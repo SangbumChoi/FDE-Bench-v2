@@ -1,0 +1,36 @@
+# Copy to configs/models.yaml (git-ignored) and fill in. Every endpoint speaks
+# the OpenAI Chat Completions protocol; keys are read from the named env vars.
+endpoints:
+  gpt:
+    model: gpt-6
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+  claude:
+    model: claude-opus-5-5
+    base_url: https://api.anthropic.com/v1/      # Anthropic's OpenAI-compatible endpoint
+    api_key_env: ANTHROPIC_API_KEY
+  gemini:
+    model: gemini-3-pro
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+    api_key_env: GEMINI_API_KEY
+  deepseek:
+    model: deepseek-chat
+    base_url: https://api.deepseek.com/v1
+    api_key_env: DEEPSEEK_API_KEY
+  qwen:
+    model: qwen3-max
+    base_url: https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+    api_key_env: DASHSCOPE_API_KEY
+  local-open-model:                               # any open-weights model behind vLLM / SGLang / Ollama
+    model: your-org/your-open-model
+    base_url: http://localhost:8000/v1
+    api_key_env: null
+    temperature: 0.6
+
+# Evaluation-side models are part of the benchmark setting: pin them for a
+# campaign and never change them mid-campaign.
+roles:
+  customer: gpt
+  translator: gpt
+  extractor: gpt
+  judges: [gpt, claude, gemini]     # majority vote; must read every locale in the campaign

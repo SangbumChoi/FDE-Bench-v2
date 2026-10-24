@@ -1,0 +1,9 @@
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+# FDE-Bench v1 data is CC BY-NC-ND 4.0: never commit it, or anything derived from it.
+v1/
+.cache/
+runs/
+configs/models.yaml

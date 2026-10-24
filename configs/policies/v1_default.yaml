@@ -1,0 +1,9 @@
+# Reproduces v1 scoring: the agent sees no policy, delivery quality is the
+# whole score, and every case rule is a hard constraint.
+title: FDE-Bench v1 default
+agent_visible: false
+exceptions: forbidden
+notes_required: false
+communication_locale: customer
+hard_gates: [validity]
+weights: {quality: 1.0}

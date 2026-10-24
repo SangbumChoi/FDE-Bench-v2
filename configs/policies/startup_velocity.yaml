@@ -1,0 +1,17 @@
+title: Startup (velocity)
+statement: |
+  This client is a fast-moving startup. A good-enough solution today beats a perfect one next week. Do not
+  bother the client with more than a handful of questions; make sensible assumptions and write them down.
+  Internal business preferences may be broken when doing so clearly improves the outcome; record each
+  exception and why.
+agent_visible: true
+question_budget: 5
+over_budget_penalty: 0.03
+exceptions: justify
+rule_classes: {physical: hard, contractual: hard, business_policy: soft}
+soft_rule_penalty: 0.05
+notes_required: true
+communication_locale: customer
+budgets: {wall_seconds: 7200, total_tokens: 3000000}
+hard_gates: [validity]
+weights: {quality: 0.6, clarification: 0.05, communication: 0.1, efficiency: 0.25}

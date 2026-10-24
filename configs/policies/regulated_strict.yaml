@@ -1,0 +1,12 @@
+title: Regulated industry (strict)
+statement: |
+  This client operates in a regulated industry (finance / healthcare). Every business rule the client states is
+  binding, even when breaking it would give a better result. Confirm your understanding before you build, and
+  document every assumption: an undocumented assumption is treated as a defect.
+agent_visible: true
+confirm_before_build: true
+exceptions: forbidden
+notes_required: true
+communication_locale: customer
+hard_gates: [validity, notes]
+weights: {quality: 0.6, clarification: 0.2, communication: 0.2}

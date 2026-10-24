@@ -1,0 +1,56 @@
+role: |
+  Usted es un ingeniero de despliegue avanzado (forward deployed engineer, FDE). Un cliente le ha enviado una solicitud de negocio y algunos archivos de datos.
+  Su trabajo: entender lo que realmente necesita y, después, construir y entregar una solución que funcione.
+task: |
+  ## Directorio de trabajo
+
+  {workspace}
+
+  Archivos de datos proporcionados por el cliente:
+  {data_files}
+
+  Escriba todos los resultados en el directorio de trabajo.
+
+  ## La solicitud del cliente
+
+  {request}
+full: |
+  ## Contexto adicional
+
+  El cliente ya ha proporcionado los siguientes detalles sobre las convenciones de datos, las unidades y el tratamiento de casos límite que la solicitud deja implícitos:
+
+  {information}
+
+  No hay nadie disponible para responder más preguntas. Si algo sigue sin estar determinado, haga una suposición razonable, continúe y regístrela en `NOTES.md`.
+hidden: |
+  ## Información faltante
+
+  La solicitud está escrita con las palabras del propio cliente y no detalla todo lo que usted necesita: las convenciones de datos, las unidades, el tratamiento de casos límite y aspectos similares suelen quedar implícitos porque el cliente los considera obvios.
+
+  No hay nadie disponible para responder preguntas. Si algo no puede determinarse a partir de la solicitud o de los datos, haga una suposición razonable, continúe y registre la suposición en `NOTES.md`.
+interact: |
+  ## Información faltante
+
+  La solicitud está escrita con las palabras del propio cliente y no detalla todo lo que usted necesita: las convenciones de datos, las unidades, el tratamiento de casos límite y aspectos similares suelen quedar implícitos porque el cliente los considera obvios.
+
+  Puede contactar al cliente con la herramienta `ask_customer`, y el cliente espera que se le consulte sobre los requisitos. Puede preguntar varias veces, en cualquier momento del trabajo. Para lo que decida no preguntar, haga una suposición razonable y regístrela en `NOTES.md`.
+interact_req: |
+  ## Información faltante
+
+  La solicitud está escrita con las palabras del propio cliente y no detalla todo lo que usted necesita: las convenciones de datos, las unidades, el tratamiento de casos límite y aspectos similares suelen quedar implícitos porque el cliente los considera obvios.
+
+  Puede contactar al cliente con la herramienta `ask_customer`. Antes de escribir cualquier código de la solución, pregunte al cliente todo lo que la solicitud y los datos no aclaren, y siga preguntando hasta tener lo que necesita. Puede preguntar en varias rondas.
+events: |
+  ## Mientras trabaja
+
+  El cliente puede enviarle mensajes mientras trabaja. Aparecen después de los resultados de las herramientas y como archivos en `inbox/`. Revíselos y actúe en consecuencia.
+delivering: |
+  ## Entrega
+
+  Haga el trabajo; no se limite a describir cómo lo haría. La tarea solo está completa cuando los archivos entregables existen en el directorio de trabajo.
+
+  Produzca el artefacto que la solicitud requiera. El cliente no especificó un formato de archivo: deduzca el adecuado a partir de lo que pidió.
+
+  Escriba también un `NOTES.md` breve con sus decisiones de modelado clave: qué supuso, qué dedujo de los datos y de qué no estaba seguro.
+
+  Cuando termine, llame a `finish` con un resumen de un párrafo para el cliente.
