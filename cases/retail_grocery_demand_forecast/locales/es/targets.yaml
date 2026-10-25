@@ -1,0 +1,18 @@
+- id: stockout_censoring
+  text: Los días con rotura de stock las unidades_vendidas están limitadas por el stock; se prevé la demanda de los clientes, así que esos días no se tratan como ventas normales.
+- id: returns
+  text: Las filas con unidades_vendidas negativas son devoluciones de clientes registradas el día de la devolución; no son demanda y se excluyen, sin restarlas de las ventas.
+- id: s4_sunday_closed
+  text: La tienda Casco Antiguo S4 cierra los domingos y su previsión para esos días debe ser 0.
+- id: promo_plan
+  text: Hay que usar las promociones de plan_promociones.csv (con las fechas de inicio y fin incluidas); el aumento crece con el descuento, varía por categoría y se estima con el descuento_promo_pct del historial.
+- id: holiday_nov11
+  text: El miércoles 11 de noviembre de 2026 es un festivo único que no está en festivos.csv; las tiendas abren y la demanda sube como en los festivos anteriores, sobre todo en panadería y bebidas.
+- id: unit_change_i07
+  text: Los panecillos I07 se registraban por unidad hasta el 31 de mayo de 2026 y por paquete de 6 desde el 1 de junio de 2026; el historial anterior se divide por 6 y I07 se prevé en paquetes.
+- id: min_display
+  text: Los artículos básicos (fruta y verdura y lácteos, I01-I06) nunca tienen una previsión por debajo de 2 unidades en un día en que la tienda abre.
+- id: wape_metric
+  text: La calidad es el WAPE por tienda (suma de errores absolutos entre la suma de la demanda real, incluidas las ventas perdidas por rotura) y luego la media de las cinco tiendas; cuanto más bajo, mejor.
+- id: submission_format
+  text: Se entrega forecast.csv con las columnas store_id,item_id,date,forecast y exactamente una fila por tienda, artículo y día del 2026-11-02 al 2026-11-15 (840 filas).
