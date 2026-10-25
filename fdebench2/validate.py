@@ -109,7 +109,7 @@ def validate_case(root: Path) -> list[str]:
             files = sorted(p for p in a.rglob("*") if p.is_file())
             if not files:
                 problems.append(f"{lang}: no data files")
-            shapes[lang] = [(p.suffix, p.stat().st_size > 0) for p in files]
+            shapes[lang] = sorted((p.suffix, p.stat().st_size > 0) for p in files)
             if lang in ("en", "es"):
                 for p in files:
                     if p.suffix in (".csv", ".json", ".md", ".txt") and (HAN.search(p.read_text(encoding="utf-8-sig"))
