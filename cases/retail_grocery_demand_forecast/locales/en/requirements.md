@@ -17,7 +17,7 @@ One CSV file, `forecast.csv`, with the header `store_id,item_id,date,forecast`. 
 - `promo_discount_pct` in the history shows the discount on days an item was on promotion in a store (0 = no promotion). The promotions for the forecast period are in `promo_plan.csv`; `start_date` and `end_date` are both inclusive, and they must be taken into account. The sales lift grows with the discount and differs by category; learn it from past promotions.
 - Wednesday 11 November 2026 is a one-off regional public holiday (the city's anniversary) and is not in `holidays.csv`. All stores open as usual that day. On past holidays demand went up, more for bakery and beverages than for fresh produce and dairy; expect the same pattern.
 - Bread rolls (I07) were sold and recorded per piece until 31 May 2026. Since 1 June 2026 they are sold in packs of 6, the current `sales_unit`. Divide the history before 1 June 2026 by 6 and forecast I07 in packs.
-- Our habit: we never forecast less than 2 units of a core item, meaning fresh produce and dairy (I01–I06), on a day the store is open, so the shelves never look empty.
+- Our habit: we never forecast less than 6 units of a core item, meaning fresh produce and dairy (I01–I06), on a day the store is open, so the shelves never look empty.
 
 ## How the forecast is judged
 
@@ -26,6 +26,6 @@ One CSV file, `forecast.csv`, with the header `store_id,item_id,date,forecast`. 
 - Exactly one row for every store × item × date in the period; nothing missing, nothing twice.
 - No negative forecast.
 - S4 is forecast 0 on Sundays.
-- Fresh produce and dairy items are forecast at 2 or more on every day the store is open.
+- Fresh produce and dairy items are forecast at 6 or more on every day the store is open.
 
 **Quality**: for each store, the WAPE (weighted absolute percentage error) = sum of |forecast − actual demand| over all its items and days ÷ sum of actual demand; then the average over the five stores. Actual demand is what customers wanted to buy, including what they could not buy because of a stockout, in the current sales unit. Lower is better.

@@ -25,7 +25,7 @@
 - id: min_display
   kind: missing
   domain: business rule
-  text: Core items (fresh produce and dairy, I01-I06) are never forecast below 2 units on a day the store is open.
+  text: Core items (fresh produce and dairy, I01-I06) are never forecast below 6 units on a day the store is open.
 - id: wape_metric
   kind: missing
   domain: scoring

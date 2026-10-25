@@ -11,7 +11,7 @@
 - id: unit_change_i07
   text: Los panecillos I07 se registraban por unidad hasta el 31 de mayo de 2026 y por paquete de 6 desde el 1 de junio de 2026; el historial anterior se divide por 6 y I07 se prevé en paquetes.
 - id: min_display
-  text: Los artículos básicos (fruta y verdura y lácteos, I01-I06) nunca tienen una previsión por debajo de 2 unidades en un día en que la tienda abre.
+  text: Los artículos básicos (fruta y verdura y lácteos, I01-I06) nunca tienen una previsión por debajo de 6 unidades en un día en que la tienda abre.
 - id: wape_metric
   text: La calidad es el WAPE por tienda (suma de errores absolutos entre la suma de la demanda real, incluidas las ventas perdidas por rotura) y luego la media de las cinco tiendas; cuanto más bajo, mejor.
 - id: submission_format

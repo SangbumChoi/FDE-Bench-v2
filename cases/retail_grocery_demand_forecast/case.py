@@ -28,7 +28,7 @@ UNIT_CHANGE = dt.date(2026, 6, 1)        # I07 recorded per piece before this da
 PACK = 6
 HORIZON_HOLIDAY = dt.date(2026, 11, 11)  # one-off regional holiday, known only to the client
 CLOSED_STORE, CLOSED_WEEKDAY = "S4", 6   # S4 closes on Sundays
-MIN_DISPLAY = 2.0
+MIN_DISPLAY = 6.0
 CORE_CATEGORIES = ("produce", "dairy")
 
 STORES = {"S1": (1.30, 0.03), "S2": (1.00, 0.08), "S3": (0.85, 0.00), "S4": (0.60, 0.02), "S5": (1.10, -0.05)}
