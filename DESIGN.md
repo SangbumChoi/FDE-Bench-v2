@@ -1,56 +1,88 @@
 # FDE-Bench v2 — design
 
 FDE-Bench v2 measures how well agent systems (model × harness) do forward-deployed engineering when the
-**customer's language**, the **deploying company's policy**, and the **realism of the engagement** change.
-It is a rewrite of the harness around the 49 cases of
-[FDE-Bench v1](https://baidubce.github.io/FM-Agent/FDE-Bench/) (Baidu AI Cloud, arXiv 2610.14539).
-v2 adds no new scenarios: every v2 task is a **transform** of a v1 case. The case, its data, and its
-evaluator stay exactly as v1 ships them.
+**customer's language**, the **deploying company's policy** and the **realism of the engagement** change.
 
-## 1. What v1 gives us, and what it lacks
+It is inspired by [FDE-Bench v1](https://baidubce.github.io/FM-Agent/FDE-Bench/) (Baidu AI Cloud,
+arXiv 2610.14539): an under-specified customer request, hidden requirements that a simulated client reveals
+when asked, a deterministic evaluator with hard constraints and a quality score against a reference. v2 is
+**fully independent** of the FM-Agent repository: its own harness, its own cases, its own pipelines. Nothing
+from FM-Agent is installed, imported or vendored.
 
-v1 case = `instruction.md` (the customer's original, under-specified request) + `data/` + hidden
-`information.md` (complete requirements) + `gt.json` (266 clarification targets in total) + a deterministic
-`tests/evaluator.py` (hard constraints → 0; otherwise quality normalized so the accepted FDE solution is 1.0).
-The main setting (Interact-Req) lets the agent question an LLM-simulated client before solving.
+## 1. What v2 adds over v1
 
-From reading the v1 code:
-
-| Gap in v1 | Evidence | v2 axis |
+| Gap in v1 | Evidence | v2 answer |
 |---|---|---|
-| One language | Every request, requirement, target and client answer is Chinese; the agent prompt is English. | **Language** |
-| One policy | All case rules are hard constraints inside each evaluator; no notion of a company's engagement rules, budgets, or sanctioned rule exceptions. | **Policy** |
-| No difficulty signal | All 49 `task.toml` say `difficulty = "hard"`. The paper itself lists "requirements and data are fixed" and a client that never revises expectations as limitations. | **Difficulty** |
+| One language | Every request, requirement, target and client answer is Chinese; the agent prompt is English. | Cases authored natively in **zh / en / ko / ja / es**, data rendered in each locale; the agent's own instruction language is a separate variable. |
+| One policy | All case rules are hard constraints inside each evaluator; no notion of a company's engagement rules, budgets or sanctioned exceptions. | **Policy profiles** (gates, weights, budgets, question caps, exception process) and rule classes that say which rules may bend. |
+| No difficulty signal | All 49 v1 `task.toml` say `difficulty = "hard"`; the paper lists fixed requirements and a client that never revises expectations as limitations. | **easy / medium / hard** tiers over explicit knobs, including recoverable data noise and mid-task events. |
+| Harness lock-in | Agent CLIs wired one by one. | One **OpenAI-compatible** model protocol plus vendor CLIs over a shared **MCP** client channel. |
 
-## 2. Licensing constraint (shapes the architecture)
+## 2. Cases and licensing
 
-v1 code is MIT, but v1 **data** (everything under `case/`: requests, requirements, targets, data files,
-evaluators, references) is **CC BY-NC-ND 4.0**: no commercial use, no sharing of modified versions.
+v1 case material (requests, requirements, targets, data, evaluators, references) is **CC BY-NC-ND 4.0**:
+it may be shared only unmodified and non-commercially. Translating or adapting it would create derivatives
+we could not publish. v2 therefore ships **its own original cases** (`cases/`):
 
-Consequences:
+- Written from scratch on the same *kinds* of problems (routing, rostering, forecasting, ...). Problem types
+  are ideas and free to use; no v1 text, data, evaluator code or reference solution is reused. Case authors
+  never open v1 material while writing.
+- Licensed by this repository, so the benchmark can be published, translated and extended freely.
 
-- This repository contains **no v1 case material**. Users point `--v1-root` at their own checkout of
-  `baidubce/FM-Agent/FDE-Bench` with the data restored.
-- Transforms run **locally at run time**. Translations, noisy data copies and variant files are written to
-  `.cache/` and `runs/` (both git-ignored) and must not be published.
-- v2 code is a clean rewrite; it reads v1 files and calls v1 evaluators unmodified.
-- Case annotations that v2 *does* ship (`configs/case_rules/*.yaml`, `fdebench2/case_hooks/`) contain only
-  our own classification of rule codes plus code that calls the v1 evaluator's functions. They contain no v1
-  text or data.
-- **Open question for the team:** NC prohibits commercial use. Running v1 data inside a company may count as
-  commercial use. Get a legal read, or ask the FDE-Bench authors for permission, before running campaigns at
-  work. Publishing translated cases needs the authors' permission in any case.
+v1 remains available as an **optional external benchmark** for comparison: `fdebench2 fetch-v1` downloads it
+at a pinned commit into `external/` (git-ignored) with checksum verification, and `--v1 external/fde-bench-v1`
+loads its cases through the same pipeline (Chinese only; other customer locales use run-time machine
+translation that stays on the user's machine). Running v1 inside a company may count as commercial use; check
+before doing so.
 
-## 3. Architecture
+## 3. Native case format
 
 ```
-               v1 case (read-only)                         configs/
-   instruction · information · gt · data · evaluator       policies · difficulty · case_rules · models
-                       │                                        │
-                       ▼                                        ▼
+cases/<id>/
+  case.yaml                 id, title, task_type, domain, seed, objective (minimize|maximize),
+                            deliverables, deliverable_spec, rules [{id, class, description}]
+  case.py                   build_world(seed) · write_data(world, dir, lang) · reference_solution(world, dir)
+                            · score(world, submission_dir) · violating_examples(world)
+  locales/<zh|en|ko|ja|es>/
+    request.md              the client's short, under-specified request (what the agent sees)
+    requirements.md         complete requirements (hidden; the simulated client answers from it)
+    targets.yaml            clarification targets: the facts a good FDE must ask for
+```
+
+Design rules that keep scoring language-independent:
+
+- **The world is built from the seed, never from files.** Ground truth (including any hidden future for
+  forecasting cases) lives in the world. The evaluator scores against the world, so noisy or localized data
+  copies can never corrupt scoring.
+- **Data is rendered per locale.** File names, sheet names, column headers and categorical labels are
+  localized; IDs and numbers are not. A Korean client sends `매장목록.csv` with `매장등급 = 프리미엄`; a Spanish
+  one sends `cafeterias.csv` with `categoria = premium`.
+- **Deliverables use ASCII keys and data IDs**, so one evaluator scores submissions made in any locale.
+- **Quality** is `reference_objective / objective` (or the inverse for maximize). The reference is a solid
+  deterministic heuristic shipped with the case: quality 1.0 = matches it, > 1.0 = beats it (clipped at 1.0
+  in the composite score, reported raw).
+- **Rules carry a class** (`physical`, `contractual`, `business_policy`). The evaluator reports violations by
+  rule id; relaxing a rule is a scoring parameter (`evaluate(..., relaxed={...})`), so no per-case hooks.
+
+`fdebench2 validate-case <dir>` enforces the contract before a case is used:
+
+- all 5 locales present with the same target ids, in the right script;
+- data renders deterministically in every locale with no untranslated labels;
+- the reference scores validity 1 / quality 1.0 and an empty submission is invalid;
+- every rule has an example that breaks exactly that rule, and that becomes valid when a non-physical rule
+  is relaxed.
+
+## 4. Architecture
+
+```
+          cases/<id>  (native, 5 locales)        external/fde-bench-v1 (optional)
+                       │                                   │
+                       └──────────── Case interface ───────┘
+                                         │
           ┌──────────────── transforms (fdebench2/transforms) ────────────────┐
-          │ language: translate request / requirements / targets / events     │
-          │ policy:   load profile, render agent-visible brief (agent locale) │
+          │ language: pick the customer locale; agent instructions in agent   │
+          │           locale; all generated messages from a 5-locale catalog  │
+          │ policy:   profile + agent-visible brief                           │
           │ difficulty: condition · persona · data noise · scheduled events   │
           └──────────────────────────────┬────────────────────────────────────┘
                                          ▼
@@ -63,136 +95,69 @@ Consequences:
  tool loop, any model  ───────▶  in-process  ◀── MCP bridge ──────  Gemini CLI · OpenCode
                                          │
                                          ▼
-     scoring: extract submission → v1 evaluator (unmodified, pristine data)
+     scoring: extract submission → case evaluator (world truth, rules, relaxations)
               → clarification judges → policy composition → result.json → report
 ```
 
-### One protocol for models: OpenAI Chat Completions
+**One model protocol.** Every model call (solver, simulated client, judges, extractor, and the run-time
+translator used only for external v1 cases) goes through `fdebench2/llm.py`: the official `openai` SDK with a
+configurable `base_url`. That reaches OpenAI, Anthropic's and Gemini's OpenAI-compatible endpoints, DeepSeek,
+Qwen/DashScope, OpenRouter, and any open-weights model behind vLLM, SGLang or Ollama (e.g. Reflection AI's
+open models).
 
-Every model call goes through `fdebench2/llm.py`. This covers the solver under test, the simulated client,
-the translator, the judges and the extractor. It uses the official `openai` SDK with a configurable
-`base_url`. That one wire format reaches OpenAI, Anthropic's and Gemini's OpenAI-compatible endpoints,
-DeepSeek, Qwen/DashScope, OpenRouter, and any open-weights model served by vLLM, SGLang or Ollama (for
-example Reflection AI's open models once they are served). Adding a model is a 3-line entry in
-`configs/models.yaml`.
+**Two kinds of harness.** A neutral reference loop (`bash`, `read_file`, `write_file`, `list_files`,
+`ask_customer`, `request_exception`, `finish`) gives every model identical tools and prompts; vendor CLIs
+(Claude Code, Codex, Gemini CLI, OpenCode) run headless and reach the same client through an MCP server.
+Model M in the reference loop vs M in its vendor CLI isolates the **harness effect**.
 
-### Two kinds of harness
+**No run-time translation for native cases.** Case texts and data are authored per locale; the agent
+instructions (`prompts/agent/*.yaml`) and every message v2 generates itself (events, noise facts, policy
+briefs: `prompts/messages.yaml`) are hand-written in all five locales.
 
-- **Reference harness** (`agents/reference.py`): a plain function-calling loop with `bash`, `read_file`,
-  `write_file`, `list_files`, `ask_customer`, `request_exception` and `finish`. Every model gets identical
-  tools, prompts and budgets, so rows differ only by model.
-- **Vendor CLIs** (`agents/cli.py`): Claude Code, Codex, Gemini CLI and OpenCode, run headless. They get
-  the same prompt. They reach the client through an **MCP server** (`mcp_bridge.py`) that exposes the same
-  `ask_customer` / `request_exception` / `check_inbox` tools backed by the same Session. Events reach CLI
-  agents through tool responses and `inbox/` files.
+## 5. The three axes
 
-Comparing model M in the reference harness against M inside its vendor CLI isolates the **harness effect**.
-
-### Improvements over the v1 harness
-
-- Client interaction is a structured tool (`ask_customer`), not a parsed "## Questions" heading. It is the
-  same tool across all harnesses.
-- Every interaction (questions, answers, events, exceptions, steps) goes to one `transcript.jsonl` per run.
-  All process scoring reads from it.
-- Scoring is re-runnable and **re-scorable under any policy** without re-running the agent.
-- Evaluation-side models (client, translator, extractor, judges) are recorded with every result
-  (`eval_models`), because changing them changes the benchmark.
-
-## 4. The three axes
-
-### 4.1 Language
+### 5.1 Language
 
 | Variable | Values | Meaning |
 |---|---|---|
-| `customer_locale` | `source` (zh), `en`, `ko`, `ja`, `es` | Language of the request, the hidden requirements, the client's answers, and event messages. |
-| `agent_locale` | `en`, `zh`, `ko`, `ja`, `es` | **Protocol language**: the language of the agent's own instructions. Hand-written templates in `fdebench2/prompts/agent/*.yaml`, not machine translated. |
+| `customer_locale` | `zh`, `en`, `ko`, `ja`, `es` | Language of the request, hidden requirements, data labels, client answers and event messages. |
+| `agent_locale` | `zh`, `en`, `ko`, `ja`, `es` | **Protocol language**: the language of the agent's own instructions and policy brief. |
 
-- The client simulator answers in the customer's language and register: business-polite Korean (합니다/해요체),
-  Japanese です/ます with light 敬語, Spanish *usted*.
-- Data files are never translated. Translations keep file, sheet, column and code names verbatim, with an
-  optional gloss in parentheses, because the agent has to match them to the data.
-- Measured: delivery quality and Ask-F1 per locale relative to that agent's `zh` baseline. **Language
-  fidelity** is the share of the agent's questions and of `NOTES.md` written in the required locale. It
-  uses a script-based detector for these five languages.
-- Clarification judges see each target both as annotated (zh) and in the customer locale. The judge panel
-  must read every locale in the campaign.
-- Translation quality is a threat to validity. Machine translation is the default, and translations are
-  cached per model. For any locale we publish numbers on, a native speaker should review the cached
-  translations; corrections are written straight into the cache.
+The simulated client answers in the customer's register (business-polite Korean, Japanese です/ます with light
+敬語, Spanish *usted*). Measured: quality and Ask-F1 per locale relative to the agent's `en` baseline, and
+**language fidelity** (share of questions to the client and of `NOTES.md` in the required language).
+Clarification judges see each target in English and in the customer locale.
 
-**Two experiments**
-1. *Customer language*: vary `customer_locale` with `agent_locale = en` fixed.
-2. *Protocol language*: fix the customer (e.g. `ko`) and vary `agent_locale` over {en, ko, zh}. This answers
-   which language to deploy the FDE agent's instructions in for a given market.
+Experiments: *customer language* (vary `customer_locale`, agent `en`) and *protocol language* (fix e.g. a
+Korean client, vary `agent_locale` over en/ko/zh) — which instruction language to deploy an FDE agent with.
 
-### 4.2 Policy
+### 5.2 Policy
 
-A policy (`configs/policies/*.yaml`) states how a company wants FDE work done. It can be shown to the agent
-(`agent_visible`) and it is also the scoring profile.
+A policy (`configs/policies/*.yaml`) is both an agent-visible brief and a scoring profile: `confirm_before_build`,
+`question_budget`, `exceptions` (`forbidden` / `escalate` / `justify`), `rule_classes` that may bend,
+`soft_rule_penalty`, `notes_required`, `communication_locale`, `budgets` (+ `hard_budgets`), `hard_gates`,
+`weights`. Shipped: `baseline` (quality only, hidden; reproduces v1 scoring), `enterprise_balanced`,
+`regulated_strict`, `startup_velocity`.
 
-| Field | Effect |
-|---|---|
-| `statement`, `agent_visible` | Policy brief added to the agent prompt, translated to the agent locale. |
-| `confirm_before_build` | Penalty if solution code is written before the first client question (reference harness). |
-| `question_budget`, `over_budget_penalty` | Soft cap on clarification questions. |
-| `exceptions`: `forbidden` / `escalate` / `justify` | Whether and how the agent may break a client business rule. |
-| `rule_classes` | Which classes of case rules may bend: `physical` (never), `contractual`, `business_policy`. |
-| `soft_rule_penalty` | Cost per case rule that was legitimately bent. |
-| `notes_required`, `communication_locale` | Documentation and reporting-language duties. |
-| `budgets`, `hard_budgets` | Wall-clock, token and USD budgets; either cost points or are hard gates. |
-| `hard_gates`, `weights` | Score composition (§5). |
+A violated rule is forgiven only if the policy makes its class soft, the agent went through the prescribed
+exception process (`request_exception` approved under `escalate`, recorded under `justify`), and the case
+re-scores the deliverable with the rule relaxed. Physical rules never bend.
 
-Shipped profiles: `v1_default` (reproduces v1 scoring), `enterprise_balanced`, `regulated_strict`,
-`startup_velocity`.
+### 5.3 Difficulty
 
-**Rule bending.** v1 evaluators report hard-constraint violations as coded messages (e.g. `HC2_HC3_…`).
-`configs/case_rules/<case>.yaml` classifies those codes. A violation is forgiven only when all of these hold:
-
-- the policy makes that rule's class soft;
-- the agent went through the prescribed process: `request_exception` approved by the client under
-  `escalate`, or recorded under `justify`;
-- a case hook (`fdebench2/case_hooks/`) can re-score the plan with that rule switched off. v1 evaluators
-  stop at the first violation and report no quality.
-
-Shipped annotation: case 010. Here "use same-city stock before buying from suppliers" is a
-`business_policy` rule; stock limits are `physical`; DSD designated suppliers are `contractual`.
-Annotating more cases is ongoing work. Each annotation is small: a YAML file plus a hook of about 30 lines.
-
-### 4.3 Difficulty
-
-Difficulty is a preset over concrete knobs (`configs/difficulty.yaml`). Case, data and evaluator never
-change across tiers.
-
-| Knob | easy | medium (= v1 main setting) | hard |
+| Knob | easy | medium | hard |
 |---|---|---|---|
 | Condition | `full`: complete requirements given | `interact_req`: must clarify first | `interact_req` |
-| Client persona | cooperative | default (v1 style) | busy: terse, vague questions get vague answers |
+| Client persona | cooperative | default | busy: terse; vague questions get vague answers |
 | Question rounds | 30 | 30 | 15 |
-| Data noise | none | none | duplicate rows, stale backup file, legacy GB18030 encoding |
+| Data noise | none | none | duplicate rows, stale backup file, legacy code-page encoding (GB18030 / CP949 / Shift_JIS / CP1252 by locale) |
 | Events | none | none | stakeholder conflict, client unavailable, data correction, late-remembered requirement, deadline pulled in |
 
-All noise and events are **recoverable**, so the hard tier tests diligence, not luck:
+Everything in the hard tier is **recoverable**: noise touches only the agent's copy (scoring uses the world),
+the client knows the fact that undoes each noise op (it becomes an extra clarification target), a non-owner
+stakeholder's conflicting message is resolvable by asking the client, and a corrected file arrives mid-task.
 
-- **Noise** touches only the agent's copy of the data. The evaluator scores against pristine v1 data.
-  The client knows the fact that undoes each op (e.g. "exact duplicate rows are export errors"), and that
-  fact becomes a new clarification target (`origin` = the op), reported apart from v1 targets.
-- **Data correction**: the agent first receives a 5%-perturbed version of one file; the correct file arrives
-  in `inbox/` mid-task. A solution built on the wrong file scores worse against the pristine data.
-- **Stakeholder conflict**: a non-owner asks for a different priority. The client knows this person is not
-  the project owner, so an agent that checks with the client gets the right answer.
-- **Late requirement**: the client volunteers one v1 target mid-task, which forces rework for agents that
-  didn't ask.
-- **Deadline**: the remaining time budget is halved.
-- Triggers count agent steps (reference harness) or elapsed seconds (CLI harnesses, whose steps the bridge
-  can't see), plus "after N questions".
-
-Verified on all 49 real cases: every hard variant builds in ≤ 40 s. Noise coverage depends on the data
-format. Four cases have no tabular or JSON file the ops can safely edit (npz arrays, solver code, an 11 MB
-workbook, and case 001's 2.6 GB archive, which wasn't downloaded), so their hard tier is events + persona
-only. Seven cases have no data-correction event. The variant records which ops applied, so the report can
-stratify.
-
-## 5. Scoring
+## 6. Scoring
 
 ```
 final = 0                                          if a hard gate fails (always: validity)
@@ -201,54 +166,22 @@ final = 0                                          if a hard gate fails (always:
 
 | Component | Definition |
 |---|---|
-| quality | v1 quality, clipped at the FDE reference (1.0); 0 if invalid |
-| clarification | Ask-F1 over v1 + v2 targets (majority vote of a judge panel); only if the client was reachable |
+| quality | case quality vs reference, clipped at 1.0; 0 if invalid |
+| clarification | Ask-F1 over case + noise targets (majority vote of a judge panel); only if the client was reachable |
 | communication | mean of language fidelity (questions, NOTES.md) and NOTES.md presence |
 | efficiency | per budget: 1 − ½·used/budget, 0 once over budget |
 
-Also reported per cell: validity rate, **DSR** (quality ≥ reference), **pass^k** (all seeds valid),
-Ask-F1, v1-only recall. Cells are case-macro averaged. Deltas are taken within one agent against its
-baseline cell, never across agents.
-
-`v1_default` uses quality only. The headline number is policy-conditioned (the agent saw the policy it is
-scored under); `fdebench2 score RUN --policy X` also gives the counterfactual.
-
-## 6. Experiment design and cost
-
-The full grid (49 cases × 5 customer locales × 5 agent locales × 4 policies × 3 tiers × 3 seeds) is about
-44k runs per agent, with runs of up to 12 h each, so it isn't run in full. Instead, one axis is varied at a
-time against a shared baseline cell (customer zh, agent en, `v1_default`, medium) on `subset20`.
-`configs/experiments.example.yaml` gives about 20 × 3 × (5 + 3 + 4 + 3 − 3 shared) ≈ 720 runs per agent.
-Shared cells are deduplicated automatically.
+Reported per cell: final, quality, validity rate, DSR (quality ≥ reference), pass^k (all seeds valid),
+Ask-F1. Case-macro averages; deltas within one agent against its baseline cell.
 
 ## 7. Status
 
-Implemented and tested (`pytest`, 13 tests on a synthetic fixture case in v1 format):
-transforms, the reference harness, the Session (client, events, exceptions), the MCP bridge, extraction,
-the evaluator shim, clarification judging, policy composition, the campaign runner and the report.
+- Harness, transforms, scoring, MCP bridge, campaign runner and report: implemented, 16 tests passing.
+- Native case format, `casekit`, validator and message catalog: implemented.
+- Original cases: `logistics_bakery_routing` (validated in all 5 locales); more in progress (see
+  `cases/README.md`).
+- External v1 path: fetcher verified against the pinned commit; the evaluator shim reproduces v1's reference
+  scores on all 48 cases with data.
 
-Verified against real v1 material:
-- 49 cases and 266 targets load.
-- The evaluator shim scores the FDE reference solution of all 48 cases with data at validity 1.0 and
-  quality 1.0 (± 2e-5), i.e. it reproduces v1. Evaluators need lightgbm, shapely, scipy, scikit-learn and
-  networkx on the scoring host.
-- Hard variants build for all 49 cases.
-- The case-010 relaxation hook was checked on a real plan with an injected sourcing-order violation.
-
-**Not yet verified:**
-- **No live model run yet:** this environment has no API keys.
-- **The vendor CLI command lines are unchecked** against installed versions.
-- **`DockerSandbox` is unexercised:** no Docker daemon in the build environment. Tests use `LocalSandbox`.
-
-Open items, in priority order:
-1. First live smoke run (one case, reference harness + one CLI) to calibrate step-based event triggers and
-   budgets.
-2. Native-speaker review of the cached ko / ja / es translations for `subset20`.
-3. Run CLI agents in a container that mounts only the workspace, with the MCP bridge on the host over
-   HTTP (`--http`). Stdio mode lets the agent's user read the run directory.
-4. Parse token usage from each CLI's log so efficiency applies to CLI harnesses too. A `deadline_change`
-   event is announced to CLI agents but does not yet shorten their subprocess timeout.
-5. `case_rules` annotations and hooks beyond case 010. Requirement-*change* events (beyond the five
-   evaluator-neutral kinds) need the same per-case hooks.
-6. Docker images: v1's `env-runner` image and per-case Dockerfiles can be reused; the reference harness
-   only needs `docker exec`.
+Not yet verified: a live model run (no API keys in the build environment), the vendor CLI command lines
+against installed versions, `DockerSandbox` (no Docker daemon in the build environment).

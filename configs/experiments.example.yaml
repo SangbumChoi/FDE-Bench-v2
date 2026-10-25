@@ -1,23 +1,15 @@
 # A campaign is a list of experiments; each expands to a grid of runs.
 # One axis at a time against a fixed baseline keeps the grid affordable:
-# baseline = customer zh, agent en, baseline policy, medium difficulty.
+# baseline = customer en, agent en, baseline policy, medium difficulty.
 defaults:
-  cases_root: cases              # vendored v1 cases; run `fdebench2 fetch-data` once for their data
+  cases_root: cases
   models: configs/models.yaml
   out: runs
   seeds: [0, 1, 2]
   sandbox: {kind: docker, image: "fde-bench:{case}"}
-  cases: subset20
+  cases: all                     # every case under cases/ (or a list of ids, or a subset name)
 
-subsets:
-  subset20: [001_car_body_aerodynamic_forecast, 002_city_delivery_route_planning, 003_crop_yield_sparse_sampling,
-             004_dayahead_power_price_forecast, 005_flight_seat_booking_forecast, 006_ion_beam_uniformity_optimization,
-             007_lube_oil_inverse_formulation, 008_material_property_forward_prediction,
-             009_nuclear_construction_scheduling, 010_retail_replenishment_transfer, 011_retail_zone_partition_routing,
-             012_silicon_steel_slitting_cutting, 013_vessel_stowage_planning,
-             014_warehouse_multi_shuttle_water_level_policy, 015_truck_load_planning, 016_aps_multi_table_scheduling,
-             017_cold_rolling_coil_sequencing, 018_multi_batch_mip_scheduling, 019_multi_line_production_scheduling,
-             020_multi_warehouse_shipping_3097]
+subsets: {}
 
 agents:
   # Neutral harness: same tools and prompts for every model.
@@ -33,7 +25,7 @@ agents:
 
 experiments:
   language_customer:     # which customer languages does each system handle?
-    customer_locale: [zh, en, ko, ja, es]
+    customer_locale: [en, zh, ko, ja, es]
   language_protocol:     # which language should the FDE agent itself be instructed in?
     customer_locale: [ko]
     agent_locale: [en, ko, zh]
