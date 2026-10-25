@@ -15,7 +15,7 @@ from fdebench2.transforms.variant import VariantSpec, build_variant
 
 
 def test_bridge_exposes_client_channel(v1_root, tmp_path):
-    case = V1Case.load(v1_root / "case" / "toy_001_order_allocation")
+    case = V1Case(v1_root / "case" / "toy_001_order_allocation")
     run_dir = tmp_path / "run"
     v = build_variant(VariantSpec(case.id, policy="enterprise_balanced"), case, run_dir / "workspace",
                       Translator(ScriptedModel(lambda m: ChatResponse(content=m[-1]["content"])), tmp_path / "c"))

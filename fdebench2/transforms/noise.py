@@ -29,7 +29,7 @@ MAX_CSV_BYTES = 50 * 1024 * 1024
 MAX_XLSX_BYTES = 5 * 1024 * 1024     # openpyxl loads whole workbooks; bigger ones take minutes
 MAX_JSON_BYTES = 20 * 1024 * 1024
 MAX_SHEET_ROWS = 200_000             # sheets padded to Excel's row limit are formatting, not data
-MIN_ROWS = 20
+MIN_ROWS = 10
 
 
 @dataclass
@@ -53,7 +53,7 @@ LEGACY_ENCODING = {"zh": "GB18030", "ko": "CP949", "ja": "Shift_JIS", "en": "CP1
 
 def _read_csv(path: Path) -> tuple[list[list[str]], str, csv.Dialect]:
     raw = path.read_bytes()
-    for enc in ("utf-8-sig", "utf-8", "gb18030"):
+    for enc in ("utf-8-sig", "utf-8", "gb18030", "cp949", "shift_jis", "cp1252", "latin-1"):
         try:
             text = raw.decode(enc)
             break

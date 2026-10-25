@@ -196,7 +196,7 @@ class Bench:
 # ── experiment grids ─────────────────────────────────────────────────────────
 
 AXES = ("customer_locale", "agent_locale", "policy", "difficulty", "condition")
-BASELINE = {"customer_locale": "source", "agent_locale": "en", "policy": "baseline", "difficulty": "medium",
+BASELINE = {"customer_locale": "en", "agent_locale": "en", "policy": "baseline", "difficulty": "medium",
             "condition": None}
 
 

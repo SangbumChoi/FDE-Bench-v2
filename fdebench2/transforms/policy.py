@@ -144,7 +144,9 @@ def policy_brief_msgs(policy: Policy) -> list[dict[str, Any]]:
     """The agent-visible policy as catalog messages (localized by fdebench2.i18n)."""
     from .events import msg
 
-    lines = [msg("Engagement policy: {title}", title=msg(policy.title)), msg(policy.statement.strip())]
+    lines = [msg("Engagement policy: {title}", title=msg(policy.title))]
+    if policy.statement.strip():
+        lines.append(msg(policy.statement.strip()))
     if policy.confirm_before_build:
         lines.append(msg("Confirm your understanding with the client before you write solution code."))
     if policy.question_budget is not None:
