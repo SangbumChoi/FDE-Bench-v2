@@ -1,6 +1,6 @@
 """fdebench2 command line.
 
-  fdebench2 fetch-v1  [--case ID ...]                    download FDE-Bench v1 (optional, external) into external/fde-bench-v1
+  fdebench2 validate-case cases/<id> ...                  check native cases against the case contract
   fdebench2 cases                                        list cases
   fdebench2 prepare   --case ID [axes]                   materialize a variant, print the agent prompt
   fdebench2 run       --case ID --harness reference --model gpt [axes]
@@ -35,8 +35,6 @@ def _axes(ap: argparse.ArgumentParser) -> None:
 
 def _common(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--cases", dest="cases_root", type=Path, default=Path("cases"))
-    ap.add_argument("--v1", dest="v1_root", type=Path, default=None,
-                    help="also load external FDE-Bench v1 cases from here (see fetch-v1)")
     ap.add_argument("--models", type=Path, default=Path("configs/models.yaml"))
     ap.add_argument("--out", type=Path, default=Path("runs"))
     ap.add_argument("--docker-image", help="run commands in this image (use {case} for per-case images)")
@@ -49,16 +47,13 @@ def _spec(a) -> VariantSpec:
 
 def _bench(a) -> Bench:
     sandbox = {"kind": "docker", "image": a.docker_image} if a.docker_image else {"kind": "local"}
-    return Bench(Settings(cases_root=a.cases_root, v1_root=a.v1_root, models=a.models, out=a.out, sandbox=sandbox))
+    return Bench(Settings(cases_root=a.cases_root, models=a.models, out=a.out, sandbox=sandbox))
 
 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(prog="fdebench2")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    p = sub.add_parser("fetch-v1"); _common(p)
-    p.add_argument("--case", action="append", help="only these cases (repeatable); default all")
-    p.add_argument("--check", action="store_true", help="only verify checksums")
     p = sub.add_parser("validate-case")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
     p = sub.add_parser("cases"); _common(p)
@@ -80,16 +75,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("out", type=Path)
 
     a = ap.parse_args(argv)
-    if a.cmd == "fetch-v1":
-        from .v1_fetch import check, fetch
-        root = a.v1_root or Path("external/fde-bench-v1")
-        wanted = set(a.case) if a.case else None
-        if not a.check:
-            fetch(root, Path(".cache/v1-release"), wanted)
-        bad = check(root, wanted)
-        print("all data files verified" if not bad else f"{len(bad)} files missing or corrupt, e.g. {bad[:3]}")
-        sys.exit(1 if bad else 0)
-    elif a.cmd == "validate-case":
+    if a.cmd == "validate-case":
         from .validate import validate_case
         failed = 0
         for path in a.paths:

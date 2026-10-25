@@ -21,7 +21,6 @@ from typing import Any
 import yaml
 
 POLICY_DIR = Path(__file__).resolve().parents[2] / "configs" / "policies"
-CASE_RULES_DIR = Path(__file__).resolve().parents[2] / "configs" / "case_rules"
 
 EXCEPTION_MODES = ("forbidden", "escalate", "justify")
 RULE_CLASSES = ("physical", "contractual", "business_policy")
@@ -82,38 +81,20 @@ def list_policies() -> list[str]:
 
 @dataclass
 class CaseRule:
-    """A v1 hard constraint, classified so a policy can decide whether it may bend."""
+    """A case's hard constraint, classified so a policy can decide whether it may bend."""
 
     id: str
-    match: str              # prefix of the violation message the v1 evaluator emits
     rule_class: str         # physical | contractual | business_policy
     description: str = ""
-
-    def matches(self, violation: str) -> bool:
-        return violation.startswith(self.match)
 
 
 @dataclass
 class CaseRules:
     case_id: str
     rules: list[CaseRule]
-    hook: str | None = None  # module implementing relaxed re-scoring for this case
-
-    def classify(self, violation: str) -> CaseRule | None:
-        return next((r for r in self.rules if r.matches(violation)), None)
 
     def by_id(self, rule_id: str) -> CaseRule | None:
         return next((r for r in self.rules if r.id == rule_id), None)
-
-
-def load_case_rules(case_id: str) -> CaseRules | None:
-    path = CASE_RULES_DIR / f"{case_id}.yaml"
-    if not path.is_file():
-        return None
-    doc = yaml.safe_load(path.read_text(encoding="utf-8"))
-    rules = [CaseRule(id=r["id"], match=r["match"], rule_class=r["class"], description=r.get("description", ""))
-             for r in doc.get("rules", [])]
-    return CaseRules(case_id=case_id, rules=rules, hook=doc.get("hook"))
 
 
 _CLASS_WORDS = {

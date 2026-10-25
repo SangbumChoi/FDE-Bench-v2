@@ -4,10 +4,10 @@
 # while it works.
 #
 # condition: what the agent gets up front
-#   full          request + complete requirements, nobody to ask      (v1 "Full")
-#   interact      request only; client reachable, asking is optional   (v1 "Interact")
-#   interact_req  request only; must clarify before solving            (v1 "Interact-Req", the paper's main setting)
-#   hidden        request only, nobody to ask                          (v1 "Hidden")
+#   full          request + complete requirements, nobody to ask
+#   interact      request only; client reachable, asking is optional
+#   interact_req  request only; must clarify before solving
+#   hidden        request only, nobody to ask
 # persona: how the simulated client answers (see fdebench2/customer.py)
 
 easy:

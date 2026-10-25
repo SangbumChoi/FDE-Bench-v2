@@ -1,7 +1,7 @@
 """Data noise for the hard tier, applied only to the agent's copy of the data.
 
-Every op is *recoverable*: the evaluator keeps scoring against the pristine v1
-data, and the customer knows the fact that undoes the noise (it is appended to
+Every op is *recoverable*: the evaluator keeps scoring against the case's
+ground truth, and the customer knows the fact that undoes the noise (it is appended to
 the hidden requirements and registered as a new clarification target). So a
 noisy variant measures whether the agent notices and asks, not whether it can
 read minds.

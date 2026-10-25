@@ -1,7 +1,7 @@
 # Cases
 
-Original FDE-Bench v2 cases. Each is written from scratch (no material from FDE-Bench v1 or any other
-benchmark), authored natively in zh / en / ko / ja / es, and checked by `fdebench2 validate-case`.
+Example cases in the FDE-Bench v2 format, each authored natively in zh / en / ko / ja / es and checked by
+`fdebench2 validate-case`. Add your own cases next to them; every directory with a `case.yaml` is picked up.
 Format and conventions: [DESIGN.md §3](../DESIGN.md#3-native-case-format).
 
 | Case | Type | Domain | What the client asks | Hidden requirements (targets) | Bendable rule |
