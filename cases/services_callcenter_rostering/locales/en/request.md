@@ -1,0 +1,1 @@
+Could you put together next week's roster (Monday 9 to Sunday 15 November) for our support team? We need enough people on the phones so customers aren't left waiting, in every language we support. The staff list and the expected call volume are attached.

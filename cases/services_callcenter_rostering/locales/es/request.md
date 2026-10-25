@@ -1,0 +1,1 @@
+¿Podría preparar el cuadrante de la próxima semana (del lunes 9 al domingo 15 de noviembre) para nuestro equipo de soporte? Necesitamos suficiente gente al teléfono para que los clientes no esperen, en todos los idiomas que atendemos. Le adjunto la lista de personal y el volumen de llamadas previsto.

@@ -1,0 +1,40 @@
+# Difficulty = a preset over concrete knobs. The case, its data and its
+# evaluator never change across tiers; only what the agent is told, how the
+# customer behaves, how clean the agent's copy of the data is, and what happens
+# while it works.
+#
+# condition: what the agent gets up front
+#   full          request + complete requirements, nobody to ask      (v1 "Full")
+#   interact      request only; client reachable, asking is optional   (v1 "Interact")
+#   interact_req  request only; must clarify before solving            (v1 "Interact-Req", the paper's main setting)
+#   hidden        request only, nobody to ask                          (v1 "Hidden")
+# persona: how the simulated client answers (see fdebench2/customer.py)
+
+easy:
+  condition: full
+  persona: cooperative
+  noise: []
+  events: []
+  time_budget_s: 43200
+  max_question_rounds: 30
+
+medium:
+  condition: interact_req
+  persona: default
+  noise: []
+  events: []
+  time_budget_s: 43200
+  max_question_rounds: 30
+
+hard:
+  condition: interact_req
+  persona: busy
+  noise: [duplicate_rows, stale_copy, legacy_encoding]
+  events:
+    - {kind: stakeholder_conflict, at_step: 12}
+    - {kind: customer_unavailable, after_questions: 6, duration_steps: 20}
+    - {kind: data_correction, at_step: 30}
+    - {kind: customer_volunteer, at_step: 45}
+    - {kind: deadline_change, at_step: 80, factor: 0.5}
+  time_budget_s: 43200
+  max_question_rounds: 15

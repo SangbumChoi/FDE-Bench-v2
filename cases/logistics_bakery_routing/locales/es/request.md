@@ -1,0 +1,1 @@
+Mañana (lunes) por la mañana nuestra cocina central tiene que repartir el pan a todas nuestras cafeterías con nuestras cuatro furgonetas. ¿Puede planificar qué furgoneta va a cada sitio, para que las cafeterías reciban sus bandejas a tiempo y los conductores no estén fuera más de lo necesario? Le adjunto la lista de cafeterías y la de furgonetas.

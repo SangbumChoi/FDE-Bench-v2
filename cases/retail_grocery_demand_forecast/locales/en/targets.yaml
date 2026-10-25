@@ -1,0 +1,36 @@
+- id: stockout_censoring
+  kind: ambiguous
+  domain: data semantics
+  text: On stockout days units_sold is capped by what was in stock; the forecast is of customer demand, so those days must not be treated as normal sales.
+- id: returns
+  kind: ambiguous
+  domain: data semantics
+  text: Rows with negative units_sold are customer returns logged on the day of return; they are not demand and are left out, not netted against sales.
+- id: s4_sunday_closed
+  kind: missing
+  domain: business rule
+  text: The Old Town store S4 is closed on Sundays and must be forecast 0 on those days.
+- id: promo_plan
+  kind: missing
+  domain: data semantics
+  text: The promotions in promo_plan.csv (start and end dates inclusive) must be used; the lift grows with the discount, differs by category and is learned from promo_discount_pct in the history.
+- id: holiday_nov11
+  kind: missing
+  domain: business rule
+  text: Wednesday 11 November 2026 is a one-off public holiday not in holidays.csv; stores are open and demand rises as on past holidays, most for bakery and beverages.
+- id: unit_change_i07
+  kind: missing
+  domain: data semantics
+  text: Bread rolls I07 were recorded per piece until 31 May 2026 and per pack of 6 since 1 June 2026; earlier history is divided by 6 and I07 is forecast in packs.
+- id: min_display
+  kind: missing
+  domain: business rule
+  text: Core items (fresh produce and dairy, I01-I06) are never forecast below 6 units on a day the store is open.
+- id: wape_metric
+  kind: missing
+  domain: scoring
+  text: Quality is WAPE per store (sum of absolute errors over sum of actual demand) against true demand including lost sales, averaged over the five stores; lower is better.
+- id: submission_format
+  kind: ambiguous
+  domain: deliverable
+  text: Deliver forecast.csv with columns store_id,item_id,date,forecast and exactly one row per store, item and day from 2026-11-02 to 2026-11-15 (840 rows).
