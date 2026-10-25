@@ -121,39 +121,48 @@ _CLASS_WORDS = {
     "contractual": "contractual terms (designated suppliers, SLAs)",
     "business_policy": "the client's internal business preferences (sourcing order, prioritisation habits)",
 }
+_EXCEPTION_LINES = {
+    "forbidden": "Business rules stated by the client are never to be broken, even if breaking one would give a "
+                 "better result.",
+    "escalate": "If you believe breaking one of the client's business rules would give a clearly better result, you "
+                "may not decide that yourself: request an exception with `request_exception` and follow the "
+                "client's answer.",
+    "justify": "You may break a soft business rule when it clearly improves the outcome, but you must record each "
+               "exception with `request_exception`, giving the rule and your justification.",
+}
+_BUDGET_LINES = {
+    ("wall_seconds", False): "Budget: {n:g} wall-clock seconds.",
+    ("wall_seconds", True): "Hard limit: {n:g} wall-clock seconds.",
+    ("total_tokens", False): "Budget: {n:g} model tokens.",
+    ("total_tokens", True): "Hard limit: {n:g} model tokens.",
+    ("cost_usd", False): "Budget: {n:g} USD of model spend.",
+    ("cost_usd", True): "Hard limit: {n:g} USD of model spend.",
+}
 
 
-def render_policy_brief(policy: Policy) -> str:
-    """English policy text shown to the agent (translated to agent_locale by the caller)."""
-    lines = [f"# Engagement policy: {policy.title}", "", policy.statement.strip(), ""]
+def policy_brief_msgs(policy: Policy) -> list[dict[str, Any]]:
+    """The agent-visible policy as catalog messages (localized by fdebench2.i18n)."""
+    from .events import msg
+
+    lines = [msg("Engagement policy: {title}", title=msg(policy.title)), msg(policy.statement.strip())]
     if policy.confirm_before_build:
-        lines.append("- Confirm your understanding with the client before you write solution code.")
+        lines.append(msg("Confirm your understanding with the client before you write solution code."))
     if policy.question_budget is not None:
-        lines.append(f"- Keep clarification to about {policy.question_budget} questions in total; "
-                     "the client's time is expensive.")
-    lines.append({
-        "forbidden": "- Business rules stated by the client are never to be broken, even if breaking one "
-                     "would give a better result.",
-        "escalate": "- If you believe breaking one of the client's business rules would give a clearly better "
-                    "result, you may not decide that yourself: request an exception with `request_exception` "
-                    "and follow the client's answer.",
-        "justify": "- You may break a soft business rule when it clearly improves the outcome, but you must "
-                   "record each exception with `request_exception`, giving the rule and your justification.",
-    }[policy.exceptions])
+        lines.append(msg("Keep clarification to about {n} questions in total; the client's time is expensive.",
+                         n=policy.question_budget))
+    lines.append(msg(_EXCEPTION_LINES[policy.exceptions]))
     soft = [c for c in RULE_CLASSES if policy.relaxable(c)]
     if soft:
         hard = [c for c in RULE_CLASSES if c not in soft]
-        lines.append("- Rules that may bend under this policy: " + "; ".join(_CLASS_WORDS[c] for c in soft)
-                     + ". Never: " + "; ".join(_CLASS_WORDS[c] for c in hard) + ".")
+        lines.append(msg("Rules that may bend under this policy: {soft}. Never: {hard}.",
+                         soft=[msg(_CLASS_WORDS[c]) for c in soft], hard=[msg(_CLASS_WORDS[c]) for c in hard]))
     if policy.notes_required:
-        lines.append("- `NOTES.md` is mandatory: list every assumption and decision.")
+        lines.append(msg("`NOTES.md` is mandatory: list every assumption and decision."))
     if policy.communication_locale == "customer":
-        lines.append("- Write to the client, and write `NOTES.md`, in the client's language.")
+        lines.append(msg("Write to the client, and write `NOTES.md`, in the client's language."))
     elif policy.communication_locale != "agent":
-        lines.append(f"- Write to the client, and write `NOTES.md`, in locale `{policy.communication_locale}`.")
-    for key, label in (("wall_seconds", "wall-clock seconds"), ("total_tokens", "model tokens"),
-                       ("cost_usd", "USD of model spend")):
+        lines.append(msg("Write to the client, and write `NOTES.md`, in locale `{loc}`.", loc=policy.communication_locale))
+    for key in ("wall_seconds", "total_tokens", "cost_usd"):
         if key in policy.budgets:
-            word = "hard limit" if policy.hard_budgets else "budget"
-            lines.append(f"- {word.capitalize()}: {policy.budgets[key]:g} {label}.")
-    return "\n".join(lines).strip() + "\n"
+            lines.append(msg(_BUDGET_LINES[(key, policy.hard_budgets)], n=policy.budgets[key]))
+    return lines

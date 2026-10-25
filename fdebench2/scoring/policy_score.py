@@ -11,21 +11,19 @@ Components (each in [0, 1]):
 
 A case rule the policy lets bend is not a validity failure *if* the agent went
 through the exception process the policy prescribes; it costs
-`soft_rule_penalty` per rule instead, and quality is recomputed by the case
-hook with that rule switched off.
+`soft_rule_penalty` per rule instead, and the case re-scores the deliverable
+with that rule switched off.
 """
 
 from __future__ import annotations
 
-import importlib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from ..cases import V1Case
+from ..cases import Case
 from ..transforms.language import language_fidelity, resolve
-from ..transforms.policy import CaseRules, Policy
-from .evaluate import violations
+from ..transforms.policy import Policy
 
 
 @dataclass
@@ -60,15 +58,8 @@ def facts_from_transcript(records: list[dict[str, Any]], notes: str, total_token
     return f
 
 
-def _relaxed_rescore(case: V1Case, rules: CaseRules, submission_dir: Path, relaxed: set[str]) -> dict[str, Any] | None:
-    if not rules.hook:
-        return None
-    module = importlib.import_module(rules.hook)
-    return module.relaxed_score(case, submission_dir, relaxed, rules)
-
-
-def apply_policy(policy: Policy, raw: dict[str, Any], facts: RunFacts, *, case: V1Case, submission_dir: Path,
-                 rules: CaseRules | None, clarification_f1: float | None, can_ask: bool,
+def apply_policy(policy: Policy, raw: dict[str, Any], facts: RunFacts, *, case: Case, submission_dir: Path,
+                 clarification_f1: float | None, can_ask: bool,
                  customer_locale: str, agent_locale: str) -> dict[str, Any]:
     gates: dict[str, bool] = {}
     penalties: dict[str, float] = {}
@@ -78,19 +69,20 @@ def apply_policy(policy: Policy, raw: dict[str, Any], facts: RunFacts, *, case: 
     quality_raw = float(raw.get("quality_score") or 0.0)
     valid = float(raw.get("validity_score") or 0.0) > 0
     bent: list[str] = []
+    rules = case.rules()
     if not valid and rules is not None:
-        found = violations(raw)
-        classified = [rules.classify(v) for v in found]
+        found = [v["rule"] for v in raw.get("violations") or []]
+        classified = [rules.by_id(r) for r in found]
         if found and all(r is not None and policy.relaxable(r.rule_class) for r in classified):
             bent = sorted({r.id for r in classified if r is not None})
             granted = sum(e["decision"] == "approve" for e in facts.exceptions)
             if granted >= len(bent):
-                rescored = _relaxed_rescore(case, rules, submission_dir, set(bent))
-                if rescored is not None and rescored.get("validity_score", 0) > 0:
+                rescored = case.evaluate(submission_dir, customer_locale, relaxed=frozenset(bent))
+                if rescored.get("validity_score", 0) > 0:
                     valid, quality_raw = True, float(rescored["quality_score"])
                     penalties["bent_rules"] = policy.soft_rule_penalty * len(bent)
                 else:
-                    notes_out.append("relaxable violations but no case hook or still invalid after relaxing")
+                    notes_out.append("still invalid after relaxing the bent rules")
             else:
                 notes_out.append(f"broke {bent} without {len(bent)} approved exception(s)")
     gates["validity"] = valid

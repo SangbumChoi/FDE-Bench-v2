@@ -56,7 +56,7 @@ def registry(agent_model) -> ModelRegistry:
 
 def test_reference_run_scores_like_v1(v1_root, tmp_path):
     case_dir = v1_root / "case" / CASE
-    bench = Bench(Settings(v1_root=v1_root, models=tmp_path / "none.yaml", out=tmp_path / "runs"),
+    bench = Bench(Settings(cases_root=v1_root, models=tmp_path / "none.yaml", out=tmp_path / "runs"),
                   registry=registry(scripted_agent(greedy(case_dir))))
     result = bench.run(VariantSpec(CASE), AgentSpec("reference", "agent"))
 
@@ -65,7 +65,7 @@ def test_reference_run_scores_like_v1(v1_root, tmp_path):
     assert result["evaluator"]["validity_score"] == 1.0
     assert abs(result["evaluator"]["quality_score"] - 1.0) < 1e-9
     assert result["clarification"]["recall"] == 1.0
-    assert result["score"]["final"] == 1.0  # v1_default: quality only
+    assert result["score"]["final"] == 1.0  # baseline: quality only
 
     run_dir = bench.run_dir(VariantSpec(CASE), AgentSpec("reference", "agent"))
     kinds = [r["kind"] for r in read_transcript(run_dir)]
@@ -76,7 +76,7 @@ def test_reference_run_scores_like_v1(v1_root, tmp_path):
 
 def test_rescoring_under_other_policies(v1_root, tmp_path):
     case_dir = v1_root / "case" / CASE
-    bench = Bench(Settings(v1_root=v1_root, models=tmp_path / "none.yaml", out=tmp_path / "runs"),
+    bench = Bench(Settings(cases_root=v1_root, models=tmp_path / "none.yaml", out=tmp_path / "runs"),
                   registry=registry(scripted_agent(greedy(case_dir))))
     agent = AgentSpec("reference", "agent")
     bench.run(VariantSpec(CASE), agent)

@@ -1,0 +1,18 @@
+- id: road_distance
+  text: La distancia por carretera es 1,3 veces la distancia en línea recta; las coordenadas son kilómetros desde la cocina en (0, 0).
+- id: speeds
+  text: La velocidad es de 30 km/h en tramos que empiezan antes de las 07:00 y de 20 km/h en tramos que empiezan a las 07:00 o después.
+- id: service_time
+  text: La descarga en una cafetería dura 4 minutos más 0,2 minutos por bandeja.
+- id: shift
+  text: Las furgonetas pueden salir desde las 05:00 y deben volver a la cocina a las 09:30 como muy tarde.
+- id: closed_c11
+  text: La Cafetería Torre del Reloj (C11) está cerrada esta semana por reformas y no debe atenderse.
+- id: cold_chain
+  text: Las cafeterías de marca asociada venden productos refrigerados y solo puede atenderlas la furgoneta refrigerada V4.
+- id: one_visit
+  text: Cada cafetería recibe todas sus bandejas en una sola visita de una furgoneta; nunca se divide la entrega.
+- id: premium_first
+  text: En cada ruta, las cafeterías premium deben visitarse antes que las estándar.
+- id: lateness
+  text: Llegar después de entregar_antes está permitido, pero cada minuto de retraso cuenta tres veces en el tiempo total de ruta; llegar antes de la apertura obliga a esperar.

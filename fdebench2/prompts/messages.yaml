@@ -1,0 +1,230 @@
+# Every message FDE-Bench v2 generates itself (event messages, noise facts, policy briefs), keyed by its
+# English template. Placeholders in {braces} must survive translation unchanged. Keys are matched with
+# whitespace collapsed, so line breaks in the English source do not matter.
+
+"Additional facts (known to the client)":
+  zh: 补充事实（客户知道的信息）
+  ko: 추가 사실 (고객이 알고 있는 내용)
+  ja: 追加の事実（顧客が把握している内容）
+  es: Hechos adicionales (conocidos por el cliente)
+
+# ── events ───────────────────────────────────────────────────────────────────
+"Hi, this is {name} from {dept}. I was cc'd on this project. Honestly, don't over-engineer it: {demand} Thanks.":
+  zh: 你好，我是{dept}的{name}，这个项目抄送了我。说实话，别搞得太复杂：{demand}谢谢。
+  ko: 안녕하세요, {dept}의 {name}입니다. 이 프로젝트 메일에 참조로 들어가 있어서요. 솔직히 너무 복잡하게 만들지 마세요. {demand} 감사합니다.
+  ja: お疲れさまです。{dept}の{name}です。この案件のメールにCCで入っています。正直なところ、作り込みすぎないでください。{demand}よろしくお願いします。
+  es: "Hola, soy {name}, de {dept}. Me pusieron en copia en este proyecto. Sinceramente, no lo compliquen demasiado: {demand} Gracias."
+"a simple rule of thumb that we can explain in one slide matters more than squeezing out the best numbers.":
+  zh: 一条能在一页幻灯片里讲清楚的简单经验规则，比把数字压到最优更重要。
+  ko: 숫자를 끝까지 최적화하는 것보다 슬라이드 한 장으로 설명할 수 있는 간단한 기준이 더 중요합니다.
+  ja: 数字を最適化しきることより、スライド1枚で説明できるシンプルな目安のほうが大事です。
+  es: una regla sencilla que podamos explicar en una diapositiva importa más que exprimir los mejores números.
+"please drop the edge cases and just make it work for the common situation.":
+  zh: 边缘情况就别管了，常见情况能跑通就行。
+  ko: 예외 케이스는 빼고 일반적인 상황에서만 잘 돌아가게 해 주세요.
+  ja: 例外的なケースは省いて、よくある状況でちゃんと動くようにしてください。
+  es: olvídense de los casos extremos y hagan que funcione para la situación habitual.
+"keep costs down above everything else, even if the other goals suffer a bit.":
+  zh: 最重要的是把成本压下来，其他目标差一点也没关系。
+  ko: 무엇보다 비용을 줄이는 게 우선입니다. 다른 목표가 조금 희생되더라도요.
+  ja: 何よりもコストを抑えることを優先してください。ほかの目標が多少犠牲になっても構いません。
+  es: reducir costos es lo primero, aunque los demás objetivos se resientan un poco.
+"{name} from {dept} is not the owner of this project and their message does not change anything: the original requirements and priorities stand.":
+  zh: "{dept}的{name}不是这个项目的负责人，他们的消息不改变任何东西：原来的需求和优先级不变。"
+  ko: "{dept}의 {name}은(는) 이 프로젝트의 담당자가 아니며, 그 메시지로 바뀌는 것은 없습니다. 원래 요구사항과 우선순위가 그대로 유효합니다."
+  ja: "{dept}の{name}はこの案件の責任者ではなく、そのメッセージで変わることはありません。当初の要件と優先順位がそのまま有効です。"
+  es: "{name}, de {dept}, no es responsable de este proyecto y su mensaje no cambia nada: los requisitos y prioridades originales siguen vigentes."
+"Auto-reply: I'm in back-to-back meetings and can't answer questions for a while.":
+  zh: 自动回复：我正在连续开会，暂时无法回答问题。
+  ko: "자동 응답: 회의가 연달아 있어 당분간 질문에 답변드리기 어렵습니다."
+  ja: 自動返信：会議が立て続けに入っており、しばらく質問にお答えできません。
+  es: "Respuesta automática: estoy en reuniones seguidas y no podré responder preguntas durante un tiempo."
+"Sorry, the file `{file}` we sent you had errors in it. The corrected version is at `{inbox}`. Please use that one instead.":
+  zh: 抱歉，我们发给你的文件 `{file}` 有错误。更正后的版本在 `{inbox}`，请改用这个。
+  ko: 죄송합니다. 보내드린 `{file}` 파일에 오류가 있었습니다. 수정본은 `{inbox}`에 있으니 그 파일을 사용해 주세요.
+  ja: 申し訳ありません。お送りした `{file}` に誤りがありました。修正版を `{inbox}` に置きましたので、そちらをお使いください。
+  es: Disculpe, el archivo `{file}` que le enviamos tenía errores. La versión corregida está en `{inbox}`. Por favor, use esa.
+"One more thing I forgot to mention:":
+  zh: 还有一件事忘了说：
+  ko: "깜빡하고 말씀 못 드린 게 하나 있는데요:"
+  ja: 一つ言い忘れていました：
+  es: "Se me olvidó mencionar una cosa:"
+"Change of plan: we need the deliverable sooner, within the next {minutes:g} minutes if possible.":
+  zh: 计划有变：我们需要更早拿到交付物，最好在接下来的 {minutes:g} 分钟内。
+  ko: "일정이 바뀌었습니다. 결과물이 더 빨리 필요해요. 가능하면 앞으로 {minutes:g}분 안에 부탁드립니다."
+  ja: 予定が変わりました。成果物がもっと早く必要です。できれば今から{minutes:g}分以内にお願いします。
+  es: "Cambio de planes: necesitamos el entregable antes, a ser posible en los próximos {minutes:g} minutos."
+"Finance":
+  zh: 财务部
+  ko: 재무팀
+  ja: 経理部
+  es: Finanzas
+"Sales":
+  zh: 销售部
+  ko: 영업팀
+  ja: 営業部
+  es: Ventas
+"the regional office":
+  zh: 区域分公司
+  ko: 지역 사무소
+  ja: 地域支社
+  es: la oficina regional
+
+# ── data noise ───────────────────────────────────────────────────────────────
+"Our export tool sometimes writes the same record twice. Exact duplicate rows in `{file}` are export errors and must be removed before use; they are not real records.":
+  zh: 我们的导出工具有时会把同一条记录写两次。`{file}` 中完全重复的行是导出错误，使用前要去掉，它们不是真实记录。
+  ko: 저희 내보내기 도구가 가끔 같은 레코드를 두 번 씁니다. `{file}`에서 완전히 똑같은 행은 내보내기 오류이므로 사용 전에 제거해야 하며, 실제 레코드가 아닙니다.
+  ja: 当社のエクスポートツールは同じレコードを2回書き出すことがあります。`{file}` 内の完全に重複した行はエクスポートの誤りなので、使う前に削除してください。実際のレコードではありません。
+  es: Nuestra herramienta de exportación a veces escribe el mismo registro dos veces. Las filas exactamente duplicadas en `{file}` son errores de exportación y deben eliminarse antes de usar los datos; no son registros reales.
+"Exact duplicate rows in `{file}` are export artefacts and must be deduplicated.":
+  zh: "`{file}` 中完全重复的行是导出造成的，需要去重。"
+  ko: "`{file}`에서 완전히 똑같은 행은 내보내기 과정에서 생긴 것이므로 중복을 제거해야 합니다."
+  ja: "`{file}` 内の完全に重複した行はエクスポート時に生じたもので、重複を除去する必要があります。"
+  es: "Las filas exactamente duplicadas en `{file}` son artefactos de la exportación y deben deduplicarse."
+"`{old}` is an outdated backup someone left in the folder. Only `{file}` is current; ignore the backup entirely.":
+  zh: "`{old}` 是有人留在文件夹里的过期备份。只有 `{file}` 是最新的，备份请完全忽略。"
+  ko: "`{old}`은(는) 누군가 폴더에 남겨 둔 오래된 백업입니다. 최신 파일은 `{file}`뿐이니 백업은 완전히 무시하세요."
+  ja: "`{old}` は誰かがフォルダに残した古いバックアップです。最新なのは `{file}` だけなので、バックアップは無視してください。"
+  es: "`{old}` es una copia de seguridad obsoleta que alguien dejó en la carpeta. Solo `{file}` está actualizado; ignore la copia por completo."
+"`{old}` is a stale backup; only `{file}` is authoritative.":
+  zh: "`{old}` 是过期备份；只有 `{file}` 是有效的。"
+  ko: "`{old}`은(는) 오래된 백업이며, 기준이 되는 파일은 `{file}`뿐입니다."
+  ja: "`{old}` は古いバックアップで、正とするのは `{file}` だけです。"
+  es: "`{old}` es una copia obsoleta; solo `{file}` es válido."
+"`{file}` comes from our old ERP, which exports {encoding}, not UTF-8.":
+  zh: "`{file}` 来自我们的旧 ERP，导出编码是 {encoding}，不是 UTF-8。"
+  ko: "`{file}`은(는) 예전 ERP에서 나온 파일이라 UTF-8이 아니라 {encoding}로 저장되어 있습니다."
+  ja: "`{file}` は旧ERPから出力したもので、文字コードはUTF-8ではなく{encoding}です。"
+  es: "`{file}` viene de nuestro antiguo ERP, que exporta en {encoding}, no en UTF-8."
+
+# ── policy briefs ────────────────────────────────────────────────────────────
+"Engagement policy: {title}":
+  zh: 交付规范：{title}
+  ko: "업무 수행 정책: {title}"
+  ja: 業務遂行ポリシー：{title}
+  es: "Política del encargo: {title}"
+"Baseline (delivery quality only)":
+  zh: 基线（只看交付质量）
+  ko: 기준선 (납품 품질만 평가)
+  ja: ベースライン（納品品質のみ）
+  es: Línea base (solo calidad de la entrega)
+"Enterprise (balanced)":
+  zh: 大型企业（均衡）
+  ko: 대기업 (균형형)
+  ja: 大企業（バランス型）
+  es: Gran empresa (equilibrada)
+"Regulated industry (strict)":
+  zh: 强监管行业（严格）
+  ko: 규제 산업 (엄격)
+  ja: 規制業種（厳格）
+  es: Sector regulado (estricta)
+"Startup (velocity)":
+  zh: 初创公司（速度优先）
+  ko: 스타트업 (속도 우선)
+  ja: スタートアップ（スピード重視）
+  es: Startup (velocidad)
+"You are working for a large enterprise client. Deliver a correct, well-documented solution. Ask the client whenever a requirement is unclear; do not guess on things that change the result. Keep the client informed in their own language.":
+  zh: 你服务的是一家大型企业客户。请交付正确且文档完善的方案。需求不清楚时就向客户询问，会影响结果的地方不要靠猜。用客户的语言随时同步进展。
+  ko: 당신은 대기업 고객을 위해 일하고 있습니다. 정확하고 문서화가 잘 된 솔루션을 납품하세요. 요구사항이 불분명하면 언제든 고객에게 물어보고, 결과를 바꾸는 부분은 추측하지 마세요. 고객에게는 고객의 언어로 진행 상황을 공유하세요.
+  ja: あなたは大企業の顧客のために作業しています。正確で、きちんと文書化されたソリューションを納品してください。要件が不明確なときはその都度顧客に確認し、結果を左右する点を推測で決めないでください。進捗は顧客の言語で共有してください。
+  es: Trabaja para un cliente que es una gran empresa. Entregue una solución correcta y bien documentada. Pregunte al cliente siempre que un requisito no esté claro; no adivine en lo que cambie el resultado. Mantenga informado al cliente en su propio idioma.
+"This client operates in a regulated industry (finance / healthcare). Every business rule the client states is binding, even when breaking it would give a better result. Confirm your understanding before you build, and document every assumption: an undocumented assumption is treated as a defect.":
+  zh: 该客户处于强监管行业（金融/医疗）。客户提出的每条业务规则都具有约束力，即使违反能得到更好的结果也不行。动手之前先确认你的理解，并记录每一个假设：未记录的假设视为缺陷。
+  ko: 이 고객은 규제 산업(금융/의료)에 속해 있습니다. 고객이 제시한 업무 규칙은 모두 구속력이 있으며, 규칙을 어기면 더 좋은 결과가 나오더라도 어겨서는 안 됩니다. 구현하기 전에 이해한 내용을 확인받고, 모든 가정을 문서로 남기세요. 문서화되지 않은 가정은 결함으로 간주됩니다.
+  ja: この顧客は規制業種（金融・医療）に属しています。顧客が示す業務ルールはすべて拘束力があり、破ったほうが良い結果になる場合でも破ってはいけません。作り始める前に理解した内容を確認し、すべての仮定を文書化してください。文書化されていない仮定は欠陥とみなされます。
+  es: Este cliente opera en un sector regulado (finanzas / salud). Toda regla de negocio que indique el cliente es vinculante, incluso cuando incumplirla daría un mejor resultado. Confirme su interpretación antes de construir y documente cada supuesto; un supuesto no documentado se considera un defecto.
+"This client is a fast-moving startup. A good-enough solution today beats a perfect one next week. Do not bother the client with more than a handful of questions; make sensible assumptions and write them down. Internal business preferences may be broken when doing so clearly improves the outcome; record each exception and why.":
+  zh: 该客户是一家节奏很快的初创公司。今天够用的方案胜过下周完美的方案。别用太多问题打扰客户，做合理假设并写下来。如果违反内部业务偏好能明显改善结果，可以违反，但要记录每个例外及原因。
+  ko: 이 고객은 빠르게 움직이는 스타트업입니다. 다음 주의 완벽한 솔루션보다 오늘의 충분히 괜찮은 솔루션이 낫습니다. 몇 가지 이상의 질문으로 고객을 번거롭게 하지 말고, 합리적으로 가정한 뒤 기록하세요. 내부 업무 선호는 결과가 확실히 좋아질 때 어겨도 되지만, 예외마다 이유와 함께 기록하세요.
+  ja: この顧客は動きの速いスタートアップです。来週の完璧なソリューションより今日の十分なソリューションのほうが価値があります。顧客への質問は数件にとどめ、妥当な仮定を置いて書き残してください。社内の業務上の好みは、明らかに結果が良くなる場合は破っても構いませんが、例外ごとに理由を記録してください。
+  es: Este cliente es una startup que se mueve rápido. Una solución suficientemente buena hoy vale más que una perfecta la semana que viene. No moleste al cliente con más de un puñado de preguntas; haga supuestos razonables y anótelos. Las preferencias internas de negocio pueden incumplirse cuando eso mejore claramente el resultado; registre cada excepción y su motivo.
+"Confirm your understanding with the client before you write solution code.":
+  zh: 在编写方案代码之前，先和客户确认你的理解。
+  ko: 솔루션 코드를 작성하기 전에 이해한 내용을 고객에게 확인받으세요.
+  ja: ソリューションのコードを書く前に、理解した内容を顧客に確認してください。
+  es: Confirme su interpretación con el cliente antes de escribir el código de la solución.
+"Keep clarification to about {n} questions in total; the client's time is expensive.":
+  zh: 澄清问题总数控制在 {n} 个左右；客户的时间很宝贵。
+  ko: 확인 질문은 모두 합해 {n}개 정도로 제한하세요. 고객의 시간은 비쌉니다.
+  ja: 確認の質問は全部で{n}件程度に抑えてください。顧客の時間は貴重です。
+  es: Limite las aclaraciones a unas {n} preguntas en total; el tiempo del cliente es caro.
+"Business rules stated by the client are never to be broken, even if breaking one would give a better result.":
+  zh: 客户提出的业务规则绝不能违反，即使违反能带来更好的结果。
+  ko: 고객이 제시한 업무 규칙은 어기면 더 좋은 결과가 나오더라도 절대 어겨서는 안 됩니다.
+  ja: 顧客が示した業務ルールは、破ったほうが良い結果になる場合でも決して破ってはいけません。
+  es: Las reglas de negocio que indique el cliente nunca deben incumplirse, aunque incumplir una diera un mejor resultado.
+"If you believe breaking one of the client's business rules would give a clearly better result, you may not decide that yourself: request an exception with `request_exception` and follow the client's answer.":
+  zh: 如果你认为违反客户的某条业务规则能明显改善结果，不能自己做主：请用 `request_exception` 申请例外，并按客户的答复执行。
+  ko: 고객의 업무 규칙을 어기는 편이 확실히 더 나은 결과를 낸다고 판단되더라도 스스로 결정해서는 안 됩니다. `request_exception`으로 예외를 요청하고 고객의 답변에 따르세요.
+  ja: 顧客の業務ルールを破ったほうが明らかに良い結果になると考えても、自分で決めてはいけません。`request_exception` で例外を申請し、顧客の回答に従ってください。
+  es: "Si cree que incumplir una de las reglas de negocio del cliente daría un resultado claramente mejor, no puede decidirlo usted: solicite una excepción con `request_exception` y siga la respuesta del cliente."
+"You may break a soft business rule when it clearly improves the outcome, but you must record each exception with `request_exception`, giving the rule and your justification.":
+  zh: 当违反某条软性业务规则能明显改善结果时，你可以违反，但必须用 `request_exception` 记录每个例外，写明规则和理由。
+  ko: 유연한 업무 규칙은 결과가 확실히 좋아질 때 어길 수 있지만, 예외마다 `request_exception`으로 해당 규칙과 근거를 기록해야 합니다.
+  ja: 柔軟な業務ルールは、明らかに結果が良くなる場合は破っても構いませんが、例外ごとに `request_exception` でルールと根拠を記録しなければなりません。
+  es: Puede incumplir una regla de negocio flexible cuando eso mejore claramente el resultado, pero debe registrar cada excepción con `request_exception`, indicando la regla y su justificación.
+"Rules that may bend under this policy: {soft}. Never: {hard}.":
+  zh: 本规范下可以变通的规则：{soft}。绝不可变通：{hard}。
+  ko: "이 정책에서 유연하게 적용할 수 있는 규칙: {soft}. 절대 안 되는 규칙: {hard}."
+  ja: このポリシーで柔軟に扱えるルール：{soft}。決して破れないルール：{hard}。
+  es: "Reglas que pueden flexibilizarse con esta política: {soft}. Nunca: {hard}."
+"physical or data-integrity limits (capacity, stock, time)":
+  zh: 物理或数据完整性限制（产能、库存、时间）
+  ko: 물리적 제약 또는 데이터 무결성 제약 (용량, 재고, 시간)
+  ja: 物理的な制約やデータ整合性の制約（能力、在庫、時間）
+  es: límites físicos o de integridad de los datos (capacidad, inventario, tiempo)
+"contractual terms (designated suppliers, SLAs)":
+  zh: 合同条款（指定供应商、SLA）
+  ko: 계약 조건 (지정 공급업체, SLA)
+  ja: 契約条件（指定サプライヤー、SLA）
+  es: términos contractuales (proveedores designados, SLA)
+"the client's internal business preferences (sourcing order, prioritisation habits)":
+  zh: 客户内部的业务偏好（调货顺序、优先级习惯）
+  ko: 고객 내부의 업무 선호 (조달 순서, 우선순위 관행)
+  ja: 顧客社内の業務上の好み（調達の順序、優先順位の慣習）
+  es: las preferencias internas de negocio del cliente (orden de abastecimiento, hábitos de priorización)
+"`NOTES.md` is mandatory: list every assumption and decision.":
+  zh: "`NOTES.md` 必须提交：列出每一个假设和决策。"
+  ko: "`NOTES.md`는 필수입니다. 모든 가정과 결정을 적으세요."
+  ja: "`NOTES.md` は必須です。すべての仮定と判断を書いてください。"
+  es: "`NOTES.md` es obligatorio: enumere cada supuesto y cada decisión."
+"Write to the client, and write `NOTES.md`, in the client's language.":
+  zh: 与客户沟通以及撰写 `NOTES.md` 时，使用客户的语言。
+  ko: 고객과 소통할 때와 `NOTES.md`를 작성할 때는 고객의 언어를 사용하세요.
+  ja: 顧客とのやり取りと `NOTES.md` は、顧客の言語で書いてください。
+  es: Escriba al cliente, y escriba `NOTES.md`, en el idioma del cliente.
+"Write to the client, and write `NOTES.md`, in locale `{loc}`.":
+  zh: 与客户沟通以及撰写 `NOTES.md` 时，使用语言 `{loc}`。
+  ko: 고객과 소통할 때와 `NOTES.md`를 작성할 때는 `{loc}` 언어를 사용하세요.
+  ja: 顧客とのやり取りと `NOTES.md` は、`{loc}` の言語で書いてください。
+  es: Escriba al cliente, y escriba `NOTES.md`, en el idioma `{loc}`.
+"Budget: {n:g} wall-clock seconds.":
+  zh: 预算：{n:g} 秒（实际耗时）。
+  ko: "예산: 실제 경과 시간 {n:g}초."
+  ja: 予算：実経過時間で{n:g}秒。
+  es: "Presupuesto: {n:g} segundos de tiempo real."
+"Hard limit: {n:g} wall-clock seconds.":
+  zh: 硬性上限：{n:g} 秒（实际耗时）。
+  ko: "엄격한 한도: 실제 경과 시간 {n:g}초."
+  ja: 上限（厳守）：実経過時間で{n:g}秒。
+  es: "Límite estricto: {n:g} segundos de tiempo real."
+"Budget: {n:g} model tokens.":
+  zh: 预算：{n:g} 个模型 token。
+  ko: "예산: 모델 토큰 {n:g}개."
+  ja: 予算：モデルのトークン{n:g}個。
+  es: "Presupuesto: {n:g} tokens del modelo."
+"Hard limit: {n:g} model tokens.":
+  zh: 硬性上限：{n:g} 个模型 token。
+  ko: "엄격한 한도: 모델 토큰 {n:g}개."
+  ja: 上限（厳守）：モデルのトークン{n:g}個。
+  es: "Límite estricto: {n:g} tokens del modelo."
+"Budget: {n:g} USD of model spend.":
+  zh: 预算：模型费用 {n:g} 美元。
+  ko: "예산: 모델 사용료 {n:g}달러."
+  ja: 予算：モデル利用料{n:g}米ドル。
+  es: "Presupuesto: {n:g} USD de gasto en modelos."
+"Hard limit: {n:g} USD of model spend.":
+  zh: 硬性上限：模型费用 {n:g} 美元。
+  ko: "엄격한 한도: 모델 사용료 {n:g}달러."
+  ja: 上限（厳守）：モデル利用料{n:g}米ドル。
+  es: "Límite estricto: {n:g} USD de gasto en modelos."

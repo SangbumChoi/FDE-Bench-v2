@@ -7,3 +7,5 @@ v1/
 .cache/
 runs/
 configs/models.yaml
+# FDE-Bench v1 (CC BY-NC-ND 4.0): optional external benchmark, fetched by `fdebench2 fetch-v1`
+external/

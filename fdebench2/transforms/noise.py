@@ -23,6 +23,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from .events import msg
+
 MAX_CSV_BYTES = 50 * 1024 * 1024
 MAX_XLSX_BYTES = 5 * 1024 * 1024     # openpyxl loads whole workbooks; bigger ones take minutes
 MAX_JSON_BYTES = 20 * 1024 * 1024
@@ -34,8 +36,17 @@ MIN_ROWS = 20
 class NoiseResult:
     op: str
     files: list[str] = field(default_factory=list)   # workspace-relative paths touched or added
-    knowledge: str = ""                               # English fact the customer now knows
-    target: str = ""                                  # English clarification target ("" = none)
+    knowledge: dict[str, Any] | None = None           # msg: fact the customer now knows
+    target: dict[str, Any] | None = None              # msg: clarification target (None = none)
+
+
+DUP_FACT = ("Our export tool sometimes writes the same record twice. Exact duplicate rows in `{file}` are export "
+            "errors and must be removed before use; they are not real records.")
+DUP_TARGET = "Exact duplicate rows in `{file}` are export artefacts and must be deduplicated."
+STALE_FACT = "`{old}` is an outdated backup someone left in the folder. Only `{file}` is current; ignore the backup entirely."
+STALE_TARGET = "`{old}` is a stale backup; only `{file}` is authoritative."
+ENCODING_FACT = "`{file}` comes from our old ERP, which exports {encoding}, not UTF-8."
+LEGACY_ENCODING = {"zh": "GB18030", "ko": "CP949", "ja": "Shift_JIS", "en": "CP1252", "es": "CP1252"}
 
 
 # ── file helpers ─────────────────────────────────────────────────────────────
@@ -95,7 +106,7 @@ def candidates(data_dir: Path, kinds: tuple[str, ...] = (".csv", ".xlsx")) -> li
 
 # ── ops ──────────────────────────────────────────────────────────────────────
 
-def duplicate_rows(workspace: Path, rng: random.Random, frac: float = 0.03) -> NoiseResult | None:
+def duplicate_rows(workspace: Path, rng: random.Random, lang: str = "zh", frac: float = 0.03) -> NoiseResult | None:
     """Re-insert a few exact copies of existing rows, as a flaky export would."""
     for path in candidates(workspace / "data"):
         rel = path.relative_to(workspace).as_posix()
@@ -126,9 +137,7 @@ def duplicate_rows(workspace: Path, rng: random.Random, frac: float = 0.03) -> N
             wb.save(path)
         return NoiseResult(
             op="duplicate_rows", files=[rel],
-            knowledge=f"Our export tool sometimes writes the same record twice. Exact duplicate rows in "
-                      f"`{rel}` are export errors and must be removed before use; they are not real records.",
-            target=f"Exact duplicate rows in `{rel}` are export artefacts and must be deduplicated.",
+            knowledge=msg(DUP_FACT, file=rel), target=msg(DUP_TARGET, file=rel),
         )
     return None
 
@@ -185,7 +194,7 @@ def _perturb(path: Path, dest: Path, rng: random.Random, share: float = 0.15) ->
 _PERTURBABLE = (".csv", ".xlsx", ".json")
 
 
-def stale_copy(workspace: Path, rng: random.Random) -> NoiseResult | None:
+def stale_copy(workspace: Path, rng: random.Random, lang: str = "zh") -> NoiseResult | None:
     """Leave an outdated, plausible-looking copy of a data file next to the real one."""
     for path in candidates(workspace / "data", _PERTURBABLE):
         dest = path.with_name(f"{path.stem}_backup_old{path.suffix}")
@@ -195,26 +204,25 @@ def stale_copy(workspace: Path, rng: random.Random) -> NoiseResult | None:
         rel, rel_old = path.relative_to(workspace).as_posix(), dest.relative_to(workspace).as_posix()
         return NoiseResult(
             op="stale_copy", files=[rel_old],
-            knowledge=f"`{rel_old}` is an outdated backup someone left in the folder. Only `{rel}` is current; "
-                      f"ignore the backup entirely.",
-            target=f"`{rel_old}` is a stale backup; only `{rel}` is authoritative.",
+            knowledge=msg(STALE_FACT, old=rel_old, file=rel), target=msg(STALE_TARGET, old=rel_old, file=rel),
         )
     return None
 
 
-def legacy_encoding(workspace: Path, rng: random.Random) -> NoiseResult | None:
-    """Re-encode a UTF-8 CSV with non-ASCII text as GB18030, like a legacy system export."""
+def legacy_encoding(workspace: Path, rng: random.Random, lang: str = "zh") -> NoiseResult | None:
+    """Re-encode a UTF-8 CSV with non-ASCII text in the locale's legacy code page, like an old ERP export."""
+    encoding = LEGACY_ENCODING[lang]
     for path in candidates(workspace / "data", (".csv",)):
         try:
             text = path.read_bytes().decode("utf-8-sig")
-        except UnicodeDecodeError:
-            continue
-        if text.isascii():
-            continue
-        path.write_bytes(text.encode("gb18030"))
+            if text.isascii():
+                continue
+            data = text.encode(encoding)
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            continue  # not representable in that code page: try another file
+        path.write_bytes(data)
         rel = path.relative_to(workspace).as_posix()
-        return NoiseResult(op="legacy_encoding", files=[rel],
-                           knowledge=f"`{rel}` comes from our old ERP, which exports GB18030, not UTF-8.")
+        return NoiseResult(op="legacy_encoding", files=[rel], knowledge=msg(ENCODING_FACT, file=rel, encoding=encoding))
     return None
 
 

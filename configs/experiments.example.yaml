@@ -1,8 +1,8 @@
 # A campaign is a list of experiments; each expands to a grid of runs.
 # One axis at a time against a fixed baseline keeps the grid affordable:
-# baseline = customer zh, agent en, v1_default policy, medium difficulty.
+# baseline = customer zh, agent en, baseline policy, medium difficulty.
 defaults:
-  v1_root: v1/FDE-Bench          # local checkout of baidubce/FM-Agent/FDE-Bench with data restored
+  cases_root: cases              # vendored v1 cases; run `fdebench2 fetch-data` once for their data
   models: configs/models.yaml
   out: runs
   seeds: [0, 1, 2]
@@ -38,6 +38,6 @@ experiments:
     customer_locale: [ko]
     agent_locale: [en, ko, zh]
   policy:
-    policy: [v1_default, enterprise_balanced, regulated_strict, startup_velocity]
+    policy: [baseline, enterprise_balanced, regulated_strict, startup_velocity]
   difficulty:
     difficulty: [easy, medium, hard]

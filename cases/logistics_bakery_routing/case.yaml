@@ -1,0 +1,30 @@
+id: logistics_bakery_routing
+title: Bakery morning delivery routing
+task_type: Combinatorial Optimization
+domain: logistics
+seed: 20261025
+objective: minimize          # total route minutes + 3 x late minutes
+deliverables: [routes.json]
+deliverable_spec: |
+  routes.json = {"routes": [{"van": "<van id, e.g. V1>", "depart": "HH:MM (optional, default 05:00)",
+                             "stops": ["<cafe id in visiting order, e.g. C03>", ...]}, ...]}
+  One entry per van that is used; ids exactly as in the data.
+rules:
+  - id: van_capacity
+    class: physical
+    description: A van carries at most 120 trays.
+  - id: shift_window
+    class: physical
+    description: Vans leave no earlier than 05:00 and are back at the kitchen by 09:30.
+  - id: closed_cafe
+    class: physical
+    description: No delivery to a café that is closed this week.
+  - id: serve_each_once
+    class: contractual
+    description: Every open café receives all its trays in exactly one visit.
+  - id: cold_chain
+    class: contractual
+    description: Partner-brand cafés (chilled products) are served only by the refrigerated van.
+  - id: premium_first
+    class: business_policy
+    description: On every route, premium cafés are visited before standard cafés.

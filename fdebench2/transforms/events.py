@@ -48,7 +48,7 @@ class Event:
         return asdict(self)
 
 
-# English templates; the variant builder translates them to the customer locale.
+# English templates; localized through the message catalog (fdebench2/prompts/messages.yaml).
 STAKEHOLDER_MESSAGE = (
     "Hi, this is {name} from {dept}. I was cc'd on this project. Honestly, don't over-engineer it: "
     "{demand} Thanks."
@@ -73,16 +73,25 @@ DEADLINE_MESSAGE = "Change of plan: we need the deliverable sooner, within the n
 _NAMES = [("Alex Kim", "Finance"), ("Jordan Lee", "Sales"), ("Sam Park", "the regional office")]
 
 
+def msg(template: str, **params: Any) -> dict[str, Any]:
+    """A message to localize later: an English catalog template plus its parameters.
+
+    A parameter may itself be a msg (nested templates are localized too).
+    """
+    return {"t": template, "p": params}
+
+
 def build_events(specs: list[dict[str, Any]], rng: random.Random, *, volunteer_facts: list[str],
                  correction: tuple[str, str] | None, time_budget_s: float) -> tuple[list[Event], list[str]]:
     """Instantiate event specs from a difficulty profile.
 
-    `volunteer_facts` are already in the customer locale. Returns the events
-    (messages still in English) and English facts the customer must
-    additionally know so the events stay resolvable.
+    `volunteer_facts` are already in the customer locale. Each event carries its
+    message as a `msg` in payload["msg"]; the variant builder localizes it.
+    Also returns the facts (msgs) the customer must additionally know so the
+    events stay resolvable.
     """
     events: list[Event] = []
-    knowledge: list[str] = []
+    knowledge: list[dict[str, Any]] = []
     for i, spec in enumerate(specs):
         spec = dict(spec)
         kind = spec.pop("kind")
@@ -91,29 +100,26 @@ def build_events(specs: list[dict[str, Any]], rng: random.Random, *, volunteer_f
         ev = Event(id=f"ev{i}_{kind}", kind=kind, **{k: spec.pop(k) for k in
                                                     ("at_step", "at_seconds", "after_questions") if k in spec})
         if kind == "customer_unavailable":
-            ev.message = UNAVAILABLE_MESSAGE
-            ev.payload = {"duration_steps": int(spec.get("duration_steps", 15)),
+            ev.payload = {"msg": msg(UNAVAILABLE_MESSAGE), "duration_steps": int(spec.get("duration_steps", 15)),
                           "duration_seconds": float(spec.get("duration_seconds", 15 * SECONDS_PER_STEP))}
         elif kind == "data_correction":
             if correction is None:
                 continue  # no tabular file to corrupt in this case
             rel, inbox_rel = correction
-            ev.message = CORRECTION_MESSAGE.format(file=rel, inbox=inbox_rel)
-            ev.payload = {"file": rel, "inbox": inbox_rel}
+            ev.payload = {"msg": msg(CORRECTION_MESSAGE, file=rel, inbox=inbox_rel), "file": rel, "inbox": inbox_rel}
         elif kind == "customer_volunteer":
             if not volunteer_facts:
                 continue
-            ev.message = VOLUNTEER_MESSAGE
-            ev.payload = {"fact": rng.choice(volunteer_facts)}
+            ev.payload = {"msg": msg(VOLUNTEER_MESSAGE), "fact": rng.choice(volunteer_facts)}
         elif kind == "stakeholder_conflict":
             name, dept = rng.choice(_NAMES)
-            ev.message = STAKEHOLDER_MESSAGE.format(name=name, dept=dept, demand=rng.choice(STAKEHOLDER_DEMANDS))
-            ev.payload = {"from": name}
-            knowledge.append(STAKEHOLDER_TRUTH.format(name=name, dept=dept))
+            ev.payload = {"msg": msg(STAKEHOLDER_MESSAGE, name=name, dept=msg(dept),
+                                     demand=msg(rng.choice(STAKEHOLDER_DEMANDS))), "from": name}
+            knowledge.append(msg(STAKEHOLDER_TRUTH, name=name, dept=msg(dept)))
         elif kind == "deadline_change":
             factor = float(spec.get("factor", 0.5))
             remaining = time_budget_s * factor
-            ev.message = DEADLINE_MESSAGE.format(minutes=round(remaining / 60))
-            ev.payload = {"new_budget_seconds_from_now": remaining}
+            ev.payload = {"msg": msg(DEADLINE_MESSAGE, minutes=round(remaining / 60)),
+                          "new_budget_seconds_from_now": remaining}
         events.append(ev)
     return events, knowledge

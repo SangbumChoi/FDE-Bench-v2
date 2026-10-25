@@ -1,19 +1,18 @@
-"""Collect the agent's deliverable into the shape the v1 evaluator reads.
+"""Collect the agent's deliverable into the shape the case evaluator reads.
 
 Requests deliberately leave the file format open, so agents name and shape
 their outputs freely. If the files the evaluator expects are already present
 they are copied as-is; otherwise a fixed extractor model (any OpenAI-compatible
 endpoint, pinned in models.yaml) converts what the agent produced, following
-the EXTRACTOR_SPEC in the evaluator's docstring. It may reshape, never re-solve.
+the case's deliverable spec. It may reshape, never re-solve.
 """
 
 from __future__ import annotations
 
-import re
 import shutil
 from pathlib import Path
 
-from ..cases import V1Case
+from ..cases import Case
 from ..llm import ChatModel, Usage
 from ..sandbox import LocalSandbox
 
@@ -25,21 +24,13 @@ Rules:
 Call `finish` when done."""
 
 
-def _spec(case: V1Case) -> str:
-    src = case.evaluator.read_text(encoding="utf-8", errors="replace")
-    m = re.search(r'"""(.*?)"""', src, re.DOTALL)
-    doc = m.group(1) if m else ""
-    spec = re.search(r"(EXTRACTOR_SPEC:.*)", doc, re.DOTALL)
-    return spec.group(1) if spec else doc
-
-
 def _find(workspace: Path, name: str) -> Path | None:
     hits = sorted((p for p in workspace.rglob(name) if p.is_file() and "data" not in p.relative_to(workspace).parts[:1]),
                   key=lambda p: (len(p.relative_to(workspace).parts), -p.stat().st_mtime))
     return hits[0] if hits else None
 
 
-def collect(case: V1Case, workspace: Path, out_dir: Path, extractor: ChatModel | None) -> dict:
+def collect(case: Case, workspace: Path, out_dir: Path, extractor: ChatModel | None) -> dict:
     """Fill `out_dir` with the submission. Returns a small report of how it was obtained."""
     out_dir.mkdir(parents=True, exist_ok=True)
     names = case.submission_files
@@ -53,7 +44,7 @@ def collect(case: V1Case, workspace: Path, out_dir: Path, extractor: ChatModel |
     return _extract_with_model(case, workspace, out_dir, extractor)
 
 
-def _extract_with_model(case: V1Case, workspace: Path, out_dir: Path, model: ChatModel) -> dict:
+def _extract_with_model(case: Case, workspace: Path, out_dir: Path, model: ChatModel) -> dict:
     from ..agents.tools import BASH, FINISH, LIST, READ, WRITE, call_tool
 
     scratch = out_dir.parent / "extract_ws"
@@ -68,7 +59,7 @@ def _extract_with_model(case: V1Case, workspace: Path, out_dir: Path, model: Cha
     ctx = _Ctx()
 
     messages = [{"role": "system", "content": _SYSTEM},
-                {"role": "user", "content": f"Expected files: {case.submission_files}\n\nSpec:\n{_spec(case)}"}]
+                {"role": "user", "content": f"Expected files: {case.submission_files}\n\nSpec:\n{case.deliverable_spec()}"}]
     usage = Usage()
     for _ in range(60):
         resp = model.chat(messages, tools=[BASH, READ, WRITE, LIST, FINISH])

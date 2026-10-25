@@ -17,17 +17,16 @@ import yaml
 from .agents.base import AgentResult, RunContext
 from .agents.cli import CLIAgent
 from .agents.reference import ReferenceAgent
-from .cases import V1Case, discover
+from .cases import Case, discover
 from .llm import ModelRegistry
 from .prompts import render_task_prompt
 from .sandbox import DockerSandbox, LocalSandbox
 from .scoring.clarify import score_clarification
-from .scoring.evaluate import run_evaluator
 from .scoring.extract import collect
 from .scoring.policy_score import apply_policy, facts_from_transcript
 from .session import Session, read_transcript
 from .transforms.language import Translator
-from .transforms.policy import load_case_rules, load_policy
+from .transforms.policy import load_policy
 from .transforms.variant import Variant, VariantSpec, build_variant
 
 REPO = Path(__file__).resolve().parents[1]
@@ -48,9 +47,10 @@ class AgentSpec:
 
 @dataclass
 class Settings:
-    v1_root: Path
+    cases_root: Path
     models: Path
     out: Path
+    v1_root: Path | None = None       # external FDE-Bench v1 checkout (optional)
     sandbox: dict[str, Any] = field(default_factory=lambda: {"kind": "local"})
     cache: Path = REPO / ".cache"
 
@@ -58,7 +58,7 @@ class Settings:
 class Bench:
     def __init__(self, settings: Settings, registry: ModelRegistry | None = None):
         self.s = settings
-        self.cases: dict[str, V1Case] = discover(settings.v1_root)
+        self.cases: dict[str, Case] = discover(settings.cases_root, settings.v1_root)
         if registry is None:
             registry = ModelRegistry.load(settings.models) if settings.models.is_file() else ModelRegistry({}, {})
         self.registry = registry
@@ -151,7 +151,7 @@ class Bench:
             extractor = self.registry.role("extractor") if "extractor" in self.registry.roles else None
             extraction = collect(case, workspace, sub_dir, extractor)
             ext_path.write_text(json.dumps(extraction, ensure_ascii=False, indent=2), encoding="utf-8")
-        raw = run_evaluator(case, sub_dir)
+        raw = case.evaluate(sub_dir, variant.customer_locale)
 
         transcript = read_transcript(run_dir)
         asks = [r["questions"] for r in transcript if r["kind"] == "ask"]
@@ -169,10 +169,9 @@ class Bench:
         usage = rec.get("usage") or {}
         facts = facts_from_transcript(transcript, notes, usage.get("total_tokens"), rec.get("cost_usd"),
                                       rec["wall_seconds"], observable_writes=agent.harness == "reference")
-        rules = load_case_rules(case.id)
 
         def under(policy):
-            return apply_policy(policy, raw, facts, case=case, submission_dir=sub_dir, rules=rules,
+            return apply_policy(policy, raw, facts, case=case, submission_dir=sub_dir,
                                 clarification_f1=clar["ask_f1"] if clar else None, can_ask=variant.can_ask,
                                 customer_locale=variant.customer_locale, agent_locale=variant.agent_locale)
 
@@ -197,14 +196,16 @@ class Bench:
 # ── experiment grids ─────────────────────────────────────────────────────────
 
 AXES = ("customer_locale", "agent_locale", "policy", "difficulty", "condition")
-BASELINE = {"customer_locale": "source", "agent_locale": "en", "policy": "v1_default", "difficulty": "medium",
+BASELINE = {"customer_locale": "source", "agent_locale": "en", "policy": "baseline", "difficulty": "medium",
             "condition": None}
 
 
 def load_campaign(path: Path) -> tuple[Settings, list[AgentSpec], list[tuple[str, VariantSpec]], dict[str, Any]]:
     doc = yaml.safe_load(path.read_text(encoding="utf-8"))
     d = doc.get("defaults", {})
-    settings = Settings(v1_root=Path(d["v1_root"]), models=Path(d["models"]), out=Path(d.get("out", "runs")),
+    settings = Settings(cases_root=Path(d.get("cases_root", "cases")),
+                        v1_root=Path(d["v1_root"]) if d.get("v1_root") else None,
+                        models=Path(d["models"]), out=Path(d.get("out", "runs")),
                         sandbox=d.get("sandbox", {"kind": "local"}))
     agents = [AgentSpec(**a) for a in doc.get("agents", [])]
     subsets = doc.get("subsets", {})

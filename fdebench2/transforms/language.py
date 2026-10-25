@@ -19,7 +19,6 @@ from pathlib import Path
 
 from ..llm import ChatModel, Usage, complete_text
 
-SOURCE_LOCALE = "zh"  # every v1 case is authored in Chinese
 LOCALES = {
     "zh": "Simplified Chinese",
     "en": "English",
@@ -39,7 +38,7 @@ REGISTER = {
 
 
 def resolve(locale: str) -> str:
-    return SOURCE_LOCALE if locale in ("source", "", None) else locale
+    return locale
 
 
 def check_locale(locale: str) -> str:
@@ -76,7 +75,7 @@ class Translator:
         h = hashlib.sha256(json.dumps([model, src, dst, kind, text], ensure_ascii=False).encode()).hexdigest()
         return h[:32]
 
-    def translate(self, text: str, dst: str, src: str = SOURCE_LOCALE, kind: str = "document") -> str:
+    def translate(self, text: str, dst: str, src: str = "en", kind: str = "document") -> str:
         src, dst = check_locale(src), check_locale(dst)
         if src == dst or not text.strip():
             return text

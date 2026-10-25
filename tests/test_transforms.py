@@ -45,10 +45,10 @@ def test_translator_caches(tmp_path):
 
 
 def test_policies_load_and_render():
-    assert {"v1_default", "enterprise_balanced", "regulated_strict", "startup_velocity"} <= set(list_policies())
+    assert {"baseline", "enterprise_balanced", "regulated_strict", "startup_velocity"} <= set(list_policies())
     brief = render_policy_brief(load_policy("startup_velocity"))
     assert "request_exception" in brief and "about 5 questions" in brief
-    assert not load_policy("v1_default").agent_visible
+    assert not load_policy("baseline").agent_visible
 
 
 def test_medium_variant_is_v1_equivalent(v1_root, tmp_path):
@@ -86,11 +86,11 @@ def test_campaign_dedups_shared_baseline(tmp_path):
     from fdebench2.runner import load_campaign
     cfg = tmp_path / "c.yaml"
     cfg.write_text("""
-defaults: {v1_root: v1, models: m.yaml, seeds: [0], cases: [a, b]}
+defaults: {cases_root: cases, models: m.yaml, seeds: [0], cases: [a, b]}
 experiments:
   lang: {customer_locale: [zh, ko]}
   proto: {customer_locale: [ko], agent_locale: [en, ko]}
-  pol: {policy: [v1_default, startup_velocity]}
+  pol: {policy: [baseline, startup_velocity]}
 """)
     _, _, jobs, _ = load_campaign(cfg)
     # cells: zh/en, ko/en, ko/ko, startup_velocity -> 4 cells x 2 cases

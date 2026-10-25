@@ -1,8 +1,9 @@
 """fdebench2 command line.
 
-  fdebench2 cases     --v1-root V1                       list v1 cases
-  fdebench2 prepare   --v1-root V1 --case ID [axes]      materialize a variant, print the agent prompt
-  fdebench2 run       --v1-root V1 --case ID --harness reference --model gpt [axes]
+  fdebench2 fetch-v1  [--case ID ...]                    download FDE-Bench v1 (optional, external) into external/fde-bench-v1
+  fdebench2 cases                                        list cases
+  fdebench2 prepare   --case ID [axes]                   materialize a variant, print the agent prompt
+  fdebench2 run       --case ID --harness reference --model gpt [axes]
   fdebench2 score     RUN_DIR [--policy P ...]           (re)score a run, optionally under more policies
   fdebench2 campaign  configs/experiments.yaml [--dry-run]
   fdebench2 report    runs/
@@ -24,16 +25,18 @@ from .transforms.variant import VariantSpec
 
 def _axes(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--case", required=True)
-    ap.add_argument("--customer-locale", default="source")
+    ap.add_argument("--customer-locale", default="en")
     ap.add_argument("--agent-locale", default="en")
-    ap.add_argument("--policy", default="v1_default")
+    ap.add_argument("--policy", default="baseline")
     ap.add_argument("--difficulty", default="medium")
     ap.add_argument("--condition", default=None)
     ap.add_argument("--seed", type=int, default=0)
 
 
 def _common(ap: argparse.ArgumentParser) -> None:
-    ap.add_argument("--v1-root", type=Path, default=Path("v1/FDE-Bench"))
+    ap.add_argument("--cases", dest="cases_root", type=Path, default=Path("cases"))
+    ap.add_argument("--v1", dest="v1_root", type=Path, default=None,
+                    help="also load external FDE-Bench v1 cases from here (see fetch-v1)")
     ap.add_argument("--models", type=Path, default=Path("configs/models.yaml"))
     ap.add_argument("--out", type=Path, default=Path("runs"))
     ap.add_argument("--docker-image", help="run commands in this image (use {case} for per-case images)")
@@ -46,13 +49,18 @@ def _spec(a) -> VariantSpec:
 
 def _bench(a) -> Bench:
     sandbox = {"kind": "docker", "image": a.docker_image} if a.docker_image else {"kind": "local"}
-    return Bench(Settings(v1_root=a.v1_root, models=a.models, out=a.out, sandbox=sandbox))
+    return Bench(Settings(cases_root=a.cases_root, v1_root=a.v1_root, models=a.models, out=a.out, sandbox=sandbox))
 
 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(prog="fdebench2")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
+    p = sub.add_parser("fetch-v1"); _common(p)
+    p.add_argument("--case", action="append", help="only these cases (repeatable); default all")
+    p.add_argument("--check", action="store_true", help="only verify checksums")
+    p = sub.add_parser("validate-case")
+    p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
     p = sub.add_parser("cases"); _common(p)
     sub.add_parser("policies")
     p = sub.add_parser("prepare"); _common(p); _axes(p)
@@ -72,11 +80,28 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("out", type=Path)
 
     a = ap.parse_args(argv)
-    if a.cmd == "policies":
+    if a.cmd == "fetch-v1":
+        from .v1_fetch import check, fetch
+        root = a.v1_root or Path("external/fde-bench-v1")
+        wanted = set(a.case) if a.case else None
+        if not a.check:
+            fetch(root, Path(".cache/v1-release"), wanted)
+        bad = check(root, wanted)
+        print("all data files verified" if not bad else f"{len(bad)} files missing or corrupt, e.g. {bad[:3]}")
+        sys.exit(1 if bad else 0)
+    elif a.cmd == "validate-case":
+        from .validate import validate_case
+        failed = 0
+        for path in a.paths:
+            problems = validate_case(path)
+            failed += bool(problems)
+            print(f"{path.name}: " + ("OK" if not problems else "\n  - " + "\n  - ".join(problems)))
+        sys.exit(1 if failed else 0)
+    elif a.cmd == "policies":
         print("\n".join(list_policies()))
     elif a.cmd == "cases":
         for cid, case in _bench(a).cases.items():
-            print(f"{cid}\t{case.task_type}\t{len(case.targets)} targets\t{len(case.data_files())} files")
+            print(f"{cid}\t{case.task_type}\t{case.domain}\t{','.join(case.locales())}")
     elif a.cmd == "prepare":
         bench = _bench(a)
         run_dir = Path(tempfile.mkdtemp(prefix="fdeb2-prepare-"))

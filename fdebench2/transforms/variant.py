@@ -1,21 +1,21 @@
-"""Compose the three axes over one v1 case into a concrete, saved variant."""
+"""Compose the three axes over one case into a concrete, saved variant."""
 
 from __future__ import annotations
 
 import json
 import random
-import shutil
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-from ..cases import Target, V1Case
+from .. import i18n
+from ..cases import Case, NotLocalized, Target
 from . import noise as noise_ops
 from .events import Event, build_events
-from .language import Translator, check_locale, resolve
-from .policy import Policy, load_policy, render_policy_brief
+from .language import Translator, check_locale
+from .policy import Policy, load_policy, policy_brief_msgs
 
 DIFFICULTY_FILE = Path(__file__).resolve().parents[2] / "configs" / "difficulty.yaml"
 CONDITIONS = ("full", "interact", "interact_req", "hidden")
@@ -24,16 +24,16 @@ CONDITIONS = ("full", "interact", "interact_req", "hidden")
 @dataclass(frozen=True)
 class VariantSpec:
     case_id: str
-    customer_locale: str = "source"   # "source" = the case's own language (zh for v1)
-    agent_locale: str = "en"          # v1's agent prompt is English
-    policy: str = "v1_default"
+    customer_locale: str = "en"
+    agent_locale: str = "en"
+    policy: str = "baseline"
     difficulty: str = "medium"
     seed: int = 0
     condition: str | None = None      # override the difficulty's condition (ablations)
 
     def key(self) -> str:
-        """Run-directory name; equal for specs that denote the same variant (e.g. "source" and "zh")."""
-        parts = [self.case_id, f"c-{resolve(self.customer_locale)}", f"a-{self.agent_locale}", f"p-{self.policy}",
+        """Run-directory name."""
+        parts = [self.case_id, f"c-{self.customer_locale}", f"a-{self.agent_locale}", f"p-{self.policy}",
                  f"d-{self.difficulty}"]
         if self.condition:
             parts.append(f"x-{self.condition}")
@@ -96,20 +96,12 @@ class Variant:
         return cls(**doc)
 
 
-def _copy_data(case: V1Case, workspace: Path) -> None:
-    dest = workspace / "data"
-    if dest.exists():
-        shutil.rmtree(dest)
-    if case.data_dir.is_dir():
-        shutil.copytree(case.data_dir, dest)
-    else:
-        dest.mkdir(parents=True)
+def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Translator) -> Variant:
+    """Materialize `spec`: write the agent's data into `workspace/data` and return the variant.
 
-
-def build_variant(spec: VariantSpec, case: V1Case, workspace: Path, translator: Translator) -> Variant:
-    """Materialize `spec`: write the agent's data copy into `workspace/data` and return the variant.
-
-    Nothing under the v1 case directory is modified.
+    Texts come from the case in the customer locale. Only when a case lacks that
+    locale (external v1 cases) are they machine-translated, on the user's machine.
+    Nothing in the case directory is modified.
     """
     cust = check_locale(spec.customer_locale)
     agent = check_locale(spec.agent_locale)
@@ -119,30 +111,41 @@ def build_variant(spec: VariantSpec, case: V1Case, workspace: Path, translator: 
         raise ValueError(f"unknown condition {condition!r}")
     policy = load_policy(spec.policy)
     rng = random.Random(f"{spec.case_id}|{spec.difficulty}|{spec.seed}")
+    src = case.source_locale
 
-    def tr(text: str, kind: str = "document", src: str = "zh") -> str:
-        return translator.translate(text, cust, src=src, kind=kind)
+    def text(getter, kind: str) -> str:
+        try:
+            return getter(cust)
+        except NotLocalized:
+            return translator.translate(getter(src), cust, src=src, kind=kind)
+
+    def say(message: Any, lang: str = cust) -> str:
+        return i18n.render(message, lang, fallback=lambda t: translator.translate(t, lang, src="en", kind="message"))
 
     workspace.mkdir(parents=True, exist_ok=True)
-    _copy_data(case, workspace)
+    case.materialize_data(cust, workspace / "data")
 
     # Language: request, hidden requirements, clarification targets.
-    instruction = tr(case.instruction, "request")
-    information = tr(case.information, "requirements")
-    targets = [replace(t, text=tr(t.source_text, "target")) for t in case.targets]
+    instruction = text(case.request, "request")
+    information = text(case.requirements, "requirements")
+    try:
+        targets = case.targets(cust)
+    except NotLocalized:
+        targets = [replace(t, text=translator.translate(t.source_text, cust, src=src, kind="target"))
+                   for t in case.targets(src)]
 
     # Difficulty: data noise (agent's copy only) and the facts that undo it.
-    extra_facts: list[str] = []
+    extra_facts: list[Any] = []
     applied: list[dict[str, Any]] = []
     for op in diff.noise:
-        result = noise_ops.OPS[op](workspace, rng)
+        result = noise_ops.OPS[op](workspace, rng, cust)
         if result is None:
             continue
         applied.append(asdict(result))
         extra_facts.append(result.knowledge)
         if result.target:
-            targets.append(Target(id=f"v2·{op}", text=tr(result.target, "target", src="en"),
-                                  source_text=result.target, kind="noise", domain="data quality", origin=op))
+            targets.append(Target(id=f"v2·{op}", text=say(result.target), source_text=say(result.target, "en"),
+                                  kind="noise", domain="data quality", origin=op))
 
     correction = None
     if any(e["kind"] == "data_correction" for e in diff.events):
@@ -151,21 +154,23 @@ def build_variant(spec: VariantSpec, case: V1Case, workspace: Path, translator: 
             rel, _ = held
             correction = (rel, f"inbox/{Path(rel).name}")
 
-    events, event_facts = build_events(diff.events, rng, volunteer_facts=[t.text for t in targets if t.origin == "v1"],
+    events, event_facts = build_events(diff.events, rng, volunteer_facts=[t.text for t in targets if t.origin == "case"],
                                        correction=correction, time_budget_s=diff.time_budget_s)
     for ev in events:
-        ev.message = tr(ev.message, "event", src="en")
+        ev.message = say(ev.payload.pop("msg"))
         if "fact" in ev.payload:
             ev.message = f"{ev.message} {ev.payload['fact']}"
     extra_facts += event_facts
 
     if extra_facts:
-        header = tr("Additional facts (known to the client)", "heading", src="en")
-        information += f"\n\n## {header}\n\n" + "\n".join(f"- {tr(f, 'fact', src='en')}" for f in extra_facts)
+        header = say({"t": "Additional facts (known to the client)"})
+        information += f"\n\n## {header}\n\n" + "\n".join(f"- {say(f)}" for f in extra_facts)
 
     brief = ""
     if policy.agent_visible:
-        brief = translator.translate(render_policy_brief(policy), agent, src="en", kind="policy")
+        title, *lines = policy_brief_msgs(policy)
+        brief = f"# {say(title, agent)}\n\n" + "\n".join(
+            say(m, agent) if i == 0 else f"- {say(m, agent)}" for i, m in enumerate(lines)) + "\n"
 
     return Variant(
         spec=spec, condition=condition, persona=diff.persona, customer_locale=cust, agent_locale=agent,
