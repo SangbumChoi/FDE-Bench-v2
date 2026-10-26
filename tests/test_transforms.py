@@ -2,7 +2,7 @@ import hashlib
 from pathlib import Path
 
 from fdebench2 import i18n
-from fdebench2.cases import NativeCase, V1Case, discover
+from fdebench2.cases import NativeCase, discover
 from fdebench2.llm import ChatResponse, ScriptedModel
 from fdebench2.transforms import events as ev_mod
 from fdebench2.transforms import noise as noise_mod
@@ -11,7 +11,7 @@ from fdebench2.transforms.language import Translator, detect_locale, language_fi
 from fdebench2.transforms.policy import list_policies, load_policy, policy_brief_msgs
 from fdebench2.transforms.variant import Variant, VariantSpec, build_variant
 
-from conftest import NATIVE, V1_TOY
+from conftest import NATIVE
 
 NO_TRANSLATOR = None
 
@@ -30,13 +30,11 @@ def _offline(tmp_path) -> Translator:
     return Translator(NO_TRANSLATOR, tmp_path / "no-cache")
 
 
-def test_discover_native_and_v1(cases_root, v1_root):
-    found = discover(cases_root, v1_root)
+def test_discover_native(cases_root):
+    found = discover(cases_root)
     assert isinstance(found[NATIVE], NativeCase)
     assert set(found[NATIVE].locales()) == {"zh", "en", "ko", "ja", "es"}
-    toy = found[f"v1-{V1_TOY}"]
-    assert isinstance(toy, V1Case) and toy.locales() == ("zh",)
-    assert [t.id for t in toy.targets("zh")] == ["澄清项·不能拆单", "澄清项·W3盘点"]
+    assert [t.id for t in found[NATIVE].targets("ko")] == [t.id for t in found[NATIVE].targets("en")]
 
 
 def test_detect_locale():
@@ -103,12 +101,15 @@ def test_hard_native_variant(cases_root, tmp_path):
     assert again.targets == v.targets and again.events == v.events and again.policy == v.policy
 
 
-def test_v1_case_other_locale_uses_translator(v1_root, tmp_path):
-    case = V1Case(v1_root / "case" / V1_TOY)
-    tr = Translator(ScriptedModel(lambda m: ChatResponse(content="[en] " + m[-1]["content"])), tmp_path / "c")
-    v = build_variant(VariantSpec(case.id, customer_locale="en"), case, tmp_path / "ws", tr)
-    assert v.instruction.startswith("[en] ")
-    assert v.targets[0].source_text.startswith("每个订单")
+def test_missing_locale_falls_back_to_translation(cases_root, tmp_path):
+    import shutil
+    shutil.rmtree(cases_root / NATIVE / "locales" / "es")
+    case = NativeCase(cases_root / NATIVE)
+    assert "es" not in case.locales()
+    tr = Translator(ScriptedModel(lambda m: ChatResponse(content="[es] " + m[-1]["content"])), tmp_path / "c")
+    v = build_variant(VariantSpec(NATIVE, customer_locale="es"), case, tmp_path / "ws", tr)
+    assert v.instruction == "[es] " + case.request("en")
+    assert v.targets[0].text.startswith("[es] ") and v.targets[0].source_text == case.targets("en")[0].text
 
 
 def test_campaign_dedups_shared_baseline(tmp_path):

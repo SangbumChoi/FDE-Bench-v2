@@ -1,5 +1,4 @@
-# Delivery quality is the whole score, the agent sees no policy, and every case rule is a hard constraint
-# (this reproduces FDE-Bench v1 scoring).
+# Delivery quality is the whole score, the agent sees no policy, and every case rule is a hard constraint.
 title: Baseline (delivery quality only)
 agent_visible: false
 exceptions: forbidden

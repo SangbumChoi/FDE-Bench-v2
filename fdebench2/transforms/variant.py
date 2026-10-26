@@ -100,7 +100,7 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
     """Materialize `spec`: write the agent's data into `workspace/data` and return the variant.
 
     Texts come from the case in the customer locale. Only when a case lacks that
-    locale (external v1 cases) are they machine-translated, on the user's machine.
+    locale are they machine-translated at run time.
     Nothing in the case directory is modified.
     """
     cust = check_locale(spec.customer_locale)

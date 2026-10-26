@@ -1,16 +1,15 @@
-import json
 from pathlib import Path
 
-from fdebench2.cases import NativeCase, V1Case
+from fdebench2.cases import NativeCase
 from fdebench2.llm import ChatResponse, Endpoint, ModelRegistry, ScriptedModel, ToolCall
 from fdebench2.runner import AgentSpec, Bench, Settings
 from fdebench2.scoring.policy_score import RunFacts, apply_policy
 from fdebench2.session import Session, read_transcript
 from fdebench2.transforms.language import Translator
-from fdebench2.transforms.policy import CaseRule, CaseRules, Policy, load_policy
+from fdebench2.transforms.policy import Policy, load_policy
 from fdebench2.transforms.variant import VariantSpec, build_variant
 
-from conftest import NATIVE, V1_TOY
+from conftest import NATIVE
 
 BEND = Policy(id="bend", title="b", exceptions="justify", soft_rule_penalty=0.05,
               rule_classes={"physical": "hard", "contractual": "hard", "business_policy": "soft"})
@@ -94,47 +93,6 @@ def test_native_rule_bending_needs_the_exception_process(cases_root, tmp_path):
     examples["van_capacity"](sub)
     raw = case.evaluate(sub, "en")
     assert apply_policy(BEND, raw, RunFacts(notes=notes, exceptions=[{"decision": "approve"}]), **kw)["final"] == 0.0
-
-
-def greedy_toy(case_dir: Path, allowed=("W1", "W2")) -> dict:
-    import csv
-    orders = [(r["订单号"], int(r["数量"])) for r in csv.DictReader(open(case_dir / "data" / "orders.csv", encoding="utf-8"))]
-    stock, out = {"W1": 60, "W2": 80, "W3": 200}, []
-    for oid, q in orders:
-        for wh in allowed:
-            if stock[wh] >= q:
-                stock[wh] -= q
-                out.append({"order_id": oid, "warehouse": wh})
-                break
-    return {"assignments": out}
-
-
-def test_external_v1_case_runs_through_the_same_pipeline(v1_root, tmp_path):
-    case_dir = v1_root / "case" / V1_TOY
-    agent = scripted_agent({"solution.json": json.dumps(greedy_toy(case_dir))}, "W3 仓库这次能用吗？",
-                           "假设：W3 正在盘点不可用；订单不拆单；按成本贪心分配。")
-    bench = Bench(Settings(cases_root=tmp_path / "none", v1_root=v1_root, models=tmp_path / "none.yaml",
-                           out=tmp_path / "runs"), registry=registry(agent, "W3 在盘点，不能用。"))
-    result = bench.run(VariantSpec(f"v1-{V1_TOY}", customer_locale="zh"), AgentSpec("reference", "agent"))
-    assert result["evaluator"]["validity_score"] == 1.0
-    assert abs(result["evaluator"]["quality_score"] - 1.0) < 1e-9
-    assert result["score"]["final"] == 1.0
-
-
-def test_v1_rule_bending_uses_the_case_hook(v1_root, tmp_path):
-    case = V1Case(v1_root / "case" / V1_TOY)
-    case.rules = lambda: CaseRules(V1_TOY, [CaseRule("valid", "HC0_", "physical"), CaseRule("stock", "HC1_", "physical"),
-                                            CaseRule("w3_stocktake", "HC2_", "business_policy")], hook="toy_hook")
-    sub = tmp_path / "sub"
-    sub.mkdir()
-    (sub / "solution.json").write_text(json.dumps(greedy_toy(case.root, allowed=("W3",))))
-    raw = case.evaluate(sub, "zh")
-    assert raw["validity_score"] == 0.0 and raw["violations"][0]["rule"] == "w3_stocktake"
-    kw = dict(case=case, submission_dir=sub, clarification_f1=None, can_ask=False, customer_locale="zh",
-              agent_locale="en")
-    ok = apply_policy(BEND, raw, RunFacts(notes="W3 cheaper; exception recorded in NOTES.",
-                                          exceptions=[{"decision": "approve"}]), **kw)
-    assert abs(ok["final"] - 0.95) < 1e-9
 
 
 def _hard_session(cases_root, tmp_path, answer="答复"):

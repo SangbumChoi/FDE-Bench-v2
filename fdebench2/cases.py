@@ -1,26 +1,18 @@
 """Benchmark cases behind one interface.
 
-Two kinds:
-
-* `NativeCase` (cases/<id>/): FDE-Bench v2's own original cases. Every text is
-  authored in all five locales, data is generated deterministically from a seed
-  and written with localized headers and labels, and the evaluator scores against
-  the generated ground truth, so no file is ever translated after the fact.
-* `V1Case` (external/fde-bench-v1/case/<id>/): the optional external FDE-Bench v1
-  benchmark (CC BY-NC-ND 4.0, fetched by `fdebench2 fetch-v1`, never committed).
-  Chinese only; other customer locales fall back to run-time machine translation
-  of the texts, which stays on the user's machine.
+A case lives in cases/<id>/: texts authored per locale, data generated
+deterministically from a seed and written with localized headers and labels,
+and an evaluator that scores against the generated ground truth. A case that
+lacks a locale can still run in it: its texts are then machine-translated at
+run time (see transforms.variant).
 """
 
 from __future__ import annotations
 
 import importlib.util
-import json
-import shutil
 import sys
 import tempfile
-import tomllib
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
 from types import ModuleType
@@ -28,7 +20,7 @@ from typing import Any
 
 import yaml
 
-from .transforms.policy import CaseRule, CaseRules, load_case_rules
+from .transforms.policy import CaseRule, CaseRules
 
 LOCALES = ("zh", "en", "ko", "ja", "es")
 
@@ -43,7 +35,7 @@ class Target:
 
     id: str
     text: str                 # in the variant's customer locale
-    source_text: str          # canonical wording (native: English; v1: Chinese)
+    source_text: str          # canonical wording (English)
     kind: str = ""            # missing | ambiguous | ...
     domain: str = ""          # data semantics | calculation | scoring | business rule ...
     origin: str = "case"      # "case" or the v2 transform that introduced it
@@ -191,7 +183,7 @@ class NativeCase(Case):
         return out
 
     def rules(self) -> CaseRules:
-        return CaseRules(self.id, [CaseRule(id=r["id"], match=r["id"], rule_class=r["class"],
+        return CaseRules(self.id, [CaseRule(id=r["id"], rule_class=r["class"],
                                             description=r.get("description", ""))
                                    for r in self.meta.get("rules", [])])
 
@@ -203,131 +195,13 @@ class NativeCase(Case):
         return self.meta.get("deliverable_spec", "")
 
 
-# ── external FDE-Bench v1 cases ──────────────────────────────────────────────
-
-_GT_TEXT, _GT_KIND, _GT_DOMAIN = "澄清问题", "问题类型", "内容域"
-
-
-def parse_gt(gt: dict[str, Any]) -> list[Target]:
-    out = []
-    for key, val in gt.items():
-        if isinstance(val, dict):
-            text = str(val.get(_GT_TEXT) or next((v for v in val.values() if isinstance(v, str)), ""))
-            kind, domain = str(val.get(_GT_KIND) or ""), str(val.get(_GT_DOMAIN) or "")
-        else:
-            text, kind, domain = str(val), "", ""
-        out.append(Target(id=key, text=text, source_text=text, kind=kind, domain=domain))
-    return out
-
-
-class V1Case(Case):
-    def __init__(self, root: Path):
-        self.root = root.resolve()
-        self.id = f"v1-{self.root.name}"
-        self.v1_id = self.root.name
-        task = tomllib.loads((self.root / "task.toml").read_text(encoding="utf-8")) if (self.root / "task.toml").is_file() else {}
-        self.metadata = task.get("metadata", {})
-        self.task_type = str(self.metadata.get("task_type", "")).strip()
-        self.source_locale = "zh"
-        schema = self.root / "tests" / "submission_schema.json"
-        self.schema = json.loads(schema.read_text(encoding="utf-8")) if schema.is_file() else None
-
-    @classmethod
-    def load(cls, root: str | Path) -> "V1Case":
-        return cls(Path(root))
-
-    def locales(self) -> tuple[str, ...]:
-        return ("zh",)
-
-    def _zh(self, lang: str, name: str) -> str:
-        if lang != "zh":
-            raise NotLocalized(f"{self.id}: v1 cases are Chinese only")
-        return (self.root / name).read_text(encoding="utf-8").strip()
-
-    def request(self, lang: str) -> str:
-        return self._zh(lang, "instruction.md")
-
-    def requirements(self, lang: str) -> str:
-        return self._zh(lang, "information.md")
-
-    def targets(self, lang: str) -> list[Target]:
-        if lang != "zh":
-            raise NotLocalized(self.id)
-        gt = self.root / "gt.json"
-        return parse_gt(json.loads(gt.read_text(encoding="utf-8"))) if gt.is_file() else []
-
-    @property
-    def data_dir(self) -> Path:
-        return self.root / "data"
-
-    @property
-    def tests_dir(self) -> Path:
-        return self.root / "tests"
-
-    @property
-    def evaluator(self) -> Path:
-        return self.tests_dir / "evaluator.py"
-
-    def data_files(self) -> list[Path]:
-        return sorted(p for p in self.data_dir.rglob("*") if p.is_file()) if self.data_dir.is_dir() else []
-
-    def materialize_data(self, lang: str, dest: Path) -> None:
-        if dest.exists():
-            shutil.rmtree(dest)
-        if self.data_dir.is_dir():
-            shutil.copytree(self.data_dir, dest)
-        else:
-            dest.mkdir(parents=True)
-
-    def evaluate(self, submission_dir: Path, lang: str, relaxed: frozenset[str] = frozenset()) -> dict[str, Any]:
-        from .scoring.evaluate import run_evaluator, violations
-        rules = self.rules()
-        raw = run_evaluator(self, submission_dir)
-        raw["violations"] = []
-        for v in violations(raw):
-            r = rules.classify(v) if rules else None
-            raw["violations"].append({"rule": r.id if r else "unclassified", "message": v})
-        if not relaxed or raw.get("validity_score"):
-            return raw
-        # v1 evaluators stop at the first violation and report no quality: a per-case hook re-scores.
-        if rules is None or not rules.hook:
-            return raw
-        hook = importlib.import_module(rules.hook)
-        rescored = hook.relaxed_score(self, Path(submission_dir), set(relaxed), rules)
-        return {**raw, **rescored}
-
-    def rules(self) -> CaseRules | None:
-        return load_case_rules(self.v1_id)
-
-    @property
-    def submission_files(self) -> list[str]:
-        if not self.schema:
-            return []
-        return [f["name"] for f in self.schema.get("files", []) if f.get("name")]
-
-    def deliverable_spec(self) -> str:
-        import re
-        src = self.evaluator.read_text(encoding="utf-8", errors="replace")
-        m = re.search(r'"""(.*?)"""', src, re.DOTALL)
-        doc = m.group(1) if m else ""
-        spec = re.search(r"(EXTRACTOR_SPEC:.*)", doc, re.DOTALL)
-        return spec.group(1) if spec else doc
-
-
-def discover(cases_root: str | Path | None = "cases", v1_root: str | Path | None = None) -> dict[str, Case]:
-    """Native cases under `cases_root`, plus v1 cases under `v1_root` (if given and present)."""
+def discover(cases_root: str | Path = "cases") -> dict[str, Case]:
+    """Every case under `cases_root` (a directory holding <id>/case.yaml)."""
     found: dict[str, Case] = {}
-    if cases_root and Path(cases_root).is_dir():
-        for p in sorted(Path(cases_root).iterdir()):
+    root = Path(cases_root)
+    if root.is_dir():
+        for p in sorted(root.iterdir()):
             if (p / "case.yaml").is_file():
                 c = NativeCase(p)
                 found[c.id] = c
-    if v1_root:
-        base = Path(v1_root)
-        base = base / "case" if (base / "case").is_dir() else base
-        if base.is_dir():
-            for p in sorted(base.iterdir()):
-                if (p / "instruction.md").is_file():
-                    c = V1Case(p)
-                    found[c.id] = c
     return found

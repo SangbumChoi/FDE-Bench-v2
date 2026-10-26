@@ -60,9 +60,8 @@ Rules:
 class Translator:
     """LLM translation with a content-addressed on-disk cache.
 
-    The cache lives in the user's own working tree (`.cache/`, git-ignored):
-    translations of v1 text are adaptations of CC BY-NC-ND material and must not
-    be committed or shared.
+    Used only when a case lacks the requested locale, or for custom policy text
+    missing from the message catalog. The cache lives in `.cache/` (git-ignored).
     """
 
     def __init__(self, model: ChatModel | None, cache_dir: str | Path):

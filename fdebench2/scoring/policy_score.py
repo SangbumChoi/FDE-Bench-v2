@@ -4,8 +4,8 @@
           = clip(Σ w_i·c_i / Σ w_i − penalties)  otherwise, over the components that apply
 
 Components (each in [0, 1]):
-  quality        v1 delivery quality (clipped at the FDE reference, 1.0)
-  clarification  Ask-F1 over v1 + v2 targets      (only when the client was reachable)
+  quality        delivery quality vs the case reference (clipped at 1.0)
+  clarification  Ask-F1 over case + noise targets (only when the client was reachable)
   communication  right language to the client and in NOTES.md, NOTES.md present
   efficiency     1 − ½·used/budget per budget, 0 once over budget
 

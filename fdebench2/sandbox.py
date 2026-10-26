@@ -2,7 +2,7 @@
 
 `LocalSandbox` runs in a subprocess with the workspace as cwd (development and
 tests only: it does not isolate anything). `DockerSandbox` mounts only the
-workspace into a container, so the v1 case directory with the hidden
+workspace into a container, so the case directory with the hidden
 requirements and evaluator is never reachable from inside.
 """
 

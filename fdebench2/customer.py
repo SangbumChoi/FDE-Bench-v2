@@ -2,7 +2,7 @@
 
 Answers from the request plus the hidden requirements (localized, including any
 v2 facts added by noise and events), in the customer's language, in a persona
-set by the difficulty tier. Like v1, it never sees the clarification targets or
+set by the difficulty tier. It never sees the clarification targets or
 the evaluator, and never reveals scoring formulas.
 """
 

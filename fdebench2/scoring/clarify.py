@@ -1,13 +1,12 @@
 """Clarification coverage: did the agent's questions uncover the hidden requirements?
 
-Same criterion as v1 ("would the client, answering these questions, reveal
-this requirement?"), judged by a fixed panel with a majority vote. Two v2
-changes:
+Criterion: would the client, answering these questions honestly, reveal this
+requirement? Judged by a fixed panel with a majority vote.
   - Questions can be in any of the five locales, so each judge sees the target
-    both as annotated (Chinese) and in the customer locale. Use judges that
-    read all locales in the campaign.
-  - Targets added by v2 transforms (noise) are scored too, and reported apart
-    from v1 targets so v1-comparable numbers stay available.
+    both in its canonical English wording and in the customer locale. Use
+    judges that read all locales in the campaign.
+  - Targets added by transforms (noise) are scored too; `recall_case` reports
+    recall over the case's own targets only.
 """
 
 from __future__ import annotations
@@ -38,7 +37,7 @@ class ClarifyScore:
     recall: float | None
     precision: float | None
     ask_f1: float | None
-    recall_v1: float | None
+    recall_case: float | None
     n_questions: int
     covered: dict[str, bool]
     usage: Usage
@@ -66,8 +65,8 @@ def score_clarification(targets: list[Target], asks: list[str], judges: list[Cha
         return ClarifyScore(None, None, None, None, len(questions), {}, usage)
     if not questions:
         covered = {t.id: False for t in targets}
-        v1 = [t for t in targets if t.origin == "v1"]
-        return ClarifyScore(0.0, None, 0.0, 0.0 if v1 else None, 0, covered, usage)
+        own = [t for t in targets if t.origin == "case"]
+        return ClarifyScore(0.0, None, 0.0, 0.0 if own else None, 0, covered, usage)
     if not judges:
         raise ValueError("clarification scoring needs at least one judge model")
 
@@ -92,6 +91,6 @@ def score_clarification(targets: list[Target], asks: list[str], judges: list[Cha
     recall = sum(covered.values()) / len(targets)
     precision = len({q for q in useful if 1 <= q <= len(questions)}) / len(questions)
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-    v1 = [t for t in targets if t.origin == "v1"]
-    recall_v1 = sum(covered[t.id] for t in v1) / len(v1) if v1 else None
-    return ClarifyScore(recall, precision, f1, recall_v1, len(questions), covered, usage)
+    own = [t for t in targets if t.origin == "case"]
+    recall_case = sum(covered[t.id] for t in own) / len(own) if own else None
+    return ClarifyScore(recall, precision, f1, recall_case, len(questions), covered, usage)

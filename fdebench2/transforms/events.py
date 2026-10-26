@@ -1,8 +1,9 @@
 """Mid-task events for the hard tier.
 
-v1's paper lists as a limitation that "requirements and data are fixed". v2
-schedules events that change the agent's situation while it works. Every kind
-below leaves the v1 evaluator valid, so no case needs re-annotation:
+Real engagements are not static: requirements and data change while the work
+is under way. v2 schedules events that change the agent's situation while it
+works. Every kind below leaves the case evaluator valid, so no case needs extra
+annotation:
 
   customer_unavailable  the client stops answering for a while
   data_correction       the agent started on a wrong file; the corrected one arrives

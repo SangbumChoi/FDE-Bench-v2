@@ -50,7 +50,6 @@ class Settings:
     cases_root: Path
     models: Path
     out: Path
-    v1_root: Path | None = None       # external FDE-Bench v1 checkout (optional)
     sandbox: dict[str, Any] = field(default_factory=lambda: {"kind": "local"})
     cache: Path = REPO / ".cache"
 
@@ -58,7 +57,7 @@ class Settings:
 class Bench:
     def __init__(self, settings: Settings, registry: ModelRegistry | None = None):
         self.s = settings
-        self.cases: dict[str, Case] = discover(settings.cases_root, settings.v1_root)
+        self.cases: dict[str, Case] = discover(settings.cases_root)
         if registry is None:
             registry = ModelRegistry.load(settings.models) if settings.models.is_file() else ModelRegistry({}, {})
         self.registry = registry
@@ -204,7 +203,6 @@ def load_campaign(path: Path) -> tuple[Settings, list[AgentSpec], list[tuple[str
     doc = yaml.safe_load(path.read_text(encoding="utf-8"))
     d = doc.get("defaults", {})
     settings = Settings(cases_root=Path(d.get("cases_root", "cases")),
-                        v1_root=Path(d["v1_root"]) if d.get("v1_root") else None,
                         models=Path(d["models"]), out=Path(d.get("out", "runs")),
                         sandbox=d.get("sandbox", {"kind": "local"}))
     agents = [AgentSpec(**a) for a in doc.get("agents", [])]
