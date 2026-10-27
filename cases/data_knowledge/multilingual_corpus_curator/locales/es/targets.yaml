@@ -1,0 +1,32 @@
+- id: layout
+  text: Cada libro que se coloca en la biblioteca es un archivo en {{layout}} dentro de la carpeta out_dir.
+- id: year_basis
+  text: El año de la ruta es {{year_basis}}; un libro con un solo año usa ese año.
+- id: script
+  text: Los títulos y los nombres de autor de la ruta se escriben en {{script}}; la forma romanizada es la que los metadatos emparejan con el original.
+- id: co_authors
+  text: En los libros con varios autores, la parte del autor en la ruta es {{multi_author}}.
+- id: name_rules
+  text: 'Títulos y nombres de autor: NFKC, cada \ / : * ? " < > | o carácter de control pasa a ser un espacio, cada tramo de espacios se convierte en {{sep}}, se conservan los primeros {{max_len}} caracteres y se quitan espacios, puntos y separadores en los extremos.'
+- id: content
+  text: Un archivo de la biblioteca contiene solo la sinopsis del libro, en UTF-8, con los párrafos separados por una línea en blanco.
+- id: manifest_review
+  text: manifest.csv enumera todos los libros (archivos de origen separados por ;, estado placed o review); los libros en revisión copian sus archivos bajo _review/ y llevan un código de motivo UNREADABLE, NO_TITLE, NO_AUTHOR, NO_YEAR, NO_DESCRIPTION o CONFLICT (el primero que se aplique).
+- id: precedence
+  text: Cada dato sale primero de los metadatos incrustados, luego del texto de la portadilla y por último del nombre del archivo; las fechas de creación y modificación de los archivos no son años de publicación.
+- id: encodings
+  text: Algunos archivos están en GB18030, CP949, Shift_JIS o CP1252 sin ninguna marca (el HTML declara su charset).
+- id: year_notations
+  text: Los años aparecen también como eras japonesas, años Minguo y Dangi, numerales chinos y números romanos; todos pasan a años de cuatro cifras.
+- id: author_variants
+  text: Un mismo autor aparece con varias romanizaciones o como Apellido, Nombre; use siempre la pareja oficial, que dan los demás libros del autor en la unidad cuando faltan en los archivos del libro.
+- id: duplicates
+  text: Las copias del mismo libro en varios archivos o formatos se funden en un solo archivo de biblioteca, y su fila del manifiesto las enumera todas.
+- id: exceptions
+  text: Los datos que faltan se toman de los otros archivos del libro; un nombre de archivo con sentido es un título (los genéricos no); una línea de copyright da el año; sin sinopsis es NO_DESCRIPTION y nunca se inventa; dos fuentes del mismo rango con años distintos son CONFLICT.
+- id: containers
+  text: Los archivos zip y los CSV de catálogo (un libro por fila, cabeceras en inglés o japonés) también contienen libros; los escaneos de solo imagen se ignoran si hay una copia legible y si no son UNREADABLE; la basura no genera nada.
+- id: missing_author
+  text: Un libro sin autor va a revisión como NO_AUTHOR; es una política y, con una excepción aprobada, se coloca como "{{fallback_author}}".
+- id: scoring
+  text: Por libro, 1 por la ruta exacta con la sinopsis (si no, 0,4 por la sinopsis más 0,2 por cada acierto de año, título y autor; 0,6 por la ruta correcta con otra sinopsis), 1 por el código de revisión correcto (0,4 por otro); en medium y hard se resta 0,5 por cada archivo de la biblioteca que no es un libro.

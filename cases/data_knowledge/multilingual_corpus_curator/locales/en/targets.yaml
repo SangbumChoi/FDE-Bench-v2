@@ -1,0 +1,71 @@
+- id: layout
+  kind: missing
+  domain: business rule
+  text: Each placed book is one file at {{layout}} inside out_dir.
+- id: year_basis
+  kind: ambiguous
+  domain: business rule
+  text: The year in the path is {{year_basis}}; a book with only one year uses it for both.
+- id: script
+  kind: ambiguous
+  domain: business rule
+  text: Titles and author names in the path are written in {{script}}; the romanized form is the one paired with the original in the metadata.
+- id: co_authors
+  kind: missing
+  domain: business rule
+  text: For a co-authored book the author part of the path is {{multi_author}}.
+- id: name_rules
+  kind: missing
+  domain: data semantics
+  text: 'Title and author names: NFKC, each \ / : * ? " < > | or control character becomes a space, whitespace runs become {{sep}}, keep the first {{max_len}} characters, trim spaces, dots and separators at both ends.'
+- id: content
+  kind: missing
+  domain: data semantics
+  text: A library file holds only the book's description, UTF-8, paragraphs separated by a blank line.
+- id: manifest_review
+  kind: missing
+  domain: business rule
+  text: manifest.csv lists every book (source files separated by ;, status placed or review); review books get their files copied under _review/ and one reason code UNREADABLE, NO_TITLE, NO_AUTHOR, NO_YEAR, NO_DESCRIPTION or CONFLICT (first that applies).
+- id: precedence
+  kind: missing
+  domain: data semantics
+  text: Each fact comes from embedded metadata first, then the title page text, then the file name; file creation and modification dates are not publication years.
+- id: encodings
+  kind: missing
+  domain: data semantics
+  tiers: [medium, hard]
+  text: Some files are GB18030, CP949, Shift_JIS or CP1252 without a marker (HTML declares its charset).
+- id: year_notations
+  kind: missing
+  domain: data semantics
+  tiers: [medium, hard]
+  text: Years also appear as Japanese eras, Minguo and Dangi years, Chinese numerals and Roman numerals; all become four-digit years.
+- id: author_variants
+  kind: ambiguous
+  domain: data semantics
+  tiers: [medium, hard]
+  text: One author appears under several romanizations or as Family, Given; always use the official pair, which the author's other books in the drive supply when a book's own files lack it.
+- id: duplicates
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: Copies of the same book in several files or formats are merged into one library file, and its manifest row lists all of them.
+- id: exceptions
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: Missing fields come from the book's other files; a meaningful file name is a title (generic names are not); a copyright line gives the year; no description means NO_DESCRIPTION and never an invented one; two same-rank sources disagreeing on the year mean CONFLICT.
+- id: containers
+  kind: missing
+  domain: data semantics
+  tiers: [hard]
+  text: Zip archives and catalog CSVs (one book per row, English or Japanese headers) contain books too; image-only scans are ignored when a readable copy exists and are UNREADABLE otherwise; junk files get no output.
+- id: missing_author
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: A book with no author goes to review as NO_AUTHOR; this is policy, and with an approved exception it is shelved under "{{fallback_author}}" instead.
+- id: scoring
+  kind: missing
+  domain: scoring
+  text: Per book 1 for the exact path with the description (0.4 for the description plus 0.2 per right year, title, author otherwise; 0.6 for the right path with a wrong description), 1 for the right review code (0.4 for another); medium and hard subtract 0.5 per library file that is no book.

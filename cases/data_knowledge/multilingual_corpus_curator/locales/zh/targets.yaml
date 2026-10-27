@@ -1,0 +1,32 @@
+- id: layout
+  text: 每本上架的书在 out_dir 下对应一个文件，路径为 {{layout}}。
+- id: year_basis
+  text: 路径里的年份是{{year_basis}}；只有一个年份的书两者都用它。
+- id: script
+  text: 路径里的书名和作者名用{{script}}书写；罗马字写法以元数据里与原文成对给出的为准。
+- id: co_authors
+  text: 多人合著的书，路径里的作者部分为{{multi_author}}。
+- id: name_rules
+  text: '书名和作者名：先做 NFKC；每个 \ / : * ? " < > | 或控制字符换成空格；连续空白换成{{sep}}；保留前 {{max_len}} 个字符；去掉两端的空格、句点和分隔符。'
+- id: content
+  text: 书库文件里只放这本书的简介，UTF-8，段落之间空一行。
+- id: manifest_review
+  text: manifest.csv 列出每本书（源文件用 ; 分隔，状态为 placed 或 review）；复核的书把文件复制到 _review/ 下，并给出一个原因代码 UNREADABLE、NO_TITLE、NO_AUTHOR、NO_YEAR、NO_DESCRIPTION 或 CONFLICT（取第一个符合的）。
+- id: precedence
+  text: 每项信息先取内嵌元数据，其次书名页文字，最后文件名；文件的创建和修改日期不是出版年份。
+- id: encodings
+  text: 有些文件是 GB18030、CP949、Shift_JIS 或 CP1252 编码，没有标记（HTML 会声明 charset）。
+- id: year_notations
+  text: 年份还会写成日本年号、民国纪年、檀君纪年、汉字数字和罗马数字，都要换算成四位数年份。
+- id: author_variants
+  text: 同一位作者有多种罗马字写法，或写成“姓, 名”；始终用正式的那一对写法，一本书自己的文件里没有时，可从同一作者在共享盘里的其他书找到。
+- id: duplicates
+  text: 同一本书在多个文件或格式里的副本合并成一个书库文件，清单里那一行列出所有这些文件。
+- id: exceptions
+  text: 缺的字段从这本书的其他文件取；有意义的文件名可当书名（通用文件名不算）；版权行给出年份；没有简介就是 NO_DESCRIPTION，绝不编造；同级别两个来源年份不一致就是 CONFLICT。
+- id: containers
+  text: 压缩包和目录 CSV（每行一本书，表头为英文或日文）里也有书；只有图像的扫描件在有可读副本时忽略，否则为 UNREADABLE；垃圾文件不产生任何输出。
+- id: missing_author
+  text: 没有作者的书以 NO_AUTHOR 送去复核；这是规定，批准例外后改以“{{fallback_author}}”上架。
+- id: scoring
+  text: 每本书：路径完全正确且是它的简介得 1 分（否则简介正确得 0.4，年份、书名、作者每对一项加 0.2；路径对但简介错得 0.6），复核原因代码正确得 1 分（错的 0.4）；medium 和 hard 中每个不属于任何书的书库文件扣 0.5。

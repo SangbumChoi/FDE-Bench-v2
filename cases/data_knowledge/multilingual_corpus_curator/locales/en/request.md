@@ -1,0 +1,3 @@
+Our shared drive holds the material of about a hundred of our books, in Chinese, English, Korean, Japanese and Spanish, and nobody has kept it in order: titles, authors, years and blurbs are scattered over all kinds of files from the regional offices, the scanning team and the rights desk. A sample of the drive is attached (`corpus/`).
+
+We need a program we can run on the full drive that builds a clean library from it: one text file per book with the book's description, filed the way our catalogue team wants, plus a manifest of what went where. Anything it cannot file should be set aside for our team to look at, not guessed.
