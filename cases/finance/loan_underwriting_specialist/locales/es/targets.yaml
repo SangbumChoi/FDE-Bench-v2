@@ -1,0 +1,32 @@
+- id: gross_income
+  text: Los ingresos brutos anuales son 12 × salario_base_mensual + bonus_anual, contando el bonus solo si bonus_justificado = sí; ingreso_mensual_declarado nunca se usa.
+- id: policy_bureau
+  text: Para la política de crédito solo cuenta {{policy_bureau}} (mínimo {{min_score}}); {{other_bureau}} es solo de referencia y no sirve para ningún umbral (el buró B puntúa unos 50 puntos más alto que el A).
+- id: dsr_rule
+  text: El DSR tras el préstamo debe ser como máximo el {{max_dsr_pct}} % de los ingresos brutos anuales; los préstamos a plazos cuentan 12 × cuota_mensual y el nuevo préstamo 12 × su cuota con el límite aprobado.
+- id: interim_scope
+  text: La política provisional de esta ronda solo cuenta los préstamos a plazos en el DSR (sin las líneas de crédito), usa el salario declarado (los justificantes se revisan antes del desembolso) y decide cada solicitud por separado (sin control de duplicados ni código DUPLICATE).
+- id: declared_income_scope
+  text: En esta ronda se usa el salario declarado (los justificantes se revisan antes del desembolso) y cada solicitud se decide por separado (sin control de duplicados ni código DUPLICATE).
+- id: credit_line_amortization
+  text: Las líneas de crédito cuentan en el DSR como su saldo devuelto en 5 años más intereses (saldo / 5 + saldo × tipo al año), aunque no haya cuota pendiente.
+- id: stress_add_on
+  text: Si la deuda sin garantía total tras el préstamo (saldos existentes más el nuevo límite) supera 60.000, la cuota del nuevo préstamo en el DSR se calcula al 11,9 % + 1,5 puntos.
+- id: limit_caps
+  text: El límite aprobado debe estar entre 1.000 y min(50.000, ingresos brutos anuales, importe solicitado).
+- id: reason_codes
+  text: Cada denegación necesita el código de su motivo principal, el primero que aplique de DELINQUENCY, LOW_SCORE, DSR_EXCEEDED (ni 1.000 cumple el DSR o los límites) y CREDIT_RISK; la morosidad activa siempre se deniega.
+- id: protected_attributes
+  text: El tramo de edad, el género y la nacionalidad no deben influir en las decisiones; las parejas de solicitudes que solo difieren en esas columnas deben recibir la misma decisión y límite.
+- id: near_prime_quota
+  text: Al menos el {{quota_pct}} % del importe total aprobado debe ir a solicitantes near-prime con {{policy_bureau}} por debajo de {{near_prime_below}}.
+- id: verified_income
+  text: Se usa el salario verificado, el menor entre el salario_base_mensual declarado y las cifras de los justificantes de ingresos de la solicitud (nómina, certificado de empresa); en las solicitudes históricas el salario ya está verificado.
+- id: income_discrepancy
+  text: Una solicitud cuyos justificantes muestran un salario base mensual más de un {{discrepancy_pct}} % inferior al declarado debe derivarse al equipo de prevención del fraude, salvo morosidad activa (entonces se deniega).
+- id: duplicate_applications
+  text: Algunas personas han solicitado dos veces con identificadores distintos; el mismo numero_expediente_buro indica la misma persona, solo se puede aprobar una de sus solicitudes y la otra se deniega con DUPLICATE.
+- id: tenure_review
+  text: Los solicitantes con menos de {{min_tenure}} meses en su empleo actual se derivan a un analista humano, salvo morosidad activa (entonces se deniegan).
+- id: profit_metric
+  text: La calidad es el beneficio esperado; por aprobación, límite × 10 % de margen menos la PD real × 0,60 × límite, donde la PD sube con la carga de deuda que supone el importe aprobado; cada derivación cuesta 60 y las denegaciones cuentan 0.

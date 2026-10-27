@@ -1,0 +1,18 @@
+- id: liability_cap
+  text: 责任上限必须不低于台账中年度金额_美元的 1 倍；按过去 N 个月费用约定的上限折算为年度金额的 N/12，恰好相等没问题，不设上限也没问题。
+- id: governing_law
+  text: 适用法律必须是瑞士法或新加坡法；只看适用法律，不看法院或仲裁地。
+- id: auto_renewal
+  text: 会自动续期的合同（不论措辞）不续约通知期须不少于 60 天，一个月按 30 天计；期满即终止的合同没问题。
+- id: payment_terms
+  text: 付款期限必须自收到发票起不少于 45 天。
+- id: data_protection
+  text: 采购类别为 IT与数据服务 的合同必须有处理个人信息的条款，标题不限；其他类别不要求。
+- id: termination_convenience
+  text: 年度金额超过 150,000 美元的合同必须允许我方无理由随时解除；只有违约解除不够。
+- id: indemnity_mutual
+  text: 赔偿必须是双向的；只由我方赔偿供应商的条款算问题。
+- id: decision_and_scoring
+  text: 问题代码为 LIABILITY_CAP、GOVERNING_LAW、AUTO_RENEWAL、PAYMENT_TERMS、DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY；两个及以上关键问题（责任上限、数据保护、赔偿）为 reject，有任何问题为 negotiate，否则 sign；按 0.7 × 问题 F1 + 0.3 × 结论准确率评分。
+- id: small_contract_fast_track
+  text: 年度金额低于 20,000 美元的合同不做审查，直接标为 sign，问题列表为空。

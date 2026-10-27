@@ -1,0 +1,24 @@
+- id: date_format
+  text: fecha_desde está escrita como día/mes/año; es el primer día en que el paciente puede venir, y una fecha anterior al 16 de noviembre significa que puede venir desde el 16 (la espera se cuenta desde entonces).
+- id: visit_length
+  text: Una primera visita ocupa dos huecos libres consecutivos de 20 minutos del mismo médico el mismo día (inicio = primer hueco); una revisión ocupa un hueco.
+- id: urgent_window
+  text: Toda solicitud urgente (U) debe citarse dentro de los {{urgent_days}} días laborables siguientes a su fecha de referencia (fecha desde, o el 16 de noviembre si es anterior).
+- id: follow_up_doctor
+  text: Citar la revisión con el médico anterior es una costumbre de admisión, no una obligación contractual, y admite excepciones (el médico D11 está de vacaciones la primera semana).
+- id: interpreters
+  text: Una visita con un médico que no habla el idioma del paciente necesita intérprete; solo hay {{interpreters_per_day}} intérpretes presenciales al día, obligatorios en primeras visitas, y las revisiones que excedan usan interpretación por vídeo de pago (3 por visita).
+- id: holiday_clinic
+  text: "{{closed_dept}} cierra el 23 de noviembre (Día de la Ciudad) aunque la lista de huecos todavía muestre sus huecos."
+- id: referral_expiry
+  text: La primera visita debe hacerse como muy tarde en la fecha de volante_valido_hasta (día/mes/año); después el volante caduca y es mejor no citar la solicitud.
+- id: blood_test
+  text: El análisis de sangre en ayunas debe hacerse al menos un día laborable antes de la visita y no antes de la fecha desde, con su fecha en test_date; el laboratorio admite como máximo {{lab_cap}} por día laborable.
+- id: no_show_rates
+  text: La tasa de ausencias varía según el paciente (historial de asistencia; en total, una de cada cinco) y sube un punto por cada día laborable de antelación; el historial se midió con unos 5 días de antelación y las solicitudes se recibieron 2 días laborables antes del 16 de noviembre.
+- id: overbooking
+  text: Un hueco puede tener dos revisiones (nunca una primera visita), con un máximo de {{overbooked_per_session}} huecos sobrecitados por médico en cada consulta de mañana o de tarde.
+- id: scoring
+  text: Calidad = días laborables de espera ponderados U 3 / S 2 / R 1, más 20 por cada solicitud S citada con más de {{soon_days}} días laborables de retraso, más 60 por solicitud sin citar, más 3 por revisión con interpretación por vídeo; cuanto más bajo, mejor.
+- id: scoring_no_shows
+  text: En el nivel difícil la calidad suma además 10 por cada hueco que se espera que quede vacío y 25 por cada hueco sobrecitado al que se espera que acudan los dos pacientes.

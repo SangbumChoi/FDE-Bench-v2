@@ -5,3 +5,4 @@ __pycache__/
 .cache/
 runs/
 configs/models.yaml
+.claude/worktrees/

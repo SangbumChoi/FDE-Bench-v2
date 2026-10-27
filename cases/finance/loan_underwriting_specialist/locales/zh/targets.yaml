@@ -1,0 +1,32 @@
+- id: gross_income
+  text: 年总收入 = 12 × 月基本工资 + 年度奖金，奖金仅在 奖金有证明 = 是 时计入，申报月收入一律不用。
+- id: policy_bureau
+  text: 政策只用 {{policy_bureau}}（最低 {{min_score}}），{{other_bureau}} 仅供参考，不能用于任何门槛（B 机构的分数比 A 机构高 50 分左右）。
+- id: dsr_rule
+  text: 贷款后 DSR 不得超过年总收入的 {{max_dsr_pct}}%；分期贷款按 12 × 月还款额，新贷款按批准额度的月供 × 12 计算。
+- id: interim_scope
+  text: 这一轮的过渡政策中 DSR 只算分期贷款（不计循环授信），收入按填报工资计算（收入证明材料在放款前核对），每笔申请单独决定（不查重复申请，不用 DUPLICATE）。
+- id: declared_income_scope
+  text: 这一轮收入按填报工资计算（收入证明材料在放款前核对），每笔申请单独决定（不查重复申请，不用 DUPLICATE）。
+- id: credit_line_amortization
+  text: 循环授信在 DSR 中按未偿余额 5 年还清加利息计算（余额 / 5 + 余额 × 利率），即使当前没有应还金额也要计入。
+- id: stress_add_on
+  text: 贷款后无抵押负债总额（现有余额 + 新额度）超过 60,000 时，新贷款月供按 11.9% + 1.5 个百分点计算。
+- id: limit_caps
+  text: 批准额度在 1,000 与 min(50,000, 年总收入, 申请金额) 之间。
+- id: reason_codes
+  text: 每笔拒绝都要按 DELINQUENCY、LOW_SCORE、DSR_EXCEEDED（连 1,000 都满足不了 DSR 或额度限制）、CREDIT_RISK 的顺序填写第一个符合的原因代码，当前逾期一律拒绝。
+- id: protected_attributes
+  text: 年龄段、性别、国籍不得影响决定，只在这些列上不同的成对申请必须得到相同的决定和额度。
+- id: near_prime_quota
+  text: 批准总金额中至少 {{quota_pct}}% 要发放给 {{policy_bureau}} 低于 {{near_prime_below}} 的中低信用申请人。
+- id: verified_income
+  text: 规则使用核实后的工资，即申请表的 月基本工资 与该笔申请收入证明材料（工资单、单位收入证明）上金额中的最低值；历史申请里的工资已经核实过。
+- id: income_discrepancy
+  text: 材料上的月基本工资比申请表填报额低 {{discrepancy_pct}}% 以上的申请，必须转反欺诈团队人工审核；当前有逾期的则拒绝。
+- id: duplicate_applications
+  text: 有人用不同申请编号申请了两次；征信档案号 相同即同一个人，最多只能批准其中一笔，另一笔以 DUPLICATE 拒绝。
+- id: tenure_review
+  text: 现职不满 {{min_tenure}} 个月的申请人转人工审批，但当前有逾期的直接拒绝。
+- id: profit_metric
+  text: 质量是预期利润：每笔批准为额度 × 10% 利润率 − 真实 PD × 0.60 × 额度，PD 随批准金额带来的还款负担升高；每笔转人工成本 60，拒绝计 0。

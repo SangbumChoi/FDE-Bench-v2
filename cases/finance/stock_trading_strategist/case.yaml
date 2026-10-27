@@ -1,0 +1,65 @@
+id: stock_trading_strategist
+role: Stock Trading Strategist
+task_type: Strategy
+field: finance
+seed: 101
+objective: maximize          # final net equity after the hidden 80 sessions: cash + unsettled sale proceeds
+                             # + positions at the last close net of commission (and, medium+, sales tax)
+deliverable_type: program
+entrypoint: strategy.py:on_day
+tiers:                       # one world and the same data in every setting; the tier sets the engine and the rules
+  easy: >-
+    The trading core, with the engine in its simple mode: orders fill next session at the price 10 minutes after
+    the open plus half the spread (or in the opening auction at the open); commission with a minimum; board lots;
+    cash only, no short sales; sale proceeds usable at once; the firm's restricted list; the desk's habit of not
+    trading in the first 10 minutes. No position, sector, order-size or drawdown limits this round.
+  medium: >-
+    Easy plus a 0.2% sales tax on sells and sale proceeds that settle T+2, per-stock and per-sector limits after
+    buying, and an order-size cap as a share of the 20-session average volume in today's shares (a share
+    consolidation in the history leaves volumes raw).
+  hard: >-
+    Medium plus market impact that grows with the order's share of the session's volume, and a maximum-drawdown
+    mandate through the sell-off in the hidden period.
+rulesets:                    # the client's rule parameters (percentages); same data, three ground truths
+  A: {restricted: "MEDQ, ZENT", stock_cap: 15, sector_cap: 40, participation: 10, max_drawdown: 15}
+  B: {restricted: "NEXO, PYRO", stock_cap: 10, sector_cap: 25, participation: 15, max_drawdown: 10}
+  C: {restricted: "BRAX, DUNE", stock_cap: 20, sector_cap: 50, participation: 5, max_drawdown: 12}
+deliverable_spec: |
+  A program/ directory with strategy.py defining on_day(day) -> {"orders": [...]} (or just the list of orders).
+  The engine loads it once and calls it once per hidden session after the close, in the same process, so
+  module-level state survives from one call to the next: day = {"market": {...}, "portfolio": {...}} as in the
+  sample call file. Standard library only is safe; 10 s per call.
+  An order is {"ticker": str, "side": "buy" | "sell", "qty": int, "at": "p10" | "open"} ("at" defaults to
+  "p10"); at most one order per ticker per session; orders execute in the next session, sells before buys.
+rules:
+  - id: order_format
+    class: physical
+    description: Every call returns well-formed orders (a listed ticker, side buy or sell, a positive integer quantity, at p10 or open, one order per ticker); a call that fails or times out counts too.
+  - id: lot_size
+    class: physical
+    description: Every order quantity is a multiple of the stock's board lot.
+  - id: no_short_selling
+    class: physical
+    description: A sell order never exceeds the shares the book holds (cash account, no short sales).
+  - id: restricted_list
+    class: contractual
+    description: The book never places a buy order for a stock on the firm's restricted list ({{restricted}}).
+  - id: no_first_10_minutes
+    class: business_policy
+    description: No order trades in the first 10 minutes of the session, opening auction included (orders fill at p10, never "at open").
+  - id: position_limit
+    class: contractual
+    tiers: [medium, hard]
+    description: A stock bought in a session is at most {{stock_cap}}% of the book's equity at that session's close.
+  - id: sector_limit
+    class: contractual
+    tiers: [medium, hard]
+    description: A sector in which the book bought in a session is at most {{sector_cap}}% of the book's equity at that session's close.
+  - id: volume_participation
+    class: contractual
+    tiers: [medium, hard]
+    description: Every order is at most {{participation}}% of the stock's average daily volume over its last 20 trading sessions, counted in today's shares (volumes before a split or consolidation converted).
+  - id: max_drawdown
+    class: contractual
+    tiers: [hard]
+    description: The book's closing equity never falls more than {{max_drawdown}}% below its running peak (starting capital included).

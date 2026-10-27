@@ -1,0 +1,18 @@
+- id: fiscal_year
+  text: 财年从 4 月 1 日开始，以开始那一年命名（FY2025 = 2025-04-01 至 2026-03-31）；第一季度为 4–6 月，上半年为 4–9 月。
+- id: local_day
+  text: 时间戳以 UTC 存储，但日、月、季度和财年都按韩国时间（UTC+9）划分；取日期前先加 9 小时。
+- id: test_accounts
+  text: accounts_meta 中 account_type 为“测试”的客户是 QA 账号，所有数字都必须排除；“员工”账号保留。
+- id: counted_orders
+  text: 只有“已完成”的订单才算；“已取消”和“支付失败”的订单一律不算，即使 payments.csv 里有付款记录。
+- id: net_revenue
+  text: 净收入 = 订单 subtotal（税前）减去不含税退款（退款金额 × subtotal / total），计入下单日期所在期间；按品类统计时，退款按行金额比例分摊。
+- id: fx_order_date
+  text: 金额以订单币种存储，按订单日期（韩国时间）的 fx_rates 中 krw_per_unit 换算成韩元；退款使用其订单的同一汇率。
+- id: active_customer
+  text: 活跃客户是在截至基准日期的 90 天内（2026-07-03 至 2026-09-30）至少有一笔已完成订单的客户。
+- id: category_rename
+  text: “零食”品类于 2025-10-01 更名为“食品储藏”，较早的商品仍是旧标签；问到“食品储藏”时两个标签都要算。
+- id: report_rounding
+  text: 财务要求所有金额答案四舍五入到千韩元；答案与精确值比较（计数和编号须完全一致，其他须在 0.5% 以内）。

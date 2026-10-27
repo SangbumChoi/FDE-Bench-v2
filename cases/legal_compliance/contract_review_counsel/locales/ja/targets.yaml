@@ -1,0 +1,18 @@
+- id: liability_cap
+  text: 責任上限は契約台帳の年間金額_USDの1倍以上が必要です。直近Nか月の代金による上限は年間金額のN/12と換算し、ちょうど同額なら問題なく、上限なしの契約も問題ありません。
+- id: governing_law
+  text: 準拠法はスイス法またはシンガポール法である必要があり、裁判所や仲裁地ではなく準拠法だけで判断します。
+- id: auto_renewal
+  text: 自動的に更新される契約は書き方にかかわらず更新拒絶の通知期間が60日以上必要で、1か月は30日として扱います。満了で終了する契約は問題ありません。
+- id: payment_terms
+  text: 支払期限は請求書の受領から45日以上必要です。
+- id: data_protection
+  text: 調達区分が IT・データサービス の契約には、見出しを問わず個人情報の取扱いに関する条項が必要で、ほかの区分では不要です。
+- id: termination_convenience
+  text: 年間金額が150,000米ドルを超える契約では、当社がいつでも理由なく解約できる必要があり、違反による解除だけでは足りません。
+- id: indemnity_mutual
+  text: 補償は相互的である必要があり、当社だけが取引先を補償する条項は論点です。
+- id: decision_and_scoring
+  text: 論点コードは LIABILITY_CAP、GOVERNING_LAW、AUTO_RENEWAL、PAYMENT_TERMS、DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY です。重大な論点（責任上限・データ保護・補償）が2つ以上で reject、論点があれば negotiate、なければ sign とし、0.7 × 論点 F1 ＋ 0.3 × 判定正解率で評価します。
+- id: small_contract_fast_track
+  text: 年間金額20,000米ドル未満の契約はレビューせず、論点なしの sign とします。

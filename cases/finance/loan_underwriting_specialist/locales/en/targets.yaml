@@ -1,0 +1,72 @@
+- id: gross_income
+  kind: ambiguous
+  domain: calculation
+  text: Annual gross income is 12 x monthly_base_salary plus annual_bonus, counting the bonus only when bonus_documented = yes; stated_monthly_income is self-declared and never used.
+- id: policy_bureau
+  kind: ambiguous
+  domain: data semantics
+  text: "{{policy_bureau}} is the policy score (minimum {{min_score}}); {{other_bureau}} is reference only and never used for a cutoff (Bureau B runs about 50 points higher than Bureau A)."
+- id: dsr_rule
+  kind: missing
+  domain: calculation
+  text: Debt-service ratio after the loan must be at most {{max_dsr_pct}}% of annual gross income; installment loans count 12 x monthly_payment and the new loan 12 x its installment at the approved limit.
+- id: interim_scope
+  kind: missing
+  domain: business rule
+  tiers: [easy]
+  text: This round's interim policy counts installment loans only in the DSR (credit lines left out), uses the declared salary (income documents are checked before disbursement) and decides every application on its own (no duplicate check, DUPLICATE unused).
+- id: declared_income_scope
+  kind: missing
+  domain: business rule
+  tiers: [medium]
+  text: This round uses the declared salary (income documents are checked before disbursement) and decides every application on its own (no duplicate check, DUPLICATE unused).
+- id: credit_line_amortization
+  kind: missing
+  domain: calculation
+  tiers: [medium, hard]
+  text: Credit lines count in the DSR as their outstanding balance repaid over 5 years plus interest (balance / 5 + balance x rate per year), even when no payment is due.
+- id: stress_add_on
+  kind: missing
+  domain: calculation
+  tiers: [medium, hard]
+  text: When total unsecured debt after the loan (existing balances plus the new limit) exceeds 60,000, the new loan's installment in the DSR is computed at 11.9% + 1.5 points.
+- id: limit_caps
+  kind: missing
+  domain: business rule
+  text: The approved limit must be between 1,000 and min(50,000, annual gross income, requested amount).
+- id: reason_codes
+  kind: missing
+  domain: business rule
+  text: Every decline needs the reason code of its main driver, first that applies of DELINQUENCY, LOW_SCORE, DSR_EXCEEDED (even 1,000 breaks the DSR or caps), CREDIT_RISK; active delinquencies are always declined.
+- id: protected_attributes
+  kind: missing
+  domain: business rule
+  text: Age band, gender and nationality must not influence decisions; planted twin applications differing only in those columns must get the same decision and limit.
+- id: near_prime_quota
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: At least {{quota_pct}}% of the total approved amount must go to near-prime applicants with {{policy_bureau}} below {{near_prime_below}}.
+- id: verified_income
+  kind: ambiguous
+  domain: calculation
+  tiers: [hard]
+  text: The salary used is the verified one, the lowest of the declared monthly_base_salary and every figure on the application's income documents (payslip, employer letter); past applications already show verified salaries.
+- id: income_discrepancy
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: An application whose documents show a monthly base salary more than {{discrepancy_pct}}% below the declared one must be referred to the fraud-prevention team (unless it has an active delinquency, then declined).
+- id: duplicate_applications
+  kind: missing
+  domain: data semantics
+  tiers: [hard]
+  text: Some people applied twice under different application ids; the same bureau_file_number means the same person, at most one of their applications may be approved, and the other is declined with DUPLICATE.
+- id: tenure_review
+  kind: missing
+  domain: business rule
+  text: Applicants with fewer than {{min_tenure}} months in their current job are referred to a human underwriter, unless they have an active delinquency (then declined).
+- id: profit_metric
+  kind: missing
+  domain: scoring
+  text: Quality is expected profit; per approval limit x 10% margin minus true PD x 0.60 x limit, where PD rises with the debt burden of the approved amount; each referral costs 60, declines count 0.

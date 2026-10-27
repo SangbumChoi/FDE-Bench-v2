@@ -1,0 +1,2 @@
+Tenemos acumuladas muchas solicitudes de cita de consultas externas. ¿Podría usted citarlas en las agendas de los médicos para las próximas dos semanas (del lunes 16 al viernes 27 de noviembre)? Nos gustaría que los pacientes no esperen más de lo necesario. Le adjuntamos la lista de médicos, los huecos libres, las solicitudes y nuestros avisos de consultas.
+También le adjuntamos el historial de asistencia de los pacientes.

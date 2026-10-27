@@ -1,0 +1,36 @@
+- id: efficiency
+  kind: ambiguous
+  domain: calculation
+  text: Efficiency is modelled as 92% on charge and 92% on discharge (not the 84.6% round-trip applied once); charging P MW for a quarter adds 0.25*P*0.92 MWh and discharging P MW removes 0.25*P/0.92 MWh.
+- id: soc_window
+  kind: ambiguous
+  domain: business rule
+  text: The warranty requires state of charge between 10% and 90% (4-36 MWh) at all times, narrower than the manufacturer's 5%-95%.
+- id: start_end_soc
+  kind: missing
+  domain: business rule
+  text: The battery starts the week at 50% (20 MWh) and must finish the week at 50% or more.
+- id: export_cap
+  kind: ambiguous
+  domain: data semantics
+  text: The export limit is temporarily 25 MW (not the 30 MW in the agreement); solar + discharge - charge must not exceed 25 MW while discharging, and solar above 25 MW is clipped unless the battery absorbs it.
+- id: grid_charging
+  kind: missing
+  domain: business rule
+  text: Charging from solar is allowed any time, but drawing from the grid is only allowed in quarters starting 00:00-05:45 local time (max 20 MW); never charge and discharge in the same quarter.
+- id: quarter_settlement
+  kind: ambiguous
+  domain: data semantics
+  text: Settlement is in 15-minute intervals; the hourly price applies to all four quarters, MW values are quarter averages and energy is MW x 0.25.
+- id: dst_clock
+  kind: missing
+  domain: data semantics
+  text: Timestamps are local time and clocks go forward on Sunday 28 March, so that day has 23 hours, no 02:00-02:45 rows, and the plan has exactly 668 quarter rows.
+- id: evening_reserve
+  kind: missing
+  domain: business rule
+  text: Company policy keeps at least 20% state of charge at every moment between 17:00 and 21:00 every day.
+- id: profit_scoring
+  kind: missing
+  domain: scoring
+  text: The plan is scored at actual prices as site export revenue minus grid import cost minus what solar alone would earn (clipped at 25 MW), minus EUR 5 per MWh of charge plus discharge throughput.

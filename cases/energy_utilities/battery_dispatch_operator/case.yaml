@@ -1,0 +1,31 @@
+id: battery_dispatch_operator
+role: Battery Dispatch Operator
+task_type: Combinatorial Optimization
+field: energy_utilities
+seed: 20270322
+objective: maximize          # battery profit in EUR at true prices: extra site export revenue vs solar alone - grid import cost - 5 EUR/MWh throughput
+deliverables: [dispatch.csv]
+deliverable_spec: |
+  dispatch.csv, ASCII header: timestamp,charge_mw,discharge_mw
+  One row per 15-minute interval of the week 2027-03-22 00:00 .. 2027-03-28 23:45, local time, timestamp = interval
+  start as "YYYY-MM-DD HH:MM" (only clock times that exist locally). charge_mw / discharge_mw = average battery
+  power at the meter over the interval in MW, both >= 0.
+rules:
+  - id: soc_limits
+    class: physical
+    description: State of charge stays between 10% and 90% of 40 MWh at all times (92% efficiency on charge and on discharge).
+  - id: power_limits
+    class: physical
+    description: Charge and discharge are each between 0 and 20 MW, never both in the same interval; grid import at most 20 MW.
+  - id: export_cap
+    class: contractual
+    description: While the battery discharges, site export (solar + discharge - charge) must not exceed the amended 25 MW cap.
+  - id: grid_charging_window
+    class: contractual
+    description: The site may import from the grid (charging beyond solar output) only in intervals starting 00:00-05:45 local time.
+  - id: end_soc
+    class: contractual
+    description: The week starts at 50% state of charge and must end at no less than 50%.
+  - id: reserve_20pct
+    class: business_policy
+    description: State of charge is at least 20% at every moment between 17:00 and 21:00 local time each day.

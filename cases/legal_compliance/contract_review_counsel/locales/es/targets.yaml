@@ -1,0 +1,18 @@
+- id: liability_cap
+  text: El límite de responsabilidad debe ser al menos 1 vez el importe_anual_usd del registro; un límite de lo pagado en N meses equivale a N/12 del importe anual, un límite igual es correcto y un contrato sin límite también.
+- id: governing_law
+  text: La ley aplicable debe ser la de Suiza o la de Singapur; solo cuenta la ley aplicable, no los tribunales ni la sede del arbitraje.
+- id: auto_renewal
+  text: Un contrato que se prorroga automáticamente, con cualquier redacción, necesita un preaviso de no renovación de al menos 60 días; cada mes cuenta como 30 días; los contratos que simplemente vencen son correctos.
+- id: payment_terms
+  text: El plazo de pago debe ser de al menos 45 días desde la recepción de la factura.
+- id: data_protection
+  text: Los contratos de la categoría TI y servicios de datos deben incluir una cláusula sobre el tratamiento de datos personales, sea cual sea su título; las demás categorías no la necesitan.
+- id: termination_convenience
+  text: Los contratos con un importe anual superior a 150.000 USD deben permitirnos desistir por conveniencia, en cualquier momento y sin causa; la resolución por incumplimiento no basta.
+- id: indemnity_mutual
+  text: Las indemnidades deben ser recíprocas; una cláusula en la que solo nosotros indemnizamos al proveedor es una incidencia.
+- id: decision_and_scoring
+  text: Los códigos son LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS, DATA_PROTECTION, TERMINATION_CONVENIENCE e INDEMNITY; reject con dos o más incidencias críticas (límite de responsabilidad, protección de datos, indemnidad), negotiate con alguna incidencia y, si no, sign; se evalúa con 0,7 × F1 de incidencias + 0,3 × acierto en la decisión.
+- id: small_contract_fast_track
+  text: Los contratos con un importe anual inferior a 20.000 USD se marcan como sign sin incidencias y sin revisión jurídica.

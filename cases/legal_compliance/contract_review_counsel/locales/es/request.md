@@ -1,0 +1,1 @@
+Buenos días: el departamento de compras tiene preparados unos cuarenta contratos con proveedores pendientes de firma. ¿Podría revisar estos contratos e indicarnos cuáles necesitan cambios antes de firmarlos? Le adjuntamos el registro de contratos y los textos de los contratos.

@@ -1,0 +1,38 @@
+- id: bom_explosion
+  text: La necesidad semanal de cada componente es el número de placas de cada modelo fabricadas esa semana (plan_produccion.csv) por su cantidad_por_placa en lista_materiales.csv, sumado para los dos modelos; todas las cantidades van en piezas.
+- id: round_scope_easy
+  text: En esta ronda se planifica a precio de lista (precio_unitario, sin tramos), sin el cambio de la flash (C04 las diez semanas, sin C25, columnas de vigencia ignoradas) y como si los proveedores entregaran en la semana prometida y confirmaran todo (no se usan el historial de entregas ni las asignaciones).
+- id: round_scope_medium
+  text: En esta ronda se planifica sin el cambio de la flash (C04 las diez semanas, sin C25, columnas de vigencia ignoradas) y como si los proveedores entregaran en la semana prometida y confirmaran todo (no se usan el historial de entregas ni las asignaciones).
+- id: lead_time_weeks
+  text: En esta ronda los plazos cuentan como semanas completas (plazo_entrega_dias entre 5, redondeado hacia arriba, sin festivos); lo pedido el lunes de la semana w con L semanas puede usarse a partir de la semana w+L para toda la necesidad de esa semana.
+- id: business_day_lead_times
+  text: Los plazos son días hábiles contados desde el lunes de la semana del pedido; W5 y W6 (Navidad y Año Nuevo) tienen solo 4 días hábiles, las demás 5, y la mercancía se puede usar desde la primera semana que empieza después de la entrega.
+- id: usd_planning_rate
+  text: Pacific Parts (S04) cotiza en dólares; todos los costes y el presupuesto están en KRW, convertidos con el tipo fijo de planificación de {{usd_krw}} KRW por USD.
+- id: moq_per_line
+  text: El pedido mínimo se aplica por línea de pedido (un proveedor, componente y semana de pedido); las cantidades de semanas distintas nunca se suman para alcanzarlo.
+- id: price_breaks
+  text: Los tramos de precio se aplican por línea de pedido y a toda la línea (descuento sobre todas las unidades); las cantidades de semanas distintas nunca se suman para alcanzar un tramo.
+- id: quality_hold
+  text: "{{hold_supplier}} está en retención de calidad; su mercancía con llegada prevista de W1 a W{{hold_until}} se rechaza, así que sus entregas solo pueden llegar después de W{{hold_until}}."
+- id: monthly_budget_cap
+  text: El presupuesto mensual es un tope obligatorio, no un objetivo; cada pedido cuenta en el mes del lunes de su semana de pedido (W1-W2 noviembre, W3-W6 diciembre, W7-W8 enero).
+- id: approved_status_only
+  text: Solo pueden usarse proveedores homologados para ese componente; los que están en evaluación o suspendidos no valen aunque hayan cotizado.
+- id: resistor_reels
+  text: En el archivo de inventario las resistencias SMD (C07, C08, C09) se cuentan en bobinas de 5.000 piezas; el resto de componentes y todas las cantidades de pedido van en piezas.
+- id: safety_stock
+  text: Los componentes críticos (critico = sí) deben mantener un stock de seguridad de {{safety_weeks}} veces su necesidad semanal media (su necesidad total en las semanas en que se usan, dividida entre esas semanas, por {{safety_weeks}} y redondeada hacia arriba) al final de cada semana en que se usan.
+- id: dual_source_critical
+  text: Cada componente crítico en uso debe pedirse a al menos dos proveedores distintos dentro de este plan, sin que ninguno supere el {{max_share}} % de la cantidad pedida del componente; es una costumbre de la empresa, así que se puede pedir una excepción.
+- id: cost_model
+  text: El plan se simula semana a semana de W1 a W10 con pedidos pendientes (las placas esperan la pieza que falta); coste = compras + 0,5 % del costo estándar por pieza en stock y semana + 5 veces el costo estándar por pieza y semana de espera + 1,5 veces el costo estándar por pieza y semana por debajo del stock de seguridad en los críticos.
+- id: supplier_lateness
+  text: Los proveedores entregan una o dos semanas tarde con sus propias probabilidades, visibles en historial_entregas.csv (de 1 a 7 días después del lunes prometido = una semana de retraso, de 8 a 14 días = dos); cada entrega (un proveedor, componente y semana de llegada) se retrasa de forma independiente; los pedidos abiertos llegan a tiempo.
+- id: allocation_caps
+  text: S03 para C01 y C03 y S08 para C06 confirman como máximo la cantidad de asignaciones.csv por mes natural de semanas de pedido; lo que exceda no se entrega.
+- id: engineering_change
+  text: Desde W6 la flash C04 se sustituye por C25 en las dos placas; la C04 que quede al final de W5 se desecha a costo estándar y la que llegue después no sirve; C25 no tiene stock, es crítica y debe pedirse a dos proveedores, mientras que C04 ya no necesita stock de seguridad ni segunda fuente.
+- id: expected_cost
+  text: Como las entregas pueden retrasarse, la calidad cuenta el almacenamiento, la espera, el déficit y el desecho de C04 como valores esperados según las probabilidades reales de retraso de los proveedores (el historial es solo una muestra); las compras se pagan completas en cualquier caso.

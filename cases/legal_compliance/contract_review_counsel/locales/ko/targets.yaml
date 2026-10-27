@@ -1,0 +1,18 @@
+- id: liability_cap
+  text: 책임 한도는 계약대장의 연간금액_USD의 1배 이상이어야 합니다. 직전 N개월 대금 기준 한도는 연간금액의 N/12로 보고, 정확히 같으면 문제없으며 한도가 없는 계약도 문제없습니다.
+- id: governing_law
+  text: 준거법은 스위스법 또는 싱가포르법이어야 하며, 법원이나 중재지는 보지 않고 준거법만 봅니다.
+- id: auto_renewal
+  text: 자동으로 갱신되는 계약은 표현과 상관없이 갱신 거절 통지 기간이 60일 이상이어야 하고, 1개월은 30일로 봅니다. 만료로 종료되는 계약은 문제없습니다.
+- id: payment_terms
+  text: 지급 기한은 청구서 수령일로부터 45일 이상이어야 합니다.
+- id: data_protection
+  text: 구매분류가 IT·데이터 서비스인 계약에는 제목과 상관없이 개인정보 취급 조항이 있어야 하며, 다른 분류는 필요 없습니다.
+- id: termination_convenience
+  text: 연간금액이 150,000달러를 초과하는 계약은 저희가 언제든 사유 없이 해지할 수 있어야 하며, 위반 해지만으로는 부족합니다.
+- id: indemnity_mutual
+  text: 배상 조항은 상호적이어야 하며, 저희만 공급업체에 배상하는 조항은 이슈입니다.
+- id: decision_and_scoring
+  text: 이슈 코드는 LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS, DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY입니다. 중대 이슈(책임 한도, 데이터 보호, 배상)가 2개 이상이면 reject, 이슈가 있으면 negotiate, 없으면 sign이고, 0.7 × 이슈 F1 + 0.3 × 결정 정확도로 평가합니다.
+- id: small_contract_fast_track
+  text: 연간금액 20,000달러 미만 계약은 검토 없이 이슈 없이 sign으로 표시합니다.

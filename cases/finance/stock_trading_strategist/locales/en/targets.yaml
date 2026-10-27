@@ -1,0 +1,79 @@
+- id: interface
+  kind: missing
+  domain: data semantics
+  text: The deliverable is program/strategy.py with on_day(day), day = {market, portfolio}; called after each close, orders execute next session; the engine loads the program once and makes every call in the same process, so state can live in module variables; 10 s per call, standard library.
+- id: evaluation_period
+  kind: missing
+  domain: scoring
+  text: The strategy is replayed on the 80 sessions after the history (18 May to 4 September 2026), starting from 10,000,000 in cash and no positions.
+- id: fills
+  kind: missing
+  domain: calculation
+  text: Orders fill at the next session's p10 (price 10 minutes after the open) plus or minus half the stock's spread; "at open" trades in the opening auction at the open without spread; sells execute before buys.
+- id: costs
+  kind: missing
+  domain: calculation
+  text: Commission is 0.04% of the traded value with a minimum of 20 per filled order.
+- id: simple_engine
+  kind: missing
+  domain: calculation
+  tiers: [easy]
+  text: This round the engine runs in its simple mode (no sales tax, sale proceeds usable at once, no market impact), and only the restricted list and the trading core are checked (no position, order-size or drawdown limits).
+- id: lots_and_cash
+  kind: ambiguous
+  domain: business rule
+  text: Quantities are whole board lots (100 shares, 10 for high-priced stocks); cash account with no short selling; a buy that exceeds the usable cash is rejected whole.
+- id: restricted_list
+  kind: missing
+  domain: business rule
+  text: "{{restricted}} are on the firm's restricted list (its corporate finance team advises them): the book may never place a buy order for them, although they stay in the index and the data."
+- id: first_10_minutes
+  kind: missing
+  domain: business rule
+  text: The desk never trades in the first 10 minutes, opening auction included (all orders at p10); it is a habit, not a rule or contract, and an exception is possible if trading at the open pays.
+- id: objective
+  kind: missing
+  domain: scoring
+  text: Quality is the final net equity on 4 September 2026 (cash, unsettled proceeds, positions at the last close net of the costs of selling them); the yardstick is buying the cap-weighted index on the first session and holding it.
+- id: halts
+  kind: missing
+  domain: data semantics
+  text: A halted stock has no bars and every order for it is rejected; it reopens with the price move accumulated during the halt; new halts are only known when they start.
+- id: upcoming_split
+  kind: missing
+  domain: data semantics
+  text: OMNY splits 2-for-1 effective 3 July 2026; positions double and its bars are re-adjusted from the evening before.
+- id: earnings
+  kind: missing
+  domain: data semantics
+  text: Companies report quarterly after the close with a surprise in %; the price reacts mostly in the next morning's gap and first minutes, and partly over the following sessions.
+- id: settlement
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: Sells pay a 0.2% sales tax, and sale proceeds settle T+2 (usable for buys two sessions after the sale); buys are paid immediately.
+- id: raw_volumes
+  kind: ambiguous
+  domain: data semantics
+  tiers: [medium, hard]
+  text: Prices are adjusted for splits and consolidations but volumes are raw; XIPH's 5-to-1 consolidation on 7 May 2026 makes its earlier volumes five times too high in today's shares.
+- id: position_limits
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: At the close of a session in which the book bought a stock, the stock is at most {{stock_cap}}% and its sector at most {{sector_cap}}% of equity (passive drift is not a breach).
+- id: order_size
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: No order may exceed {{participation}}% of the stock's average daily volume over its last 20 trading sessions, in today's shares.
+- id: market_impact
+  kind: missing
+  domain: calculation
+  tiers: [hard]
+  text: Fills also pay market impact of 0.1% per 5% of the session's volume the order takes (0.02 x qty / volume), at the open as well as at p10.
+- id: max_drawdown
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: The risk mandate closes the book if closing equity falls more than {{max_drawdown}}% below its running peak (starting capital included).

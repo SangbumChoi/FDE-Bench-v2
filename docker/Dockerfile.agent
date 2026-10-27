@@ -1,0 +1,20 @@
+# Image for isolated runs (isolation: strict). It holds tools only: no cases, no hidden requirements,
+# no benchmark code. The run's workspace is mounted at /workspace; the client channel is an MCP server on
+# the host (host.docker.internal), and program deliverables are scored in a separate --network none
+# container from the same image.
+#
+#   docker build -f docker/Dockerfile.agent -t fde-bench-agent:latest .
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        bash ca-certificates curl git coreutils procps nodejs npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# What agents commonly reach for when working on the data.
+RUN pip install --no-cache-dir numpy pandas scipy scikit-learn openpyxl pypdf python-docx lxml chardet
+
+# Vendor CLIs (pin versions for a campaign and record them with the results).
+RUN npm install -g @anthropic-ai/claude-code @openai/codex @google/gemini-cli opencode-ai \
+    && npm cache clean --force
+
+WORKDIR /workspace

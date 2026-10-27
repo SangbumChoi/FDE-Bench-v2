@@ -17,7 +17,8 @@ import yaml
 from .agents.base import AgentResult, RunContext
 from .agents.cli import CLIAgent
 from .agents.reference import ReferenceAgent
-from .cases import Case, discover
+from . import program
+from .cases import DEFAULT_RULESET, Case, discover
 from .llm import ModelRegistry
 from .prompts import render_task_prompt
 from .sandbox import DockerSandbox, LocalSandbox
@@ -52,6 +53,10 @@ class Settings:
     out: Path
     sandbox: dict[str, Any] = field(default_factory=lambda: {"kind": "local"})
     cache: Path = REPO / ".cache"
+    # "strict": every run in a docker sandbox, so the agent can see only /workspace (its request and data,
+    # the same in every difficulty and rule set) and never the cases, other settings or the run directory.
+    # "off": local sandbox allowed (development and tests).
+    isolation: str = "off"
 
 
 class Bench:
@@ -77,12 +82,24 @@ class Bench:
         variant.save(run_dir / "variant")
         return variant
 
+    def _image(self, case_id: str) -> str:
+        return self.s.sandbox["image"].format(case=case_id.replace("/", "-"))
+
     def _sandbox(self, case_id: str, workspace: Path):
         sb = self.s.sandbox
         if sb.get("kind", "local") == "docker":
-            return DockerSandbox(workspace, image=sb["image"].format(case=case_id), cpus=sb.get("cpus"),
-                                 memory=sb.get("memory"))
+            return DockerSandbox(workspace, image=self._image(case_id), cpus=sb.get("cpus"), memory=sb.get("memory"),
+                                 env=sb.get("env"))
+        if self.s.isolation == "strict":
+            raise RuntimeError("isolation: strict needs a docker sandbox (sandbox: {kind: docker, image: ...})")
         return LocalSandbox(workspace)
+
+    def _configure_programs(self, case_id: str) -> None:
+        """Program deliverables run where the agent ran: in the same image under a docker sandbox."""
+        if self.s.sandbox.get("kind", "local") == "docker":
+            program.configure("docker", self._image(case_id))
+        else:
+            program.configure("local")
 
     def _agent(self, agent: AgentSpec):
         if agent.harness == "reference":
@@ -138,9 +155,10 @@ class Bench:
     # ── scoring (re-runnable, and re-scorable under other policies) ─────────
     def score(self, run_dir: Path, agent: AgentSpec, extra_policies: list[str] = ()) -> dict[str, Any]:
         variant = Variant.load(run_dir / "variant")
-        case = self.cases[variant.spec.case_id]
+        case = self.cases[variant.spec.case_id].at(variant.case_tier, variant.ruleset)
         workspace = run_dir / "workspace"
         rec = json.loads((run_dir / "agent_result.json").read_text(encoding="utf-8"))
+        self._configure_programs(case.id)
 
         sub_dir = run_dir / "submission"
         ext_path = run_dir / "extraction.json"
@@ -194,9 +212,9 @@ class Bench:
 
 # ── experiment grids ─────────────────────────────────────────────────────────
 
-AXES = ("customer_locale", "agent_locale", "policy", "difficulty", "condition")
+AXES = ("customer_locale", "agent_locale", "policy", "difficulty", "ruleset", "engagement", "condition")
 BASELINE = {"customer_locale": "en", "agent_locale": "en", "policy": "baseline", "difficulty": "medium",
-            "condition": None}
+            "ruleset": "all", "engagement": "standard", "condition": None}
 
 
 def load_campaign(path: Path) -> tuple[Settings, list[AgentSpec], list[tuple[str, VariantSpec]], dict[str, Any]]:
@@ -204,7 +222,7 @@ def load_campaign(path: Path) -> tuple[Settings, list[AgentSpec], list[tuple[str
     d = doc.get("defaults", {})
     settings = Settings(cases_root=Path(d.get("cases_root", "cases")),
                         models=Path(d["models"]), out=Path(d.get("out", "runs")),
-                        sandbox=d.get("sandbox", {"kind": "local"}))
+                        sandbox=d.get("sandbox", {"kind": "local"}), isolation=d.get("isolation", "strict"))
     agents = [AgentSpec(**a) for a in doc.get("agents", [])]
     subsets = doc.get("subsets", {})
     seeds = d.get("seeds", [0])
@@ -229,8 +247,11 @@ def load_campaign(path: Path) -> tuple[Settings, list[AgentSpec], list[tuple[str
 
 
 def _case_list(cases: Any, subsets: dict[str, list[str]]) -> list[str]:
+    """"all", "field:<field>", a subset name, or a list of "<field>/<role>" ids (expanded per run)."""
     if cases == "all":
         return ["__ALL__"]
+    if isinstance(cases, str) and cases.startswith("field:"):
+        return [f"__FIELD__:{cases.split(':', 1)[1]}"]
     if isinstance(cases, str):
         return subsets[cases]
     return list(cases)
@@ -242,9 +263,20 @@ def run_campaign(path: Path, dry_run: bool = False, concurrency: int = 4) -> lis
     expanded: list[tuple[AgentSpec, VariantSpec]] = []
     for agent in agents:
         for _, spec in jobs:
-            ids = bench.cases if spec.case_id == "__ALL__" else [spec.case_id]
+            if spec.case_id == "__ALL__":
+                ids = list(bench.cases)
+            elif spec.case_id.startswith("__FIELD__:"):
+                field = spec.case_id.split(":", 1)[1]
+                ids = [cid for cid in bench.cases if cid.startswith(field + "/")]
+            else:
+                ids = [spec.case_id]
             for cid in ids:
-                expanded.append((agent, VariantSpec(**{**asdict(spec), "case_id": cid})))
+                # ruleset "all": every rule set the case declares, so each (case, difficulty) cell is the mean
+                # over its ground truths; cases without settings run once.
+                rulesets = ([spec.ruleset] if spec.ruleset != "all"
+                            else list(bench.cases[cid].rulesets) or [DEFAULT_RULESET])
+                for rs in rulesets:
+                    expanded.append((agent, VariantSpec(**{**asdict(spec), "case_id": cid, "ruleset": rs})))
     if dry_run:
         for agent, spec in expanded:
             print(f"{agent.label}\t{spec.key()}")

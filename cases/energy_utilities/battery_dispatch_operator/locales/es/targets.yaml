@@ -1,0 +1,18 @@
+- id: efficiency
+  text: La eficiencia se modela como un 92 % en la carga y un 92 % en la descarga (no como el 84,6 % de ida y vuelta aplicado una sola vez); cargar P MW durante un cuarto de hora añade 0,25*P*0,92 MWh y descargar P MW retira 0,25*P/0,92 MWh.
+- id: soc_window
+  text: La garantía exige un estado de carga entre el 10 % y el 90 % (de 4 a 36 MWh) en todo momento, un margen más estrecho que el 5 %-95 % del fabricante.
+- id: start_end_soc
+  text: La batería arranca la semana con un estado de carga del 50 % (20 MWh) y debe terminarla con un 50 % o más de carga.
+- id: export_cap
+  text: El límite de vertido es temporalmente de 25 MW (no los 30 MW del contrato); mientras se descarga, solar + descarga − carga no puede superar 25 MW, y la solar por encima de 25 MW se recorta salvo que la batería la absorba.
+- id: grid_charging
+  text: Cargar desde la solar se permite siempre, pero tomar energía de la red solo en los cuartos de hora que empiezan entre las 00:00 y las 05:45 hora local (máximo 20 MW); nunca se carga y descarga en el mismo cuarto de hora.
+- id: quarter_settlement
+  text: La liquidación es por cuartos de hora; el precio horario se aplica a los cuatro cuartos de la hora, los MW son medias del cuarto de hora y la energía es MW × 0,25.
+- id: dst_clock
+  text: Las horas son locales y el domingo 28 de marzo se adelanta el reloj, así que ese día tiene 23 horas, no hay filas de 02:00 a 02:45 y el plan tiene exactamente 668 filas.
+- id: evening_reserve
+  text: La política de la empresa exige mantener al menos un 20 % de estado de carga en todo momento entre las 17:00 y las 21:00, todos los días.
+- id: profit_scoring
+  text: El plan se evalúa a precios reales como ingresos por vertido menos coste de la energía tomada de la red, menos lo que ganaría la solar sola (recortada a 25 MW), menos 5 EUR por MWh de energía cargada más descargada.

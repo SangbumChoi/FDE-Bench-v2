@@ -1,0 +1,32 @@
+id: callcenter_workforce_planner
+role: Call-Center Workforce Planner
+task_type: Combinatorial Optimization
+field: customer_service
+seed: 20261109
+objective: minimize          # 40 x under-covered agent-slots + labor cost (5th full-time shift at 1.5x)
+deliverables: [roster.json]
+deliverable_spec: |
+  roster.json = {"assignments": [{"agent": "<agent id, e.g. A01>", "day": "YYYY-MM-DD (2026-11-09 .. 2026-11-15)",
+                                  "shift": "<shift id from the shift list, e.g. S0800 or P1600>",
+                                  "language": "<language the agent takes calls in for this shift: ko | ja | en | zh | es>"}, ...]}
+  One entry per agent per worked shift; ids exactly as in the data; language as the ASCII code
+  (ko = Korean, ja = Japanese, en = English, zh = Chinese, es = Spanish).
+rules:
+  - id: skill_valid
+    class: physical
+    description: An agent only takes calls in a language listed among their skills.
+  - id: min_rest
+    class: physical
+    description: At least 11 hours between the end of one shift and the start of the agent's next shift (so at most one shift a day).
+  - id: shift_type
+    class: contractual
+    description: Full-timers work only 8-hour shifts, part-timers only 4-hour shifts.
+  - id: max_shifts
+    class: contractual
+    description: A full-timer works at most 5 shifts a week, a part-timer at most 3.
+  - id: leave_respected
+    class: contractual
+    description: Nobody is scheduled on a day of approved leave.
+  - id: buddy_rule
+    class: business_policy
+    description: Whenever a new hire is on the phones, at least one non-new agent is on the same language at the same time.

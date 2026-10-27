@@ -9,6 +9,15 @@
    is not valid.
 5. Each declared violating example breaks exactly the rule it names; when the
    rule is not physical, relaxing it makes the example valid again.
+
+A case with settings (tiers x rule sets) is checked in every setting (3-5 run
+per setting, with that setting's rules and parameters), and also:
+
+6. request.md has no setting markers or parameters, and the agent's whole view
+   (prompt and workspace) is byte-identical in every setting;
+7. the rule sets are really different ground truths: within a tier, each rule
+   set's reference is invalid, or at least 1% worse, under every other rule set;
+8. markers, parameters and `tiers:` / `rulesets:` lists only name declared ones.
 """
 
 from __future__ import annotations
@@ -16,15 +25,17 @@ from __future__ import annotations
 import hashlib
 import re
 import tempfile
+import time
 from pathlib import Path
 
 import yaml
 
-from .cases import LOCALES, NativeCase
+from .cases import LOCALES, PARAM, RULESETS, TIERS, NativeCase, load_fields
 from .transforms.language import detect_locale
 from .transforms.policy import RULE_CLASSES
 
-REQUIRED_META = ("id", "title", "task_type", "domain", "objective", "seed", "deliverables", "deliverable_spec", "rules")
+DISTINCT_MARGIN = 0.01
+REQUIRED_META = ("id", "role", "field", "task_type", "objective", "seed", "deliverable_spec", "rules")
 HANGUL = re.compile(r"[가-힣]")
 KANA = re.compile(r"[぀-ヿ]")
 HAN = re.compile(r"[一-鿿]")
@@ -61,11 +72,45 @@ def validate_case(root: Path) -> list[str]:
     problems += [f"case.yaml: missing {k}" for k in REQUIRED_META if k not in meta]
     if meta.get("id") != root.name:
         problems.append(f"case.yaml id {meta.get('id')!r} != directory name {root.name!r}")
+    if meta.get("field") != root.parent.name:
+        problems.append(f"case.yaml field {meta.get('field')!r} != parent directory {root.parent.name!r}")
+    if meta.get("field") not in load_fields(root.parent.parent):
+        problems.append(f"field {meta.get('field')!r} is not listed in cases/fields.yaml")
+    kind = meta.get("deliverable_type", "batch")
+    if kind == "batch" and not meta.get("deliverables"):
+        problems.append("case.yaml: batch cases need deliverables")
+    elif kind == "program":
+        entry = str(meta.get("entrypoint", ""))
+        if not re.fullmatch(r"[A-Za-z0-9_./-]+\.py:[A-Za-z_][A-Za-z0-9_]*", entry):
+            problems.append("case.yaml: program cases need entrypoint 'file.py:function'")
+        if getattr(case.module, "ENTRYPOINT", entry) != entry:
+            problems.append("case.py ENTRYPOINT differs from case.yaml entrypoint")
+    elif kind not in ("batch", "program"):
+        problems.append("case.yaml: deliverable_type must be batch or program")
     if meta.get("objective") not in ("minimize", "maximize"):
         problems.append("case.yaml: objective must be minimize or maximize")
-    rule_ids = []
+    tiers, rulesets = case.tiers, case.rulesets
+    if meta.get("tiers") and set(meta["tiers"]) - set(TIERS):
+        problems.append(f"case.yaml: tiers must be among {TIERS}")
+    if meta.get("rulesets") and set(meta["rulesets"]) - set(RULESETS):
+        problems.append(f"case.yaml: rulesets must be among {RULESETS}")
+    if tiers and (len(tiers) != 3 or len(rulesets) != 3):
+        problems.append("case.yaml: a case with settings declares all three tiers and all three rule sets")
+    if rulesets and len({tuple(sorted((meta["rulesets"][r] or {}).items(), key=str)) for r in rulesets}) < len(rulesets):
+        problems.append("case.yaml: two rule sets have the same parameters")
+    params = set().union(*[(meta["rulesets"][r] or {}).keys() for r in rulesets]) if rulesets else set()
+
+    def bad_tiers(names) -> bool:
+        return not tiers or not set(names) <= set(tiers)
+
+    def bad_rulesets(names) -> bool:
+        return not rulesets or not set(names) <= set(rulesets)
+
     for r in meta.get("rules", []):
-        rule_ids.append(r.get("id"))
+        if "tiers" in r and bad_tiers(r["tiers"]):
+            problems.append(f"rule {r.get('id')}: tiers {r['tiers']} are not declared in case.yaml")
+        if "rulesets" in r and bad_rulesets(r["rulesets"]):
+            problems.append(f"rule {r.get('id')}: rulesets {r['rulesets']} are not declared in case.yaml")
         if r.get("class") not in RULE_CLASSES:
             problems.append(f"rule {r.get('id')}: class must be one of {RULE_CLASSES}")
         if not r.get("description"):
@@ -81,9 +126,21 @@ def validate_case(root: Path) -> list[str]:
         if problems and any(p.startswith(f"{lang}: missing") for p in problems):
             continue
         for name in ("request.md", "requirements.md"):
-            why = _script_problem((d / name).read_text(encoding="utf-8"), lang)
+            body = (d / name).read_text(encoding="utf-8")
+            why = _script_problem(body, lang)
             if why:
                 problems.append(f"{lang}/{name}: {why}")
+            for kind, bad in (("tier", bad_tiers), ("ruleset", bad_rulesets)):
+                opened = re.findall(rf"<!-- {kind}: ([A-Za-z ]+) -->", body)
+                if len(opened) != body.count(f"<!-- /{kind} -->"):
+                    problems.append(f"{lang}/{name}: unbalanced {kind} markers")
+                if any(bad(o.split()) for o in opened):
+                    problems.append(f"{lang}/{name}: {kind} markers name undeclared {kind}s")
+            unknown = set(PARAM.findall(body)) - params
+            if unknown:
+                problems.append(f"{lang}/{name}: unknown parameters {sorted(unknown)}")
+            if name == "request.md" and ("<!--" in body or PARAM.search(body)):
+                problems.append(f"{lang}/request.md: must be the same in every setting (no markers or parameters)")
         targets = yaml.safe_load((d / "targets.yaml").read_text(encoding="utf-8")) or []
         ids_by_lang[lang] = [t.get("id") for t in targets]
         for t in targets:
@@ -92,17 +149,27 @@ def validate_case(root: Path) -> list[str]:
                 problems.append(f"{lang}/targets.yaml {t.get('id')}: {why}")
             if lang == "en" and (not t.get("kind") or not t.get("domain")):
                 problems.append(f"en/targets.yaml {t.get('id')}: needs kind and domain")
+            if lang == "en" and "tiers" in t and bad_tiers(t["tiers"]):
+                problems.append(f"en/targets.yaml {t.get('id')}: tiers {t['tiers']} are not declared")
+            if lang == "en" and "rulesets" in t and bad_rulesets(t["rulesets"]):
+                problems.append(f"en/targets.yaml {t.get('id')}: rulesets {t['rulesets']} are not declared")
+            unknown = set(PARAM.findall(t.get("text", ""))) - params
+            if unknown:
+                problems.append(f"{lang}/targets.yaml {t.get('id')}: unknown parameters {sorted(unknown)}")
     if ids_by_lang and len({tuple(v) for v in ids_by_lang.values()}) > 1:
         problems.append(f"target ids differ across locales: {ids_by_lang}")
     if problems:
         return problems
 
-    # ── data ─────────────────────────────────────────────────────────────────
+    # ── data: one world for every setting ───────────────────────────────────
     shapes = {}
     with tempfile.TemporaryDirectory() as tmp:
+        # Render every locale twice, more than a second apart, so time-stamped output cannot pass.
+        for lang in LOCALES:
+            case.materialize_data(lang, Path(tmp) / lang / "a")
+        time.sleep(1.1)
         for lang in LOCALES:
             a, b = Path(tmp) / lang / "a", Path(tmp) / lang / "b"
-            case.materialize_data(lang, a)
             case.materialize_data(lang, b)
             if _tree_digest(a) != _tree_digest(b):
                 problems.append(f"{lang}: data is not deterministic")
@@ -111,7 +178,12 @@ def validate_case(root: Path) -> list[str]:
                 problems.append(f"{lang}: no data files")
             shapes[lang] = sorted((p.suffix, p.stat().st_size > 0) for p in files)
             if lang in ("en", "es"):
+                # content_dirs (case.yaml): folders whose files are the client's multilingual content (e.g. a
+                # book corpus), not labels, so they may hold any script.
+                content = tuple(str(d).strip("/") + "/" for d in meta.get("content_dirs", []))
                 for p in files:
+                    if p.relative_to(a).as_posix().startswith(content) and content:
+                        continue
                     if p.suffix in (".csv", ".json", ".md", ".txt") and (HAN.search(p.read_text(encoding="utf-8-sig"))
                                                                           or HANGUL.search(p.read_text(encoding="utf-8-sig"))):
                         problems.append(f"{lang}: {p.name} contains CJK labels")
@@ -120,35 +192,88 @@ def validate_case(root: Path) -> list[str]:
         if len({tuple(v) for v in shapes.values()}) > 1:
             problems.append("data file sets differ in shape across locales")
 
-        # ── scoring ──────────────────────────────────────────────────────────
-        ref_dir = Path(tmp) / "ref"
-        ref_dir.mkdir()
-        case.module.reference_solution(case.world, ref_dir)
-        for lang in LOCALES:
-            res = case.evaluate(ref_dir, lang)
-            if res["validity_score"] != 1.0 or abs(res["quality_score"] - 1.0) > 1e-9:
-                problems.append(f"{lang}: reference solution scores {res}")
-        empty = Path(tmp) / "empty"
-        empty.mkdir()
-        if case.evaluate(empty, "en")["validity_score"] != 0.0:
-            problems.append("an empty submission is valid")
-        examples = getattr(case.module, "violating_examples", lambda w: {})(case.world)
-        for rule_id in rule_ids:
-            if rule_id not in examples:
-                problems.append(f"rule {rule_id}: no violating example")
-        for rule_id, make in examples.items():
-            ex = Path(tmp) / f"viol_{rule_id}"
-            ex.mkdir()
-            make(ex)
-            res = case.evaluate(ex, "en")
-            broken = {v["rule"] for v in res["violations"]}
-            if rule_id not in broken:
-                problems.append(f"rule {rule_id}: its example does not violate it (got {sorted(broken)})")
-            elif broken != {rule_id}:
-                problems.append(f"rule {rule_id}: its example also violates {sorted(broken - {rule_id})}")
-            rule = case.rules().by_id(rule_id)
-            if rule and rule.rule_class != "physical":
-                relaxed = case.evaluate(ex, "en", relaxed=frozenset({rule_id}))
-                if relaxed["validity_score"] != 1.0:
-                    problems.append(f"rule {rule_id}: example still invalid when the rule is relaxed: {relaxed}")
+    # ── scoring, in every setting ───────────────────────────────────────────
+    refs: dict[tuple, Path] = {}
+    keep = tempfile.TemporaryDirectory()
+    for c in case.settings():
+        at = f"[{c.setting.label}] " if c.tiers else ""
+        try:
+            c.requirements("en"), c.targets("en"), c.rules()
+        except KeyError as e:
+            problems.append(f"{at}texts: {e}")
+            continue
+        with tempfile.TemporaryDirectory() as tmp:
+            ref_dir = Path(keep.name) / f"ref_{c.tier}_{c.ruleset}"
+            ref_dir.mkdir()
+            c.write_reference(ref_dir)
+            refs[(c.tier, c.ruleset)] = ref_dir
+            first = c.evaluate(ref_dir, "en")
+            if first["validity_score"] != 1.0 or abs(first["quality_score"] - 1.0) > 1e-9:
+                problems.append(f"{at}reference solution scores {first}")
+            if c.evaluate(ref_dir, "en").get("objective") != first.get("objective"):
+                problems.append(at + "scoring is not deterministic (two evaluations of the reference differ)")
+            if kind == "program" and not (ref_dir / "program").is_dir():
+                problems.append(at + "program case: reference_solution must write program/")
+            empty = Path(tmp) / "empty"
+            empty.mkdir()
+            if c.evaluate(empty, "en")["validity_score"] != 0.0:
+                problems.append(at + "an empty submission is valid")
+            examples = c.violating_examples()
+            for rule_id in [r.id for r in c.rules().rules]:
+                if rule_id not in examples:
+                    problems.append(f"{at}rule {rule_id}: no violating example")
+            for rule_id, make in examples.items():
+                ex = Path(tmp) / f"viol_{rule_id}"
+                ex.mkdir()
+                make(ex)
+                res = c.evaluate(ex, "en")
+                broken = {v["rule"] for v in res["violations"]}
+                if rule_id not in broken:
+                    problems.append(f"{at}rule {rule_id}: its example does not violate it (got {sorted(broken)})")
+                elif broken != {rule_id}:
+                    problems.append(f"{at}rule {rule_id}: its example also violates {sorted(broken - {rule_id})}")
+                rule = c.rules().by_id(rule_id)
+                if rule and rule.rule_class != "physical":
+                    relaxed = c.evaluate(ex, "en", relaxed=frozenset({rule_id}))
+                    if relaxed["validity_score"] != 1.0:
+                        problems.append(f"{at}rule {rule_id}: example still invalid when the rule is relaxed: {relaxed}")
+
+    # ── rule sets are different ground truths ───────────────────────────────
+    for tier in tiers:
+        for x in rulesets:
+            for y in rulesets:
+                if x == y or (tier, x) not in refs:
+                    continue
+                res = case.at(tier, y).evaluate(refs[(tier, x)], "en")
+                if res["validity_score"] == 1.0 and res["quality_score"] > 1.0 - DISTINCT_MARGIN:
+                    problems.append(f"[{tier}] rule set {x}'s reference scores {res['quality_score']:.4f} under "
+                                    f"rule set {y}: the two rule sets do not lead to different solutions")
+    keep.cleanup()
+
+    # ── the agent sees the same thing in every setting ──────────────────────
+    if tiers:
+        views = {}
+        for c in case.settings():
+            views[c.setting.label] = agent_view(c)
+        if len(set(views.values())) > 1:
+            problems.append(f"the agent's view differs between settings: {sorted(views)} -> "
+                            f"{len(set(views.values()))} distinct views")
     return problems
+
+
+def agent_view(case: NativeCase, lang: str = "en") -> str:
+    """Digest of everything an agent is shown in the default engagement: prompt text and workspace files."""
+    from .prompts import render_task_prompt
+    from .transforms.language import Translator
+    from .transforms.variant import VariantSpec, build_variant
+
+    with tempfile.TemporaryDirectory() as tmp:
+        ws = Path(tmp) / "workspace"
+        spec = VariantSpec(case.id, customer_locale=lang, agent_locale=lang, difficulty=case.tier or "medium",
+                           ruleset=case.ruleset or "A")
+        variant = build_variant(spec, case, ws, Translator(None, Path(tmp) / "cache"))
+        files = sorted(p.relative_to(ws).as_posix() for p in (ws / "data").rglob("*") if p.is_file())
+        system, user = render_task_prompt(variant, "/workspace", files)
+        h = hashlib.sha256((system + "\n" + user).encode())
+        h.update(_tree_digest(ws).encode())
+        return h.hexdigest()

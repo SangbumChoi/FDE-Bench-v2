@@ -1,0 +1,67 @@
+# Top-level fields. A case lives in cases/<field>/<role>/ and its field must be listed here.
+finance:
+  zh: 金融与银行
+  en: Finance & Banking
+  ko: 금융·은행
+  ja: 金融・銀行
+  es: Finanzas y banca
+healthcare:
+  zh: 医疗健康
+  en: Healthcare
+  ko: 의료
+  ja: 医療
+  es: Salud
+manufacturing:
+  zh: 制造与供应链
+  en: Manufacturing & Supply Chain
+  ko: 제조·공급망
+  ja: 製造・サプライチェーン
+  es: Manufactura y cadena de suministro
+retail:
+  zh: 零售与电商
+  en: Retail & E-commerce
+  ko: 리테일·이커머스
+  ja: 小売・EC
+  es: Comercio minorista y electrónico
+logistics:
+  zh: 物流与交通
+  en: Logistics & Transportation
+  ko: 물류·운송
+  ja: 物流・運輸
+  es: Logística y transporte
+customer_service:
+  zh: 客户服务与运营
+  en: Customer Service & Operations
+  ko: 고객서비스·운영
+  ja: カスタマーサービス・運用
+  es: Atención al cliente y operaciones
+data_knowledge:
+  zh: 数据与知识工作
+  en: Data & Knowledge Work
+  ko: 데이터·지식 업무
+  ja: データ・ナレッジワーク
+  es: Datos y trabajo del conocimiento
+legal_compliance:
+  zh: 法务与合规
+  en: Legal & Compliance
+  ko: 법무·컴플라이언스
+  ja: 法務・コンプライアンス
+  es: Legal y cumplimiento
+people_hr:
+  zh: 人力资源
+  en: People & HR
+  ko: 인사
+  ja: 人事
+  es: Personas y RR. HH.
+energy_utilities:
+  zh: 能源与公用事业
+  en: Energy & Utilities
+  ko: 에너지·유틸리티
+  ja: エネルギー・公益
+  es: Energía y servicios públicos
+public_sector:
+  zh: 公共部门
+  en: Public Sector
+  ko: 공공 부문
+  ja: 公共部門
+  es: Sector público

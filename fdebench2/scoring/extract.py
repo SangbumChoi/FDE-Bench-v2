@@ -25,14 +25,37 @@ Call `finish` when done."""
 
 
 def _find(workspace: Path, name: str) -> Path | None:
-    hits = sorted((p for p in workspace.rglob(name) if p.is_file() and "data" not in p.relative_to(workspace).parts[:1]),
+    hits = sorted((p for p in workspace.rglob(name) if p.is_file()
+                   and p.relative_to(workspace).parts[0] not in ("data", "inbox", ".agent")),
                   key=lambda p: (len(p.relative_to(workspace).parts), -p.stat().st_mtime))
     return hits[0] if hits else None
+
+
+_NOT_PROGRAM = shutil.ignore_patterns("data", "inbox", "__pycache__", ".git", ".gemini", ".agent", "opencode.json",
+                                     "NOTES.md")
+
+
+def _collect_program(case: Case, workspace: Path, out_dir: Path) -> dict:
+    """Program cases: copy the directory holding the entry file to submission/program/."""
+    entry_file = case.entrypoint.partition(":")[0]
+    preferred = workspace / "program" / entry_file
+    found = preferred if preferred.is_file() else _find(workspace, entry_file)
+    if found is None:
+        return {"method": "none", "missing": [entry_file]}
+    dest = out_dir / "program"
+    if dest.exists():
+        shutil.rmtree(dest)
+    shutil.copytree(found.parent, dest, ignore=_NOT_PROGRAM)
+    return {"method": "program", "from": found.parent.relative_to(workspace).as_posix() or ".",
+            "files": sorted(p.relative_to(dest).as_posix() for p in dest.rglob("*") if p.is_file())[:200]}
 
 
 def collect(case: Case, workspace: Path, out_dir: Path, extractor: ChatModel | None) -> dict:
     """Fill `out_dir` with the submission. Returns a small report of how it was obtained."""
     out_dir.mkdir(parents=True, exist_ok=True)
+    if case.deliverable_type == "program":
+        # Never reshaped by a model: rewriting code would mean re-solving the task.
+        return _collect_program(case, workspace, out_dir)
     names = case.submission_files
     found = {n: _find(workspace, n) for n in names}
     if names and all(found.values()):
@@ -50,7 +73,7 @@ def _extract_with_model(case: Case, workspace: Path, out_dir: Path, model: ChatM
     scratch = out_dir.parent / "extract_ws"
     if scratch.exists():
         shutil.rmtree(scratch)
-    shutil.copytree(workspace, scratch, ignore=shutil.ignore_patterns(".gemini", "opencode.json"))
+    shutil.copytree(workspace, scratch, ignore=shutil.ignore_patterns(".gemini", "opencode.json", ".agent"))
     (scratch / "_submission").mkdir(exist_ok=True)
 
     class _Ctx:  # the subset of RunContext the file tools use

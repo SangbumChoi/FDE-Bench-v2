@@ -1,0 +1,53 @@
+- id: date_format
+  kind: ambiguous
+  domain: data semantics
+  text: earliest_date is written day/month/year; it is the first day the patient can come, and a date before 16 November means the patient can come from 16 November (waiting is counted from then).
+- id: visit_length
+  kind: missing
+  domain: calculation
+  text: A new-patient visit takes two consecutive free 20-minute slots of the same doctor on the same day (start = first slot); a follow-up takes one slot.
+- id: urgent_window
+  kind: missing
+  domain: business rule
+  text: Every urgent (U) request must be booked within {{urgent_days}} working days of its reference date (earliest date, or 16 November if earlier).
+- id: follow_up_doctor
+  kind: missing
+  domain: business rule
+  text: A follow-up is booked with the patient's previous doctor; this is a front-desk habit, not a contract, and an exception is possible (Dr D11 is on leave in week 1).
+- id: interpreters
+  kind: missing
+  domain: business rule
+  text: A visit with a doctor who does not speak the patient's language needs an interpreter; only {{interpreters_per_day}} in-person interpreters per day, which new-patient visits must have; follow-ups beyond that use paid video interpreting (3 per visit).
+- id: holiday_clinic
+  kind: missing
+  domain: business rule
+  text: The {{closed_dept}} clinic is closed on 23 November (City Day) even though the free-slot list still shows its slots.
+- id: referral_expiry
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: A new patient's visit must be on or before referral_valid_until (day/month/year); after that the referral is void and the request is better left unbooked.
+- id: blood_test
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: A fasting blood test must be done at least one working day before the visit and not before the earliest date, written in test_date; the lab takes at most {{lab_cap}} tests per working day.
+- id: no_show_rates
+  kind: missing
+  domain: data semantics
+  tiers: [hard]
+  text: No-show rates differ per patient (attendance history; about 1 in 5 overall) and rise about one percentage point per working day of lead time; history was measured at about 5 working days of lead, requests taken 2 working days before 16 November.
+- id: overbooking
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: A slot may hold two follow-ups (never a new-patient visit), at most {{overbooked_per_session}} such overbooked slots per doctor per morning or afternoon session.
+- id: scoring
+  kind: missing
+  domain: scoring
+  text: Quality = waiting working days weighted U 3 / S 2 / R 1, plus 20 per S request booked more than {{soon_days}} working days late, plus 60 per unbooked request, plus 3 per video-interpreted visit; lower is better.
+- id: scoring_no_shows
+  kind: missing
+  domain: scoring
+  tiers: [hard]
+  text: The hard-tier quality also counts 10 per slot expected to stand empty (all its patients stay away) and 25 per overbooked slot expected to have both patients turn up.

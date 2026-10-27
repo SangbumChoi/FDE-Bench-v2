@@ -1,0 +1,1 @@
+Tenemos acumuladas unas 300 solicitudes de nuestra Ayuda de Subsistencia para Hogares. ¿Podría decidir quién tiene derecho y cuánto le corresponde cada mes? Le adjuntamos las solicitudes, los miembros de cada hogar, el patrimonio declarado, la tabla de importes del año pasado y el folleto que entregamos a los ciudadanos.

@@ -1,0 +1,1 @@
+We have a backlog of about 300 applications for our Household Living Support benefit. Can you decide who qualifies and how much they get each month? The applications, the household members, the declared assets, last year's amount table and the leaflet we give to citizens are attached.

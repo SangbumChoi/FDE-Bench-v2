@@ -1,0 +1,83 @@
+id: hospital_appointment_scheduler
+role: Hospital Appointment Scheduler
+task_type: Combinatorial Optimization
+field: healthcare
+seed: 20261116
+objective: minimize          # weighted waiting working days (U 3, S 2, R 1) + 20 per S booked more than soon_days late
+                             # + 60 per unbooked request + 3 per remotely interpreted visit
+                             # (hard: + expected idle-slot and overbooking-collision costs)
+tiers:
+  easy: >-
+    The booking core: day/month/year dates, two slots for a new patient, the urgent window, a clinic closed on a
+    municipal holiday, follow-ups with the previous doctor (one is on leave in week 1), in-person interpreters
+    capped per day for new patients, paid remote interpreting for follow-ups.
+  medium: >-
+    Easy plus referral letters that expire before the visit can happen, and a fasting blood test that must be
+    done at least one working day before the visit in a lab with a daily capacity (a second date per booking).
+  hard: >-
+    Medium plus no-shows (hidden per-patient rate that grows with lead time; past attendance in the data) and
+    overbooking of follow-ups (two to a slot, at most two such slots per doctor session); quality becomes an
+    expected cost with idle-slot and collision terms.
+rulesets:                    # the client's rule parameters; same data, three ground truths
+  A: {closed_dept: DERM, soon_days: 5, urgent_days: 2, interpreters_per_day: 3, lab_cap: 7, overbooked_per_session: 2}
+  B: {closed_dept: ORTH, soon_days: 3, urgent_days: 1, interpreters_per_day: 4, lab_cap: 6, overbooked_per_session: 1}
+  C: {closed_dept: PED, soon_days: 8, urgent_days: 3, interpreters_per_day: 2, lab_cap: 8, overbooked_per_session: 2}
+param_labels:                # how a code parameter reads in each locale's text
+  closed_dept:
+    DERM: {zh: 皮肤科, en: Dermatology, ko: 피부과, ja: 皮膚科, es: Dermatología}
+    ORTH: {zh: 骨科, en: Orthopedics, ko: 정형외과, ja: 整形外科, es: Traumatología}
+    PED: {zh: 儿科, en: Pediatrics, ko: 소아청소년과, ja: 小児科, es: Pediatría}
+deliverables: [bookings.csv]
+deliverable_spec: |
+  bookings.csv with the ASCII header request_id,doctor_id,date,start,test_date
+  One row per booked request: request_id and doctor_id exactly as in the data, date as YYYY-MM-DD
+  (a working day 2026-11-16 .. 2026-11-27), start as HH:MM = start time of the visit's first 20-minute slot.
+  test_date (YYYY-MM-DD) is the day of the request's pre-visit blood test when the data asks for one; leave it
+  empty otherwise.
+  Requests that are not booked are simply left out; each request appears at most once.
+rules:
+  - id: no_double_booking
+    class: physical
+    tiers: [easy, medium]
+    description: A doctor's 20-minute slot holds at most one appointment.
+  - id: slot_capacity
+    class: physical
+    tiers: [hard]
+    description: A doctor's 20-minute slot holds at most two appointments, both follow-ups; a new-patient visit never shares its slots.
+  - id: overbooking_limit
+    class: contractual
+    tiers: [hard]
+    description: At most {{overbooked_per_session}} overbooked slots (slots holding two follow-ups) per doctor per session (morning or afternoon).
+  - id: slot_length
+    class: physical
+    description: Bookings use free slots from the calendar only; a new-patient visit takes two consecutive free slots of the same doctor on the same day, a follow-up one slot.
+  - id: department_match
+    class: physical
+    description: A request is booked with a doctor of the requested department.
+  - id: holiday_closure
+    class: physical
+    description: The {{closed_dept}} clinic is closed on the municipal holiday 2026-11-23; no {{closed_dept}} bookings that day.
+  - id: not_before_earliest
+    class: physical
+    description: No appointment before the request's earliest date.
+  - id: interpreter_capacity
+    class: physical
+    description: At most {{interpreters_per_day}} new-patient visits per day hospital-wide may be with a doctor who does not speak the patient's preferred language (they need one of the {{interpreters_per_day}} in-person interpreters).
+  - id: urgent_within_2_days
+    class: contractual
+    description: Every urgent (U) request is booked within {{urgent_days}} working days of its reference date (the earliest date, or 2026-11-16 if earlier).
+  - id: referral_validity
+    class: contractual
+    tiers: [medium, hard]
+    description: A new-patient visit takes place on or before the last day its referral letter is valid.
+  - id: test_before_visit
+    class: physical
+    tiers: [medium, hard]
+    description: A request that needs the fasting blood test has its test on a working day from its earliest date up to the working day before the visit.
+  - id: lab_capacity
+    class: physical
+    tiers: [medium, hard]
+    description: The lab takes at most {{lab_cap}} fasting blood tests per working day.
+  - id: follow_up_same_doctor
+    class: business_policy
+    description: A follow-up request is booked with the patient's previous doctor.

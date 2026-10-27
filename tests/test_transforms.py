@@ -86,9 +86,9 @@ def test_native_variant_in_korean_needs_no_translation(cases_root, tmp_path):
     assert _tree_hash(case.root) == before
 
 
-def test_hard_native_variant(cases_root, tmp_path):
+def test_messy_engagement_variant(cases_root, tmp_path):
     case = NativeCase(cases_root / NATIVE)
-    v = build_variant(VariantSpec(NATIVE, customer_locale="es", difficulty="hard", policy="enterprise_balanced"),
+    v = build_variant(VariantSpec(NATIVE, customer_locale="es", engagement="messy", policy="enterprise_balanced"),
                       case, tmp_path / "run" / "workspace", _offline(tmp_path))
     assert {"duplicate_rows", "stale_copy", "legacy_encoding"} <= {n["op"] for n in v.noise}
     assert any(t.origin == "duplicate_rows" and "duplicadas" in t.text for t in v.targets)
@@ -125,3 +125,42 @@ experiments:
     _, _, jobs, _ = load_campaign(cfg)
     # cells: en/en, ko/en, ko/ko, startup_velocity -> 4 cells x 2 cases
     assert len(jobs) == 8
+
+
+def test_settings_change_the_ground_truth_not_what_the_agent_sees(tmp_path):
+    """A case with settings: 3 tiers x 3 rule sets, one world; texts, targets, rules and scoring follow the
+    setting while the request, the data and the prompt stay byte-identical."""
+    from conftest import REPO
+    from fdebench2.cases import fill_params, filter_blocks
+    from fdebench2.prompts import render_task_prompt
+
+    assert filter_blocks("a\n<!-- tier: medium hard -->\nb\n<!-- /tier -->\nc", "tier", "easy") == "a\nc"
+    assert filter_blocks("a <!-- ruleset: B -->b<!-- /ruleset -->c", "ruleset", "B") == "a bc"
+    assert fill_params("cap {{n}}", {"n": 4}) == "cap 4"
+    cid = "healthcare/hospital_appointment_scheduler"
+    case = NativeCase(REPO / "cases" / cid)
+    assert case.tiers == ("easy", "medium", "hard") and case.rulesets == ("A", "B", "C")
+    assert (case.tier, case.ruleset) == ("medium", "A") and len(case.settings()) == 9
+    assert case.at("hard", "C").world is case.world                   # one world for every setting
+
+    views, infos = {}, {}
+    for tier, rs in (("easy", "A"), ("hard", "C")):
+        ws = tmp_path / f"{tier}{rs}"
+        v = build_variant(VariantSpec(cid, customer_locale="ko", difficulty=tier, ruleset=rs), case, ws,
+                          _offline(tmp_path))
+        files = sorted(p.relative_to(ws).as_posix() for p in (ws / "data").rglob("*") if p.is_file())
+        views[(tier, rs)] = (render_task_prompt(v, "/workspace", files), _tree_hash(ws))
+        infos[(tier, rs)] = v
+        assert (v.case_tier, v.ruleset) == (tier, rs)
+    assert views[("easy", "A")] == views[("hard", "C")]
+    easy, hard = infos[("easy", "A")], infos[("hard", "C")]
+    assert "오버부킹" in hard.information and "오버부킹 슬롯은 최대 2개" in hard.information
+    assert "피부과는 그날 휴진" in easy.information and "소아청소년과는 그날 휴진" in hard.information
+    assert "{{" not in easy.information and "<!--" not in easy.information
+    assert "overbooking" not in {t.id for t in easy.targets} and "overbooking" in {t.id for t in hard.targets}
+    rules = {t: {r.id for r in case.at(t).rules().rules} for t in case.tiers}
+    assert "no_double_booking" in rules["easy"] and "slot_capacity" in rules["hard"]
+    assert "lab_capacity" not in rules["easy"] and "lab_capacity" in rules["medium"]
+    hard.save(tmp_path / "saved")
+    again = Variant.load(tmp_path / "saved")
+    assert (again.case_tier, again.ruleset) == ("hard", "C")

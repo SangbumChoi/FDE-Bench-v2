@@ -15,7 +15,7 @@ from fdebench2.transforms.variant import VariantSpec, build_variant
 
 
 def test_bridge_exposes_client_channel(cases_root, tmp_path):
-    case = NativeCase(cases_root / "logistics_bakery_routing")
+    case = NativeCase(cases_root / "logistics" / "bakery_delivery_dispatcher")
     run_dir = tmp_path / "run"
     v = build_variant(VariantSpec(case.id, policy="enterprise_balanced"), case, run_dir / "workspace",
                       Translator(ScriptedModel(lambda m: ChatResponse(content=m[-1]["content"])), tmp_path / "c"))

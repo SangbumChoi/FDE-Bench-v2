@@ -1,0 +1,32 @@
+- id: gross_income
+  text: 年間総収入は12 × 月額基本給 + 年間賞与で、賞与は賞与証明あり = はい の場合のみ算入し、申告月収は使いません。
+- id: policy_bureau
+  text: 基準に使うのは{{policy_bureau}}だけで（最低{{min_score}}点）、{{other_bureau}}は参考値なのでどの基準にも使いません（B社のスコアはA社より50点ほど高く出ます）。
+- id: dsr_rule
+  text: 借入後のDSRは年間総収入の{{max_dsr_pct}}%以下でなければならず、分割返済ローンは12 × 月返済額、新規ローンは承認額での月返済額 × 12で計算します。
+- id: interim_scope
+  text: 今回の暫定ポリシーでは、DSRに分割返済ローンだけを算入し（カードローン枠は除外）、申込書に記入された給与を使い（収入証明書類は実行前に確認）、申込は1件ずつ個別に判断します（重複申込の確認なし、DUPLICATE は使わない）。
+- id: declared_income_scope
+  text: 今回は申込書に記入された給与を使い（収入証明書類は実行前に確認）、申込は1件ずつ個別に判断します（重複申込の確認なし、DUPLICATE は使わない）。
+- id: credit_line_amortization
+  text: カードローン枠はDSR上、残高を5年で返済するものとして残高 / 5 + 残高 × 金利で計算し、返済額がなくても算入します。
+- id: stress_add_on
+  text: 借入後の無担保債務総額（既存残高 + 新規承認額）が60,000を超える場合、新規ローンの返済額は11.9% + 1.5ポイントで計算します。
+- id: limit_caps
+  text: 承認額は1,000以上、min(50,000, 年間総収入, 申込金額) 以下でなければなりません。
+- id: reason_codes
+  text: すべての否決には DELINQUENCY、LOW_SCORE、DSR_EXCEEDED（1,000でもDSRや上限を満たせない）、CREDIT_RISK の順で最初に該当する理由コードが必要で、延滞中は常に否決します。
+- id: protected_attributes
+  text: 年齢層、性別、国籍は判断に影響させてはならず、これらの列だけが異なるペアの申込は同じ判断と承認額にしなければなりません。
+- id: near_prime_quota
+  text: 承認総額の{{quota_pct}}%以上を{{policy_bureau}}{{near_prime_below}}点未満のニアプライム層に供給しなければなりません。
+- id: verified_income
+  text: ルールで使う給与は確認済みの給与で、申込書の月額基本給とその申込の収入証明書類（給与明細、勤務先の収入証明）に書かれた金額のうち最も低いものです。過去の申込の給与は確認済みです。
+- id: income_discrepancy
+  text: 書類の月額基本給が申込書の記入額より{{discrepancy_pct}}%を超えて低い申込は、不正防止チームの審査に回さなければならず、延滞中なら否決します。
+- id: duplicate_applications
+  text: 同じ人が別の申込番号で2回申し込んだものがあり、信用情報登録番号が同じなら同一人物なので、承認できるのはそのうち1件だけで、もう1件は DUPLICATE で否決します。
+- id: tenure_review
+  text: 現職勤続{{min_tenure}}か月未満の申込者は審査員に回し、延滞中の場合は否決します。
+- id: profit_metric
+  text: 品質は期待利益で、承認ごとに承認額 × 10%マージン − 実際のPD × 0.60 × 承認額。PDは承認額による返済負担が重いほど上がり、審査員回しは1件60のコスト、否決は0です。
