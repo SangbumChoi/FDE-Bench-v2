@@ -63,7 +63,8 @@ def main(argv: list[str] | None = None) -> None:
 
     p = sub.add_parser("validate-case")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
-    p.add_argument("--world-seeds", default="", help="also check the case on these world seeds, e.g. 1,2,3")
+    p.add_argument("--world-seeds", default="1,2,3", help="also check the case on these world seeds ('' skips)")
+    p.add_argument("--no-world-seeds", action="store_true", help="skip the other-world check")
     p = sub.add_parser("export-dataset")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
     p = sub.add_parser("new-case")
@@ -92,13 +93,15 @@ def main(argv: list[str] | None = None) -> None:
 
     a = ap.parse_args(argv)
     if a.cmd == "validate-case":
-        from .validate import validate_case
+        from .validate import check_case
         failed = 0
+        seeds = [] if a.no_world_seeds else [int(x) for x in a.world_seeds.split(",") if x.strip()]
         for path in a.paths:
-            seeds = [int(x) for x in a.world_seeds.split(",") if x.strip()]
-            problems = validate_case(path, world_seeds=seeds)
-            failed += bool(problems)
-            print(f"{path.parent.name}/{path.name}: " + ("OK" if not problems else "\n  - " + "\n  - ".join(problems)))
+            rep = check_case(path, world_seeds=seeds)
+            failed += bool(rep.problems)
+            print(f"{path.parent.name}/{path.name}: " + ("OK" if not rep.problems else "\n  - " + "\n  - ".join(rep.problems)))
+            for line in [f"warning: {w}" for w in rep.warnings] + rep.notes:
+                print(f"  {line}")
         sys.exit(1 if failed else 0)
     elif a.cmd == "export-dataset":
         from .dataset import export_dataset

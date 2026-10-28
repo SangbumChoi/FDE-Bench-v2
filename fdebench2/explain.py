@@ -3,9 +3,10 @@
 The page gathers everything a reviewer needs to understand a case without
 running it: the request, the hidden requirements in every setting and locale,
 the rules and their classes, the rule sets, the clarification targets, the
-case README, the stored dataset and the reference scores. It is generated from
-the case files (`fdebench2 explain-case`, also run by `export-dataset`), works
-offline, and validate-case checks that it is up to date.
+case README, the stored dataset, the reference scores and the findings of a
+review (REVIEW.md, when the case has one). It is generated from the case files
+(`fdebench2 explain-case`, also run by `export-dataset`), works offline, and
+validate-case checks that it is up to date.
 """
 
 from __future__ import annotations
@@ -122,6 +123,7 @@ def build_page(case_root: Path) -> str:
     case = NativeCase(Path(case_root))
     meta = case.meta
     root = case.root
+    review = root / "REVIEW.md"
     settings = case.settings()
     has_settings = bool(case.tiers)
     labels = meta.get("param_labels") or {}
@@ -149,17 +151,20 @@ def build_page(case_root: Path) -> str:
   <nav>
     <a href="#request">Request</a><a href="#settings">Settings</a><a href="#rules">Rules</a>
     <a href="#requirements">Hidden requirements</a><a href="#targets">Targets</a><a href="#data">Data &amp; answers</a>
-    <a href="#readme">Case notes</a>
+    <a href="#readme">Case notes</a>{'<a href="#review">Review findings</a>' if review.is_file() else ""}
   </nav>
 </header>""")
 
     # request
     req = "".join(f"<details{' open' if lang in ('en', 'ko') else ''}><summary>{LANG_NAMES[lang]}</summary>"
                   f"{markdown(case.request(lang))}</details>" for lang in case.locales())
+    # A batch spec only reaches scoring/extract.py; the agent's prompt never contains it.
+    spec_label = ("the program interface" if kind == "program"
+                  else "shown to the extractor that reshapes the agent's files, not to the agent")
     parts.append(f"""<section id="request"><h2>What the agent is asked</h2>
 <p class="muted">The client's request, the only text the agent gets up front. It is the same in every setting.</p>
 {req}
-<h3>Deliverable spec (agent-visible)</h3><pre>{_esc(case.deliverable_spec().strip())}</pre></section>""")
+<h3>Deliverable spec ({spec_label})</h3><pre>{_esc(case.deliverable_spec().strip())}</pre></section>""")
 
     # settings
     if has_settings:
@@ -251,6 +256,12 @@ folder per setting. <code>validate-case</code> checks the files still match the 
     readme = root / "README.md"
     parts.append(f"""<section id="readme"><h2>Case notes (README.md)</h2>
 <div class="doc">{markdown(readme.read_text(encoding="utf-8")) if readme.is_file() else "<p class='muted'>(no README)</p>"}</div>
+</section>""")
+
+    # REVIEW.md: findings of a review of the case, when there is one
+    if review.is_file():
+        parts.append(f"""<section id="review"><h2>Review findings (REVIEW.md)</h2>
+<div class="doc">{markdown(review.read_text(encoding="utf-8"))}</div>
 </section>""")
 
     return _shell(case.role, "\n".join(parts))

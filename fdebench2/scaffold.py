@@ -2,8 +2,8 @@
 
 It writes case.yaml, case.py, README.md and the five locales with every
 required part in place and marked TODO, so a new role starts from the same
-contract as the built ones. The skeleton does not validate until the TODOs are
-filled; then `fdebench2 export-dataset` and `fdebench2 validate-case` finish it.
+contract as the built ones. validate-case fails while any TODO is left; once
+they are filled, `fdebench2 export-dataset` and `fdebench2 validate-case` finish it.
 Built cases to copy patterns from: a batch case with settings is
 `manufacturing/procurement_specialist`; daily program cases are
 `finance/loan_underwriting_specialist`, `healthcare/hospital_appointment_scheduler`
@@ -26,7 +26,7 @@ objective: maximize             # or minimize; the quantity score() returns as "
 deliverable_type: {kind}
 {deliverable}
 deliverable_spec: |
-  TODO: the exact format the agent must deliver (agent-visible, the same in every setting).
+  TODO: the exact format of the deliverable, the same in every setting (the extractor sees it, the agent does not).
 tiers:                          # difficulty -> which rules apply; the data is the same in every tier
   easy: TODO the core problem
   medium: TODO easy + more domain rules
@@ -99,6 +99,12 @@ def reference_solution(world: World, out_dir: Path, setting) -> None:
     raise NotImplementedError("TODO")
 
 
+def baseline_solution(world: World, out_dir: Path, setting) -> None:
+    """The simplest sensible valid deliverable (e.g. the client's own habit, no optimization). validate-case checks
+    it is valid and worse than the reference in every setting and prints baseline/reference per setting."""
+    raise NotImplementedError("TODO")
+
+
 def violating_examples(world: World, setting) -> dict:
     """{{rule_id: fn(out_dir)}}: for every rule of the setting, a deliverable that breaks exactly that rule."""
     raise NotImplementedError("TODO")
@@ -146,6 +152,8 @@ TODO: files and formats the agent receives.
 
 TODO: reference objective for all nine settings, how often each rule binds, gain from bending the business
 rule, headroom; per-tier means.
+
+TODO: baseline objective and baseline/reference for all nine settings (validate-case prints the ratios).
 """
 
 REQUEST = "TODO: the client's short, under-specified request in this language (no setting markers).\n"
@@ -176,7 +184,7 @@ TARGETS_EN = """- id: TODO_target
   text: TODO a fact a good engineer must ask for, may use {{example_param}}.
 """
 TARGETS = """- id: TODO_target
-  text: TODO (same ids as en/targets.yaml, written in this language)
+  text: TODO (same ids and parameters as en/targets.yaml, e.g. {{example_param}}, written in this language)
 """
 
 
