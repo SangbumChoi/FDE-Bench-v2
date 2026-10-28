@@ -23,6 +23,10 @@ all-units price breaks, `lead_time_days` in business days; a `suppliers` sheet),
 caps for S03/C01, S03/C03, S08/C06). The request mentions the history, the allocation notice and the planned
 flash change, so every tier sees them.
 
+## Supplier price email
+
+A synthetic supplier notice approves a 10% increase to all C01/S03 quote tiers for orders placed in W4 or later. Earlier orders keep the quoted price. A further 5% increase is pending and is excluded. The order week determines the price for both purchase cost and monthly budget; open orders are unaffected. This adapts the distinction between approved and pending price changes from the ReflectionAI procurement scenarios.
+
 ## Tiers: which rules apply
 
 | | easy | medium | hard |
@@ -51,7 +55,7 @@ reference is **invalid** under both other rule sets (18 of 18 pairs: mostly `qua
 when the planning rate is higher and `dual_source_critical` under B's 70% cap), so the three ground truths are
 distinct.
 
-## Reference numbers (seed 20261123)
+## Historical reference numbers (before the price email; seed 20261123)
 
 The reference is a time-phased MRP per part: it nets stock and open orders against the exploded demand and orders
 from the cheapest supplier that still arrives in time, as late as possible, covering two weeks and rounding up to a

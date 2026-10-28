@@ -1,2 +1,3 @@
 We assemble two models of control board and buy about two dozen components from a handful of suppliers. Can you plan what we should order from which supplier over the next two months so production doesn't stop and we don't overspend? I've attached the production plan, the bill of materials, our current stock, open orders, the supplier quotes, the approved-vendor list and the budget.
 Supply has been shaky lately, so I've also added our suppliers' delivery history for the last six months and the allocation notice we got. The BOM already includes engineering's planned change to the flash memory on both boards.
+Please also use the attached supplier price email when pricing orders.

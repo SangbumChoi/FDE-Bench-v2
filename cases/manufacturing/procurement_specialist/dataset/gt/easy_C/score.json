@@ -4,15 +4,15 @@
     "backlog_unit_weeks": {},
     "holding_krw": 6231720,
     "order_lines": 94,
-    "purchase_krw": 483064924,
+    "purchase_krw": 484972084,
     "safety_shortfall_krw": 0,
     "scrap_krw": 0,
     "spend_by_month": {
       "2026-11": 124187667,
-      "2026-12": 281786161,
+      "2026-12": 283693321,
       "2027-01": 77091096
     }
   },
-  "objective": 489296643.84,
+  "objective": 491203803.84,
   "violations": []
 }

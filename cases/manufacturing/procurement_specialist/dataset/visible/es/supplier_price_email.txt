@@ -1,0 +1,1 @@
+Aprobado: todos los precios unitarios cotizados de C01 por S03 aumentan un 10% para pedidos desde W4. Los pedidos anteriores mantienen el precio original. El aumento adicional del 5% está pendiente y no se aplica.

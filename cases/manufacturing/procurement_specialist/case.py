@@ -198,15 +198,15 @@ class _View:
     def breaks(self, q: Quote) -> list[tuple[int, float]]:
         return q.breaks if self.medium else []      # easy plans at list prices
 
-    def unit_krw(self, q: Quote, qty: float) -> float:
+    def unit_krw(self, q: Quote, qty: float, week: int = 1) -> float:
         p = q.price
         for b, bp in self.breaks(q):
             if qty >= b:
                 p = bp
-        return p * (self.fx if q.currency == "USD" else 1.0)
+        return p * (1.10 if (q.component, q.supplier) == ("C01", "S03") and week >= 4 else 1.0) * (self.fx if q.currency == "USD" else 1.0)
 
-    def line_cost(self, cid: str, sid: str, qty: float) -> float:
-        return qty * self.unit_krw(self._w.quotes[(cid, sid)], qty)
+    def line_cost(self, cid: str, sid: str, qty: float, week: int = 1) -> float:
+        return qty * self.unit_krw(self._w.quotes[(cid, sid)], qty, week)
 
     def arrival(self, order_week: int, q: Quote) -> int:
         """Promised arrival week: the first week whose Monday comes after delivery. Easy: lead in whole weeks
@@ -624,6 +624,14 @@ LOCATIONS = {"zh": "{n}号货架", "en": "Rack {n}", "ko": "{n}번 랙", "ja": "
 
 def write_data(world: World, data_dir: Path, lang: str) -> None:
     c, v = labels(COLS, lang), labels(VALUES, lang)
+    email = {
+        "en": "Approved: for component C01 from supplier S03, all quoted unit prices increase by 10% for orders placed from W4 onward. Earlier orders retain their original prices. The proposed additional 5% increase is pending and must not be applied.",
+        "ko": "승인됨: 공급사 S03의 부품 C01은 W4부터 발주하는 모든 견적 단가가 10% 인상됩니다. 이전 발주는 기존 단가를 유지합니다. 추가 5% 인상안은 승인 대기 중이므로 적용하지 마세요.",
+        "ja": "承認済み: S03のC01はW4以降の発注について全見積単価を10%引き上げます。それ以前の発注は旧価格です。追加5%の値上げ案は承認待ちのため適用しません。",
+        "zh": "已批准：供应商S03的C01自W4起下单的所有报价单价上调10%；此前订单保持原价。额外5%的提议尚待批准，不予应用。",
+        "es": "Aprobado: todos los precios unitarios cotizados de C01 por S03 aumentan un 10% para pedidos desde W4. Los pedidos anteriores mantienen el precio original. El aumento adicional del 5% está pendiente y no se aplica.",
+    }
+    (data_dir / "supplier_price_email.txt").write_text(email[lang] + "\n", encoding="utf-8")
     write_csv(data_dir / FILES["components"][lang],
               [c["component"], c["desc"], c["category"], c["critical"], c["std_cost"]],
               [[k.id, DESCS[k.key][lang], CATEGORIES[k.category][lang], v["yes" if k.critical else "no"],
@@ -698,7 +706,7 @@ def _parse_orders(world: _View, rows: list[dict]) -> list[dict]:
 def _spend(world: _View, lines: list[dict]) -> dict:
     spend = {m: 0.0 for m in MONTHS}
     for ln in lines:
-        spend[month_of_week(ln["week"])] += world.line_cost(ln["component"], ln["supplier"], ln["qty"])
+        spend[month_of_week(ln["week"])] += world.line_cost(ln["component"], ln["supplier"], ln["qty"], ln["week"])
     return spend
 
 
@@ -877,7 +885,7 @@ def _plan_component(world: _View, k: Component) -> list[dict]:
 
     def price(s):
         q = world.quotes[(k.id, s)]
-        return world.unit_krw(q, q.moq)
+        return world.unit_krw(q, q.moq, w)
 
     for w in range(1, N_ORDER_WEEKS + 1):
         cands = [s for s in sups if _ok(world, k, s, w, lines)]
@@ -901,7 +909,7 @@ def _plan_component(world: _View, k: Component) -> list[dict]:
             need = max(k.target(j) - net[j] for j in range(deficit, end + 1))
             qty = max(q.moq, int(math.ceil(max(need, 1) / 100.0)) * 100)
             for bq, _ in world.breaks(q):   # all-units discount: round up when the break costs less in total
-                if qty < bq and world.line_cost(k.id, best, bq) < world.line_cost(k.id, best, qty):
+                if qty < bq and world.line_cost(k.id, best, bq, w) < world.line_cost(k.id, best, qty, w):
                     qty = bq
             cap = world.alloc.get((k.id, best))
             if cap is not None:
@@ -942,7 +950,7 @@ def _second_source(world: _View, k: Component, lines: list[dict]) -> list[dict]:
                 continue
 
             def cost(s):
-                return world.line_cost(k.id, s, max(world.quotes[(k.id, s)].moq, ln["qty"]))
+                return world.line_cost(k.id, s, max(world.quotes[(k.id, s)].moq, ln["qty"]), ln["week"])
             s = min(alts, key=cost)
             lines[i] = {**ln, "supplier": s, "qty": max(world.quotes[(k.id, s)].moq, ln["qty"])}
             moved.add(i)
@@ -970,7 +978,7 @@ def _merge(lines: list[dict]) -> list[dict]:
 def _part_cost(world: _View, k: Component, lines: list[dict]) -> float:
     """The reference's own view of a part's cost (estimated lateness, never the hidden rates)."""
     lots = _lots_by_part(world, lines)[k.id]
-    return sum(world.line_cost(k.id, ln["supplier"], ln["qty"]) for ln in lines) + \
+    return sum(world.line_cost(k.id, ln["supplier"], ln["qty"], ln["week"]) for ln in lines) + \
         sum(_expected_costs(world, k, lots, world.est_late).values())
 
 
@@ -991,7 +999,7 @@ def _defer(world: _View, lines: list[dict], month: str, cap: float, strict: bool
             rest = [x for x in part if x is not ln]
             a0 = _parr(world, k.id, ln["supplier"], ln["week"])
             base = _part_cost(world, k, part)
-            saved = world.line_cost(k.id, ln["supplier"], ln["qty"])
+            saved = world.line_cost(k.id, ln["supplier"], ln["qty"], ln["week"])
             for sid in world.suppliers_of(k.id):
                 q = world.quotes[(k.id, sid)]
                 if not _ok(world, k, sid, target, rest, ln["qty"]) or _parr(world, k.id, sid, target) > a0:
