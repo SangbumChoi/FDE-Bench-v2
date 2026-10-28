@@ -19,6 +19,7 @@ cp configs/models.example.yaml configs/models.yaml   # set endpoints and API-key
 ```bash
 fdebench2 cases                                   # <field>/<role>, role title, task type, locales
 fdebench2 validate-case cases/*/*/                # contract checks for every case
+fdebench2 export-dataset cases/<field>/<role>     # store a case's data and ground truth in dataset/
 fdebench2 policies
 # What an agent would get, without running one (Korean client, Japanese agent instructions, messy engagement):
 fdebench2 prepare --case logistics/bakery_delivery_dispatcher --customer-locale ko --agent-locale ja \
@@ -49,6 +50,7 @@ Axes on every command: `--customer-locale {zh,en,ko,ja,es}`, `--agent-locale {zh
 
 ```
 cases/<field>/<role>/  case.yaml, case.py, locales/<lang>/{request.md, requirements.md, targets.yaml},
+                       dataset/ (data per locale, hidden inputs, ground truth per setting),
                        README.md for cases with settings (tiers x rule sets)
 cases/README.md        catalog of cases by field   cases/fields.yaml  field names in 5 locales
 fdebench2/

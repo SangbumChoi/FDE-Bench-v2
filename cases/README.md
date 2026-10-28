@@ -12,6 +12,11 @@ authored natively in zh / en / ko / ja / es and must pass `fdebench2 validate-ca
 evaluator runs on hidden inputs (e.g. `decide(application)`, `answer(question)`), isolated from the scorer
 (see [DESIGN.md §3](../DESIGN.md#program-deliverables)).
 
+**Data and answers on disk:** every case keeps its generated data and ground truth in `dataset/`
+(`visible/<lang>/` as the agent receives it, `hidden/` for inputs it never sees, `gt/<tier>_<ruleset>/`
+per setting with the reference deliverable and its score). Regenerate with `fdebench2 export-dataset`;
+`validate-case` fails if the stored files drift from the generator.
+
 Detailed, research-grounded specs for every unbuilt role are in [`docs/specs/`](../docs/specs/README.md).
 
 Each row lists the hidden requirements the simulated client knows (examples, not exhaustive) and the

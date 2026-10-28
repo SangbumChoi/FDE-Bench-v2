@@ -41,6 +41,11 @@ cases/<field>/<role>/
     requirements.md         complete requirements (hidden; the simulated client answers from it)
     targets.yaml            clarification targets: the facts a good FDE must ask for
   README.md                 cases with settings: tiers, rule sets and reference numbers per setting
+  dataset/                  the generated data and ground truth as files (fdebench2 export-dataset):
+    visible/<lang>/         what the agent receives, per customer locale
+    hidden/                 inputs the agent never sees (a program case's hidden period or corpus)
+    gt/<tier>_<ruleset>/    per setting: setting.json, reference/, score.json and case extras
+    MANIFEST.json           sha256 of every file; validate-case checks it against the generator
 ```
 
 Design rules that keep scoring language-independent:
@@ -48,6 +53,9 @@ Design rules that keep scoring language-independent:
 - **The world is built from the seed, never from files.** Ground truth (including any hidden future for
   forecasting cases) lives in the world. The evaluator scores against the world, so noisy or localized data
   copies can never corrupt scoring.
+- **Data comes in the client's own formats.** Tables arrive the way a client exports them (CSV and xlsx,
+  or a plain-text SQL dump via `casekit.write_sql`), messages as e-mails (`casekit.write_eml`, `.eml`),
+  documents as folders of mixed files.
 - **Data is rendered per locale.** File names, sheet names, column headers and categorical labels are
   localized; IDs and numbers are not. A Korean client sends `매장목록.csv` with `매장등급 = 프리미엄`; a Spanish
   one sends `cafeterias.csv` with `categoria = premium`.
@@ -62,6 +70,7 @@ Design rules that keep scoring language-independent:
 
 - all 5 locales present with the same target ids, in the right script;
 - data renders deterministically in every locale with no untranslated labels;
+- the stored `dataset/` matches what the generator produces now;
 - the reference scores validity 1 / quality 1.0 and an empty submission is invalid;
 - every rule has an example that breaks exactly that rule, and that becomes valid when a non-physical rule
   is relaxed.
