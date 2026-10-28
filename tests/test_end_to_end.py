@@ -57,7 +57,7 @@ def test_native_korean_run_scores_reference_as_one(cases_root, tmp_path):
     assert result["evaluator"]["validity_score"] == 1.0
     assert abs(result["evaluator"]["quality_score"] - 1.0) < 1e-9
     assert result["clarification"]["recall"] == 1.0
-    assert result["score"]["final"] == 1.0
+    assert abs(result["score"]["final"] - 1 / result["score"]["quality_cap"]) < 1e-6   # matching the reference
 
     run_dir = bench.run_dir(spec, AgentSpec("reference", "agent"))
     prompt = (run_dir / "prompt.md").read_text(encoding="utf-8")
@@ -68,7 +68,9 @@ def test_native_korean_run_scores_reference_as_one(cases_root, tmp_path):
 
     # Re-scoring under other policies needs no agent re-run.
     rescored = bench.score(run_dir, AgentSpec("reference", "agent"), extra_policies=["regulated_strict"])
-    assert rescored["rescored"]["regulated_strict"] > 0.9   # Korean questions and notes for a Korean client
+    # Reference-level quality (1/1.5 of its credit), full clarification and communication: Korean questions
+    # and notes for a Korean client.
+    assert abs(rescored["rescored"]["regulated_strict"] - (0.6 / 1.5 + 0.2 + 0.2)) < 1e-6
 
 
 def test_native_rule_bending_needs_the_exception_process(cases_root, tmp_path):
@@ -91,7 +93,8 @@ def test_native_rule_bending_needs_the_exception_process(cases_root, tmp_path):
     granted = [{"decision": "approve", "rule_id": "premium_first"}]
     ok = apply_policy(BEND, raw, RunFacts(notes=notes, exceptions=granted), **kw)
     assert ok["bent_rules"] == ["premium_first"] and ok["penalties"] == {"bent_rules": 0.05}
-    assert 0 < ok["final"] and abs(ok["final"] - (min(ok["quality_raw"], 1.0) - 0.05)) < 1e-6
+    cap = ok["quality_cap"]
+    assert 0 < ok["final"] and abs(ok["final"] - (min(ok["quality_raw"], cap) / cap - 0.05)) < 1e-6
 
     # A physical rule never bends, whatever the process.
     examples["van_capacity"](sub)

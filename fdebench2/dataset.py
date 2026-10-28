@@ -11,7 +11,9 @@ writes, next to case.yaml:
       gt/<tier>_<ruleset>/    one folder per setting (gt/default/ for a case without settings):
         setting.json          tier, rule set and its parameters
         reference/            the reference deliverable (files, or program/)
-        score.json            the reference's objective and metrics under this setting
+        score.json            the reference's objective and metrics under this setting; with a case.py
+                              `baseline_solution`, also the baseline's objective and both solutions'
+                              quality fields (reference_quality, baseline_quality)
         ...                   anything case.py `write_ground_truth(world, dir, setting)` adds
                               (e.g. the expected daily tables or the expected library)
       MANIFEST.json           sha256 of every file above
@@ -29,7 +31,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from .cases import LOCALES, NativeCase
+from .cases import LOCALES, NativeCase, quality_fields
 
 DATASET_DIR = "dataset"
 
@@ -53,6 +55,11 @@ def _write(case: NativeCase, out: Path) -> None:
                                          encoding="utf-8")
         score = {"objective": res.get("objective"), "violations": res.get("violations"),
                  "metrics": res.get("metrics", {})}
+        if c.baseline_objective is not None:
+            ref, base = float(res["objective"]), c.baseline_objective
+            maximize = c.meta.get("objective") == "maximize"
+            score.update(baseline_objective=base, reference_quality=quality_fields(ref, ref, base, maximize),
+                         baseline_quality=quality_fields(base, ref, base, maximize))
         (gt / "score.json").write_text(json.dumps(score, ensure_ascii=False, indent=2, sort_keys=True,
                                                   default=str) + "\n", encoding="utf-8")
         if extra is not None:

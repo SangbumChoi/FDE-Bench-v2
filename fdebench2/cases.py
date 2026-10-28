@@ -21,6 +21,7 @@ and so the ground truth. Texts mark setting-specific passages with
 from __future__ import annotations
 
 import importlib.util
+import math
 import re
 import sys
 import tempfile
@@ -42,6 +43,28 @@ DEFAULT_RULESET = "A"
 _BLOCK = {kind: re.compile(rf"<!-- {kind}: ([A-Za-z ]+) -->\n?(.*?)<!-- /{kind} -->\n?", re.S)
           for kind in ("tier", "ruleset")}
 PARAM = re.compile(r"\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}")
+RATIO_CAP = 10.0          # upper bound of a quality ratio or normalized quality
+
+
+def quality_fields(obj: float, ref: float, base: float | None, maximize: bool) -> dict[str, Any]:
+    """An objective's quality against the reference (and the baseline, when the case has one).
+
+    quality_ratio is obj/ref (ref/obj when minimizing); quality_score is normalized so that the baseline
+    scores 0 and the reference 1, or is the ratio itself when there is no baseline strictly worse than the
+    reference (quality_anchor says which). Both are capped at RATIO_CAP; the score is floored at 0.
+    """
+    if obj == ref:
+        ratio = 1.0
+    elif (ref if maximize else obj) > 0:
+        ratio = min(obj / ref if maximize else ref / obj, RATIO_CAP)
+    else:  # no meaningful ratio (e.g. zero cost): beating the reference earns the cap, falling short 0
+        ratio = RATIO_CAP if (obj > ref) == maximize else 0.0
+    if base is not None and (base < ref if maximize else base > ref):
+        score, anchor = (obj - base) / (ref - base), "baseline"
+    else:
+        score, anchor = ratio, "ratio"
+    return {"quality_ratio": round(ratio, 8), "quality_score": round(min(max(score, 0.0), RATIO_CAP), 8),
+            "quality_anchor": anchor}
 
 
 def filter_blocks(text: str, kind: str, value: str | None) -> str:
@@ -135,10 +158,16 @@ class Case:
         raise NotImplementedError
 
     def evaluate(self, submission_dir: Path, lang: str, relaxed: frozenset[str] = frozenset()) -> dict[str, Any]:
-        """{validity_score, quality_score, violations: [{rule, message}], metrics, error_info}."""
+        """{validity_score, quality_score, violations: [{rule, message}], metrics, error_info}; a valid
+        submission adds objective, reference_objective, baseline_objective and quality_fields()."""
         raise NotImplementedError
 
     def rules(self) -> CaseRules | None:
+        return None
+
+    @property
+    def quality_cap(self) -> float | None:
+        """The normalized quality that earns full quality credit on this case; None: the policy's."""
         return None
 
     @property
@@ -197,16 +226,19 @@ class NativeCase(Case):
       build_world(seed) -> world                    ground truth and everything the data is rendered from
       write_data(world, data_dir, lang)             render the agent-visible data in one locale
       reference_solution(world, out_dir)           write the reference deliverable (scores quality 1.0)
+      baseline_solution(world, out_dir)            the simplest sensible valid deliverable (do nothing, first-fit,
+                                                    a naive rule); it scores quality 0 (optional)
       score(world, submission_dir) -> dict          {"violations": [(rule_id, message)], "objective": float,
                                                      "metrics": {...}} or {"fatal": message}
                                                     Program cases call casekit.run_program(submission_dir,
                                                     ENTRYPOINT, hidden_inputs) here.
       violating_examples(world) -> {rule_id: fn(out_dir)}   for the validator (optional)
     A case that declares settings (`tiers:` and `rulesets:` in case.yaml) gets the setting as a last
-    argument of reference_solution, score and violating_examples; build_world and write_data never see
-    it, so the data is the same in every setting.
+    argument of reference_solution, baseline_solution, score and violating_examples; build_world and
+    write_data never see it, so the data is the same in every setting.
     case.yaml declares objective direction, the deliverable (`deliverable_type: batch` with `deliverables`,
-    or `deliverable_type: program` with `entrypoint`), its spec, and rule classes.
+    or `deliverable_type: program` with `entrypoint`), its spec, rule classes and optionally `quality_cap`
+    (the normalized quality of the best known solution, which then earns full quality credit).
     """
 
     def __init__(self, root: Path, tier: str | None = None, ruleset: str | None = None,
@@ -346,6 +378,9 @@ class NativeCase(Case):
     def write_reference(self, out_dir: Path) -> None:
         self.module.reference_solution(self.world, Path(out_dir), *self._args())
 
+    def write_baseline(self, out_dir: Path) -> None:
+        self.module.baseline_solution(self.world, Path(out_dir), *self._args())
+
     def violating_examples(self) -> dict:
         fn = getattr(self.module, "violating_examples", None)
         return fn(self.world, *self._args()) if fn else {}
@@ -353,15 +388,34 @@ class NativeCase(Case):
     def raw_score(self, submission_dir: Path) -> dict:
         return self.module.score(self.world, Path(submission_dir), *self._args())
 
-    @cached_property
-    def reference_objective(self) -> float:
+    def _valid_objective(self, write, name: str) -> float:
         with tempfile.TemporaryDirectory() as tmp:
-            self.write_reference(Path(tmp))
+            write(Path(tmp))
             res = self.raw_score(Path(tmp))
-        if "fatal" in res or res["violations"]:
-            raise AssertionError(f"{self.id} {self.setting.label if self.tiers else ''}: reference solution is "
+        if "fatal" in res or res["violations"] or not math.isfinite(float(res["objective"])):
+            raise AssertionError(f"{self.id} {self.setting.label if self.tiers else ''}: {name} solution is "
                                  f"not valid: {res}")
         return float(res["objective"])
+
+    @cached_property
+    def reference_objective(self) -> float:
+        return self._valid_objective(self.write_reference, "reference")
+
+    @cached_property
+    def baseline_objective(self) -> float | None:
+        """The objective of case.py's baseline_solution; None when the case has none."""
+        if not hasattr(self.module, "baseline_solution"):
+            return None
+        return self._valid_objective(self.write_baseline, "baseline")
+
+    @property
+    def quality_cap(self) -> float | None:
+        cap = self.meta.get("quality_cap")
+        if cap is None:
+            return None
+        if not 0 < float(cap) <= RATIO_CAP:     # above RATIO_CAP full credit could never be reached
+            raise ValueError(f"{self.id}: quality_cap must be in (0, {RATIO_CAP:g}], got {cap!r}")
+        return float(cap)
 
     def evaluate(self, submission_dir: Path, lang: str, relaxed: frozenset[str] = frozenset()) -> dict[str, Any]:
         out: dict[str, Any] = {"validity_score": 0.0, "quality_score": 0.0, "violations": [], "metrics": {},
@@ -380,14 +434,14 @@ class NativeCase(Case):
         if blocking:
             out["error_info"] = {"constraint": [f"{v['rule']}: {v['message']}" for v in blocking[:8]]}
             return out
-        obj, ref = float(res["objective"]), self.reference_objective
+        obj = float(res["objective"])
+        if not math.isfinite(obj):      # NaN fails every comparison and would earn full credit
+            out["error_info"] = {"fatal": f"the objective is not a finite number: {obj}"}
+            return out
+        ref, base = self.reference_objective, self.baseline_objective
         higher = self.meta.get("objective", "minimize") == "maximize"
-        if higher:
-            quality = obj / ref if ref > 0 else 0.0
-        else:
-            quality = ref / obj if obj > 0 else (1.0 if ref == 0 else 0.0)
-        out.update(validity_score=1.0, quality_score=round(quality, 8), objective=obj, reference_objective=ref,
-                   relaxed_violations=len(out["violations"]))
+        out.update(validity_score=1.0, **quality_fields(obj, ref, base, higher), objective=obj,
+                   reference_objective=ref, baseline_objective=base, relaxed_violations=len(out["violations"]))
         return out
 
     def rules(self) -> CaseRules:
