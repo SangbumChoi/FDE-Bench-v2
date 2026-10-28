@@ -21,6 +21,7 @@ and so the ground truth. Texts mark setting-specific passages with
 from __future__ import annotations
 
 import importlib.util
+import math
 import re
 import sys
 import tempfile
@@ -391,7 +392,7 @@ class NativeCase(Case):
         with tempfile.TemporaryDirectory() as tmp:
             write(Path(tmp))
             res = self.raw_score(Path(tmp))
-        if "fatal" in res or res["violations"]:
+        if "fatal" in res or res["violations"] or not math.isfinite(float(res["objective"])):
             raise AssertionError(f"{self.id} {self.setting.label if self.tiers else ''}: {name} solution is "
                                  f"not valid: {res}")
         return float(res["objective"])
@@ -412,8 +413,8 @@ class NativeCase(Case):
         cap = self.meta.get("quality_cap")
         if cap is None:
             return None
-        if float(cap) <= 0:
-            raise ValueError(f"{self.id}: quality_cap must be positive, got {cap!r}")
+        if not 0 < float(cap) <= RATIO_CAP:     # above RATIO_CAP full credit could never be reached
+            raise ValueError(f"{self.id}: quality_cap must be in (0, {RATIO_CAP:g}], got {cap!r}")
         return float(cap)
 
     def evaluate(self, submission_dir: Path, lang: str, relaxed: frozenset[str] = frozenset()) -> dict[str, Any]:
@@ -433,7 +434,11 @@ class NativeCase(Case):
         if blocking:
             out["error_info"] = {"constraint": [f"{v['rule']}: {v['message']}" for v in blocking[:8]]}
             return out
-        obj, ref, base = float(res["objective"]), self.reference_objective, self.baseline_objective
+        obj = float(res["objective"])
+        if not math.isfinite(obj):      # NaN fails every comparison and would earn full credit
+            out["error_info"] = {"fatal": f"the objective is not a finite number: {obj}"}
+            return out
+        ref, base = self.reference_objective, self.baseline_objective
         higher = self.meta.get("objective", "minimize") == "maximize"
         out.update(validity_score=1.0, **quality_fields(obj, ref, base, higher), objective=obj,
                    reference_objective=ref, baseline_objective=base, relaxed_violations=len(out["violations"]))

@@ -25,6 +25,7 @@ POLICY_DIR = Path(__file__).resolve().parents[2] / "configs" / "policies"
 EXCEPTION_MODES = ("forbidden", "escalate", "justify")
 RULE_CLASSES = ("physical", "contractual", "business_policy")
 HARD_GATES = ("validity", "notes", "budget")
+BUDGETS = ("wall_seconds", "total_tokens", "cost_usd")
 
 
 @dataclass
@@ -54,6 +55,9 @@ class Policy:
         unknown = sorted(set(self.hard_gates) - set(HARD_GATES))
         if unknown:
             raise ValueError(f"{self.id}: unknown hard_gates {unknown}; known: {HARD_GATES}")
+        unknown = sorted(set(self.budgets) - set(BUDGETS))
+        if unknown:
+            raise ValueError(f"{self.id}: unknown budgets {unknown}; known: {BUDGETS}")
         if self.quality_cap <= 0:
             raise ValueError(f"{self.id}: quality_cap must be positive")
         for cls, mode in self.rule_classes.items():
@@ -152,7 +156,8 @@ def policy_brief_msgs(policy: Policy) -> list[dict[str, Any]]:
         lines.append(msg("Write to the client, and write `NOTES.md`, in the client's language."))
     elif policy.communication_locale != "agent":
         lines.append(msg("Write to the client, and write `NOTES.md`, in locale `{loc}`.", loc=policy.communication_locale))
-    for key in ("wall_seconds", "total_tokens", "cost_usd"):
+    hard = policy.hard_budgets or "budget" in policy.hard_gates
+    for key in BUDGETS:
         if key in policy.budgets:
-            lines.append(msg(_BUDGET_LINES[(key, policy.hard_budgets)], n=policy.budgets[key]))
+            lines.append(msg(_BUDGET_LINES[(key, hard)], n=policy.budgets[key]))
     return lines

@@ -113,8 +113,9 @@ def apply_policy(policy: Policy, raw: dict[str, Any], facts: RunFacts, *, case: 
         eff.append(0.0 if ratio > 1 else 1 - 0.5 * ratio)
     if policy.hard_budgets or "budget" in policy.hard_gates:
         gates["budget"] = not over
-        if not eff:                     # nothing to measure against: the gate passes, and says so
-            notes_out.append("budget not measured")
+        unmeasured = sorted(k for k, b in policy.budgets.items() if b and used.get(k) is None)
+        if unmeasured or not eff:       # what could not be measured passes the gate, and says so
+            notes_out.append("budget not measured" + (f": {', '.join(unmeasured)}" if unmeasured else ""))
 
     # ── components ────────────────────────────────────────────────────────────
     comm_locale = {"customer": customer_locale, "agent": agent_locale}.get(policy.communication_locale,

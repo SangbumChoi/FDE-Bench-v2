@@ -8,7 +8,7 @@ import pytest
 from fdebench2.cases import RATIO_CAP, NativeCase, quality_fields
 from fdebench2.dataset import check_dataset, export_dataset
 from fdebench2.scoring.policy_score import RunFacts, apply_policy
-from fdebench2.transforms.policy import Policy
+from fdebench2.transforms.policy import Policy, policy_brief_msgs
 
 CASE_PY = '''
 import json
@@ -100,6 +100,19 @@ def test_a_perfect_zero_cost_submission_is_not_scored_zero(tmp_path):
     assert quality_fields(5.0, 0.0, None, maximize=False)["quality_score"] == 0.0
 
 
+def test_a_non_finite_objective_is_never_valid(tmp_path):
+    for objective in ("minimize", "maximize"):       # NaN fails every comparison: it must not earn credit
+        case = make_case(tmp_path, objective, ref=80.0)
+        sub = submit(tmp_path, float("nan"))
+        res = case.evaluate(sub, "en")
+        assert res["validity_score"] == 0.0 and "not a finite number" in res["error_info"]["fatal"]
+        assert _score(case, sub, Policy(id="p", title="p"))["final"] == 0.0
+    case = make_case(tmp_path, "minimize", ref=80.0)
+    case.module.REF = float("nan")
+    with pytest.raises(AssertionError, match="reference solution is not valid"):
+        case.reference_objective
+
+
 def test_degenerate_baseline_falls_back_to_the_ratio(tmp_path):
     for base in (80.0, 70.0):            # as good as, or better than, the reference
         case = make_case(tmp_path, "minimize", ref=80.0, base=base)
@@ -137,6 +150,11 @@ def test_quality_credit_is_capped_at_the_policy_or_case_cap(tmp_path):
     assert out["quality_cap"] == 2.0 and out["components"]["quality"] == 0.75
     out = _score(case, submit(tmp_path, 100.0, ["habit"]), policy)
     assert out["final"] == 0.0 and out["components"]["quality"] == 0.0 and out["quality_anchor"] is None
+    for bad in (0, 12):                  # full credit must be reachable: 0 < cap <= RATIO_CAP
+        with pytest.raises(ValueError, match="quality_cap"):
+            make_case(tmp_path, "maximize", ref=80.0, cap=bad).quality_cap
+    with pytest.raises(ValueError, match="quality_cap"):
+        Policy(id="p", title="p", quality_cap=0)
 
 
 def test_the_first_exception_decision_on_a_rule_binds(tmp_path):
@@ -169,6 +187,13 @@ def test_hard_gates_are_known_and_never_pass_silently(tmp_path):
     over = Policy(id="h", title="h", budgets={"wall_seconds": 10}, hard_budgets=True)
     out = _score(case, submit(tmp_path, 100.0), over, wall_seconds=20.0)
     assert out["gates"]["budget"] is False and out["final"] == 0.0             # hard_budgets enforces the gate
+    with pytest.raises(ValueError, match="unknown budgets"):
+        Policy(id="t", title="t", budgets={"wall_second": 10}, hard_budgets=True)
+    tokens = Policy(id="t", title="t", budgets={"wall_seconds": 100, "total_tokens": 1000}, hard_budgets=True)
+    out = _score(case, submit(tmp_path, 100.0), tokens, wall_seconds=20.0)       # no token count reported
+    assert out["gates"]["budget"] is True and "budget not measured: total_tokens" in out["notes"]
+    gated = Policy(id="g", title="g", budgets={"wall_seconds": 10}, hard_gates=["validity", "budget"])
+    assert {"t": "Hard limit: {n:g} wall-clock seconds.", "p": {"n": 10}} in policy_brief_msgs(gated)
 
 
 def test_dataset_stores_the_baseline_only_when_the_case_has_one(tmp_path):
