@@ -203,7 +203,7 @@ class _View:
         for b, bp in self.breaks(q):
             if qty >= b:
                 p = bp
-        return p * (1.10 if (q.component, q.supplier) == ("C01", "S03") and week >= 4 else 1.0) * (self.fx if q.currency == "USD" else 1.0)
+        return p * (1.20 if (q.component, q.supplier) == ("C01", "S03") and week >= 4 else 1.0) * (self.fx if q.currency == "USD" else 1.0)
 
     def line_cost(self, cid: str, sid: str, qty: float, week: int = 1) -> float:
         return qty * self.unit_krw(self._w.quotes[(cid, sid)], qty, week)
@@ -625,13 +625,15 @@ LOCATIONS = {"zh": "{n}号货架", "en": "Rack {n}", "ko": "{n}번 랙", "ja": "
 def write_data(world: World, data_dir: Path, lang: str) -> None:
     c, v = labels(COLS, lang), labels(VALUES, lang)
     email = {
-        "en": "Approved: for component C01 from supplier S03, all quoted unit prices increase by 10% for orders placed from W4 onward. Earlier orders retain their original prices. The proposed additional 5% increase is pending and must not be applied.",
-        "ko": "승인됨: 공급사 S03의 부품 C01은 W4부터 발주하는 모든 견적 단가가 10% 인상됩니다. 이전 발주는 기존 단가를 유지합니다. 추가 5% 인상안은 승인 대기 중이므로 적용하지 마세요.",
-        "ja": "承認済み: S03のC01はW4以降の発注について全見積単価を10%引き上げます。それ以前の発注は旧価格です。追加5%の値上げ案は承認待ちのため適用しません。",
-        "zh": "已批准：供应商S03的C01自W4起下单的所有报价单价上调10%；此前订单保持原价。额外5%的提议尚待批准，不予应用。",
-        "es": "Aprobado: todos los precios unitarios cotizados de C01 por S03 aumentan un 10% para pedidos desde W4. Los pedidos anteriores mantienen el precio original. El aumento adicional del 5% está pendiente y no se aplica.",
+        "en": "Approved: for component C01 from supplier S03, all quoted unit prices increase by 20% for orders placed from W4 onward. Earlier orders retain their original prices. The proposed additional 5% increase is pending and must not be applied.",
+        "ko": "승인됨: 공급사 S03의 부품 C01은 W4부터 발주하는 모든 견적 단가가 20% 인상됩니다. 이전 발주는 기존 단가를 유지합니다. 추가 5% 인상안은 승인 대기 중이므로 적용하지 마세요.",
+        "ja": "承認済み: S03のC01はW4以降の発注について全見積単価を20%引き上げます。それ以前の発注は旧価格です。追加5%の値上げ案は承認待ちのため適用しません。",
+        "zh": "已批准：供应商S03的C01自W4起下单的所有报价单价上调20%；此前订单保持原价。额外5%的提议尚待批准，不予应用。",
+        "es": "Aprobado: todos los precios unitarios cotizados de C01 por S03 aumentan un 20% para pedidos desde W4. Los pedidos anteriores mantienen el precio original. El aumento adicional del 5% está pendiente y no se aplica.",
     }
-    (data_dir / "supplier_price_email.txt").write_text(email[lang] + "\n", encoding="utf-8")
+    (data_dir / "supplier_price_email.txt").write_text(
+        "From: purchasing@fictional.example\nDate: 2026-11-20\n"
+        "Subject: C01 / S03 price revision\n\n" + email[lang] + "\n", encoding="utf-8")
     write_csv(data_dir / FILES["components"][lang],
               [c["component"], c["desc"], c["category"], c["critical"], c["std_cost"]],
               [[k.id, DESCS[k.key][lang], CATEGORIES[k.category][lang], v["yes" if k.critical else "no"],

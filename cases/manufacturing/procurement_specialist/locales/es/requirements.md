@@ -75,3 +75,6 @@ El coste de compra usa el tramo de precio que alcanza cada línea.
 
 Además, la C04 que quede en stock al final de W5 cuesta su `costo_estandar_krw` por pieza (desecho), y la C04 no se simula después de W5. Como las entregas pueden retrasarse, el almacenamiento, la espera, el déficit y el desecho se cuentan como valores esperados según las probabilidades reales de cada proveedor de llegar una o dos semanas tarde (el historial es solo una muestra de ellas). Las compras se pagan completas, llegue la entrega a tiempo o no.
 <!-- /tier -->
+
+
+Aplique el cambio aprobado del correo del proveedor según la semana del pedido, también a los descuentos aplicables; ignore la propuesta pendiente.
