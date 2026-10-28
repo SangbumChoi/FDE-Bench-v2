@@ -1,0 +1,30 @@
+{
+ "orders": [
+  {
+   "ticker": "LUMO",
+   "side": "sell",
+   "qty": 5000,
+   "at": "p10"
+  },
+  {
+   "ticker": "KOVA",
+   "side": "buy",
+   "qty": 1000,
+   "at": "p10"
+  }
+ ],
+ "status": {
+  "stock_weights": {
+   "KOVA": 12.8783,
+   "LUMO": 12.7191,
+   "MEDQ": 6.9176
+  },
+  "sector_weights": {
+   "CONS": 12.7191,
+   "ENER": 12.8783,
+   "HLTH": 6.9176
+  },
+  "buying_power": 6663157.49,
+  "drawdown_pct": 0.0
+ }
+}

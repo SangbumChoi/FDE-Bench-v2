@@ -1,5 +1,5 @@
 - id: interface
-  text: El entregable es program/strategy.py con on_day(day), day = {market, portfolio, notices}; se llama tras cada cierre y las órdenes se ejecutan en la sesión siguiente; un solo proceso para las 80 llamadas, así que el estado puede vivir en variables de módulo; 10 s por llamada, biblioteca estándar, sin archivos de datos al ejecutar; devuelve {orders, status}.
+  text: El entregable es program/strategy.py con on_day(day), day = {market, portfolio, notices}; se llama tras cada cierre y las órdenes se ejecutan en la sesión siguiente; un solo proceso para las 80 llamadas, así que el estado puede vivir en variables de módulo; 10 s por llamada, biblioteca estándar, sin archivos de datos al ejecutar; devuelve {orders, status}. Los mensajes del día le llegan solo como notices en su entrada, nunca como correo.
 - id: evaluation_period
   text: El programa se reproduce sobre las 80 sesiones posteriores al histórico (18 de mayo a 4 de septiembre de 2026), empezando con 10.000.000 en efectivo y sin posiciones; los avisos de esas sesiones solo llegan durante la ejecución, una vez, el día en que se reciben.
 - id: fills
@@ -17,7 +17,7 @@
 - id: earnings
   text: Las empresas publican resultados trimestrales tras el cierre con una sorpresa en %; el precio reacciona sobre todo en el hueco y los primeros minutos de la mañana siguiente, y en parte en las sesiones siguientes.
 - id: restricted_list
-  text: "{{restricted}} están en la lista restringida de la firma (su equipo de finanzas corporativas los asesora): la cartera nunca puede dar órdenes de compra sobre ellos, aunque siguen en el índice y en los datos."
+  text: "{{restricted}} están en la lista restringida de la firma (su equipo de finanzas corporativas los asesora): la cartera nunca puede dar órdenes de compra sobre ellos, aunque siguen en el índice y en los datos. El historial de la lista restringida en la base de datos de la mesa solo tiene entradas anteriores ya levantadas."
 - id: restricted_addition
   text: Cuando cumplimiento normativo añade un valor a la lista restringida (aviso restricted_list_add), la cartera no da órdenes de compra sobre él desde la fecha efectiva y vende todo lo que tenga al cierre de la sesión número {{liquidation_days}}, contando la sesión efectiva como la primera.
 - id: large_order_approval

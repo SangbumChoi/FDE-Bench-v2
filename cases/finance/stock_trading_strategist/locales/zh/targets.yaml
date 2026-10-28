@@ -1,5 +1,5 @@
 - id: interface
-  text: 交付物是 program/strategy.py 中的 on_day(day)，day = {market, portfolio, notices}；每次收盘后调用，订单在下一交易日执行；80 次调用在同一进程中完成，状态可以放在模块变量里；每次 10 秒，只用标准库，运行时不能读数据文件；返回 {orders, status}。
+  text: 交付物是 program/strategy.py 中的 on_day(day)，day = {market, portfolio, notices}；每次收盘后调用，订单在下一交易日执行；80 次调用在同一进程中完成，状态可以放在模块变量里；每次 10 秒，只用标准库，运行时不能读数据文件；返回 {orders, status}。当天的消息只以 notices 的形式出现在输入里，不会以邮件形式到达。
 - id: evaluation_period
   text: 程序在历史数据之后的 80 个交易日（2026 年 5 月 18 日至 9 月 4 日）上回放，从现金 10,000,000、无持仓开始；期间的通知只在运行时于收到当天出现一次。
 - id: fills
@@ -17,7 +17,7 @@
 - id: earnings
   text: 各公司每季度收盘后公布业绩并附超预期幅度（%）；股价反应大部分在次日早上的跳空和开盘最初几分钟，部分在之后几天延续。
 - id: restricted_list
-  text: '{{restricted}} 在公司的限制名单上（投行团队正在为其提供顾问服务）：它们仍在指数和数据里，但本账户不得对它们下任何买单。'
+  text: '{{restricted}} 在公司的限制名单上（投行团队正在为其提供顾问服务）：它们仍在指数和数据里，但本账户不得对它们下任何买单。数据库里的限制名单历史只有以前已解除的条目。'
 - id: restricted_addition
   text: 合规把股票加入限制名单（restricted_list_add 通知）后，自生效日起不得对其下买单，已有持仓须在以生效日为第一个交易日算起的第 {{liquidation_days}} 个交易日收盘前卖完。
 - id: large_order_approval

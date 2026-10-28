@@ -1,5 +1,5 @@
 - id: interface
-  text: 산출물은 program/strategy.py의 on_day(day)이고 day = {market, portfolio, notices}입니다. 매 마감 후 호출되어 주문은 다음 거래일에 체결되며, 80번 호출이 한 프로세스에서 이뤄지므로 상태는 모듈 변수에 둘 수 있습니다. 호출당 10초, 표준 라이브러리만, 실행 중 데이터 파일 사용 불가이며 {orders, status}를 반환합니다.
+  text: 산출물은 program/strategy.py의 on_day(day)이고 day = {market, portfolio, notices}입니다. 매 마감 후 호출되어 주문은 다음 거래일에 체결되며, 80번 호출이 한 프로세스에서 이뤄지므로 상태는 모듈 변수에 둘 수 있습니다. 호출당 10초, 표준 라이브러리만, 실행 중 데이터 파일 사용 불가이며 {orders, status}를 반환합니다. 그날의 메시지는 입력의 notices로만 전달되고 메일로는 오지 않습니다.
 - id: evaluation_period
   text: 프로그램은 과거 데이터 다음의 80거래일(2026년 5월 18일~9월 4일)에 현금 10,000,000, 보유 종목 없이 시작해 재생되며, 그 기간의 통지는 실행 중에 받은 날 한 번씩만 들어옵니다.
 - id: fills
@@ -17,7 +17,7 @@
 - id: earnings
   text: 각 회사는 분기마다 장 마감 후 서프라이즈(%)와 함께 실적을 발표하며, 주가 반응은 대부분 다음 날 아침 갭과 개장 직후에 나오고 일부는 이후 며칠간 이어집니다.
 - id: restricted_list
-  text: '{{restricted}}는 회사의 매매제한 목록에 있습니다(기업금융팀이 자문 중). 지수와 데이터에는 남아 있지만 이 계좌는 매수 주문을 절대 낼 수 없습니다.'
+  text: '{{restricted}}는 회사의 매매제한 목록에 있습니다(기업금융팀이 자문 중). 지수와 데이터에는 남아 있지만 이 계좌는 매수 주문을 절대 낼 수 없습니다. 데스크 데이터베이스의 매매제한 목록 이력에는 이미 해제된 이전 항목만 있습니다.'
 - id: restricted_addition
   text: 컴플라이언스가 매매제한 목록에 종목을 추가하면(restricted_list_add 통지) 효력일부터 그 종목 매수 주문은 금지되고, 보유분은 효력일을 첫 번째로 세어 {{liquidation_days}}번째 거래일 마감까지 전부 팔아야 합니다.
 - id: large_order_approval

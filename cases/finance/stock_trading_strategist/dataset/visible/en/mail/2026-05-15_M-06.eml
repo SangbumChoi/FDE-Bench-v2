@@ -1,0 +1,26 @@
+From: Backtest engine team <backtest@desk.example>
+To: Trading desk <trading.desk@desk.example>
+Date: Fri, 15 May 2026 18:30:00 +0000
+Subject: Pilot run of the backtest engine
+Message-ID: <M-06@desk.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Hi,
+
+Before the real run we tried the engine on a short pilot inside the history: =
+a test book that started with 10,000,000 in cash at the close of 2026-02-06, =
+bought at the open of the next session and sold part of one position in the l=
+ast two sessions, with the engine in its full mode (0.2% sales tax, T+2 settl=
+ement). Its fills, its positions and the status table at every close are in t=
+he database export (desk_database.sql: tables pilot_fills, pilot_positions, p=
+ilot_status, pilot_weights). sample_call.json is the call the engine made aft=
+er the close of 2026-02-20, exactly as sent; sample_output.json is the answer=
+ the pilot program gave (format only).
+
+The notices in that call were test messages and mean nothing. In the real run=
+ the program receives the day's messages only inside each call (the "notices"=
+ list); it cannot read e-mail.
+
+Backtest engine team

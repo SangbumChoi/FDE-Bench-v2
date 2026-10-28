@@ -1,7 +1,7 @@
 - id: interface
   kind: missing
   domain: data semantics
-  text: The deliverable is program/strategy.py with on_day(day), day = {market, portfolio, notices}; called after each close, orders execute next session; one process for all 80 calls, so state can live in module variables; 10 s per call, standard library, no data files at run time; it returns {orders, status}.
+  text: The deliverable is program/strategy.py with on_day(day), day = {market, portfolio, notices}; called after each close, orders execute next session; one process for all 80 calls, so state can live in module variables; 10 s per call, standard library, no data files at run time; it returns {orders, status}. The day's messages reach it only as notices in its input, never as e-mail.
 - id: evaluation_period
   kind: missing
   domain: scoring
@@ -38,7 +38,7 @@
 - id: restricted_list
   kind: missing
   domain: business rule
-  text: "{{restricted}} are on the firm's restricted list (its corporate finance team advises them): the book may never place a buy order for them, although they stay in the index and the data."
+  text: "{{restricted}} are on the firm's restricted list (its corporate finance team advises them): the book may never place a buy order for them, although they stay in the index and the data. The restricted-list history in the desk database holds only earlier, lifted entries."
 - id: restricted_addition
   kind: missing
   domain: business rule
