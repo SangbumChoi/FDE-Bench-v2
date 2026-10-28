@@ -2,7 +2,7 @@
 
 ## Background
 
-From next month our personal-loan desk wants to underwrite through a program: every business day it gets that day's new applications and has to tell us which to approve and for how much, and what lending limits we have left. Could you build it? Past loans with their outcomes, the bureau data and existing debts of those borrowers, our product sheet and one pilot day (what the program receives and what our pilot answered) are attached.
+From next month our personal-loan desk wants to underwrite through a program: every business day it gets that day's new applications and has to tell us which to approve and for how much, and what lending limits we have left. Could you build it? Past loans with their outcomes, the bureau data and existing debts of those borrowers (an export of our loan database), our product sheet and one pilot day (what the program receives, what our pilot answered and the e-mails we got that day) are attached.
 
 We will judge the program by running it on the **20 business days from Monday 2 November to Friday 27 November 2026**. Those days are not in the data, of course: every application in them is new to you.
 
@@ -24,7 +24,8 @@ A folder `program/` with a file `underwriter.py` that defines **`on_day(day)`**.
 ## Data notes
 
 - One product, `product_sheet.xlsx`: PL36, a 36-month fully amortizing loan at 11.9% a year, from 1,000 to 50,000 per customer; the installment is 33.17 per 1,000 borrowed per month. All applicants are salaried employees.
-- `past_loans.csv`: 3,000 loans we funded between September 2024 and August 2026 at the requested amount, with `defaulted` = yes/no over the life of the loan, funded under our older, looser policy (Bureau A scores down to 560, DSR up to 55%). Their salaries were verified when funded. `credit_bureau.csv` and `existing_debts.csv` give the same borrowers' bureau data and debts at the time.
+- `loan_book_export.sql`, an SQL dump of our loan database (loads with `sqlite3 loans.db < loan_book_export.sql`): table `loans` holds 3,000 loans we funded between September 2024 and August 2026 at the requested amount, with `defaulted` = 1/0 over the life of the loan, funded under our older, looser policy (Bureau A scores down to 560, DSR up to 55%). Their salaries were verified when funded. `customers`, `bureau_records` and `existing_debts` give the same borrowers' attributes, bureau data and debts at the time (join on `loan_id` / `customer_id`).
+- `mail/`: the e-mails of the pilot day: notices from the regulator, the treasury, a creditor and an employer, and a branch manager's note. The engine passes the same messages to the program as `notices` (each e-mail quotes its `notice_id`) and as an application's `notes`.
 - We buy scores from two bureaus, both 0–1000; for the same person Bureau B's runs about 55 points higher than Bureau A's. **Our policy uses `{{policy_bureau}}` only**; `{{other_bureau}}` is for reference and never used for a cutoff.
 - Annual gross income, used by every rule: 12 × the monthly base salary + `annual_bonus` only when `bonus_documented` is true. `stated_monthly_income` is unverified and never used.
 - The pilot output was produced by our pilot program under the pilot's interim rules; use it for the format, not for the numbers.

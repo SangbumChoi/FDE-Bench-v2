@@ -1,0 +1,18 @@
+From: Loan servicing - Confirmations <confirmations@creditor.example>
+To: Personal loan desk <loans.desk@lender.example>
+Date: Fri, 30 Oct 2026 09:00:00 +0000
+Subject: Repayment confirmation NT-P3: debt BF1029693-D1
+Message-ID: <NT-P3.2026-10-30@lender.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Hello,
+
+We confirm that debt BF1029693-D1 of customer BF1029693 (bureau file number) =
+was repaid in full on 2026-10-30.
+New outstanding balance: 0
+New monthly payment: 0
+
+Reference: NT-P3
+Loan servicing - Confirmations

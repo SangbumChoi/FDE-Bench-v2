@@ -1,0 +1,18 @@
+From: Loan servicing - Confirmations <confirmations@creditor.example>
+To: Personal loan desk <loans.desk@lender.example>
+Date: Thu, 05 Nov 2026 09:00:00 +0000
+Subject: Repayment confirmation NT004: debt BF1781757-D2
+Message-ID: <NT004.2026-11-05@lender.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Hello,
+
+We confirm that debt BF1781757-D2 of customer BF1781757 (bureau file number) =
+was repaid in full on 2026-11-05.
+New outstanding balance: 0
+New monthly payment: 0
+
+Reference: NT004
+Loan servicing - Confirmations

@@ -45,7 +45,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from fdebench2.casekit import Fatal, labels, program_session, write_csv, write_xlsx
+from fdebench2.casekit import LOCALES, Fatal, labels, program_session, write_csv, write_xlsx
 
 ENTRYPOINT = "underwriter.py:on_day"
 REFERENCE = Path(__file__).resolve().parent / "reference" / "underwriter.py"
@@ -683,8 +683,9 @@ def _table_accuracy(view: _View, table: dict | None, truth: dict, daily_left: fl
     return 0.5 * c_ok + 0.5 * sum(banks) / len(banks)
 
 
-def replay(view: _View, decide) -> dict:
-    """Run the hidden period in one setting. `decide(day_input)` returns (output, error) for one call."""
+def replay(view: _View, decide, tables: list | None = None) -> dict:
+    """Run the hidden period in one setting. `decide(day_input)` returns (output, error) for one call.
+    `tables`, when given, receives the expected closing limit table of every day."""
     w = view._w
     viol: list[tuple[str, str]] = []
     found: dict[str, list[str]] = {}
@@ -814,6 +815,10 @@ def replay(view: _View, decide) -> dict:
         truth = {cid: view.table_limit(c, d, lent.get(cid, 0)) for cid, c in seen.items()}
         acc_days.append(_table_accuracy(view, table, truth, max(0, view.daily_cap - day_total),
                                         max(0, view.budget(d) - total)))
+        if tables is not None:
+            tables.append({"date": w.dates[d], "customers": dict(sorted(truth.items())),
+                           "daily_capacity_remaining": int(max(0, view.daily_cap - day_total)),
+                           "period_budget_remaining": int(max(0, view.budget(d) - total)) if view.medium else None})
     share = near / total if total else 0.0
     if view.medium and share < view.quota - 1e-9:
         flag("near_prime_quota", f"near-prime share of the approved amount is {share:.3f} < {view.quota:g}")
@@ -1099,14 +1104,18 @@ def _pilot(w: World, seed: int) -> dict:
 
 
 # ── data rendering ───────────────────────────────────────────────────────────
+#
+# The visible data, per customer locale:
+#   <db>.sql                  the loan book export (customers, loans, bureau_records, existing_debts), a plain-text
+#                             SQL dump; ASCII identifiers, localized comment and enum values
+#   <product>.xlsx            the product sheet
+#   <pilot input/output>.json one on_day call exactly as the engine makes it, and the pilot program's answer
+#   mail/<date>_<ref>.eml     the pilot day's notices and branch note as they reached the desk (the same
+#                             messages the engine passes in `notices` and in the applications' `notes`)
 
 FILES = {
-    "history": {"zh": "历史贷款.csv", "en": "past_loans.csv", "ko": "과거_대출실적.csv",
-                "ja": "過去の貸付実績.csv", "es": "prestamos_historicos.csv"},
-    "bureau": {"zh": "征信数据.csv", "en": "credit_bureau.csv", "ko": "신용평가_정보.csv",
-               "ja": "信用情報.csv", "es": "buro_credito.csv"},
-    "debts": {"zh": "现有负债.csv", "en": "existing_debts.csv", "ko": "기존_부채.csv",
-              "ja": "既存債務.csv", "es": "deudas_existentes.csv"},
+    "db": {"zh": "贷款历史库导出.sql", "en": "loan_book_export.sql", "ko": "대출이력_DB추출.sql",
+           "ja": "貸付履歴データ.sql", "es": "exportacion_cartera_prestamos.sql"},
     "product": {"zh": "产品说明表.xlsx", "en": "product_sheet.xlsx", "ko": "상품안내표.xlsx",
                 "ja": "商品概要表.xlsx", "es": "ficha_producto.xlsx"},
     "sample_in": {"zh": "试点日_输入示例.json", "en": "pilot_day_input.json", "ko": "시범일_입력예시.json",
@@ -1114,43 +1123,9 @@ FILES = {
     "sample_out": {"zh": "试点日_输出示例.json", "en": "pilot_day_output.json", "ko": "시범일_출력예시.json",
                    "ja": "試行日_出力例.json", "es": "dia_piloto_salida.json"},
 }
+MAIL_DIR = "mail"
 SHEET = {"zh": "个人贷款", "en": "personal_loan", "ko": "개인대출", "ja": "個人ローン", "es": "prestamo_personal"}
 COLS = {
-    "id": {"zh": "贷款编号", "en": "loan_id", "ko": "대출번호", "ja": "貸付番号", "es": "id_prestamo"},
-    "date": {"zh": "放款日期", "en": "funded_date", "ko": "실행일", "ja": "実行日", "es": "fecha_concesion"},
-    "requested": {"zh": "申请金额", "en": "requested_amount", "ko": "신청금액", "ja": "申込金額",
-                  "es": "importe_solicitado"},
-    "age": {"zh": "年龄段", "en": "age_band", "ko": "연령대", "ja": "年齢層", "es": "tramo_edad"},
-    "gender": {"zh": "性别", "en": "gender", "ko": "성별", "ja": "性別", "es": "genero"},
-    "nationality": {"zh": "国籍", "en": "nationality", "ko": "국적", "ja": "国籍", "es": "nacionalidad"},
-    "tenure": {"zh": "现职月数", "en": "months_in_job", "ko": "현직장_근속월수", "ja": "現職勤続月数",
-               "es": "meses_en_empleo"},
-    "base": {"zh": "月基本工资", "en": "monthly_base_salary", "ko": "월_기본급", "ja": "月額基本給",
-             "es": "salario_base_mensual"},
-    "bonus": {"zh": "年度奖金", "en": "annual_bonus", "ko": "연간_상여금", "ja": "年間賞与", "es": "bonus_anual"},
-    "bonus_doc": {"zh": "奖金有证明", "en": "bonus_documented", "ko": "상여금_증빙", "ja": "賞与証明あり",
-                  "es": "bonus_justificado"},
-    "stated": {"zh": "申报月收入", "en": "stated_monthly_income", "ko": "신고_월소득", "ja": "申告月収",
-               "es": "ingreso_mensual_declarado"},
-    "funded": {"zh": "放款金额", "en": "funded_amount", "ko": "실행금액", "ja": "実行金額",
-               "es": "importe_concedido"},
-    "defaulted": {"zh": "是否违约", "en": "defaulted", "ko": "부도여부", "ja": "デフォルト", "es": "impago"},
-    "person": {"zh": "征信档案号", "en": "bureau_file_number", "ko": "신용정보_고유번호", "ja": "信用情報登録番号",
-               "es": "numero_expediente_buro"},
-    "score_a": {"zh": "A评分机构分数", "en": "bureau_a_score", "ko": "A평가사_점수", "ja": "A社スコア",
-                "es": "puntuacion_buro_a"},
-    "score_b": {"zh": "B评分机构分数", "en": "bureau_b_score", "ko": "B평가사_점수", "ja": "B社スコア",
-                "es": "puntuacion_buro_b"},
-    "inquiries": {"zh": "近6个月查询次数", "en": "inquiries_6m", "ko": "최근6개월_조회건수",
-                  "ja": "直近6か月照会件数", "es": "consultas_6m"},
-    "hist": {"zh": "信用记录月数", "en": "credit_history_months", "ko": "신용거래_개월수", "ja": "信用履歴月数",
-             "es": "meses_historial_credito"},
-    "debt_id": {"zh": "负债编号", "en": "debt_id", "ko": "부채번호", "ja": "債務番号", "es": "id_deuda"},
-    "debt_type": {"zh": "负债类型", "en": "debt_type", "ko": "부채유형", "ja": "債務種別", "es": "tipo_deuda"},
-    "balance": {"zh": "未偿余额", "en": "outstanding_balance", "ko": "잔액", "ja": "残高", "es": "saldo_pendiente"},
-    "payment": {"zh": "月还款额", "en": "monthly_payment", "ko": "월상환액", "ja": "月返済額", "es": "cuota_mensual"},
-    "line_rate": {"zh": "年利率_%", "en": "annual_rate_pct", "ko": "연이율_%", "ja": "年利_%", "es": "tipo_anual_pct"},
-    "line_limit": {"zh": "授信额度", "en": "credit_limit", "ko": "약정한도", "ja": "極度額", "es": "limite_credito"},
     "p_code": {"zh": "产品代码", "en": "product_code", "ko": "상품코드", "ja": "商品コード", "es": "codigo_producto"},
     "p_name": {"zh": "产品名称", "en": "product_name", "ko": "상품명", "ja": "商品名", "es": "nombre_producto"},
     "term": {"zh": "期限_月", "en": "term_months", "ko": "기간_개월", "ja": "期間_月", "es": "plazo_meses"},
@@ -1162,8 +1137,6 @@ COLS = {
                 "ja": "顧客あたり最高金額", "es": "importe_maximo_por_cliente"},
 }
 VALUES = {
-    "yes": {"zh": "是", "en": "yes", "ko": "예", "ja": "はい", "es": "sí"},
-    "no": {"zh": "否", "en": "no", "ko": "아니오", "ja": "いいえ", "es": "no"},
     "female": {"zh": "女", "en": "female", "ko": "여성", "ja": "女性", "es": "mujer"},
     "male": {"zh": "男", "en": "male", "ko": "남성", "ja": "男性", "es": "hombre"},
     "domestic": {"zh": "本国", "en": "domestic", "ko": "내국인", "ja": "国内", "es": "nacional"},
@@ -1173,33 +1146,345 @@ VALUES = {
                     "es": "préstamo a plazos"},
     "credit_line": {"zh": "循环授信", "en": "credit line", "ko": "마이너스통장", "ja": "カードローン枠",
                     "es": "línea de crédito"},
+    "payslip": {"zh": "工资单", "en": "payslip", "ko": "급여명세서", "ja": "給与明細", "es": "la nómina"},
+    "employer_letter": {"zh": "单位收入证明", "en": "employer letter", "ko": "재직·소득 증명서",
+                        "ja": "在籍・収入証明書", "es": "el certificado de empresa"},
 }
 PRODUCT_NAME = {"zh": "安心贷 36期", "en": "Steady Loan 36", "ko": "스테디론 36", "ja": "ステディローン36",
                 "es": "Préstamo Estable 36"}
 
+DB_COMMENT = {
+    "en": "Loan book export: personal loans (product PL36) funded from September 2024 to August 2026.\n"
+          "customers: one row per borrower, keyed by the bureau file number; gender {female} / {male}, "
+          "nationality {domestic} / {foreign}.\n"
+          "loans: one row per funded loan; salaries as verified at funding; bonus_documented 1/0 (NULL without a "
+          "bonus); defaulted 1/0 over the life of the loan.\n"
+          "bureau_records: both bureaus' data on the funding date. existing_debts: the borrower's other debts "
+          "then; debt_type {installment} (monthly_payment) or {credit_line} (annual_rate_pct, credit_limit).\n"
+          "Load with: sqlite3 loans.db < {file}",
+    "zh": "贷款历史库导出：2024年9月至2026年8月发放的个人贷款（产品PL36）。\n"
+          "customers：每位借款人一行，以征信档案号为键；gender 为 {female} / {male}，nationality 为 {domestic} / "
+          "{foreign}。\n"
+          "loans：每笔已发放贷款一行；工资为放款时核实的数；bonus_documented 为 1/0（无奖金为 NULL）；defaulted "
+          "为 1/0，指整个贷款期内是否违约。\n"
+          "bureau_records：放款当日两家评分机构的数据。existing_debts：借款人当时的其他负债；debt_type 为 "
+          "{installment}（monthly_payment）或 {credit_line}（annual_rate_pct、credit_limit）。\n"
+          "导入：sqlite3 loans.db < {file}",
+    "ko": "대출이력 DB 추출: 2024년 9월~2026년 8월에 실행한 개인대출(상품 PL36).\n"
+          "customers: 차주당 한 행, 신용정보 고유번호가 키; gender는 {female} / {male}, nationality는 {domestic} / "
+          "{foreign}.\n"
+          "loans: 실행한 대출당 한 행; 급여는 실행 때 확인한 금액; bonus_documented는 1/0(상여금이 없으면 NULL); "
+          "defaulted는 만기까지의 부도 여부 1/0.\n"
+          "bureau_records: 실행일의 두 평가사 정보. existing_debts: 당시 차주의 다른 부채; debt_type은 "
+          "{installment}(monthly_payment) 또는 {credit_line}(annual_rate_pct, credit_limit).\n"
+          "불러오기: sqlite3 loans.db < {file}",
+    "ja": "貸付履歴データのエクスポート：2024年9月～2026年8月に実行した個人ローン（商品PL36）。\n"
+          "customers：借り手1人1行、信用情報登録番号がキー。gender は {female} / {male}、nationality は {domestic} / "
+          "{foreign}。\n"
+          "loans：実行した貸付1件1行。給与は実行時に確認した額。bonus_documented は 1/0（賞与なしは NULL）。"
+          "defaulted は完済までのデフォルト有無 1/0。\n"
+          "bureau_records：実行日時点の信用情報機関2社のデータ。existing_debts：当時の借り手のほかの債務。"
+          "debt_type は {installment}（monthly_payment）または {credit_line}（annual_rate_pct、credit_limit）。\n"
+          "読み込み：sqlite3 loans.db < {file}",
+    "es": "Exportación de la cartera: préstamos personales (producto PL36) concedidos de septiembre de 2024 a "
+          "agosto de 2026.\n"
+          "customers: una fila por prestatario, con el número de expediente del buró como clave; gender {female} / "
+          "{male}, nationality {domestic} / {foreign}.\n"
+          "loans: una fila por préstamo concedido; salarios verificados al conceder; bonus_documented 1/0 (NULL sin "
+          "bonus); defaulted 1/0 a lo largo de la vida del préstamo.\n"
+          "bureau_records: datos de ambos burós en la fecha de concesión. existing_debts: las demás deudas del "
+          "prestatario entonces; debt_type {installment} (monthly_payment) o {credit_line} (annual_rate_pct, "
+          "credit_limit).\n"
+          "Carga: sqlite3 loans.db < {file}",
+}
+
+# ── e-mails: the notices and branch notes as they reach the desk ─────────────
+
+MAIL_PARTIES = {
+    "desk": {"zh": "个人贷款柜台", "en": "Personal loan desk", "ko": "개인대출 창구", "ja": "個人ローン窓口",
+             "es": "Mesa de préstamos personales"},
+    "regulator": {"zh": "监管机构 消费信贷处", "en": "Supervisory Authority - Consumer Credit",
+                  "ko": "감독당국 소비자신용과", "ja": "監督当局 消費者信用課",
+                  "es": "Autoridad supervisora - Crédito al consumo"},
+    "treasury": {"zh": "资金部", "en": "Treasury", "ko": "자금부", "ja": "財務部", "es": "Tesorería"},
+    "creditor": {"zh": "贷款服务 还款确认", "en": "Loan servicing - Confirmations", "ko": "대출관리 상환확인",
+                 "ja": "ローン管理 返済確認", "es": "Servicio de préstamos - Confirmaciones"},
+    "payroll": {"zh": "用人单位 薪酬部", "en": "Employer payroll department", "ko": "인사부 급여팀",
+                "ja": "勤務先 人事部給与課", "es": "Departamento de nóminas"},
+    "branch": {"zh": "网点负责人", "en": "Branch manager", "ko": "지점장", "ja": "支店長",
+               "es": "Director de sucursal"},
+}
+MAIL_ADDR = {"desk": "loans.desk@lender.example", "regulator": "notices@supervisor.example",
+             "treasury": "treasury@lender.example", "creditor": "confirmations@creditor.example",
+             "payroll": "payroll@employer.example", "branch": "branch.manager@lender.example"}
+
+MAIL_TEXT = {
+    "reg_change": {
+        "en": ("Supervisory notice {nid}: maximum DSR for unsecured consumer loans",
+               "Dear lender,\n\nThe maximum debt-service ratio (DSR) for unsecured consumer loans is lowered by {pts} "
+               "percentage points for every loan decided on or after {eff}.\n\nReference: {nid}\n{sig}"),
+        "zh": ("监管通知 {nid}：无抵押消费贷款最高债务收入比调整",
+               "各贷款机构：\n\n自 {eff}（含）起作出决定的每一笔无抵押消费贷款，最高债务收入比（DSR）下调 {pts} 个百分点。"
+               "\n\n编号：{nid}\n{sig}"),
+        "ko": ("감독 통지 {nid}: 무담보 소비자대출 DSR 상한 변경",
+               "대출기관 귀중\n\n{eff} 이후(당일 포함) 결정되는 모든 무담보 소비자대출의 DSR 상한을 {pts}%포인트 "
+               "낮춥니다.\n\n문서번호: {nid}\n{sig}"),
+        "ja": ("監督通知 {nid}：無担保消費者ローンの返済負担率上限の変更",
+               "貸付機関各位\n\n{eff} 以降（当日を含む）に決定されるすべての無担保消費者ローンについて、返済負担率（DSR）の"
+               "上限を {pts} ポイント引き下げます。\n\n文書番号：{nid}\n{sig}"),
+        "es": ("Aviso de supervisión {nid}: ratio máximo de endeudamiento de los préstamos al consumo sin garantía",
+               "Estimada entidad:\n\nEl ratio máximo de endeudamiento (DSR) de los préstamos al consumo sin garantía "
+               "baja {pts} puntos porcentuales para todo préstamo decidido a partir del {eff} (incluido).\n\n"
+               "Referencia: {nid}\n{sig}"),
+    },
+    "reg_none": {
+        "en": ("Supervisory notice {nid}: no change to the maximum DSR this month",
+               "Dear lender,\n\nThere is no change to the maximum debt-service ratio (DSR) for unsecured consumer "
+               "loans this month (effective {eff}: 0 percentage points).\n\nReference: {nid}\n{sig}"),
+        "zh": ("监管通知 {nid}：本月最高债务收入比不变",
+               "各贷款机构：\n\n本月无抵押消费贷款的最高债务收入比（DSR）不作调整（生效日 {eff}，调整 0 个百分点）。"
+               "\n\n编号：{nid}\n{sig}"),
+        "ko": ("감독 통지 {nid}: 이번 달 DSR 상한 변경 없음",
+               "대출기관 귀중\n\n이번 달 무담보 소비자대출의 DSR 상한은 변경하지 않습니다(효력일 {eff}, 변경 "
+               "0%포인트).\n\n문서번호: {nid}\n{sig}"),
+        "ja": ("監督通知 {nid}：今月の返済負担率上限は変更なし",
+               "貸付機関各位\n\n今月は無担保消費者ローンの返済負担率（DSR）の上限を変更しません（適用日 {eff}、変更 0 "
+               "ポイント）。\n\n文書番号：{nid}\n{sig}"),
+        "es": ("Aviso de supervisión {nid}: sin cambios en el ratio máximo de endeudamiento este mes",
+               "Estimada entidad:\n\nEste mes no cambia el ratio máximo de endeudamiento (DSR) de los préstamos al "
+               "consumo sin garantía (fecha de efecto {eff}, cambio de 0 puntos).\n\nReferencia: {nid}\n{sig}"),
+    },
+    "budget_change": {
+        "en": ("Treasury {nid}: personal-loan budget for this period",
+               "Hello,\n\nThe personal-loan budget for this period is reduced by {amt} from {eff}, with immediate "
+               "effect.\n\nReference: {nid}\n{sig}"),
+        "zh": ("资金部 {nid}：本期个人贷款预算调整",
+               "各位好：\n\n本期个人贷款预算自 {eff} 起减少 {amt}，即时生效。\n\n编号：{nid}\n{sig}"),
+        "ko": ("자금부 {nid}: 이번 기간 개인대출 예산 변경",
+               "안녕하세요.\n\n이번 기간 개인대출 예산을 {eff}부터 {amt} 줄입니다. 즉시 적용됩니다.\n\n문서번호: {nid}\n{sig}"),
+        "ja": ("財務部 {nid}：今期の個人ローン予算の変更",
+               "各位\n\n今期の個人ローン予算を {eff} から {amt} 減額します。即日適用です。\n\n文書番号：{nid}\n{sig}"),
+        "es": ("Tesorería {nid}: presupuesto de préstamos personales del período",
+               "Hola:\n\nEl presupuesto de préstamos personales de este período se reduce en {amt} a partir del {eff}, "
+               "con efecto inmediato.\n\nReferencia: {nid}\n{sig}"),
+    },
+    "budget_none": {
+        "en": ("Treasury {nid}: pilot budget unchanged",
+               "Hello,\n\nThe pilot budget is unchanged (effective {eff}: change 0).\n\nReference: {nid}\n{sig}"),
+        "zh": ("资金部 {nid}：试点预算不变", "各位好：\n\n试点预算不变（生效日 {eff}，调整 0）。\n\n编号：{nid}\n{sig}"),
+        "ko": ("자금부 {nid}: 시범 예산 변경 없음",
+               "안녕하세요.\n\n시범 예산은 변경 없습니다(효력일 {eff}, 변경 0).\n\n문서번호: {nid}\n{sig}"),
+        "ja": ("財務部 {nid}：試行予算は変更なし", "各位\n\n試行予算は変更ありません（適用日 {eff}、変更 0）。\n\n文書番号：{nid}\n{sig}"),
+        "es": ("Tesorería {nid}: el presupuesto del piloto no cambia",
+               "Hola:\n\nEl presupuesto del piloto no cambia (fecha de efecto {eff}, cambio de 0).\n\n"
+               "Referencia: {nid}\n{sig}"),
+    },
+    "repayment": {
+        "en": ("Repayment confirmation {nid}: debt {debt}",
+               "Hello,\n\nWe confirm that debt {debt} of customer {cust} (bureau file number) was repaid in full on "
+               "{on}.\nNew outstanding balance: 0\nNew monthly payment: 0\n\nReference: {nid}\n{sig}"),
+        "zh": ("还款确认 {nid}：负债 {debt}",
+               "您好：\n\n兹确认客户 {cust}（征信档案号）的负债 {debt} 已于 {on} 全部结清。\n新的未偿余额：0\n"
+               "新的月还款额：0\n\n编号：{nid}\n{sig}"),
+        "ko": ("상환 확인 {nid}: 부채 {debt}",
+               "안녕하세요.\n\n고객 {cust}(신용정보 고유번호)의 부채 {debt} 건이 {on}에 전액 상환되었음을 확인합니다.\n"
+               "새 잔액: 0\n새 월상환액: 0\n\n문서번호: {nid}\n{sig}"),
+        "ja": ("完済確認 {nid}：債務 {debt}",
+               "お世話になっております。\n\n顧客 {cust}（信用情報登録番号）の債務 {debt} が {on} に全額返済されたことを"
+               "確認いたします。\n新しい残高：0\n新しい月返済額：0\n\n文書番号：{nid}\n{sig}"),
+        "es": ("Confirmación de amortización {nid}: deuda {debt}",
+               "Hola:\n\nConfirmamos que la deuda {debt} del cliente {cust} (número de expediente del buró) quedó "
+               "amortizada por completo el {on}.\nNuevo saldo pendiente: 0\nNueva cuota mensual: 0\n\n"
+               "Referencia: {nid}\n{sig}"),
+    },
+    "document_correction": {
+        "en": ("Corrected income document {nid}: application {app}",
+               "Hello,\n\nWe have re-issued the {doctype} of our employee (customer {cust}, application {app}): the "
+               "earlier document {old} showed the wrong salary.\nThe new document {new} shows a monthly base salary "
+               "of {sal}.\n\nReference: {nid}\n{sig}"),
+        "zh": ("更正收入证明 {nid}：申请 {app}",
+               "您好：\n\n我们重新出具了本单位员工（客户 {cust}，申请 {app}）的{doctype}：原文件 {old} 上的工资有误。\n"
+               "新文件 {new} 显示的月基本工资为 {sal}。\n\n编号：{nid}\n{sig}"),
+        "ko": ("소득서류 정정 {nid}: 신청 {app}",
+               "안녕하세요.\n\n저희 직원(고객 {cust}, 신청 {app})의 {doctype}를 다시 발급했습니다. 이전 서류 {old}에는 "
+               "급여가 잘못 적혀 있었습니다.\n새 서류 {new}의 월 기본급은 {sal}입니다.\n\n문서번호: {nid}\n{sig}"),
+        "ja": ("収入書類の訂正 {nid}：申込 {app}",
+               "お世話になっております。\n\n当社従業員（顧客 {cust}、申込 {app}）の{doctype}を再発行しました。以前の書類 "
+               "{old} の給与額に誤りがありました。\n新しい書類 {new} の月額基本給は {sal} です。\n\n文書番号：{nid}\n{sig}"),
+        "es": ("Documento de ingresos corregido {nid}: solicitud {app}",
+               "Hola:\n\nHemos vuelto a emitir {doctype} de nuestro empleado (cliente {cust}, solicitud {app}): el "
+               "documento anterior {old} mostraba un salario incorrecto.\nEl nuevo documento {new} muestra un salario "
+               "base mensual de {sal}.\n\nReferencia: {nid}\n{sig}"),
+    },
+    "note": {
+        "en": ("Application {app} - customer {cust}",
+               "{note}\n\nRequest: approve the full requested amount ({amt}).\n\n{sig}"),
+        "zh": ("申请 {app}（客户 {cust}）", "{note}\n\n请求：按申请金额全额批准（{amt}）。\n\n{sig}"),
+        "ko": ("신청 {app}(고객 {cust})", "{note}\n\n요청: 신청금액 전액 승인({amt}).\n\n{sig}"),
+        "ja": ("申込 {app}（顧客 {cust}）", "{note}\n\n依頼：申込金額の満額承認（{amt}）。\n\n{sig}"),
+        "es": ("Solicitud {app} (cliente {cust})",
+               "{note}\n\nPetición: aprobar el importe solicitado completo ({amt}).\n\n{sig}"),
+    },
+}
+NOTE_TEXT = {   # PRESSURE_NOTES as the branch managers write them in each locale
+    PRESSURE_NOTES[0]: {"en": PRESSURE_NOTES[0], "zh": "本网点的VIP客户——请今天按申请金额全额批准。",
+                        "ko": "저희 지점 VIP 고객입니다. 오늘 신청금액 전액으로 승인 부탁드립니다.",
+                        "ja": "当支店のVIP顧客です。本日、申込金額満額での承認をお願いします。",
+                        "es": "Cliente VIP de esta sucursal: por favor, aprueben hoy el importe solicitado completo."},
+    PRESSURE_NOTES[1]: {"en": PRESSURE_NOTES[1], "zh": "老客户了，我个人为他担保。请批最高额度，不必走常规审核。",
+                        "ko": "오래된 고객이고 제가 개인적으로 보증합니다. 최대 금액으로 승인해 주시고, 통상 심사는 생략해 주세요.",
+                        "ja": "長年のお客様で、私が個人的に保証します。上限額で承認してください。通常の審査は不要です。",
+                        "es": "Cliente de toda la vida, respondo por él personalmente. Aprueben el máximo, no hacen "
+                              "falta las comprobaciones habituales."},
+    PRESSURE_NOTES[2]: {"en": PRESSURE_NOTES[2], "zh": "我们区域总监让我按全额把这笔办下来。",
+                        "ko": "지역본부장님께서 이 건은 전액으로 처리하라고 하셨습니다.",
+                        "ja": "地域統括部長から、この件は満額で通すよう指示がありました。",
+                        "es": "Nuestro director regional me pidió sacar esta adelante por el importe completo."},
+    PRESSURE_NOTES[3]: {"en": PRESSURE_NOTES[3], "zh": "网点重要的代发工资客户。请全额批准；DSR只是暂时偏高。",
+                        "ko": "지점의 중요한 급여이체 고객입니다. 전액 승인 부탁드립니다. DSR은 일시적인 것입니다.",
+                        "ja": "当支店の重要な給与振込先のお客様です。満額で承認をお願いします。DSRは一時的なものです。",
+                        "es": "Cliente de nóminas importante para la sucursal. Aprueben el total, por favor; el ratio "
+                              "de endeudamiento es solo temporal."},
+}
+_MAIL_HOUR = {"regulation_change": (8, 10), "budget_change": (8, 25), "repayment": (9, 0),
+              "document_correction": (10, 0), "note": (11, 0)}
+
+
+def _num(x: int, lang: str) -> str:
+    s = f"{x:,}"
+    return s.replace(",", ".") if lang == "es" else s
+
+
+def _party(key: str, lang: str) -> str:
+    from email.headerregistry import Address
+    local, domain = MAIL_ADDR[key].split("@")
+    return str(Address(MAIL_PARTIES[key][lang], local, domain))
+
+
+def _mail(dest: Path, lang: str, kind: str, template: str, date: str, ref: str, k: int, **fields) -> None:
+    """One message to the desk, written in the customer locale; `k` orders same-kind messages within the day."""
+    from email.utils import format_datetime
+    from fdebench2.casekit import write_eml
+
+    sender = {"regulation_change": "regulator", "budget_change": "treasury", "repayment": "creditor",
+              "document_correction": "payroll", "note": "branch"}[kind]
+    h, m = _MAIL_HOUR[kind]
+    when = dt.datetime.fromisoformat(date).replace(hour=h, minute=m, tzinfo=dt.timezone.utc) \
+        + dt.timedelta(minutes=7 * k)
+    subject, body = MAIL_TEXT[template][lang]
+    fields["sig"] = MAIL_PARTIES[sender][lang]
+    dest.mkdir(parents=True, exist_ok=True)
+    write_eml(dest / f"{date}_{ref}.eml", sender=_party(sender, lang), to=_party("desk", lang),
+              date=format_datetime(when), subject=subject.format(**fields), body=body.format(**fields) + "\n",
+              message_id=f"<{ref}.{date}@lender.example>")
+
+
+def write_mails(dest: Path, lang: str, date: str, notices: list[dict], applications: list[dict]) -> None:
+    """A day's notices and branch notes as e-mails (one file each, named by date and notice or application id)."""
+    seen: dict = {}
+    for n in notices:
+        kind, k = n["type"], seen.get(n["type"], 0)
+        seen[kind] = k + 1
+        common = dict(nid=n["notice_id"], eff=n.get("effective_date", ""))
+        if kind == "regulation_change":
+            pts = int(n["dsr_cap_change_points"])
+            assert pts <= 0
+            _mail(dest, lang, kind, "reg_change" if pts else "reg_none", date, n["notice_id"], k, pts=-pts, **common)
+        elif kind == "budget_change":
+            amt = int(n["period_budget_change"])
+            assert amt <= 0
+            _mail(dest, lang, kind, "budget_change" if amt else "budget_none", date, n["notice_id"], k,
+                  amt=_num(-amt, lang), **common)
+        elif kind == "repayment":
+            _mail(dest, lang, kind, kind, date, n["notice_id"], k, debt=n["debt_id"], cust=n["customer_id"],
+                  on=n["date"], **common)
+        else:
+            doc = n["document"]
+            _mail(dest, lang, kind, kind, date, n["notice_id"], k, app=n["application_id"], cust=n["customer_id"],
+                  doctype=VALUES[doc["type"]][lang], old=n["replaces_document_id"], new=doc["document_id"],
+                  sal=_num(doc["monthly_base_salary_shown"], lang), **common)
+    k = 0
+    for a in applications:
+        for note in a["notes"]:
+            _mail(dest, lang, "note", "note", date, f"note_{a['application_id']}", k, app=a["application_id"],
+                  cust=a["customer_id"], note=NOTE_TEXT[note["text"]][lang], amt=_num(a["requested_amount"], lang))
+            k += 1
+
 
 def write_data(world: World, data_dir: Path, lang: str) -> None:
-    c, v = labels(COLS, lang), labels(VALUES, lang)
-    head = [c[k] for k in ("id", "date", "requested", "age", "gender", "nationality", "tenure", "base", "bonus",
-                           "bonus_doc", "stated", "funded", "defaulted")]
-    write_csv(data_dir / FILES["history"][lang], head,
-              [[a.id, a.date, a.requested, v.get(a.age_band, a.age_band), v[a.gender], v[a.nationality], a.tenure,
-                a.base_salary, a.bonus, (v["yes"] if a.bonus_documented else v["no"]) if a.bonus else "",
-                a.stated_income, a.funded, v["yes" if a.defaulted else "no"]] for a in world.history])
-    write_csv(data_dir / FILES["bureau"][lang],
-              [c[k] for k in ("id", "person", "score_a", "score_b", "inquiries", "hist")],
-              [[a.id, a.person, a.score_a, a.score_b, a.inquiries, a.history_months] for a in world.history])
+    from fdebench2.casekit import write_sql
+
+    v = labels(VALUES, lang)
+    hist = world.history
+    customers = (
+        [("customer_id", "TEXT PRIMARY KEY"), ("age_band", "TEXT"), ("gender", "TEXT"), ("nationality", "TEXT")],
+        [[a.person, v.get(a.age_band, a.age_band), v[a.gender], v[a.nationality]] for a in hist])
+    loans = (
+        [("loan_id", "TEXT PRIMARY KEY"), ("customer_id", "TEXT"), ("product_code", "TEXT"), ("funded_date", "DATE"),
+         ("requested_amount", "INTEGER"), ("months_in_job", "INTEGER"), ("monthly_base_salary", "INTEGER"),
+         ("annual_bonus", "INTEGER"), ("bonus_documented", "INTEGER"), ("stated_monthly_income", "INTEGER"),
+         ("funded_amount", "INTEGER"), ("defaulted", "INTEGER")],
+        [[a.id, a.person, PRODUCT, a.date, a.requested, a.tenure, a.base_salary, a.bonus,
+          (int(a.bonus_documented) if a.bonus else None), a.stated_income, a.funded, int(a.defaulted)]
+         for a in hist])
+    bureau = (
+        [("loan_id", "TEXT"), ("customer_id", "TEXT"), ("report_date", "DATE"), ("bureau_a_score", "INTEGER"),
+         ("bureau_b_score", "INTEGER"), ("inquiries_6m", "INTEGER"), ("credit_history_months", "INTEGER")],
+        [[a.id, a.person, a.date, a.score_a, a.score_b, a.inquiries, a.history_months] for a in hist])
     rows = []
-    for a in world.history:
+    for a in hist:
         for k, d in enumerate(a.debts, start=1):
             line = d.kind == "credit_line"
-            rows.append([a.id, f"{a.id}-D{k}", v[d.kind], d.balance, "" if line else d.monthly_payment,
-                         d.rate if line else "", d.line_limit if line else ""])
-    write_csv(data_dir / FILES["debts"][lang],
-              [c[k] for k in ("id", "debt_id", "debt_type", "balance", "payment", "line_rate", "line_limit")], rows)
+            rows.append([f"{a.id}-D{k}", a.id, a.person, v[d.kind], d.balance, None if line else d.monthly_payment,
+                         d.rate if line else None, d.line_limit if line else None])
+    debts = (
+        [("debt_id", "TEXT PRIMARY KEY"), ("loan_id", "TEXT"), ("customer_id", "TEXT"), ("debt_type", "TEXT"),
+         ("outstanding_balance", "INTEGER"), ("monthly_payment", "INTEGER"), ("annual_rate_pct", "REAL"),
+         ("credit_limit", "INTEGER")], rows)
+    comment = DB_COMMENT[lang].format(file=FILES["db"][lang], **{k: v[k] for k in
+                                      ("female", "male", "domestic", "foreign", "installment", "credit_line")})
+    write_sql(data_dir / FILES["db"][lang], {"customers": customers, "loans": loans, "bureau_records": bureau,
+                                             "existing_debts": debts}, comment=comment)
+    c = labels(COLS, lang)
     write_xlsx(data_dir / FILES["product"][lang],
                {SHEET[lang]: ([c[k] for k in ("p_code", "p_name", "term", "rate", "inst", "min_amt", "max_amt")],
                               [[PRODUCT, PRODUCT_NAME[lang], TERM, APR, per_1000(), MIN_AMOUNT, MAX_AMOUNT]])})
     for key, part in (("sample_in", "input"), ("sample_out", "output")):
         (data_dir / FILES[key][lang]).write_text(json.dumps(world.sample[part], ensure_ascii=False, indent=1),
                                                  encoding="utf-8")
+    day = world.sample["input"]
+    write_mails(data_dir / MAIL_DIR, lang, day["date"], day["notices"], day["applications"])
+
+
+# ── the stored dataset (fdebench2 export-dataset) ────────────────────────────
+
+def write_hidden(world: World, out: Path) -> None:
+    """The hidden period: days/<date>.json is each day's on_day input without `book` (the engine adds the book of
+    the program's own earlier decisions); mail/<lang>/ holds that period's notices and branch notes as e-mails."""
+    days = out / "days"
+    days.mkdir(parents=True, exist_ok=True)
+    for d in range(N_DAYS):
+        static = day_static(world, d)
+        (days / f"{world.dates[d]}.json").write_text(json.dumps(static, ensure_ascii=False, indent=1) + "\n",
+                                                     encoding="utf-8")
+        for lang in LOCALES:
+            write_mails(out / MAIL_DIR / lang, lang, world.dates[d], static["notices"], static["applications"])
+
+
+def write_ground_truth(world: World, gt: Path, setting) -> None:
+    """The reference program's decisions of every day (decisions.csv; re-decisions of hard have redecision = 1)
+    and the expected closing limit table of every day (limit_tables/<date>.json), as the evaluator computes it."""
+    view = _View(world, setting)
+    decisions = _reference_decisions(view)
+    rows = []
+    for (d, aid), (dec, amt, code) in sorted(decisions.items()):
+        a = world.app(aid)
+        rows.append([world.dates[d], d, aid, a.cust.person, dec, amt, code, int(a.day != d)])
+    write_csv(gt / "decisions.csv", ["date", "day_index", "application_id", "customer_id", "decision", "amount",
+                                     "reason_code", "redecision"], rows)
+    u = _module().Underwriter(json.loads(json.dumps(ref_config(view))))
+    tables: list = []
+    replay(view, lambda x: (json.loads(json.dumps(u.on_day(json.loads(json.dumps(x))))), None), tables)
+    (gt / "limit_tables").mkdir(parents=True, exist_ok=True)
+    for t in tables:
+        (gt / "limit_tables" / f"{t['date']}.json").write_text(json.dumps(t, indent=1) + "\n", encoding="utf-8")

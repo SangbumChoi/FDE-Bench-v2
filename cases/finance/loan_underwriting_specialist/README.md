@@ -9,10 +9,10 @@ of 20 business days** (2–27 November 2026, 562 applications from 501 customers
 The key of the case is keeping every approval within the day's limits and getting each day's limit table
 right. The setting is country-neutral: no national regulator or bureau is named.
 
-The agent sees 3,000 past funded loans with their default outcomes (`past_loans`, `credit_bureau`,
-`existing_debts`), the product sheet, and one **pilot day**: an input exactly as the engine sends it (8
-applications, one notice of each kind, a branch note) and the answer the client's pilot program gave under
-the pilot's interim rules (format only). The case has nine settings (3 tiers × 3 rule sets) on **one** world:
+The agent sees 3,000 past funded loans with their default outcomes (an SQL export of the loan database), the
+product sheet, and one **pilot day**: an input exactly as the engine sends it (8 applications, one notice of
+each kind, a branch note), the answer the client's pilot program gave under the pilot's interim rules (format
+only), and that day's notices and branch note as the e-mails the desk received (see [Data](#data)). The case has nine settings (3 tiers × 3 rule sets) on **one** world:
 the history, the hidden period, every application, branch note and notice are the same in all nine, and the
 agent's view (request, data, deliverable spec) is byte-identical (checked by the validator). Only the hidden
 requirements and the evaluator differ. The engagement knobs (full spec vs. clarify first, persona, data
@@ -32,6 +32,37 @@ day 0 … 19:   engine builds the day's input  ──►  on_day(day)  ──►
 The program keeps its own state (one process, module variables survive); the input's `book` also lists
 every approval so far and the applications whose latest decision is `refer`. Approvals are final and paid
 out the same day, so an over-limit approval cannot be undone by a later call.
+
+## Data
+
+Visible (per customer locale; file names localized, e.g. en / zh):
+
+| File | Format | Content |
+|---|---|---|
+| `loan_book_export.sql` / `贷款历史库导出.sql` | plain-text SQL dump (`casekit.write_sql`; `sqlite3 loans.db < file.sql`) | `customers` (3,000 borrowers by bureau file number: age band, gender, nationality), `loans` (funded date, request, tenure, verified salary, bonus, `bonus_documented` 1/0/NULL, stated income, funded amount, `defaulted` 1/0), `bureau_records` (both bureaus' scores, inquiries, history on the funding date), `existing_debts` (3,431 rows: installment loans with `monthly_payment`, credit lines with `annual_rate_pct` and `credit_limit`). ASCII table and column names in every locale; the header comment and the enum values (gender, nationality, age band 66+, debt type) are localized |
+| `product_sheet.xlsx` | xlsx, localized sheet and headers | PL36: term, rate, 33.17 per 1,000, min and max amount |
+| `pilot_day_input.json`, `pilot_day_output.json` | JSON, ASCII keys (the engine's format, same in every locale) | one `on_day` call (30 Oct 2026) and the pilot program's answer |
+| `mail/<date>_<ref>.eml` | RFC 5322 e-mails (`casekit.write_eml`), in the customer locale | the pilot day's 4 notices (`NT-P1`…`NT-P4`: regulator, treasury, creditor, employer payroll) and the branch manager's note on `T0003` (`note_T0003`); each quotes the notice or application id of the JSON input |
+
+Every mail mirrors a JSON notice or note one to one, so the agent can tie the human messages to what the
+engine sends. The program's input itself stays JSON (the engine's contract); the notices' `text` and the
+branch notes in the JSON are in English in every locale.
+
+### Stored dataset (`dataset/`)
+
+Written by `python -m fdebench2.cli export-dataset cases/finance/loan_underwriting_specialist` (466 files,
+~18 MB; `validate-case` checks it matches the generator):
+
+- `visible/<lang>/`: the files above, per locale (identical in every setting).
+- `hidden/days/<date>.json`: the 20 hidden days' `on_day` inputs (applications with that morning's bureau
+  snapshot, notices) without `book`, which the engine fills from the program's own earlier decisions.
+- `hidden/mail/<lang>/<date>_<ref>.eml`: the hidden period's 25 notices (1 regulation change, 1 budget cut, 15
+  repayments, 8 document corrections) and 10 branch notes as e-mails, per locale.
+- `gt/<tier>_<ruleset>/` (9 settings): `setting.json`, `reference/program/` (the reference with its config),
+  `score.json` (objective 1.0, metrics), `decisions.csv` (the reference's decisions per day: date, day_index,
+  application_id, customer_id, decision, amount, reason_code, redecision = 1 for hard's re-decisions) and
+  `limit_tables/<date>.json` (the expected closing limit table of each day as the evaluator computes it after
+  the reference's approvals: `customers`, `daily_capacity_remaining`, `period_budget_remaining`, null in easy).
 
 ## Interface (`on_day(day)`)
 

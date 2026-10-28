@@ -1,0 +1,20 @@
+From: Servicio de =?utf-8?q?pr=C3=A9stamos?= - Confirmaciones
+ <confirmations@creditor.example>
+To: Mesa de =?utf-8?q?pr=C3=A9stamos?= personales <loans.desk@lender.example>
+Date: Wed, 04 Nov 2026 09:07:00 +0000
+Subject: =?utf-8?q?Confirmaci=C3=B3n_de_amortizaci=C3=B3n?= NT002: deuda
+ BF3837178-D1
+Message-ID: <NT002.2026-11-04@lender.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Hola:
+
+Confirmamos que la deuda BF3837178-D1 del cliente BF3837178 (n=C3=BAmero de e=
+xpediente del bur=C3=B3) qued=C3=B3 amortizada por completo el 2026-11-04.
+Nuevo saldo pendiente: 0
+Nueva cuota mensual: 0
+
+Referencia: NT002
+Servicio de pr=C3=A9stamos - Confirmaciones

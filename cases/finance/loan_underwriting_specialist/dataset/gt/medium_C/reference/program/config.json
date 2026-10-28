@@ -1,0 +1,24 @@
+{
+ "beta": [
+  -3.648488,
+  -1.822968,
+  8.807822,
+  0.25175,
+  -0.318401
+ ],
+ "daily_cap": 300000,
+ "discrepancy_pct": 25,
+ "income_cap_pct": 120,
+ "max_dsr_pct": 45,
+ "min_score": 680,
+ "min_tenure": 12,
+ "near_prime_below": 850,
+ "pace": 1.25,
+ "period_budget": 3400000,
+ "policy_bureau": "A",
+ "quota": true,
+ "quota_margin": 0.015,
+ "quota_pct": 35,
+ "tenure_review": true,
+ "tier": "medium"
+}

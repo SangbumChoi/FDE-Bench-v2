@@ -2,7 +2,7 @@
 
 ## Contexto
 
-A partir del mes que viene, nuestra mesa de préstamos personales quiere hacer la evaluación con un programa: cada día hábil recibe las solicitudes nuevas de ese día y nos tiene que decir cuáles aprobar y por cuánto, y qué límites de préstamo nos quedan. ¿Podrían desarrollarlo? Les adjuntamos los préstamos anteriores con su resultado, los datos de buró y las deudas existentes de esos prestatarios, nuestra ficha de producto y un día piloto (lo que recibe el programa y lo que respondió nuestro programa piloto).
+A partir del mes que viene, nuestra mesa de préstamos personales quiere hacer la evaluación con un programa: cada día hábil recibe las solicitudes nuevas de ese día y nos tiene que decir cuáles aprobar y por cuánto, y qué límites de préstamo nos quedan. ¿Podrían desarrollarlo? Les adjuntamos los préstamos anteriores con su resultado, los datos de buró y las deudas existentes de esos prestatarios (una exportación de nuestra base de datos de préstamos), nuestra ficha de producto y un día piloto (lo que recibe el programa, lo que respondió nuestro programa piloto y los correos que recibimos ese día).
 
 Evaluaremos el programa ejecutándolo sobre los **20 días hábiles del lunes 2 al viernes 27 de noviembre de 2026**. Esos días, lógicamente, no están en los datos: todas sus solicitudes serán nuevas para ustedes.
 
@@ -24,7 +24,8 @@ Una carpeta `program/` con un archivo `underwriter.py` que defina **`on_day(day)
 ## Notas sobre los datos
 
 - Un solo producto, en `ficha_producto.xlsx`: PL36, préstamo a 36 meses con cuota constante, al 11,9 % anual, de 1.000 a 50.000 por cliente; la cuota es de 33,17 al mes por cada 1.000 prestados. Todos los solicitantes son asalariados.
-- `prestamos_historicos.csv`: 3.000 préstamos que concedimos entre septiembre de 2024 y agosto de 2026 por el importe solicitado, con `impago` = sí/no a lo largo de la vida del préstamo, concedidos con nuestra política anterior, más laxa (buró A desde 560, ratio de endeudamiento hasta el 55 %). Sus salarios se verificaron al conceder el préstamo. `buro_credito.csv` y `deudas_existentes.csv` recogen los datos de buró y las deudas de esos mismos prestatarios en aquel momento.
+- `exportacion_cartera_prestamos.sql`, un volcado SQL de nuestra base de datos de préstamos (se carga con `sqlite3 loans.db < exportacion_cartera_prestamos.sql`): la tabla `loans` recoge 3.000 préstamos que concedimos entre septiembre de 2024 y agosto de 2026 por el importe solicitado, con `defaulted` = 1/0 a lo largo de la vida del préstamo, concedidos con nuestra política anterior, más laxa (buró A desde 560, ratio de endeudamiento hasta el 55 %). Sus salarios se verificaron al conceder el préstamo. `customers`, `bureau_records` y `existing_debts` recogen los atributos, los datos de buró y las deudas de esos mismos prestatarios en aquel momento (se cruzan por `loan_id` / `customer_id`).
+- `mail/`: los correos del día piloto: avisos del supervisor, de tesorería, de un acreedor y de un empleador, y una nota de un director de sucursal. El motor pasa los mismos mensajes al programa como `notices` (cada correo cita su `notice_id`) y como `notes` de una solicitud.
 - Compramos puntuaciones a dos burós, ambas de 0 a 1000; para la misma persona, la del buró B sale unos 55 puntos más alta que la del A. **Nuestra política usa solo `{{policy_bureau}}`**; `{{other_bureau}}` es solo de referencia y nunca se usa para un corte.
 - Ingreso bruto anual, el que usan todas las reglas: 12 × el salario base mensual + `annual_bonus` solo cuando `bonus_documented` es true. `stated_monthly_income` no está verificado y no se usa nunca.
 - La salida del día piloto la produjo nuestro programa piloto con las reglas provisionales del piloto: úsenla para el formato, no para las cifras.
