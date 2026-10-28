@@ -162,12 +162,15 @@ def test_the_first_exception_decision_on_a_rule_binds(tmp_path):
                   rule_classes={"physical": "hard", "contractual": "hard", "business_policy": "soft"})
     case = make_case(tmp_path, "maximize", ref=80.0, base=40.0)
     sub = submit(tmp_path, 100.0, ["habit"])
-    deny, approve = {"rule_id": "habit", "decision": "deny"}, {"rule_id": "habit", "decision": "approve"}
+    deny = {"rule_id": "habit", "decision": "deny", "reason_given": False}
+    approve = {"rule_id": "habit", "decision": "approve", "reason_given": True}
     assert _score(case, sub, bend, exceptions=[deny, approve])["final"] == 0.0   # asking again does not overturn it
     ok = _score(case, sub, bend, exceptions=[approve, deny])
     assert ok["gates"]["validity"] and abs(ok["final"] - (1.0 - 0.1)) < 1e-9
     both = submit(tmp_path, 100.0, ["habit", "habit2"])
     assert _score(case, both, bend, exceptions=[approve])["final"] == 0.0       # each bent rule needs its own grant
+    recorded = {"rule_id": "habit", "decision": "approve", "reason_given": None}   # a justify run's record
+    assert _score(case, sub, bend, exceptions=[recorded])["final"] == 0.0     # escalate wants a business reason
 
 
 def test_question_budget_counts_questions_not_rounds(tmp_path):

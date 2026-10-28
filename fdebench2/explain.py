@@ -238,7 +238,8 @@ and the agent went through the exception process.</p><ul class="legend">{classes
         sc = json.loads((gt / "score.json").read_text(encoding="utf-8")) if (gt / "score.json").is_file() else {}
         metrics = sc.get("metrics", {})
         top = ", ".join(f"{k}={v}" for k, v in list(metrics.items())[:4])
-        score_rows.append([f"<code>{_esc(gt.name)}</code>", _esc(sc.get("objective")), _esc(top),
+        score_rows.append([f"<code>{_esc(gt.name)}</code>", _esc(sc.get("objective")),
+                           _esc(sc.get("baseline_objective", "–")), _esc(top),
                            f'<a href="{DATASET_DIR}/gt/{_esc(gt.name)}/">open</a>'])
     gt_example = next(iter(sorted((ds / "gt").glob("*"))), None) if (ds / "gt").is_dir() else None
     parts.append(f"""<section id="data"><h2>Data &amp; answers (<code>dataset/</code>)</h2>
@@ -248,7 +249,9 @@ folder per setting. <code>validate-case</code> checks the files still match the 
 <h3>Agent-visible data (English locale)</h3>{_tree(ds / "visible" / "en")}
 <h3>Hidden inputs</h3>{_tree(ds / "hidden", limit=30)}
 <h3>Reference score per setting</h3>
-{_table(["Setting", "Objective", "Metrics (first four)", "Folder"], score_rows) if score_rows else "<p class='muted'>(no dataset yet)</p>"}
+<p class="muted">Quality is normalized per setting: the baseline (the simplest valid deliverable) is 0, the reference
+is 1, and better than the reference goes above 1 (full credit at the policy's quality cap).</p>
+{_table(["Setting", "Reference objective", "Baseline objective", "Metrics (first four)", "Folder"], score_rows) if score_rows else "<p class='muted'>(no dataset yet)</p>"}
 <h3>One answer folder: <code>gt/{_esc(gt_example.name if gt_example else '')}</code></h3>
 {_tree(gt_example, limit=40) if gt_example else ""}</section>""")
 

@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from fdebench2.cli import main
+from fdebench2.dataset import export_dataset
 from fdebench2.explain import check_page, write_page
 from fdebench2.scaffold import new_case
 from fdebench2.validate import Report, check_case, check_hash_seed, validate_case
@@ -48,10 +49,14 @@ def _append(path: Path, text: str) -> None:
 
 
 def test_unmodified_copy_passes(tmp_path):
-    report = check_case(_copy(tmp_path, FAST))
-    assert report.problems == []
-    # The texts call C11 the Clock Tower café; the data calls it South Hill.
-    assert any(w.startswith("en:") and "C11" in w for w in report.warnings)
+    assert check_case(_copy(tmp_path, FAST)).problems == []
+
+
+def test_name_that_does_not_match_the_data(tmp_path):
+    root = _copy(tmp_path, FAST)
+    # C11 is the South Hill café in the data; the text calls it by another café's name.
+    _append(root / "locales/en/requirements.md", "\n- The Clock Tower café (C11) is closed on Friday.\n")
+    assert any(w.startswith("en:") and "C11" in w for w in check_case(root).warnings)
 
 
 def test_setting_marker_in_request(tmp_path):
@@ -112,6 +117,9 @@ def test_target_missing_in_one_locale(tmp_path):
 def test_baseline_must_be_valid_and_worse(tmp_path, baseline, problem):
     root = _copy(tmp_path, FAST)
     _append(root / "case.py", baseline)
+    if problem is None:
+        export_dataset(root)  # the stored scores now include the baseline's
+        write_page(root)
     report = check_case(root)
     if problem is None:
         assert report.problems == [] and report.notes == ["baseline/reference objective: 1.188"]

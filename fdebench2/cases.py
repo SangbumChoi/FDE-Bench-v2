@@ -33,7 +33,7 @@ from typing import Any
 
 import yaml
 
-from .transforms.policy import CaseRule, CaseRules
+from .transforms.policy import RATIO_CAP, CaseRule, CaseRules
 
 LOCALES = ("zh", "en", "ko", "ja", "es")
 TIERS = ("easy", "medium", "hard")
@@ -43,7 +43,6 @@ DEFAULT_RULESET = "A"
 _BLOCK = {kind: re.compile(rf"<!-- {kind}: ([A-Za-z ]+) -->\n?(.*?)<!-- /{kind} -->\n?", re.S)
           for kind in ("tier", "ruleset")}
 PARAM = re.compile(r"\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}")
-RATIO_CAP = 10.0          # upper bound of a quality ratio or normalized quality
 
 
 def quality_fields(obj: float, ref: float, base: float | None, maximize: bool) -> dict[str, Any]:
@@ -464,7 +463,9 @@ class NativeCase(Case):
         return self.meta.get("entrypoint", "")
 
     def deliverable_spec(self) -> str:
-        return self.meta.get("deliverable_spec", "")      # agent-visible: the same in every setting
+        # The same in every setting. Batch cases: shown to the extractor, not the agent (the format is open).
+        # Program cases: shown to the agent as the program interface.
+        return self.meta.get("deliverable_spec", "")
 
 
 def load_fields(cases_root: str | Path = "cases") -> dict[str, dict[str, str]]:

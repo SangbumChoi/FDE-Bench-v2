@@ -252,7 +252,7 @@ class Bench:
         variant = self.prepare(spec, run_dir)
         workspace = run_dir / "workspace"
         data_files = sorted(p.relative_to(workspace).as_posix() for p in (workspace / "data").rglob("*") if p.is_file())
-        needs_client = variant.can_ask or variant.policy.agent_visible
+        needs_client = variant.can_ask or variant.can_request_exceptions
         customer = self.registry.role("customer") if needs_client else None
         sandbox = self._sandbox(spec.case_id, workspace)
         live = sandbox.workspace            # what the agent and the client channel work on during the run

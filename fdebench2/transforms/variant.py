@@ -90,7 +90,7 @@ class Variant:
     information: str            # hidden from the agent unless condition == full
     targets: list[Target]
     policy: Policy
-    policy_brief: str           # in agent locale; "" when the policy is not agent-visible
+    policy_brief: str           # in agent locale: the policy (when agent-visible) and, for programs, the interface
     events: list[Event]
     noise: list[dict[str, Any]]
     time_budget_s: float
@@ -100,12 +100,18 @@ class Variant:
     ruleset: str | None = None        # the rule set the case was scored at (None: no settings)
     world_seed: int | None = None     # the world the case was built from (None: its public seed)
     rules: list[dict[str, str]] = field(default_factory=list)   # the setting's rules {id, class, description};
-                                                                 # never shown to the agent: exception requests are
-                                                                 # mapped to one of them
+                                                                 # not shown to the agent (an exception reply names
+                                                                 # only the id it was mapped to)
 
     @property
     def can_ask(self) -> bool:
         return self.condition in ("interact", "interact_req")
+
+    @property
+    def can_request_exceptions(self) -> bool:
+        """Escalating needs a client who answers; recording an exception (justify) does not."""
+        p = self.policy
+        return p.agent_visible and (p.exceptions == "justify" or (p.exceptions == "escalate" and self.can_ask))
 
     def save(self, directory: Path) -> None:
         directory.mkdir(parents=True, exist_ok=True)

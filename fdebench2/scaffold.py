@@ -96,7 +96,7 @@ def score(world: World, submission_dir: Path, setting) -> dict:
 
 
 def reference_solution(world: World, out_dir: Path, setting) -> None:
-    """A solid deterministic heuristic; it defines quality 1.0. Leave headroom and report it in the README."""
+    """A solid deterministic heuristic; it defines quality 1.0 (the baseline is 0). Report the headroom above it."""
     raise NotImplementedError("TODO")
 
 

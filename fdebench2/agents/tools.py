@@ -28,7 +28,8 @@ WRITE = _fn("write_file", "Create or overwrite a file in the working directory."
 LIST = _fn("list_files", "List files under a directory of the working directory.",
            {"path": {"type": "string"}}, [])
 ASK = _fn("ask_customer", "Send questions to the client and wait for the answer. Put several questions in one "
-          "message, one per line.", {"questions": {"type": "string"}}, ["questions"])
+          "message, one per line (at most 6 are answered per message).", {"questions": {"type": "string"}},
+          ["questions"])
 EXCEPTION = _fn("request_exception", "Ask the client for permission to break one of their business rules, or "
                 "record that you are breaking one, as the engagement policy requires.",
                 {"rule": {"type": "string"}, "justification": {"type": "string"}}, ["rule", "justification"])
@@ -40,7 +41,7 @@ def tool_schemas(ctx: RunContext) -> list[dict[str, Any]]:
     tools = [BASH, READ, WRITE, LIST]
     if ctx.variant.can_ask:
         tools.append(ASK)
-    if ctx.variant.policy.agent_visible:
+    if ctx.variant.can_request_exceptions:
         tools.append(EXCEPTION)
     tools.append(FINISH)
     return tools

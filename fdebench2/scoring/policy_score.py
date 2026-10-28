@@ -80,10 +80,12 @@ def apply_policy(policy: Policy, raw: dict[str, Any], facts: RunFacts, *, case: 
         classified = [rules.by_id(r) for r in found]
         if found and all(r is not None and policy.relaxable(r.rule_class) for r in classified):
             bent = sorted({r.id for r in classified if r is not None})
-            first: dict[str, str] = {}      # the first decision on a rule binds
+            first: dict[str, dict] = {}     # the first decision on a rule binds
             for e in facts.exceptions:
-                first.setdefault(e.get("rule_id"), e.get("decision"))
-            granted = {r for r, d in first.items() if d == "approve"}
+                first.setdefault(e.get("rule_id"), e)
+            # Re-scored under escalate, an approval given without a business reason (e.g. under justify) is none.
+            granted = {r for r, e in first.items() if e.get("decision") == "approve"
+                       and (policy.exceptions != "escalate" or e.get("reason_given") is True)}
             if set(bent) <= granted:
                 rescored = case.evaluate(submission_dir, customer_locale, relaxed=frozenset(bent))
                 if rescored.get("validity_score", 0) > 0:

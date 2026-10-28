@@ -26,6 +26,8 @@ EXCEPTION_MODES = ("forbidden", "escalate", "justify")
 RULE_CLASSES = ("physical", "contractual", "business_policy")
 HARD_GATES = ("validity", "notes", "budget")
 BUDGETS = ("wall_seconds", "total_tokens", "cost_usd")
+COMPONENTS = ("quality", "clarification", "communication", "efficiency")
+RATIO_CAP = 10.0          # upper bound of a quality ratio or normalized quality
 
 
 @dataclass
@@ -58,8 +60,11 @@ class Policy:
         unknown = sorted(set(self.budgets) - set(BUDGETS))
         if unknown:
             raise ValueError(f"{self.id}: unknown budgets {unknown}; known: {BUDGETS}")
-        if self.quality_cap <= 0:
-            raise ValueError(f"{self.id}: quality_cap must be positive")
+        unknown = sorted(set(self.weights) - set(COMPONENTS))
+        if unknown:
+            raise ValueError(f"{self.id}: unknown weights {unknown}; known: {COMPONENTS}")
+        if not 0 < self.quality_cap <= RATIO_CAP:
+            raise ValueError(f"{self.id}: quality_cap must be in (0, {RATIO_CAP:g}]")
         for cls, mode in self.rule_classes.items():
             if cls not in RULE_CLASSES or mode not in ("hard", "soft"):
                 raise ValueError(f"{self.id}: bad rule_classes entry {cls}: {mode}")

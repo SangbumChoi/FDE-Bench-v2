@@ -272,3 +272,26 @@ def test_judges_must_quote_the_answer():
     # Without answers there is nothing to quote: the vote counts as before.
     res = score_clarification([target], asks, [judge([1], "")], answers=None)
     assert res.recall == 1.0
+
+
+
+def test_inbox_never_writes_through_a_link(cases_root, tmp_path):
+    v, run_dir = variant(tmp_path, root=cases_root)
+    s = session(v, run_dir, Fake(lambda m: "ok"))
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (run_dir / "workspace" / "inbox").symlink_to(outside, target_is_directory=True)
+    s._inbox("hello")
+    assert list(outside.iterdir()) == []
+    assert (run_dir / "workspace" / "inbox" / "01_message.md").read_text(encoding="utf-8") == "hello\n"
+
+
+def test_justify_records_without_a_client_but_escalate_needs_one(cases_root, tmp_path):
+    v, run_dir = variant(tmp_path / "j", root=cases_root, policy="startup_velocity", condition="hidden")
+    s = session(v, run_dir, classifier("premium_first"))
+    assert v.can_request_exceptions and s.request_exception("premium first", "saves driving").startswith("[APPROVE]")
+    assert s.question_rounds == 0                                      # a record, not a question
+    v, run_dir = variant(tmp_path / "e", root=cases_root, policy="enterprise_balanced", condition="hidden")
+    s = session(v, run_dir, classifier("premium_first"))
+    assert not v.can_request_exceptions and s.request_exception("premium first", "saves driving") != ""
+    assert records(run_dir, "exception_refused")[0]["reason"] == "no_channel"

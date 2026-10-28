@@ -90,7 +90,7 @@ class Session:
             self.fired.add(ev.id)
             if ev.kind == "data_correction":
                 src = self.run_dir / "held_back" / ev.payload["file"]
-                dst = self.workspace / ev.payload["inbox"]
+                dst = self._host_path(ev.payload["inbox"])
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(src, dst)
             elif ev.kind == "customer_unavailable":
@@ -111,10 +111,21 @@ class Session:
 
     def _inbox(self, message: str) -> None:
         """Deliver a message as inbox/NN_message.md: a neutral name, as for any e-mail from the client."""
-        box = self.workspace / "inbox"
-        box.mkdir(exist_ok=True)
         self.delivered += 1     # counted here, not from the folder, which the agent may tidy up
-        (box / f"{self.delivered:02d}_message.md").write_text(message + "\n", encoding="utf-8")
+        path = self._host_path(f"inbox/{self.delivered:02d}_message.md")
+        path.parent.mkdir(exist_ok=True)
+        path.write_text(message + "\n", encoding="utf-8")
+
+    def _host_path(self, rel: str) -> Path:
+        """Where the host writes into the workspace, never through a link the agent made (e.g. inbox -> /)."""
+        root = self.workspace.resolve()
+        path = root / rel
+        for p in (path, *path.parents):
+            if p == root:
+                break
+            if p.is_symlink():
+                p.unlink()
+        return path
 
     def _unavailable(self) -> bool:
         if self.unavailable_until is None:
@@ -159,22 +170,24 @@ class Session:
 
         A model only sorts the request: which one of the setting's rules it is about and, under escalate, whether
         it gives a concrete business reason; it never sees what the client knows. The decision follows from the
-        policy, covers only that rule (`rule_id` in the transcript), and the first one for a rule is final. Each
-        request takes a question round; none is decided while the client cannot answer.
+        policy, covers only that rule (`rule_id` in the transcript), and the first one for a rule is final. Under
+        escalate each request takes a question round and none is decided while the client cannot answer; under
+        justify it is a record and needs no client.
         """
         rule, justification = (rule or "").strip(), (justification or "").strip()
-        if not self.variant.can_ask or self.customer is None:
+        if not self.variant.can_request_exceptions or self.customer is None:
             self.log("exception_refused", rule=rule, justification=justification, reason="no_channel")
             return NO_EXCEPTIONS
-        if self.question_rounds >= self.variant.max_question_rounds:
-            self.log("exception_refused", rule=rule, justification=justification, reason="round_limit")
-            return NO_EXCEPTIONS
-        self.question_rounds += 1
-        self.poll_events()  # after_questions triggers
-        if self._unavailable():
-            self.log("exception_refused", rule=rule, justification=justification, reason="unavailable",
-                     round=self.question_rounds)
-            return self._auto_reply()
+        if self.variant.policy.exceptions == "escalate":   # a question to the client; justify only records
+            if self.question_rounds >= self.variant.max_question_rounds:
+                self.log("exception_refused", rule=rule, justification=justification, reason="round_limit")
+                return NO_EXCEPTIONS
+            self.question_rounds += 1
+            self.poll_events()  # after_questions triggers
+            if self._unavailable():
+                self.log("exception_refused", rule=rule, justification=justification, reason="unavailable",
+                         round=self.question_rounds)
+                return self._auto_reply()
 
         # A request seen before, or one naming a decided rule's id, gets that decision without a model call. The
         # justification is part of the request: the same rule text may stand for another rule with another reason.

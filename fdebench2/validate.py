@@ -48,7 +48,8 @@ from .cases import LOCALES, PARAM, RULESETS, TIERS, NativeCase, load_fields
 from .transforms.language import detect_locale
 from .transforms.policy import RULE_CLASSES
 
-DISTINCT_MARGIN = 0.01
+DISTINCT_MARGIN = 0.01           # on the objective ratio: rule sets whose answers differ by less look the same
+BASELINE_GAP = 0.02              # a baseline closer than this to the reference makes normalized quality unstable
 BASELINE_REQUIRED = False        # a case without baseline_solution: an error when True, a warning when False
 REQUIRED_META = ("id", "role", "field", "task_type", "objective", "seed", "deliverable_spec", "rules")
 HANGUL = re.compile(r"[가-힣]")
@@ -265,7 +266,7 @@ def check_world_seed(case: NativeCase, seed: int) -> list[str]:
                 for y in other.rulesets:
                     if x != y and (tier, x) in refs:
                         res = other.at(tier, y).evaluate(refs[(tier, x)], "en")
-                        if res["validity_score"] == 1.0 and res["quality_score"] > 1.0 - DISTINCT_MARGIN:
+                        if res["validity_score"] == 1.0 and res["quality_ratio"] > 1.0 - DISTINCT_MARGIN:
                             problems.append(f"[seed {seed} {tier}] rule sets {x} and {y} give the same solution")
     finally:
         keep.cleanup()
@@ -423,6 +424,11 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
         (problems if BASELINE_REQUIRED else warnings).append(
             "case.py has no baseline_solution (the simplest sensible valid deliverable)")
     ratios, unstated = [], {}
+    broken_baseline = False
+    try:
+        case.quality_cap
+    except ValueError as e:
+        problems.append(f"case.yaml: {e}")
     for c in case.settings():
         at = f"[{c.setting.label}] " if c.tiers else ""
         try:
@@ -438,6 +444,21 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
             if missing:
                 unstated.setdefault((rule.id, tuple(dict.fromkeys(missing))), []).append(c)
         with tempfile.TemporaryDirectory() as tmp:
+            # The baseline first: every evaluation of a valid submission scores against it.
+            if baseline is not None:
+                base_dir = Path(tmp) / "baseline"
+                base_dir.mkdir()
+                try:
+                    baseline(c.world, base_dir, *((c.setting,) if c.tiers else ()))
+                    res = c.raw_score(base_dir)
+                except Exception as e:
+                    res = {"fatal": f"baseline_solution fails: {e!r}"[:400]}
+                if "fatal" in res or res["violations"]:
+                    problems.append(f"{at}the baseline is not valid: "
+                                    f"{res.get('fatal') or sorted({r for r, _ in res['violations']})}")
+                    broken_baseline = True
+                    continue
+                base_obj = res["objective"]
             ref_dir = Path(keep.name) / f"ref_{c.tier}_{c.ruleset}"
             ref_dir.mkdir()
             c.write_reference(ref_dir)
@@ -454,22 +475,15 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
             if c.evaluate(empty, "en")["validity_score"] != 0.0:
                 problems.append(at + "an empty submission is valid")
             if baseline is not None and first["validity_score"] == 1.0:
-                base_dir = Path(tmp) / "baseline"
-                base_dir.mkdir()
-                try:
-                    baseline(c.world, base_dir, *((c.setting,) if c.tiers else ()))
-                    res = c.raw_score(base_dir)
-                except Exception as e:
-                    res = {"fatal": f"baseline_solution fails: {e!r}"[:400]}
                 ref = c.reference_objective
-                if "fatal" in res or res["violations"]:
-                    problems.append(f"{at}the baseline is not valid: "
-                                    f"{res.get('fatal') or sorted({r for r, _ in res['violations']})}")
-                elif (res["objective"] >= ref) if meta.get("objective") == "maximize" else (res["objective"] <= ref):
-                    problems.append(f"{at}the baseline ({res['objective']}) is not worse than the reference ({ref})")
+                if (base_obj >= ref) if meta.get("objective") == "maximize" else (base_obj <= ref):
+                    problems.append(f"{at}the baseline ({base_obj}) is not worse than the reference ({ref})")
                 else:
-                    ratio = f"{res['objective'] / ref:.3f}" if ref else "n/a (reference 0)"
+                    ratio = f"{base_obj / ref:.3f}" if ref else "n/a (reference 0)"
                     ratios.append(f"{c.setting.label} {ratio}" if c.tiers else ratio)
+                    if abs(ref - base_obj) < BASELINE_GAP * max(abs(ref), 1e-9):
+                        warnings.append(f"{at}the baseline is within {BASELINE_GAP:.0%} of the reference: "
+                                        "normalized quality will swing on tiny objective differences")
             examples = c.violating_examples()
             for rule_id in [r.id for r in c.rules().rules]:
                 if rule_id not in examples:
@@ -496,6 +510,10 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
         warnings.append(f"{at}rule {rule_id}: its description says {', '.join(numbers)}, "
                         f"which en/requirements.md never says")
 
+    if broken_baseline:  # every further evaluation would fail on the baseline
+        keep.cleanup()
+        return report
+
     # ── rule sets are different ground truths ───────────────────────────────
     for tier in tiers:
         for x in rulesets:
@@ -503,8 +521,8 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                 if x == y or (tier, x) not in refs:
                     continue
                 res = case.at(tier, y).evaluate(refs[(tier, x)], "en")
-                if res["validity_score"] == 1.0 and res["quality_score"] > 1.0 - DISTINCT_MARGIN:
-                    problems.append(f"[{tier}] rule set {x}'s reference scores {res['quality_score']:.4f} under "
+                if res["validity_score"] == 1.0 and res["quality_ratio"] > 1.0 - DISTINCT_MARGIN:
+                    problems.append(f"[{tier}] rule set {x}'s reference scores {res['quality_ratio']:.4f} under "
                                     f"rule set {y}: the two rule sets do not lead to different solutions")
 
     # ── tiers add signal: two tiers with the same answer test the same thing ─

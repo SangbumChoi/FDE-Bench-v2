@@ -83,7 +83,8 @@ class Endpoint:
     model: str
     base_url: str | None = None
     api_key_env: str | None = "OPENAI_API_KEY"
-    temperature: float | None = None
+    temperature: float | None = None     # wins over a caller's default (e.g. the client's 0)
+    sampling_params: bool = True         # false for endpoints that reject temperature (some reasoning models)
     max_tokens: int | None = None
     extra_body: dict[str, Any] = field(default_factory=dict)
     # Price per million tokens, for cost-budget policies. Optional.
@@ -126,13 +127,15 @@ class OpenAICompatModel:
         params: dict[str, Any] = {"model": self.endpoint.model, "messages": messages}
         if tools:
             params["tools"] = tools
-        if self.endpoint.temperature is not None:
-            params["temperature"] = self.endpoint.temperature
         if self.endpoint.max_tokens is not None:
             params["max_tokens"] = self.endpoint.max_tokens
         if self.endpoint.extra_body:
             params["extra_body"] = self.endpoint.extra_body
         params.update(kwargs)
+        if self.endpoint.temperature is not None:
+            params["temperature"] = self.endpoint.temperature
+        if not self.endpoint.sampling_params:
+            params.pop("temperature", None)
 
         resp = self._with_retries(lambda: self._client.chat.completions.create(**params))
         choice = resp.choices[0]
