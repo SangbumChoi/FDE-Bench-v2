@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-572967</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9796780572967</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>¿La casa dormida?</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>Inés Ribera</PersonName>
+        <PersonNameInverted>Ribera, Inés</PersonNameInverted>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">Durante años, un joven piloto de transbordador ha evitado una estación meteorológica en el altiplano; entonces llega una carta con cuarenta años de retraso y todo vuelve.
+
+Contada a lo largo de un solo invierno, sigue a un joven piloto de transbordador y a quienes se niegan a marcharse.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">2003</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

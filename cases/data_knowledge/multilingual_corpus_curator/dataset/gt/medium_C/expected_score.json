@@ -1,0 +1,28 @@
+{
+  "hidden": {
+    "metrics": {
+      "books_scored": 66,
+      "books_without_credit": 0,
+      "credit": 66.0,
+      "extra_files": 0,
+      "library_files": 66,
+      "placed_exactly": 66,
+      "reviewed_correctly": 0
+    },
+    "objective": 100.0,
+    "violations": []
+  },
+  "visible": {
+    "metrics": {
+      "books_scored": 66,
+      "books_without_credit": 0,
+      "credit": 66.0,
+      "extra_files": 0,
+      "library_files": 66,
+      "placed_exactly": 66,
+      "reviewed_correctly": 0
+    },
+    "objective": 100.0,
+    "violations": []
+  }
+}

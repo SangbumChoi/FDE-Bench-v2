@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-825421</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9799590825421</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>透明的书店？</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Touming de Shudian?</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>林若曦</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Lin Ruoxi</PersonName></AlternativeName>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">故事从只有一家书店的小岛开始：一封迟到了四十年的信突然寄到，而一位守寡的养蜂人是唯一记得原因的人。
+
+这是一部关于记忆与宽恕的安静小说。</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1970</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

@@ -1,0 +1,101 @@
+﻿book,lang,kind,tier,scored,status,path,reason,title,title_latin,authors,authors_latin,first_published,edition_year,sources
+B001,zh,easy,easy,1,placed,library/1998/陈思远/雨季与信使.txt,,雨季与信使,Yuji yu Xinshi,陈思远,Chen Siyuan,1988,1998,北京办公室/9795512678908.md
+B002,zh,easy,easy,1,placed,library/1983/李浩然-&-陈思远/遥远的群岛.txt,,遥远的群岛,Yaoyuan de Qundao,李浩然; 陈思远,Li Haoran; Chen Siyuan,1979,1983,misc/Yaoyuan_de_Qundao.docx
+B003,zh,easy,easy,1,placed,library/1968/陈雨桐/最后的港口.txt,,最后的港口,Zuihou de Gangkou,陈雨桐,Chen Yutong,1968,1968,北京办公室/9792141156388.epub
+B004,zh,easy,easy,1,placed,library/2019/陈雨桐/安静的书店.txt,,安静的书店,Anjing de Shudian,陈雨桐,Chen Yutong,2019,2019,北京办公室/安静的书店.txt
+B005,zh,easy,easy,1,placed,library/1975/林浩然/透明的花园.txt,,透明的花园,Touming de Huayuan,林浩然,Lin Haoran,1975,1975,北京办公室/透明的花园.xml
+B006,zh,easy,easy,1,placed,library/2000/陈雨桐/透明的雨季.txt,,透明的雨季,Touming de Yuji,陈雨桐,Chen Yutong,2000,2000,北京办公室/透明的雨季.json
+B007,en,easy,easy,1,placed,"library/1969/Jonah-Calloway/The-Quiet-Lighthouse-—-Notes-on-Memory,.txt",,"The Quiet Lighthouse — Notes on Memory, Weather and the Families We Leave","The Quiet Lighthouse — Notes on Memory, Weather and the Families We Leave",Jonah Calloway,Jonah Calloway,1967,1969,"inbox/The_Quiet_Lighthouse_—_Notes_on_Memory,_Weather_and_the_Families_We_Leave.docx"
+B008,en,easy,easy,1,placed,library/2007/Priya-Elsworth/The-Glass-Map.txt,,The Glass Map,The Glass Map,Priya Elsworth,Priya Elsworth,2007,2007,london/The Glass Map.pdf
+B009,en,easy,easy,1,placed,library/1983/Priya-Elsworth-&-Jonah-Calloway/The-Glass-Islands.txt,,The Glass Islands,The Glass Islands,Priya Elsworth; Jonah Calloway,Priya Elsworth; Jonah Calloway,1969,1983,inbox/9796963902512.xml
+B010,en,easy,easy,1,placed,library/1983/Helena-Penrose/The-Northern-Lighthouse.txt,,The Northern Lighthouse,The Northern Lighthouse,Helena Penrose,Helena Penrose,1969,1983,inbox/book_0010.pdf
+B011,en,easy,easy,1,placed,library/1992/Helena-Calloway/The-Hidden-Messenger.txt,,The Hidden Messenger,The Hidden Messenger,Helena Calloway,Helena Calloway,1992,1992,london/The Hidden Messenger.json
+B012,en,easy,easy,1,placed,library/2025/Eleanor-Ashdown/A-Map-of-Fenwick-Hollow.txt,,A Map of Fenwick Hollow,A Map of Fenwick Hollow,Eleanor Ashdown,Eleanor Ashdown,2012,2025,inbox/A_Map_of_Fenwick_Hollow.docx
+B013,ko,easy,easy,1,placed,library/1973/박예린-&-강수아/작은-여름.txt,,작은 여름,Jageun Yeoreum,박예린; 강수아,Park Ye-rin; Kang Su-ah,1969,1973,inbox/작은_여름.md
+B014,ko,easy,easy,1,placed,library/2009/이예린/먼-정원.txt,,먼 정원,Meon Jeongwon,이예린,Lee Ye-rin,2009,2009,서울지사/book_0014.html
+B015,ko,easy,easy,1,placed,library/1993/강수아/늦은-정원.txt,,늦은 정원,Neujeun Jeongwon,강수아,Kang Su-ah,1984,1993,서울지사/늦은 정원.xml
+B016,ko,easy,easy,1,placed,library/1973/박예린/등대의-바다.txt,,등대의 바다,Deungdae-ui Bada,박예린,Park Ye-rin,1973,1973,inbox/Deungdae-ui_Bada.pdf
+B017,ko,easy,easy,1,placed,library/2010/정하은/여름의-정원.txt,,여름의 정원,Yeoreum-ui Jeongwon,정하은,Jung Ha-eun,2002,2010,서울지사/Yeoreum-ui_Jeongwon.xml
+B018,ko,easy,easy,1,placed,library/1963/박예린/먼-지도.txt,,먼 지도,Meon Jido,박예린,Park Ye-rin,1963,1963,서울지사/Meon_Jido.epub
+B019,ja,easy,easy,1,placed,library/1998/伊藤美咲/夏の硝子.txt,,夏の硝子,Natsu no Garasu,伊藤美咲,Ito Misaki,1986,1998,misc/夏の硝子.md
+B020,ja,easy,easy,1,placed,library/1996/小林蓮/夏の坂道.txt,,夏の坂道,Natsu no Sakamichi,小林蓮,Kobayashi Ren,1996,1996,inbox/夏の坂道.docx
+B021,ja,easy,easy,1,placed,library/2023/鈴木葵/夏の手紙.txt,,夏の手紙,Natsu no Tegami,鈴木葵,Suzuki Aoi,2012,2023,misc/9790421163392.pdf
+B022,ja,easy,easy,1,placed,library/1987/伊藤美咲/手紙の月.txt,,手紙の月,Tegami no Tsuki,伊藤美咲,Ito Misaki,1987,1987,inbox/Tegami_no_Tsuki.docx
+B023,ja,easy,easy,1,placed,library/1979/高橋大翔/静かな森.txt,,静かな森,Shizukana Mori,高橋大翔,Takahashi Hiroto,1974,1979,東京オフィス/9796705646148.txt
+B024,ja,easy,easy,1,placed,library/1990/高橋大翔/鳥の旅人.txt,,鳥の旅人,Tori no Tabibito,高橋大翔,Takahashi Hiroto,1990,1990,東京オフィス/book_0024.md
+B025,es,easy,easy,1,placed,library/2021/Álvaro-Quiroga-&-Mateo-Olmedo/La-canción-lejana.txt,,La canción lejana,La canción lejana,Álvaro Quiroga; Mateo Olmedo,Álvaro Quiroga; Mateo Olmedo,2021,2021,madrid/La canción lejana.txt
+B026,es,easy,easy,1,placed,library/1988/Inés-Saldaña/Cartas-desde-Valdemora-—-Notas-sobre-la.txt,,"Cartas desde Valdemora — Notas sobre la memoria, el tiempo y las familias que dejamos","Cartas desde Valdemora — Notas sobre la memoria, el tiempo y las familias que dejamos",Inés Saldaña,Inés Saldaña,1982,1988,madrid/9792675789120.docx
+B027,es,easy,easy,1,placed,library/2008/Inés-Saldaña/El-verano-pequeño-—-Notas-sobre-la-memor.txt,,"El verano pequeño — Notas sobre la memoria, el tiempo y las familias que dejamos","El verano pequeño — Notas sobre la memoria, el tiempo y las familias que dejamos",Inés Saldaña,Inés Saldaña,2006,2008,"madrid/El_verano_pequeño_—_Notas_sobre_la_memoria,_el_tiempo_y_las_familias_que_dejamos.md"
+B028,es,easy,easy,1,placed,library/2013/Mateo-Olmedo/La-canción-perdida-—-Una-novela-en-trein.txt,,La canción perdida — Una novela en treinta y un capítulos breves,La canción perdida — Una novela en treinta y un capítulos breves,Mateo Olmedo,Mateo Olmedo,2013,2013,madrid/La canción perdida — Una novela en treinta y un capítulos breves.epub
+B029,es,easy,easy,1,placed,library/1967/Mateo-Quiroga/El-jardín-de-Castrillo-de-la-Vega.txt,,El jardín de Castrillo de la Vega,El jardín de Castrillo de la Vega,Mateo Quiroga,Mateo Quiroga,1967,1967,madrid/El jardín de Castrillo de la Vega.md
+B030,es,easy,easy,1,placed,library/1990/Mateo-Olmedo/La-memoria-pequeña.txt,,La memoria pequeña,La memoria pequeña,Mateo Olmedo,Mateo Olmedo,1986,1990,madrid/La memoria pequeña.txt
+B031,zh,m_encoding,medium,0,placed,library/2006/陈雨桐/漫长的河流.txt,,漫长的河流,Manchang de Heliu,陈雨桐,Chen Yutong,2006,2006,北京办公室/9794639381609.txt
+B032,ko,m_encoding,medium,0,placed,library/1996/김민준/골목의-바다.txt,,골목의 바다,Golmok-ui Bada,김민준,Kim Min-jun,1986,1996,서울지사/Golmok-ui_Bada.txt
+B033,ja,m_encoding,medium,0,placed,library/2025/渡辺大翔/青い月.txt,,青い月,Aoi Tsuki,渡辺大翔,Watanabe Hiroto,2018,2025,東京オフィス/9796414507051.txt
+B034,es,m_encoding,medium,0,placed,library/1990/Tomás-Saldaña/La-memoria-olvidada-—-Notas-sobre-la-mem.txt,,"La memoria olvidada — Notas sobre la memoria, el tiempo y las familias que dejamos","La memoria olvidada — Notas sobre la memoria, el tiempo y las familias que dejamos",Tomás Saldaña,Tomás Saldaña,1990,1990,"madrid/La_memoria_olvidada_—_Notas_sobre_la_memoria,_el_tiempo_y_las_familias_que_dejamos.txt"
+B035,en,m_encoding,medium,0,placed,library/1986/Eleanor-Ashdown-&-Jonah-Calloway/The-Silent-Messenger.txt,,The Silent Messenger,The Silent Messenger,Eleanor Ashdown; Jonah Calloway,Eleanor Ashdown; Jonah Calloway,1981,1986,london/The_Silent_Messenger.txt
+B036,ko,m_encoding,medium,0,placed,library/1970/김하은/먼-기차.txt,,먼 기차,Meon Gicha,김하은,Kim Ha-eun,1970,1970,서울지사/먼 기차.txt
+B037,ja,m_encoding,medium,0,placed,library/2020/小林蓮-&-小林遥/静かな冬.txt,,静かな冬,Shizukana Fuyu,小林蓮; 小林遥,Kobayashi Ren; Kobayashi Haruka,2010,2020,東京オフィス/静かな冬.txt
+B038,ja,m_era,medium,0,placed,library/2023/渡辺大翔/旅人の坂道.txt,,旅人の坂道,Tabibito no Sakamichi,渡辺大翔,Watanabe Hiroto,2010,2023,東京オフィス/旅人の坂道.json
+B039,zh,m_era,medium,0,placed,library/1997/林嘉怡/最后的地图.txt,,最后的地图,Zuihou de Ditu,林嘉怡,Lin Jiayi,1997,1997,inbox/9791217727026.md
+B040,ko,m_era,medium,0,placed,library/2025/최민준/하얀-기차.txt,,하얀 기차,Hayan Gicha,최민준,Choi Min-jun,2014,2025,misc/하얀 기차.json
+B041,en,m_era,medium,0,placed,library/1995/Helena-Fairbairn-&-Clara-Hartigan/The-Late-Summer-—-Stories-from-the-North.txt,,The Late Summer — Stories from the Northern Coast and the Keepers Who Stayed Behind,The Late Summer — Stories from the Northern Coast and the Keepers Who Stayed Behind,Helena Fairbairn; Clara Hartigan,Helena Fairbairn; Clara Hartigan,1987,1995,london/book_0041.json
+B042,es,m_era,medium,0,placed,library/1967/Lucía-Echeverría/Cartas-desde-Puerto-Albéniz.txt,,Cartas desde Puerto Albéniz,Cartas desde Puerto Albéniz,Lucía Echeverría,Lucía Echeverría,1967,1967,inbox/Cartas desde Puerto Albéniz.md
+B043,zh,m_era,medium,0,placed,library/1974/林若曦/失落的河流.txt,,失落的河流,Shiluo de Heliu,林若曦,Lin Ruoxi,1974,1974,inbox/9791587683571.json
+B044,en,m_width,medium,0,placed,"library/2011/Priya-Elsworth/The-Late-Garden-—-Three-Generations,-One.txt",,"The Late Garden — Three Generations, One House and a River That Would Not Stay","The Late Garden — Three Generations, One House and a River That Would Not Stay",Priya Elsworth,Priya Elsworth,2011,2011,inbox/Ｔｈｅ　Ｌａｔｅ　Ｇａｒｄｅｎ　—　Ｔｈｒｅｅ　Ｇｅｎｅｒａｔｉｏｎｓ，　Ｏｎｅ　Ｈｏｕｓｅ　ａｎｄ　ａ　Ｒｉｖｅｒ　Ｔｈａｔ　Ｗｏｕｌｄ　Ｎｏｔ　Ｓｔａｙ.md
+B045,en,m_width,medium,0,placed,library/1977/Clara-Hartigan/The-Quiet-Messenger.txt,,The Quiet Messenger,The Quiet Messenger,Clara Hartigan,Clara Hartigan,1977,1977,inbox/9794432236151.txt
+B046,es,m_width,medium,0,placed,library/2023/Tomás-Saldaña/El-río-olvidado.txt,,El río olvidado,El río olvidado,Tomás Saldaña,Tomás Saldaña,2023,2023,misc/9796364937670.xml
+B047,es,m_width,medium,0,placed,library/1991/Lucía-Echeverría/El-jardín-dormido.txt,,El jardín dormido,El jardín dormido,Lucía Echeverría,Lucía Echeverría,1987,1991,misc/9794832908832.docx
+B048,en,m_forbidden,medium,0,placed,library/1999/Helena-Ashdown/The-Last-Summer-A-Novel.txt,,The Last Summer: A Novel,The Last Summer: A Novel,Helena Ashdown,Helena Ashdown,1994,1999,inbox/book_0048.docx
+B049,es,m_forbidden,medium,0,placed,library/2013/Lucía-Echeverría/¿El-verano-de-Puerto-Albéniz.txt,,¿El verano de Puerto Albéniz?,¿El verano de Puerto Albéniz?,Lucía Echeverría,Lucía Echeverría,2013,2013,inbox/¿El verano de Puerto Albéniz.md
+B050,zh,m_forbidden,medium,0,placed,library/1970/林若曦/透明的书店.txt,,透明的书店?,Touming de Shudian?,林若曦,Lin Ruoxi,1970,1970,北京办公室/Touming_de_Shudian.xml
+B051,ja,m_forbidden,medium,0,placed,library/1987/伊藤湊/時計の坂道.txt,,時計の坂道?,Tokei no Sakamichi?,伊藤湊,Ito Minato,1987,1987,東京オフィス/9795182803792.html
+B052,ko,m_forbidden,medium,0,placed,library/2007/최민준-&-김하은/하얀-시계탑.txt,,하얀 시계탑?,Hayan Sigyetap?,최민준; 김하은,Choi Min-jun; Kim Ha-eun,1994,2007,서울지사/하얀 시계탑.xml
+B053,zh,m_variant,medium,0,placed,library/2002/陈思远/钟楼与书店.txt,,钟楼与书店,Zhonglou yu Shudian,陈思远,Chen Siyuan,2002,2002,inbox/钟楼与书店.pdf
+B054,ko,m_variant,medium,0,placed,library/2010/강수아/기차의-서점.txt,,기차의 서점,Gicha-ui Seojeom,강수아,Kang Su-ah,2010,2010,서울지사/9793885857111.docx
+B055,ja,m_variant,medium,0,placed,library/1962/小林蓮/遠い港.txt,,遠い港,Toi Minato,小林蓮,Kobayashi Ren,1962,1962,東京オフィス/Toi_Minato.pdf
+B056,ko,m_variant,medium,0,placed,library/2023/정하은/작은-시계탑.txt,,작은 시계탑,Jageun Sigyetap,정하은,Jung Ha-eun,2023,2023,misc/book_0056.txt
+B057,en,m_variant,medium,0,placed,library/2016/Priya-Elsworth/A-Map-of-Westerley-—-Stories-from-the-No.txt,,A Map of Westerley — Stories from the Northern Coast and the Keepers Who Stayed Behind,A Map of Westerley — Stories from the Northern Coast and the Keepers Who Stayed Behind,Priya Elsworth,Priya Elsworth,2006,2016,london/A Map of Westerley — Stories from the Northern Coast and the Keepers Who Stayed Behind.docx
+B058,zh,m_dup,medium,0,placed,library/1981/王思远/遥远的雨季.txt,,遥远的雨季,Yaoyuan de Yuji,王思远,Wang Siyuan,1981,1981,inbox/9797792825263.epub;inbox/遥远的雨季.pdf
+B059,ko,m_dup,medium,0,placed,library/2011/이예린/작은-바다.txt,,작은 바다,Jageun Bada,이예린,Lee Ye-rin,2008,2011,inbox/작은 바다.xml;서울지사/작은 바다.docx;서울지사/Jageun_Bada.html
+B060,ja,m_dup,medium,0,placed,library/2025/中村湊/雨の月.txt,,雨の月,Ame no Tsuki,中村湊,Nakamura Minato,2020,2025,東京オフィス/雨の月.epub;東京オフィス/雨の月.pdf
+B061,en,m_dup,medium,0,placed,library/2009/Tobias-Ashdown/A-Map-of-Aldermoor.txt,,A Map of Aldermoor,A Map of Aldermoor,Tobias Ashdown,Tobias Ashdown,2000,2009,london/A_Map_of_Aldermoor.md;misc/A_Map_of_Aldermoor.pdf
+B062,es,m_dup,medium,0,placed,library/1963/Tomás-Quiroga/El-mapa-dormido-—-Notas-sobre-la-memoria.txt,,"El mapa dormido — Notas sobre la memoria, el tiempo y las familias que dejamos","El mapa dormido — Notas sobre la memoria, el tiempo y las familias que dejamos",Tomás Quiroga,Tomás Quiroga,1963,1963,"misc/El mapa dormido — Notas sobre la memoria, el tiempo y las familias que dejamos.epub;misc/El mapa dormido — Notas sobre la memoria, el tiempo y las familias que dejamos.pdf"
+B063,ja,m_dup,medium,0,placed,library/1998/鈴木葵/坂道の港.txt,,坂道の港,Sakamichi no Minato,鈴木葵,Suzuki Aoi,1998,1998,東京オフィス/9795056684533.epub;東京オフィス/坂道の港.txt;東京オフィス/坂道の港.json
+B064,en,m_precedence,medium,0,placed,library/1968/Helena-Calloway/The-Islands-at-Cape-Halloway-—-Stories-f.txt,,The Islands at Cape Halloway — Stories from the Northern Coast and the Keepers Who Stayed Behind,The Islands at Cape Halloway — Stories from the Northern Coast and the Keepers Who Stayed Behind,Helena Calloway,Helena Calloway,1968,1968,misc/The Islands at Cape Halloway — Stories from the Northern Coast and the Keepers Who Stayed Behind.json;inbox/The Islands at Cape Halloway — Stories from the Northern Coast and the Keepers Who Stayed Behind.txt
+B065,ko,m_precedence,medium,0,placed,library/1995/김하은-&-윤수아/정원의-편지.txt,,정원의 편지,Jeongwon-ui Pyeonji,김하은; 윤수아,Kim Ha-eun; Yoon Su-ah,1995,1995,서울지사/Jeongwon-ui_Pyeonji.json;misc/book_0075.txt
+B066,zh,m_precedence,medium,0,placed,library/2006/陈雨桐/花园与地图.txt,,花园与地图,Huayuan yu Ditu,陈雨桐,Chen Yutong,1995,2006,inbox/花园与地图.xml;misc/花园与地图.pdf
+B067,es,h_author_recover,hard,0,placed,library/2012/Mateo-Olmedo/La-canción-dormida.txt,,La canción dormida,La canción dormida,Mateo Olmedo,Mateo Olmedo,2012,2012,misc/book_0078.epub;madrid/La canción dormida.pdf
+B068,ja,h_author_recover,hard,0,placed,library/1995/中村湊/遠い旅人.txt,,遠い旅人,Toi Tabibito,中村湊,Nakamura Minato,1995,1995,inbox/Toi_Tabibito.xml;inbox/Toi_Tabibito.txt
+B069,zh,h_author_recover,hard,0,placed,library/1979/陈思远-&-李雨桐/沉默的花园.txt,,沉默的花园,Chenmo de Huayuan,陈思远; 李雨桐,Chen Siyuan; Li Yutong,1979,1979,misc/9791575273883.xml;inbox/book_0083.txt
+B070,ja,h_no_author,hard,0,placed,library/1971/Anonymous/硝子の時計.txt,,硝子の時計,Garasu no Tokei,,,1971,1971,東京オフィス/硝子の時計.json
+B071,en,h_no_author,hard,0,placed,library/2025/Anonymous/The-Last-River.txt,,The Last River,The Last River,,,2017,2025,london/9792022927281.txt
+B072,en,h_title_filename,hard,0,placed,library/2004/Eleanor-Ashdown/Letters-from-Fenwick-Hollow.txt,,Letters from Fenwick Hollow,Letters from Fenwick Hollow,Eleanor Ashdown,Eleanor Ashdown,2004,2004,misc/Letters_from_Fenwick_Hollow.txt
+B073,es,h_title_filename,hard,0,placed,library/2002/Inés-Ferrán/La-playa-callada.txt,,La playa callada,La playa callada,Inés Ferrán,Inés Ferrán,2002,2002,inbox/La_playa_callada.txt
+B074,en,h_no_title,hard,0,review,,NO_TITLE,"The Glass Orchard — Notes on Memory, Weather and the Families We Leave","The Glass Orchard — Notes on Memory, Weather and the Families We Leave",Tobias Ashdown; Priya Elsworth,Tobias Ashdown; Priya Elsworth,2008,2018,london/doc_0088.txt
+B075,en,h_no_title,hard,0,review,,NO_TITLE,A Map of Cape Halloway,A Map of Cape Halloway,Jonah Calloway,Jonah Calloway,1978,1978,london/doc_0090.txt
+B076,ko,h_desc_recover,hard,0,placed,library/1993/최민준/작은-강.txt,,작은 강,Jageun Gang,최민준,Choi Min-jun,1985,1993,inbox/작은 강.json;inbox/작은 강.txt
+B077,ja,h_desc_recover,hard,0,placed,library/1997/中村湊-&-小林遥/庭の港.txt,,庭の港,Niwa no Minato,中村湊; 小林遥,Nakamura Minato; Kobayashi Haruka,1995,1997,東京オフィス/book_0094.json;東京オフィス/庭の港.txt
+B078,ja,h_no_desc,hard,0,review,,NO_DESCRIPTION,静かな月,Shizukana Tsuki,渡辺大翔,Watanabe Hiroto,2007,2007,東京オフィス/Shizukana_Tsuki.txt
+B079,ko,h_no_desc,hard,0,review,,NO_DESCRIPTION,오래된 정원,Oraedoen Jeongwon,정하은,Jung Ha-eun,1992,2007,inbox/Oraedoen_Jeongwon.epub
+B080,es,h_year_copyright,hard,0,placed,library/1973/Inés-Saldaña/La-casa-callada.txt,,La casa callada,La casa callada,Inés Saldaña,Inés Saldaña,1973,1973,madrid/La_casa_callada.docx
+B081,ko,h_year_copyright,hard,0,placed,library/2001/강수아/먼-시계탑.txt,,먼 시계탑,Meon Sigyetap,강수아,Kang Su-ah,2001,2001,inbox/Meon_Sigyetap.txt
+B082,es,h_year_copyright,hard,0,placed,library/1977/Álvaro-Quiroga/La-playa-olvidada.txt,,La playa olvidada,La playa olvidada,Álvaro Quiroga,Álvaro Quiroga,1977,1977,madrid/La playa olvidada.txt
+B083,zh,h_no_year,hard,0,review,,NO_YEAR,迟到的雨季,Chidao de Yuji,王思远,Wang Siyuan,,,北京办公室/迟到的雨季.txt
+B084,ko,h_no_year,hard,0,review,,NO_YEAR,푸른 강,Pureun Gang,강예린,Kang Ye-rin,,,서울지사/book_0102.docx
+B085,en,h_conflict,hard,0,review,,CONFLICT,The Summer at Westerley,The Summer at Westerley,Jonah Calloway; Clara Hartigan,Jonah Calloway; Clara Hartigan,1994,1994,inbox/The_Summer_at_Westerley.json;inbox/9790189036648.xml
+B086,es,h_conflict,hard,0,review,,CONFLICT,El jardín de Almenara,El jardín de Almenara,Joaquín Montalbán,Joaquín Montalbán,2006,2006,madrid/El jardín de Almenara.json;misc/book_0106.xml
+B087,ko,h_scan_only,hard,0,review,,UNREADABLE,조용한 지도,Joyonghan Jido,최민준,Choi Min-jun,1979,1988,scans/scan_0107.pdf
+B088,en,h_scan_only,hard,0,review,,UNREADABLE,The Lost Orchard,The Lost Orchard,Jonah Calloway,Jonah Calloway,2018,2018,scans/scan_0109.pdf
+B089,es,h_scan_plus,hard,0,placed,library/1984/Tomás-Saldaña/El-faro-de-Almenara.txt,,El faro de Almenara,El faro de Almenara,Tomás Saldaña,Tomás Saldaña,1984,1984,scans/El faro de Almenara (scan).pdf;madrid/El faro de Almenara.epub
+B090,es,h_scan_plus,hard,0,placed,library/2021/Inés-Echeverría/La-estación-pequeña.txt,,La estación pequeña,La estación pequeña,Inés Echeverría,Inés Echeverría,2021,2021,scans/La estación pequeña (scan).pdf;inbox/La estación pequeña.epub
+B091,ko,h_zip,hard,0,placed,library/2005/강수아/시계탑의-편지.txt,,시계탑의 편지,Sigyetap-ui Pyeonji,강수아,Kang Su-ah,2005,2005,archives/handover_2021.zip!handover/book_0115.txt
+B092,ja,h_zip,hard,0,placed,library/1999/小林蓮/坂道の鳥.txt,,坂道の鳥,Sakamichi no Tori,小林蓮,Kobayashi Ren,1999,1999,archives/old_drive_backup.zip!backup/坂道の鳥.md
+B093,ko,h_zip,hard,0,placed,library/1986/정하은/시계탑의-기차.txt,,시계탑의 기차,Sigyetap-ui Gicha,정하은,Jung Ha-eun,1978,1986,archives/handover_2021.zip!handover/Sigyetap-ui_Gicha.md
+B094,zh,h_zip,hard,0,placed,library/1966/陈思远/迟到的地图.txt,,迟到的地图,Chidao de Ditu,陈思远,Chen Siyuan,1964,1966,archives/old_drive_backup.zip!backup/9792704928599.txt
+B095,ko,h_csv,hard,0,placed,library/1995/김하은/섬의-바다.txt,,섬의 바다,Seom-ui Bada,김하은,Kim Ha-eun,1995,1995,catalogs/rights_catalog_export.csv#1
+B096,ko,h_csv,hard,0,placed,library/1973/박예린/오래된-지도.txt,,오래된 지도,Oraedoen Jido,박예린,Park Ye-rin,1973,1973,catalogs/東京_目録.csv#1
+B097,en,h_csv,hard,0,placed,library/1972/Jonah-Calloway/The-Harbour-at-Fenwick-Hollow.txt,,The Harbour at Fenwick Hollow,The Harbour at Fenwick Hollow,Jonah Calloway,Jonah Calloway,1972,1972,catalogs/rights_catalog_export.csv#2
+B098,en,h_csv,hard,0,placed,library/1979/Clara-Hartigan/A-Map-of-Saint-Brennock.txt,,A Map of Saint Brennock,A Map of Saint Brennock,Clara Hartigan,Clara Hartigan,1966,1979,catalogs/東京_目録.csv#2
+B099,en,h_csv,hard,0,placed,library/1991/Eleanor-Ashdown/A-Map-of-Marrow-Bay.txt,,A Map of Marrow Bay,A Map of Marrow Bay,Eleanor Ashdown,Eleanor Ashdown,1991,1991,catalogs/rights_catalog_export.csv#3
+B100,ko,h_csv,hard,0,placed,library/1993/정지호/편지의-정원.txt,,편지의 정원,Pyeonji-ui Jeongwon,정지호,Jung Ji-ho,1993,1993,catalogs/東京_目録.csv#3

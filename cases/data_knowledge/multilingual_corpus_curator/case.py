@@ -1336,3 +1336,92 @@ def violating_examples(world: World, setting) -> dict:
     if setting.at_least("hard"):
         breaks.update(no_fabrication="fabricate", missing_author_review="bend")
     return {rule: (lambda d, b=b: write_program(d, setting, b)) for rule, b in breaks.items()}
+
+
+# ── stored dataset (fdebench2 export-dataset) ────────────────────────────────
+
+def write_hidden(world: World, out_dir: Path) -> None:
+    """hidden/corpus/...: the hidden drive exactly as the program receives it (same in every setting)."""
+    for rel, body in world.hidden.files.items():
+        p = Path(out_dir) / "corpus" / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(body)
+
+
+def _skipped(corpus: Corpus) -> list:
+    """Corpus files and archive members that belong to no book (junk), as manifest sources."""
+    refs = {re.split(r"[!#]", f)[0] for b in corpus.books for f in b.files}
+    members = {f for b in corpus.books for f in b.files if "!" in f}
+    out = []
+    for rel, body in corpus.files.items():
+        if rel not in refs:
+            out.append(rel)
+        elif rel.endswith(".zip"):
+            with zipfile.ZipFile(io.BytesIO(body)) as z:
+                out += [f"{rel}!{m}" for m in z.namelist() if f"{rel}!{m}" not in members]
+    return out
+
+
+def expected_output(corpus: Corpus, v: _View) -> tuple[dict, list]:
+    """The correct out_dir for the books scored in this setting: ({relative path: bytes}, per-book key rows)."""
+    files, manifest, key, taken = {}, [], [], {}
+    for b in corpus.books:
+        scored = v.in_scope(b)
+        review = b.review if b.review != "NO_AUTHOR" or v.hard else None
+        path = None if review else v.path(b)
+        if scored:
+            if review:
+                for rel in sorted(b.own):
+                    files[f"_review/{review}/{rel.replace('/', '__')}"] = corpus.files[rel]
+                manifest.append([";".join(b.files), "review", "", review])
+            else:
+                assert path not in taken, (path, b.bid, taken.get(path))
+                taken[path] = b.bid
+                files[path] = content_of(b).encode("utf-8")
+                manifest.append([";".join(b.files), "placed", path, ""])
+        key.append([b.bid, b.lang, b.kind, b.scope, int(scored), "review" if review else "placed", path or "",
+                    review or "", b.title, b.title_latin, "; ".join(p.orig for p in b.authors),
+                    "; ".join(p.latin for p in b.authors), b.first or "", b.edition_year or "", ";".join(b.files)])
+    if v.hard:
+        manifest += [[rel, "skipped", "", "JUNK"] for rel in _skipped(corpus)]
+    buf = io.StringIO()
+    w = csv.writer(buf, lineterminator="\n")
+    w.writerow(["source", "status", "path", "reason"])
+    w.writerows(manifest)
+    files["manifest.csv"] = buf.getvalue().encode("utf-8")
+    return files, key
+
+
+BOOK_KEY_HEADER = ["book", "lang", "kind", "tier", "scored", "status", "path", "reason", "title", "title_latin",
+                   "authors", "authors_latin", "first_published", "edition_year", "sources"]
+
+
+def _write_tree(root: Path, files: dict) -> None:
+    for rel, body in files.items():
+        p = root / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(body)
+
+
+def write_ground_truth(world: World, gt_dir: Path, setting) -> None:
+    """expected_{hidden,visible}/ (the correct out_dir for the scored books), books_{hidden,visible}.csv (every
+    book with its expected status, path and reason), expected_score.json, and reference_output/ (what the
+    reference program writes on the hidden corpus)."""
+    gt_dir, v = Path(gt_dir), _View(setting)
+    scores = {}
+    for name, corpus in (("hidden", world.hidden), ("visible", world.visible)):
+        files, key = expected_output(corpus, v)
+        _write_tree(gt_dir / f"expected_{name}", files)
+        buf = io.StringIO()
+        w = csv.writer(buf, lineterminator="\n")
+        w.writerow(BOOK_KEY_HEADER)
+        w.writerows(key)
+        (gt_dir / f"books_{name}.csv").write_bytes(buf.getvalue().encode("utf-8-sig"))
+        violations, objective, metrics = evaluate(corpus, files, v)
+        scores[name] = {"objective": objective, "violations": violations, "metrics": metrics}
+    (gt_dir / "expected_score.json").write_text(json.dumps(scores, ensure_ascii=False, indent=2, sort_keys=True)
+                                                + "\n", encoding="utf-8")
+    with tempfile.TemporaryDirectory(prefix="fdeb2-ref-") as tmp:
+        write_program(Path(tmp), setting)
+        run = run_on(world.hidden, Path(tmp), world._cache.setdefault("runs", {}))
+    _write_tree(gt_dir / "reference_output", run["files"])

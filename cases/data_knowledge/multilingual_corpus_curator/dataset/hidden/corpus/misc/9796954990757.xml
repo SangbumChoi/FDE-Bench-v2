@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-990757</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9796954990757</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>雨季与港口</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Yuji yu Gangkou</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>王浩然</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Wang Haoran</PersonName></AlternativeName>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">一名年轻的渡轮驾驶员多年来一直回避一条废弃铁路的终点站，直到一个陌生人买下了同一本书的所有存货，一切又被重新翻了出来。
+
+全书以一个冬天为线索，写一名年轻的渡轮驾驶员和那些不肯离开的人。</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1989</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

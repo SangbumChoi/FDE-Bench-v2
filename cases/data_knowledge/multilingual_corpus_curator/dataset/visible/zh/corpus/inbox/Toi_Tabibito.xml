@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-569273</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9795378569273</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>遠い旅人</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Toi Tabibito</TitleText></TitleElement></TitleDetail>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">灯台の灯りが初めて消えるとき、河口の古い波止場に住む引退した地図職人は、何を残すべきかを決めなければならない。
+
+ひと冬の出来事として、引退した地図職人と、町を離れようとしない人々を描く。</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1995</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

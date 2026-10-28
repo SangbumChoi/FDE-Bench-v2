@@ -1,0 +1,13 @@
+{
+  "params": {
+    "fallback_author": "Unknown Author",
+    "layout": "author/year_title",
+    "max_len": 80,
+    "multi_author": "first",
+    "script": "latin",
+    "sep": " ",
+    "year_basis": "first"
+  },
+  "ruleset": "C",
+  "tier": "hard"
+}

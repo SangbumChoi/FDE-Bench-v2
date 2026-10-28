@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-937670</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9796364937670</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>El río olvidado</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>Tomás Saldaña</PersonName>
+        <PersonNameInverted>Saldaña, Tomás</PersonNameInverted>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">Cuando un incendio destruye el archivo, dos hermanas que dejaron de hablarse de los viejos muelles de la desembocadura debe decidir qué merece la pena conservar.
+
+Contada a lo largo de un solo invierno, sigue a dos hermanas que dejaron de hablarse y a quienes se niegan a marcharse.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">2023</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

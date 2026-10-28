@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-847028</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9796925847028</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>늦은 정원</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Neujeun Jeongwon</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>강수아</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Kang Su-ah</PersonName></AlternativeName>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">낯선 사람이 같은 책을 모두 사 가자, 강어귀의 낡은 부두에 사는 오랫동안 말을 끊은 두 자매는 무엇을 남길지 결정해야 한다.
+
+한 겨울 동안의 이야기로, 오랫동안 말을 끊은 두 자매와 떠나기를 거부하는 사람들을 따라간다.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1993</Date></PublishingDate>
+      <PublishingDate><PublishingDateRole>11</PublishingDateRole><Date dateformat="05">1984</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

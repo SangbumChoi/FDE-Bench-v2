@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-012178</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9792459012178</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>森の庭</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Mori no Niwa</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>佐藤湊</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Sato Minato</PersonName></AlternativeName>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">最終列車が戻らないとき、書店がひとつしかない島に住む引退した地図職人は、何を残すべきかを決めなければならない。
+
+時間が場所を変えていくことをめぐる静かな長編。</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">2013</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

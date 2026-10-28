@@ -135,3 +135,31 @@ as `NO_YEAR` and 4 author-variant books get an unofficial name (0.8 each); hard 
   archivist's note outside the corpus is localized.
 - `write only inside out_dir` and `never modify the corpus` are enforced by the runner (the program gets a copy
   of the corpus, read-only under docker), not scored.
+
+## Stored dataset (`dataset/`)
+
+Written by `python -m fdebench2.cli export-dataset cases/data_knowledge/multilingual_corpus_curator`;
+`validate-case` regenerates it and fails if it drifts from the generator (~2 MB, ~2,900 small files).
+
+```
+dataset/
+  visible/<lang>/corpus/...          the agent's sample drive (byte-identical in every locale) + the archivist's note
+  hidden/corpus/...                  the hidden drive exactly as organize() receives it (same in all nine settings)
+  gt/<tier>_<A|B|C>/
+    setting.json, score.json         the setting and the reference's score on the hidden corpus
+    reference/program/               the reference deliverable (organize.py + config.json of the rule set)
+    reference_output/                what the reference writes on the hidden corpus (library/, _review/, manifest.csv)
+    expected_hidden/                 the correct out_dir for the books scored in this setting, hidden corpus:
+                                       library/... one description file per placed book, at the rule set's path
+                                       _review/<REASON>/<path with / as __>  the source files of review books
+                                       manifest.csv  placed / review rows (with reason) and, in hard, JUNK skips
+    expected_visible/                the same for the visible sample
+    books_hidden.csv, books_visible.csv   answer key: every book with kind, tier, scored, expected status,
+                                       path and reason, canonical title/authors/years and its source files
+    expected_score.json              expected_* scored by the evaluator: 100 in easy and medium, 99.4 in hard
+                                       (the two NO_AUTHOR books earn 0.7 in review; no rule is bent)
+```
+
+The expected trees hold only the books the tier scores (30 / 66 / 100); books outside the tier are not part of
+that setting's answer. No client e-mails or SQL exports were added: the drive already contains the client's
+own catalog exports, and new side material would change what the case tests.
