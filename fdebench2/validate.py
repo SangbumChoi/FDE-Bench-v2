@@ -256,7 +256,9 @@ def validate_case(root: Path) -> list[str]:
     # ── the stored dataset matches the generator ────────────────────────────
     if not problems:
         from .dataset import check_dataset
+        from .explain import check_page
         problems += check_dataset(root)
+        problems += check_page(root)
 
     # ── the agent sees the same thing in every setting ──────────────────────
     if tiers:
