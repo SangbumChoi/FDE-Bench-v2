@@ -1,28 +1,13 @@
 {
-  "hidden": {
-    "metrics": {
-      "books_scored": 100,
-      "books_without_credit": 0,
-      "credit": 99.4,
-      "extra_files": 0,
-      "library_files": 88,
-      "placed_exactly": 88,
-      "reviewed_correctly": 12
-    },
-    "objective": 99.4,
-    "violations": []
+  "metrics": {
+    "books_scored": 100,
+    "books_without_credit": 0,
+    "credit": 99.4,
+    "extra_files": 0,
+    "library_files": 88,
+    "placed_exactly": 88,
+    "reviewed_correctly": 12
   },
-  "visible": {
-    "metrics": {
-      "books_scored": 100,
-      "books_without_credit": 0,
-      "credit": 99.4,
-      "extra_files": 0,
-      "library_files": 88,
-      "placed_exactly": 88,
-      "reviewed_correctly": 12
-    },
-    "objective": 99.4,
-    "violations": []
-  }
+  "objective": 99.4,
+  "violations": []
 }

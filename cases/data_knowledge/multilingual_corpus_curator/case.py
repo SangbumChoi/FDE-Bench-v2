@@ -1404,22 +1404,20 @@ def _write_tree(root: Path, files: dict) -> None:
 
 
 def write_ground_truth(world: World, gt_dir: Path, setting) -> None:
-    """expected_{hidden,visible}/ (the correct out_dir for the scored books), books_{hidden,visible}.csv (every
-    book with its expected status, path and reason), expected_score.json, and reference_output/ (what the
-    reference program writes on the hidden corpus)."""
+    """For the hidden corpus (the one the program is scored on): expected_output/ (the correct out_dir for the
+    scored books), books.csv (every book with its expected status, path and reason), expected_score.json, and
+    reference_output/ (what the reference program writes)."""
     gt_dir, v = Path(gt_dir), _View(setting)
-    scores = {}
-    for name, corpus in (("hidden", world.hidden), ("visible", world.visible)):
-        files, key = expected_output(corpus, v)
-        _write_tree(gt_dir / f"expected_{name}", files)
-        buf = io.StringIO()
-        w = csv.writer(buf, lineterminator="\n")
-        w.writerow(BOOK_KEY_HEADER)
-        w.writerows(key)
-        (gt_dir / f"books_{name}.csv").write_bytes(buf.getvalue().encode("utf-8-sig"))
-        violations, objective, metrics = evaluate(corpus, files, v)
-        scores[name] = {"objective": objective, "violations": violations, "metrics": metrics}
-    (gt_dir / "expected_score.json").write_text(json.dumps(scores, ensure_ascii=False, indent=2, sort_keys=True)
+    files, key = expected_output(world.hidden, v)
+    _write_tree(gt_dir / "expected_output", files)
+    buf = io.StringIO()
+    w = csv.writer(buf, lineterminator="\n")
+    w.writerow(BOOK_KEY_HEADER)
+    w.writerows(key)
+    (gt_dir / "books.csv").write_bytes(buf.getvalue().encode("utf-8-sig"))
+    violations, objective, metrics = evaluate(world.hidden, files, v)
+    score = {"objective": objective, "violations": violations, "metrics": metrics}
+    (gt_dir / "expected_score.json").write_text(json.dumps(score, ensure_ascii=False, indent=2, sort_keys=True)
                                                 + "\n", encoding="utf-8")
     with tempfile.TemporaryDirectory(prefix="fdeb2-ref-") as tmp:
         write_program(Path(tmp), setting)
