@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-902512</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9796963902512</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>The Glass Islands</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>Priya Elsworth</PersonName>
+        <PersonNameInverted>Elsworth, Priya</PersonNameInverted>
+      </Contributor>
+      <Contributor><SequenceNumber>2</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>Jonah Calloway</PersonName>
+        <PersonNameInverted>Calloway, Jonah</PersonNameInverted>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">For years a night-shift librarian has avoided an island with a single bookshop; then the river changes course overnight, and everything comes back.
+
+A quiet novel about home and elsewhere.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1983</Date></PublishingDate>
+      <PublishingDate><PublishingDateRole>11</PublishingDateRole><Date dateformat="05">1969</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

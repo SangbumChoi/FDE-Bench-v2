@@ -1,0 +1,14 @@
+From: 外来管理室 <outpatient-office@hospital.example>
+To: 外来予約係 <booking-office@hospital.example>
+Date: Wed, 04 Nov 2026 12:48:00 +0900
+Subject: 予約プログラムのデータのコード
+Message-ID: <2026-11-04_outpatient_office_data_codes.ja@hospital.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+予約係各位
+
+予約プログラムが受け取るデータでは、診療科・言語・日付はコードと YYYY-MM-DD で表します。診療科コードは IM=内科、CARD=循環器内科、DERM=皮膚科、ORTH=整形外科、PED=小児科、言語コードはシステムのエクスポートの languages テーブルにあります。
+
+外来管理室

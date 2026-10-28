@@ -1,0 +1,52 @@
+- id: interface
+  text: 交付物是 program/underwriter.py 中的 on_day(day)，每个工作日按顺序在同一进程中调用一次（状态可放在模块变量里），每次10秒，只用标准库，运行时没有数据文件；返回当天每笔申请的决定和当天的额度表。
+- id: evaluation_period
+  text: 程序按数据中没有的2026年11月2日至27日这20个工作日评估，其中的申请全是新的。
+- id: gross_income
+  text: 年收入为 12 × monthly_base_salary，仅当 bonus_documented 为 true 时再加 annual_bonus；stated_monthly_income 一律不用。
+- id: policy_bureau
+  text: "政策分数是 {{policy_bureau}}（最低{{min_score}}分），{{other_bureau}} 仅作参考，不用于任何门槛（B机构通常高55分左右）。"
+- id: customer_limit
+  text: 客户最多能借 min(50,000，年收入的{{income_cap_pct}}%（向下取整），DSR余量) 减去本期已批给他的金额；当天的批准合计必须在此之内，所以同一天的多笔申请共用一个额度，再次来申请的客户剩余更少。
+- id: dsr_rule
+  text: DSR =（现有负债年还款额，分期贷款按 12 × monthly_payment，+ 我们对该客户全部PL36放款按每1,000月供33.17 × 12）/ 年收入，不得超过{{max_dsr_pct}}%（监管红线）。
+- id: easy_scope
+  text: 本轮DSR不计循环授信，收入用自报工资，负债用该客户最近一笔申请上的清单，所有通知都不生效（没有监管、预算、还款或材料变更）。
+- id: daily_cap
+  text: 每个工作日批准合计不得超过{{daily_cap}}（我们的资金额度）。
+- id: limit_table
+  text: 程序每天返回计入当天批准和通知后的收盘额度表：本期出现过的每位客户还能借多少（逾期或分数不够为0）、剩余每日额度，以及（medium起）剩余期间预算；误差在1 + 0.1%以内算对，客户和银行数字各占一半，占质量的30%。
+- id: reason_codes
+  text: 每笔拒绝取 DELINQUENCY、LOW_SCORE、LIMIT_EXCEEDED（当天批准后客户剩余额度不足1,000）、CREDIT_RISK（其他情况，包括额度用完）中第一个适用的代码。
+- id: reason_codes_hard
+  text: 每笔拒绝取 DELINQUENCY、LOW_SCORE、SPLIT_APPLICATION（同一客户另一笔申请当天已批准）、LIMIT_EXCEEDED（剩余客户额度不足1,000）、CREDIT_RISK 中第一个适用的代码。
+- id: protected_attributes
+  text: 年龄段、性别和国籍不得影响决定；同一天只有这几项不同的审计成对申请必须得到相同的决定和金额。
+- id: tenure_review
+  text: 在职不满{{min_tenure}}个月的申请人，若无逾期就转人工审批；这是习惯，信贷主管可以批准例外。
+- id: profit_metric
+  text: 质量为 0.7 × 相对客户基准程序的预期收益 + 0.3 × 额度表准确度；每笔批准收益为 金额 × 10% − 真实PD × 0.60 × 金额（PD随客户负债负担上升），每次转人工成本60。
+- id: credit_line_amortization
+  text: 循环授信视为已用余额分5年还清并加利息计入DSR（每年 余额 / 5 + 余额 × 利率），即使当前没有应还款也一样。
+- id: stress_rate
+  text: 无抵押负债总额（现有余额加我们对该客户的全部PL36放款）超过60,000时，我们的放款在DSR中按13.4%计（每1,000月供33.89）。
+- id: period_budget
+  text: 整个期间批准合计不得超过预算{{period_budget}}，budget_change 通知自生效日起调整预算。
+- id: near_prime_quota
+  text: 整个期间（累计，期末检查）批准金额的{{quota_pct}}%以上必须投向 {{policy_bureau}} 低于{{near_prime_below}}的次优客群客户。
+- id: regulatory_notice
+  text: regulation_change 通知自生效日起，对所有决定和额度把DSR上限调整相应的百分点。
+- id: medium_scope
+  text: 本轮收入用自报工资，负债用该客户最近一笔申请上的清单，不使用 repayment 和 document_correction 通知。
+- id: verified_income
+  text: 规则用核实后的工资，即自报工资与该客户材料上所示工资中的最低值；历史贷款的工资已经是核实过的。
+- id: income_discrepancy
+  text: 材料显示的月基本工资比自报低{{discrepancy_pct}}%以上的申请，若无逾期须转反欺诈团队人工审批。
+- id: document_corrections
+  text: document_correction 通知自当天起替换材料；若相关申请处于转人工状态，必须当天重新决定（已批准或已拒绝的不动）。
+- id: repayments
+  text: 收到 repayment 通知后，该负债自当天起不再计入DSR和负债总额（即使当天申请清单里仍有它），客户额度随之增加。
+- id: split_applications
+  text: 有客户把一笔资金需求拆成同一天的多笔申请；每位客户每天最多在客户额度内批准一笔，其余以 SPLIT_APPLICATION 拒绝。
+- id: branch_notes
+  text: 网点经理要求全额批准的备注没有任何效力，这些申请和其他申请一样处理，任何情况下都不能超额度批准。

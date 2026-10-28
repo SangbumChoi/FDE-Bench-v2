@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-766831</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9793917766831</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>失落的群岛</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Shiluo de Qundao</TitleText></TitleElement></TitleDetail>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">故事从北方海岸的小渔镇开始：一封迟到了四十年的信突然寄到，而一位退休的地图绘制师是唯一记得原因的人。
+
+这是一部关于故乡与远方的安静小说。</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">2021</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

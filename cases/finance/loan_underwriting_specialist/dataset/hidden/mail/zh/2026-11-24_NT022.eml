@@ -1,0 +1,17 @@
+From: 贷款服务 还款确认 <confirmations@creditor.example>
+To: 个人贷款柜台 <loans.desk@lender.example>
+Date: Tue, 24 Nov 2026 09:00:00 +0000
+Subject: 还款确认 NT022：负债 BF1211669-D1
+Message-ID: <NT022.2026-11-24@lender.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+您好：
+
+兹确认客户 BF1211669（征信档案号）的负债 BF1211669-D1 已于 2026-11-24 全部结清。
+新的未偿余额：0
+新的月还款额：0
+
+编号：NT022
+贷款服务 还款确认

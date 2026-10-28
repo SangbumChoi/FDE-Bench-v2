@@ -1,0 +1,1205 @@
+{
+ "date": "2026-11-10",
+ "day_index": 6,
+ "days_in_period": 20,
+ "period_end": "2026-11-27",
+ "applications": [
+  {
+   "application_id": "N0167",
+   "customer_id": "BF9585334",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 23500,
+   "age_band": "66+",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 40,
+   "monthly_base_salary": 6110,
+   "annual_bonus": 13800,
+   "bonus_documented": false,
+   "stated_monthly_income": 7680,
+   "bureau": {
+    "bureau_a_score": 968,
+    "bureau_b_score": 1000,
+    "inquiries_6m": 0,
+    "credit_history_months": 347,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF9585334-D1",
+     "type": "credit_line",
+     "outstanding_balance": 8160,
+     "annual_rate_pct": 8.4,
+     "credit_limit": 19500
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF9585334-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 4290
+    },
+    {
+     "document_id": "BF9585334-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 5050
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0168",
+   "customer_id": "BF1611201",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 9500,
+   "age_band": "66+",
+   "gender": "female",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 156,
+   "monthly_base_salary": 2410,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 2540,
+   "bureau": {
+    "bureau_a_score": 990,
+    "bureau_b_score": 1000,
+    "inquiries_6m": 1,
+    "credit_history_months": 236,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF1611201-D1",
+     "type": "installment",
+     "outstanding_balance": 14670,
+     "monthly_payment": 467
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF1611201-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 2410
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0169",
+   "customer_id": "BF8674336",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 21000,
+   "age_band": "36-50",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 185,
+   "monthly_base_salary": 2210,
+   "annual_bonus": 4100,
+   "bonus_documented": true,
+   "stated_monthly_income": 2800,
+   "bureau": {
+    "bureau_a_score": 686,
+    "bureau_b_score": 767,
+    "inquiries_6m": 1,
+    "credit_history_months": 188,
+    "active_delinquency": true
+   },
+   "existing_debts": [],
+   "income_documents": [
+    {
+     "document_id": "BF8674336-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 2210
+    },
+    {
+     "document_id": "BF8674336-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 2320
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0170",
+   "customer_id": "BF3016656",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 19500,
+   "age_band": "36-50",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 62,
+   "monthly_base_salary": 3950,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 4220,
+   "bureau": {
+    "bureau_a_score": 890,
+    "bureau_b_score": 938,
+    "inquiries_6m": 2,
+    "credit_history_months": 106,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF3016656-D1",
+     "type": "installment",
+     "outstanding_balance": 15000,
+     "monthly_payment": 311
+    },
+    {
+     "debt_id": "BF3016656-D2",
+     "type": "credit_line",
+     "outstanding_balance": 1080,
+     "annual_rate_pct": 6.9,
+     "credit_limit": 7300
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF3016656-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 3950
+    },
+    {
+     "document_id": "BF3016656-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 3950
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0171",
+   "customer_id": "BF6052850",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 18500,
+   "age_band": "26-35",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 53,
+   "monthly_base_salary": 2770,
+   "annual_bonus": 4500,
+   "bonus_documented": true,
+   "stated_monthly_income": 3610,
+   "bureau": {
+    "bureau_a_score": 795,
+    "bureau_b_score": 836,
+    "inquiries_6m": 1,
+    "credit_history_months": 74,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF6052850-D1",
+     "type": "installment",
+     "outstanding_balance": 20550,
+     "monthly_payment": 653
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF6052850-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 2770
+    },
+    {
+     "document_id": "BF6052850-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 2770
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0172",
+   "customer_id": "BF2006383",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 19000,
+   "age_band": "26-35",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 18,
+   "monthly_base_salary": 4310,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 4780,
+   "bureau": {
+    "bureau_a_score": 894,
+    "bureau_b_score": 927,
+    "inquiries_6m": 2,
+    "credit_history_months": 63,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF2006383-D1",
+     "type": "installment",
+     "outstanding_balance": 20890,
+     "monthly_payment": 1827
+    },
+    {
+     "debt_id": "BF2006383-D2",
+     "type": "installment",
+     "outstanding_balance": 21020,
+     "monthly_payment": 523
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF2006383-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 4310
+    },
+    {
+     "document_id": "BF2006383-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 4310
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0173",
+   "customer_id": "BF3837178",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 29500,
+   "age_band": "26-35",
+   "gender": "female",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 17,
+   "monthly_base_salary": 4380,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 4550,
+   "bureau": {
+    "bureau_a_score": 747,
+    "bureau_b_score": 818,
+    "inquiries_6m": 1,
+    "credit_history_months": 143,
+    "active_delinquency": false
+   },
+   "existing_debts": [],
+   "income_documents": [
+    {
+     "document_id": "BF3837178-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 4380
+    },
+    {
+     "document_id": "BF3837178-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 4600
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0174",
+   "customer_id": "BF2641103",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 28500,
+   "age_band": "51-65",
+   "gender": "female",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 113,
+   "monthly_base_salary": 4980,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 5560,
+   "bureau": {
+    "bureau_a_score": 990,
+    "bureau_b_score": 988,
+    "inquiries_6m": 0,
+    "credit_history_months": 213,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF2641103-D1",
+     "type": "credit_line",
+     "outstanding_balance": 14180,
+     "annual_rate_pct": 12.5,
+     "credit_limit": 17000
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF2641103-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 4400
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0175",
+   "customer_id": "BF2723284",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 19000,
+   "age_band": "51-65",
+   "gender": "female",
+   "nationality": "foreign",
+   "employment": "salaried",
+   "months_in_job": 18,
+   "monthly_base_salary": 4310,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 4780,
+   "bureau": {
+    "bureau_a_score": 894,
+    "bureau_b_score": 927,
+    "inquiries_6m": 2,
+    "credit_history_months": 63,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF2723284-D1",
+     "type": "installment",
+     "outstanding_balance": 20890,
+     "monthly_payment": 1827
+    },
+    {
+     "debt_id": "BF2723284-D2",
+     "type": "installment",
+     "outstanding_balance": 21020,
+     "monthly_payment": 523
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF2723284-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 4310
+    },
+    {
+     "document_id": "BF2723284-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 4310
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0176",
+   "customer_id": "BF4661772",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 13500,
+   "age_band": "36-50",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 89,
+   "monthly_base_salary": 3990,
+   "annual_bonus": 3700,
+   "bonus_documented": false,
+   "stated_monthly_income": 4870,
+   "bureau": {
+    "bureau_a_score": 800,
+    "bureau_b_score": 836,
+    "inquiries_6m": 3,
+    "credit_history_months": 287,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF4661772-D1",
+     "type": "credit_line",
+     "outstanding_balance": 8100,
+     "annual_rate_pct": 8.4,
+     "credit_limit": 12000
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF4661772-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 3990
+    },
+    {
+     "document_id": "BF4661772-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 3990
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0177",
+   "customer_id": "BF5543038",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 50000,
+   "age_band": "51-65",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 117,
+   "monthly_base_salary": 3870,
+   "annual_bonus": 11400,
+   "bonus_documented": true,
+   "stated_monthly_income": 5420,
+   "bureau": {
+    "bureau_a_score": 854,
+    "bureau_b_score": 885,
+    "inquiries_6m": 0,
+    "credit_history_months": 92,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF5543038-D1",
+     "type": "credit_line",
+     "outstanding_balance": 20550,
+     "annual_rate_pct": 8.4,
+     "credit_limit": 20600
+    },
+    {
+     "debt_id": "BF5543038-D2",
+     "type": "credit_line",
+     "outstanding_balance": 2110,
+     "annual_rate_pct": 9.9,
+     "credit_limit": 24700
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF5543038-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 3870
+    },
+    {
+     "document_id": "BF5543038-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 3870
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0178",
+   "customer_id": "BF3480578",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 50000,
+   "age_band": "51-65",
+   "gender": "male",
+   "nationality": "foreign",
+   "employment": "salaried",
+   "months_in_job": 9,
+   "monthly_base_salary": 6720,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 7340,
+   "bureau": {
+    "bureau_a_score": 889,
+    "bureau_b_score": 956,
+    "inquiries_6m": 1,
+    "credit_history_months": 93,
+    "active_delinquency": false
+   },
+   "existing_debts": [],
+   "income_documents": [
+    {
+     "document_id": "BF3480578-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 5100
+    },
+    {
+     "document_id": "BF3480578-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 5370
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0179",
+   "customer_id": "BF1114971",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 37500,
+   "age_band": "26-35",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 29,
+   "monthly_base_salary": 3540,
+   "annual_bonus": 5700,
+   "bonus_documented": false,
+   "stated_monthly_income": 4320,
+   "bureau": {
+    "bureau_a_score": 841,
+    "bureau_b_score": 887,
+    "inquiries_6m": 2,
+    "credit_history_months": 85,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF1114971-D1",
+     "type": "installment",
+     "outstanding_balance": 2680,
+     "monthly_payment": 67
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF1114971-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 3540
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0180",
+   "customer_id": "BF4310961",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 33500,
+   "age_band": "18-25",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 1,
+   "monthly_base_salary": 4920,
+   "annual_bonus": 12700,
+   "bonus_documented": false,
+   "stated_monthly_income": 6130,
+   "bureau": {
+    "bureau_a_score": 860,
+    "bureau_b_score": 936,
+    "inquiries_6m": 0,
+    "credit_history_months": 29,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF4310961-D1",
+     "type": "credit_line",
+     "outstanding_balance": 24040,
+     "annual_rate_pct": 8.4,
+     "credit_limit": 27000
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF4310961-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 4920
+    },
+    {
+     "document_id": "BF4310961-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 4920
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0181",
+   "customer_id": "BF7431474",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 16000,
+   "age_band": "36-50",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 62,
+   "monthly_base_salary": 1500,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 1570,
+   "bureau": {
+    "bureau_a_score": 960,
+    "bureau_b_score": 1000,
+    "inquiries_6m": 0,
+    "credit_history_months": 54,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF7431474-D1",
+     "type": "installment",
+     "outstanding_balance": 7560,
+     "monthly_payment": 240
+    },
+    {
+     "debt_id": "BF7431474-D2",
+     "type": "installment",
+     "outstanding_balance": 2130,
+     "monthly_payment": 68
+    },
+    {
+     "debt_id": "BF7431474-D3",
+     "type": "credit_line",
+     "outstanding_balance": 6090,
+     "annual_rate_pct": 8.4,
+     "credit_limit": 8300
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF7431474-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 1300
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0182",
+   "customer_id": "BF6753351",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 16000,
+   "age_band": "36-50",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 32,
+   "monthly_base_salary": 8590,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 9210,
+   "bureau": {
+    "bureau_a_score": 791,
+    "bureau_b_score": 861,
+    "inquiries_6m": 0,
+    "credit_history_months": 192,
+    "active_delinquency": false
+   },
+   "existing_debts": [],
+   "income_documents": [
+    {
+     "document_id": "BF6753351-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 5230
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0183",
+   "customer_id": "BF7058595",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 10500,
+   "age_band": "51-65",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 14,
+   "monthly_base_salary": 3450,
+   "annual_bonus": 2400,
+   "bonus_documented": false,
+   "stated_monthly_income": 3950,
+   "bureau": {
+    "bureau_a_score": 980,
+    "bureau_b_score": 997,
+    "inquiries_6m": 0,
+    "credit_history_months": 274,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF7058595-D1",
+     "type": "installment",
+     "outstanding_balance": 7260,
+     "monthly_payment": 151
+    },
+    {
+     "debt_id": "BF7058595-D2",
+     "type": "installment",
+     "outstanding_balance": 4890,
+     "monthly_payment": 102
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF7058595-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 3450
+    },
+    {
+     "document_id": "BF7058595-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 3450
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0184",
+   "customer_id": "BF4546731",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 23000,
+   "age_band": "36-50",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 31,
+   "monthly_base_salary": 3880,
+   "annual_bonus": 10800,
+   "bonus_documented": true,
+   "stated_monthly_income": 5370,
+   "bureau": {
+    "bureau_a_score": 798,
+    "bureau_b_score": 830,
+    "inquiries_6m": 1,
+    "credit_history_months": 227,
+    "active_delinquency": true
+   },
+   "existing_debts": [],
+   "income_documents": [
+    {
+     "document_id": "BF4546731-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 3880
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0185",
+   "customer_id": "BF9482660",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 25500,
+   "age_band": "26-35",
+   "gender": "female",
+   "nationality": "foreign",
+   "employment": "salaried",
+   "months_in_job": 70,
+   "monthly_base_salary": 4170,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 4790,
+   "bureau": {
+    "bureau_a_score": 834,
+    "bureau_b_score": 855,
+    "inquiries_6m": 0,
+    "credit_history_months": 46,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF9482660-D1",
+     "type": "credit_line",
+     "outstanding_balance": 7330,
+     "annual_rate_pct": 9.9,
+     "credit_limit": 11900
+    },
+    {
+     "debt_id": "BF9482660-D2",
+     "type": "credit_line",
+     "outstanding_balance": 2680,
+     "annual_rate_pct": 6.9,
+     "credit_limit": 10500
+    },
+    {
+     "debt_id": "BF9482660-D3",
+     "type": "credit_line",
+     "outstanding_balance": 14400,
+     "annual_rate_pct": 6.9,
+     "credit_limit": 19500
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF9482660-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 4170
+    },
+    {
+     "document_id": "BF9482660-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 4170
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0186",
+   "customer_id": "BF3336456",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 26000,
+   "age_band": "36-50",
+   "gender": "female",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 30,
+   "monthly_base_salary": 2780,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 3060,
+   "bureau": {
+    "bureau_a_score": 937,
+    "bureau_b_score": 1000,
+    "inquiries_6m": 1,
+    "credit_history_months": 48,
+    "active_delinquency": false
+   },
+   "existing_debts": [],
+   "income_documents": [
+    {
+     "document_id": "BF3336456-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 2780
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0187",
+   "customer_id": "BF5444104",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 9000,
+   "age_band": "18-25",
+   "gender": "female",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 19,
+   "monthly_base_salary": 3050,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 3220,
+   "bureau": {
+    "bureau_a_score": 792,
+    "bureau_b_score": 831,
+    "inquiries_6m": 2,
+    "credit_history_months": 51,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF5444104-D1",
+     "type": "installment",
+     "outstanding_balance": 13220,
+     "monthly_payment": 1156
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF5444104-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 3050
+    },
+    {
+     "document_id": "BF5444104-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 3050
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0188",
+   "customer_id": "BF1610839",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 38000,
+   "age_band": "26-35",
+   "gender": "female",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 9,
+   "monthly_base_salary": 6470,
+   "annual_bonus": 5300,
+   "bonus_documented": false,
+   "stated_monthly_income": 7400,
+   "bureau": {
+    "bureau_a_score": 733,
+    "bureau_b_score": 766,
+    "inquiries_6m": 3,
+    "credit_history_months": 31,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF1610839-D1",
+     "type": "credit_line",
+     "outstanding_balance": 13910,
+     "annual_rate_pct": 12.5,
+     "credit_limit": 14500
+    },
+    {
+     "debt_id": "BF1610839-D2",
+     "type": "credit_line",
+     "outstanding_balance": 11110,
+     "annual_rate_pct": 8.4,
+     "credit_limit": 18200
+    },
+    {
+     "debt_id": "BF1610839-D3",
+     "type": "credit_line",
+     "outstanding_balance": 2290,
+     "annual_rate_pct": 9.9,
+     "credit_limit": 19200
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF1610839-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 6470
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0189",
+   "customer_id": "BF9711056",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 6500,
+   "age_band": "36-50",
+   "gender": "female",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 15,
+   "monthly_base_salary": 2380,
+   "annual_bonus": 2700,
+   "bonus_documented": true,
+   "stated_monthly_income": 2640,
+   "bureau": {
+    "bureau_a_score": 901,
+    "bureau_b_score": 987,
+    "inquiries_6m": 0,
+    "credit_history_months": 247,
+    "active_delinquency": false
+   },
+   "existing_debts": [],
+   "income_documents": [
+    {
+     "document_id": "BF9711056-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 2380
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0190",
+   "customer_id": "BF6228466",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 5000,
+   "age_band": "36-50",
+   "gender": "female",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 120,
+   "monthly_base_salary": 2210,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 2480,
+   "bureau": {
+    "bureau_a_score": 779,
+    "bureau_b_score": 898,
+    "inquiries_6m": 2,
+    "credit_history_months": 201,
+    "active_delinquency": false
+   },
+   "existing_debts": [],
+   "income_documents": [
+    {
+     "document_id": "BF6228466-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 2320
+    },
+    {
+     "document_id": "BF6228466-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 2210
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0191",
+   "customer_id": "BF2100136",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 23500,
+   "age_band": "51-65",
+   "gender": "male",
+   "nationality": "domestic",
+   "employment": "salaried",
+   "months_in_job": 135,
+   "monthly_base_salary": 3240,
+   "annual_bonus": 9500,
+   "bonus_documented": true,
+   "stated_monthly_income": 4260,
+   "bureau": {
+    "bureau_a_score": 857,
+    "bureau_b_score": 911,
+    "inquiries_6m": 1,
+    "credit_history_months": 384,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF2100136-D1",
+     "type": "installment",
+     "outstanding_balance": 6700,
+     "monthly_payment": 139
+    },
+    {
+     "debt_id": "BF2100136-D2",
+     "type": "installment",
+     "outstanding_balance": 22140,
+     "monthly_payment": 1011
+    },
+    {
+     "debt_id": "BF2100136-D3",
+     "type": "installment",
+     "outstanding_balance": 24960,
+     "monthly_payment": 621
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF2100136-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 2470
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0192",
+   "customer_id": "BF6020234",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 45500,
+   "age_band": "26-35",
+   "gender": "female",
+   "nationality": "foreign",
+   "employment": "salaried",
+   "months_in_job": 15,
+   "monthly_base_salary": 3490,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 3730,
+   "bureau": {
+    "bureau_a_score": 771,
+    "bureau_b_score": 810,
+    "inquiries_6m": 0,
+    "credit_history_months": 69,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF6020234-D1",
+     "type": "credit_line",
+     "outstanding_balance": 8230,
+     "annual_rate_pct": 12.5,
+     "credit_limit": 19100
+    },
+    {
+     "debt_id": "BF6020234-D2",
+     "type": "credit_line",
+     "outstanding_balance": 1210,
+     "annual_rate_pct": 9.9,
+     "credit_limit": 6600
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF6020234-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 3660
+    },
+    {
+     "document_id": "BF6020234-S2",
+     "type": "employer_letter",
+     "monthly_base_salary_shown": 3490
+    }
+   ],
+   "notes": []
+  },
+  {
+   "application_id": "N0193",
+   "customer_id": "BF4637282",
+   "received": "2026-11-10",
+   "product": "PL36",
+   "requested_amount": 28000,
+   "age_band": "36-50",
+   "gender": "female",
+   "nationality": "foreign",
+   "employment": "salaried",
+   "months_in_job": 49,
+   "monthly_base_salary": 3290,
+   "annual_bonus": 0,
+   "bonus_documented": false,
+   "stated_monthly_income": 3430,
+   "bureau": {
+    "bureau_a_score": 749,
+    "bureau_b_score": 833,
+    "inquiries_6m": 1,
+    "credit_history_months": 144,
+    "active_delinquency": false
+   },
+   "existing_debts": [
+    {
+     "debt_id": "BF4637282-D1",
+     "type": "installment",
+     "outstanding_balance": 5100,
+     "monthly_payment": 162
+    }
+   ],
+   "income_documents": [
+    {
+     "document_id": "BF4637282-S1",
+     "type": "payslip",
+     "monthly_base_salary_shown": 3080
+    }
+   ],
+   "notes": []
+  }
+ ],
+ "notices": [
+  {
+   "notice_id": "NT008",
+   "date": "2026-11-10",
+   "type": "regulation_change",
+   "effective_date": "2026-11-16",
+   "dsr_cap_change_points": -5,
+   "text": "Supervisory notice: the maximum debt-service ratio for unsecured consumer loans is lowered by 5 percentage points for every loan decided on or after 2026-11-16."
+  },
+  {
+   "notice_id": "NT009",
+   "date": "2026-11-10",
+   "type": "repayment",
+   "customer_id": "BF4310961",
+   "debt_id": "BF4310961-D1",
+   "new_outstanding_balance": 0,
+   "new_monthly_payment": 0,
+   "text": "The creditor confirms this debt was repaid in full today."
+  }
+ ]
+}

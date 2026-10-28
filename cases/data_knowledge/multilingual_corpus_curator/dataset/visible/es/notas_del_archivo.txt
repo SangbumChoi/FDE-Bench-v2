@@ -1,0 +1,4 @@
+corpus/ es una muestra de nuestra unidad compartida, copiada tal cual, sin ordenar.
+Las oficinas regionales, el equipo de escaneo y el departamento de derechos han ido dejando archivos;
+también hay archivos comprimidos antiguos y exportaciones de catálogo.
+En la ejecución real el programa recibe la unidad completa, organizada como esta muestra.

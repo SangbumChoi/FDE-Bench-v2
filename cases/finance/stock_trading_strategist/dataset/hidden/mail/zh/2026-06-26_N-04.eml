@@ -1,0 +1,14 @@
+From: 阿登交易所 市场运营部 <market.operations@arden-exchange.example>
+To: 交易台 <trading.desk@desk.example>
+Date: Fri, 26 Jun 2026 17:40:00 +0000
+Subject: 2026-06-26 全市场熔断
+Message-ID: <N-04@desk.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+各会员：
+
+2026-06-26 开盘时触发了全市场熔断（指数 -4.5%）。交易暂停至收盘集合竞价，收盘价由收盘集合竞价产生。
+
+阿登交易所 市场运营部

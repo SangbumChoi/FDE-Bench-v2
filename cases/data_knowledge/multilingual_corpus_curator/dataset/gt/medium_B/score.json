@@ -1,0 +1,14 @@
+{
+  "metrics": {
+    "books_scored": 66,
+    "books_without_credit": 4,
+    "credit": 61.2,
+    "extra_files": 0,
+    "library_files": 79,
+    "placed_exactly": 58,
+    "program_error": "",
+    "reviewed_correctly": 0
+  },
+  "objective": 92.727273,
+  "violations": []
+}

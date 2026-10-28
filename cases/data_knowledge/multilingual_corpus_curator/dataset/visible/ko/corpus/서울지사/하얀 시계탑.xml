@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-046170</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9797761046170</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>하얀 시계탑?</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Hayan Sigyetap?</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>최민준</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Choi Min-jun</PersonName></AlternativeName>
+      </Contributor>
+      <Contributor><SequenceNumber>2</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>김하은</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Kim Ha-eun</PersonName></AlternativeName>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">강줄기가 하룻밤 사이에 바뀌자, 운하가 흐르는 오래된 도시에 사는 시계공 견습생은 무엇을 남길지 결정해야 한다.
+
+한 겨울 동안의 이야기로, 시계공 견습생과 떠나기를 거부하는 사람들을 따라간다.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">2007</Date></PublishingDate>
+      <PublishingDate><PublishingDateRole>11</PublishingDateRole><Date dateformat="05">1994</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

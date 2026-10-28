@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-273883</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9791575273883</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>沉默的花园</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Chenmo de Huayuan</TitleText></TitleElement></TitleDetail>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">故事从河口的旧码头开始：河流在一夜之间改了道，而一个刚搬来的邮递员是唯一记得原因的人。
+
+全书以一个冬天为线索，写一个刚搬来的邮递员和那些不肯离开的人。</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1979</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

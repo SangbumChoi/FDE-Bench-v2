@@ -1,0 +1,36 @@
+- id: fiscal_year
+  kind: missing
+  domain: business rule
+  text: The fiscal year starts on April 1 and is named after the year it starts in (FY2025 = 2025-04-01 to 2026-03-31); Q1 is April–June and H1 is April–September.
+- id: local_day
+  kind: ambiguous
+  domain: data semantics
+  text: Timestamps are stored in UTC, but days, months, quarters and fiscal years are decided in Korea time (UTC+9); add 9 hours before taking the date.
+- id: test_accounts
+  kind: missing
+  domain: business rule
+  text: Customers with account_type test in accounts_meta are QA accounts and must be excluded from every figure; staff accounts stay in.
+- id: counted_orders
+  kind: ambiguous
+  domain: data semantics
+  text: Only completed orders count; cancelled and payment_failed orders never count, even when payments.csv has a payment row for them.
+- id: net_revenue
+  kind: ambiguous
+  domain: calculation
+  text: Net revenue = order subtotal (before tax) minus refunds without tax (refund amount × subtotal / total), booked in the period of the order date; within an order, refunds are spread over lines pro rata for category figures.
+- id: fx_order_date
+  kind: missing
+  domain: calculation
+  text: Amounts are in the order currency and are converted to KRW at the fx_rates krw_per_unit of the order's date (Korea time); refunds use the same rate as their order.
+- id: active_customer
+  kind: ambiguous
+  domain: business rule
+  text: An active customer has at least one completed order dated within the 90 days ending on the reference date (2026-07-03 to 2026-09-30).
+- id: category_rename
+  kind: missing
+  domain: data semantics
+  text: The snacks category was renamed pantry on 2025-10-01 and older products still carry the old label; questions about pantry include both labels.
+- id: report_rounding
+  kind: missing
+  domain: scoring
+  text: Finance requires every money answer rounded to the nearest thousand KRW; answers are checked against exact figures (counts and ids exact, others within 0.5 %).

@@ -1,0 +1,14 @@
+From: 风险管理部 <risk@desk.example>
+To: 交易台 <trading.desk@desk.example>
+Date: Thu, 16 Jul 2026 17:40:00 +0000
+Subject: 自 2026-07-21 起单只股票限额下调 5 个百分点
+Message-ID: <N-05@desk.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+交易台：
+
+鉴于市场回撤，自 2026-07-21 起每个客户账户的单只股票限额下调 5 个百分点。当天收盘时，所有持仓（无论当天是否买入）都必须在新限额以内。
+
+风险管理部

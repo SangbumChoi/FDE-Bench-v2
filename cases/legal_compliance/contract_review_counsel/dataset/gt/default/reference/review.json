@@ -1,0 +1,243 @@
+{
+  "C001": {
+    "issues": [
+      "PAYMENT_TERMS",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C002": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C003": {
+    "issues": [
+      "GOVERNING_LAW",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C004": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C005": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C006": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C007": {
+    "issues": [
+      "LIABILITY_CAP",
+      "AUTO_RENEWAL"
+    ],
+    "decision": "negotiate"
+  },
+  "C008": {
+    "issues": [
+      "LIABILITY_CAP",
+      "GOVERNING_LAW",
+      "TERMINATION_CONVENIENCE",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  },
+  "C009": {
+    "issues": [
+      "DATA_PROTECTION",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  },
+  "C010": {
+    "issues": [
+      "GOVERNING_LAW",
+      "TERMINATION_CONVENIENCE",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C011": {
+    "issues": [
+      "GOVERNING_LAW",
+      "TERMINATION_CONVENIENCE"
+    ],
+    "decision": "negotiate"
+  },
+  "C012": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C013": {
+    "issues": [
+      "DATA_PROTECTION"
+    ],
+    "decision": "negotiate"
+  },
+  "C014": {
+    "issues": [
+      "TERMINATION_CONVENIENCE"
+    ],
+    "decision": "negotiate"
+  },
+  "C015": {
+    "issues": [
+      "AUTO_RENEWAL",
+      "PAYMENT_TERMS",
+      "TERMINATION_CONVENIENCE",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C016": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C017": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C018": {
+    "issues": [
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C019": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C020": {
+    "issues": [
+      "GOVERNING_LAW",
+      "TERMINATION_CONVENIENCE"
+    ],
+    "decision": "negotiate"
+  },
+  "C021": {
+    "issues": [
+      "DATA_PROTECTION",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  },
+  "C022": {
+    "issues": [
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C023": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C024": {
+    "issues": [
+      "GOVERNING_LAW",
+      "PAYMENT_TERMS"
+    ],
+    "decision": "negotiate"
+  },
+  "C025": {
+    "issues": [
+      "GOVERNING_LAW",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C026": {
+    "issues": [
+      "GOVERNING_LAW",
+      "AUTO_RENEWAL",
+      "PAYMENT_TERMS"
+    ],
+    "decision": "negotiate"
+  },
+  "C027": {
+    "issues": [
+      "GOVERNING_LAW",
+      "PAYMENT_TERMS",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C028": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C029": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C030": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C031": {
+    "issues": [
+      "PAYMENT_TERMS"
+    ],
+    "decision": "negotiate"
+  },
+  "C032": {
+    "issues": [
+      "LIABILITY_CAP",
+      "DATA_PROTECTION"
+    ],
+    "decision": "reject"
+  },
+  "C033": {
+    "issues": [
+      "TERMINATION_CONVENIENCE"
+    ],
+    "decision": "negotiate"
+  },
+  "C034": {
+    "issues": [
+      "LIABILITY_CAP",
+      "TERMINATION_CONVENIENCE"
+    ],
+    "decision": "negotiate"
+  },
+  "C035": {
+    "issues": [
+      "LIABILITY_CAP",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  },
+  "C036": {
+    "issues": [
+      "GOVERNING_LAW"
+    ],
+    "decision": "negotiate"
+  },
+  "C037": {
+    "issues": [
+      "LIABILITY_CAP",
+      "PAYMENT_TERMS",
+      "TERMINATION_CONVENIENCE"
+    ],
+    "decision": "negotiate"
+  },
+  "C038": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C039": {
+    "issues": [
+      "TERMINATION_CONVENIENCE",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C040": {
+    "issues": [
+      "LIABILITY_CAP"
+    ],
+    "decision": "negotiate"
+  }
+}

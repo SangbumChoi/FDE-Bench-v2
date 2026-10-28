@@ -1,0 +1,21 @@
+# Test fixture for program deliverables (not a benchmark case: no locales).
+id: toy_fraud_screener
+role: Toy Fraud Screener
+field: finance
+task_type: Machine Learning
+seed: 7
+objective: minimize
+deliverable_type: program
+entrypoint: solution.py:decide
+deliverable_spec: |
+  program/solution.py defines decide(txn: dict) -> "approve" | "block"; txn has id, amount, country, hour.
+rules:
+  - id: valid_decision
+    class: physical
+    description: Every call returns "approve" or "block".
+  - id: block_sanctioned_country
+    class: contractual
+    description: Transactions from country XX are always blocked.
+  - id: approve_small_amounts
+    class: business_policy
+    description: Transactions under 10 are always approved.

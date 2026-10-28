@@ -1,0 +1,1 @@
+Hemos recibido demasiadas solicitudes para estos tres puestos. ¿Podría preseleccionar a los mejores candidatos para entrevistarlos? Le adjunto las descripciones de los puestos y la exportación de candidatos de nuestro sistema de selección, además de algunos datos de las personas que contratamos antes para estos mismos puestos.

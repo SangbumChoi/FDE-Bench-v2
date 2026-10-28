@@ -1,0 +1,17 @@
+From: 贷款服务 还款确认 <confirmations@creditor.example>
+To: 个人贷款柜台 <loans.desk@lender.example>
+Date: Wed, 04 Nov 2026 09:00:00 +0000
+Subject: 还款确认 NT001：负债 BF3379733-D3
+Message-ID: <NT001.2026-11-04@lender.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+您好：
+
+兹确认客户 BF3379733（征信档案号）的负债 BF3379733-D3 已于 2026-11-04 全部结清。
+新的未偿余额：0
+新的月还款额：0
+
+编号：NT001
+贷款服务 还款确认

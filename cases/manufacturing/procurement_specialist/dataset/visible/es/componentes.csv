@@ -1,0 +1,26 @@
+﻿id_componente,descripcion,categoria,critico,costo_estandar_krw
+C01,microcontrolador de 32 bits QFN48,circuito integrado,sí,4200
+C02,circuito de gestión de energía,circuito integrado,sí,1850
+C03,DRAM 4Gb,circuito integrado,sí,3300
+C04,memoria flash NOR 128Mb,circuito integrado,sí,1400
+C05,placa desnuda de 6 capas,placa de circuito,sí,2600
+C06,"módulo de pantalla TFT de 3,5 pulgadas",pantalla,sí,14800
+C07,resistencia 0402 10kΩ,resistencia SMD,no,3.0
+C08,"resistencia 0402 4,7kΩ",resistencia SMD,no,3.0
+C09,resistencia 0603 100Ω,resistencia SMD,no,4.0
+C10,condensador cerámico 0402 100nF,condensador,no,6.0
+C11,condensador cerámico 0603 10µF,condensador,no,18
+C12,condensador cerámico 1206 47µF,condensador,no,55
+C13,condensador electrolítico 220µF,condensador,no,95
+C14,"inductor de potencia 4,7µH",inductor,no,140
+C15,cristal 16MHz,circuito integrado,no,230
+C16,conector USB-C,conector/antena,no,420
+C17,conector placa a placa 40P,conector/antena,no,380
+C18,LED 0603 verde,LED,no,22
+C19,sensor de temperatura,circuito integrado,no,650
+C20,antena FPC,conector/antena,no,310
+C21,portapilas de botón,mecánico,no,120
+C22,carcasa superior,mecánico,no,900
+C23,carcasa inferior,mecánico,no,780
+C24,tornillo M2,mecánico,no,9.0
+C25,"memoria flash NOR 128Mb, nuevo chip (rev. B)",circuito integrado,sí,1500

@@ -1,0 +1,16 @@
+From: バックテストエンジン担当 <backtest@desk.example>
+To: トレーディングデスク <trading.desk@desk.example>
+Date: Fri, 15 May 2026 18:30:00 +0000
+Subject: バックテストエンジンの試験運用
+Message-ID: <M-06@desk.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+お疲れさまです。
+
+本番の前に、ヒストリー期間の中でエンジンを短く試験運用しました。テスト口座は2026-02-06の大引け時点で現金10,000,000から始め、翌営業日の寄り付きで買い、最後の2営業日に1銘柄の一部を売りました。エンジンはフルモード（売却時の取引税0.2%、T+2決済）です。約定、保有銘柄、毎回の大引け時点のステータス表はデータベースのエクスポート（デスクDB.sqlのテーブル pilot_fills、pilot_positions、pilot_status、pilot_weights）にあります。呼び出し例.json はエンジンが2026-02-20の大引け後に送った呼び出しそのもので、戻り値の例.json は試験用プログラムの戻り値です（形式の参考のみ）。
+
+その呼び出しに含まれる通知はテスト用のメッセージで、意味はありません。本番では、プログラムはその日のメッセージを毎回の呼び出しの中（"notices" のリスト）でのみ受け取り、メールは読めません。
+
+バックテストエンジン担当

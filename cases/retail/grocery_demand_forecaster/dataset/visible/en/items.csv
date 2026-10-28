@@ -1,0 +1,13 @@
+﻿item_id,item_name,category,sales_unit
+I01,Bananas,fresh produce,kg
+I02,Tomatoes,fresh produce,kg
+I03,Fresh basil,fresh produce,bunch
+I04,Whole milk 1L,dairy,carton
+I05,Plain yogurt,dairy,cup
+I06,Aged cheese,dairy,piece
+I07,Bread rolls,bakery,pack of 6
+I08,Sourdough loaf,bakery,loaf
+I09,Croissant,bakery,piece
+I10,Sparkling water 1.5L,beverages,bottle
+I11,Orange juice 1L,beverages,bottle
+I12,Cold brew coffee,beverages,can

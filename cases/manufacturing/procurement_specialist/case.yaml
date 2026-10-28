@@ -1,0 +1,64 @@
+id: procurement_specialist
+role: Procurement Specialist
+task_type: Combinatorial Optimization
+field: manufacturing
+seed: 20261123
+objective: minimize          # purchases (KRW) + holding + 5x backlog per piece-week + 1.5x safety-stock shortfall
+                             # (hard: expected over the suppliers' true lateness, + scrap of the phased-out part)
+tiers:
+  easy: >-
+    The MRP core: component demand exploded from the board plan and the BOM, lead times as whole weeks, list
+    prices with the USD quotes at a planning rate, MOQ per order line, the approved-vendor list, a hard monthly
+    budget, resistor stock counted in reels, safety stock for critical parts, a supplier on quality hold and the
+    dual-sourcing habit. The engineering change, price breaks, holiday calendar, delivery history and allocation
+    are out of scope this round.
+  medium: >-
+    Easy plus all-units price breaks per order line and lead times in business days with two short holiday weeks.
+  hard: >-
+    Medium plus supply uncertainty: suppliers deliver one or two weeks late with hidden probabilities (six months
+    of delivery history in the data), monthly allocation caps on three constrained parts, and the engineering
+    change that replaces the flash C04 by C25 from W6 (C04 left after W5 is scrapped); quality becomes an exact
+    expected cost.
+rulesets:                    # the client's rule parameters; same data, three ground truths
+  A: {usd_krw: 1380, safety_weeks: 1, max_share: 80, hold_supplier: S07, hold_until: 3}
+  B: {usd_krw: 1450, safety_weeks: 1.5, max_share: 70, hold_supplier: S05, hold_until: 4}
+  C: {usd_krw: 1320, safety_weeks: 0.5, max_share: 90, hold_supplier: S01, hold_until: 4}
+param_labels:                # how a parameter reads in each locale's text
+  usd_krw:
+    1380: {zh: "1,380", en: "1,380", ko: "1,380", ja: "1,380", es: "1.380"}
+    1450: {zh: "1,450", en: "1,450", ko: "1,450", ja: "1,450", es: "1.450"}
+    1320: {zh: "1,320", en: "1,320", ko: "1,320", ja: "1,320", es: "1.320"}
+  safety_weeks:
+    1: {zh: "1", en: "1", ko: "1", ja: "1", es: "1"}
+    1.5: {zh: "1.5", en: "1.5", ko: "1.5", ja: "1.5", es: "1,5"}
+    0.5: {zh: "0.5", en: "0.5", ko: "0.5", ja: "0.5", es: "0,5"}
+  hold_supplier:
+    S07: {zh: Kowon Passive（S07）, en: Kowon Passive (S07), ko: 고원패시브(S07), ja: Kowon Passive（S07）, es: Kowon Passive (S07)}
+    S05: {zh: Seoul PCB Tech（S05）, en: Seoul PCB Tech (S05), ko: 서울PCB테크(S05), ja: Seoul PCB Tech（S05）, es: Seoul PCB Tech (S05)}
+    S01: {zh: Hanbit Electronics（S01）, en: Hanbit Electronics (S01), ko: 한빛전자(S01), ja: Hanbit Electronics（S01）, es: Hanbit Electronics (S01)}
+deliverables: [orders.csv]
+deliverable_spec: |
+  orders.csv with the header order_week,component_id,supplier_id,quantity
+  One row per purchase order line: order_week = the week the order is placed, as a number 1..8 (W1 = week of
+  2026-11-23); component_id and supplier_id exactly as in the data; quantity = whole units (pieces, not reels).
+  Rows with the same order_week, component_id and supplier_id are added together into one order line.
+rules:
+  - id: approved_vendor
+    class: contractual
+    description: A part is ordered only from suppliers whose status for that part on the approved-vendor list is approved.
+  - id: moq
+    class: physical
+    description: Each order line (one week, part and supplier) is at least the supplier's minimum order quantity.
+  - id: budget_cap
+    class: contractual
+    description: Purchases in each month (by the Monday of the order week) stay within that month's budget.
+  - id: quality_hold
+    class: physical
+    description: "{{hold_supplier}} is on quality hold; its goods due to arrive in weeks W1 to W{{hold_until}} are rejected."
+  - id: allocation_cap
+    class: physical
+    tiers: [hard]
+    description: Orders placed in one month with a supplier for a part on allocation stay within that supplier's monthly allocation.
+  - id: dual_source_critical
+    class: business_policy
+    description: Every critical part in use is ordered from at least two suppliers, and no supplier gets more than {{max_share}}% of its ordered quantity.

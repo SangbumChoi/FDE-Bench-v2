@@ -1,0 +1,36 @@
+- id: liability_cap
+  kind: missing
+  domain: calculation
+  text: The liability cap must be at least 1x annual_value_usd from the register; a cap of fees over N months is worth N/12 of the annual value, an equal cap is fine and an uncapped contract is fine.
+- id: governing_law
+  kind: missing
+  domain: business rule
+  text: The governing law must be Switzerland or Singapore; only the governing law counts, not the courts or arbitration seat.
+- id: auto_renewal
+  kind: missing
+  domain: calculation
+  text: A contract that renews automatically (in any wording) needs a non-renewal notice period of at least 60 days; a month counts as 30 days; contracts that simply expire are fine.
+- id: payment_terms
+  kind: missing
+  domain: business rule
+  text: The payment term must be at least 45 days from receipt of the invoice.
+- id: data_protection
+  kind: ambiguous
+  domain: data semantics
+  text: Contracts in the IT & data services category must contain a clause on handling personal data, whatever its title; other categories do not need one.
+- id: termination_convenience
+  kind: missing
+  domain: business rule
+  text: Contracts with an annual value above USD 150,000 must allow us to terminate for convenience (any time, no reason needed); termination for breach alone is not enough.
+- id: indemnity_mutual
+  kind: missing
+  domain: business rule
+  text: Indemnities must be mutual; a clause where only we indemnify the supplier is an issue.
+- id: decision_and_scoring
+  kind: missing
+  domain: scoring
+  text: Issue codes are LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS, DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY; reject with two or more critical issues (liability cap, data protection, indemnity), negotiate with any issue, else sign; judged by 0.7 x issue F1 + 0.3 x decision accuracy.
+- id: small_contract_fast_track
+  kind: missing
+  domain: business rule
+  text: Contracts with an annual value below USD 20,000 are marked sign with no issues, without legal review.

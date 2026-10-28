@@ -14,6 +14,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -22,6 +23,53 @@ LOCALES = ("zh", "en", "ko", "ja", "es")
 
 class Fatal(Exception):
     """The submission cannot be scored at all (missing file, unparseable, wrong shape)."""
+
+
+def run_program(submission_dir: Path, entry: str, inputs: list[Any], *, per_call_timeout: float = 5.0,
+                total_timeout: float = 600.0, input_dir: Path | None = None, output_to: Path | None = None):
+    """Program cases: call the delivered `entry` ("file.py:function") once per hidden input, in order.
+
+    The program runs isolated from the scorer (see fdebench2.program). Returns a ProgramResult whose
+    `outputs[i]` is None where `errors[i]` is set; a program that cannot load at all raises Fatal.
+    Per-input failures are the case's to score (usually as a wrong or default answer).
+    """
+    from .program import run_program as _run
+
+    prog = Path(submission_dir) / "program"
+    if not prog.is_dir():
+        raise Fatal("missing program/ directory")
+    res = _run(prog, entry, inputs, per_call_timeout=per_call_timeout, total_timeout=total_timeout,
+               input_dir=input_dir, output_to=output_to)
+    if not res.loaded:
+        raise Fatal(f"program failed to load: {res.load_error}")
+    return res
+
+
+class program_session:
+    """Program cases whose next input depends on earlier outputs: a ProgramSession on submission/program/.
+
+        with casekit.program_session(submission_dir, ENTRYPOINT, per_call_timeout=2) as prog:
+            output, error = prog.call(x)
+
+    A missing program/ directory or a program that cannot load raises Fatal.
+    """
+
+    def __init__(self, submission_dir: Path, entry: str, **kw: Any):
+        from .program import ProgramSession
+
+        prog = Path(submission_dir) / "program"
+        if not prog.is_dir():
+            raise Fatal("missing program/ directory")
+        self._session = ProgramSession(prog, entry, **kw)
+
+    def __enter__(self):
+        try:
+            return self._session.__enter__()
+        except RuntimeError as e:
+            raise Fatal(f"program failed to load: {e}") from e
+
+    def __exit__(self, *exc) -> None:
+        self._session.__exit__(*exc)
 
 
 def pick(table: Mapping[str, Mapping[str, str]], key: str, lang: str) -> str:
@@ -45,6 +93,56 @@ def write_csv(path: Path, header: Sequence[str], rows: Iterable[Sequence[Any]]) 
     path.write_bytes(buf.getvalue().encode("utf-8-sig"))
 
 
+def _sql_literal(v: Any) -> str:
+    if v is None:
+        return "NULL"
+    if isinstance(v, bool):
+        return "1" if v else "0"
+    if isinstance(v, (int, float)):
+        if isinstance(v, float) and (v != v or v in (float("inf"), float("-inf"))):
+            raise ValueError(f"cannot write {v!r} to SQL")
+        return repr(v) if isinstance(v, float) else str(v)
+    return "'" + str(v).replace("'", "''") + "'"
+
+
+def write_sql(path: Path, tables: Mapping[str, tuple[Sequence[tuple[str, str]], Iterable[Sequence[Any]]]],
+              comment: str = "") -> None:
+    """A plain-text SQL dump (CREATE TABLE + INSERT), the way a client exports a database.
+
+    tables: {name: ([(column, type), ...], rows)}. Loads with `sqlite3 db < file.sql` (or any SQL engine
+    that accepts standard DDL). Deterministic: same input, same bytes.
+    """
+    out = [f"-- {line}" for line in comment.splitlines()] + ["BEGIN TRANSACTION;"]
+    for name, (cols, rows) in tables.items():
+        defs = ", ".join(f'"{c}" {t}' for c, t in cols)
+        out.append(f'CREATE TABLE "{name}" ({defs});')
+        names = ", ".join(f'"{c}"' for c, _ in cols)
+        for row in rows:
+            out.append(f'INSERT INTO "{name}" ({names}) VALUES ({", ".join(_sql_literal(v) for v in row)});')
+    out.append("COMMIT;")
+    path.write_text("\n".join(out) + "\n", encoding="utf-8")
+
+
+def write_eml(path: Path, *, sender: str, to: str, date: str, subject: str, body: str,
+              cc: str = "", message_id: str = "") -> None:
+    """One e-mail as an .eml file (RFC 5322, UTF-8 body in 8bit so it reads as plain text). `date` is an
+    RFC 2822 date string; deterministic."""
+    from email.message import EmailMessage
+    from email.policy import SMTPUTF8
+
+    msg = EmailMessage(policy=SMTPUTF8)              # UTF-8 headers, not =?utf-8?b?...?= words
+    msg["From"] = sender
+    msg["To"] = to
+    if cc:
+        msg["Cc"] = cc
+    msg["Date"] = date
+    msg["Subject"] = subject
+    if message_id:
+        msg["Message-ID"] = message_id
+    msg.set_content(body, charset="utf-8", cte="8bit")      # readable as plain text, any script
+    path.write_bytes(msg.as_bytes())
+
+
 def write_xlsx(path: Path, sheets: Mapping[str, tuple[Sequence[str], Iterable[Sequence[Any]]]]) -> None:
     from openpyxl import Workbook
 
@@ -65,7 +163,11 @@ def write_xlsx(path: Path, sheets: Mapping[str, tuple[Sequence[str], Iterable[Se
         for info in src.infolist():
             fixed = zipfile.ZipInfo(info.filename, date_time=(2026, 1, 1, 0, 0, 0))
             fixed.compress_type = zipfile.ZIP_DEFLATED
-            dst.writestr(fixed, src.read(info.filename))
+            body = src.read(info.filename)
+            if info.filename == "docProps/core.xml":
+                # openpyxl stamps the save time here regardless of wb.properties.
+                body = re.sub(rb"(<dcterms:(?:created|modified)[^>]*>)[^<]*(<)", rb"\g<1>2026-01-01T00:00:00Z\g<2>", body)
+            dst.writestr(fixed, body)
 
 
 def write_json(path: Path, doc: Any) -> None:

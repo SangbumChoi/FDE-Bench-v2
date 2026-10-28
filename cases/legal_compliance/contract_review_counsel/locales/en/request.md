@@ -1,0 +1,1 @@
+Hi, procurement has lined up about forty supplier contracts that are waiting for signature. Please review these supplier contracts and tell us which ones need changes before we sign. The contract register and the contract texts are attached.

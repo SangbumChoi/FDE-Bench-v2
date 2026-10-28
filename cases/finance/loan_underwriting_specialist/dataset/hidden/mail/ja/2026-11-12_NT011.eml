@@ -1,0 +1,16 @@
+From: 勤務先 人事部給与課 <payroll@employer.example>
+To: 個人ローン窓口 <loans.desk@lender.example>
+Date: Thu, 12 Nov 2026 10:00:00 +0000
+Subject: 収入書類の訂正 NT011：申込 N0182
+Message-ID: <NT011.2026-11-12@lender.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+お世話になっております。
+
+当社従業員（顧客 BF6753351、申込 N0182）の給与明細を再発行しました。以前の書類 BF6753351-S1 の給与額に誤りがありました。
+新しい書類 BF6753351-S1R の月額基本給は 8,590 です。
+
+文書番号：NT011
+勤務先 人事部給与課

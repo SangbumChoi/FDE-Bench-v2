@@ -1,0 +1,25 @@
+{
+  "metrics": {
+    "actions_rejected": 0,
+    "booked": 1165,
+    "calls_failed": 0,
+    "cancellations": 87,
+    "capacity_slots": 1566,
+    "collision_cost": 0.0,
+    "extra_trips": 0,
+    "moved": 0,
+    "moves": 0,
+    "ops_component": 1.0,
+    "ops_value": 11701.6,
+    "overbooked_slots": 0,
+    "reference_ops_value": 11701.6,
+    "released": 0,
+    "seen_slots": 1538.0,
+    "table_accuracy": 1.0,
+    "unbooked": 61,
+    "utilization": 0.98212,
+    "waiting_cost": 3068.4
+  },
+  "objective": 1.0,
+  "violations": []
+}

@@ -1,0 +1,66 @@
+{
+ "decisions": [
+  {
+   "application_id": "T0001",
+   "decision": "decline",
+   "amount": 0,
+   "reason_code": "CREDIT_RISK"
+  },
+  {
+   "application_id": "T0002",
+   "decision": "approve",
+   "amount": 8000,
+   "reason_code": ""
+  },
+  {
+   "application_id": "T0003",
+   "decision": "decline",
+   "amount": 0,
+   "reason_code": "CREDIT_RISK"
+  },
+  {
+   "application_id": "T0004",
+   "decision": "decline",
+   "amount": 0,
+   "reason_code": "CREDIT_RISK"
+  },
+  {
+   "application_id": "T0005",
+   "decision": "approve",
+   "amount": 28000,
+   "reason_code": ""
+  },
+  {
+   "application_id": "T0006",
+   "decision": "approve",
+   "amount": 20500,
+   "reason_code": ""
+  },
+  {
+   "application_id": "T0007",
+   "decision": "decline",
+   "amount": 0,
+   "reason_code": "LIMIT_EXCEEDED"
+  },
+  {
+   "application_id": "T0008",
+   "decision": "approve",
+   "amount": 44500,
+   "reason_code": ""
+  }
+ ],
+ "limit_table": {
+  "customers": {
+   "BF1029693": 50000,
+   "BF1043840": 30840,
+   "BF3165600": 0,
+   "BF4023162": 22000,
+   "BF5539334": 5500,
+   "BF7481551": 29500,
+   "BF7726758": 22480,
+   "BF8587779": 50000
+  },
+  "daily_capacity_remaining": 299000,
+  "period_budget_remaining": null
+ }
+}

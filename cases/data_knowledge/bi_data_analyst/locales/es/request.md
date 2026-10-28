@@ -1,0 +1,1 @@
+Nuestros directivos nos han enviado estas preguntas. ¿Podría responderlas a partir de la exportación de la base de datos? Le adjuntamos las tablas, un pequeño diccionario de datos y la lista de preguntas; con un número por pregunta nos basta.

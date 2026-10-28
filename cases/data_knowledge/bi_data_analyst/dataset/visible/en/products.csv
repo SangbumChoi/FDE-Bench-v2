@@ -1,0 +1,25 @@
+﻿product_id,product_name,category,list_price_krw
+P01,Classic Coffee Box,box,29000
+P02,Premium Coffee Box,box,45000
+P03,Tea Discovery Box,box,32000
+P04,Ethiopia Yirgacheffe 250g,coffee,18000
+P05,Colombia Huila 250g,coffee,16000
+P06,House Blend 1kg,coffee,42000
+P07,Decaf Blend 250g,coffee,17000
+P08,Drip Bags 10-pack,coffee,12000
+P09,Jeju Green Tea,tea,15000
+P10,Earl Grey,tea,13000
+P11,Rooibos,tea,12000
+P12,Hojicha,tea,14000
+P13,Almond Biscotti,snacks,8500
+P14,Dark Chocolate Bar,snacks,6500
+P15,Granola,snacks,11000
+P16,Butter Cookies,snacks,9000
+P17,Wildflower Honey 250g,pantry,14000
+P18,Oat Milk Concentrate,pantry,9500
+P19,Cocoa Powder,pantry,12500
+P20,Matcha Shortbread,pantry,9800
+P21,Pour-over Dripper,accessories,25000
+P22,Paper Filters 100,accessories,4500
+P23,Hand Grinder,accessories,68000
+P24,Travel Tumbler,accessories,22000

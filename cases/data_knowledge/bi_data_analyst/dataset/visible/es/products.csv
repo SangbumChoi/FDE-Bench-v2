@@ -1,0 +1,25 @@
+﻿product_id,product_name,category,list_price_krw
+P01,Caja Café Clásico,caja,29000
+P02,Caja Café Premium,caja,45000
+P03,Caja Descubre Tés,caja,32000
+P04,Etiopía Yirgacheffe 250g,café,18000
+P05,Colombia Huila 250g,café,16000
+P06,Mezcla de la Casa 1kg,café,42000
+P07,Mezcla Descafeinada 250g,café,17000
+P08,Bolsitas de goteo x10,café,12000
+P09,Té verde de Jeju,té,15000
+P10,Earl Grey,té,13000
+P11,Rooibos,té,12000
+P12,Hojicha,té,14000
+P13,Biscotti de almendra,snacks,8500
+P14,Tableta de chocolate negro,snacks,6500
+P15,Granola,snacks,11000
+P16,Galletas de mantequilla,snacks,9000
+P17,Miel de flores 250g,despensa,14000
+P18,Concentrado de avena,despensa,9500
+P19,Cacao en polvo,despensa,12500
+P20,Galletas de matcha,despensa,9800
+P21,Gotero para filtrado,accesorios,25000
+P22,Filtros de papel x100,accesorios,4500
+P23,Molinillo manual,accesorios,68000
+P24,Vaso térmico,accesorios,22000

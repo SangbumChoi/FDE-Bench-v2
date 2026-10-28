@@ -1,0 +1,8 @@
+{
+  "metrics": {
+    "late_minutes": 10.94,
+    "route_minutes": 592.74
+  },
+  "objective": 625.5512902630212,
+  "violations": []
+}

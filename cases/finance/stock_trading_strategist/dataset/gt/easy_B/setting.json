@@ -1,0 +1,13 @@
+{
+  "params": {
+    "large_order": 5,
+    "liquidation_days": 4,
+    "max_drawdown": 12,
+    "restricted": "NEXO, PYRO",
+    "sector_cap": 30,
+    "stock_cap": 18,
+    "withdrawal_basis": "notice"
+  },
+  "ruleset": "B",
+  "tier": "easy"
+}

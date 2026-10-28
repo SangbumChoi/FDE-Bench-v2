@@ -1,0 +1,15 @@
+From:
+ Arden Exchange market operations <market.operations@arden-exchange.example>
+To: Trading desk <trading.desk@desk.example>
+Date: Fri, 26 Jun 2026 17:40:00 +0000
+Subject: Market-wide circuit breaker on 2026-06-26
+Message-ID: <N-04@desk.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+To all members,
+
+The market-wide circuit breaker tripped at the open of 2026-06-26 (index -4.5%). Trading was suspended until the closing auction, which set the closing prices.
+
+Market operations, Arden Exchange

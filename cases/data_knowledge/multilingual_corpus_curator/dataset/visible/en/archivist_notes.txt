@@ -1,0 +1,4 @@
+corpus/ is a sample of our shared drive, copied as it is, nothing tidied.
+The regional offices, the scanning team and the rights desk have all put things there; there are also
+some old archives and catalog exports.
+For the real run the program gets the full drive, laid out like this sample.

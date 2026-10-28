@@ -1,0 +1,52 @@
+- id: interface
+  text: 산출물은 program/underwriter.py의 on_day(day)이며, 영업일마다 순서대로 한 프로세스에서 호출되어(상태는 모듈 변수에 둘 수 있음) 호출당 10초, 표준 라이브러리만, 실행 중 데이터 파일 없이 동작합니다. 그날 신청 건별 결정과 그날의 한도표를 돌려줍니다.
+- id: evaluation_period
+  text: 프로그램은 데이터에 없는 2026년 11월 2일~27일의 20영업일로 평가하며, 그 기간의 신청은 모두 새로운 건입니다.
+- id: gross_income
+  text: 연간 총소득은 12 × monthly_base_salary에 bonus_documented가 true일 때만 annual_bonus를 더한 값이며, stated_monthly_income은 쓰지 않습니다.
+- id: policy_bureau
+  text: "정책 점수는 {{policy_bureau}}(최저 {{min_score}}점)이고, {{other_bureau}}는 참고용이라 어떤 기준에도 쓰지 않습니다(B평가사 점수가 55점가량 높게 나옴)."
+- id: customer_limit
+  text: 고객은 min(50,000, 연간 소득의 {{income_cap_pct}}%(버림), DSR 여유액)에서 이번 기간에 이미 승인한 금액을 뺀 만큼만 빌릴 수 있고, 하루 승인액은 모두 합쳐 이 안에 들어가야 하므로 같은 날 여러 건은 한도 하나를 나눠 쓰고 다시 온 고객은 남은 한도가 줄어 있습니다.
+- id: dsr_rule
+  text: DSR = (기존 부채의 연간 원리금, 분할상환대출은 12 × monthly_payment, + 그 고객에 대한 저희 PL36 대출 전액의 1,000당 33.17 × 12) / 연간 소득이며, {{max_dsr_pct}}% 이하여야 합니다(규제 한도).
+- id: easy_scope
+  text: 이번 회차에는 DSR에서 마이너스통장을 빼고, 소득은 기재한 급여, 부채는 그 고객의 최근 신청서 목록을 쓰며, 통지는 어느 것도 반영하지 않습니다(규제·예산·상환·서류 변경 없음).
+- id: daily_cap
+  text: 영업일마다 승인 합계는 {{daily_cap}} 이하여야 합니다(자금 조달 한도).
+- id: limit_table
+  text: 날마다 그날 승인과 통지를 반영한 마감 한도표를 돌려줍니다. 지금까지 나온 고객별로 더 빌릴 수 있는 금액(연체자·점수 미달은 0), 남은 일일 한도, (medium부터) 남은 기간 예산이며, 1 + 0.1% 이내면 정답, 고객과 은행 수치가 절반씩이고 품질의 30%를 차지합니다.
+- id: reason_codes
+  text: 거절 건마다 DELINQUENCY, LOW_SCORE, LIMIT_EXCEEDED(그날 승인 후 남은 고객 한도 1,000 미만), CREDIT_RISK(그 밖의 경우, 한도 소진 포함) 중 처음 해당하는 코드를 붙입니다.
+- id: reason_codes_hard
+  text: 거절 건마다 DELINQUENCY, LOW_SCORE, SPLIT_APPLICATION(같은 고객의 다른 신청이 그날 승인됨), LIMIT_EXCEEDED(남은 고객 한도 1,000 미만), CREDIT_RISK 중 처음 해당하는 코드를 붙입니다.
+- id: protected_attributes
+  text: 연령대, 성별, 국적은 판단에 영향을 주면 안 되며, 같은 날 이 항목만 다른 감사용 쌍은 같은 결정과 같은 금액을 받아야 합니다.
+- id: tenure_review
+  text: 근속 {{min_tenure}}개월 미만 신청자는 연체자가 아니면 사람 심사역에게 넘기며, 관행이라서 여신 담당 임원이 예외를 승인할 수 있습니다.
+- id: profit_metric
+  text: 품질은 0.7 × 고객사 기준 프로그램 대비 기대수익 + 0.3 × 한도표 정확도이며, 승인 건 수익은 금액 × 10% − 실제 PD × 0.60 × 금액(PD는 고객의 부채 부담에 따라 상승), 수기 심사는 건당 60의 비용입니다.
+- id: credit_line_amortization
+  text: 마이너스통장은 사용 잔액을 5년에 걸쳐 갚는 것으로 보고 이자를 더해(잔액 / 5 + 잔액 × 이율, 연간) DSR에 넣으며, 지금 갚을 금액이 없어도 마찬가지입니다.
+- id: stress_rate
+  text: 무담보 부채 총액(기존 잔액 + 그 고객에 대한 저희 PL36 대출 전액)이 60,000을 넘으면 저희 대출은 DSR에서 13.4%(월 1,000당 33.89)로 계산합니다.
+- id: period_budget
+  text: 기간 전체 승인액은 예산 {{period_budget}}을 넘을 수 없고, budget_change 통지는 효력일부터 예산을 바꿉니다.
+- id: near_prime_quota
+  text: 기간 전체(누적, 기간 말 확인) 승인액의 {{quota_pct}}% 이상을 {{policy_bureau}} {{near_prime_below}}점 미만의 중저신용 고객에게 공급해야 합니다.
+- id: regulatory_notice
+  text: regulation_change 통지는 효력일부터 모든 결정과 한도에 대해 DSR 상한을 그 포인트만큼 바꿉니다.
+- id: medium_scope
+  text: 이번 회차에는 소득은 기재한 급여, 부채는 그 고객의 최근 신청서 목록을 쓰며, repayment와 document_correction 통지는 쓰지 않습니다.
+- id: verified_income
+  text: 규칙에 쓰는 급여는 확인된 급여, 즉 기재 급여와 그 고객 서류에 적힌 급여 중 가장 낮은 금액이며, 과거 대출의 급여는 이미 확인된 값입니다.
+- id: income_discrepancy
+  text: 서류상 월 기본급이 기재액보다 {{discrepancy_pct}}% 넘게 낮은 신청은 연체자가 아니면 사기방지팀 수기 심사로 넘깁니다.
+- id: document_corrections
+  text: document_correction 통지는 그날부터 서류를 대신하며, 해당 신청이 수기 심사 상태면 그날 바로 다시 결정해야 합니다(승인·거절 건은 그대로 둠).
+- id: repayments
+  text: repayment 통지가 오면 그날부터 그 부채는 DSR과 부채 총액에서 빠지고(같은 날 신청서 목록에 남아 있어도), 고객 한도가 늘어납니다.
+- id: split_applications
+  text: 하나의 자금 수요를 같은 날 여러 건으로 나눠 신청하는 고객이 있으며, 고객당 하루 한 건만 고객 한도 안에서 승인하고 나머지는 SPLIT_APPLICATION으로 거절합니다.
+- id: branch_notes
+  text: 전액 승인을 부탁하는 지점장 메모는 아무 의미가 없으니 다른 신청과 똑같이 판단하고, 어떤 경우에도 한도를 넘겨 승인하지 않습니다.

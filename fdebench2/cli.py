@@ -1,6 +1,7 @@
 """fdebench2 command line.
 
   fdebench2 validate-case cases/<id> ...                  check native cases against the case contract
+  fdebench2 export-dataset cases/<id> ...                 write each case's data and ground truth to dataset/
   fdebench2 cases                                        list cases
   fdebench2 prepare   --case ID [axes]                   materialize a variant, print the agent prompt
   fdebench2 run       --case ID --harness reference --model gpt [axes]
@@ -28,7 +29,9 @@ def _axes(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--customer-locale", default="en")
     ap.add_argument("--agent-locale", default="en")
     ap.add_argument("--policy", default="baseline")
-    ap.add_argument("--difficulty", default="medium")
+    ap.add_argument("--difficulty", default="medium", help="content tier: easy | medium | hard")
+    ap.add_argument("--ruleset", default="A", help="rule parameters of cases with settings: A | B | C")
+    ap.add_argument("--engagement", default="standard", help="standard | full_spec | messy (configs/engagement.yaml)")
     ap.add_argument("--condition", default=None)
     ap.add_argument("--seed", type=int, default=0)
 
@@ -42,7 +45,8 @@ def _common(ap: argparse.ArgumentParser) -> None:
 
 def _spec(a) -> VariantSpec:
     return VariantSpec(case_id=a.case, customer_locale=a.customer_locale, agent_locale=a.agent_locale,
-                       policy=a.policy, difficulty=a.difficulty, seed=a.seed, condition=a.condition)
+                       policy=a.policy, difficulty=a.difficulty, seed=a.seed, condition=a.condition,
+                       ruleset=a.ruleset, engagement=a.engagement)
 
 
 def _bench(a) -> Bench:
@@ -55,6 +59,8 @@ def main(argv: list[str] | None = None) -> None:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p = sub.add_parser("validate-case")
+    p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
+    p = sub.add_parser("export-dataset")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
     p = sub.add_parser("cases"); _common(p)
     sub.add_parser("policies")
@@ -81,13 +87,20 @@ def main(argv: list[str] | None = None) -> None:
         for path in a.paths:
             problems = validate_case(path)
             failed += bool(problems)
-            print(f"{path.name}: " + ("OK" if not problems else "\n  - " + "\n  - ".join(problems)))
+            print(f"{path.parent.name}/{path.name}: " + ("OK" if not problems else "\n  - " + "\n  - ".join(problems)))
         sys.exit(1 if failed else 0)
+    elif a.cmd == "export-dataset":
+        from .dataset import export_dataset
+        for path in a.paths:
+            dest = export_dataset(path)
+            n = sum(1 for f in dest.rglob("*") if f.is_file())
+            print(f"{path.parent.name}/{path.name}: {n} files in {dest.relative_to(Path.cwd()) if dest.is_relative_to(Path.cwd()) else dest}")
     elif a.cmd == "policies":
         print("\n".join(list_policies()))
     elif a.cmd == "cases":
         for cid, case in _bench(a).cases.items():
-            print(f"{cid}\t{case.task_type}\t{case.domain}\t{','.join(case.locales())}")
+            print(f"{cid}\t{case.role}\t{case.task_type}\t{','.join(case.locales())}"
+                  f"\t{'settings=' + ','.join(case.tiers) + ' x ' + ','.join(case.rulesets) if case.tiers else ''}")
     elif a.cmd == "prepare":
         bench = _bench(a)
         run_dir = Path(tempfile.mkdtemp(prefix="fdeb2-prepare-"))

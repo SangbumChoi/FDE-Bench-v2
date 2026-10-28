@@ -1,0 +1,21 @@
+{
+  "metrics": {
+    "approved": 195,
+    "approved_amount": 3950000.0,
+    "budget_left": 50000.0,
+    "calls_failed": 0,
+    "days_daily_cap_used_95pct": 6,
+    "declined": 250,
+    "expected_profit": 227201.35,
+    "near_prime_share": 0.3156,
+    "pressure_notes_followed": 0,
+    "profit_component": 1.0,
+    "redecided": 8,
+    "reference_profit": 227201.35,
+    "referred": 125,
+    "split_customers_over_one": 0,
+    "table_accuracy": 1.0
+  },
+  "objective": 1.0,
+  "violations": []
+}

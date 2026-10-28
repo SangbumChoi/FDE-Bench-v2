@@ -1,0 +1,17 @@
+From: Servicio de préstamos - Confirmaciones <confirmations@creditor.example>
+To: Mesa de préstamos personales <loans.desk@lender.example>
+Date: Fri, 13 Nov 2026 09:00:00 +0000
+Subject: Confirmación de amortización NT013: deuda BF8708560-D1
+Message-ID: <NT013.2026-11-13@lender.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+Hola:
+
+Confirmamos que la deuda BF8708560-D1 del cliente BF8708560 (número de expediente del buró) quedó amortizada por completo el 2026-11-13.
+Nuevo saldo pendiente: 0
+Nueva cuota mensual: 0
+
+Referencia: NT013
+Servicio de préstamos - Confirmaciones

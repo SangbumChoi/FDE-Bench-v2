@@ -1,0 +1,16 @@
+From: Equipo del motor de backtest <backtest@desk.example>
+To: Mesa de negociación <trading.desk@desk.example>
+Date: Fri, 15 May 2026 18:30:00 +0000
+Subject: Prueba piloto del motor de backtest
+Message-ID: <M-06@desk.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+Hola:
+
+Antes de la ejecución real probamos el motor con un piloto corto dentro del histórico: una cartera de prueba que empezó con 10.000.000 en efectivo al cierre del 2026-02-06, compró en la apertura de la sesión siguiente y vendió parte de una posición en las dos últimas sesiones, con el motor en modo completo (impuesto del 0,2 % sobre las ventas, liquidación T+2). Sus ejecuciones, sus posiciones y la tabla de estado de cada cierre están en la exportación de la base de datos (base_datos_mesa.sql: tablas pilot_fills, pilot_positions, pilot_status, pilot_weights). ejemplo_llamada.json es la llamada que hizo el motor tras el cierre del 2026-02-20, tal cual; ejemplo_respuesta.json es la respuesta que dio el programa piloto (solo como formato).
+
+Los avisos de esa llamada eran mensajes de prueba y no significan nada. En la ejecución real el programa recibe los mensajes del día solo dentro de cada llamada (la lista "notices"); no puede leer el correo.
+
+Equipo del motor de backtest

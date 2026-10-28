@@ -1,0 +1,105 @@
+source,status,path,reason
+archives/handover_2021.zip,skipped,,ARCHIVE_NOT_READ
+archives/old_drive_backup.zip,skipped,,ARCHIVE_NOT_READ
+inbox/.DS_Store,skipped,,JUNK
+inbox/untitled.txt,skipped,,JUNK
+london/~$draft notes.docx,skipped,,JUNK
+misc/desktop.ini,skipped,,JUNK
+北京办公室/新建文本文档.txt,skipped,,JUNK
+東京オフィス/Thumbs.db,skipped,,JUNK
+catalogs/rights_catalog_export.csv#1,placed,library/1974/하얀_기차/이서연.txt,
+catalogs/rights_catalog_export.csv#2,placed,library/1980/漫长的信使/李若曦.txt,
+catalogs/rights_catalog_export.csv#3,placed,library/2002/푸른_서점/정예린.txt,
+catalogs/東京_目録.csv#1,placed,"library/1970/The_Lighthouse_at_Cape_Halloway_—_Three_Generations,_One_Hou/Eleanor_Calloway.txt",
+catalogs/東京_目録.csv#2,placed,library/1982/먼_서점/최현우.txt,
+catalogs/東京_目録.csv#3,placed,library/2004/작은_정원/윤민준.txt,
+inbox/9793788223204.txt,review,,NO_YEAR
+inbox/9796946409144.txt,placed,library/1991/하얀_바다/박하은.txt,
+inbox/9799868631617.json,placed,library/2002/하얀_여름/윤민준.txt,
+inbox/A Map of Cape Halloway.json;inbox/A_Map_of_Cape_Halloway.txt,placed,library/1979/A_Map_of_Cape_Halloway/Eleanor_Elsworth.txt,
+inbox/Chidao_de_Qundao.md,placed,library/2021/迟到的群岛/吴嘉怡.txt,
+inbox/El_jardín_dormido.epub;madrid/El_jardín_dormido.txt;madrid/book_0069.json,placed,library/2010/El_jardín_dormido/Carmen_Barrachina.txt,
+inbox/La librería pequeña.json;madrid/9799197512489.xml,placed,library/1971/La_librería_pequeña/Carmen_Barrachina.txt,
+inbox/La_estación_pequeña.txt,placed,library/2010/La_estación_pequeña/Mateo_Quiroga.txt,
+inbox/Majimak_Gang.txt;서울지사/9794049644233.json,placed,library/1981/마지막_강/박하은.txt,
+inbox/Minato_no_Garasu.txt,review,,NO_YEAR
+inbox/Natsu_no_Minato.md,placed,library/1981/夏の港/鈴木湊.txt,
+"inbox/The Last Garden — Three Generations, One House and a River That Would Not Stay.json;inbox/The_Last_Garden_—_Three_Generations,_One_House_and_a_River_That_Would_Not_Stay.txt",placed,"library/1972/The_Last_Garden_—_Three_Generations,_One_House_and_a_River_T/Eleanor_Whitlock.txt",
+inbox/The Lost Map.docx,review,,NO_YEAR
+inbox/The Silent Garden.txt,placed,library/2022/The_Silent_Garden/Clara_Calloway.txt,
+inbox/The Summer at Aldermoor A Novel.json,placed,library/1979/The_Summer_at_Aldermoor_A_Novel/Marcus_Ashdown.txt,
+inbox/book_0022.md,placed,library/2011/青い時計/佐藤大翔.txt,
+inbox/book_0025.pdf,placed,library/2010/Cartas_desde_Valdemora/Carmen_Barrachina.txt,
+inbox/book_0027.txt,placed,library/1986/El_puerto_callado_—_Una_novela_en_treinta_y_un_capítulos_bre/Lucía_Echeverría.txt,
+inbox/book_0043.md,review,,NO_YEAR
+inbox/book_0051.html,placed,library/1993/港の時計/高橋結衣.txt,
+inbox/book_0098.txt,review,,NO_YEAR
+inbox/doc_0088.docx,review,,NO_TITLE
+inbox/doc_0090.txt,review,,NO_TITLE
+inbox/书店与雨季.txt,review,,NO_YEAR
+inbox/列车与河流.txt,placed,library/1971/列车与河流/ZHAO_Ming-zhe.txt,
+inbox/坂道の手紙.txt,review,,NO_DESCRIPTION
+inbox/失落的夏天.pdf,placed,library/2014/失落的夏天/陈子涵.txt,
+inbox/庭の図書館.xml,placed,library/2019/庭の図書館/田中葵.txt,
+inbox/雨の森.txt,placed,library/1967/雨の森/高橋結衣.txt,
+inbox/골목의 여름.txt,placed,library/2012/골목의_여름/Choi_Hyunwoo.txt,
+inbox/먼 등대.json,review,,NO_DESCRIPTION
+inbox/먼_섬.md,placed,library/1996/먼_섬/최하은.txt,
+inbox/정원의 여름.txt;misc/Jeongwon-ui_Yeoreum.json,placed,library/1997/정원의_여름/한서연.txt,
+inbox/지도의 정원.txt,review,,NO_AUTHOR
+london/9793321029201.txt,placed,library/1997/The_Hidden_River/Eleanor_Whitlock.txt,
+london/9794923497283.epub,placed,library/1979/Letters_from_Saint_Brennock/Eleanor_Whitlock.txt,
+"london/A_Map_of_Marrow_Bay_—_Notes_on_Memory,_Weather_and_the_Families_We_Leave.pdf",placed,"library/2016/A_Map_of_Marrow_Bay_—_Notes_on_Memory,_Weather_and_the_Famil/Eleanor_Whitlock.txt",
+london/The Late Clock Tower.pdf,placed,library/2012/The_Late_Clock_Tower/Marcus_Elsworth.txt,
+london/The Quiet Harbour.epub,placed,library/1993/The_Quiet_Harbour/Marcus_Elsworth.txt,
+"london/The Summer at Marrow Bay — Three Generations, One House and a River That Would Not Stay.pdf",placed,"library/2018/The_Summer_at_Marrow_Bay_—_Three_Generations,_One_House_and/Eleanor_Whitlock.txt",
+london/The_Map_at_Saint_Brennock.docx;misc/9797453065335.epub,placed,library/1969/The_Map_at_Saint_Brennock/Priya_Ashdown.txt,
+london/The_Northern_Clock_Tower.json,review,,NO_YEAR
+london/book_0009.pdf,placed,"library/1999/The_Long_Bookshop_—_Three_Generations,_One_House_and_a_River/Eleanor_Elsworth.txt",
+london/book_0035.txt,placed,"library/1996/The_Northern_Summer_—_Notes_on_Memory,_Weather_and_the_Famil/Priya_Ashdown.txt",
+madrid/9793598830814.epub,placed,library/2010/El_río_pequeño/Inés_Ribera.txt,
+madrid/9799209405914.epub,placed,library/1988/Cartas_desde_Castrillo_de_la_Vega/Inés_Ribera.txt,
+madrid/El_puerto_lejano.txt,placed,library/1973/El_puerto_lejano/Carmen_Barrachina.txt,
+madrid/El_río_de_San_Telmo_del_Mar_—_Una_novela_en_treinta_y_un_capítulos_breves.html,placed,library/1962/El_río_de_San_Telmo_del_Mar_—_Una_novela_en_treinta_y_un_cap/Tomás_Ribera.txt,
+madrid/La_canción_pequeña.epub,placed,library/2019/La_canción_pequeña/Álvaro_Montalbán.txt,
+madrid/book_0049.xml,placed,library/2003/¿La_casa_dormida/Inés_Ribera.txt,
+misc/9790136342631.json,review,,NO_YEAR
+misc/9792877476095.xml,placed,library/1992/먼_시계탑/이서연.txt,
+misc/9796175767176.txt,placed,library/1992/El_puerto_dormido/Joaquín_Olmedo.txt,
+misc/9796954990757.xml;北京办公室/Yuji_yu_Gangkou.pdf,placed,library/1989/雨季与港口/王浩然.txt,
+misc/9799080452045.txt;misc/安静的地图.epub;北京办公室/安静的地图.json,placed,library/1962/安静的地图/许浩然.txt,
+misc/El puerto perdido.md,placed,library/2015/El_puerto_perdido/Marina_Quiroga.txt,
+misc/Oraedoen_Gang.txt,placed,library/1986/오래된_강/Seo-yeon_Lee.txt,
+misc/The Last Train.epub;misc/The Last Train.pdf,placed,library/1976/The_Last_Train/Eleanor_Calloway.txt,
+misc/The_Distant_Messenger.txt,placed,library/1987/The_Distant_Messenger/Eleanor_Elsworth.txt,
+misc/The_Late_Summer.json;scans/The Late Summer (scan).pdf,placed,library/1988/The_Late_Summer/Tobias_Thorne.txt,
+misc/book_0031.txt,placed,library/2001/遥远的夏天/王浩然.txt,
+misc/失落的群岛.txt;misc/失落的群岛.xml,placed,library/2021/失落的群岛/吴嘉怡.txt,
+misc/沉默的灯塔.json,placed,library/2006/沉默的灯塔/李雨桐.txt,
+misc/雨の庭.pdf,placed,library/1994/雨の庭/SATO_Minato.txt,
+misc/조용한_지도.md,placed,library/1994/조용한_지도/최하은.txt,
+misc/Ｌｅｔｔｅｒｓ　ｆｒｏｍ　Ａｌｄｅｒｍｏｏｒ.epub,placed,library/1998/Letters_from_Aldermoor/Eleanor_Fairbairn.txt,
+scans/scan_0107.pdf,review,,UNREADABLE
+scans/scan_0109.pdf,review,,UNREADABLE
+scans/地图与雨季 (scan).pdf;北京办公室/book_0114.json,placed,library/1994/地图与雨季/李雨桐.txt,
+北京办公室/Anjing_de_Lieche.md,placed,library/1997/安静的列车/吴嘉怡.txt,
+北京办公室/book_0002.md,placed,library/2002/最后的列车/李若曦.txt,
+北京办公室/漫长的灯塔.pdf,placed,library/1998/漫长的灯塔/赵明哲.txt,
+北京办公室/透明的灯塔.docx,placed,library/1973/透明的灯塔/赵明哲.txt,
+東京オフィス/9790890207207.txt;東京オフィス/遠い灯台.json,placed,library/1968/遠い灯台/佐藤大翔.txt,
+東京オフィス/9792459012178.json;東京オフィス/森の庭.xml,placed,library/2015/森の庭/佐藤湊.txt,
+東京オフィス/Fuyu_no_Tabibito.epub,placed,library/2011/冬の旅人/佐藤湊.txt,
+東京オフィス/Fuyu_no_Umi.json;東京オフィス/冬の海.txt,placed,library/2019/冬の海/田中悠真.txt,
+東京オフィス/Todai_no_Minato.epub;東京オフィス/灯台の港.pdf,placed,library/1988/灯台の港/田中大翔.txt,
+東京オフィス/book_0021.html,placed,library/1984/最後の図書館/佐藤大翔.txt,
+東京オフィス/冬の夏.html,placed,library/2003/冬の夏/高橋湊.txt,
+東京オフィス/小さな夏.txt,review,,NO_YEAR
+東京オフィス/時計の灯台.md,placed,library/1997/時計の灯台/田中大翔.txt,
+東京オフィス/時計の雨.md,placed,library/1969/時計の雨/中村結衣.txt,
+東京オフィス/月の時計.json;東京オフィス/月の時計.txt,placed,library/1979/月の時計/佐藤大翔.txt,
+東京オフィス/静かな雨.json,review,,NO_AUTHOR
+서울지사/book_0017.txt,placed,library/1971/푸른_바다/최현우.txt,
+서울지사/마지막 편지.xml,placed,library/2003/마지막_편지/이서연.txt,
+서울지사/시계탑의 골목.json,placed,library/1966/시계탑의_골목/정예린.txt,
+서울지사/편지의_여름.json,placed,library/1979/편지의_여름/한서연.txt,
+서울지사/푸른 정원.txt,placed,library/1962/푸른_정원/박현우.txt,

@@ -1,0 +1,361 @@
+﻿hire_id,role_id,hire_date,relevant_years_at_hire,skills,certifications_valid_at_hire,highest_education,graduation_year,gender,age_band,nationality,referral,performance_score_1y
+H001,R1,2021-01-02,3.4,Python;SQL;Kubernetes;AWS;Scrum,AWS Certified Solutions Architect - Associate,diploma,2014,female,under 30,Singapore,no,50.1
+H002,R2,2021-01-05,5.6,Python;SQL;statistics;Excel;Power BI,Tableau Desktop Specialist,bachelor,2014,male,under 30,Singapore,no,69.7
+H003,R2,2021-01-14,5.6,Python;SQL;statistics;Tableau;Power BI,,bachelor,2014,male,under 30,Singapore,no,72.2
+H004,R3,2021-01-14,6.4,Go;Kubernetes;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,bachelor,2014,male,under 30,China,no,74.1
+H005,R1,2021-01-14,5.5,Python;Go;SQL;Kubernetes;incident response,,master,2008,female,40-49,Singapore,no,45.2
+H006,R2,2021-01-19,6.3,Python;Java;SQL;statistics;Tableau,,bachelor,2008,male,30-39,Singapore,no,56.2
+H007,R2,2021-01-21,10.3,Python;SQL;AWS;statistics;Excel;Tableau;cloud security,,bachelor,2010,female,30-39,Singapore,yes,61.2
+H008,R3,2021-01-24,2.3,statistics;network security;SIEM;incident response;Linux,CompTIA Security+,master,2016,male,under 30,Malaysia,no,53.3
+H009,R3,2021-01-28,2.1,Java;network security;SIEM;cloud security;Linux,CompTIA Security+,diploma,2012,female,30-39,Malaysia,no,29.0
+H010,R1,2021-02-02,5.0,Python;SQL;Tableau;network security;SIEM,AWS Certified Solutions Architect - Associate,bachelor,2015,female,under 30,Malaysia,no,30.7
+H011,R2,2021-02-03,4.6,Python;SQL;statistics;Excel;Tableau;A/B testing,,bachelor,2013,female,30-39,Vietnam,yes,57.6
+H012,R1,2021-02-04,5.9,Python;SQL;AWS;statistics,,bachelor,2014,male,30-39,Philippines,no,50.7
+H013,R1,2021-02-07,3.0,Python;SQL;Kubernetes;Docker;A/B testing;R,AWS Certified Solutions Architect - Associate,bachelor,2017,male,under 30,Singapore,no,64.3
+H014,R2,2021-02-13,3.1,Python;SQL;AWS;statistics;Tableau;Power BI,,bachelor,2015,male,under 30,Malaysia,no,50.5
+H015,R2,2021-02-15,14.1,SQL;Kubernetes;statistics;Power BI,,bachelor,2004,male,30-39,Malaysia,no,45.2
+H016,R3,2021-02-19,5.3,network security;SIEM;incident response,CompTIA Security+,bachelor,2013,male,under 30,China,no,62.0
+H017,R3,2021-02-19,6.9,Python;network security;SIEM;incident response;Linux,CompTIA Security+,bachelor,2011,male,30-39,Singapore,no,67.6
+H018,R3,2021-02-20,3.1,Python;statistics;network security;SIEM;Linux,CISSP,bachelor,2011,male,30-39,China,no,45.4
+H019,R1,2021-03-05,5.7,Python;Go;SQL;Docker;AWS;statistics;Linux,,master,2011,female,30-39,Singapore,no,53.3
+H020,R3,2021-03-07,3.1,network security;SIEM;incident response,CISSP,master,2015,male,30-39,Singapore,no,66.8
+H021,R3,2021-03-09,3.4,Python;statistics;Power BI;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,diploma,2016,female,under 30,Philippines,no,50.4
+H022,R3,2021-03-10,4.7,Python;network security;SIEM;incident response,CISSP,master,2012,male,30-39,Malaysia,no,57.8
+H023,R1,2021-03-11,5.4,Python;Java;SQL;Kubernetes,,bachelor,2013,female,under 30,China,no,50.9
+H024,R3,2021-03-22,3.9,Python;Java;Kubernetes;statistics;network security;SIEM,CISSP,diploma,2016,male,under 30,Singapore,no,57.4
+H025,R3,2021-04-01,2.3,Java;network security;SIEM,CISSP,master,2016,female,under 30,Singapore,no,44.1
+H026,R3,2021-04-14,3.2,Python;network security;SIEM;incident response;cloud security;Linux,CISSP,master,2017,male,30-39,Singapore,no,72.4
+H027,R3,2021-04-16,9.0,Python;Docker;network security;SIEM;incident response;cloud security,CISSP,bachelor,2010,male,30-39,Singapore,no,74.7
+H028,R1,2021-04-24,4.2,Python;SQL;Tableau,,bachelor,2013,male,30-39,India,no,44.8
+H029,R1,2021-05-01,5.5,Python;Go;SQL;AWS;Linux;Scrum,AWS Certified Solutions Architect - Associate,bachelor,2014,female,30-39,Singapore,no,55.2
+H030,R1,2021-05-03,5.1,Python;Go;SQL;Tableau;A/B testing,,bachelor,2011,female,30-39,Malaysia,no,38.6
+H031,R3,2021-05-07,3.5,Python;network security;SIEM,CompTIA Security+,master,2015,female,30-39,Malaysia,no,21.9
+H032,R1,2021-05-08,12.8,Python;SQL;AWS,AWS Certified Solutions Architect - Associate,diploma,2002,male,30-39,Singapore,no,64.8
+H033,R1,2021-05-18,14.7,Python;Go;SQL;Kubernetes,,master,2002,male,40-49,Malaysia,no,54.7
+H034,R1,2021-05-23,3.0,Python;Java;SQL;Excel,AWS Certified Solutions Architect - Associate,bachelor,2017,male,under 30,Singapore,no,47.8
+H035,R3,2021-05-27,3.3,Java;Docker;statistics;Excel;network security;SIEM;incident response;cloud security,CompTIA Security+,bachelor,2015,other / undisclosed,under 30,China,no,46.6
+H036,R1,2021-05-27,6.7,Python;SQL;statistics,AWS Certified Solutions Architect - Associate,diploma,2014,female,under 30,Malaysia,no,37.5
+H037,R2,2021-06-03,7.7,SQL;Kubernetes;statistics;Tableau;SIEM,Tableau Desktop Specialist,master,2007,male,30-39,Singapore,yes,61.9
+H038,R1,2021-06-04,12.1,Python;Go;SQL;AWS;R;network security,,bachelor,2007,female,30-39,India,no,54.1
+H039,R1,2021-06-05,3.6,Python;Go;SQL,,bachelor,2016,male,under 30,Singapore,no,51.5
+H040,R2,2021-06-06,4.7,SQL;statistics;Excel;A/B testing;cloud security,Tableau Desktop Specialist,bachelor,2010,male,30-39,China,no,63.3
+H041,R1,2021-06-07,4.5,Python;SQL;Docker;Linux,,bachelor,2015,male,30-39,Singapore,no,51.2
+H042,R3,2021-06-07,3.2,Python;Docker;network security;SIEM;Linux;Scrum,CompTIA Security+,diploma,2017,male,30-39,Singapore,no,60.6
+H043,R2,2021-06-09,5.6,SQL;statistics;Tableau;Power BI;A/B testing,,bachelor,2012,female,30-39,Indonesia,yes,49.3
+H044,R1,2021-06-17,7.9,Python;Go;SQL;AWS;Tableau;network security,,bachelor,2009,male,30-39,Philippines,no,58.3
+H045,R2,2021-06-22,4.5,SQL;statistics;Excel;Tableau;A/B testing;incident response,,bachelor,2009,male,40-49,Singapore,no,60.1
+H046,R2,2021-06-23,6.1,Go;SQL;statistics;Power BI;cloud security,Tableau Desktop Specialist,master,2014,female,30-39,China,no,47.4
+H047,R3,2021-06-23,2.7,Python;network security;SIEM;incident response;cloud security,CompTIA Security+,bachelor,2017,male,under 30,Philippines,no,60.4
+H048,R3,2021-07-04,3.1,SQL;R;network security;SIEM;incident response;Linux,CompTIA Security+,bachelor,2011,female,30-39,Singapore,no,50.7
+H049,R2,2021-07-14,2.2,Python;SQL;statistics;Power BI,,master,2017,male,30-39,Malaysia,no,44.6
+H050,R3,2021-07-15,8.5,network security;SIEM;incident response,CompTIA Security+,bachelor,2012,male,30-39,Singapore,no,67.8
+H051,R1,2021-07-28,3.2,Python;Go;SQL;Kubernetes;Excel,AWS Certified Solutions Architect - Associate,bachelor,2014,male,30-39,Malaysia,no,66.0
+H052,R3,2021-08-10,7.8,Python;network security;SIEM;Scrum,CompTIA Security+,diploma,2006,female,30-39,Malaysia,no,38.9
+H053,R3,2021-08-25,3.4,Python;Go;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,bachelor,2015,female,under 30,Singapore,no,59.0
+H054,R1,2021-09-06,9.9,Python;Go;SQL;Linux,,master,2011,female,30-39,Malaysia,no,38.8
+H055,R1,2021-09-08,5.1,Python;Go;SQL;Docker;Scrum,,bachelor,2014,male,30-39,Singapore,no,56.7
+H056,R2,2021-09-08,4.2,Python;Java;Go;SQL;statistics;Power BI;A/B testing;network security,,PhD,2013,female,40-49,India,no,42.4
+H057,R3,2021-09-18,5.5,network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,master,2012,male,30-39,Malaysia,no,64.2
+H058,R1,2021-09-21,5.9,Python;SQL,,bachelor,2011,other / undisclosed,30-39,Singapore,no,52.9
+H059,R1,2021-10-03,3.8,Python;Go;SQL;Docker;A/B testing,,bachelor,2016,female,30-39,Singapore,no,32.2
+H060,R1,2021-10-07,9.3,Python;Java;SQL;Kubernetes;Power BI;network security,,bachelor,2008,male,30-39,Singapore,no,75.5
+H061,R1,2021-10-15,7.7,Python;Go;SQL;Docker;AWS;network security,,master,2011,male,30-39,Singapore,no,64.0
+H062,R3,2021-10-19,7.4,network security;SIEM,CompTIA Security+,diploma,2012,male,30-39,India,no,49.8
+H063,R1,2021-10-21,4.3,Python;SQL;AWS,AWS Certified Solutions Architect - Associate,master,2015,male,30-39,Singapore,no,56.3
+H064,R2,2021-11-16,5.8,SQL;statistics;Power BI;A/B testing;cloud security,Tableau Desktop Specialist,diploma,2015,male,under 30,Singapore,no,73.2
+H065,R2,2021-11-20,3.8,Python;SQL;Kubernetes;AWS;statistics;A/B testing;SIEM;Scrum,,master,2016,male,30-39,Singapore,no,67.5
+H066,R1,2021-11-27,4.3,Python;SQL;Docker;AWS,AWS Certified Solutions Architect - Associate,bachelor,2013,male,under 30,Singapore,no,62.0
+H067,R3,2021-12-04,7.3,Go;Excel;network security;SIEM;Linux,CISSP,bachelor,2007,other / undisclosed,30-39,Singapore,no,60.4
+H068,R1,2021-12-05,6.5,Python;SQL;Kubernetes;A/B testing;Linux;Scrum,AWS Certified Solutions Architect - Associate,bachelor,2011,male,30-39,Singapore,no,67.4
+H069,R2,2021-12-05,4.0,SQL;statistics;A/B testing,,master,2016,female,under 30,Malaysia,no,45.0
+H070,R1,2021-12-15,5.5,Python;Java;Go;SQL;incident response,AWS Certified Solutions Architect - Associate,bachelor,2012,female,30-39,Malaysia,no,44.8
+H071,R1,2021-12-20,7.4,Python;SQL;Kubernetes;Docker;Tableau;cloud security,AWS Certified Solutions Architect - Associate,bachelor,2011,female,30-39,Singapore,no,46.9
+H072,R1,2021-12-28,4.9,Python;SQL;Tableau,,master,2013,male,30-39,Malaysia,no,46.9
+H073,R3,2022-01-03,5.0,Kubernetes;network security;SIEM;incident response;cloud security,CISSP,master,2015,female,30-39,China,yes,59.2
+H074,R3,2022-01-05,3.2,network security;SIEM,CISSP,master,2017,female,30-39,Singapore,no,45.5
+H075,R2,2022-01-08,14.5,Python;Go;SQL;statistics;Excel;Tableau;Power BI;A/B testing,,bachelor,2004,male,30-39,China,no,66.1
+H076,R3,2022-01-08,2.5,Python;Excel;network security;SIEM,CISSP,master,2017,male,30-39,Malaysia,no,41.1
+H077,R1,2022-01-09,7.7,Python;Go;SQL;Docker;AWS,AWS Certified Solutions Architect - Associate,bachelor,2012,male,30-39,Philippines,no,72.6
+H078,R2,2022-01-13,6.6,Python;SQL;statistics;Tableau;Power BI;A/B testing,Tableau Desktop Specialist,bachelor,2014,male,30-39,Singapore,no,69.9
+H079,R1,2022-01-13,7.9,Python;SQL;AWS;R,AWS Certified Solutions Architect - Associate,bachelor,2013,male,30-39,Singapore,no,67.1
+H080,R3,2022-01-23,7.1,Python;Java;AWS;statistics;Excel;network security;SIEM;cloud security;Linux,CISSP,bachelor,2008,male,30-39,India,no,63.0
+H081,R3,2022-01-27,2.8,Python;SQL;Tableau;Power BI;network security;SIEM;incident response;Linux,CompTIA Security+,master,2017,male,under 30,India,no,58.1
+H082,R2,2022-01-28,10.6,SQL;statistics;Tableau;Power BI;A/B testing,Tableau Desktop Specialist,diploma,2004,female,40-49,Singapore,no,54.5
+H083,R2,2022-02-10,4.3,Python;SQL;statistics;A/B testing;incident response,,master,2015,female,30-39,Malaysia,no,51.3
+H084,R3,2022-02-17,9.7,Python;Tableau;network security;SIEM;cloud security;Linux,CompTIA Security+,bachelor,2011,female,30-39,Singapore,no,57.3
+H085,R2,2022-02-22,2.4,Python;SQL;Kubernetes;statistics;Tableau;A/B testing,,bachelor,2018,male,30-39,Malaysia,no,52.7
+H086,R3,2022-03-05,4.4,Python;Go;SQL;AWS;statistics;network security;SIEM,CompTIA Security+,bachelor,2015,male,under 30,India,no,39.2
+H087,R1,2022-03-14,3.8,Python;Go;SQL,,bachelor,2018,female,under 30,China,no,33.9
+H088,R2,2022-03-16,11.8,Python;SQL;statistics;Excel;Tableau;Power BI,Tableau Desktop Specialist,bachelor,2006,male,30-39,Singapore,no,70.3
+H089,R3,2022-03-22,3.7,R;network security;SIEM;incident response,CISSP,master,2016,male,30-39,Singapore,no,67.2
+H090,R1,2022-03-23,6.7,Python;Go;SQL;Kubernetes;Docker;AWS;SIEM;Scrum,,master,2012,female,30-39,China,no,59.8
+H091,R1,2022-03-25,5.8,Python;Go;SQL;Kubernetes;AWS;Excel;A/B testing,,bachelor,2014,male,under 30,Philippines,no,66.9
+H092,R2,2022-03-28,3.7,Go;SQL;statistics;Excel,,bachelor,2011,male,30-39,Singapore,no,49.3
+H093,R2,2022-04-03,3.3,Python;SQL;Kubernetes;statistics;Tableau;A/B testing;network security,Tableau Desktop Specialist,master,2017,male,30-39,Malaysia,no,62.1
+H094,R2,2022-04-08,15.5,Python;SQL;Kubernetes;statistics;Excel;Tableau;Power BI;SIEM,,bachelor,2002,male,40-49,Philippines,no,47.4
+H095,R3,2022-04-13,5.4,Python;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,diploma,2015,male,under 30,Singapore,no,75.5
+H096,R2,2022-04-20,3.5,SQL;statistics;Excel;Tableau;Power BI,,bachelor,2012,male,30-39,Singapore,no,52.6
+H097,R2,2022-04-24,5.4,Java;SQL;statistics;Tableau;A/B testing;R,Tableau Desktop Specialist,master,2014,male,30-39,Malaysia,no,67.7
+H098,R2,2022-04-25,5.3,Python;Java;SQL;AWS;statistics,,bachelor,2016,male,30-39,Singapore,no,62.8
+H099,R3,2022-05-04,2.1,Python;statistics;network security;SIEM;cloud security,CISSP,bachelor,2017,male,under 30,India,no,56.0
+H100,R2,2022-05-05,3.4,Python;SQL;statistics;A/B testing,,bachelor,2017,female,30-39,Malaysia,no,43.3
+H101,R2,2022-05-12,2.3,Python;Java;SQL;statistics;Excel;Tableau;A/B testing;network security;SIEM;Linux,,bachelor,2017,male,30-39,India,yes,55.8
+H102,R1,2022-05-15,5.1,Python;Go;SQL;Kubernetes;statistics;Scrum,,master,2013,female,30-39,Singapore,no,53.8
+H103,R1,2022-05-19,3.3,Python;Go;SQL;Excel,,PhD,2016,male,30-39,China,no,46.2
+H104,R3,2022-05-20,10.9,Python;network security;SIEM;incident response,CompTIA Security+,bachelor,2010,female,30-39,Singapore,no,60.0
+H105,R2,2022-05-23,12.2,Python;SQL;statistics;A/B testing;SIEM,Tableau Desktop Specialist,bachelor,2007,male,40-49,Singapore,no,58.0
+H106,R1,2022-05-26,3.0,Python;Java;Go;SQL;Kubernetes,,bachelor,2012,female,30-39,India,no,35.9
+H107,R2,2022-06-10,16.0,Go;SQL;statistics;Excel;Power BI,,master,2002,female,40-49,Singapore,no,38.3
+H108,R3,2022-06-26,2.2,AWS;network security;SIEM;incident response,CISSP,master,2017,female,30-39,Vietnam,no,51.0
+H109,R3,2022-06-28,14.6,Python;R;network security;SIEM;cloud security;Scrum,CompTIA Security+,master,2006,female,30-39,China,no,49.8
+H110,R3,2022-07-03,2.7,Python;statistics;network security;SIEM;incident response;Linux,CompTIA Security+,diploma,2015,male,under 30,Singapore,no,57.8
+H111,R1,2022-07-25,3.3,Python;Go;SQL;Kubernetes;Docker;SIEM,,bachelor,2017,female,under 30,Malaysia,no,46.8
+H112,R2,2022-08-05,10.1,Python;SQL;Docker;AWS;statistics;Power BI;A/B testing,Tableau Desktop Specialist,master,2010,male,40-49,Singapore,no,69.6
+H113,R3,2022-08-06,4.5,Python;Go;network security;SIEM;incident response;cloud security;Linux,CISSP,bachelor,2013,female,30-39,Singapore,yes,62.9
+H114,R1,2022-08-10,3.2,Python;Go;SQL;Kubernetes;AWS;R;incident response,AWS Certified Solutions Architect - Associate,bachelor,2015,female,under 30,India,no,52.4
+H115,R2,2022-08-12,7.6,Python;SQL;statistics;Excel,Tableau Desktop Specialist,PhD,2014,male,30-39,Philippines,no,67.8
+H116,R3,2022-08-13,3.0,Python;network security;SIEM;cloud security,CompTIA Security+,master,2017,male,30-39,Singapore,no,54.4
+H117,R2,2022-08-14,2.1,SQL;statistics;Power BI,Tableau Desktop Specialist,diploma,2019,male,under 30,Malaysia,no,47.1
+H118,R3,2022-08-21,11.4,Python;Java;Excel;network security;SIEM;Linux,CompTIA Security+,bachelor,2003,other / undisclosed,40-49,India,no,36.2
+H119,R3,2022-08-24,3.0,network security;SIEM;incident response;Linux,CompTIA Security+,bachelor,2012,male,30-39,Singapore,no,61.9
+H120,R3,2022-08-26,8.3,Python;network security;SIEM;Linux,CompTIA Security+,bachelor,2010,female,30-39,Philippines,no,41.4
+H121,R3,2022-08-28,11.4,SQL;AWS;network security;SIEM;cloud security,CompTIA Security+,bachelor,2009,male,30-39,China,no,54.9
+H122,R1,2022-09-04,3.3,Python;SQL;Docker;AWS,,bachelor,2018,female,under 30,Singapore,no,46.9
+H123,R3,2022-09-07,2.3,network security;SIEM;incident response;Linux,CompTIA Security+,master,2018,other / undisclosed,under 30,Singapore,no,55.0
+H124,R3,2022-09-10,2.8,Python;R;network security;SIEM;incident response,CompTIA Security+,diploma,2016,male,under 30,Singapore,no,60.1
+H125,R1,2022-09-14,3.5,Python;Java;SQL;Kubernetes;Docker;AWS;R,,bachelor,2016,male,30-39,Singapore,no,66.0
+H126,R3,2022-09-17,14.1,SQL;network security;SIEM;cloud security,CompTIA Security+,bachelor,2001,male,40-49,Singapore,yes,51.6
+H127,R1,2022-09-18,5.0,Python;SQL;Kubernetes;Docker;AWS,AWS Certified Solutions Architect - Associate,diploma,2010,female,30-39,India,no,54.5
+H128,R2,2022-09-24,2.2,Python;Java;SQL;statistics;Excel;Tableau;A/B testing;network security,,bachelor,2019,male,under 30,Philippines,no,51.1
+H129,R2,2022-09-25,5.1,Python;SQL;statistics;A/B testing,,bachelor,2014,male,30-39,Singapore,no,79.9
+H130,R3,2022-10-07,2.5,Java;Kubernetes;A/B testing;network security;SIEM;incident response,CISSP,bachelor,2019,male,under 30,Indonesia,no,46.4
+H131,R2,2022-10-10,2.0,Python;SQL;statistics;Power BI,,bachelor,2013,male,30-39,Singapore,no,60.6
+H132,R1,2022-10-12,6.2,Python;Go;SQL;Kubernetes;Docker;AWS,,PhD,2013,male,30-39,Philippines,no,65.8
+H133,R1,2022-10-15,3.2,Python;Go;SQL;Kubernetes,AWS Certified Solutions Architect - Associate,PhD,2018,male,30-39,Singapore,no,65.7
+H134,R1,2022-11-03,9.1,Python;Java;Go;SQL;Docker;AWS,,master,2012,female,40-49,India,no,34.1
+H135,R3,2022-11-16,3.2,Python;network security;SIEM;incident response;cloud security,CISSP,bachelor,2018,male,under 30,Philippines,no,59.6
+H136,R2,2022-11-19,2.9,Go;SQL;statistics;Tableau;A/B testing,Tableau Desktop Specialist,bachelor,2012,other / undisclosed,30-39,Singapore,no,63.4
+H137,R1,2022-11-20,5.1,Python;Go;SQL;Kubernetes;SIEM,,bachelor,2016,male,under 30,Singapore,no,64.8
+H138,R2,2022-11-20,2.9,Python;SQL;statistics;A/B testing;Scrum,,diploma,2012,male,under 30,Indonesia,no,58.0
+H139,R3,2022-12-03,15.8,Python;R;network security;SIEM;incident response,CISSP,master,2002,male,40-49,China,no,58.8
+H140,R1,2022-12-13,14.9,Python;Go;SQL;Kubernetes;Docker,,master,2006,male,40-49,Singapore,no,60.4
+H141,R3,2022-12-23,3.6,network security;SIEM;incident response,CompTIA Security+,diploma,2014,male,30-39,Philippines,no,48.8
+H142,R3,2023-01-03,2.1,SQL;AWS;network security;SIEM;incident response;cloud security;Linux,CISSP,bachelor,2017,female,under 30,Singapore,no,58.3
+H143,R3,2023-01-03,3.4,statistics;R;network security;SIEM;cloud security,CompTIA Security+,bachelor,2019,male,30-39,Malaysia,no,46.3
+H144,R3,2023-01-07,3.3,Python;Power BI;network security;SIEM;incident response;cloud security,CISSP,master,2012,male,40-49,Singapore,no,57.9
+H145,R3,2023-01-09,15.3,Python;network security;SIEM;Linux,CompTIA Security+,master,2006,female,40-49,China,no,36.5
+H146,R1,2023-01-10,5.6,Python;Go;SQL;Kubernetes;Docker;AWS;statistics;Excel;A/B testing,AWS Certified Solutions Architect - Associate,diploma,2015,male,under 30,China,no,67.7
+H147,R3,2023-01-13,4.8,Python;Java;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,diploma,2016,female,under 30,China,no,52.2
+H148,R3,2023-01-14,4.9,network security;SIEM;cloud security,CompTIA Security+,master,2017,female,under 30,Singapore,no,51.7
+H149,R2,2023-01-25,2.0,SQL;Docker;statistics;Power BI;A/B testing,,bachelor,2014,female,30-39,Singapore,no,46.4
+H150,R1,2023-02-03,8.2,Python;Go;SQL;Kubernetes,,PhD,2008,male,40-49,Philippines,no,63.3
+H151,R1,2023-02-05,5.6,Python;SQL;AWS;Tableau;network security,,PhD,2016,male,30-39,Malaysia,no,56.4
+H152,R1,2023-02-07,4.2,Python;SQL;Kubernetes;AWS,,bachelor,2017,female,30-39,Philippines,no,41.6
+H153,R1,2023-02-09,5.9,Python;SQL;statistics,,master,2010,female,30-39,Singapore,no,45.7
+H154,R3,2023-02-09,3.8,Python;SQL;network security;SIEM;cloud security,CompTIA Security+,bachelor,2012,female,30-39,Vietnam,yes,35.4
+H155,R2,2023-02-11,3.9,Python;SQL;statistics;Tableau;A/B testing,,master,2016,male,30-39,Philippines,no,66.4
+H156,R2,2023-02-20,3.1,Python;SQL;statistics;Power BI;A/B testing,,bachelor,2019,female,under 30,Singapore,no,55.5
+H157,R1,2023-02-27,15.8,Python;SQL;Docker;AWS;Scrum,,bachelor,2004,female,40-49,China,no,33.0
+H158,R1,2023-02-28,8.8,Python;SQL;AWS;R;Linux,AWS Certified Solutions Architect - Associate,bachelor,2013,male,30-39,Malaysia,yes,62.5
+H159,R3,2023-03-07,9.0,Python;SQL;Excel;R;network security;SIEM;incident response;cloud security;Linux,CISSP,master,2013,male,30-39,Malaysia,no,78.0
+H160,R3,2023-03-07,2.2,SQL;network security;SIEM;incident response;cloud security,CompTIA Security+,bachelor,2018,male,30-39,India,no,53.6
+H161,R3,2023-03-10,2.9,Python;network security;SIEM;incident response;cloud security,CompTIA Security+,bachelor,2018,male,30-39,Philippines,yes,63.2
+H162,R3,2023-03-13,3.9,network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,master,2018,male,under 30,Singapore,no,73.9
+H163,R2,2023-03-17,2.3,Java;Go;SQL;statistics;Excel;Tableau;A/B testing;network security,Tableau Desktop Specialist,master,2017,male,30-39,Singapore,no,58.7
+H164,R2,2023-03-26,3.9,SQL;statistics;Excel;Tableau;A/B testing;network security,,bachelor,2016,female,under 30,Singapore,no,55.9
+H165,R2,2023-04-06,3.4,SQL;statistics,,master,2017,female,under 30,China,no,44.3
+H166,R2,2023-04-20,3.9,SQL;AWS;statistics;Tableau,Tableau Desktop Specialist,master,2012,male,30-39,Singapore,no,64.2
+H167,R1,2023-04-27,3.4,Python;SQL,,master,2019,male,under 30,Singapore,no,48.0
+H168,R2,2023-04-27,6.4,SQL;statistics;Excel;Tableau;Power BI;SIEM;Scrum,Tableau Desktop Specialist,diploma,2012,male,30-39,Malaysia,yes,51.6
+H169,R2,2023-05-06,6.8,Python;SQL;Kubernetes;statistics;Excel;Tableau;A/B testing;Linux,Tableau Desktop Specialist,master,2012,female,30-39,Singapore,no,57.1
+H170,R3,2023-05-08,4.3,Python;Kubernetes;AWS;statistics;network security;SIEM;incident response;cloud security,CompTIA Security+,bachelor,2012,male,30-39,China,no,56.1
+H171,R3,2023-05-15,3.9,network security;SIEM,CISSP,bachelor,2016,female,under 30,China,no,35.0
+H172,R2,2023-05-15,2.3,SQL;statistics;Excel;Tableau;Power BI,,bachelor,2019,other / undisclosed,under 30,Singapore,no,42.0
+H173,R2,2023-05-20,15.0,Python;Java;Go;SQL;statistics;A/B testing;Scrum,Tableau Desktop Specialist,bachelor,2006,female,40-49,India,yes,40.0
+H174,R2,2023-06-01,4.3,Python;SQL;AWS;statistics;Excel;Power BI;A/B testing;Scrum,,bachelor,2018,female,under 30,Singapore,no,56.3
+H175,R1,2023-06-02,6.4,Python;Java;SQL;Kubernetes,AWS Certified Solutions Architect - Associate,bachelor,2014,male,30-39,Indonesia,no,60.0
+H176,R3,2023-06-02,2.3,Kubernetes;Excel;network security;SIEM;Linux,CompTIA Security+,bachelor,2019,female,under 30,Singapore,no,42.1
+H177,R2,2023-06-05,4.4,Python;SQL;statistics;Linux,,bachelor,2012,female,30-39,Singapore,no,42.5
+H178,R2,2023-06-05,2.0,Python;SQL;statistics;Tableau,,bachelor,2018,female,30-39,Philippines,no,28.1
+H179,R3,2023-06-15,2.6,Go;network security;SIEM;cloud security,CompTIA Security+,master,2014,female,30-39,Singapore,no,48.9
+H180,R3,2023-06-17,11.2,Python;Java;network security;SIEM;Linux,CompTIA Security+,master,2010,male,30-39,Malaysia,no,56.0
+H181,R2,2023-06-20,8.3,SQL;statistics,,bachelor,2008,other / undisclosed,30-39,Singapore,no,47.0
+H182,R3,2023-06-28,3.7,Go;network security;SIEM;cloud security;Scrum,CompTIA Security+,bachelor,2017,male,under 30,India,no,50.2
+H183,R2,2023-07-01,3.8,SQL;statistics;Excel;Tableau,,master,2017,male,under 30,Singapore,no,63.6
+H184,R2,2023-07-07,3.6,SQL;statistics;Excel;Tableau;Power BI,,bachelor,2017,male,under 30,Singapore,no,58.0
+H185,R2,2023-07-28,4.6,SQL;statistics;Excel;Tableau;Power BI;A/B testing,,bachelor,2014,female,30-39,China,no,51.8
+H186,R1,2023-07-28,8.1,Python;SQL;Kubernetes;Docker;AWS;Tableau;Power BI;Scrum,AWS Certified Solutions Architect - Associate,bachelor,2008,female,40-49,Singapore,no,59.9
+H187,R1,2023-08-07,10.6,Python;SQL;Docker;AWS;incident response,,master,2011,female,30-39,Philippines,no,35.9
+H188,R3,2023-08-10,4.9,Python;A/B testing;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,bachelor,2016,male,under 30,Singapore,yes,72.1
+H189,R3,2023-08-17,3.0,Python;SQL;Power BI;network security;SIEM;cloud security;Linux,CompTIA Security+,bachelor,2016,male,under 30,Singapore,no,49.0
+H190,R1,2023-08-26,3.3,Python;Java;SQL;Docker;AWS;R;incident response,,bachelor,2019,male,under 30,Singapore,no,61.9
+H191,R1,2023-09-02,3.6,Python;SQL;AWS,AWS Certified Solutions Architect - Associate,bachelor,2012,male,30-39,India,no,51.1
+H192,R3,2023-09-03,6.0,Python;Power BI;network security;SIEM;incident response;Linux,CompTIA Security+,bachelor,2013,male,30-39,China,no,61.7
+H193,R2,2023-09-05,4.0,Python;SQL;statistics;Power BI,,bachelor,2016,male,under 30,India,no,46.7
+H194,R1,2023-09-07,3.4,Python;Go;SQL;network security,,master,2018,male,30-39,India,yes,47.7
+H195,R2,2023-09-19,6.1,Python;SQL;AWS;statistics;Tableau;Power BI;A/B testing,,bachelor,2016,female,30-39,Malaysia,no,60.8
+H196,R2,2023-09-21,6.2,SQL;Kubernetes;AWS;statistics;Excel;A/B testing,Tableau Desktop Specialist,diploma,2014,male,under 30,Philippines,no,61.9
+H197,R3,2023-09-22,2.5,Python;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,bachelor,2016,male,under 30,Singapore,no,63.4
+H198,R3,2023-09-23,3.9,Excel;network security;SIEM;incident response;Linux;Scrum,CISSP,bachelor,2015,male,30-39,Singapore,no,67.4
+H199,R2,2023-09-28,3.1,SQL;Kubernetes;statistics;Tableau;Power BI;A/B testing;Linux,,bachelor,2017,female,under 30,Singapore,no,52.2
+H200,R2,2023-10-04,8.2,SQL;statistics;Tableau;Power BI,,diploma,2012,female,30-39,Malaysia,no,40.6
+H201,R1,2023-10-07,16.0,Python;SQL;Kubernetes,,bachelor,2006,male,30-39,Singapore,yes,70.6
+H202,R3,2023-10-09,6.9,Python;Go;A/B testing;network security;SIEM,CompTIA Security+,bachelor,2014,male,30-39,Singapore,no,60.6
+H203,R1,2023-10-12,4.8,Python;Go;SQL,AWS Certified Solutions Architect - Associate,master,2017,female,under 30,Singapore,no,39.6
+H204,R2,2023-10-16,6.1,SQL;Kubernetes;statistics;Excel;Tableau;A/B testing,,bachelor,2016,male,under 30,India,no,64.4
+H205,R1,2023-10-24,3.0,Python;Go;SQL;Kubernetes;AWS;Excel,,master,2013,female,30-39,Indonesia,no,40.0
+H206,R3,2023-10-24,4.2,Python;Go;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,bachelor,2017,male,under 30,Malaysia,no,62.0
+H207,R3,2023-10-27,3.9,Python;A/B testing;network security;SIEM,CompTIA Security+,diploma,2012,male,30-39,Singapore,no,50.7
+H208,R2,2023-11-01,16.0,Python;Go;SQL;statistics;incident response,,bachelor,2000,female,50 and over,Malaysia,no,21.5
+H209,R2,2023-11-06,4.4,Python;Java;SQL;statistics;Excel,,bachelor,2018,male,30-39,India,yes,54.1
+H210,R3,2023-11-08,2.5,Python;network security;SIEM;incident response,CompTIA Security+,bachelor,2018,other / undisclosed,under 30,Singapore,no,52.5
+H211,R2,2023-11-11,7.3,Python;Go;SQL;statistics;Tableau;Power BI;Linux,Tableau Desktop Specialist,bachelor,2015,male,under 30,Singapore,no,75.0
+H212,R1,2023-11-20,3.8,Python;Go;SQL;Kubernetes;Docker;AWS,,PhD,2018,female,30-39,Vietnam,yes,45.3
+H213,R2,2023-11-25,4.2,Python;SQL;statistics;Excel;Tableau;Power BI;A/B testing,,master,2017,female,under 30,Singapore,no,78.1
+H214,R1,2023-12-04,8.0,Python;Go;SQL;Kubernetes,AWS Certified Solutions Architect - Associate,master,2014,male,30-39,Singapore,no,66.0
+H215,R2,2023-12-09,3.5,Python;SQL;statistics;Excel,,bachelor,2019,male,under 30,Malaysia,no,58.7
+H216,R3,2023-12-12,3.2,statistics;network security;SIEM;cloud security,CompTIA Security+,PhD,2012,male,30-39,India,no,44.5
+H217,R3,2023-12-12,6.0,network security;SIEM;incident response;cloud security,CISSP,diploma,2013,male,30-39,Singapore,no,73.0
+H218,R2,2023-12-22,3.1,Python;Go;SQL;Kubernetes;statistics;Excel;A/B testing;R;network security,,bachelor,2012,male,30-39,China,no,55.1
+H219,R3,2024-01-08,2.9,Python;Kubernetes;network security;SIEM;cloud security,CompTIA Security+,bachelor,2019,male,under 30,Singapore,no,59.5
+H220,R1,2024-01-09,6.0,Python;Go;SQL;Kubernetes;Docker,AWS Certified Solutions Architect - Associate,bachelor,2014,female,30-39,Malaysia,no,49.7
+H221,R3,2024-01-11,3.6,Python;network security;SIEM;incident response;cloud security,CompTIA Security+,master,2016,male,30-39,Singapore,no,72.7
+H222,R1,2024-01-13,5.5,Python;Go;SQL;Kubernetes;AWS,AWS Certified Solutions Architect - Associate,bachelor,2011,female,30-39,Malaysia,no,52.9
+H223,R1,2024-01-27,4.8,Python;Go;SQL;Kubernetes;Tableau;network security;incident response,,bachelor,2018,male,30-39,Indonesia,yes,47.3
+H224,R1,2024-02-04,7.3,Python;Go;SQL;Kubernetes;Docker;AWS;A/B testing;Linux,,bachelor,2014,male,30-39,Singapore,no,69.0
+H225,R3,2024-02-07,6.5,Docker;Excel;network security;SIEM;Linux,CompTIA Security+,master,2015,other / undisclosed,30-39,Singapore,yes,54.4
+H226,R1,2024-02-10,4.8,Python;SQL;SIEM,,diploma,2016,female,30-39,India,no,38.1
+H227,R3,2024-02-14,5.8,Python;Docker;AWS;A/B testing;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,bachelor,2014,male,30-39,Singapore,no,74.0
+H228,R3,2024-02-26,3.6,Python;A/B testing;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,bachelor,2014,female,30-39,China,no,45.3
+H229,R3,2024-03-03,5.3,Python;network security;SIEM;Scrum,CompTIA Security+,master,2016,female,30-39,Singapore,no,51.9
+H230,R1,2024-03-04,4.6,Python;SQL;Docker;AWS;R,AWS Certified Solutions Architect - Associate,bachelor,2018,other / undisclosed,under 30,Singapore,no,54.8
+H231,R1,2024-03-07,4.2,Python;SQL;AWS;Tableau;Linux,,bachelor,2013,male,30-39,Malaysia,no,56.7
+H232,R2,2024-03-08,3.1,SQL;statistics;Tableau;Power BI;A/B testing,,bachelor,2019,female,under 30,Malaysia,no,39.6
+H233,R3,2024-03-11,5.4,network security;SIEM;incident response;Linux,CompTIA Security+,master,2014,female,30-39,Malaysia,no,50.4
+H234,R2,2024-03-23,6.5,Python;SQL;statistics;Tableau;Power BI;R;network security,Tableau Desktop Specialist,diploma,2013,male,30-39,India,no,60.9
+H235,R1,2024-03-27,3.5,Python;SQL;Kubernetes;AWS,,bachelor,2018,other / undisclosed,under 30,Singapore,no,54.6
+H236,R1,2024-04-02,8.3,Python;SQL;Kubernetes;Docker;R;Scrum,,master,2014,female,30-39,Singapore,yes,57.7
+H237,R2,2024-04-04,3.8,Python;SQL;statistics;R,Tableau Desktop Specialist,bachelor,2017,male,30-39,Singapore,no,53.8
+H238,R2,2024-04-06,4.6,SQL;Kubernetes;statistics;Excel;Tableau;Power BI;A/B testing;incident response,Tableau Desktop Specialist,bachelor,2017,male,30-39,Singapore,no,65.1
+H239,R3,2024-04-06,3.3,Kubernetes;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,bachelor,2014,female,30-39,Philippines,no,54.9
+H240,R3,2024-04-10,3.5,SQL;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,master,2014,male,30-39,India,no,59.6
+H241,R1,2024-04-17,6.6,Python;SQL;AWS;A/B testing,,master,2016,female,30-39,India,no,44.3
+H242,R2,2024-04-20,3.3,SQL;statistics;Excel;Tableau;Power BI,,master,2017,male,30-39,Singapore,yes,58.3
+H243,R2,2024-04-25,5.8,Python;SQL;statistics;Excel;Power BI,Tableau Desktop Specialist,bachelor,2018,female,30-39,Malaysia,no,45.2
+H244,R3,2024-05-02,2.3,network security;SIEM;cloud security;Linux,CISSP,bachelor,2017,female,under 30,India,no,36.4
+H245,R1,2024-05-05,6.6,Python;SQL;Kubernetes;Docker;AWS;cloud security,,master,2017,male,30-39,Singapore,no,58.7
+H246,R3,2024-05-15,6.4,Java;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,PhD,2010,female,40-49,Singapore,yes,57.4
+H247,R3,2024-05-16,4.8,Python;Excel;Power BI;network security;SIEM;incident response;Linux;Scrum,CompTIA Security+,bachelor,2016,female,30-39,Malaysia,no,48.6
+H248,R1,2024-05-19,5.6,Python;SQL;AWS;Power BI,,bachelor,2018,male,under 30,Malaysia,no,57.4
+H249,R1,2024-05-20,4.2,Python;Go;SQL;Kubernetes;Docker;AWS;network security,,diploma,2018,female,under 30,Malaysia,no,46.9
+H250,R3,2024-05-27,4.3,Python;Go;Docker;network security;SIEM;cloud security,CISSP,master,2013,other / undisclosed,40-49,Singapore,no,47.3
+H251,R1,2024-05-27,9.6,Python;SQL;Kubernetes;Docker;SIEM;cloud security,,PhD,2008,female,40-49,Singapore,no,33.8
+H252,R2,2024-05-28,6.3,Go;SQL;statistics;Excel;Power BI;A/B testing,Tableau Desktop Specialist,bachelor,2016,female,30-39,Singapore,no,59.6
+H253,R1,2024-06-08,12.4,Python;SQL;AWS;incident response;Linux,AWS Certified Solutions Architect - Associate,bachelor,2005,female,40-49,Philippines,no,30.2
+H254,R3,2024-06-10,10.4,Python;network security;SIEM;Linux,CISSP,master,2013,female,30-39,Singapore,no,52.8
+H255,R1,2024-06-15,4.5,Python;Go;SQL;AWS,,bachelor,2017,male,under 30,Singapore,no,66.3
+H256,R2,2024-06-18,2.7,SQL;statistics;Excel;Power BI;A/B testing,,master,2020,female,under 30,China,no,50.3
+H257,R3,2024-06-20,4.7,Python;network security;SIEM;cloud security;Linux,CompTIA Security+,master,2016,male,30-39,Singapore,no,68.3
+H258,R2,2024-06-21,4.8,Python;SQL;statistics;Tableau;A/B testing,Tableau Desktop Specialist,bachelor,2019,female,under 30,Singapore,no,55.4
+H259,R1,2024-06-28,6.5,Python;SQL;Docker;A/B testing;Scrum,AWS Certified Solutions Architect - Associate,master,2015,male,30-39,Singapore,no,58.1
+H260,R3,2024-07-03,4.7,Python;statistics;A/B testing;network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,bachelor,2018,male,under 30,Singapore,yes,68.8
+H261,R2,2024-07-09,4.3,Python;SQL;statistics;incident response,Tableau Desktop Specialist,bachelor,2019,male,under 30,Singapore,no,64.4
+H262,R2,2024-07-19,6.8,Python;SQL;AWS;statistics;A/B testing;Scrum,,bachelor,2013,other / undisclosed,30-39,Vietnam,no,54.1
+H263,R3,2024-07-22,4.2,network security;SIEM;Linux,CompTIA Security+,bachelor,2018,female,under 30,Singapore,no,37.2
+H264,R1,2024-08-04,7.3,Python;Go;SQL;Docker,,diploma,2014,female,30-39,Philippines,no,41.5
+H265,R1,2024-08-07,3.0,Python;Go;SQL;Docker;statistics,AWS Certified Solutions Architect - Associate,bachelor,2019,female,under 30,Malaysia,no,35.9
+H266,R2,2024-08-08,2.6,SQL;statistics;Tableau;Power BI;A/B testing;cloud security;Scrum,,bachelor,2017,female,30-39,Singapore,no,54.3
+H267,R3,2024-09-01,4.3,Python;network security;SIEM;cloud security,CISSP,master,2019,female,30-39,Malaysia,no,53.9
+H268,R1,2024-09-04,12.3,Python;Go;SQL;Kubernetes;AWS;cloud security;Linux,,bachelor,2009,female,40-49,China,no,44.9
+H269,R1,2024-09-05,9.9,Python;SQL;Docker;SIEM,AWS Certified Solutions Architect - Associate,master,2010,male,40-49,China,no,54.9
+H270,R2,2024-09-10,3.7,Python;SQL;statistics;Tableau;Power BI;A/B testing,,master,2018,female,under 30,India,no,60.4
+H271,R2,2024-09-15,5.7,SQL;statistics;Tableau;A/B testing;Linux,,bachelor,2017,male,30-39,Singapore,no,74.8
+H272,R3,2024-09-16,9.0,Python;Docker;A/B testing;network security;SIEM;incident response;cloud security,CompTIA Security+,bachelor,2014,female,30-39,Malaysia,no,58.4
+H273,R2,2024-09-17,9.8,SQL;statistics;Excel;Power BI;A/B testing,,diploma,2007,other / undisclosed,40-49,Singapore,no,47.4
+H274,R2,2024-09-20,4.9,Python;SQL;statistics;Power BI,,master,2015,male,30-39,China,no,60.3
+H275,R3,2024-09-20,7.8,Python;network security;SIEM;incident response;Linux,CISSP,bachelor,2015,other / undisclosed,30-39,Singapore,no,73.1
+H276,R2,2024-10-05,14.5,SQL;statistics;Power BI;A/B testing;incident response,Tableau Desktop Specialist,master,2008,male,40-49,Singapore,no,61.2
+H277,R1,2024-10-11,6.6,Python;Java;Go;SQL;Docker;AWS,AWS Certified Solutions Architect - Associate,diploma,2014,female,30-39,Singapore,no,66.3
+H278,R1,2024-10-20,10.6,Python;Go;SQL;AWS;R,AWS Certified Solutions Architect - Associate,diploma,2010,male,40-49,India,no,55.9
+H279,R2,2024-10-23,5.0,Python;SQL;statistics;Excel;A/B testing,,master,2017,female,30-39,Indonesia,no,56.6
+H280,R1,2024-11-03,6.9,Python;Go;SQL;AWS;Tableau,AWS Certified Solutions Architect - Associate,master,2015,male,30-39,Singapore,no,63.6
+H281,R1,2024-11-04,5.8,Python;Java;Go;SQL;Kubernetes;AWS;Excel;Power BI;incident response,,PhD,2015,male,30-39,Singapore,no,76.3
+H282,R3,2024-11-12,7.1,statistics;Power BI;network security;SIEM;cloud security,CISSP,bachelor,2016,male,30-39,Malaysia,no,65.5
+H283,R2,2024-11-13,4.1,Python;SQL;statistics;Power BI;A/B testing,Tableau Desktop Specialist,diploma,2013,male,30-39,Singapore,no,67.9
+H284,R2,2024-12-07,10.7,Python;SQL;Kubernetes;statistics;Excel;Power BI;A/B testing;incident response,,master,2010,male,30-39,Singapore,no,79.9
+H285,R3,2024-12-16,2.4,Go;AWS;network security;SIEM;incident response;cloud security,CISSP,master,2019,female,30-39,China,no,40.5
+H286,R2,2025-01-03,3.8,SQL;AWS;statistics;Excel;Scrum,Tableau Desktop Specialist,bachelor,2019,male,30-39,Vietnam,no,46.1
+H287,R2,2025-01-07,5.3,Python;Go;SQL;statistics,,diploma,2018,female,under 30,Singapore,no,45.5
+H288,R3,2025-01-09,3.9,Python;SQL;Kubernetes;statistics;Tableau;network security;SIEM;incident response;cloud security,CompTIA Security+,diploma,2020,male,under 30,Malaysia,no,57.0
+H289,R2,2025-01-12,6.7,SQL;AWS;statistics;Tableau;A/B testing,Tableau Desktop Specialist,bachelor,2014,male,30-39,Vietnam,no,66.3
+H290,R3,2025-01-17,8.0,network security;SIEM;incident response;cloud security;Linux,CompTIA Security+,bachelor,2015,male,30-39,Malaysia,no,64.4
+H291,R1,2025-01-20,9.4,Python;SQL;statistics;Scrum,AWS Certified Solutions Architect - Associate,bachelor,2015,male,30-39,India,no,47.3
+H292,R3,2025-01-22,2.5,network security;SIEM;cloud security;Linux,CompTIA Security+,master,2022,male,30-39,Philippines,no,43.9
+H293,R2,2025-01-23,4.7,Python;SQL;statistics;Tableau;Power BI;A/B testing,,bachelor,2019,male,30-39,Vietnam,no,70.7
+H294,R2,2025-02-01,11.1,SQL;AWS;statistics;Excel;A/B testing;network security;incident response,Tableau Desktop Specialist,master,2011,female,30-39,Singapore,no,61.0
+H295,R1,2025-02-03,5.8,Python;Go;SQL;Docker;AWS;statistics;A/B testing,,bachelor,2016,male,30-39,Singapore,no,68.0
+H296,R1,2025-02-07,3.0,Python;SQL;Kubernetes;AWS;Tableau;incident response;Scrum,,diploma,2021,female,under 30,Philippines,no,34.9
+H297,R3,2025-02-22,3.4,Python;AWS;network security;SIEM;incident response,CISSP,bachelor,2015,male,30-39,Singapore,no,55.0
+H298,R1,2025-02-24,8.1,Python;Go;SQL;AWS;Excel;SIEM,,bachelor,2016,male,30-39,China,no,61.4
+H299,R2,2025-03-01,7.7,SQL;Kubernetes;statistics;Tableau;Power BI;R;incident response,,bachelor,2015,female,30-39,Singapore,no,48.7
+H300,R2,2025-03-06,4.0,Python;SQL;AWS;statistics;Tableau;R,,master,2019,female,30-39,Singapore,no,56.4
+H301,R2,2025-03-12,7.1,SQL;AWS;statistics;Tableau;Power BI;A/B testing;SIEM,,bachelor,2015,female,30-39,China,no,45.5
+H302,R2,2025-03-12,3.6,Python;SQL;statistics;Excel;network security,Tableau Desktop Specialist,bachelor,2019,male,under 30,Singapore,no,65.9
+H303,R1,2025-03-17,5.6,Python;Go;SQL;Kubernetes;SIEM,,bachelor,2019,male,30-39,Singapore,no,63.2
+H304,R3,2025-03-17,9.7,network security;SIEM;cloud security;Linux,CompTIA Security+,diploma,2013,male,30-39,China,no,62.0
+H305,R1,2025-03-18,4.9,Python;SQL;Kubernetes,AWS Certified Solutions Architect - Associate,diploma,2017,female,under 30,Singapore,no,62.0
+H306,R1,2025-03-22,5.7,Python;SQL;Kubernetes;AWS;incident response,,bachelor,2017,female,under 30,Singapore,no,58.4
+H307,R2,2025-03-28,4.9,Python;SQL;statistics;Tableau;Power BI,,bachelor,2019,female,under 30,Singapore,no,56.9
+H308,R3,2025-04-03,7.4,Kubernetes;network security;SIEM;cloud security,CompTIA Security+,bachelor,2015,male,30-39,Philippines,no,62.7
+H309,R1,2025-04-03,3.9,Python;SQL;Kubernetes;Docker,AWS Certified Solutions Architect - Associate,PhD,2020,male,30-39,Singapore,no,60.7
+H310,R1,2025-04-14,6.4,Python;SQL;Kubernetes;AWS,,master,2015,male,30-39,Singapore,no,69.0
+H311,R2,2025-04-17,5.4,Python;Go;SQL;statistics;Excel,,PhD,2016,female,40-49,India,no,43.6
+H312,R1,2025-04-20,5.1,Python;Go;SQL;Kubernetes;Docker,AWS Certified Solutions Architect - Associate,bachelor,2018,female,30-39,Indonesia,no,44.3
+H313,R1,2025-05-01,6.7,Python;Go;SQL;network security;incident response,,bachelor,2011,female,30-39,Singapore,no,49.5
+H314,R1,2025-05-03,5.0,Python;SQL;Docker;AWS;A/B testing,AWS Certified Solutions Architect - Associate,bachelor,2016,female,30-39,Vietnam,no,45.7
+H315,R2,2025-05-08,4.0,Java;SQL;statistics;Tableau;A/B testing;R,,bachelor,2020,male,under 30,China,no,61.0
+H316,R2,2025-05-09,13.2,Python;SQL;Kubernetes;statistics;Excel;Power BI,,bachelor,2011,male,30-39,Philippines,no,54.7
+H317,R2,2025-05-20,7.5,Python;SQL;statistics,Tableau Desktop Specialist,master,2015,male,30-39,Malaysia,no,61.5
+H318,R3,2025-05-23,4.1,Python;A/B testing;network security;SIEM;incident response,CISSP,bachelor,2020,male,30-39,Philippines,no,56.6
+H319,R1,2025-06-03,3.2,Python;SQL;AWS,,bachelor,2014,female,30-39,India,no,38.1
+H320,R3,2025-06-12,2.3,Python;network security;SIEM;incident response;Linux,CompTIA Security+,bachelor,2022,male,under 30,Singapore,yes,49.7
+H321,R1,2025-06-14,4.2,Python;SQL;Kubernetes;Excel;Tableau,AWS Certified Solutions Architect - Associate,master,2014,male,40-49,Philippines,no,45.3
+H322,R3,2025-06-15,11.9,Python;network security;SIEM,CompTIA Security+,master,2012,female,40-49,Philippines,no,24.0
+H323,R2,2025-06-19,2.1,Python;Java;SQL;statistics;Power BI;A/B testing,,bachelor,2019,male,under 30,Singapore,no,60.8
+H324,R2,2025-06-20,8.3,SQL;statistics;Excel;Tableau,,bachelor,2015,male,30-39,Malaysia,no,60.3
+H325,R2,2025-06-20,3.5,Java;SQL;statistics;Excel;Power BI;A/B testing,,master,2018,male,30-39,Singapore,yes,54.1
+H326,R3,2025-07-06,4.6,Python;network security;SIEM;Linux,CompTIA Security+,diploma,2016,male,30-39,Singapore,yes,54.2
+H327,R3,2025-07-06,2.8,Python;A/B testing;network security;SIEM;Linux,CISSP,master,2019,male,under 30,Singapore,no,53.1
+H328,R3,2025-07-09,8.1,Go;AWS;network security;SIEM;cloud security;Linux,CompTIA Security+,bachelor,2016,male,30-39,Singapore,yes,73.3
+H329,R1,2025-08-01,12.4,Python;Go;SQL;Kubernetes;Docker;Excel,,bachelor,2005,female,40-49,China,no,38.9
+H330,R2,2025-08-11,15.7,SQL;statistics;Power BI;A/B testing;Linux,,PhD,2005,female,40-49,Singapore,no,55.3
+H331,R2,2025-08-11,7.6,Python;SQL;statistics;Scrum,,bachelor,2011,female,30-39,Singapore,no,41.0
+H332,R1,2025-08-14,3.1,Python;Go;SQL;Kubernetes;Docker;AWS,,bachelor,2020,male,30-39,India,no,56.4
+H333,R3,2025-08-15,8.6,Tableau;network security;SIEM,CISSP,diploma,2015,female,30-39,Singapore,no,54.6
+H334,R1,2025-08-20,7.4,Python;Go;SQL;Docker;R;cloud security,,master,2013,female,30-39,Singapore,no,55.7
+H335,R2,2025-08-23,2.1,Python;SQL;statistics;Excel,,bachelor,2022,male,under 30,Singapore,yes,45.6
+H336,R3,2025-09-03,4.1,Python;network security;SIEM;incident response;cloud security,CompTIA Security+,master,2014,male,30-39,Singapore,yes,65.7
+H337,R1,2025-09-22,3.8,Python;Go;SQL;Kubernetes;Docker;AWS,AWS Certified Solutions Architect - Associate,bachelor,2018,female,30-39,Philippines,no,47.3
+H338,R2,2025-09-24,2.5,Python;Java;SQL;statistics;Excel;Tableau;Power BI;A/B testing;incident response;Linux,,bachelor,2018,male,under 30,India,yes,54.3
+H339,R1,2025-09-25,5.6,Python;Go;SQL;Docker;cloud security;Linux,AWS Certified Solutions Architect - Associate,bachelor,2017,female,30-39,Singapore,no,59.1
+H340,R2,2025-09-26,6.3,Python;Go;SQL;Docker;statistics;Excel;Tableau;Power BI,,bachelor,2017,female,30-39,India,no,46.7
+H341,R3,2025-10-02,13.1,Python;network security;SIEM;cloud security;Linux,CompTIA Security+,bachelor,2009,male,30-39,China,no,48.1
+H342,R3,2025-10-04,6.6,Python;network security;SIEM;incident response;cloud security;Linux,CISSP,bachelor,2014,female,30-39,Malaysia,no,66.9
+H343,R2,2025-10-05,10.1,SQL;statistics;Tableau;Power BI;network security;Scrum,,master,2013,female,30-39,Singapore,no,47.9
+H344,R1,2025-10-15,5.7,Python;Go;SQL;Docker;AWS;SIEM,,master,2016,female,30-39,Malaysia,no,57.1
+H345,R1,2025-10-20,6.2,Python;SQL;AWS;A/B testing,AWS Certified Solutions Architect - Associate,master,2017,other / undisclosed,30-39,Vietnam,no,59.3
+H346,R2,2025-10-21,5.8,SQL;statistics;Excel;A/B testing;Scrum,,bachelor,2017,male,under 30,China,no,56.9
+H347,R1,2025-10-23,9.7,Python;Go;SQL;Docker;AWS;Power BI,AWS Certified Solutions Architect - Associate,master,2012,male,30-39,Malaysia,no,71.6
+H348,R1,2025-10-24,16.0,Python;Go;SQL;Kubernetes;AWS,AWS Certified Solutions Architect - Associate,bachelor,2006,female,40-49,Malaysia,no,55.5
+H349,R1,2025-10-26,8.3,Python;Go;SQL;Kubernetes;Power BI,,master,2013,male,30-39,India,no,56.3
+H350,R1,2025-10-26,4.9,Python;Go;SQL;Docker,AWS Certified Solutions Architect - Associate,master,2017,other / undisclosed,30-39,Singapore,no,58.2
+H351,R2,2025-11-14,4.8,Python;SQL;AWS;statistics;Excel;A/B testing,,bachelor,2019,female,30-39,Malaysia,no,61.0
+H352,R1,2025-11-15,10.0,Python;Go;SQL;AWS,,bachelor,2014,female,30-39,Singapore,no,58.9
+H353,R2,2025-11-17,2.9,SQL;statistics;Tableau;Power BI;A/B testing;cloud security,,bachelor,2018,male,under 30,India,no,51.9
+H354,R2,2025-11-18,9.0,SQL;statistics;Excel;Tableau;R;incident response;Linux,,bachelor,2015,male,30-39,Singapore,no,61.4
+H355,R2,2025-12-01,3.1,SQL;statistics;Excel;A/B testing,,diploma,2021,female,under 30,Malaysia,yes,37.4
+H356,R3,2025-12-03,12.7,network security;SIEM;incident response;Linux,CompTIA Security+,master,2008,female,40-49,Singapore,no,48.2
+H357,R3,2025-12-13,3.3,Python;network security;SIEM;Linux;Scrum,CISSP,diploma,2017,female,under 30,Philippines,yes,34.0
+H358,R1,2025-12-17,5.8,Python;SQL;Kubernetes,,master,2016,female,30-39,Singapore,no,50.3
+H359,R3,2025-12-21,3.0,A/B testing;network security;SIEM;cloud security,CompTIA Security+,bachelor,2019,male,30-39,Vietnam,no,53.8
+H360,R2,2025-12-21,3.6,Python;SQL;Kubernetes;statistics;Tableau;Power BI;incident response,,bachelor,2014,male,30-39,Philippines,no,58.0

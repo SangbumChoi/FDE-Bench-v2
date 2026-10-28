@@ -1,0 +1,26 @@
+﻿component_id,description,category,critical,standard_cost_krw
+C01,32-bit microcontroller QFN48,IC,yes,4200
+C02,power management IC,IC,yes,1850
+C03,DRAM 4Gb,IC,yes,3300
+C04,NOR flash 128Mb,IC,yes,1400
+C05,bare PCB 6-layer,PCB,yes,2600
+C06,3.5-inch TFT display module,display,yes,14800
+C07,chip resistor 0402 10kΩ,SMD resistor,no,3.0
+C08,chip resistor 0402 4.7kΩ,SMD resistor,no,3.0
+C09,chip resistor 0603 100Ω,SMD resistor,no,4.0
+C10,MLCC 0402 100nF,capacitor,no,6.0
+C11,MLCC 0603 10µF,capacitor,no,18
+C12,MLCC 1206 47µF,capacitor,no,55
+C13,electrolytic capacitor 220µF,capacitor,no,95
+C14,power inductor 4.7µH,inductor,no,140
+C15,crystal 16MHz,IC,no,230
+C16,USB-C receptacle,connector/antenna,no,420
+C17,board-to-board connector 40P,connector/antenna,no,380
+C18,LED 0603 green,LED,no,22
+C19,temperature sensor IC,IC,no,650
+C20,FPC antenna,connector/antenna,no,310
+C21,coin cell holder,mechanical,no,120
+C22,enclosure top,mechanical,no,900
+C23,enclosure bottom,mechanical,no,780
+C24,M2 screw,mechanical,no,9.0
+C25,"NOR flash 128Mb, new die (rev. B)",IC,yes,1500

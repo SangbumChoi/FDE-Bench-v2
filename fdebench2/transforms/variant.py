@@ -11,13 +11,13 @@ from typing import Any
 import yaml
 
 from .. import i18n
-from ..cases import Case, NotLocalized, Target
+from ..cases import DEFAULT_RULESET, TIERS, Case, NotLocalized, Target
 from . import noise as noise_ops
 from .events import Event, build_events
 from .language import Translator, check_locale
 from .policy import Policy, load_policy, policy_brief_msgs
 
-DIFFICULTY_FILE = Path(__file__).resolve().parents[2] / "configs" / "difficulty.yaml"
+ENGAGEMENT_FILE = Path(__file__).resolve().parents[2] / "configs" / "engagement.yaml"
 CONDITIONS = ("full", "interact", "interact_req", "hidden")
 
 
@@ -27,21 +27,23 @@ class VariantSpec:
     customer_locale: str = "en"
     agent_locale: str = "en"
     policy: str = "baseline"
-    difficulty: str = "medium"
+    difficulty: str = "medium"        # content tier of cases that declare settings
     seed: int = 0
-    condition: str | None = None      # override the difficulty's condition (ablations)
+    condition: str | None = None      # override the engagement's condition (ablations)
+    ruleset: str = DEFAULT_RULESET    # rule parameters of cases that declare settings (A / B / C)
+    engagement: str = "standard"      # how the work is handed over (configs/engagement.yaml)
 
     def key(self) -> str:
-        """Run-directory name."""
+        """Run-directory name (outside the agent's sandbox: the agent never sees it)."""
         parts = [self.case_id, f"c-{self.customer_locale}", f"a-{self.agent_locale}", f"p-{self.policy}",
-                 f"d-{self.difficulty}"]
+                 f"d-{self.difficulty}", f"r-{self.ruleset}", f"e-{self.engagement}"]
         if self.condition:
             parts.append(f"x-{self.condition}")
         return "__".join(parts) + f"__s{self.seed}"
 
 
 @dataclass
-class Difficulty:
+class Engagement:
     name: str
     condition: str
     persona: str
@@ -51,11 +53,11 @@ class Difficulty:
     max_question_rounds: int = 30
 
 
-def load_difficulty(name: str, path: Path = DIFFICULTY_FILE) -> Difficulty:
+def load_engagement(name: str, path: Path = ENGAGEMENT_FILE) -> Engagement:
     doc = yaml.safe_load(path.read_text(encoding="utf-8"))
     if name not in doc:
-        raise KeyError(f"unknown difficulty {name!r}; defined: {sorted(doc)}")
-    return Difficulty(name=name, **doc[name])
+        raise KeyError(f"unknown engagement {name!r}; defined: {sorted(doc)}")
+    return Engagement(name=name, **doc[name])
 
 
 @dataclass
@@ -75,6 +77,8 @@ class Variant:
     time_budget_s: float
     max_question_rounds: int
     submission_files: list[str]
+    case_tier: str | None = None      # the content tier the case was scored at (None: no settings)
+    ruleset: str | None = None        # the rule set the case was scored at (None: no settings)
 
     @property
     def can_ask(self) -> bool:
@@ -105,12 +109,17 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
     """
     cust = check_locale(spec.customer_locale)
     agent = check_locale(spec.agent_locale)
-    diff = load_difficulty(spec.difficulty)
-    condition = spec.condition or diff.condition
+    if spec.difficulty not in TIERS:
+        raise ValueError(f"unknown difficulty {spec.difficulty!r}; one of {TIERS}")
+    eng = load_engagement(spec.engagement)
+    condition = spec.condition or eng.condition
     if condition not in CONDITIONS:
         raise ValueError(f"unknown condition {condition!r}")
     policy = load_policy(spec.policy)
-    rng = random.Random(f"{spec.case_id}|{spec.difficulty}|{spec.seed}")
+    case = case.at(spec.difficulty, spec.ruleset)
+    # Nothing the agent sees may depend on the difficulty or the rule set: noise and events are
+    # seeded by the engagement only.
+    rng = random.Random(f"{spec.case_id}|{spec.engagement}|{spec.seed}")
     src = case.source_locale
 
     def text(getter, kind: str) -> str:
@@ -134,10 +143,10 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
         targets = [replace(t, text=translator.translate(t.source_text, cust, src=src, kind="target"))
                    for t in case.targets(src)]
 
-    # Difficulty: data noise (agent's copy only) and the facts that undo it.
+    # Engagement: data noise (agent's copy only) and the facts that undo it.
     extra_facts: list[Any] = []
     applied: list[dict[str, Any]] = []
-    for op in diff.noise:
+    for op in eng.noise:
         result = noise_ops.OPS[op](workspace, rng, cust)
         if result is None:
             continue
@@ -148,14 +157,14 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
                                   kind="noise", domain="data quality", origin=op))
 
     correction = None
-    if any(e["kind"] == "data_correction" for e in diff.events):
+    if any(e["kind"] == "data_correction" for e in eng.events):
         held = noise_ops.corrupt_for_correction(workspace, rng)
         if held is not None:
             rel, _ = held
             correction = (rel, f"inbox/{Path(rel).name}")
 
-    events, event_facts = build_events(diff.events, rng, volunteer_facts=[t.text for t in targets if t.origin == "case"],
-                                       correction=correction, time_budget_s=diff.time_budget_s)
+    events, event_facts = build_events(eng.events, rng, volunteer_facts=[t.text for t in targets if t.origin == "case"],
+                                       correction=correction, time_budget_s=eng.time_budget_s)
     for ev in events:
         ev.message = say(ev.payload.pop("msg"))
         if "fact" in ev.payload:
@@ -173,8 +182,9 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
             say(m, agent) if i == 0 else f"- {say(m, agent)}" for i, m in enumerate(lines)) + "\n"
 
     return Variant(
-        spec=spec, condition=condition, persona=diff.persona, customer_locale=cust, agent_locale=agent,
+        spec=spec, condition=condition, persona=eng.persona, customer_locale=cust, agent_locale=agent,
         instruction=instruction, information=information, targets=targets, policy=policy, policy_brief=brief,
-        events=events, noise=applied, time_budget_s=diff.time_budget_s,
-        max_question_rounds=diff.max_question_rounds, submission_files=case.submission_files,
+        events=events, noise=applied, time_budget_s=eng.time_budget_s,
+        max_question_rounds=eng.max_question_rounds, submission_files=case.submission_files,
+        case_tier=getattr(case, "tier", None), ruleset=getattr(case, "ruleset", None),
     )

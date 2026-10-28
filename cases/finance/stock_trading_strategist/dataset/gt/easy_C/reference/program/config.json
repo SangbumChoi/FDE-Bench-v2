@@ -1,0 +1,33 @@
+{
+ "at": "open",
+ "band": 0.25,
+ "cap_margin": 0.02,
+ "cash_buffer": 0.005,
+ "cost": 0.001,
+ "dd_off": 0.04,
+ "dd_stop": 0.1,
+ "defensive": 0.0,
+ "hard": false,
+ "invest": 0.97,
+ "liq_days": 2,
+ "medium": false,
+ "min_fee": 20.0,
+ "min_weight": 0.03,
+ "participation": 0.0855,
+ "per_sector": 3,
+ "price_buffer": 0.02,
+ "rebalance": 5,
+ "reserve_buffer": 1.08,
+ "restricted": [
+  "TARK",
+  "VYTA"
+ ],
+ "risk_switch": true,
+ "same_day_proceeds": true,
+ "sector_target": 10.0,
+ "stock_cap": 0.2,
+ "top": 8,
+ "trend_off": -0.04,
+ "weight": 0.24,
+ "withdrawal_basis": "payment"
+}

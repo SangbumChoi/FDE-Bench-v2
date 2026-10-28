@@ -1,0 +1,8 @@
+﻿parametro,valor,unidad
+Energía nominal,40.0,MWh
+Potencia máxima de carga,20.0,MW
+Potencia máxima de descarga,20.0,MW
+Eficiencia de ida y vuelta,84.6,%
+SOC mínimo del fabricante,5,%
+SOC máximo del fabricante,95,%
+Potencia solar en el mismo emplazamiento,30.0,MWp

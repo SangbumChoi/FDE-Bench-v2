@@ -1,0 +1,3 @@
+En nuestra unidad compartida está el material de unos cien libros nuestros, en chino, inglés, coreano, japonés y español, y nadie lo ha mantenido en orden: títulos, autores, años y sinopsis andan repartidos en todo tipo de archivos de las oficinas regionales, el equipo de escaneo y el departamento de derechos. Adjuntamos una muestra de la unidad (`corpus/`).
+
+Necesitamos un programa que podamos ejecutar sobre la unidad completa y que construya con ella una biblioteca limpia: un archivo de texto por libro con su sinopsis, archivado como lo quiere nuestro equipo de catalogación, y un manifiesto de qué fue a parar dónde. Lo que no pueda archivar debe quedar aparte para que lo revise nuestro equipo, sin inventar nada.

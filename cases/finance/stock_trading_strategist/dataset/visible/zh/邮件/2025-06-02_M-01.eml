@@ -1,0 +1,18 @@
+From: 交易台主管 <desk.head@desk.example>
+To: 交易台 <trading.desk@desk.example>
+Date: Mon, 02 Jun 2025 08:15:00 +0000
+Subject: 大额订单需经我批准
+Message-ID: <M-01@desk.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+各位：
+
+提醒一下我们交易台的规定，适用于我们管理的每一个账户，包括客户账户：
+
+任何订单，无论买卖，只要相对该股票近期的流动性过大——超过为该账户设定的门槛，即该股票最近 20 个交易日平均日成交量（按当前股本计）的一定百分比——在报送市场之前都需要我批准。这也包括我们不得不做的卖出，例如对合规部限制的股票进行清仓。
+
+这个百分比按账户设定；如果你负责的账户还没有这个数字，请来问我。需要例外的话，请事先把订单和理由写给我。
+
+交易台主管

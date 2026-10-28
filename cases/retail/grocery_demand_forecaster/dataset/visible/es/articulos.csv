@@ -1,0 +1,13 @@
+﻿id_articulo,nombre_articulo,categoria,unidad_venta
+I01,Plátanos,fruta y verdura,kg
+I02,Tomates,fruta y verdura,kg
+I03,Albahaca fresca,fruta y verdura,manojo
+I04,Leche entera 1L,lácteos,brik
+I05,Yogur natural,lácteos,unidad
+I06,Queso curado,lácteos,pieza
+I07,Panecillos,panadería,paquete de 6
+I08,Pan de masa madre,panadería,pieza
+I09,Cruasán,panadería,unidad
+I10,"Agua con gas 1,5L",bebidas,botella
+I11,Zumo de naranja 1L,bebidas,botella
+I12,Café cold brew,bebidas,lata

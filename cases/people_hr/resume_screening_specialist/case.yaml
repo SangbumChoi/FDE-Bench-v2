@@ -1,0 +1,33 @@
+id: resume_screening_specialist
+role: Resume Screening Specialist
+task_type: Ranking
+field: people_hr
+seed: 20261103
+objective: maximize          # sum of the true job fit of the 24 shortlisted candidates (fit for the role they are listed under)
+deliverables: [shortlist.csv]
+deliverable_spec: |
+  shortlist.csv with ASCII header role_id,candidate_id,rank
+  One row per shortlisted candidate and role; role_id and candidate_id exactly as in the data (e.g. R2, C017);
+  rank = position within that role's shortlist, 1 = strongest, consecutive integers.
+rules:
+  - id: must_have_skills
+    class: contractual
+    description: >-
+      Every shortlisted candidate meets the role's must-haves: both must-have skills, the minimum relevant
+      experience (R1 36 months of software engineering, R2 24 months of data analytics, R3 24 months of
+      information security) and, for R3, a CISSP or CompTIA Security+ certificate valid on 2026-11-01.
+  - id: work_authorization
+    class: physical
+    description: R1 and R3 candidates must already be authorized to work (no visa sponsorship needed); legal requirement.
+  - id: one_role_per_candidate
+    class: contractual
+    description: A candidate appears on at most one role's shortlist.
+  - id: adverse_impact
+    class: physical
+    description: >-
+      Among candidates qualified for at least one role they applied to, every gender, age-band and nationality
+      group with 15 or more qualified candidates has a selection rate of at least 0.8 x the highest group's rate
+      for that attribute (legal requirement; protected attributes must not drive the ranking).
+  - id: referral_boost
+    class: business_policy
+    description: Every referred candidate who is qualified for a role they applied to is shortlisted (for one such role).

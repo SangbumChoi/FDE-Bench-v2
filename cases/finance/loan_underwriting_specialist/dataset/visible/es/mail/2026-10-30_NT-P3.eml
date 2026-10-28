@@ -1,0 +1,17 @@
+From: Servicio de préstamos - Confirmaciones <confirmations@creditor.example>
+To: Mesa de préstamos personales <loans.desk@lender.example>
+Date: Fri, 30 Oct 2026 09:00:00 +0000
+Subject: Confirmación de amortización NT-P3: deuda BF1029693-D1
+Message-ID: <NT-P3.2026-10-30@lender.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+Hola:
+
+Confirmamos que la deuda BF1029693-D1 del cliente BF1029693 (número de expediente del buró) quedó amortizada por completo el 2026-10-30.
+Nuevo saldo pendiente: 0
+Nueva cuota mensual: 0
+
+Referencia: NT-P3
+Servicio de préstamos - Confirmaciones

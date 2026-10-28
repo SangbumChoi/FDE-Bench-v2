@@ -1,13 +1,19 @@
 # A campaign is a list of experiments; each expands to a grid of runs.
 # One axis at a time against a fixed baseline keeps the grid affordable:
-# baseline = customer en, agent en, baseline policy, medium difficulty.
+# baseline = customer en, agent en, baseline policy, medium difficulty, standard engagement,
+# and every rule set (ruleset: all), so each difficulty cell is the mean over rule sets A/B/C.
 defaults:
   cases_root: cases
   models: configs/models.yaml
   out: runs
   seeds: [0, 1, 2]
-  sandbox: {kind: docker, image: "fde-bench:{case}"}
-  cases: all                     # every case under cases/ (or a list of ids, or a subset name)
+  # strict: every run in docker; the agent sees only /workspace (same in every setting).
+  isolation: strict
+  sandbox:
+    kind: docker
+    image: "fde-bench-agent:latest"     # docker/Dockerfile.agent: python, data libraries, the vendor CLIs
+    env: [OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY]   # passed to CLI agents in the container
+  cases: all                     # all | field:<field> | a subset name | list of <field>/<role> ids
 
 subsets: {}
 
@@ -31,5 +37,7 @@ experiments:
     agent_locale: [en, ko, zh]
   policy:
     policy: [baseline, enterprise_balanced, regulated_strict, startup_velocity]
-  difficulty:
+  difficulty:            # three columns, each the mean over rule sets A/B/C
     difficulty: [easy, medium, hard]
+  engagement:            # how the work is handed over (configs/engagement.yaml)
+    engagement: [full_spec, standard, messy]

@@ -1,0 +1,129 @@
+id: hospital_appointment_scheduler
+role: Hospital Appointment Scheduler
+task_type: Decision Program
+field: healthcare
+seed: 20261116
+objective: maximize          # 0.8 x operations value / the reference program's operations value (same setting)
+                             # + 0.2 x status-table accuracy (mean over the 20 days); the reference scores 1.0
+deliverable_type: program
+entrypoint: scheduler.py:on_day
+tiers:                       # one world, one hidden period and the same requests, notices and notes in every setting
+  easy: >-
+    The daily booking core: new patient = two consecutive slots, follow-up = one; department; never before the
+    earliest date; the urgent window; the urgent reserve (the first two morning slots of a session are held for
+    urgent requests until the day before); one clinic closed on the City Day holiday although the calendar
+    lists it; in-person interpreters per day for new patients; the notice period for moving an appointment; the
+    waitlist priority order; follow-ups with their previous doctor (bendable); the daily status table. Absence
+    and interpreter notices, referral dates, blood tests, no-shows and duplicate requests are out of scope.
+  medium: >-
+    Easy plus referral letters that expire, a fasting blood test at least one working day before the visit
+    within a daily lab cap, doctor absences (the absent doctor's appointments must be moved, within the notice
+    period) and an interpreter's absence (one fewer interpreter that day).
+  hard: >-
+    Medium plus no-shows (each patient's hidden rate rising with lead time; the value counts expected patients
+    seen), overbooking of follow-ups (two to a slot, a cap per doctor session, expected collision cost),
+    duplicate requests (one appointment per patient and department; one need on the waitlist) and extra trips
+    of patients booked in several departments.
+rulesets:                    # the client's rule parameters; same data, three ground truths
+  A: {closed_dept: DERM, urgent_days: 2, interpreters_per_day: 3, lab_cap: 6, overbooked_per_session: 2,
+      move_notice_days: 3, waitlist_order: urgency_received}
+  B: {closed_dept: ORTH, urgent_days: 1, interpreters_per_day: 4, lab_cap: 5, overbooked_per_session: 1,
+      move_notice_days: 2, waitlist_order: received}
+  C: {closed_dept: PED, urgent_days: 3, interpreters_per_day: 2, lab_cap: 7, overbooked_per_session: 2,
+      move_notice_days: 4, waitlist_order: urgency_earliest}
+param_labels:                # how a code parameter reads in each locale's text
+  closed_dept:
+    DERM: {zh: 皮肤科, en: Dermatology, ko: 피부과, ja: 皮膚科, es: Dermatología}
+    ORTH: {zh: 骨科, en: Orthopedics, ko: 정형외과, ja: 整形外科, es: Traumatología}
+    PED: {zh: 儿科, en: Pediatrics, ko: 소아청소년과, ja: 小児科, es: Pediatría}
+  waitlist_order:
+    urgency_received:
+      zh: 先按紧急程度（U、S、R），同一紧急程度内按受理日期先后
+      en: by urgency first (U, then S, then R), and within the same urgency by the date received, oldest first
+      ko: 먼저 긴급도 순(U, S, R), 같은 긴급도 안에서는 접수일이 이른 순
+      ja: まず緊急度順（U、S、R）、同じ緊急度の中では受付日の早い順
+      es: primero por urgencia (U, luego S, luego R) y, dentro de la misma urgencia, por fecha de recepción, de la más antigua a la más reciente
+    received:
+      zh: 紧急（U）申请最先，其余（S 和 R 一起）一律按受理日期先后，先到先得
+      en: urgent (U) requests first, then everyone else (S and R together) strictly by the date received, first come first served
+      ko: 긴급(U) 요청이 먼저이고, 나머지(S와 R 구분 없이)는 접수일이 이른 순, 즉 선착순
+      ja: 緊急（U）の依頼が最優先、それ以外（S と R は区別しない）は受付日の早い順、つまり先着順
+      es: primero las urgentes (U) y después todas las demás (S y R juntas) estrictamente por fecha de recepción, por orden de llegada
+    urgency_earliest:
+      zh: 先按紧急程度（U、S、R），同一紧急程度内按最早可约日期先后（能最早来的人优先）
+      en: by urgency first (U, then S, then R), and within the same urgency by earliest_date, the patient who can come first goes first
+      ko: 먼저 긴급도 순(U, S, R), 같은 긴급도 안에서는 희망시작일(earliest_date)이 이른 순, 즉 가장 먼저 올 수 있는 환자 먼저
+      ja: まず緊急度順（U、S、R）、同じ緊急度の中では受診可能日（earliest_date）の早い順、つまり早く来られる患者から
+      es: primero por urgencia (U, luego S, luego R) y, dentro de la misma urgencia, por earliest_date (primero quien puede venir antes)
+deliverable_spec: |
+  A program/ directory with scheduler.py defining on_day(day). The engine loads it once and calls it once per
+  working day of the hidden period, in order, in the same process (module-level state survives between calls);
+  10 s per call, Python standard library only, no network and no access to the data files at run time.
+  day = {"date", "day_index", "days_in_period", "period_end", "booking_window": {"first", "last"}, "doctors",
+  "sessions", "new_requests", "notices", "attendance", "book", "waitlist"} exactly as in the pilot-day input file.
+  Return {"actions": [{"type": "book" | "move", "request_id", "doctor_id", "date": "YYYY-MM-DD",
+  "start": "HH:MM", "test_date": "YYYY-MM-DD" or null} | {"type": "release", "request_id"}],
+  "status_table": {department_code: {"free_slots": int, "held_back": int, "waitlist": int}}} as in the pilot-day
+  output file. Actions are applied in order; a request not booked stays on the waitlist.
+rules:
+  - id: well_formed
+    class: contractual
+    description: Every call returns well-formed actions on known requests (book only a waiting request, move or release only an upcoming appointment) with a date inside the booking window (the next 10 working days); a call that fails or times out breaks it too.
+  - id: no_double_booking
+    class: physical
+    tiers: [easy, medium]
+    description: A doctor's 20-minute slot holds at most one appointment.
+  - id: slot_capacity
+    class: physical
+    tiers: [hard]
+    description: A doctor's 20-minute slot holds at most two appointments, both follow-ups; a new-patient visit never shares its slots.
+  - id: slot_length
+    class: physical
+    description: An appointment uses the calendar's session slots of its doctor and day; a new-patient visit takes two consecutive slots of the same session, a follow-up one.
+  - id: department_match
+    class: physical
+    description: A request is booked with a doctor of its department.
+  - id: holiday_closure
+    class: physical
+    description: The {{closed_dept}} clinic is closed on City Day, Monday 23 November 2026, although the calendar still lists its sessions; no {{closed_dept}} appointment that day.
+  - id: not_before_earliest
+    class: physical
+    description: No appointment before the request's earliest date.
+  - id: interpreter_capacity
+    class: physical
+    description: At most {{interpreters_per_day}} new-patient visits per day hospital-wide with a doctor who does not speak the patient's language (each needs one of the in-person interpreters; medium+, one fewer on the day an interpreter is away).
+  - id: lab_capacity
+    class: physical
+    tiers: [medium, hard]
+    description: The lab takes at most {{lab_cap}} fasting blood tests per working day.
+  - id: test_before_visit
+    class: physical
+    tiers: [medium, hard]
+    description: A request that needs the fasting blood test has its test day from its earliest date to the working day before the visit (a newly set test day in the future).
+  - id: doctor_available
+    class: physical
+    tiers: [medium, hard]
+    description: Once an absence notice has arrived, no appointment stays or is booked with that doctor on a day of the absence.
+  - id: urgent_window
+    class: contractual
+    description: Every urgent (U) request is booked the day it arrives, within {{urgent_days}} working days of its first possible day (earliest date or the next working day), and stays within that window.
+  - id: urgent_reserve
+    class: contractual
+    description: The first two slots of every morning session (09:00 and 09:20) are held for urgent requests until the working day before; no S or R request is booked or moved into them two or more working days ahead.
+  - id: move_notice
+    class: contractual
+    description: When the hospital changes the day or time of a patient's appointment, the new appointment is at least {{move_notice_days}} working days after the day of the change (another doctor at the same day and time needs no notice).
+  - id: waitlist_priority
+    class: contractual
+    description: Waiting requests are booked in the priority order ({{waitlist_order}}); a request is not booked while a request of higher priority of the same department, visit type and previous doctor still waits and could have taken that slot.
+  - id: overbooking_limit
+    class: contractual
+    tiers: [hard]
+    description: At most {{overbooked_per_session}} overbooked slots (slots holding two follow-ups) per doctor per session (morning or afternoon).
+  - id: one_per_department
+    class: contractual
+    tiers: [hard]
+    description: A patient has at most one appointment per department in the period (held or upcoming); a duplicate request (same patient and department) is never booked as a second appointment.
+  - id: follow_up_same_doctor
+    class: business_policy
+    description: A follow-up is booked with the patient's previous doctor; a habit the head of the outpatient office can grant exceptions to.

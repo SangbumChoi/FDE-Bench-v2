@@ -1,0 +1,14 @@
+From: Dirección de consultas externas <outpatient-office@hospital.example>
+To: Oficina de citas de consultas externas <booking-office@hospital.example>
+Date: Wed, 04 Nov 2026 12:48:00 +0100
+Subject: Códigos en los datos del programa de citas
+Message-ID: <2026-11-04_outpatient_office_data_codes.es@hospital.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+A la oficina de citas:
+
+En los datos que recibe el programa de citas, especialidades, idiomas y fechas van como códigos y AAAA-MM-DD: códigos de especialidad IM = Medicina Interna, CARD = Cardiología, DERM = Dermatología, ORTH = Traumatología, PED = Pediatría; los códigos de idioma están en la tabla languages de la exportación del sistema.
+
+Dirección de consultas externas

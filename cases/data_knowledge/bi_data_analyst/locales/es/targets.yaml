@@ -1,0 +1,18 @@
+- id: fiscal_year
+  text: El año fiscal empieza el 1 de abril y lleva el nombre del año en que empieza (FY2025 = del 2025-04-01 al 2026-03-31); el primer trimestre es abril–junio y el primer semestre, abril–septiembre.
+- id: local_day
+  text: Las marcas de tiempo están en UTC, pero los días, meses, trimestres y años fiscales se deciden en hora de Corea (UTC+9); hay que sumar 9 horas antes de tomar la fecha.
+- id: test_accounts
+  text: Los clientes con account_type «prueba» en accounts_meta son cuentas de QA y se excluyen de todas las cifras; las cuentas «empleado» se mantienen.
+- id: counted_orders
+  text: Solo cuentan los pedidos «completado»; los «cancelado» y «pago_fallido» no cuentan nunca, aunque payments.csv tenga una fila de pago para ellos.
+- id: net_revenue
+  text: Ingreso neto = subtotal del pedido (sin impuestos) menos los reembolsos sin impuesto (importe × subtotal / total), imputados al periodo de la fecha del pedido; por categoría, los reembolsos se reparten entre las líneas en proporción a su importe.
+- id: fx_order_date
+  text: Los importes están en la moneda del pedido y se convierten a KRW con el krw_per_unit de fx_rates de la fecha del pedido (hora de Corea); los reembolsos usan el mismo tipo que su pedido.
+- id: active_customer
+  text: Un cliente activo tiene al menos un pedido completado con fecha dentro de los 90 días que terminan en la fecha de referencia (del 2026-07-03 al 2026-09-30).
+- id: category_rename
+  text: La categoría snacks se renombró como despensa el 2025-10-01 y los productos antiguos conservan la etiqueta vieja; las preguntas sobre despensa incluyen ambas etiquetas.
+- id: report_rounding
+  text: Finanzas exige redondear toda respuesta monetaria al millar de KRW más cercano; las respuestas se comparan con las cifras exactas (recuentos e identificadores exactos, el resto dentro del 0,5 %).

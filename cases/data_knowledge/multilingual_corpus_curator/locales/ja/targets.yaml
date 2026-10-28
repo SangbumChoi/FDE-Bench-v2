@@ -1,0 +1,32 @@
+- id: layout
+  text: ライブラリに並べる本は、out_dir の中の {{layout}} というパスのファイル1つです。
+- id: year_basis
+  text: パスの年は{{year_basis}}です。年が1つしかない本はその年を使います。
+- id: script
+  text: パスの書名と著者名は{{script}}で書きます。ローマ字はメタデータで原語の表記と対になっているものを使います。
+- id: co_authors
+  text: 共著の本では、パスの著者の部分は{{multi_author}}です。
+- id: name_rules
+  text: '書名と著者名：NFKC、\ / : * ? " < > | と制御文字は空白に、連続する空白は{{sep}}に、先頭の {{max_len}} 文字だけ残し、両端の空白・ピリオド・区切り文字を除く。'
+- id: content
+  text: ライブラリのファイルにはその本の紹介文だけを UTF-8 で入れ、段落の間に空行を入れます。
+- id: manifest_review
+  text: manifest.csv にすべての本を載せ（元ファイルは ; 区切り、状態は placed か review）、確認に回す本はファイルを _review/ の下にコピーし、理由コード UNREADABLE、NO_TITLE、NO_AUTHOR、NO_YEAR、NO_DESCRIPTION、CONFLICT のうち最初に当てはまるものを付けます。
+- id: precedence
+  text: 各情報は埋め込みメタデータ、扉ページのテキスト、ファイル名の順に取ります。ファイルの作成日・更新日は刊行年ではありません。
+- id: encodings
+  text: 一部のファイルは目印なしで GB18030、CP949、Shift_JIS、CP1252 になっています（HTML は charset を宣言）。
+- id: year_notations
+  text: 年は和暦、民国紀年、檀紀、漢数字、ローマ数字でも書かれており、すべて4桁の年に直します。
+- id: author_variants
+  text: 同じ著者がいくつものローマ字表記や「姓, 名」の形で出てきます。常に正式な対の表記を使い、その本のファイルにないときはドライブにある同じ著者のほかの本から見つけます。
+- id: duplicates
+  text: 複数のファイルや形式にある同じ本のコピーはライブラリのファイル1つにまとめ、一覧のその行にファイルをすべて載せます。
+- id: exceptions
+  text: 欠けた項目はその本のほかのファイルから取ります。意味のあるファイル名は書名になります（汎用的な名前は除く）。著作権表示が年になります。紹介文がなければ NO_DESCRIPTION で、決して作りません。同じ段階の2つの情報源で年が違えば CONFLICT です。
+- id: containers
+  text: zip アーカイブと目録 CSV（1行1冊、ヘッダーは英語か日本語）にも本があります。画像だけのスキャンは読めるコピーがあれば無視し、なければ UNREADABLE です。不要ファイルからは何も出力しません。
+- id: missing_author
+  text: 著者のない本は NO_AUTHOR として確認に回します。方針なので、例外が承認されれば「{{fallback_author}}」でライブラリに並べます。
+- id: scoring
+  text: 1冊ごとに、正しいパスと紹介文なら1点（そうでなければ紹介文が正しくて0.4点、年・書名・著者が合うごとに0.2点、パスだけ正しく紹介文が違えば0.6点）、確認は理由コードが正しければ1点（違えば0.4点）。medium と hard では本でないライブラリのファイル1つにつき0.5点を引きます。

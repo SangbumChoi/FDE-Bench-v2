@@ -1,0 +1,13 @@
+{
+  "params": {
+    "closed_dept": "DERM",
+    "interpreters_per_day": 3,
+    "lab_cap": 6,
+    "move_notice_days": 3,
+    "overbooked_per_session": 2,
+    "urgent_days": 2,
+    "waitlist_order": "urgency_received"
+  },
+  "ruleset": "A",
+  "tier": "hard"
+}

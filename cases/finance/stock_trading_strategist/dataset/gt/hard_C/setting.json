@@ -1,0 +1,13 @@
+{
+  "params": {
+    "large_order": 9,
+    "liquidation_days": 2,
+    "max_drawdown": 10,
+    "restricted": "TARK, VYTA",
+    "sector_cap": 35,
+    "stock_cap": 20,
+    "withdrawal_basis": "payment"
+  },
+  "ruleset": "C",
+  "tier": "hard"
+}

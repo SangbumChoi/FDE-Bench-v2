@@ -1,0 +1,18 @@
+{
+  "metrics": {
+    "backlog_krw": 0,
+    "backlog_unit_weeks": {},
+    "holding_krw": 6482180,
+    "order_lines": 94,
+    "purchase_krw": 483622615,
+    "safety_shortfall_krw": 0,
+    "scrap_krw": 0,
+    "spend_by_month": {
+      "2026-11": 124187667,
+      "2026-12": 279984052,
+      "2027-01": 79450896
+    }
+  },
+  "objective": 490104795.03999996,
+  "violations": []
+}

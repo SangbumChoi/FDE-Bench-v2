@@ -1,0 +1,16 @@
+From: Secretaría de Pediatría <ped-secretariat@hospital.example>
+To: Oficina de citas de consultas externas <booking-office@hospital.example>
+Date: Fri, 13 Nov 2026 10:52:00 +0100
+Subject:
+ Dr. Jorge Serrano (D13) de baja del 16 de noviembre al 27 de noviembre
+Message-ID: <2026-11-13_illness_D13.es@hospital.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+Estimada oficina de citas:
+
+El Dr. Jorge Serrano (D13, Pediatría) está de baja por enfermedad del lunes 16 de noviembre al viernes 27 de noviembre y no pasa consulta esos días.
+
+Un saludo,
+Secretaría de Pediatría

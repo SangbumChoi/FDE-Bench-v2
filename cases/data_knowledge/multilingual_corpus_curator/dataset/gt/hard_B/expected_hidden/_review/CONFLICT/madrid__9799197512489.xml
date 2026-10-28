@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-512489</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9799197512489</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>La librería pequeña</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>Carmen Barrachina</PersonName>
+        <PersonNameInverted>Barrachina, Carmen</PersonNameInverted>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">Durante años, un joven piloto de transbordador ha evitado la última estación de un ferrocarril abandonado; entonces el último tren no regresa y todo vuelve.
+
+En treinta y uno capítulos breves que van del pasado al presente, se pregunta por el precio de quedarse.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1968</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

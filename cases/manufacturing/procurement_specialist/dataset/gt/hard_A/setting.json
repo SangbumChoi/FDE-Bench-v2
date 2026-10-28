@@ -1,0 +1,11 @@
+{
+  "params": {
+    "hold_supplier": "S07",
+    "hold_until": 3,
+    "max_share": 80,
+    "safety_weeks": 1,
+    "usd_krw": 1380
+  },
+  "ruleset": "A",
+  "tier": "hard"
+}

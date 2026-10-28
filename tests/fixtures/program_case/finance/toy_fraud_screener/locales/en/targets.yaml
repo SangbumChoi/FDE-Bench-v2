@@ -1,0 +1,8 @@
+- id: interface
+  kind: missing
+  domain: data semantics
+  text: The deliverable is program/solution.py with decide(txn) returning approve or block.
+- id: sanctions
+  kind: missing
+  domain: business rule
+  text: Transactions from country XX are always blocked.

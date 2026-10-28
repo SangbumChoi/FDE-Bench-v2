@@ -1,0 +1,48 @@
+- id: interface
+  text: 交付物是定义了 on_day(day) 的 program/scheduler.py，每个工作日下班后按顺序在同一进程中调用一次（状态可放在模块变量里），每次10秒，只用标准库，运行时不能读数据文件；返回 book / move / release 动作（从明天起10个工作日以内）和当天的现况表。
+- id: evaluation_period
+  text: 程序用数据里没有的2026年11月9日至12月4日共20个工作日评估，其中的申请全是新的。
+- id: visit_length
+  text: 初诊占同一医生同一时段连续两个20分钟号源（开始时间为第一个号源），复诊占一个号源。
+- id: urgent_window
+  text: 每条紧急（U）申请必须在受理当天预约，日期在最早可就诊日（最早可约日期或受理后下一个工作日）起{{urgent_days}}个工作日以内，调整后也要在此范围内。
+- id: urgent_reserve
+  text: 每个上午时段的前两个号源（09:00 和 09:20）在两个及以上工作日之后只留给紧急申请，前一天（对明天的门诊）才放给所有人。
+- id: follow_up_doctor
+  text: 复诊约给患者的上次接诊医生；这是惯例而非合同规定，门诊办公室主任可以批准例外。
+- id: interpreters
+  text: 初诊若医生不会说患者的语言，需要全院每天{{interpreters_per_day}}名现场翻译之一；复诊用电话翻译，不限数量。
+- id: holiday_clinic
+  text: 11月23日（周一）市民日{{closed_dept}}停诊，但出诊表里仍列着它的时段；其他科室照常。
+- id: move_notice
+  text: 医院更改患者预约的日期或时间时，新预约须在今天之后至少{{move_notice_days}}个工作日（同一时间只换医生不需要），每次更改都有成本。
+- id: waitlist_priority
+  text: 候诊申请按优先顺序（{{waitlist_order}}）预约；同一科室、就诊类型和上次接诊医生下有更高优先级的申请仍在候诊且本可以用那个号源时，不能约优先级更低的申请。
+- id: status_table
+  text: 每天执行动作后，就接下来10个工作日按科室返回 free_slots（可约的空号源，不含预留号和停诊）、held_back（两个及以上工作日后的空紧急预留号）和 waitlist（候诊申请数）；每项须完全一致，现况表占质量的20%。
+- id: scoring
+  text: 质量 = 0.8 × 相对客户基准程序的运营价值 + 0.2 × 现况表准确率；运营价值为11月10日至12月7日每看诊一个患者号源 +10，每等一个工作日 − 0.4 × 紧急权重（U 3，S 2，R 1），始终没约上的申请每条 − 10，每更改一次患者预约 − 4。
+- id: easy_scope
+  text: 本轮不考虑缺勤和翻译通知、转诊单期限、抽血和爽约（test_date 为 null，约上的患者都算会来），每条申请算一次单独就诊。
+- id: medium_scope
+  text: 本轮不考虑爽约（约上的患者都算会来，不允许超额预约），同一患者申请两次也按每条申请单独就诊。
+- id: referral_expiry
+  text: 初诊须在 referral_valid_until 当天或之前就诊；过期后不能再预约，也不计入候诊人数。
+- id: blood_test
+  text: 空腹抽血须在就诊至少一个工作日前、且不早于最早可约日期，写在 test_date；检验科每个工作日最多{{lab_cap}}人，已预约的也算。
+- id: doctor_absence
+  text: 从收到 doctor_absence 通知那天起，该医生缺勤日的预约一个都不能留，须在那次调用里调整（适用提前通知期，同一时间换其他医生除外）或放回候诊名单，缺勤日也不计入现况表。
+- id: interpreter_absence
+  text: 收到 interpreter_absence 通知后，从当天起该日期现场翻译少一名，当天多出的需翻译初诊须调整或放回。
+- id: no_show_rates
+  text: 爽约率因人而异（申请里的历史预约和爽约次数，历史到诊记录里约22%爽约），提前期每多一个工作日约高一个百分点；患者记录是在约5个工作日提前期下统计的。
+- id: overbooking
+  text: 一个号源最多放两个复诊（初诊不行），每位医生每个上午或下午时段最多{{overbooked_per_session}}个超额号源。
+- id: duplicates
+  text: 同一患者对同一科室再次申请是同一次就诊；每位患者本期间每个科室最多一个预约，现况表的候诊数按患者而不是申请计。
+- id: several_departments
+  text: 在多个科室有预约的患者尽量安排同一天来，这类患者每多来医院一天扣3。
+- id: staff_notes
+  text: 备注没有效力：院长的熟人和其他人一样排队，科主任要求留出下午门诊也不是规定，那些号源照样从候诊名单里填。
+- id: scoring_hard
+  text: 本轮看诊号源按每位患者爽约概率取期望值，每个超额号源扣 12 × 两位患者都来的概率。

@@ -1,0 +1,1 @@
+We got too many applications for these three roles. Can you shortlist the best candidates for interviews? The job descriptions and the applicant export from our recruiting system are attached, along with some data on people we hired for the same roles before.

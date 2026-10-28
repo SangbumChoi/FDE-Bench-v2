@@ -98,7 +98,7 @@ def test_native_rule_bending_needs_the_exception_process(cases_root, tmp_path):
 def _hard_session(cases_root, tmp_path, answer="答复"):
     case = NativeCase(cases_root / NATIVE)
     run_dir = tmp_path / "run"
-    v = build_variant(VariantSpec(NATIVE, customer_locale="zh", difficulty="hard"), case, run_dir / "workspace",
+    v = build_variant(VariantSpec(NATIVE, customer_locale="zh", engagement="messy"), case, run_dir / "workspace",
                       Translator(None, tmp_path / "c"))
     return v, run_dir, Session(v, run_dir, run_dir / "workspace", ScriptedModel(lambda m: ChatResponse(content=answer)))
 

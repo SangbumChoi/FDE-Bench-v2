@@ -1,0 +1,14 @@
+From: Outpatient office <outpatient-office@hospital.example>
+To: Outpatient booking office <booking-office@hospital.example>
+Date: Wed, 04 Nov 2026 12:48:00 +0000
+Subject: Codes in the booking program's data
+Message-ID: <2026-11-04_outpatient_office_data_codes.en@hospital.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+To the booking office,
+
+In the data the booking program receives, departments, languages and dates are codes and YYYY-MM-DD: department codes IM = Internal Medicine, CARD = Cardiology, DERM = Dermatology, ORTH = Orthopedics, PED = Pediatrics; the language codes are in the languages table of the system export.
+
+Outpatient office

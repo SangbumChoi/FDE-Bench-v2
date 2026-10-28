@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-278455</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9790406278455</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>透明的花园</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Touming de Huayuan</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>林浩然</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Lin Haoran</PersonName></AlternativeName>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">当最后一班列车没有回来，住在边境线上的茶园的一个刚搬来的邮递员不得不决定哪些东西值得留下。
+
+作者用十七个短章在过去与现在之间来回，追问时间如何改变一个地方。</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1975</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

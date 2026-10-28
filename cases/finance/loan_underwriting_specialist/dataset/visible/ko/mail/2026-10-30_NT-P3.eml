@@ -1,0 +1,17 @@
+From: 대출관리 상환확인 <confirmations@creditor.example>
+To: 개인대출 창구 <loans.desk@lender.example>
+Date: Fri, 30 Oct 2026 09:00:00 +0000
+Subject: 상환 확인 NT-P3: 부채 BF1029693-D1
+Message-ID: <NT-P3.2026-10-30@lender.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+안녕하세요.
+
+고객 BF1029693(신용정보 고유번호)의 부채 BF1029693-D1 건이 2026-10-30에 전액 상환되었음을 확인합니다.
+새 잔액: 0
+새 월상환액: 0
+
+문서번호: NT-P3
+대출관리 상환확인

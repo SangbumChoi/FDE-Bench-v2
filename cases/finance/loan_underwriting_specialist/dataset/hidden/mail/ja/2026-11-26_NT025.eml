@@ -1,0 +1,17 @@
+From: ローン管理 返済確認 <confirmations@creditor.example>
+To: 個人ローン窓口 <loans.desk@lender.example>
+Date: Thu, 26 Nov 2026 09:07:00 +0000
+Subject: 完済確認 NT025：債務 BF6326549-D1
+Message-ID: <NT025.2026-11-26@lender.example>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+
+お世話になっております。
+
+顧客 BF6326549（信用情報登録番号）の債務 BF6326549-D1 が 2026-11-26 に全額返済されたことを確認いたします。
+新しい残高：0
+新しい月返済額：0
+
+文書番号：NT025
+ローン管理 返済確認
