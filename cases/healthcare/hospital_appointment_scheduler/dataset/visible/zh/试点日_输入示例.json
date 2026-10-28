@@ -1,0 +1,1823 @@
+{
+ "date": "2026-11-06",
+ "day_index": 0,
+ "days_in_period": 1,
+ "period_end": "2026-11-06",
+ "booking_window": {
+  "first": "2026-11-09",
+  "last": "2026-11-20"
+ },
+ "doctors": [
+  {
+   "doctor_id": "D01",
+   "department": "IM",
+   "languages": [
+    "L0",
+    "F1"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "department": "IM",
+   "languages": [
+    "L0"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "department": "IM",
+   "languages": [
+    "L0",
+    "F2"
+   ]
+  },
+  {
+   "doctor_id": "D04",
+   "department": "IM",
+   "languages": [
+    "L0"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "department": "CARD",
+   "languages": [
+    "L0",
+    "F1"
+   ]
+  },
+  {
+   "doctor_id": "D06",
+   "department": "CARD",
+   "languages": [
+    "L0"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "department": "CARD",
+   "languages": [
+    "L0",
+    "F3"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "department": "DERM",
+   "languages": [
+    "L0",
+    "F1"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "department": "DERM",
+   "languages": [
+    "L0"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "department": "ORTH",
+   "languages": [
+    "L0",
+    "F4"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "department": "ORTH",
+   "languages": [
+    "L0"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "department": "ORTH",
+   "languages": [
+    "L0",
+    "F1",
+    "F2"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "department": "PED",
+   "languages": [
+    "L0",
+    "F1"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "department": "PED",
+   "languages": [
+    "L0"
+   ]
+  }
+ ],
+ "sessions": [
+  {
+   "doctor_id": "D01",
+   "date": "2026-11-09",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "date": "2026-11-09",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "date": "2026-11-09",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-11-09",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-11-09",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "date": "2026-11-09",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-11-09",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-11-09",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D01",
+   "date": "2026-11-10",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "date": "2026-11-10",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D06",
+   "date": "2026-11-10",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-11-10",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "date": "2026-11-10",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-11-10",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "date": "2026-11-10",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-11-10",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "date": "2026-11-11",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D04",
+   "date": "2026-11-11",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "date": "2026-11-11",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "date": "2026-11-11",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-11-11",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-11-11",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "date": "2026-11-11",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-11-11",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-11-11",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D01",
+   "date": "2026-11-12",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "date": "2026-11-12",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "date": "2026-11-12",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "date": "2026-11-12",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "date": "2026-11-12",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "date": "2026-11-12",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-11-12",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "date": "2026-11-12",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-11-12",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-11-12",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "date": "2026-11-13",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "date": "2026-11-13",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D04",
+   "date": "2026-11-13",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D06",
+   "date": "2026-11-13",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "date": "2026-11-13",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-11-13",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "date": "2026-11-13",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "date": "2026-11-13",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-11-13",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D01",
+   "date": "2026-11-16",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "date": "2026-11-16",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "date": "2026-11-16",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-11-16",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-11-16",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "date": "2026-11-16",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-11-16",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-11-16",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D01",
+   "date": "2026-11-17",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "date": "2026-11-17",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D06",
+   "date": "2026-11-17",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-11-17",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "date": "2026-11-17",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-11-17",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "date": "2026-11-17",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-11-17",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "date": "2026-11-18",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D04",
+   "date": "2026-11-18",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "date": "2026-11-18",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "date": "2026-11-18",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-11-18",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-11-18",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "date": "2026-11-18",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-11-18",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-11-18",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D01",
+   "date": "2026-11-19",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "date": "2026-11-19",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "date": "2026-11-19",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "date": "2026-11-19",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "date": "2026-11-19",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "date": "2026-11-19",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-11-19",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "date": "2026-11-19",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-11-19",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-11-19",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "date": "2026-11-20",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "date": "2026-11-20",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D04",
+   "date": "2026-11-20",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D06",
+   "date": "2026-11-20",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "date": "2026-11-20",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-11-20",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "date": "2026-11-20",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "date": "2026-11-20",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-11-20",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  }
+ ],
+ "new_requests": [
+  {
+   "request_id": "T0001",
+   "patient_id": "P845164",
+   "received": "2026-11-06",
+   "department": "IM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-09",
+   "referral_valid_until": "2027-01-29",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "T0002",
+   "patient_id": "P322241",
+   "received": "2026-11-06",
+   "department": "CARD",
+   "visit_type": "follow_up",
+   "previous_doctor": "D05",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-09",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 7,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "T0003",
+   "patient_id": "P493709",
+   "received": "2026-11-06",
+   "department": "DERM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "S",
+   "triage_note": "symptoms ongoing for several weeks",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-09",
+   "referral_valid_until": "2027-01-29",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "T0004",
+   "patient_id": "P437136",
+   "received": "2026-11-06",
+   "department": "ORTH",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-09",
+   "referral_valid_until": "2027-01-29",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": [
+    {
+     "author_role": "director_office",
+     "request": "book_tomorrow_morning",
+     "text": "The hospital director's acquaintance - please book tomorrow morning."
+    }
+   ]
+  },
+  {
+   "request_id": "T0005",
+   "patient_id": "P631454",
+   "received": "2026-11-06",
+   "department": "PED",
+   "visit_type": "follow_up",
+   "previous_doctor": "D13",
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "F3",
+   "earliest_date": "2026-11-11",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 11,
+   "missed_appointments": 2,
+   "notes": []
+  },
+  {
+   "request_id": "T0006",
+   "patient_id": "P466273",
+   "received": "2026-11-06",
+   "department": "IM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-09",
+   "referral_valid_until": "2027-01-29",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  }
+ ],
+ "notices": [
+  {
+   "notice_id": "NT-P1",
+   "type": "cancellation",
+   "request_id": "T0031",
+   "patient_id": "P714908",
+   "doctor_id": "D01",
+   "date": "2026-11-09",
+   "start": "09:40",
+   "text": "The patient cancelled this appointment."
+  },
+  {
+   "notice_id": "NT-P2",
+   "type": "doctor_absence",
+   "doctor_id": "D05",
+   "from": "2026-11-12",
+   "to": "2026-11-12",
+   "reason": "conference",
+   "text": "Dr D05 is at a conference from 2026-11-12 to 2026-11-12 and holds no clinics then."
+  },
+  {
+   "notice_id": "NT-P3",
+   "type": "interpreter_absence",
+   "date": "2026-11-10",
+   "in_person_interpreters_change": -1,
+   "text": "One of our in-person interpreters is away on 2026-11-10."
+  },
+  {
+   "notice_id": "NT-P4",
+   "type": "staff_note",
+   "author_role": "department_head",
+   "doctor_id": "D07",
+   "text": "Please send me the list of next week's new patients by Monday."
+  }
+ ],
+ "attendance": [
+  {
+   "request_id": "T0041",
+   "patient_id": "P432231",
+   "doctor_id": "D04",
+   "start": "13:20",
+   "attended": true
+  },
+  {
+   "request_id": "T0042",
+   "patient_id": "P390069",
+   "doctor_id": "D04",
+   "start": "13:40",
+   "attended": false
+  }
+ ],
+ "book": [
+  {
+   "request_id": "T0021",
+   "doctor_id": "D02",
+   "date": "2026-11-09",
+   "start": "13:00",
+   "slots": 1,
+   "test_date": null,
+   "booked_on": "2026-11-04",
+   "request": {
+    "request_id": "T0021",
+    "patient_id": "P608367",
+    "received": "2026-11-03",
+    "department": "IM",
+    "visit_type": "follow_up",
+    "previous_doctor": "D02",
+    "urgency": "R",
+    "triage_note": "annual review",
+    "preferred_language": "L0",
+    "earliest_date": "2026-11-04",
+    "referral_valid_until": null,
+    "pre_visit_test": false,
+    "past_appointments": 0,
+    "missed_appointments": 0,
+    "notes": []
+   }
+  },
+  {
+   "request_id": "T0022",
+   "doctor_id": "D08",
+   "date": "2026-11-09",
+   "start": "10:00",
+   "slots": 1,
+   "test_date": null,
+   "booked_on": "2026-11-04",
+   "request": {
+    "request_id": "T0022",
+    "patient_id": "P491818",
+    "received": "2026-11-03",
+    "department": "DERM",
+    "visit_type": "follow_up",
+    "previous_doctor": "D08",
+    "urgency": "R",
+    "triage_note": "annual review",
+    "preferred_language": "L0",
+    "earliest_date": "2026-11-04",
+    "referral_valid_until": null,
+    "pre_visit_test": false,
+    "past_appointments": 0,
+    "missed_appointments": 0,
+    "notes": []
+   }
+  },
+  {
+   "request_id": "T0023",
+   "doctor_id": "D10",
+   "date": "2026-11-11",
+   "start": "15:00",
+   "slots": 1,
+   "test_date": null,
+   "booked_on": "2026-11-04",
+   "request": {
+    "request_id": "T0023",
+    "patient_id": "P135646",
+    "received": "2026-11-03",
+    "department": "ORTH",
+    "visit_type": "follow_up",
+    "previous_doctor": "D10",
+    "urgency": "R",
+    "triage_note": "annual review",
+    "preferred_language": "L0",
+    "earliest_date": "2026-11-04",
+    "referral_valid_until": null,
+    "pre_visit_test": false,
+    "past_appointments": 0,
+    "missed_appointments": 0,
+    "notes": []
+   }
+  }
+ ],
+ "waitlist": [
+  {
+   "request_id": "T0011",
+   "patient_id": "P395187",
+   "received": "2026-11-04",
+   "department": "DERM",
+   "visit_type": "follow_up",
+   "previous_doctor": "D08",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-05",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 14,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "T0012",
+   "patient_id": "P328104",
+   "received": "2026-11-04",
+   "department": "ORTH",
+   "visit_type": "follow_up",
+   "previous_doctor": "D10",
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-05",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 11,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "T0013",
+   "patient_id": "P873684",
+   "received": "2026-11-04",
+   "department": "PED",
+   "visit_type": "follow_up",
+   "previous_doctor": "D14",
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-05",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 7,
+   "missed_appointments": 3,
+   "notes": []
+  }
+ ]
+}

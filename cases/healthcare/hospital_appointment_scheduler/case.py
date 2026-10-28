@@ -50,7 +50,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from fdebench2.casekit import Fatal, labels, program_session, write_csv
+from fdebench2.casekit import LOCALES, Fatal, labels, program_session, write_csv, write_eml, write_sql
 
 ENTRYPOINT = "scheduler.py:on_day"
 REFERENCE = Path(__file__).resolve().parent / "reference" / "scheduler.py"
@@ -1501,51 +1501,24 @@ def _pilot(w: World, seed: int) -> dict:
 
 
 # ── data rendering ───────────────────────────────────────────────────────────
+#
+# The agent sees what the hospital would hand over: an export of the booking system as a plain-text SQL dump
+# (ASCII table and column names and IDs; department and language names, visit types, statuses and comments in
+# the customer locale), the booking office's e-mails (mail/*.eml) and the pilot day as JSON, exactly as the
+# engine sends a day. The dataset adds the hidden period (write_hidden) and per-setting answers
+# (write_ground_truth).
 
 FILES = {
-    "doctors": {"zh": "医生名单.csv", "en": "doctors.csv", "ko": "의사목록.csv", "ja": "医師一覧.csv",
-                "es": "medicos.csv"},
-    "requests": {"zh": "历史预约申请.csv", "en": "past_requests.csv", "ko": "과거_예약요청.csv",
-                 "ja": "過去の予約依頼.csv", "es": "solicitudes_anteriores.csv"},
-    "appointments": {"zh": "历史就诊记录.csv", "en": "past_appointments.csv", "ko": "과거_예약내역.csv",
-                     "ja": "過去の予約実績.csv", "es": "citas_anteriores.csv"},
-    "notice": {"zh": "门诊通知.txt", "en": "clinic_notices.txt", "ko": "진료안내.txt", "ja": "外来のお知らせ.txt",
-               "es": "avisos_consultas.txt"},
+    "export": {"zh": "预约系统导出.sql", "en": "booking_system_export.sql", "ko": "예약시스템_내보내기.sql",
+               "ja": "予約システム_エクスポート.sql", "es": "exportacion_sistema_citas.sql"},
     "sample_in": {"zh": "试点日_输入示例.json", "en": "pilot_day_input.json", "ko": "시범일_입력예시.json",
                   "ja": "試行日_入力例.json", "es": "dia_piloto_entrada.json"},
     "sample_out": {"zh": "试点日_输出示例.json", "en": "pilot_day_output.json", "ko": "시범일_출력예시.json",
                    "ja": "試行日_出力例.json", "es": "dia_piloto_salida.json"},
 }
-COLS = {
-    "doctor": {"zh": "医生编号", "en": "doctor_id", "ko": "의사ID", "ja": "医師ID", "es": "id_medico"},
-    "name": {"zh": "姓名", "en": "name", "ko": "이름", "ja": "氏名", "es": "nombre"},
-    "dept": {"zh": "科室", "en": "department", "ko": "진료과", "ja": "診療科", "es": "especialidad"},
-    "dept_code": {"zh": "科室代码", "en": "department_code", "ko": "진료과코드", "ja": "診療科コード",
-                  "es": "codigo_especialidad"},
-    "langs": {"zh": "会说的语言", "en": "languages", "ko": "구사언어", "ja": "対応言語", "es": "idiomas"},
-    "lang_codes": {"zh": "语言代码", "en": "language_codes", "ko": "언어코드", "ja": "言語コード",
-                   "es": "codigos_idioma"},
-    "sessions": {"zh": "出诊时间", "en": "clinic_sessions", "ko": "진료일정", "ja": "外来担当", "es": "consultas"},
-    "request": {"zh": "申请编号", "en": "request_id", "ko": "요청ID", "ja": "依頼ID", "es": "id_solicitud"},
-    "patient": {"zh": "患者编号", "en": "patient_id", "ko": "환자ID", "ja": "患者ID", "es": "id_paciente"},
-    "received": {"zh": "受理日期", "en": "received", "ko": "접수일", "ja": "受付日", "es": "fecha_recepcion"},
-    "visit": {"zh": "就诊类型", "en": "visit_type", "ko": "진료구분", "ja": "受診区分", "es": "tipo_visita"},
-    "urgency": {"zh": "紧急程度", "en": "urgency", "ko": "긴급도", "ja": "緊急度", "es": "urgencia"},
-    "note": {"zh": "分诊备注", "en": "triage_note", "ko": "접수메모", "ja": "受付メモ", "es": "nota_triaje"},
-    "lang": {"zh": "首选语言", "en": "preferred_language", "ko": "희망언어", "ja": "希望言語",
-             "es": "idioma_preferido"},
-    "prev": {"zh": "上次接诊医生", "en": "previous_doctor", "ko": "이전담당의", "ja": "前回担当医",
-             "es": "medico_anterior"},
-    "earliest": {"zh": "最早可约日期", "en": "earliest_date", "ko": "희망시작일", "ja": "受診可能日", "es": "fecha_desde"},
-    "referral": {"zh": "转诊单有效期至", "en": "referral_valid_until", "ko": "의뢰서유효기한", "ja": "紹介状有効期限",
-                 "es": "volante_valido_hasta"},
-    "test": {"zh": "就诊前检查", "en": "pre_visit_test", "ko": "사전검사", "ja": "事前検査", "es": "prueba_previa"},
-    "date": {"zh": "就诊日期", "en": "date", "ko": "진료일", "ja": "受診日", "es": "fecha"},
-    "start": {"zh": "开始时间", "en": "start", "ko": "시작시각", "ja": "開始時刻", "es": "inicio"},
-    "booked_on": {"zh": "预约日期", "en": "booked_on", "ko": "예약일", "ja": "予約日", "es": "reservada_el"},
-    "test_date": {"zh": "抽血日期", "en": "test_date", "ko": "채혈일", "ja": "採血日", "es": "fecha_analisis"},
-    "outcome": {"zh": "结果", "en": "outcome", "ko": "결과", "ja": "結果", "es": "resultado"},
-}
+MAIL_DIR = "mail"
+EXPORT_DAY = -1                         # the export and the pilot: Friday 6 November 2026, end of the day
+CAL_FROM, CAL_TO = -20, HORIZON - 1     # the calendar in the export: 12 October - 20 November
 VALUES = {
     "new": {"zh": "初诊", "en": "new patient", "ko": "초진", "ja": "初診", "es": "primera visita"},
     "follow": {"zh": "复诊", "en": "follow-up", "ko": "재진", "ja": "再診", "es": "revisión"},
@@ -1555,8 +1528,14 @@ VALUES = {
     "missed": {"zh": "爽约", "en": "missed", "ko": "미내원", "ja": "無断欠席", "es": "no acudió"},
     "cancelled": {"zh": "患者取消", "en": "cancelled by patient", "ko": "환자 취소", "ja": "患者キャンセル",
                   "es": "anulada por el paciente"},
-    "AM": {"zh": "上午", "en": "AM", "ko": "오전", "ja": "午前", "es": "mañana"},
-    "PM": {"zh": "下午", "en": "PM", "ko": "오후", "ja": "午後", "es": "tarde"},
+    "booked": {"zh": "已预约", "en": "booked", "ko": "예약됨", "ja": "予約済み", "es": "citada"},
+    "patient": {"zh": "患者", "en": "patient", "ko": "환자", "ja": "患者", "es": "paciente"},
+    "appointment_given": {"zh": "已约上", "en": "appointment given", "ko": "예약 완료", "ja": "予約確定",
+                          "es": "cita asignada"},
+    "director_office": {"zh": "院长办公室", "en": "director's office", "ko": "원장실", "ja": "院長室",
+                        "es": "dirección"},
+    "pilot": {"zh": "试点程序（临时规则）", "en": "pilot program (interim rules)", "ko": "시범 프로그램(임시 규칙)",
+              "ja": "試行版プログラム（暫定ルール）", "es": "programa piloto (reglas provisionales)"},
     "IM": {"zh": "内科", "en": "Internal Medicine", "ko": "내과", "ja": "内科", "es": "Medicina Interna"},
     "CARD": {"zh": "心内科", "en": "Cardiology", "ko": "심장내과", "ja": "循環器内科", "es": "Cardiología"},
     "DERM": {"zh": "皮肤科", "en": "Dermatology", "ko": "피부과", "ja": "皮膚科", "es": "Dermatología"},
@@ -1584,13 +1563,19 @@ NAMES = {
            "Jorge Serrano", "Paula Gil"],
 }
 WEEKDAYS = {
-    "zh": ["周一", "周二", "周三", "周四", "周五"],
-    "en": ["Mon", "Tue", "Wed", "Thu", "Fri"],
-    "ko": ["월", "화", "수", "목", "금"],
-    "ja": ["月", "火", "水", "木", "金"],
-    "es": ["lun", "mar", "mié", "jue", "vie"],
+    "zh": ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
+    "en": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    "ko": ["월", "화", "수", "목", "금", "토", "일"],
+    "ja": ["月", "火", "水", "木", "金", "土", "日"],
+    "es": ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"],
 }
-LIST_SEP = {"zh": "、", "en": "; ", "ko": ", ", "ja": "・", "es": "; "}
+MONTHS = {
+    "en": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+           "November", "December"],
+    "es": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre",
+           "noviembre", "diciembre"],
+}
+TZ = {"zh": 8, "en": 0, "ko": 9, "ja": 9, "es": 1}
 TRIAGE_L = {
     "U": {
         "zh": ["症状迅速加重，转诊医生要求尽快复查", "转诊医生标注检查结果异常", "疼痛剧烈，现用药物无法控制"],
@@ -1619,62 +1604,480 @@ TRIAGE_L = {
         "es": ["control rutinario", "revisión anual", "molestia leve de larga evolución"],
     },
 }
-NOTICE = {
-    "zh": "门诊通知\n\n1. 2026年11月23日（周一）为本市市民日，属于地方公共假日。当天门诊照常开放，各科室按平时的出诊安排接诊；"
-          "如有调整，以各科室通知为准。预约系统里的出诊表没有因假日作任何修改。\n\n"
-          "2. 预约程序收到的数据里，科室、语言和日期都用代码和 YYYY-MM-DD 表示：科室代码 IM=内科、CARD=心内科、DERM=皮肤科、"
-          "ORTH=骨科、PED=儿科；语言代码见医生名单。\n",
-    "en": "Clinic notices\n\n1. Monday 23 November 2026 is City Day, a municipal public holiday. The outpatient "
-          "building is open that day and clinics run on their usual schedule, unless a department announces "
-          "otherwise. The session calendar in the booking system was not changed for the holiday.\n\n"
-          "2. In the data the booking program receives, departments, languages and dates are codes and "
-          "YYYY-MM-DD: department codes IM = Internal Medicine, CARD = Cardiology, DERM = Dermatology, "
-          "ORTH = Orthopedics, PED = Pediatrics; language codes are in the doctor list.\n",
-    "ko": "진료 안내\n\n1. 2026년 11월 23일(월)은 시민의 날로 지방 공휴일입니다. 당일 외래는 정상 운영하며 각 진료과는 평소 "
-          "일정대로 진료합니다. 변경 사항은 진료과별로 따로 안내합니다. 예약 시스템의 진료 일정표는 공휴일이라고 바꾸지 "
-          "않았습니다.\n\n"
-          "2. 예약 프로그램이 받는 데이터에서 진료과·언어·날짜는 코드와 YYYY-MM-DD로 표시합니다. 진료과 코드는 IM=내과, "
-          "CARD=심장내과, DERM=피부과, ORTH=정형외과, PED=소아청소년과이고, 언어 코드는 의사 목록에 있습니다.\n",
-    "ja": "外来のお知らせ\n\n1. 2026年11月23日（月）は市民の日（市の祝日）です。当日も外来は開いており、各診療科は通常どおりの"
-          "担当表で診療します。変更がある場合は各診療科からお知らせします。予約システムの外来枠表は祝日用に変更していません。\n\n"
-          "2. 予約プログラムが受け取るデータでは、診療科・言語・日付はコードと YYYY-MM-DD で表します。診療科コードは IM=内科、"
-          "CARD=循環器内科、DERM=皮膚科、ORTH=整形外科、PED=小児科、言語コードは医師一覧にあります。\n",
-    "es": "Avisos de consultas\n\n1. El lunes 23 de noviembre de 2026 es el Día de la Ciudad, festivo local. Ese día "
-          "el edificio de consultas externas abre y las consultas siguen su horario habitual, salvo que una "
-          "especialidad avise de lo contrario. El calendario de consultas del sistema de citas no se modificó por "
-          "el festivo.\n\n"
-          "2. En los datos que recibe el programa de citas, especialidades, idiomas y fechas van como códigos y "
-          "AAAA-MM-DD: códigos de especialidad IM = Medicina Interna, CARD = Cardiología, DERM = Dermatología, "
-          "ORTH = Traumatología, PED = Pediatría; los códigos de idioma están en la lista de médicos.\n",
+ACQUAINTANCE_L = {
+    "zh": ["院长的熟人——请安排明天上午。", "院长的私人朋友。无论如何请明天上午约上。", "院长办公室：请把这位患者安排在明天上午。",
+           "院长的熟人——如有可能请明天上午，谢谢。"],
+    "en": list(ACQUAINTANCE),
+    "ko": ["병원장님 지인입니다. 내일 오전으로 예약 부탁드립니다.", "원장님의 개인적인 친구분입니다. 어떻게든 내일 오전으로 부탁드립니다.",
+           "원장실입니다. 이 환자분 내일 오전에 넣어 주세요.", "원장님 지인입니다. 가능하면 내일 오전으로 부탁드립니다. 감사합니다."],
+    "ja": ["院長の知人です。明日の午前でお願いします。", "院長の個人的なご友人です。何とか明日の午前でお願いします。",
+           "院長室より：この患者さんを明日の午前に入れてください。", "院長の知人です。できれば明日の午前でお願いします。"],
+    "es": ["Conocido del director del hospital: por favor, cítelo mañana por la mañana.",
+           "Un amigo personal de nuestro director. Mañana por la mañana, por favor, como sea.",
+           "Dirección: por favor, encaje a este paciente mañana por la mañana.",
+           "Conocido del director: mañana por la mañana si es posible, gracias."],
+}
+HEAD_NOTE_L = {
+    "zh": "从现在起请把我下午的门诊留给我自己的病人——不要从候补名单里补约。约谁由我告诉预约处。",
+    "en": HEAD_NOTE,
+    "ko": "앞으로 제 오후 진료는 제 환자들을 위해 비워 두세요. 대기자 명단에서 채우지 마시고, 누구를 넣을지는 제가 예약실에 "
+          "알려 드리겠습니다.",
+    "ja": "今後、私の午後の外来は自分の患者のために空けておいてください。待機リストから埋めないでください。誰を入れるかは私から"
+          "予約係に伝えます。",
+    "es": "A partir de ahora, por favor, dejen libres mis consultas de tarde para mis propios pacientes; no las llenen "
+          "desde la lista de espera. Yo diré a la oficina a quién citar.",
+}
+NOTICE = {   # the outpatient office's instructions: (subject, body) of its two e-mails
+    "zh": (("11月23日市民日", "2026年11月23日（周一）为本市市民日，属于地方公共假日。当天门诊照常开放，各科室按平时的出诊安排接诊；"
+            "如有调整，以各科室通知为准。预约系统里的出诊表没有因假日作任何修改。"),
+           ("预约程序数据里的代码", "预约程序收到的数据里，科室、语言和日期都用代码和 YYYY-MM-DD 表示：科室代码 IM=内科、"
+            "CARD=心内科、DERM=皮肤科、ORTH=骨科、PED=儿科；语言代码见系统导出里的 languages 表。")),
+    "en": (("City Day, Monday 23 November", "Monday 23 November 2026 is City Day, a municipal public holiday. The "
+            "outpatient building is open that day and clinics run on their usual schedule, unless a department "
+            "announces otherwise. The session calendar in the booking system was not changed for the holiday."),
+           ("Codes in the booking program's data", "In the data the booking program receives, departments, languages "
+            "and dates are codes and YYYY-MM-DD: department codes IM = Internal Medicine, CARD = Cardiology, DERM = "
+            "Dermatology, ORTH = Orthopedics, PED = Pediatrics; the language codes are in the languages table of the "
+            "system export.")),
+    "ko": (("11월 23일 시민의 날", "2026년 11월 23일(월)은 시민의 날로 지방 공휴일입니다. 당일 외래는 정상 운영하며 각 진료과는 "
+            "평소 일정대로 진료합니다. 변경 사항은 진료과별로 따로 안내합니다. 예약 시스템의 진료 일정표는 공휴일이라고 바꾸지 "
+            "않았습니다."),
+           ("예약 프로그램 데이터의 코드", "예약 프로그램이 받는 데이터에서 진료과·언어·날짜는 코드와 YYYY-MM-DD로 표시합니다. "
+            "진료과 코드는 IM=내과, CARD=심장내과, DERM=피부과, ORTH=정형외과, PED=소아청소년과이고, 언어 코드는 시스템 "
+            "내보내기 파일의 languages 테이블에 있습니다.")),
+    "ja": (("11月23日 市民の日について", "2026年11月23日（月）は市民の日（市の祝日）です。当日も外来は開いており、各診療科は通常"
+            "どおりの担当表で診療します。変更がある場合は各診療科からお知らせします。予約システムの外来枠表は祝日用に変更していません。"),
+           ("予約プログラムのデータのコード", "予約プログラムが受け取るデータでは、診療科・言語・日付はコードと YYYY-MM-DD で表します。"
+            "診療科コードは IM=内科、CARD=循環器内科、DERM=皮膚科、ORTH=整形外科、PED=小児科、言語コードはシステムの"
+            "エクスポートの languages テーブルにあります。")),
+    "es": (("Día de la Ciudad, lunes 23 de noviembre", "El lunes 23 de noviembre de 2026 es el Día de la Ciudad, "
+            "festivo local. Ese día el edificio de consultas externas abre y las consultas siguen su horario habitual, "
+            "salvo que una especialidad avise de lo contrario. El calendario de consultas del sistema de citas no se "
+            "modificó por el festivo."),
+           ("Códigos en los datos del programa de citas", "En los datos que recibe el programa de citas, "
+            "especialidades, idiomas y fechas van como códigos y AAAA-MM-DD: códigos de especialidad IM = Medicina "
+            "Interna, CARD = Cardiología, DERM = Dermatología, ORTH = Traumatología, PED = Pediatría; los códigos de "
+            "idioma están en la tabla languages de la exportación del sistema.")),
+}
+SENDERS = {   # (display name, address); {name}/{dept} filled in
+    "office": ({"zh": "门诊预约处", "en": "Outpatient booking office", "ko": "외래 예약실", "ja": "外来予約係",
+                "es": "Oficina de citas de consultas externas"}, "booking-office@hospital.example"),
+    "outpatient": ({"zh": "门诊部办公室", "en": "Outpatient office", "ko": "외래 운영팀", "ja": "外来管理室",
+                    "es": "Dirección de consultas externas"}, "outpatient-office@hospital.example"),
+    "interpreters": ({"zh": "翻译服务组", "en": "Interpreter service", "ko": "통역 지원팀", "ja": "通訳サービス",
+                      "es": "Servicio de intérpretes"}, "interpreters@hospital.example"),
+    "director": ({"zh": "院长办公室", "en": "Director's office", "ko": "원장실", "ja": "院長室", "es": "Dirección"},
+                 "director-office@hospital.example"),
+    "secretariat": ({"zh": "{dept}科室秘书", "en": "{dept} secretariat", "ko": "{dept} 의국", "ja": "{dept} 医局",
+                     "es": "Secretaría de {dept}"}, "{code}-secretariat@hospital.example"),
+    "doctor": ({"zh": "{name}", "en": "Dr {name}", "ko": "{name} 교수", "ja": "{name} 医師", "es": "Dr. {name}"},
+               "{docl}@hospital.example"),
+}
+MAIL = {   # kind -> lang -> (subject, body); body greetings and sign-offs included
+    "conference": {
+        "zh": ("{frm_s}至{to_s}外出开会，停诊", "预约处：\n\n我{frm}至{to}外出参加学术会议，这几天不出诊。\n\n{name}（{doc}），{dept}"),
+        "en": ("Conference {frm_s} - {to_s}: no clinics", "Dear booking office,\n\nI will be at a conference from {frm} "
+               "to {to} and hold no clinics on those days.\n\nBest regards,\n{name} ({doc}), {dept}"),
+        "ko": ("{frm_s}~{to_s} 학회 참석으로 휴진", "예약실 담당자님께\n\n{frm}부터 {to}까지 학회 참석으로 그 기간에는 진료가 "
+               "없습니다.\n\n{name}({doc}), {dept}"),
+        "ja": ("{frm_s}〜{to_s} 学会出張のため休診", "予約係 御中\n\n{frm}から{to}まで学会に出席するため、その間の外来は"
+               "休診です。\n\n{dept} {name}（{doc}）"),
+        "es": ("Congreso del {frm_s} al {to_s}: sin consultas", "Estimada oficina de citas:\n\nEstaré en un congreso "
+               "del {frm} al {to} y no pasaré consulta esos días.\n\nUn saludo,\n{name} ({doc}), {dept}"),
+    },
+    "illness": {
+        "zh": ("{name}医生（{doc}）病假 {frm_s}至{to_s}", "预约处：\n\n{dept}{name}医生（{doc}）因病请假，{frm}至{to}"
+               "不出诊。\n\n{dept}科室秘书"),
+        "en": ("Dr {name} ({doc}) off sick {frm_s} - {to_s}", "Dear booking office,\n\nDr {name} ({doc}, {dept}) is off "
+               "sick from {frm} to {to} and holds no clinics then.\n\nKind regards,\n{dept} secretariat"),
+        "ko": ("{name} 교수({doc}) 병가 {frm_s}~{to_s}", "예약실 담당자님께\n\n{dept} {name} 교수({doc})가 병가로 {frm}부터 "
+               "{to}까지 진료하지 않습니다.\n\n{dept} 의국"),
+        "ja": ("{name}医師（{doc}）病欠 {frm_s}〜{to_s}", "予約係 御中\n\n{dept}の{name}医師（{doc}）が病気のため、{frm}から"
+               "{to}まで外来を休みます。\n\n{dept} 医局"),
+        "es": ("Dr. {name} ({doc}) de baja del {frm_s} al {to_s}", "Estimada oficina de citas:\n\nEl Dr. {name} ({doc}, "
+               "{dept}) está de baja por enfermedad del {frm} al {to} y no pasa consulta esos días.\n\nUn saludo,\n"
+               "Secretaría de {dept}"),
+    },
+    "interpreter": {
+        "zh": ("{day_s}有一位现场翻译不在", "各位好：\n\n{day}我们有一位现场翻译请假，当天现场翻译少一人。\n\n翻译服务组"),
+        "en": ("Interpreter away on {day_s}", "Hello,\n\nOne of our in-person interpreters is away on {day}; we have one "
+               "in-person interpreter fewer that day.\n\nInterpreter service"),
+        "ko": ("{day_s} 대면 통역사 1명 부재", "안녕하세요.\n\n{day}에 대면 통역사 한 명이 자리를 비웁니다. 그날은 대면 통역사가 "
+               "한 명 적습니다.\n\n통역 지원팀"),
+        "ja": ("{day_s} 対面通訳1名不在", "お疲れさまです。\n\n{day}は対面通訳が1名休みのため、当日の対面通訳は1名少なくなります。"
+               "\n\n通訳サービス"),
+        "es": ("Una intérprete ausente el {day_s}", "Hola:\n\nUna de nuestras intérpretes presenciales falta el {day}; ese "
+               "día tenemos una intérprete presencial menos.\n\nServicio de intérpretes"),
+    },
+    "head_list": {
+        "zh": ("下周初诊名单", "预约处：\n\n请在周一前把下周的初诊患者名单发给我。\n\n谢谢，\n{dept}主任 {name}（{doc}）"),
+        "en": ("Next week's new patients", "Hello,\n\nPlease send me the list of next week's new patients by Monday.\n\n"
+               "Thanks,\n{name} ({doc}), head of {dept}"),
+        "ko": ("다음 주 초진 환자 명단", "안녕하세요.\n\n다음 주 초진 환자 명단을 월요일까지 보내 주세요.\n\n{dept} 과장 {name}({doc})"),
+        "ja": ("来週の初診患者リスト", "お疲れさまです。\n\n来週の初診患者のリストを月曜までに送ってください。\n\n{dept} 部長 {name}（{doc}）"),
+        "es": ("Primeras visitas de la semana que viene", "Hola:\n\nPor favor, envíenme antes del lunes la lista de "
+               "primeras visitas de la semana que viene.\n\nGracias,\n{name} ({doc}), jefe de {dept}"),
+    },
+    "head_keepfree": {
+        "zh": ("我下午的门诊", "预约处：\n\n{note}\n\n{dept}主任 {name}（{doc}）"),
+        "en": ("My afternoon clinics", "Hello,\n\n{note}\n\n{name} ({doc}), head of {dept}"),
+        "ko": ("제 오후 진료 건", "안녕하세요.\n\n{note}\n\n{dept} 과장 {name}({doc})"),
+        "ja": ("私の午後の外来について", "お疲れさまです。\n\n{note}\n\n{dept} 部長 {name}（{doc}）"),
+        "es": ("Mis consultas de tarde", "Hola:\n\n{note}\n\n{name} ({doc}), jefe de {dept}"),
+    },
+    "acquaintance": {
+        "zh": ("申请 {rid}（患者 {pid}）", "预约处：\n\n申请 {rid}（患者 {pid}，{dept}，{visit}）：{note}\n\n院长办公室"),
+        "en": ("Request {rid} (patient {pid})", "Dear booking office,\n\nRequest {rid} (patient {pid}, {dept}, {visit}): "
+               "{note}\n\nDirector's office"),
+        "ko": ("요청 {rid}(환자 {pid})", "예약실 담당자님께\n\n요청 {rid}(환자 {pid}, {dept}, {visit}): {note}\n\n원장실"),
+        "ja": ("依頼 {rid}（患者 {pid}）", "予約係 御中\n\n依頼 {rid}（患者 {pid}、{dept}、{visit}）：{note}\n\n院長室"),
+        "es": ("Solicitud {rid} (paciente {pid})", "Estimada oficina de citas:\n\nSolicitud {rid} (paciente {pid}, {dept}, "
+               "{visit}): {note}\n\nDirección"),
+    },
+    "instructions": {
+        "zh": ("{subject}", "预约处各位：\n\n{body}\n\n门诊部办公室"),
+        "en": ("{subject}", "To the booking office,\n\n{body}\n\nOutpatient office"),
+        "ko": ("{subject}", "예약실 여러분께\n\n{body}\n\n외래 운영팀"),
+        "ja": ("{subject}", "予約係各位\n\n{body}\n\n外来管理室"),
+        "es": ("{subject}", "A la oficina de citas:\n\n{body}\n\nDirección de consultas externas"),
+    },
+}
+SQL_DOC = {   # the export's header comment: title, how to load, one line per table
+    "zh": ("门诊预约系统导出（截至 2026-11-06 下班）。导入：sqlite3 booking.db < 本文件。日期为 YYYY-MM-DD，时间为 HH:MM。",
+           {"departments": "科室代码与名称", "languages": "语言代码与名称",
+            "doctors": "医生", "doctor_languages": "医生会说的语言",
+            "weekly_sessions": "每周出诊安排（weekday 1=周一；session AM 上午 / PM 下午；每个号源20分钟）",
+            "clinic_sessions": "出诊表 2026-10-12 至 2026-11-20（未因假日修改）",
+            "requests": "预约申请（10月12日以来就诊的申请，以及11月6日前受理、尚在候补或已约到之后日期的申请）",
+            "request_notes": "工作人员对申请的备注", "appointments": "预约：已就诊、爽约、患者取消，以及11月9日起已预约的",
+            "cancellations": "患者取消的预约", "attendance": "到诊记录（attended 1=来了，0=没来）",
+            "waitlist_history": "候补名单进出记录（removed_on 为空：仍在候补）",
+            "status_reports": "各科室状况表（试点日由试点程序生成）"}),
+    "en": ("Outpatient booking system export (as of 2026-11-06, end of day). Load: sqlite3 booking.db < this file. "
+           "Dates are YYYY-MM-DD, times HH:MM.",
+           {"departments": "department codes and names", "languages": "language codes and names",
+            "doctors": "doctors", "doctor_languages": "the languages each doctor speaks",
+            "weekly_sessions": "weekly clinic sessions (weekday 1 = Monday; session AM / PM; 20-minute slots)",
+            "clinic_sessions": "the session calendar 2026-10-12 to 2026-11-20 (not changed for holidays)",
+            "requests": "appointment requests (those seen since 12 October, and those received before 6 November "
+                        "that are waiting or booked for a later date)",
+            "request_notes": "staff notes on requests",
+            "appointments": "appointments: attended, missed, cancelled by the patient, and booked from 9 November on",
+            "cancellations": "appointments the patient cancelled", "attendance": "attendance (attended 1 = came, 0 = "
+                                                                                 "did not come)",
+            "waitlist_history": "entries and exits of the waitlist (removed_on empty: still waiting)",
+            "status_reports": "the department status table (the pilot day's, from the pilot program)"}),
+    "ko": ("외래 예약 시스템 내보내기(2026-11-06 업무 종료 기준). 불러오기: sqlite3 booking.db < 이 파일. 날짜는 YYYY-MM-DD, "
+           "시각은 HH:MM.",
+           {"departments": "진료과 코드와 이름", "languages": "언어 코드와 이름", "doctors": "의사",
+            "doctor_languages": "의사별 구사 언어",
+            "weekly_sessions": "주간 진료 일정(weekday 1=월요일, session AM 오전 / PM 오후, 슬롯 20분)",
+            "clinic_sessions": "진료 일정표 2026-10-12 ~ 2026-11-20(공휴일 반영 안 됨)",
+            "requests": "예약 요청(10월 12일 이후 진료받은 요청과, 11월 6일 전에 접수되어 대기 중이거나 이후 날짜로 예약된 요청)",
+            "request_notes": "요청에 대한 직원 메모",
+            "appointments": "예약: 내원, 미내원, 환자 취소, 그리고 11월 9일 이후로 잡힌 예약",
+            "cancellations": "환자가 취소한 예약", "attendance": "내원 기록(attended 1=내원, 0=미내원)",
+            "waitlist_history": "대기자 명단 등록·해제 이력(removed_on이 비어 있으면 아직 대기 중)",
+            "status_reports": "진료과별 현황표(시범일의 것, 시범 프로그램이 작성)"}),
+    "ja": ("外来予約システムのエクスポート（2026-11-06 業務終了時点）。読み込み: sqlite3 booking.db < このファイル。日付は "
+           "YYYY-MM-DD、時刻は HH:MM。",
+           {"departments": "診療科コードと名称", "languages": "言語コードと名称", "doctors": "医師",
+            "doctor_languages": "医師ごとの対応言語",
+            "weekly_sessions": "週間の外来担当（weekday 1=月曜、session AM 午前 / PM 午後、1枠20分）",
+            "clinic_sessions": "外来枠表 2026-10-12〜2026-11-20（祝日の反映なし）",
+            "requests": "予約依頼（10月12日以降に受診した依頼と、11月6日までに受け付けて待機中または以降の日付で予約済みの依頼）",
+            "request_notes": "依頼への職員メモ",
+            "appointments": "予約：来院、無断欠席、患者キャンセル、および11月9日以降の予約済み",
+            "cancellations": "患者がキャンセルした予約", "attendance": "来院記録（attended 1=来院、0=来院せず）",
+            "waitlist_history": "待機リストの登録・解除の履歴（removed_on が空なら待機中）",
+            "status_reports": "診療科別の状況表（試行日のもの、試行版プログラムが作成）"}),
+    "es": ("Exportación del sistema de citas de consultas externas (a 2026-11-06, fin de la jornada). Carga: "
+           "sqlite3 booking.db < este fichero. Fechas AAAA-MM-DD, horas HH:MM.",
+           {"departments": "códigos y nombres de especialidad", "languages": "códigos y nombres de idioma",
+            "doctors": "médicos", "doctor_languages": "los idiomas que habla cada médico",
+            "weekly_sessions": "consultas semanales (weekday 1 = lunes; session AM mañana / PM tarde; huecos de 20 "
+                               "minutos)",
+            "clinic_sessions": "el calendario de consultas del 2026-10-12 al 2026-11-20 (sin cambios por festivos)",
+            "requests": "solicitudes de cita (las atendidas desde el 12 de octubre y las recibidas antes del 6 de "
+                        "noviembre que esperan o están citadas para una fecha posterior)",
+            "request_notes": "notas del personal sobre las solicitudes",
+            "appointments": "citas: acudió, no acudió, anulada por el paciente, y citadas a partir del 9 de noviembre",
+            "cancellations": "citas anuladas por el paciente", "attendance": "asistencia (attended 1 = acudió, 0 = no "
+                                                                             "acudió)",
+            "waitlist_history": "entradas y salidas de la lista de espera (removed_on vacío: sigue esperando)",
+            "status_reports": "la tabla de estado por especialidad (la del día piloto, del programa piloto)"}),
 }
 
 
+def _cal(date: dt.date, lang: str, long: bool = True) -> str:
+    """A date as a person writes it in an e-mail."""
+    wd = WEEKDAYS[lang][date.weekday()]
+    if lang == "en":
+        return f"{wd} {date.day} {MONTHS['en'][date.month - 1]}" if long else f"{date.day} {MONTHS['en'][date.month - 1][:3]}"
+    if lang == "es":
+        return f"{wd} {date.day} de {MONTHS['es'][date.month - 1]}" if long else f"{date.day} de {MONTHS['es'][date.month - 1]}"
+    if lang == "ko":
+        return f"{date.month}월 {date.day}일({wd})" if long else f"{date.month}/{date.day}"
+    return f"{date.month}月{date.day}日（{wd}）" if long else f"{date.month}月{date.day}日"
+
+
+def _sender(key: str, lang: str, **kw) -> str:
+    name, addr = SENDERS[key]
+    from email.headerregistry import Address
+    return str(Address(name[lang].format(**kw), addr_spec=addr.format(**kw)))
+
+
+def _mail(path: Path, lang: str, when: dt.datetime, sender: str, kind: str, cc: str = "", **kw) -> None:
+    import email.utils
+    subject, body = MAIL[kind][lang]
+    stamp = when.replace(tzinfo=dt.timezone(dt.timedelta(hours=TZ[lang])))
+    write_eml(path, sender=sender, to=_sender("office", lang), cc=cc, date=email.utils.format_datetime(stamp),
+              subject=subject.format(**kw), body=body.format(**kw),
+              message_id=f"<{path.stem}.{lang}@hospital.example>")
+
+
+def _at(date: dt.date, *parts) -> dt.datetime:
+    """A deterministic office-hours time on that date."""
+    minute = int(_uniform("mail", date.isoformat(), *parts) * 7 * 60)
+    return dt.datetime(date.year, date.month, date.day, 9 + minute // 60, minute % 60)
+
+
+def _doctor_kw(w: World, doc: str, lang: str) -> dict:
+    i = [d.id for d in w.doctors].index(doc)
+    code = w.doc[doc].dept
+    return {"doc": doc, "docl": doc.lower(), "name": NAMES[lang][i], "dept": VALUES[code][lang], "code": code.lower()}
+
+
+def _absence_mail(w: World, out: Path, lang: str, sent: dt.date, doc: str, frm: dt.date, to: dt.date,
+                  why: str) -> None:
+    kw = _doctor_kw(w, doc, lang)
+    kw.update(frm=_cal(frm, lang), to=_cal(to, lang), frm_s=_cal(frm, lang, False), to_s=_cal(to, lang, False))
+    who = _sender("doctor", lang, **kw) if why == "conference" else _sender("secretariat", lang, **kw)
+    _mail(out / f"{sent.isoformat()}_{why}_{doc}.eml", lang, _at(sent, doc), who, why, **kw)
+
+
+def _interpreter_mail(out: Path, lang: str, sent: dt.date, day: dt.date) -> None:
+    _mail(out / f"{sent.isoformat()}_interpreter_absence.eml", lang, _at(sent, "interp"),
+          _sender("interpreters", lang), "interpreter", day=_cal(day, lang), day_s=_cal(day, lang, False))
+
+
+def _acquaintance_mail(w: World, out: Path, lang: str, sent: dt.date, r: Req, rid: str, k: int) -> None:
+    v = labels(VALUES, lang)
+    _mail(out / f"{sent.isoformat()}_director_office_{rid}.eml", lang, _at(sent, rid), _sender("director", lang),
+          "acquaintance", rid=rid, pid=r.patient, dept=v[r.dept], visit=v["new" if r.new else "follow"],
+          note=ACQUAINTANCE_L[lang][k])
+
+
+# The e-mails of the history (all before the pilot day; the absences fall before the four weeks of the export).
+HIST_ABSENCES = (("D09", dt.date(2026, 9, 28), dt.date(2026, 10, 5), dt.date(2026, 10, 9), "conference"),
+                 ("D02", dt.date(2026, 10, 6), dt.date(2026, 10, 7), dt.date(2026, 10, 9), "illness"))
+HIST_INTERP = (dt.date(2026, 10, 2), dt.date(2026, 10, 8))
+HIST_HEAD = ("D07", dt.date(2026, 10, 21))
+HIST_INSTRUCTIONS = (dt.date(2026, 11, 2), dt.date(2026, 11, 4))
+
+
+def _history_requests(w: World) -> tuple[list, dict]:
+    """The requests of the export in order, and their ids (history requests get H ids)."""
+    if "hist_ids" not in w._cache:
+        reqs = sorted([r for r, _, _ in w.past_appts] + w.past_reqs, key=lambda r: (r.recv, r.patient))
+        ids = {id(r): r.id or f"H{k:05d}" for k, r in enumerate(reqs, start=1)}
+        w._cache["hist_ids"] = (reqs, ids)
+    return w._cache["hist_ids"]
+
+
+def _history_acquaintance(w: World):
+    """The history's director's-acquaintance request: a routine new Orthopedics patient received 28 October."""
+    reqs, ids = _history_requests(w)
+    appt = {id(r): a for r, a, _ in w.past_appts}
+    for r in reqs:
+        a = appt.get(id(r))
+        if a and r.new and r.dept == "ORTH" and r.urgency == "R" and r.recv == -7 and a.day > r.recv + 1:
+            return r, ids[id(r)]
+    raise AssertionError("no history request for the acquaintance e-mail")
+
+
+def _history_cancelled_on(r_id: str, a: Appt) -> int:
+    k = 1 + int(_uniform("cx", r_id) * 4)
+    return max(a.booked_on, a.day - k)
+
+
 def write_data(world: World, data_dir: Path, lang: str) -> None:
-    c, v, ln = labels(COLS, lang), labels(VALUES, lang), LANG_NAMES[lang]
-    sep = LIST_SEP[lang]
-    write_csv(data_dir / FILES["doctors"][lang],
-              [c["doctor"], c["name"], c["dept"], c["dept_code"], c["langs"], c["lang_codes"], c["sessions"]],
-              [[d.id, NAMES[lang][i], v[d.dept], d.dept, sep.join(ln[x] for x in d.langs), " ".join(d.langs),
-                sep.join(f"{WEEKDAYS[lang][wd]} {v[h]}" for wd, h in sorted(d.sessions))]
-               for i, d in enumerate(world.doctors)])
-    head = [c["request"], c["patient"], c["received"], c["dept"], c["visit"], c["urgency"], c["note"], c["lang"],
-            c["prev"], c["earliest"], c["referral"], c["test"]]
-    rows = []
-    reqs = sorted([r for r, _, _ in world.past_appts] + world.past_reqs, key=lambda r: (r.recv, r.patient))
-    ids = {}
-    for k, r in enumerate(reqs, start=1):
-        ids[id(r)] = r.id or f"H{k:05d}"
-        rows.append([ids[id(r)], r.patient, iso(r.recv), v[r.dept], v["new" if r.new else "follow"], r.urgency,
-                     TRIAGE_L[r.urgency][lang][r.note], ln[r.lang], r.prev or "", iso(r.earliest),
-                     iso(r.referral) if r.referral is not None else "", v["blood"] if r.test else ""])
-    write_csv(data_dir / FILES["requests"][lang], head, rows)
-    write_csv(data_dir / FILES["appointments"][lang],
-              [c["request"], c["patient"], c["doctor"], c["booked_on"], c["date"], c["start"], c["test_date"],
-               c["outcome"]],
-              [[ids[id(r)], r.patient, a.doctor, iso(a.booked_on), iso(a.day), hhmm(a.start),
-                iso(a.test) if a.test is not None else "", v[o]]
-               for r, a, o in sorted(world.past_appts, key=lambda x: (x[1].day, x[1].doctor, x[1].start))])
-    (data_dir / FILES["notice"][lang]).write_text(NOTICE[lang], encoding="utf-8")
+    w, v, ln = world, labels(VALUES, lang), LANG_NAMES[lang]
+    reqs, ids = _history_requests(w)
+    acq, acq_id = _history_acquaintance(w)
+    t_lo, t_hi = CAL_FROM, CAL_TO
+    weekly = [(d.id, wd + 1, WEEKDAYS[lang][wd], h, hhmm((AM if h == "AM" else PM)[0]),
+               hhmm((AM if h == "AM" else PM)[-1] + SLOT), SLOT) for d in w.doctors for wd, h in sorted(d.sessions)]
+    calendar = [(doc.id, iso(t), h, hhmm(starts[0]), hhmm(starts[-1] + SLOT), SLOT)
+                for t in range(t_lo, t_hi + 1) for doc in w.doctors for h, starts in w.sessions(doc.id, t)]
+    requests = [(ids[id(r)], r.patient, iso(r.recv), r.dept, v["new" if r.new else "follow"], r.prev, r.urgency,
+                 TRIAGE_L[r.urgency][lang][r.note], r.lang, iso(r.earliest),
+                 iso(r.referral) if r.referral is not None else None, v["blood"] if r.test else None) for r in reqs]
+    appts, cancels, attend, wait = [], [], [], []
+    for r, a, o in w.past_appts:
+        rid = ids[id(r)]
+        appts.append((rid, r.patient, a.doctor, iso(a.day), hhmm(a.start), a.n,
+                      iso(a.test) if a.test is not None else None, iso(a.booked_on), v[o]))
+        if o == "cancelled":
+            cancels.append((rid, r.patient, a.doctor, iso(a.day), hhmm(a.start), iso(_history_cancelled_on(rid, a)),
+                            v["patient"]))
+        else:
+            attend.append((iso(a.day), rid, r.patient, a.doctor, hhmm(a.start), 1 if o == "attended" else 0))
+    for rid, a in w.initial_book.items():
+        r = w.req[rid]
+        appts.append((rid, r.patient, a.doctor, iso(a.day), hhmm(a.start), a.n,
+                      iso(a.test) if a.test is not None else None, iso(a.booked_on), v["booked"]))
+    booked_on = {ids[id(r)]: a.booked_on for r, a, _ in w.past_appts}
+    booked_on.update({rid: a.booked_on for rid, a in w.initial_book.items()})
+    for r in reqs:
+        rid = ids[id(r)]
+        b = booked_on.get(rid)
+        wait.append((rid, r.dept, iso(r.recv), iso(b) if b is not None else None,
+                     v["appointment_given"] if b is not None else None))
+    appts.sort(key=lambda x: (x[3], x[2], x[4], x[0]))
+    cancels.sort(key=lambda x: (x[5], x[0]))
+    attend.sort(key=lambda x: (x[0], x[3], x[4]))
+    wait.sort(key=lambda x: (x[2], x[0]))
+    pilot = w.sample["output"]["status_table"]
+    title, docs = SQL_DOC[lang]
+    T, I = "TEXT", "INTEGER"
+    tables = {
+        "departments": ([("department_code", "TEXT PRIMARY KEY"), ("name", T)], [(c, v[c]) for c in DEPTS]),
+        "languages": ([("language_code", "TEXT PRIMARY KEY"), ("name", T)], [(c, ln[c]) for c in LANGS]),
+        "doctors": ([("doctor_id", "TEXT PRIMARY KEY"), ("name", T), ("department_code", T)],
+                    [(d.id, NAMES[lang][i], d.dept) for i, d in enumerate(w.doctors)]),
+        "doctor_languages": ([("doctor_id", T), ("language_code", T)],
+                             [(d.id, x) for d in w.doctors for x in d.langs]),
+        "weekly_sessions": ([("doctor_id", T), ("weekday", I), ("weekday_name", T), ("session", T),
+                             ("start_time", T), ("end_time", T), ("slot_minutes", I)], weekly),
+        "clinic_sessions": ([("doctor_id", T), ("date", T), ("session", T), ("start_time", T), ("end_time", T),
+                             ("slot_minutes", I)], calendar),
+        "requests": ([("request_id", "TEXT PRIMARY KEY"), ("patient_id", T), ("received", T), ("department_code", T),
+                      ("visit_type", T), ("previous_doctor", T), ("urgency", T), ("triage_note", T),
+                      ("preferred_language", T), ("earliest_date", T), ("referral_valid_until", T),
+                      ("pre_visit_test", T)], requests),
+        "request_notes": ([("request_id", T), ("author_role", T), ("text", T)],
+                          [(acq_id, v["director_office"], ACQUAINTANCE_L[lang][0])]),
+        "appointments": ([("request_id", T), ("patient_id", T), ("doctor_id", T), ("date", T), ("start", T),
+                          ("slots", I), ("test_date", T), ("booked_on", T), ("status", T)], appts),
+        "cancellations": ([("request_id", T), ("patient_id", T), ("doctor_id", T), ("date", T), ("start", T),
+                           ("cancelled_on", T), ("cancelled_by", T)], cancels),
+        "attendance": ([("date", T), ("request_id", T), ("patient_id", T), ("doctor_id", T), ("start", T),
+                        ("attended", I)], attend),
+        "waitlist_history": ([("request_id", T), ("department_code", T), ("added_on", T), ("removed_on", T),
+                              ("removal_reason", T)], wait),
+        "status_reports": ([("report_date", T), ("department_code", T), ("free_slots", I), ("held_back", I),
+                            ("waitlist", I), ("produced_by", T)],
+                           [(iso(EXPORT_DAY), c, pilot[c]["free_slots"], pilot[c]["held_back"], pilot[c]["waitlist"],
+                             v["pilot"]) for c in DEPTS if c in pilot]),
+    }
+    comment = "\n".join([title, ""] + [f"{name}: {docs[name]}" for name in tables])
+    write_sql(data_dir / FILES["export"][lang], tables, comment=comment)
+
+    mail = data_dir / MAIL_DIR
+    mail.mkdir(parents=True, exist_ok=True)
+    for doc, sent, frm, to, why in HIST_ABSENCES:
+        _absence_mail(w, mail, lang, sent, doc, frm, to, why)
+    _interpreter_mail(mail, lang, *HIST_INTERP)
+    doc, sent = HIST_HEAD
+    kw = _doctor_kw(w, doc, lang)
+    _mail(mail / f"{sent.isoformat()}_department_head_{doc}.eml", lang, _at(sent, doc), _sender("doctor", lang, **kw),
+          "head_list", **kw)
+    _acquaintance_mail(w, mail, lang, day_date(acq.recv), acq, acq_id, 0)
+    for (subject, body), sent, slug in zip(NOTICE[lang], HIST_INSTRUCTIONS, ("city_day", "data_codes")):
+        _mail(mail / f"{sent.isoformat()}_outpatient_office_{slug}.eml", lang, _at(sent, slug),
+              _sender("outpatient", lang), "instructions", subject=subject, body=body)
     for key, part in (("sample_in", "input"), ("sample_out", "output")):
-        (data_dir / FILES[key][lang]).write_text(json.dumps(world.sample[part], ensure_ascii=False, indent=1),
+        (data_dir / FILES[key][lang]).write_text(json.dumps(w.sample[part], ensure_ascii=False, indent=1),
                                                  encoding="utf-8")
+
+
+# ── the stored dataset: the hidden period and the answers per setting ───────
+
+def write_hidden(world: World, out: Path) -> None:
+    """The hidden period as the engine would send it, as far as it does not depend on the program.
+
+    days/<date>.json: each call's input. Day 0 is complete (nothing has been decided yet); for days 1-19 the
+    fields that depend on the program's earlier decisions (attendance, book, waitlist and the patients'
+    cancellation notices) are left out: gt/<setting>/ has them for the reference program.
+    mail/<lang>/*.eml: the period's e-mails behind the notices and notes. requests.csv: every request of the
+    period and the start with its hidden facts (no-show rate, cancellation intent, duplicate)."""
+    w = world
+    days = out / "days"
+    days.mkdir(parents=True, exist_ok=True)
+    e = Engine(type("_Any", (), {"_w": w})())
+    for d in range(N_DAYS):
+        if d == 0:
+            x = e.begin(0)
+        else:
+            x = {"date": iso(d), "day_index": d, "days_in_period": N_DAYS, "period_end": iso(N_DAYS - 1),
+                 "booking_window": {"first": iso(d + 1), "last": iso(d + HORIZON)}, "doctors": doctors_json(w),
+                 "sessions": sessions_json(w, d), "new_requests": [req_json(w, w.req[rid]) for rid in w.by_day[d]],
+                 "notices": [dict(n) for n in w.notices.get(d, [])]}
+        (days / f"{iso(d)}.json").write_text(json.dumps(x, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    acq = [(r.recv, r) for r in w.reqs if r.notes]
+    for lang in LOCALES:
+        mail = out / "mail" / lang
+        mail.mkdir(parents=True, exist_ok=True)
+        for doc, nd, ds, why in ABSENCES:
+            _absence_mail(w, mail, lang, day_date(nd), doc, day_date(ds[0]), day_date(ds[-1]), why)
+        _interpreter_mail(mail, lang, day_date(INTERP_NOTICE), day_date(INTERP_DAY))
+        kw = _doctor_kw(w, HEAD_DOCTOR, lang)
+        _mail(mail / f"{iso(HEAD_NOTE_DAY)}_department_head_{HEAD_DOCTOR}.eml", lang,
+              _at(day_date(HEAD_NOTE_DAY), HEAD_DOCTOR), _sender("doctor", lang, **kw), "head_keepfree",
+              note=HEAD_NOTE_L[lang], **kw)
+        for t, r in sorted(acq, key=lambda x: (x[0], x[1].id)):
+            k = ACQUAINTANCE.index(r.notes[0]["text"])
+            _acquaintance_mail(w, mail, lang, day_date(t), r, r.id, k)
+    write_csv(out / "requests.csv",
+              ["request_id", "patient_id", "received", "department", "visit_type", "urgency", "status_at_start",
+               "no_show_rate_at_zero_lead", "cancels_working_days_before", "duplicate_of"],
+              [[r.id, r.patient, iso(r.recv), r.dept, "new" if r.new else "follow_up", r.urgency,
+                "booked" if r.id in w.initial_book else "waiting" if r.recv < 0 else "",
+                r.base_p, r.cancel_k or "", r.dup_of] for r in w.reqs])
+
+
+def _reference_trace(view: _View) -> tuple:
+    """The reference program's run with everything it did and saw per day (for the stored answers)."""
+    sched = _module().Scheduler(_rt(ref_config(view)))
+    decide = _decider(sched)
+    e = Engine(view)
+    log, attended = [], {}
+    for d in range(N_DAYS):
+        x = e.begin(d)
+        out, err = decide(x)
+        e.end(d, out, err)
+        attended.update({a["request_id"]: a["attended"] for a in x["attendance"]})
+        log.append((d, [n for n in x["notices"] if n["type"] == "cancellation"], out, e.table_truth(d)))
+    return e, log, attended, e.finish()
+
+
+def write_ground_truth(world: World, gt: Path, setting) -> None:
+    """The reference program's run in this setting: its actions per day, the patients' cancellations it met,
+    the expected status table of every day, and the book at the end (appointments held in the period and the
+    upcoming ones) with the requests still waiting."""
+    w = world
+    e, log, attended, res = _reference_trace(_View(world, setting))
+    write_csv(gt / "actions.csv", ["call_date", "seq", "type", "request_id", "doctor_id", "date", "start", "test_date"],
+              [[iso(d), k, a.get("type"), a.get("request_id"), a.get("doctor_id", ""), a.get("date", ""),
+                a.get("start", ""), a.get("test_date") or ""]
+               for d, _, out, _ in log for k, a in enumerate(out["actions"], start=1)])
+    write_csv(gt / "status_tables.csv", ["date", "department", "free_slots", "held_back", "waitlist"],
+              [[iso(d), dept, row["free_slots"], row["held_back"], row["waitlist"]]
+               for d, _, _, truth in log for dept, row in truth.items()])
+    write_csv(gt / "cancellations.csv", ["notice_date", "request_id", "patient_id", "doctor_id", "date", "start"],
+              [[iso(d), n["request_id"], n["patient_id"], n["doctor_id"], n["date"], n["start"]]
+               for d, cx, _, _ in log for n in cx])
+    book = [(rid, a, "held") for rid, a in e.past.items()] + [(rid, a, "upcoming") for rid, a in e.appt.items()]
+    write_csv(gt / "final_book.csv",
+              ["request_id", "patient_id", "department", "visit_type", "urgency", "doctor_id", "date", "start",
+               "slots", "test_date", "booked_on", "state", "attended"],
+              [[rid, w.req[rid].patient, w.req[rid].dept, "new" if w.req[rid].new else "follow_up",
+                w.req[rid].urgency, a.doctor, iso(a.day), hhmm(a.start), a.n,
+                iso(a.test) if a.test is not None else "", iso(a.booked_on), state,
+                {True: "true", False: "false"}.get(attended.get(rid), "")]
+               for rid, a, state in sorted(book, key=lambda x: (x[1].day, x[1].doctor, x[1].start, x[0]))])
+    write_csv(gt / "final_waitlist.csv", ["request_id", "patient_id", "department", "visit_type", "urgency",
+                                          "received", "earliest_date"],
+              [[rid, w.req[rid].patient, w.req[rid].dept, "new" if w.req[rid].new else "follow_up",
+                w.req[rid].urgency, iso(w.req[rid].recv), iso(w.req[rid].earliest)] for rid in sorted(e.open)])

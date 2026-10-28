@@ -35,7 +35,7 @@
 - id: interpreter_absence
   text: Un aviso interpreter_absence significa un intérprete presencial menos en esa fecha desde el día en que llega; las primeras visitas con intérprete que sobren ese día se cambian o se devuelven.
 - id: no_show_rates
-  text: Las tasas de ausencia varían por paciente (citas previas y perdidas en la solicitud; cerca del 22% perdidas en el historial) y suben alrededor de un punto por día laborable de antelación; el historial de los pacientes se midió con unos 5 días laborables de antelación.
+  text: Las tasas de ausencia varían por paciente (citas previas y perdidas en la solicitud; cerca del 22% perdidas en la asistencia del historial) y suben alrededor de un punto por día laborable de antelación; el historial de los pacientes se midió con unos 5 días laborables de antelación.
 - id: overbooking
   text: Un hueco puede tener dos revisiones (nunca una primera visita), como mucho {{overbooked_per_session}} huecos así sobrecitados por médico y sesión de mañana o tarde.
 - id: duplicates

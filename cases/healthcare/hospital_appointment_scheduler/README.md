@@ -11,11 +11,14 @@ fills freed slots from the waitlist and reports a **daily status table** per dep
 core of the case is **slot utilization**: as many patients seen as possible in the doctors' time, without
 breaking a rule. The setting is country-neutral: no national insurer or payer rules.
 
-The agent sees 14 doctors (five departments, languages, weekly sessions), four weeks of past requests and
-appointments with their outcome (1,074 appointments, 22% missed), the clinic notices (City Day on 23
-November; the calendar is not updated for it) and one **pilot day**: an input exactly as the engine sends it
-(one notice of each kind, an acquaintance note) and the answer of the client's pilot program under its
-interim rules (format only). The case has nine settings (3 tiers × 3 rule sets) on **one** world: the
+The agent sees an export of the booking system as a plain-text SQL dump (14 doctors in five departments with
+languages and weekly sessions, the calendar, four weeks of requests and appointments with their outcome —
+1,074 appointments, 22% of the attended-or-missed ones missed — cancellations, attendance, the waitlist's
+history and the 359 appointments already booked from 9 November), the booking office's e-mails (absences, an
+interpreter's absence, staff notes, a director's-acquaintance request and the outpatient office's
+instructions: City Day on 23 November, the calendar not updated for it) and one **pilot day**: an input
+exactly as the engine sends it (one notice of each kind, an acquaintance note) and the answer of the client's
+pilot program under its interim rules (format only). The case has nine settings (3 tiers × 3 rule sets) on **one** world: the
 history, the hidden period, every request, cancellation intent, notice and note are the same in all nine,
 and the agent's view (request, data, deliverable spec) is byte-identical (checked by the validator). Only the
 hidden requirements and the evaluator differ. The engagement knobs apply on top, as for every case (see
@@ -237,6 +240,40 @@ How the rules and situations bind (reference runs; easy / medium / hard where th
 The urgent window does not bind for the reference (the reserve absorbs the 18 urgent requests on the next
 day); it binds for a program that fills the reserve early or moves an urgent appointment.
 
+## Data files and formats
+
+The agent's `data/` (same in all nine settings; file names, enum values, names and comments in the customer
+locale, table and column names, codes and IDs ASCII):
+
+| File (en / ko) | Format | Content |
+|---|---|---|
+| `booking_system_export.sql` / `예약시스템_내보내기.sql` | SQL dump (`casekit.write_sql`; `sqlite3 db < file.sql`), header comment lists the tables | `departments`, `languages` (code → localized name), `doctors`, `doctor_languages`, `weekly_sessions`, `clinic_sessions` (calendar 12 Oct – 20 Nov, no holiday change), `requests` (1,478: the history's H ids and the Q ids received before 9 Nov), `request_notes`, `appointments` (history with outcome + the 359 booked from 9 Nov, status localized), `cancellations` (history, with `cancelled_on`), `attendance` (`attended` 0/1), `waitlist_history` (`added_on` / `removed_on`; the 45 still waiting have none), `status_reports` (the pilot day's table) |
+| `mail/*.eml` | e-mail (`casekit.write_eml`, RFC 5322, UTF-8), localized bodies, `hospital.example` addresses | D09 conference 5–9 Oct, D02 off sick 7–9 Oct, interpreter away 8 Oct (all before the export's four weeks, so the history is consistent), D07's request for a new-patient list, the director's office asking "tomorrow morning" for history request H01130 (booked in turn, seen 5 Nov), the outpatient office's City Day and data-codes instructions |
+| `pilot_day_input.json`, `pilot_day_output.json` / `시범일_입력예시.json`, `시범일_출력예시.json` | JSON | one `on_day` call exactly as the engine makes it, and the pilot program's answer |
+
+The program's daily input stays JSON (`on_day(day)`): its `notices` and request `notes` are what the e-mails
+are in the history, its `book` / `waitlist` / `attendance` what the export's tables are.
+
+## Stored dataset (`dataset/`)
+
+Written by `python -m fdebench2.cli export-dataset cases/healthcare/hospital_appointment_scheduler` (checked by
+`validate-case`; about 11 MB, 193 files):
+
+- `visible/<lang>/`: the agent's data above, per locale.
+- `hidden/days/<date>.json`: the 20 calls of the hidden period. 9 November is the complete input; for the other
+  days the fields that depend on the program's earlier decisions (`attendance`, `book`, `waitlist`, patients'
+  `cancellation` notices) are left out — the rest (calendar, new requests, the absence / interpreter / staff
+  notices, notes) is exactly what the engine sends.
+- `hidden/mail/<lang>/*.eml`: the period's e-mails behind those notices and notes (D10's keep-free note 11 Nov,
+  D13 off sick 13 Nov, D05's conference 20 Nov, the interpreter 24 Nov, four director's-acquaintance requests).
+- `hidden/requests.csv`: every request of the start and the period with its hidden facts (no-show rate at zero
+  lead, the working days before an appointment the patient cancels, the request it duplicates).
+- `gt/<tier>_<ruleset>/`: per setting, `setting.json`, the reference `program/` and its `score.json`, and from
+  the reference's replay `actions.csv` (every action per call), `status_tables.csv` (the expected table, 20 days
+  × 5 departments), `cancellations.csv` (the patients' cancellations it met), `final_book.csv` (every
+  appointment held in the period, with attendance where reported, and the upcoming ones) and
+  `final_waitlist.csv`.
+
 ## Notes
 
 - **One process per replay**: `casekit.program_session` loads `scheduler.py` once and makes the 20 calls in the
@@ -250,7 +287,7 @@ day); it binds for a program that fills the reserve early or moves an urgent app
   day; two new-patient visits swapped to overfill a day's interpreters; test days moved to overfill the lab or
   onto the visit day; a new patient moved past its referral; an urgent appointment moved past its window;
   overbooked follow-ups beyond the cap; a waiting duplicate booked; a lower-priority request booked into a
-  released slot. `validate-case` (9 settings, ~250 subprocess replays of ~0.3 s) takes about **95 seconds**.
+  released slot. `validate-case` (9 settings, ~250 subprocess replays of ~0.3 s) takes about **two minutes** (with the dataset check).
 - Rates, capacities and patients are synthetic. A review of no-show models found that predictive overbooking
   can make some patient groups wait longer (see `docs/specs/healthcare.md`); the data carries no protected
   attributes and the hard tier rewards overbooking only through expected idle and collision costs.

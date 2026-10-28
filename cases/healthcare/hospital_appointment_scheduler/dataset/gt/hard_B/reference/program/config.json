@@ -1,0 +1,20 @@
+{
+ "closed_dept": "ORTH",
+ "collision_cost": 12.0,
+ "holiday": "2026-11-23",
+ "horizon": 10,
+ "interpreters_per_day": 4,
+ "lab_cap": 5,
+ "move_notice_days": 2,
+ "noshow": {
+  "base0": 0.18634,
+  "hist_lead": 5,
+  "shrink": 6.0,
+  "slope": 0.00876
+ },
+ "overbooked_per_session": 1,
+ "seen_value": 10.0,
+ "tier": "hard",
+ "urgent_days": 1,
+ "waitlist_order": "received"
+}

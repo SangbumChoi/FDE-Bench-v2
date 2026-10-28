@@ -2,7 +2,7 @@
 
 ## Background
 
-From Monday 9 November our outpatient booking office wants to work through a program: every working day it gets that day's new appointment requests, cancellations and notices together with our current bookings, books patients into the doctors' free slots and tells us where each department stands. Above all we want to stop losing doctor time to empty slots. Could you build it? The doctor list, four weeks of past requests and appointments with what happened to them, our clinic notices and one pilot day (what the program receives and what our pilot answered) are attached.
+From Monday 9 November our outpatient booking office wants to work through a program: every working day it gets that day's new appointment requests, cancellations and notices together with our current bookings, books patients into the doctors' free slots and tells us where each department stands. Above all we want to stop losing doctor time to empty slots. Could you build it? Attached are an export of our booking system (doctors, clinic calendar, four weeks of requests and appointments with what happened to them, cancellations, attendance and the waitlist), the e-mails our booking office received (absences, notes, the outpatient office's instructions) and one pilot day (what the program receives and what our pilot answered).
 
 We will judge the program by running it on the **20 working days from Monday 9 November to Friday 4 December 2026**. Those days are not in the data: every request in them is new to you.
 
@@ -15,7 +15,7 @@ A folder `program/` with a file `scheduler.py` that defines **`on_day(day)`**. A
 - `day` (see `pilot_day_input.json`, one call exactly as the engine makes it):
   - `date`, `day_index` (0 to 19), `days_in_period` (20), `period_end`;
   - `booking_window`: `first` (the next working day) and `last` (10 working days ahead). Appointments can only be made inside this window;
-  - `doctors`: `doctor_id`, `department` (code: IM, CARD, DERM, ORTH, PED) and `languages` (codes, as in `doctors.csv`);
+  - `doctors`: `doctor_id`, `department` (code: IM, CARD, DERM, ORTH, PED) and `languages` (codes, as in the `languages` table of the export);
   - `sessions`: the clinic calendar of the window: for each doctor, date and session (`AM` 09:00–12:00 or `PM` 13:00–16:00) the start times of its 20-minute slots;
   - `new_requests`: the requests received today. Each has `request_id`, `patient_id`, `received`, `department`, `visit_type` (`new` or `follow_up`), `previous_doctor` (follow-ups), `urgency` (`U` urgent, `S` soon, `R` routine), `triage_note`, `preferred_language`, `earliest_date`, `referral_valid_until` (new patients), `pre_visit_test` (true when a fasting blood test is needed), `past_appointments` and `missed_appointments` (the patient's record with us) and `notes` (comments from staff);
   - `notices`: what we were told today: `cancellation` (a patient cancelled an appointment), `doctor_absence`, `interpreter_absence`, `staff_note` (formats in the pilot file);
@@ -32,8 +32,9 @@ A folder `program/` with a file `scheduler.py` that defines **`on_day(day)`**. A
 
 ## Data notes
 
-- `doctors.csv`: 14 doctors in five departments with the languages they speak and their weekly clinic sessions. Working days are Monday to Friday; City Day (Monday 23 November) is a working day for the hospital.
-- `past_requests.csv` and `past_appointments.csv`: the requests of the last weeks and the appointments of 12 October – 6 November with their outcome (attended, missed, cancelled by the patient). They are history to learn from; the program gets everything it needs in `day`.
+- `booking_system_export.sql`: a plain-text SQL dump of our booking system at the end of Friday 6 November (load it with `sqlite3 booking.db < booking_system_export.sql`; the comment at the top lists the tables). It holds the 14 doctors in five departments with the languages they speak and their weekly clinic sessions, the session calendar of 12 October – 20 November, the requests, the appointments of 12 October – 6 November with their outcome (attended, missed, cancelled by the patient) and those already booked from 9 November, the cancellations, the attendance, the waitlist's history and the pilot day's status table. Working days are Monday to Friday; City Day (Monday 23 November) is a working day for the hospital.
+- `mail/`: e-mails the booking office received (`.eml`): doctors' absences, an interpreter's absence, notes from a department head and the director's office, and the outpatient office's instructions. Messages like these reach the program as `notices` and as request `notes` (see the pilot file).
+- The export and the e-mails are history to learn from; the program gets everything it needs in `day`.
 - Visit length: a **new-patient** visit takes **two consecutive slots** of the same doctor in the same session (booked by the first slot's start); a **follow-up** takes one slot.
 - A request is booked with a doctor of its `department`, never before its `earliest_date`. Its **first possible day** is its `earliest_date` or the working day after it was received, whichever is later.
 - `triage_note` is for information only.
@@ -93,7 +94,7 @@ A folder `program/` with a file `scheduler.py` that defines **`on_day(day)`**. A
 
 **No-shows and overbooking**
 
-- Some patients do not come. Each patient has an own no-show rate; `past_appointments` and `missed_appointments` give their record (about 22% of the appointments in `past_appointments.csv` were missed; new patients often have no record). The longer between booking and visit, the more often people stay away: about **one percentage point more per working day of lead time** (from the day the appointment was booked or last changed). The patients' records were collected at about 5 working days of lead time.
+- Some patients do not come. Each patient has an own no-show rate; `past_appointments` and `missed_appointments` give their record (about 22% of the appointments in the export's `attendance` table were missed; new patients often have no record). The longer between booking and visit, the more often people stay away: about **one percentage point more per working day of lead time** (from the day the appointment was booked or last changed). The patients' records were collected at about 5 working days of lead time.
 - Because of no-shows we allow **overbooking of follow-ups**: a slot may hold **two follow-ups** (never a new-patient visit, which keeps its two slots to itself). Each doctor may have at most **{{overbooked_per_session}} overbooked slots per session** (morning or afternoon). The urgent reserve applies to overbooking too.
 
 **Duplicates, several departments, notes**

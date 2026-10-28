@@ -80,7 +80,7 @@
   kind: missing
   domain: data semantics
   tiers: [hard]
-  text: No-show rates differ per patient (past and missed appointments in the request; about 22% missed in the history) and rise about one percentage point per working day of lead time; the patients' records were measured at about 5 working days of lead.
+  text: No-show rates differ per patient (past and missed appointments in the request; about 22% missed in the history's attendance) and rise about one percentage point per working day of lead time; the patients' records were measured at about 5 working days of lead.
 - id: overbooking
   kind: missing
   domain: business rule

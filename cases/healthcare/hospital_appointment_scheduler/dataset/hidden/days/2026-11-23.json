@@ -1,0 +1,2790 @@
+{
+ "date": "2026-11-23",
+ "day_index": 10,
+ "days_in_period": 20,
+ "period_end": "2026-12-04",
+ "booking_window": {
+  "first": "2026-11-24",
+  "last": "2026-12-07"
+ },
+ "doctors": [
+  {
+   "doctor_id": "D01",
+   "department": "IM",
+   "languages": [
+    "L0",
+    "F1"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "department": "IM",
+   "languages": [
+    "L0"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "department": "IM",
+   "languages": [
+    "L0",
+    "F2"
+   ]
+  },
+  {
+   "doctor_id": "D04",
+   "department": "IM",
+   "languages": [
+    "L0"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "department": "CARD",
+   "languages": [
+    "L0",
+    "F1"
+   ]
+  },
+  {
+   "doctor_id": "D06",
+   "department": "CARD",
+   "languages": [
+    "L0"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "department": "CARD",
+   "languages": [
+    "L0",
+    "F3"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "department": "DERM",
+   "languages": [
+    "L0",
+    "F1"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "department": "DERM",
+   "languages": [
+    "L0"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "department": "ORTH",
+   "languages": [
+    "L0",
+    "F4"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "department": "ORTH",
+   "languages": [
+    "L0"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "department": "ORTH",
+   "languages": [
+    "L0",
+    "F1",
+    "F2"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "department": "PED",
+   "languages": [
+    "L0",
+    "F1"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "department": "PED",
+   "languages": [
+    "L0"
+   ]
+  }
+ ],
+ "sessions": [
+  {
+   "doctor_id": "D01",
+   "date": "2026-11-24",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "date": "2026-11-24",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D06",
+   "date": "2026-11-24",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-11-24",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "date": "2026-11-24",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-11-24",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "date": "2026-11-24",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-11-24",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "date": "2026-11-25",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D04",
+   "date": "2026-11-25",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "date": "2026-11-25",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "date": "2026-11-25",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-11-25",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-11-25",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "date": "2026-11-25",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-11-25",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-11-25",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D01",
+   "date": "2026-11-26",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "date": "2026-11-26",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "date": "2026-11-26",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "date": "2026-11-26",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "date": "2026-11-26",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "date": "2026-11-26",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-11-26",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "date": "2026-11-26",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-11-26",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-11-26",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "date": "2026-11-27",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "date": "2026-11-27",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D04",
+   "date": "2026-11-27",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D06",
+   "date": "2026-11-27",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "date": "2026-11-27",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-11-27",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "date": "2026-11-27",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "date": "2026-11-27",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-11-27",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D01",
+   "date": "2026-11-30",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "date": "2026-11-30",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "date": "2026-11-30",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-11-30",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-11-30",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "date": "2026-11-30",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-11-30",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-11-30",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D01",
+   "date": "2026-12-01",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "date": "2026-12-01",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D06",
+   "date": "2026-12-01",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-12-01",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "date": "2026-12-01",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-12-01",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "date": "2026-12-01",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-12-01",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "date": "2026-12-02",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D04",
+   "date": "2026-12-02",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "date": "2026-12-02",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "date": "2026-12-02",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-12-02",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-12-02",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "date": "2026-12-02",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-12-02",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-12-02",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D01",
+   "date": "2026-12-03",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "date": "2026-12-03",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "date": "2026-12-03",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "date": "2026-12-03",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "date": "2026-12-03",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D09",
+   "date": "2026-12-03",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-12-03",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "date": "2026-12-03",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-12-03",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-12-03",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "date": "2026-12-04",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D03",
+   "date": "2026-12-04",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D04",
+   "date": "2026-12-04",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D06",
+   "date": "2026-12-04",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D07",
+   "date": "2026-12-04",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-12-04",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D11",
+   "date": "2026-12-04",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "date": "2026-12-04",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-12-04",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D01",
+   "date": "2026-12-07",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D02",
+   "date": "2026-12-07",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D05",
+   "date": "2026-12-07",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D08",
+   "date": "2026-12-07",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D10",
+   "date": "2026-12-07",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  },
+  {
+   "doctor_id": "D12",
+   "date": "2026-12-07",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D13",
+   "date": "2026-12-07",
+   "session": "PM",
+   "starts": [
+    "13:00",
+    "13:20",
+    "13:40",
+    "14:00",
+    "14:20",
+    "14:40",
+    "15:00",
+    "15:20",
+    "15:40"
+   ]
+  },
+  {
+   "doctor_id": "D14",
+   "date": "2026-12-07",
+   "session": "AM",
+   "starts": [
+    "09:00",
+    "09:20",
+    "09:40",
+    "10:00",
+    "10:20",
+    "10:40",
+    "11:00",
+    "11:20",
+    "11:40"
+   ]
+  }
+ ],
+ "new_requests": [
+  {
+   "request_id": "Q01004",
+   "patient_id": "P486806",
+   "received": "2026-11-23",
+   "department": "PED",
+   "visit_type": "follow_up",
+   "previous_doctor": "D14",
+   "urgency": "S",
+   "triage_note": "medication needs adjusting soon",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 6,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01005",
+   "patient_id": "P159571",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "follow_up",
+   "previous_doctor": "D12",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 13,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01006",
+   "patient_id": "P611987",
+   "received": "2026-11-23",
+   "department": "PED",
+   "visit_type": "follow_up",
+   "previous_doctor": "D14",
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 4,
+   "missed_appointments": 2,
+   "notes": []
+  },
+  {
+   "request_id": "Q01007",
+   "patient_id": "P923168",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 14,
+   "missed_appointments": 3,
+   "notes": []
+  },
+  {
+   "request_id": "Q01008",
+   "patient_id": "P375558",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "follow_up",
+   "previous_doctor": "D03",
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 9,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01009",
+   "patient_id": "P819470",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-12-03",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01010",
+   "patient_id": "P351878",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "follow_up",
+   "previous_doctor": "D11",
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 2,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01011",
+   "patient_id": "P740545",
+   "received": "2026-11-23",
+   "department": "PED",
+   "visit_type": "follow_up",
+   "previous_doctor": "D13",
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 9,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01012",
+   "patient_id": "P440318",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "follow_up",
+   "previous_doctor": "D04",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 8,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01013",
+   "patient_id": "P557799",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "follow_up",
+   "previous_doctor": "D06",
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 2,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01014",
+   "patient_id": "P208772",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "L0",
+   "earliest_date": "2026-12-08",
+   "referral_valid_until": "2026-12-16",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01015",
+   "patient_id": "P724905",
+   "received": "2026-11-23",
+   "department": "PED",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "F2",
+   "earliest_date": "2026-11-26",
+   "referral_valid_until": "2026-11-30",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01016",
+   "patient_id": "P632512",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "F2",
+   "earliest_date": "2026-12-04",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01017",
+   "patient_id": "P813546",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "follow_up",
+   "previous_doctor": "D09",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "F2",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 3,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01018",
+   "patient_id": "P501154",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-27",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01019",
+   "patient_id": "P439561",
+   "received": "2026-11-23",
+   "department": "PED",
+   "visit_type": "follow_up",
+   "previous_doctor": "D14",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 7,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01020",
+   "patient_id": "P722741",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01021",
+   "patient_id": "P724905",
+   "received": "2026-11-23",
+   "department": "PED",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "F2",
+   "earliest_date": "2026-11-26",
+   "referral_valid_until": "2026-11-30",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01022",
+   "patient_id": "P875445",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "follow_up",
+   "previous_doctor": "D03",
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-30",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 5,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01023",
+   "patient_id": "P449122",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "follow_up",
+   "previous_doctor": "D12",
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 12,
+   "missed_appointments": 2,
+   "notes": []
+  },
+  {
+   "request_id": "Q01024",
+   "patient_id": "P650520",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "F1",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2026-12-07",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01025",
+   "patient_id": "P814380",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "S",
+   "triage_note": "symptoms ongoing for several weeks",
+   "preferred_language": "F2",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01026",
+   "patient_id": "P802400",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "S",
+   "triage_note": "medication needs adjusting soon",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 11,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01027",
+   "patient_id": "P994361",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "follow_up",
+   "previous_doctor": "D08",
+   "urgency": "S",
+   "triage_note": "medication needs adjusting soon",
+   "preferred_language": "L0",
+   "earliest_date": "2026-12-07",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 12,
+   "missed_appointments": 2,
+   "notes": []
+  },
+  {
+   "request_id": "Q01028",
+   "patient_id": "P357784",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "S",
+   "triage_note": "medication needs adjusting soon",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-25",
+   "referral_valid_until": "2026-12-04",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01029",
+   "patient_id": "P764340",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "follow_up",
+   "previous_doctor": "D10",
+   "urgency": "S",
+   "triage_note": "GP referral, should not wait long",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-26",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 3,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01030",
+   "patient_id": "P119006",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "follow_up",
+   "previous_doctor": "D05",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-12-03",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 2,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01031",
+   "patient_id": "P788171",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "follow_up",
+   "previous_doctor": "D06",
+   "urgency": "S",
+   "triage_note": "GP referral, should not wait long",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 12,
+   "missed_appointments": 2,
+   "notes": []
+  },
+  {
+   "request_id": "Q01032",
+   "patient_id": "P512840",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "follow_up",
+   "previous_doctor": "D06",
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "F2",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 9,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01033",
+   "patient_id": "P500094",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "F3",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 13,
+   "missed_appointments": 4,
+   "notes": []
+  },
+  {
+   "request_id": "Q01034",
+   "patient_id": "P513541",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-12-03",
+   "referral_valid_until": "2026-12-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01035",
+   "patient_id": "P514258",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01036",
+   "patient_id": "P703909",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "follow_up",
+   "previous_doctor": "D11",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "F4",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 14,
+   "missed_appointments": 4,
+   "notes": []
+  },
+  {
+   "request_id": "Q01037",
+   "patient_id": "P291179",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "follow_up",
+   "previous_doctor": "D02",
+   "urgency": "S",
+   "triage_note": "GP referral, should not wait long",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 14,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01038",
+   "patient_id": "P333089",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "follow_up",
+   "previous_doctor": "D09",
+   "urgency": "S",
+   "triage_note": "GP referral, should not wait long",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-26",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 13,
+   "missed_appointments": 5,
+   "notes": []
+  },
+  {
+   "request_id": "Q01039",
+   "patient_id": "P801076",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "follow_up",
+   "previous_doctor": "D05",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-26",
+   "referral_valid_until": null,
+   "pre_visit_test": true,
+   "past_appointments": 12,
+   "missed_appointments": 4,
+   "notes": []
+  },
+  {
+   "request_id": "Q01040",
+   "patient_id": "P313123",
+   "received": "2026-11-23",
+   "department": "PED",
+   "visit_type": "follow_up",
+   "previous_doctor": "D13",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 5,
+   "missed_appointments": 3,
+   "notes": []
+  },
+  {
+   "request_id": "Q01041",
+   "patient_id": "P365710",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "follow_up",
+   "previous_doctor": "D07",
+   "urgency": "S",
+   "triage_note": "GP referral, should not wait long",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 5,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01042",
+   "patient_id": "P545458",
+   "received": "2026-11-23",
+   "department": "PED",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-12-02",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01043",
+   "patient_id": "P786048",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "L0",
+   "earliest_date": "2026-12-01",
+   "referral_valid_until": "2026-12-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01044",
+   "patient_id": "P462502",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2026-12-07",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01045",
+   "patient_id": "P403735",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01046",
+   "patient_id": "P801262",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "follow_up",
+   "previous_doctor": "D02",
+   "urgency": "S",
+   "triage_note": "medication needs adjusting soon",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 4,
+   "missed_appointments": 2,
+   "notes": []
+  },
+  {
+   "request_id": "Q01047",
+   "patient_id": "P355618",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "follow_up",
+   "previous_doctor": "D05",
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "F4",
+   "earliest_date": "2026-12-09",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 7,
+   "missed_appointments": 2,
+   "notes": []
+  },
+  {
+   "request_id": "Q01048",
+   "patient_id": "P717406",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "follow_up",
+   "previous_doctor": "D09",
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 6,
+   "missed_appointments": 2,
+   "notes": []
+  },
+  {
+   "request_id": "Q01049",
+   "patient_id": "P184429",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 8,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01050",
+   "patient_id": "P291179",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "S",
+   "triage_note": "symptoms ongoing for several weeks",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 14,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01051",
+   "patient_id": "P766764",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "S",
+   "triage_note": "GP referral, should not wait long",
+   "preferred_language": "L0",
+   "earliest_date": "2026-12-09",
+   "referral_valid_until": "2026-12-16",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01052",
+   "patient_id": "P305274",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "follow_up",
+   "previous_doctor": "D03",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 6,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01053",
+   "patient_id": "P252597",
+   "received": "2026-11-23",
+   "department": "PED",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "S",
+   "triage_note": "symptoms ongoing for several weeks",
+   "preferred_language": "F4",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 11,
+   "missed_appointments": 2,
+   "notes": []
+  },
+  {
+   "request_id": "Q01054",
+   "patient_id": "P886563",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "L0",
+   "earliest_date": "2026-12-04",
+   "referral_valid_until": "2026-12-14",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01055",
+   "patient_id": "P923168",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "follow_up",
+   "previous_doctor": "D05",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 14,
+   "missed_appointments": 3,
+   "notes": []
+  },
+  {
+   "request_id": "Q01056",
+   "patient_id": "P989478",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01057",
+   "patient_id": "P457269",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "follow_up",
+   "previous_doctor": "D09",
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-12-09",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 4,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01058",
+   "patient_id": "P877748",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "F3",
+   "earliest_date": "2026-11-25",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": true,
+   "past_appointments": 9,
+   "missed_appointments": 5,
+   "notes": []
+  },
+  {
+   "request_id": "Q01059",
+   "patient_id": "P864751",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "follow_up",
+   "previous_doctor": "D09",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-27",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 8,
+   "missed_appointments": 2,
+   "notes": []
+  },
+  {
+   "request_id": "Q01060",
+   "patient_id": "P237207",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "follow_up",
+   "previous_doctor": "D11",
+   "urgency": "S",
+   "triage_note": "medication needs adjusting soon",
+   "preferred_language": "F2",
+   "earliest_date": "2026-12-03",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 12,
+   "missed_appointments": 5,
+   "notes": []
+  },
+  {
+   "request_id": "Q01061",
+   "patient_id": "P178152",
+   "received": "2026-11-23",
+   "department": "ORTH",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-27",
+   "referral_valid_until": "2026-12-09",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01062",
+   "patient_id": "P764303",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "S",
+   "triage_note": "medication needs adjusting soon",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2026-12-01",
+   "pre_visit_test": false,
+   "past_appointments": 9,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01063",
+   "patient_id": "P657400",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "S",
+   "triage_note": "symptoms ongoing for several weeks",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2026-12-08",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01064",
+   "patient_id": "P820048",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "follow_up",
+   "previous_doctor": "D07",
+   "urgency": "S",
+   "triage_note": "symptoms ongoing for several weeks",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 9,
+   "missed_appointments": 2,
+   "notes": []
+  },
+  {
+   "request_id": "Q01065",
+   "patient_id": "P146380",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "routine check",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2026-12-10",
+   "pre_visit_test": false,
+   "past_appointments": 11,
+   "missed_appointments": 2,
+   "notes": []
+  },
+  {
+   "request_id": "Q01066",
+   "patient_id": "P422810",
+   "received": "2026-11-23",
+   "department": "PED",
+   "visit_type": "follow_up",
+   "previous_doctor": "D13",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 12,
+   "missed_appointments": 2,
+   "notes": []
+  },
+  {
+   "request_id": "Q01067",
+   "patient_id": "P238856",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-25",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01068",
+   "patient_id": "P331260",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "F4",
+   "earliest_date": "2026-11-26",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 9,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01069",
+   "patient_id": "P885009",
+   "received": "2026-11-23",
+   "department": "IM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "S",
+   "triage_note": "GP referral, should not wait long",
+   "preferred_language": "L0",
+   "earliest_date": "2026-12-04",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": true,
+   "past_appointments": 7,
+   "missed_appointments": 3,
+   "notes": []
+  },
+  {
+   "request_id": "Q01070",
+   "patient_id": "P160215",
+   "received": "2026-11-23",
+   "department": "PED",
+   "visit_type": "follow_up",
+   "previous_doctor": "D13",
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": true,
+   "past_appointments": 6,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01071",
+   "patient_id": "P557488",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "follow_up",
+   "previous_doctor": "D07",
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": true,
+   "past_appointments": 13,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01072",
+   "patient_id": "P892282",
+   "received": "2026-11-23",
+   "department": "PED",
+   "visit_type": "follow_up",
+   "previous_doctor": "D13",
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "F2",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": true,
+   "past_appointments": 6,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01073",
+   "patient_id": "P363049",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "S",
+   "triage_note": "symptoms ongoing for several weeks",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01074",
+   "patient_id": "P375558",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "S",
+   "triage_note": "GP referral, should not wait long",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 9,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01075",
+   "patient_id": "P378503",
+   "received": "2026-11-23",
+   "department": "CARD",
+   "visit_type": "follow_up",
+   "previous_doctor": "D05",
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": null,
+   "pre_visit_test": false,
+   "past_appointments": 2,
+   "missed_appointments": 1,
+   "notes": []
+  },
+  {
+   "request_id": "Q01076",
+   "patient_id": "P546904",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "mild long-standing complaint",
+   "preferred_language": "F2",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 0,
+   "missed_appointments": 0,
+   "notes": []
+  },
+  {
+   "request_id": "Q01077",
+   "patient_id": "P519431",
+   "received": "2026-11-23",
+   "department": "DERM",
+   "visit_type": "new",
+   "previous_doctor": null,
+   "urgency": "R",
+   "triage_note": "annual review",
+   "preferred_language": "L0",
+   "earliest_date": "2026-11-24",
+   "referral_valid_until": "2027-02-15",
+   "pre_visit_test": false,
+   "past_appointments": 12,
+   "missed_appointments": 1,
+   "notes": []
+  }
+ ],
+ "notices": []
+}

@@ -2,7 +2,7 @@
 
 ## Contexto
 
-A partir del lunes 9 de noviembre queremos que nuestra oficina de citas de consultas externas trabaje con un programa: cada día laborable recibe las solicitudes de cita nuevas, las anulaciones y los avisos del día junto con las citas que ya tenemos, cita a los pacientes en los huecos libres de los médicos y nos dice cómo está cada especialidad. Sobre todo queremos dejar de perder tiempo de médico en huecos vacíos. ¿Nos lo puede preparar? Le adjuntamos la lista de médicos, las solicitudes y citas de las últimas cuatro semanas con lo que pasó en cada una, nuestros avisos de consultas y un día piloto (lo que recibe el programa y lo que contestó nuestro piloto).
+A partir del lunes 9 de noviembre queremos que nuestra oficina de citas de consultas externas trabaje con un programa: cada día laborable recibe las solicitudes de cita nuevas, las anulaciones y los avisos del día junto con las citas que ya tenemos, cita a los pacientes en los huecos libres de los médicos y nos dice cómo está cada especialidad. Sobre todo queremos dejar de perder tiempo de médico en huecos vacíos. ¿Nos lo puede preparar? Le adjuntamos una exportación de nuestro sistema de citas (médicos, calendario de consultas, las solicitudes y citas de las últimas cuatro semanas con lo que pasó en cada una, anulaciones, asistencia y lista de espera), los correos que recibió nuestra oficina de citas (ausencias, notas, instrucciones de la dirección de consultas externas) y un día piloto (lo que recibe el programa y lo que contestó nuestro piloto).
 
 Evaluaremos el programa ejecutándolo en los **20 días laborables del lunes 9 de noviembre al viernes 4 de diciembre de 2026**. Esos días no están en los datos: todas las solicitudes de ese periodo son nuevas para usted.
 
@@ -15,7 +15,7 @@ Una carpeta `program/` con un archivo `scheduler.py` que defina **`on_day(day)`*
 - `day` (véase `dia_piloto_entrada.json`, una llamada tal como la hace el motor):
   - `date`, `day_index` (de 0 a 19), `days_in_period` (20), `period_end`;
   - `booking_window`: `first` (el siguiente día laborable) y `last` (10 días laborables después). Solo se pueden dar citas dentro de este intervalo;
-  - `doctors`: `doctor_id`, `department` (código: IM, CARD, DERM, ORTH, PED) y `languages` (códigos, como en `medicos.csv`);
+  - `doctors`: `doctor_id`, `department` (código: IM, CARD, DERM, ORTH, PED) y `languages` (códigos, como en la tabla `languages` de la exportación);
   - `sessions`: el calendario de consultas del intervalo: para cada médico, fecha y sesión (`AM` 09:00–12:00 o `PM` 13:00–16:00), las horas de inicio de sus huecos de 20 minutos;
   - `new_requests`: las solicitudes recibidas hoy. Cada una tiene `request_id`, `patient_id`, `received`, `department`, `visit_type` (`new` primera visita, `follow_up` revisión), `previous_doctor` (revisiones), `urgency` (`U` urgente, `S` preferente, `R` ordinaria), `triage_note`, `preferred_language`, `earliest_date`, `referral_valid_until` (primeras visitas), `pre_visit_test` (true si hace falta un análisis de sangre en ayunas), `past_appointments` y `missed_appointments` (el historial del paciente con nosotros) y `notes` (comentarios del personal);
   - `notices`: lo que nos han comunicado hoy: `cancellation` (un paciente anuló su cita), `doctor_absence`, `interpreter_absence`, `staff_note` (formatos en el archivo piloto);
@@ -32,8 +32,9 @@ Una carpeta `program/` con un archivo `scheduler.py` que defina **`on_day(day)`*
 
 ## Notas sobre los datos
 
-- `medicos.csv`: 14 médicos de cinco especialidades, con los idiomas que hablan y sus consultas semanales. Los días laborables son de lunes a viernes; el Día de la Ciudad (lunes 23 de noviembre) es laborable para el hospital.
-- `solicitudes_anteriores.csv` y `citas_anteriores.csv`: las solicitudes de las últimas semanas y las citas del 12 de octubre al 6 de noviembre con su resultado (acudió, no acudió, anulada por el paciente). Son historial para aprender; el programa recibe en `day` todo lo que necesita.
+- `exportacion_sistema_citas.sql`: un volcado SQL en texto plano de nuestro sistema de citas al cierre del viernes 6 de noviembre (se carga con `sqlite3 booking.db < exportacion_sistema_citas.sql`; el comentario del principio enumera las tablas). Contiene los 14 médicos de cinco especialidades con los idiomas que hablan y sus consultas semanales, el calendario de consultas del 12 de octubre al 20 de noviembre, las solicitudes, las citas del 12 de octubre al 6 de noviembre con su resultado (acudió, no acudió, anulada por el paciente) y las ya dadas a partir del 9 de noviembre, las anulaciones, la asistencia, el historial de la lista de espera y la tabla de estado del día piloto. Los días laborables son de lunes a viernes; el Día de la Ciudad (lunes 23 de noviembre) es laborable para el hospital.
+- `mail/`: correos que recibió la oficina de citas (`.eml`): ausencias de médicos, la ausencia de una intérprete, notas de un jefe de servicio y de la dirección, e instrucciones de la dirección de consultas externas. Mensajes así llegan al programa como `notices` y como `notes` de las solicitudes (véase el fichero piloto).
+- La exportación y los correos son historial para aprender; el programa recibe en `day` todo lo que necesita.
 - Duración: una **primera visita** ocupa **dos huecos consecutivos** del mismo médico en la misma sesión (se cita por la hora del primero); una **revisión** ocupa un hueco.
 - Una solicitud se cita con un médico de su `department` y nunca antes de su `earliest_date`. Su **primer día posible** es su `earliest_date` o el día laborable siguiente a su recepción, el que sea más tarde.
 - `triage_note` es solo informativa.
@@ -93,7 +94,7 @@ Una carpeta `program/` con un archivo `scheduler.py` que defina **`on_day(day)`*
 
 **Ausencias de pacientes y sobrecitación**
 
-- Algunos pacientes no acuden. Cada paciente tiene su propia tasa de ausencias; `past_appointments` y `missed_appointments` son su historial (en `citas_anteriores.csv` no se acudió a cerca del 22% de las citas; las primeras visitas a menudo no tienen historial). Cuanto más tiempo pasa entre la cita y la visita, más se falta: alrededor de **un punto porcentual más por cada día laborable de antelación** (desde el día en que se dio o se cambió la cita por última vez). El historial de los pacientes se recogió con unos 5 días laborables de antelación.
+- Algunos pacientes no acuden. Cada paciente tiene su propia tasa de ausencias; `past_appointments` y `missed_appointments` son su historial (en la tabla `attendance` de la exportación no se acudió a cerca del 22% de las citas; las primeras visitas a menudo no tienen historial). Cuanto más tiempo pasa entre la cita y la visita, más se falta: alrededor de **un punto porcentual más por cada día laborable de antelación** (desde el día en que se dio o se cambió la cita por última vez). El historial de los pacientes se recogió con unos 5 días laborables de antelación.
 - Por las ausencias permitimos **sobrecitar revisiones**: un hueco puede tener **dos revisiones** (nunca una primera visita, que se queda sus dos huecos para ella sola). Cada médico puede tener como mucho **{{overbooked_per_session}} huecos sobrecitados por sesión** (mañana o tarde). La reserva de urgencias también vale para la sobrecitación.
 
 **Duplicados, varias especialidades, notas**
