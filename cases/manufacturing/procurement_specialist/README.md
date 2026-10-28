@@ -23,6 +23,10 @@ all-units price breaks, `lead_time_days` in business days; a `suppliers` sheet),
 caps for S03/C01, S03/C03, S08/C06). The request mentions the history, the allocation notice and the planned
 flash change, so every tier sees them.
 
+## Supplier price email
+
+A synthetic supplier notice approves a 20% increase to all C01/S03 quote tiers for orders placed in W4 or later. Earlier orders keep the quoted price. A further 5% increase is pending and is excluded. The order week determines the price for both purchase cost and monthly budget; open orders are unaffected. This adapts the distinction between approved and pending price changes from the ReflectionAI procurement scenarios.
+
 ## Tiers: which rules apply
 
 | | easy | medium | hard |
@@ -51,7 +55,7 @@ reference is **invalid** under both other rule sets (18 of 18 pairs: mostly `qua
 when the planning rate is higher and `dual_source_critical` under B's 70% cap), so the three ground truths are
 distinct.
 
-## Reference numbers (seed 20261123)
+## Historical reference numbers (before the price email; seed 20261123)
 
 The reference is a time-phased MRP per part: it nets stock and open orders against the exploded demand and orders
 from the cheapest supplier that still arrives in time, as late as possible, covering two weeks and rounding up to a
@@ -126,3 +130,9 @@ backlog, shortfall and scrap. The result is exact and deterministic; nothing is 
 - `validate-case` checks every setting: deterministic data in five locales, the same agent view in all nine, the
   reference at quality 1.0, one deliverable per rule of the setting that breaks only that rule, and distinct
   references across rule sets.
+
+## Relationship to the source assignment
+
+This is a synthetic adaptation of the Apex Manufacturing take-home, not a reproduction of its data or a submission to that assignment. Both use a production schedule, BOM, shared components, stock, existing purchase orders, supplier eligibility, lead times and sourcing rules. Here the output remains the benchmark's eight-week `orders.csv`; the original assignment calls for a general-purpose program that writes purchase orders and alerts to scenario databases. The email is a new fictional commercial event, not a document from the assignment.
+
+The source assignment also includes dated management memos, certification, concentration history, approvals, hazardous handling and expedited freight. Those are not modeled by this extension: the existing quality hold and dual-source rule are only simplified analogues. The simulated client does not receive later emails during a run, issue purchase orders, or request approval. The exercise tests incorporating a dated approved price revision into a static plan and budget, rather than autonomous event handling.

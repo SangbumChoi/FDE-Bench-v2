@@ -26,7 +26,7 @@ One CSV file, `orders.csv`, with the header `order_week,component_id,supplier_id
 <!-- /tier -->
 - `supplier_quotes.xlsx`, sheet `quotes`: one row per component and supplier, with the price per piece `unit_price` in `currency`. Pacific Parts (S04) quotes in US dollars, everyone else in KRW. Our budget is in KRW and we convert at a fixed planning rate of **{{usd_krw}} KRW per USD**, not at the market rate.
 <!-- tier: easy -->
-- This round we plan at list prices: every line costs `unit_price` per piece, whatever its size; ignore the `break1_*` and `break2_*` columns.
+- This round we plan at list prices: use `unit_price` per piece, adjusted for the approved email, whatever its size; ignore the `break1_*` and `break2_*` columns.
 - This round we also treat lead times as whole weeks: divide `lead_time_days` by 5 and round up to get L weeks, and ignore holidays. An order is placed on the Monday of its order week, and an order placed in week w with a lead time of L weeks can be used from week w+L on (ordered in W1 with 12 days = 3 weeks → usable in W4). Goods are available for the whole arrival week's demand.
 - `moq` is the minimum quantity per order line, i.e. per supplier, component and order week. Below it the supplier will not ship. Quantities ordered in different weeks are never added up for the MOQ.
 <!-- /tier -->
@@ -48,6 +48,8 @@ One CSV file, `orders.csv`, with the header `order_week,component_id,supplier_id
 - Late deliveries: suppliers do not always deliver on the promised week. `delivery_history.csv` lists our deliveries of the last six months with the promised date (a Monday) and the date we received the goods. Received on or before the promised date counts as on time; 1 to 7 days after it as one week late; 8 to 14 days after it as two weeks late. Nothing was ever later than that. We expect each supplier to behave in the coming weeks as it has in its history. A late delivery can be used one or two weeks later than planned (still never after W10). One delivery is everything a supplier ships of one component for the same arrival week; each delivery is on time or late independently of the others.
 - Allocation: Mirae Semicon (S03) has the MCU (C01) and the DRAM (C03) on allocation, and Nara Display (S08) the display (C06). `allocations.csv` gives the most each of them will confirm per calendar month, counting all our orders for that part placed in that month (by the Monday of the order week, as for the budget). Anything above it will not be confirmed.
 <!-- /tier -->
+
+The supplier price email revises the quoted prices: apply the approved change by order week, including to any applicable price break. Ignore the pending proposal.
 
 ## How the plan is judged
 
