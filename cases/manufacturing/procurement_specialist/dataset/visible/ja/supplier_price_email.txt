@@ -1,0 +1,5 @@
+From: purchasing@fictional.example
+Date: 2026-11-20
+Subject: C01 / S03 price revision
+
+承認済み: S03のC01はW4以降の発注について全見積単価を20%引き上げます。それ以前の発注は旧価格です。追加5%の値上げ案は承認待ちのため適用しません。
