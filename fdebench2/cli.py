@@ -1,6 +1,7 @@
 """fdebench2 command line.
 
   fdebench2 validate-case cases/<id> ...                  check native cases against the case contract
+  fdebench2 export-dataset cases/<id> ...                 write each case's data and ground truth to dataset/
   fdebench2 cases                                        list cases
   fdebench2 prepare   --case ID [axes]                   materialize a variant, print the agent prompt
   fdebench2 run       --case ID --harness reference --model gpt [axes]
@@ -59,6 +60,8 @@ def main(argv: list[str] | None = None) -> None:
 
     p = sub.add_parser("validate-case")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
+    p = sub.add_parser("export-dataset")
+    p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
     p = sub.add_parser("cases"); _common(p)
     sub.add_parser("policies")
     p = sub.add_parser("prepare"); _common(p); _axes(p)
@@ -86,6 +89,12 @@ def main(argv: list[str] | None = None) -> None:
             failed += bool(problems)
             print(f"{path.parent.name}/{path.name}: " + ("OK" if not problems else "\n  - " + "\n  - ".join(problems)))
         sys.exit(1 if failed else 0)
+    elif a.cmd == "export-dataset":
+        from .dataset import export_dataset
+        for path in a.paths:
+            dest = export_dataset(path)
+            n = sum(1 for f in dest.rglob("*") if f.is_file())
+            print(f"{path.parent.name}/{path.name}: {n} files in {dest.relative_to(Path.cwd()) if dest.is_relative_to(Path.cwd()) else dest}")
     elif a.cmd == "policies":
         print("\n".join(list_policies()))
     elif a.cmd == "cases":

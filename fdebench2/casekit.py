@@ -93,6 +93,55 @@ def write_csv(path: Path, header: Sequence[str], rows: Iterable[Sequence[Any]]) 
     path.write_bytes(buf.getvalue().encode("utf-8-sig"))
 
 
+def _sql_literal(v: Any) -> str:
+    if v is None:
+        return "NULL"
+    if isinstance(v, bool):
+        return "1" if v else "0"
+    if isinstance(v, (int, float)):
+        if isinstance(v, float) and (v != v or v in (float("inf"), float("-inf"))):
+            raise ValueError(f"cannot write {v!r} to SQL")
+        return repr(v) if isinstance(v, float) else str(v)
+    return "'" + str(v).replace("'", "''") + "'"
+
+
+def write_sql(path: Path, tables: Mapping[str, tuple[Sequence[tuple[str, str]], Iterable[Sequence[Any]]]],
+              comment: str = "") -> None:
+    """A plain-text SQL dump (CREATE TABLE + INSERT), the way a client exports a database.
+
+    tables: {name: ([(column, type), ...], rows)}. Loads with `sqlite3 db < file.sql` (or any SQL engine
+    that accepts standard DDL). Deterministic: same input, same bytes.
+    """
+    out = [f"-- {line}" for line in comment.splitlines()] + ["BEGIN TRANSACTION;"]
+    for name, (cols, rows) in tables.items():
+        defs = ", ".join(f'"{c}" {t}' for c, t in cols)
+        out.append(f'CREATE TABLE "{name}" ({defs});')
+        names = ", ".join(f'"{c}"' for c, _ in cols)
+        for row in rows:
+            out.append(f'INSERT INTO "{name}" ({names}) VALUES ({", ".join(_sql_literal(v) for v in row)});')
+    out.append("COMMIT;")
+    path.write_text("\n".join(out) + "\n", encoding="utf-8")
+
+
+def write_eml(path: Path, *, sender: str, to: str, date: str, subject: str, body: str,
+              cc: str = "", message_id: str = "") -> None:
+    """One e-mail as an .eml file (RFC 5322, UTF-8). `date` is an RFC 2822 date string; deterministic."""
+    from email.message import EmailMessage
+    from email.policy import SMTP
+
+    msg = EmailMessage(policy=SMTP)
+    msg["From"] = sender
+    msg["To"] = to
+    if cc:
+        msg["Cc"] = cc
+    msg["Date"] = date
+    msg["Subject"] = subject
+    if message_id:
+        msg["Message-ID"] = message_id
+    msg.set_content(body, charset="utf-8")
+    path.write_bytes(msg.as_bytes())
+
+
 def write_xlsx(path: Path, sheets: Mapping[str, tuple[Sequence[str], Iterable[Sequence[Any]]]]) -> None:
     from openpyxl import Workbook
 

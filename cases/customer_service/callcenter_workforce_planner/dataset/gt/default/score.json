@@ -1,0 +1,9 @@
+{
+  "metrics": {
+    "assignments": 116,
+    "labor_cost": 18264.0,
+    "under_covered_agent_slots": 183
+  },
+  "objective": 25584.0,
+  "violations": []
+}

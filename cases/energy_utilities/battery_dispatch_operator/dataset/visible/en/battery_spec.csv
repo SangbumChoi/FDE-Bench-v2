@@ -1,0 +1,8 @@
+﻿parameter,value,unit
+Rated energy,40.0,MWh
+Max charge power,20.0,MW
+Max discharge power,20.0,MW
+Round-trip efficiency,84.6,%
+Manufacturer minimum SOC,5,%
+Manufacturer maximum SOC,95,%
+Co-located solar capacity,30.0,MWp

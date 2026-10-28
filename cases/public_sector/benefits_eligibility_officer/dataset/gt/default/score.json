@@ -1,0 +1,9 @@
+{
+  "metrics": {
+    "abs_amount_error": 12728.0,
+    "households": 300,
+    "wrong_decisions": 13
+  },
+  "objective": 17928.0,
+  "violations": []
+}

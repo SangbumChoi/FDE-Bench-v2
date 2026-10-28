@@ -18,6 +18,9 @@ per setting, with that setting's rules and parameters), and also:
 7. the rule sets are really different ground truths: within a tier, each rule
    set's reference is invalid, or at least 1% worse, under every other rule set;
 8. markers, parameters and `tiers:` / `rulesets:` lists only name declared ones.
+
+Every case also stores its data and ground truth in dataset/ (fdebench2.dataset);
+the stored files must match what the generator produces now.
 """
 
 from __future__ import annotations
@@ -249,6 +252,11 @@ def validate_case(root: Path) -> list[str]:
                     problems.append(f"[{tier}] rule set {x}'s reference scores {res['quality_score']:.4f} under "
                                     f"rule set {y}: the two rule sets do not lead to different solutions")
     keep.cleanup()
+
+    # ── the stored dataset matches the generator ────────────────────────────
+    if not problems:
+        from .dataset import check_dataset
+        problems += check_dataset(root)
 
     # ── the agent sees the same thing in every setting ──────────────────────
     if tiers:
