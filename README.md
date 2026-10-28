@@ -5,7 +5,13 @@ A benchmark for forward-deployed-engineering agents across **customer languages*
 OpenAI-compatible protocol, and vendor harnesses (Claude Code, Codex, Gemini CLI, OpenCode) through a
 shared MCP client channel. Self-contained: no dependency on any other benchmark's code or data.
 
-Design, scoring and status: [DESIGN.md](DESIGN.md).
+Design, scoring and status: [DESIGN.md](DESIGN.md). Direction, related work and critique:
+[docs/DIRECTION.md](docs/DIRECTION.md).
+
+**Browse the cases:** https://sangbumchoi.github.io/FDE-Bench-v2/ — one page per case (request, settings,
+rules, hidden requirements, targets, stored data and answers, review findings), rebuilt from
+`cases/*/*/explainer.html` by `fdebench2 build-site` and published to the `gh-pages` branch on every push
+(`.github/workflows/pages.yml`).
 
 ## Setup
 

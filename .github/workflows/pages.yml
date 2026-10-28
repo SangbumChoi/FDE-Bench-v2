@@ -1,0 +1,37 @@
+# Publishes the case explainers (fdebench2 build-site) to the gh-pages branch on every push.
+# GitHub Pages serves that branch: Settings -> Pages -> Deploy from a branch -> gh-pages, / (root).
+name: Explainer pages
+
+on:
+  push:
+    branches: [main, claude/fde-bench-v2]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - run: python -m fdebench2.cli build-site --out site
+      - name: Push to gh-pages
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd site
+          git init -q -b gh-pages
+          git config user.name fde-bench
+          git config user.email noreply@anthropic.com
+          git add -A
+          git commit -q -m "Explainer pages for ${GITHUB_REF_NAME} ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages

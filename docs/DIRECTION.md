@@ -15,7 +15,7 @@ the client's rules. FDE-Bench v2 measures four abilities on the same trajectory,
 |---|---|---|
 | **Elicit** | Did the agent find out this client's rules and parameters? | Ask-F1 against clarification targets (judges see the client's answers); the all-3 rate (valid under every rule set) |
 | **Operationalize** | Did the deliverable actually enforce what was learned, including on hidden and future inputs? | Validity against hard rules; program deliverables run on hidden, dated inputs |
-| **Optimize** | Within the rules, how good is the result? | Quality vs a reference solution (capped component and unclipped view) |
+| **Optimize** | Within the rules, how good is the result? | Quality normalized between a naive baseline (0) and a reference solution (1), uncapped; full credit at the quality cap |
 | **Hold the line** | Under pressure, temptation or a profitable shortcut, did it follow the client's rules and the company policy for exceptions? | Rule violations on pressure items; bent rules only with an approved exception for that rule |
 
 …and how these change with the **customer language**, the agent's **protocol language**, the **company
