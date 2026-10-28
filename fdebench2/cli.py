@@ -36,7 +36,9 @@ def _axes(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--engagement", default="standard", help="standard | full_spec | messy (configs/engagement.yaml)")
     ap.add_argument("--condition", default=None)
     ap.add_argument("--world-seed", type=int, default=None, help="generate the case world from this seed")
-    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--noise-seed", "--seed", dest="noise_seed", type=int, default=0,
+                    help="seed of the engagement's data noise and events")
+    ap.add_argument("--trial", type=int, default=0, help="repeat index of the same variant (for pass^k)")
 
 
 def _common(ap: argparse.ArgumentParser) -> None:
@@ -48,8 +50,8 @@ def _common(ap: argparse.ArgumentParser) -> None:
 
 def _spec(a) -> VariantSpec:
     return VariantSpec(case_id=a.case, customer_locale=a.customer_locale, agent_locale=a.agent_locale,
-                       policy=a.policy, difficulty=a.difficulty, seed=a.seed, condition=a.condition,
-                       ruleset=a.ruleset, engagement=a.engagement, world_seed=a.world_seed)
+                       policy=a.policy, difficulty=a.difficulty, noise_seed=a.noise_seed, condition=a.condition,
+                       ruleset=a.ruleset, engagement=a.engagement, world_seed=a.world_seed, trial=a.trial)
 
 
 def _bench(a) -> Bench:
@@ -140,12 +142,14 @@ def main(argv: list[str] | None = None) -> None:
         bench = _bench(a)
         agent = AgentSpec(harness=a.harness, model=a.model, max_steps=a.max_steps)
         result = bench.run(_spec(a), agent, force=a.force)
-        print(json.dumps(result["score"], ensure_ascii=False, indent=2))
+        shown = result["score"] if result.get("score") else {"status": result["status"], "error": result.get("error")}
+        print(json.dumps(shown, ensure_ascii=False, indent=2))
     elif a.cmd == "score":
         bench = _bench(a)
         meta = json.loads((a.run_dir / "session.json").read_text(encoding="utf-8"))
         result = bench.score(a.run_dir, AgentSpec(**meta["agent"]), extra_policies=a.policy)
-        print(json.dumps({"score": result["score"], "rescored": result["rescored"]}, ensure_ascii=False, indent=2))
+        print(json.dumps({"status": result["status"], "score": result["score"], "rescored": result["rescored"]},
+                         ensure_ascii=False, indent=2))
     elif a.cmd == "campaign":
         run_campaign(a.config, dry_run=a.dry_run, concurrency=a.concurrency)
     elif a.cmd == "report":

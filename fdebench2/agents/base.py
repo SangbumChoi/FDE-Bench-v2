@@ -23,7 +23,9 @@ class RunContext:
 
 @dataclass
 class AgentResult:
-    status: str                      # finished | max_steps | out_of_time | stalled | error
+    # finished | max_steps | out_of_time | stalled | error (the agent's run failed) |
+    # harness_error (the harness could not run: CLI missing, bridge down) | infra_error (the benchmark failed)
+    status: str
     summary: str = ""
     usage: Usage = field(default_factory=Usage)
     steps: int = 0
