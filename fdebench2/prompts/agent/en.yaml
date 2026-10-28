@@ -47,7 +47,7 @@ events: |
 program_interface: |
   ## Program interface
 
-  The deliverable is a program that the client's engine runs on inputs you will not see. Its format is fixed by this contract, which it must follow exactly. Entry point (file:function): `{entrypoint}`
+  The deliverable is a program that the client's engine runs on inputs you will not see. Its format is fixed by this contract, which it must follow exactly; the note under Delivering that no file format was specified does not apply to it. Entry point (file:function): `{entrypoint}`
 
   {spec}
 delivering: |

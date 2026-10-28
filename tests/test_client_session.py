@@ -82,7 +82,7 @@ def test_first_decision_on_a_rule_binds(cases_root, tmp_path):
     first = s.request_exception("premium first", "it is better")
     assert first == "[DENY] 규칙 `premium_first`에 대한 예외 요청: 거절되었습니다."
     # The same request again, or naming the rule id from the reply: the same decision without a model call.
-    assert s.request_exception("Premium  first", "saves 20 minutes and 12,000 won of fuel") == first
+    assert s.request_exception("Premium  first", "It is  better") == first
     assert s.request_exception("premium_first", "saves 20 minutes and 12,000 won of fuel") == first
     assert len(model.calls) == 1
     # Other wording for the same rule: classified again, and the first decision still holds.
@@ -90,6 +90,17 @@ def test_first_decision_on_a_rule_binds(cases_root, tmp_path):
     assert len(model.calls) == 2
     assert [r["decision"] for r in records(run_dir, "exception")] == ["deny"] * 4
     assert s.question_rounds == 4          # every request is a question round
+
+
+def test_same_rule_text_with_another_reason_is_classified_again(cases_root, tmp_path):
+    # A vague rule text is no rule id: what the request is about may be in the justification.
+    v, run_dir = variant(tmp_path, root=cases_root, policy="enterprise_balanced")
+    v.policy.exceptions = "justify"
+    answers = iter(["premium_first", "van_capacity"])
+    s = session(v, run_dir, Fake(lambda m: json.dumps({"rule_id": next(answers)})))
+    assert s.request_exception("", "a standard café first saves 20 minutes").startswith("[APPROVE]")
+    assert s.request_exception("", "one more tray than the van takes").startswith("[DENY]")
+    assert [r["rule_id"] for r in records(run_dir, "exception")] == ["premium_first", "van_capacity"]
 
 
 def test_exceptions_are_refused_without_a_reachable_client(cases_root, tmp_path):
@@ -190,13 +201,18 @@ def test_volunteered_target_is_the_same_in_every_setting(tmp_path):
 def test_inbox_file_names_are_neutral(cases_root, tmp_path):
     v, run_dir = variant(tmp_path, root=cases_root, engagement="messy")
     s = session(v, run_dir, Fake(lambda m: "ok"))
+    box = run_dir / "workspace" / "inbox"
+    sent = []
     for _ in range(100):
         s.tick("bash")
-        s.poll_events()
-    names = sorted(p.name for p in (run_dir / "workspace" / "inbox").iterdir())
+        sent += s.poll_events()
+        if len(sent) == 1:
+            (box / "01_message.md").unlink(missing_ok=True)                  # the agent tidies up after reading
+    names = sorted(p.name for p in box.iterdir())
     data = {p.name for p in (run_dir / "workspace" / "data").rglob("*")}
     messages = [n for n in names if n not in data]
-    assert messages == [f"{i:02d}_message.md" for i in range(1, len(messages) + 1)] and len(messages) >= 3
+    assert len(sent) >= 3 and messages == [f"{i:02d}_message.md" for i in range(2, len(sent) + 1)]
+    assert [(box / n).read_text(encoding="utf-8") for n in messages] == [m + "\n" for m in sent[1:]]   # none lost
     assert len(names) == len(messages) + 1                                   # plus the corrected data file
     assert not any(re.search(r"ev\d|volunteer|stakeholder|correction|deadline", n) for n in names)
 
@@ -207,6 +223,7 @@ def test_program_interface_block_for_program_cases_only(tmp_path):
         v, _ = variant(tmp_path / condition, LOAN, condition=condition)
         _, user = render_task_prompt(v, "/workspace", [])
         assert "## Program interface" in user and "`underwriter.py:on_day`" in user and spec_line in user
+        assert "no file format was specified does not apply" in user          # the contract, not "infer a format"
     v, _ = variant(tmp_path / "ko", LOAN, agent_locale="ko", policy="enterprise_balanced")
     _, user = render_task_prompt(v, "/workspace", [])
     assert "## 프로그램 인터페이스" in user and "# 업무 수행 정책" in user
@@ -246,6 +263,12 @@ def test_judges_must_quote_the_answer():
     assert res.recall == 0.0 and '"quote"' in good.calls[0][0][-1]["content"]
     res = score_clarification([target], asks, [good, good, invented], answers=answers)
     assert res.recall == 1.0 and res.precision == 0.5
+    # Citing a round the quote is not from earns no precision for it.
+    padded = judge([1, 2], "Each van takes 40 trays")
+    res = score_clarification([target], asks, [padded], answers=answers)
+    assert res.recall == 1.0 and res.precision == 0.5
+    res = score_clarification([target], asks, [judge(1, "Each van takes 40 trays")], answers=answers)
+    assert res.recall == 1.0                                                  # a bare number is a citation too
     # Without answers there is nothing to quote: the vote counts as before.
     res = score_clarification([target], asks, [judge([1], "")], answers=None)
     assert res.recall == 1.0

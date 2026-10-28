@@ -47,7 +47,7 @@ events: |
 program_interface: |
   ## Interfaz del programa
 
-  El entregable es un programa que el motor del cliente ejecuta con entradas que usted no verá. Su formato lo fija este contrato, que debe cumplir exactamente. Punto de entrada (archivo:función): `{entrypoint}`
+  El entregable es un programa que el motor del cliente ejecuta con entradas que usted no verá. Su formato lo fija este contrato, que debe cumplir exactamente; lo que dice «Entrega» sobre el formato de archivo no especificado no se aplica a él. Punto de entrada (archivo:función): `{entrypoint}`
 
   {spec}
 delivering: |

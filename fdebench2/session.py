@@ -58,7 +58,8 @@ class Session:
         self.unavailable_until: tuple[int, float] | None = None
         self.deadline_s: float = variant.time_budget_s
         self.decisions: dict[str, tuple[str, bool | None]] = {}   # rule id -> first (decision, reason_given)
-        self._requested: dict[str, str] = {}                       # exception request text -> rule id
+        self._requested: dict[tuple[str, str], str] = {}           # exception request (rule, why) -> rule id
+        self.delivered = 0                                         # messages written to inbox/
         self._log = run_dir / "transcript.jsonl"
 
     # ── bookkeeping ─────────────────────────────────────────────────────────
@@ -112,8 +113,8 @@ class Session:
         """Deliver a message as inbox/NN_message.md: a neutral name, as for any e-mail from the client."""
         box = self.workspace / "inbox"
         box.mkdir(exist_ok=True)
-        n = len(list(box.glob("*_message.md"))) + 1
-        (box / f"{n:02d}_message.md").write_text(message + "\n", encoding="utf-8")
+        self.delivered += 1     # counted here, not from the folder, which the agent may tidy up
+        (box / f"{self.delivered:02d}_message.md").write_text(message + "\n", encoding="utf-8")
 
     def _unavailable(self) -> bool:
         if self.unavailable_until is None:
@@ -175,9 +176,11 @@ class Session:
                      round=self.question_rounds)
             return self._auto_reply()
 
-        # A request seen before, or one naming a decided rule's id, gets that decision without a model call.
-        key = " ".join(rule.lower().split())
-        rule_id = self._requested.get(key, key)
+        # A request seen before, or one naming a decided rule's id, gets that decision without a model call. The
+        # justification is part of the request: the same rule text may stand for another rule with another reason.
+        name = " ".join(rule.lower().split())
+        key = (name, " ".join(justification.lower().split()))
+        rule_id = self._requested.get(key, name)
         if rule_id not in self.decisions:
             rule_id, reason_given = self._classify(rule, justification)
         if rule_id in self.decisions:

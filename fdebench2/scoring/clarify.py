@@ -13,7 +13,8 @@ requirement? Judged by a fixed panel with a majority vote.
     been). Questions are still numbered for precision. A covered vote must then
     cite the question(s) and quote the answer that states the requirement; a
     quote that is not in a cited round's answer (whitespace-normalized) is not
-    a vote.
+    a vote, and only the cited questions of the rounds it is quoted from count
+    for precision.
 """
 
 from __future__ import annotations
@@ -114,10 +115,14 @@ def score_clarification(targets: list[Target], asks: list[str], judges: list[Cha
                 continue
             if doc.get("covered") is not True:
                 continue
-            nums = {int(q) for q in doc.get("questions", []) if str(q).isdigit()}
-            quote = " ".join(str(doc.get("quote") or "").split())
-            if said is not None and not (quote and any(quote in said[q] for q in nums if q in said)):
-                continue    # with answers, a vote stands only on a verbatim quote from a cited round's answer
+            cites = doc.get("questions")
+            nums = {int(q) for q in (cites if isinstance(cites, list) else [cites]) if str(q).isdigit()}
+            if said is not None:
+                # With answers, a vote stands only on a verbatim quote, and cites only the rounds it is quoted from.
+                quote = " ".join(str(doc.get("quote") or "").split())
+                nums = {q for q in nums if quote and quote in said.get(q, "")}
+                if not nums:
+                    continue
             votes += 1
             cited |= nums
         covered[t.id] = votes * 2 > len(judges)
