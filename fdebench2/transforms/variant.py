@@ -32,6 +32,7 @@ class VariantSpec:
     condition: str | None = None      # override the engagement's condition (ablations)
     ruleset: str = DEFAULT_RULESET    # rule parameters of cases that declare settings (A / B / C)
     engagement: str = "standard"      # how the work is handed over (configs/engagement.yaml)
+    world_seed: int | None = None     # generate the case's world from this seed instead of its public one
 
     def key(self) -> str:
         """Run-directory name (outside the agent's sandbox: the agent never sees it)."""
@@ -39,6 +40,8 @@ class VariantSpec:
                  f"d-{self.difficulty}", f"r-{self.ruleset}", f"e-{self.engagement}"]
         if self.condition:
             parts.append(f"x-{self.condition}")
+        if self.world_seed is not None:
+            parts.append(f"w-{self.world_seed}")
         return "__".join(parts) + f"__s{self.seed}"
 
 
@@ -79,6 +82,10 @@ class Variant:
     submission_files: list[str]
     case_tier: str | None = None      # the content tier the case was scored at (None: no settings)
     ruleset: str | None = None        # the rule set the case was scored at (None: no settings)
+    world_seed: int | None = None     # the world the case was built from (None: its public seed)
+    rules: list[dict[str, str]] = field(default_factory=list)   # the setting's rules {id, class, description};
+                                                                 # never shown to the agent: exception requests are
+                                                                 # mapped to one of them
 
     @property
     def can_ask(self) -> bool:
@@ -116,7 +123,7 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
     if condition not in CONDITIONS:
         raise ValueError(f"unknown condition {condition!r}")
     policy = load_policy(spec.policy)
-    case = case.at(spec.difficulty, spec.ruleset)
+    case = case.with_world_seed(spec.world_seed).at(spec.difficulty, spec.ruleset)
     # Nothing the agent sees may depend on the difficulty or the rule set: noise and events are
     # seeded by the engagement only.
     rng = random.Random(f"{spec.case_id}|{spec.engagement}|{spec.seed}")
@@ -186,5 +193,7 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
         instruction=instruction, information=information, targets=targets, policy=policy, policy_brief=brief,
         events=events, noise=applied, time_budget_s=eng.time_budget_s,
         max_question_rounds=eng.max_question_rounds, submission_files=case.submission_files,
-        case_tier=getattr(case, "tier", None), ruleset=getattr(case, "ruleset", None),
+        case_tier=getattr(case, "tier", None), ruleset=getattr(case, "ruleset", None), world_seed=spec.world_seed,
+        rules=[{"id": r.id, "class": r.rule_class, "description": r.description}
+               for r in (case.rules().rules if case.rules() is not None else [])],
     )

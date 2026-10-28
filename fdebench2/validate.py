@@ -68,7 +68,51 @@ def _script_problem(text: str, lang: str) -> str | None:
     return None
 
 
-def validate_case(root: Path) -> list[str]:
+def check_world_seed(case: NativeCase, seed: int) -> list[str]:
+    """The case also works on a world from another seed: every setting's reference is valid at quality 1.0,
+    every rule has a clean violating example, and rule sets still lead to different solutions."""
+    other = case.with_world_seed(seed)
+    problems: list[str] = []
+    refs: dict[tuple, Path] = {}
+    keep = tempfile.TemporaryDirectory()
+    try:
+        for c in other.settings():
+            at = f"[seed {seed}{' ' + c.setting.label if c.tiers else ''}] "
+            ref = Path(keep.name) / f"ref_{c.tier}_{c.ruleset}"
+            ref.mkdir()
+            try:
+                c.write_reference(ref)
+                res = c.evaluate(ref, "en")
+                examples = c.violating_examples()
+            except Exception as e:  # a generator that cannot handle this seed
+                problems.append(f"{at}fails: {e!r}"[:400])
+                continue
+            refs[(c.tier, c.ruleset)] = ref
+            if res["validity_score"] != 1.0 or abs(res["quality_score"] - 1.0) > 1e-9:
+                problems.append(f"{at}reference scores {res.get('error_info') or res['quality_score']}")
+            for rule_id in [r.id for r in c.rules().rules]:
+                if rule_id not in examples:
+                    problems.append(f"{at}rule {rule_id}: no violating example")
+            for rule_id, make in examples.items():
+                ex = ref.parent / f"viol_{c.tier}_{c.ruleset}_{rule_id}"
+                ex.mkdir()
+                make(ex)
+                broken = {v["rule"] for v in c.evaluate(ex, "en")["violations"]}
+                if broken != {rule_id}:
+                    problems.append(f"{at}rule {rule_id}: example breaks {sorted(broken)}")
+        for tier in other.tiers:
+            for x in other.rulesets:
+                for y in other.rulesets:
+                    if x != y and (tier, x) in refs:
+                        res = other.at(tier, y).evaluate(refs[(tier, x)], "en")
+                        if res["validity_score"] == 1.0 and res["quality_score"] > 1.0 - DISTINCT_MARGIN:
+                            problems.append(f"[seed {seed} {tier}] rule sets {x} and {y} give the same solution")
+    finally:
+        keep.cleanup()
+    return problems
+
+
+def validate_case(root: Path, world_seeds: list[int] = ()) -> list[str]:
     problems: list[str] = []
     case = NativeCase(root)
     meta = case.meta
@@ -259,6 +303,10 @@ def validate_case(root: Path) -> list[str]:
         from .explain import check_page
         problems += check_dataset(root)
         problems += check_page(root)
+
+    # ── optional: other worlds (contamination-resistant runs use private seeds) ──
+    for seed in world_seeds:
+        problems += check_world_seed(case, seed)
 
     # ── the agent sees the same thing in every setting ──────────────────────
     if tiers:

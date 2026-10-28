@@ -35,6 +35,7 @@ def _axes(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--ruleset", default="A", help="rule parameters of cases with settings: A | B | C")
     ap.add_argument("--engagement", default="standard", help="standard | full_spec | messy (configs/engagement.yaml)")
     ap.add_argument("--condition", default=None)
+    ap.add_argument("--world-seed", type=int, default=None, help="generate the case world from this seed")
     ap.add_argument("--seed", type=int, default=0)
 
 
@@ -48,7 +49,7 @@ def _common(ap: argparse.ArgumentParser) -> None:
 def _spec(a) -> VariantSpec:
     return VariantSpec(case_id=a.case, customer_locale=a.customer_locale, agent_locale=a.agent_locale,
                        policy=a.policy, difficulty=a.difficulty, seed=a.seed, condition=a.condition,
-                       ruleset=a.ruleset, engagement=a.engagement)
+                       ruleset=a.ruleset, engagement=a.engagement, world_seed=a.world_seed)
 
 
 def _bench(a) -> Bench:
@@ -62,6 +63,7 @@ def main(argv: list[str] | None = None) -> None:
 
     p = sub.add_parser("validate-case")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
+    p.add_argument("--world-seeds", default="", help="also check the case on these world seeds, e.g. 1,2,3")
     p = sub.add_parser("export-dataset")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
     p = sub.add_parser("new-case")
@@ -93,7 +95,8 @@ def main(argv: list[str] | None = None) -> None:
         from .validate import validate_case
         failed = 0
         for path in a.paths:
-            problems = validate_case(path)
+            seeds = [int(x) for x in a.world_seeds.split(",") if x.strip()]
+            problems = validate_case(path, world_seeds=seeds)
             failed += bool(problems)
             print(f"{path.parent.name}/{path.name}: " + ("OK" if not problems else "\n  - " + "\n  - ".join(problems)))
         sys.exit(1 if failed else 0)

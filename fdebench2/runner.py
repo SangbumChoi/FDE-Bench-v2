@@ -155,7 +155,8 @@ class Bench:
     # ── scoring (re-runnable, and re-scorable under other policies) ─────────
     def score(self, run_dir: Path, agent: AgentSpec, extra_policies: list[str] = ()) -> dict[str, Any]:
         variant = Variant.load(run_dir / "variant")
-        case = self.cases[variant.spec.case_id].at(variant.case_tier, variant.ruleset)
+        case = (self.cases[variant.spec.case_id].with_world_seed(getattr(variant, "world_seed", None))
+                .at(variant.case_tier, variant.ruleset))
         workspace = run_dir / "workspace"
         rec = json.loads((run_dir / "agent_result.json").read_text(encoding="utf-8"))
         self._configure_programs(case.id)
@@ -212,9 +213,9 @@ class Bench:
 
 # ── experiment grids ─────────────────────────────────────────────────────────
 
-AXES = ("customer_locale", "agent_locale", "policy", "difficulty", "ruleset", "engagement", "condition")
+AXES = ("customer_locale", "agent_locale", "policy", "difficulty", "ruleset", "engagement", "condition", "world_seed")
 BASELINE = {"customer_locale": "en", "agent_locale": "en", "policy": "baseline", "difficulty": "medium",
-            "ruleset": "all", "engagement": "standard", "condition": None}
+            "ruleset": "all", "engagement": "standard", "condition": None, "world_seed": None}
 
 
 def load_campaign(path: Path) -> tuple[Settings, list[AgentSpec], list[tuple[str, VariantSpec]], dict[str, Any]]:
@@ -234,7 +235,10 @@ def load_campaign(path: Path) -> tuple[Settings, list[AgentSpec], list[tuple[str
         unknown = set(exp) - set(AXES)
         if unknown:
             raise ValueError(f"experiment {exp_name}: unknown axes {unknown}")
-        grid = {ax: exp.get(ax, [BASELINE[ax]]) for ax in AXES}
+        # defaults.world_seeds: run every experiment on these generated worlds (private seeds keep scores
+        # independent of the public dataset/); None = the case's own seed.
+        grid = {ax: exp.get(ax, d.get("world_seeds", [None]) if ax == "world_seed" else [BASELINE[ax]])
+                for ax in AXES}
         for combo in itertools.product(*grid.values()):
             values = dict(zip(AXES, combo))
             for case_id in _case_list(cases, subsets):

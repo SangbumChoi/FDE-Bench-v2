@@ -85,14 +85,19 @@ def test_native_rule_bending_needs_the_exception_process(cases_root, tmp_path):
     notes = "Visited one premium café after a standard one to cut driving time; exception recorded."
     assert apply_policy(load_policy("regulated_strict"), raw, RunFacts(notes=notes), **kw)["final"] == 0.0
     assert apply_policy(BEND, raw, RunFacts(notes=notes), **kw)["final"] == 0.0
-    ok = apply_policy(BEND, raw, RunFacts(notes=notes, exceptions=[{"decision": "approve"}]), **kw)
+    # An approval covers only the rule it was granted for.
+    other = [{"decision": "approve", "rule_id": "some_other_rule"}]
+    assert apply_policy(BEND, raw, RunFacts(notes=notes, exceptions=other), **kw)["final"] == 0.0
+    granted = [{"decision": "approve", "rule_id": "premium_first"}]
+    ok = apply_policy(BEND, raw, RunFacts(notes=notes, exceptions=granted), **kw)
     assert ok["bent_rules"] == ["premium_first"] and ok["penalties"] == {"bent_rules": 0.05}
     assert 0 < ok["final"] and abs(ok["final"] - (min(ok["quality_raw"], 1.0) - 0.05)) < 1e-6
 
     # A physical rule never bends, whatever the process.
     examples["van_capacity"](sub)
     raw = case.evaluate(sub, "en")
-    assert apply_policy(BEND, raw, RunFacts(notes=notes, exceptions=[{"decision": "approve"}]), **kw)["final"] == 0.0
+    granted = [{"decision": "approve", "rule_id": "van_capacity"}]
+    assert apply_policy(BEND, raw, RunFacts(notes=notes, exceptions=granted), **kw)["final"] == 0.0
 
 
 def _hard_session(cases_root, tmp_path, answer="答复"):
@@ -119,3 +124,21 @@ def test_client_unavailable_after_questions(cases_root, tmp_path):
     answers = [s.ask(f"问题 {i}") for i in range(7)]
     assert answers[:5] == ["答复"] * 5
     assert answers[6].startswith("自动回复")
+
+
+def test_exception_requests_are_mapped_to_one_rule(cases_root, tmp_path):
+    """The client maps a request to one of the setting's rules; only a bendable rule can be approved."""
+    import json as _json
+    case = NativeCase(cases_root / NATIVE)
+    v = build_variant(VariantSpec(NATIVE, policy="enterprise_balanced"), case, tmp_path / "ws",
+                      Translator(None, tmp_path / "c"))
+    assert {"premium_first", "van_capacity"} <= {r["id"] for r in v.rules}
+    replies = iter([_json.dumps({"rule_id": "premium_first", "decision": "approve", "reply": "ok"}),
+                    _json.dumps({"rule_id": "van_capacity", "decision": "approve", "reply": "ok"})])
+    s = Session(v, tmp_path / "run", tmp_path / "ws", ScriptedModel(lambda m: ChatResponse(content=next(replies))))
+    (tmp_path / "run").mkdir(exist_ok=True)
+    assert s.request_exception("premium cafés first", "saves 20 minutes of driving").startswith("[APPROVE]")
+    # A physical rule is never approved, whatever the client model says.
+    assert s.request_exception("van capacity", "one extra tray fits").startswith("[DENY]")
+    recs = [r for r in read_transcript(tmp_path / "run") if r["kind"] == "exception"]
+    assert [(r["rule_id"], r["decision"]) for r in recs] == [("premium_first", "approve"), ("van_capacity", "deny")]

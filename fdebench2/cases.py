@@ -158,6 +158,10 @@ class Case:
     def at_tier(self, tier: str | None) -> "Case":
         return self.at(tier)
 
+    def with_world_seed(self, seed: int | None) -> "Case":
+        """This case on a world generated from another seed (itself for None or the case's own seed)."""
+        return self
+
     @property
     def submission_files(self) -> list[str]:
         return []
@@ -281,9 +285,27 @@ class NativeCase(Case):
         return self._family["module"]
 
     @property
+    def world_seed(self) -> int:
+        return int(self._family.get("world_seed", self.meta.get("seed", 0)))
+
+    def with_world_seed(self, seed: int | None) -> "NativeCase":
+        """The same case on a fresh world: same rules, texts and settings, data and answers from `seed`.
+
+        The stored dataset/ uses the case's own (public) seed; campaigns can run on other seeds so that scores
+        do not depend on worlds whose answers are published.
+        """
+        if seed is None or int(seed) == self.world_seed:
+            return self
+        fam = self._family.setdefault("other_worlds", {})
+        if seed not in fam:
+            fam[seed] = NativeCase(self.root, self.tier, self.ruleset,
+                                   _family={"module": self.module, "world_seed": int(seed)})
+        return fam[seed].at(self.tier, self.ruleset)
+
+    @property
     def world(self) -> Any:
         if "world" not in self._family:
-            self._family["world"] = self.module.build_world(int(self.meta.get("seed", 0)))
+            self._family["world"] = self.module.build_world(self.world_seed)
         return self._family["world"]
 
     # ── texts ───────────────────────────────────────────────────────────────

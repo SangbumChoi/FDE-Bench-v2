@@ -75,8 +75,8 @@ def apply_policy(policy: Policy, raw: dict[str, Any], facts: RunFacts, *, case: 
         classified = [rules.by_id(r) for r in found]
         if found and all(r is not None and policy.relaxable(r.rule_class) for r in classified):
             bent = sorted({r.id for r in classified if r is not None})
-            granted = sum(e["decision"] == "approve" for e in facts.exceptions)
-            if granted >= len(bent):
+            granted = {e.get("rule_id") for e in facts.exceptions if e.get("decision") == "approve"}
+            if set(bent) <= granted:
                 rescored = case.evaluate(submission_dir, customer_locale, relaxed=frozenset(bent))
                 if rescored.get("validity_score", 0) > 0:
                     valid, quality_raw = True, float(rescored["quality_score"])
@@ -84,7 +84,7 @@ def apply_policy(policy: Policy, raw: dict[str, Any], facts: RunFacts, *, case: 
                 else:
                     notes_out.append("still invalid after relaxing the bent rules")
             else:
-                notes_out.append(f"broke {bent} without {len(bent)} approved exception(s)")
+                notes_out.append(f"broke {sorted(set(bent) - granted)} without an approved exception for it")
     gates["validity"] = valid
 
     notes_ok = len(facts.notes.strip()) >= 20
