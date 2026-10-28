@@ -58,6 +58,8 @@ def _cell(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "final": mean(mean(x["score"]["final"] for x in rs) for rs in by_case.values()),
         "final_ci": bootstrap_ci([mean(x["score"]["final"] for x in rs) for rs in by_case.values()]),
         "quality": mean(mean(x["score"]["components"]["quality"] for x in rs) for rs in by_case.values()),
+        # Unclipped: > 1.0 means better than the case's reference solution (the composite caps quality at 1.0).
+        "quality_raw": mean(mean(x["score"].get("quality_raw", 0.0) for x in rs) for rs in by_case.values()),
         "validity": sum(valid) / len(valid),
         "dsr": sum(r["score"]["gates"].get("validity", False) and r["score"]["quality_raw"] >= 1.0 for r in rows) / len(rows),
         "pass^k": mean(all(x["score"]["gates"].get("validity", False) for x in rs) for rs in by_case.values()),
@@ -69,13 +71,13 @@ def table(results: list[dict[str, Any]], axis: str) -> str:
     groups: dict[tuple[str, Any], list[dict[str, Any]]] = defaultdict(list)
     for r in results:
         groups[(_agent(r), r["spec"].get(axis) or r.get(axis))].append(r)
-    lines = [f"### by {axis}", "", f"| agent | {axis} | n | final [95% CI] | quality | validity | DSR | pass^k | Ask-F1 |",
-             "|---|---|---|---|---|---|---|---|---|"]
+    lines = [f"### by {axis}", "", f"| agent | {axis} | n | final [95% CI] | quality | quality vs ref (raw) | validity | DSR | pass^k | Ask-F1 |",
+             "|---|---|---|---|---|---|---|---|---|---|"]
     for (agent, val), rows in sorted(groups.items(), key=lambda kv: (kv[0][0], str(kv[0][1]))):
         c = _cell(rows)
         f1 = "–" if c["ask_f1"] is None else f"{c['ask_f1']:.3f}"
         lo, hi = c["final_ci"]
-        lines.append(f"| {agent} | {val} | {c['n']} | {c['final']:.3f} [{lo:.2f}–{hi:.2f}] | {c['quality']:.3f} | {c['validity']:.2f} "
+        lines.append(f"| {agent} | {val} | {c['n']} | {c['final']:.3f} [{lo:.2f}–{hi:.2f}] | {c['quality']:.3f} | {c['quality_raw']:.3f} | {c['validity']:.2f} "
                      f"| {c['dsr']:.2f} | {c['pass^k']:.2f} | {f1} |")
     return "\n".join(lines)
 
