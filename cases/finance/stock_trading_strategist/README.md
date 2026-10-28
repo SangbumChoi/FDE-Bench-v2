@@ -101,10 +101,13 @@ accuracy is the mean over the 80 calls (a failed call scores 0).
 September (cash + unsettled + positions at the last close net of commission and, medium+, sales tax) + all
 cash paid out to the client. Return component = (final value − the index bought at the first session's p10
 and held) / the same excess of the reference program in that setting (recomputed deterministically in
-process), and 0 below the index. The reference scores exactly 0.8 × 1 + 0.2 × 1.000 = 1.0, so quality =
-objective. Holding the index scores 0.2 × table; an all-cash program that reports a perfect table scores
-0.24–0.32 (the index ends 0.7% / 0.9% below the starting capital after costs, against reference excesses of
-5.8%–13.5%).
+process), and 0 below the index. Where the reference beats the index by less than 500,000 (5% of the capital,
+`MIN_EDGE`) or trails it, which happens on other world seeds (seed 2's index gains 48% in the hidden period),
+the yardstick is 500,000 below the reference's final value instead of the index, so the component stays
+defined and increasing in the book's value; in this world every reference beats the index by 5.8%–13.5%, so
+the yardstick is the index. The reference scores exactly 0.8 × 1 + 0.2 × 1.000 = 1.0, so quality = objective.
+Holding the index scores 0.2 × table; an all-cash program that reports a perfect table scores 0.24–0.32 (the
+index ends 0.7% / 0.9% below the starting capital after costs, against reference excesses of 5.8%–13.5%).
 
 ## Rules and their classes
 
@@ -137,7 +140,7 @@ approval.
 | ① | The large-order threshold | — | Ask: x% of the 20-session average volume in today's shares (convert XIPH's pre-consolidation volumes) |
 | ① | Withdrawal mechanics | — | Ask: percent of which basis (rule set), paid from settled cash at the close of the payment date, T+2 settlement of the sales |
 | ① | The status table | — | Ask: closing values, weights of equity, buying power for the next session net of the pending withdrawal, drawdown with payouts added back |
-| ② dated notice | Compliance adds LUMO to the restricted list | `restricted_list_add` on 2 Jun, effective 3 Jun | All tiers: stop buying LUMO, sell it out within N sessions (every reference holds 11,200–15,200 shares then and needs all N sessions) |
+| ② dated notice | Compliance adds LUMO to the restricted list (the generator picks the stock with the strongest trend at the notice among those no rule set restricts, other than ZENT: LUMO in this world) | `restricted_list_add` on 2 Jun, effective 3 Jun | All tiers: stop buying LUMO, sell it out within N sessions (every reference holds 11,200–15,200 shares then and needs all N sessions) |
 | ② | The client withdraws 25% | `cash_withdrawal` on 17 Jun, paid at the close of 30 Jun | Medium+: reserve the amount, sell early enough for T+2, size the weights on equity after the payout |
 | ② | Market-wide circuit breaker | flash crash on 26 Jun (index −4.5%); `circuit_breaker` notice that evening | Hard: every order for 26 Jun is rejected; anything with a deadline must not rely on that one session (26 Jun is the last session whose sales settle by 30 Jun) |
 | ② | Risk manager cuts the stock limit by 5 points | `risk_limit_change` on 16 Jul, effective 21 Jul (during the sell-off) | Medium+: every holding within the new limit at the close of 21 Jul, and buys only up to it afterwards |
@@ -249,6 +252,13 @@ cash only (ignoring proceeds that settle next session and the withdrawal reserve
   an unknown ticker, a lot plus one share, a short sale, a restricted buy, keeping the added stock, orders
   over the threshold, names over the stock limit (or ignoring the cut), one whole sector, spending the
   withdrawal reserve on the payment date (or ignoring it), no drawdown control, one lot of the tipped stock.
+  Where a world makes those break nothing or more than their rule (a book mostly in cash, a mild sell-off),
+  the search goes on to the reference with one deviation from `reference/examples.py` that keeps to every
+  other rule: one lot of the added stock kept past the deadline, the most liquid name taken over the stock
+  limit, the cash for the withdrawal put into stock in the sessions before the payment (holdings sold the
+  session before and bought back on the date, whose proceeds settle after it), and, for the drawdown mandate,
+  the stocks that fall most over the next 10 sessions (hindsight from the world). These files are not part of
+  the reference solution or the dataset.
   `validate-case` (9 settings, ~175 replays, plus regenerating and checking `dataset/`) takes about **90
   seconds**.
 - **Why the 10-minute habit was dropped**: it was the old bendable rule; with the large-order approval as the

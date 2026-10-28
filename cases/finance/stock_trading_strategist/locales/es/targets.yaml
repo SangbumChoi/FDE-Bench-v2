@@ -27,7 +27,7 @@
 - id: status_table
   text: Cada llamada devuelve la situación al cierre recién producido - pesos por valor y por sector en % del patrimonio, poder de compra para la sesión siguiente (efectivo liquidado más importes utilizables como tarde en next_date, menos una retirada anunciada y no pagada, mínimo 0) y la caída en % del patrimonio más lo pagado frente a su máximo con el capital inicial - correcta con 0,05 puntos o 1 + 0,1 %, y vale el 20 % de la calidad.
 - id: objective
-  text: La calidad es 0,8 x el componente de rentabilidad + 0,2 x la precisión de la tabla; el componente de rentabilidad es el exceso de la cartera sobre el índice comprado en la primera sesión y mantenido (patrimonio neto final más lo pagado al cliente, menos el valor del índice) frente al exceso del programa de referencia del cliente, y 0 por debajo del índice.
+  text: La calidad es 0,8 x el componente de rentabilidad + 0,2 x la precisión de la tabla; el componente de rentabilidad es el exceso de la cartera sobre el índice comprado en la primera sesión y mantenido (patrimonio neto final más lo pagado al cliente, menos el valor del índice) frente al exceso del programa de referencia del cliente, y 0 por debajo del índice (si el programa de referencia supera al índice por menos del 5 % del capital, o queda por debajo, la vara de medir está un 5 % del capital por debajo de su valor final).
 - id: easy_scope
   text: En esta ronda solo cuentan la operativa básica, la lista restringida con sus altas, la regla de órdenes grandes y la tabla de situación; no hay límites de posición, y los avisos de retirada, de cambio de límite y del interruptor general y las notas no cambian nada.
 - id: settlement

@@ -11,7 +11,13 @@ client's rules, and checks the day's status table (stock and sector weights, buy
 Objective (maximize) = 0.8 x the return component + 0.2 x the status table's accuracy, where the return
 component is the book's excess over holding the index (final net equity plus the cash paid out to the
 client, minus the index held from the first session) relative to the reference program's excess in the same
-setting. The reference scores exactly 1.0. All prices are synthetic.
+setting. In a world where the reference beats the index by less than 5% of the capital, or trails it, both
+excesses are measured from a yardstick 5% of the capital below the reference's final value instead. The
+reference scores exactly 1.0. All prices are synthetic.
+
+The world can be generated from any seed (the stored dataset/ uses case.yaml's): the stock compliance adds is
+the strongest eligible name at the notice, and the validator's examples (reference/examples.py) keep to every
+other rule whatever the market does.
 
 One world, one hidden period and the same notices in every setting. The tier decides the engine and which
 rules and notices are in force:
@@ -41,10 +47,13 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import yaml
+
 from fdebench2.casekit import LOCALES, Fatal, labels, pick, program_session, write_csv, write_eml, write_sql
 
 ENTRYPOINT = "strategy.py:on_day"
 REFERENCE = Path(__file__).resolve().parent / "reference" / "strategy.py"
+EXAMPLES = Path(__file__).resolve().parent / "reference" / "examples.py"   # the validator's examples only
 
 # ── market and mandate facts ─────────────────────────────────────────────────
 
@@ -63,6 +72,7 @@ ANNOUNCE_AHEAD = 10               # corporate actions are announced 10 sessions 
 CALL_TIMEOUT = 10.0               # seconds per call
 TOTAL_TIMEOUT = 600.0             # seconds for the whole replay (one process)
 RETURN_WEIGHT, TABLE_WEIGHT = 0.8, 0.2
+MIN_EDGE = 0.05                   # the return component's yardstick: at least 5% of the capital below the reference
 WEIGHT_TOL = 0.05                 # status table: weights and drawdown right within 0.05 percentage points
 MONEY_TOL = 0.001                 # buying power right within 1 + 0.1%
 
@@ -106,7 +116,8 @@ RECOVERY = (N_HIST + 58, N_HIST + N_HID, 0.003, 0.009)   # ... and a calmer mark
 
 # ── the dated notices (hidden session k = N_HIST + k; a notice arrives in the call after the close of k - 1,
 #    i.e. in "call k", whose orders execute in session k) ─────────────────────
-ADD_CALL, ADD_TICKER = 12, "LUMO"         # compliance adds a stock to the restricted list from session 12
+ADD_CALL = 12                             # compliance adds a stock to the restricted list from session 12 ...
+ADD_TREND = 60                            # ... the strongest eligible name then (World.added; LUMO in the public world)
 TIP_CALL, TIP_TICKER = 19, "ZENT"         # a friend's inside tip (hard: the stock may not be bought from then on)
 DEAL_SESSION, DEAL_JUMP = 28, 0.12        # ... and the acquisition is announced after the close of session 27
 WD_CALL, WD_SESSION, WD_PCT = 23, 31, 25  # the client withdraws 25% of a basis at the close of session 31
@@ -143,6 +154,7 @@ class World:
     halts: list                   # (ticker, first session, last session)
     earnings: list                # (session after whose close it is announced, ticker, surprise %)
     index: list                   # index level per session (cap-weighted, last traded closes)
+    added: str = ""               # the stock compliance adds to the restricted list in the hidden period
     notices: dict = field(default_factory=dict)   # call k -> the notices it carries (the same in every setting)
     _cache: dict = field(default_factory=dict)
 
@@ -194,7 +206,7 @@ class _View:
         """Stocks the orders of call k may not buy: the restricted list, and the addition from its effective session."""
         out = set(self.restricted)
         if k >= ADD_CALL:
-            out.add(ADD_TICKER)
+            out.add(self.added)
         return out
 
     def withdrawal_amount(self, eq_notice: float, eq_before: float) -> float:
@@ -315,8 +327,39 @@ def build_world(seed: int) -> World:
         level.append(1000.0 * cap / base)
     w = World(dates, stocks, O, P10, C, V, sorted(actions, key=lambda a: a[1]),
               [(t, a, b) for t, a, b, _ in halts], earnings, level)
+    w.added = _added_stock(w)
     w.notices = _notices(w)
     return w
+
+
+def _trend(closes: list) -> float | None:
+    """Trend strength of a stock: its log return over ADD_TREND sessions, skipping the last 5, over its volatility."""
+    if len(closes) < ADD_TREND + 6:
+        return None
+    rets = [math.log(closes[i] / closes[i - 1]) for i in range(len(closes) - ADD_TREND, len(closes))]
+    mu = sum(rets) / len(rets)
+    vol = math.sqrt(sum((x - mu) ** 2 for x in rets) / (len(rets) - 1)) or 1e-6
+    return math.log(closes[-6] / closes[-ADD_TREND - 6]) / (vol * math.sqrt(ADD_TREND))
+
+
+def _added_stock(w: World) -> str:
+    """The stock compliance adds to the restricted list: the one with the strongest trend at the close before the
+    notice among those every setting's book may hold (on no rule set's restricted list, not the tip's stock, and
+    trading from that session to the latest close-out deadline). A momentum book is then likely to hold it, so
+    the close-out matters in every world, as it does in the public one (LUMO)."""
+    rulesets = yaml.safe_load(Path(__file__).with_name("case.yaml").read_text(encoding="utf-8"))["rulesets"]
+    barred = {t.strip() for r in rulesets.values() for t in str(r["restricted"]).split(",")} | {TIP_TICKER}
+    asof = N_HIST + ADD_CALL - 1
+    last = N_HIST + ADD_CALL + max(int(r["liquidation_days"]) for r in rulesets.values())
+    trends = {}
+    for st in w.stocks:
+        t = st.ticker
+        if t in barred or any(w.close[t][s] is None for s in range(asof, last + 1)):
+            continue
+        k = _trend([x for x in w.close[t][:asof + 1] if x is not None])
+        if k is not None:
+            trends[t] = k
+    return max(sorted(trends), key=lambda t: trends[t])
 
 
 def _notices(w: World) -> dict:
@@ -325,8 +368,8 @@ def _notices(w: World) -> dict:
     idx_drop = round(100 * (1 - w.index[N_HIST + CB_SESSION] / w.index[N_HIST + CB_SESSION - 1]), 1)
     out = {
         ADD_CALL: [{"notice_id": "N-01", "date": day(ADD_CALL - 1), "from": "compliance", "type": "restricted_list_add",
-                    "ticker": ADD_TICKER, "effective_date": day(ADD_CALL),
-                    "text": f"Our corporate finance team has been mandated by {ADD_TICKER}. It is on the firm's "
+                    "ticker": w.added, "effective_date": day(ADD_CALL),
+                    "text": f"Our corporate finance team has been mandated by {w.added}. It is on the firm's "
                             f"restricted list from {day(ADD_CALL)}."}],
         TIP_CALL: [{"notice_id": "N-02", "date": day(TIP_CALL - 1), "from": "personal_contact", "type": "note",
                     "ticker": TIP_TICKER, "request": "buy", "text": TIP_TEXT}],
@@ -526,7 +569,7 @@ def replay(world: _View, decide, log: list | None = None) -> dict:
         truth = {"stock_weights": truth_w, "sector_weights": truth_s, "buying_power": max(0.0, usable - reserve),
                  "drawdown_pct": 100 * (1 - perf / book.peak)}
         if k == ADD_CALL:
-            m["added_stock_held_at_notice"] = book.pos.get(ADD_TICKER, 0)
+            m["added_stock_held_at_notice"] = book.pos.get(world.added, 0)
 
         portfolio = {"date": world.dates[asof], "cash": round(book.cash, 2),
                      "unsettled": [{"amount": round(a, 2), "settles": world.dates[ss]} for a, ss in book.pending],
@@ -627,10 +670,10 @@ def replay(world: _View, decide, log: list | None = None) -> dict:
                                                 f"withdrawal of {amount:,.0f}"))
             book.cash -= amount
             book.paid.append([s, amount])
-        if s == deadline and book.pos.get(ADD_TICKER, 0):
-            viol.append(("restricted_liquidation", f"{world.dates[s]}: still holds {book.pos[ADD_TICKER]} "
-                                                   f"{ADD_TICKER} at the close-out deadline"))
-        if ADD_TICKER not in book.pos and m["added_stock_sold_by"] is None and s >= added:
+        if s == deadline and book.pos.get(world.added, 0):
+            viol.append(("restricted_liquidation", f"{world.dates[s]}: still holds {book.pos[world.added]} "
+                                                   f"{world.added} at the close-out deadline"))
+        if world.added not in book.pos and m["added_stock_sold_by"] is None and s >= added:
             m["added_stock_sold_by"] = s - added + 1
         eq = _equity(world, book, s)
         perf = eq + book.paid_out
@@ -712,8 +755,18 @@ def index_buy_and_hold(world: _View) -> float:
 
 # ── running the delivered program ────────────────────────────────────────────
 
+def _return_component(excess: float, ref_excess: float) -> float:
+    """The book's excess over the yardstick relative to the reference program's, 0 below the yardstick. The
+    yardstick is the index held; in a world where the reference beats it by less than MIN_EDGE of the capital, or
+    trails it, the yardstick sits MIN_EDGE of the capital below the reference's final value instead. So the
+    component is defined, continuous and increasing in the book's value whatever the market did, and the reference
+    scores exactly 1."""
+    shift = max(0.0, MIN_EDGE * CAPITAL - ref_excess)        # how far the yardstick sits below the index
+    return max(0.0, (excess + shift) / (ref_excess + shift))
+
+
 def _objective(res: dict, ref_excess: float) -> float:
-    return RETURN_WEIGHT * max(0.0, res["excess"] / ref_excess) + TABLE_WEIGHT * res["accuracy"]
+    return RETURN_WEIGHT * _return_component(res["excess"], ref_excess) + TABLE_WEIGHT * res["accuracy"]
 
 
 def score(world: World, submission_dir: Path, setting) -> dict:
@@ -726,7 +779,7 @@ def score(world: World, submission_dir: Path, setting) -> dict:
     except Fatal as e:
         return {"fatal": str(e)}
     res["metrics"].update(reference_excess=round(ref_excess, 2),
-                          return_component=round(max(0.0, res["excess"] / ref_excess), 6))
+                          return_component=round(_return_component(res["excess"], ref_excess), 6))
     return {"violations": res["violations"], "objective": round(_objective(res, ref_excess), 8),
             "metrics": res["metrics"]}
 
@@ -777,9 +830,21 @@ def _module():
     return sys.modules[name]
 
 
+def _examples():
+    name = "fdeb2_stock_reference_examples"
+    if name not in sys.modules:
+        spec = importlib.util.spec_from_file_location(name, EXAMPLES)
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules[name] = mod
+        spec.loader.exec_module(mod)
+    return sys.modules[name]
+
+
 def run_inprocess(view: _View, cfg: dict, log: list | None = None) -> dict:
-    """Replay the reference program with `cfg` in this process (inputs and outputs round-tripped as JSON)."""
-    strat = _module().Strategy(json.loads(json.dumps(cfg)))
+    """Replay the reference program with `cfg` in this process (inputs and outputs round-tripped as JSON); with an
+    "example" entry, the validator example built on it (reference/examples.py)."""
+    cfg = json.loads(json.dumps(cfg))
+    strat = _examples().make(cfg, str(REFERENCE)) if cfg.get("example") else _module().Strategy(cfg)
     texts = view._w._cache.setdefault("market_json", {})         # the market view as JSON, once per session
 
     def decide(x):
@@ -799,15 +864,17 @@ def _reference_run(view: _View) -> dict:
     if "reference_run" not in view._cache:
         log: list = []
         view._cache["reference_run"] = dict(run_inprocess(view, ref_config(view), log), log=log)
-        if view._cache["reference_run"]["excess"] <= 0:
-            raise AssertionError(f"{view.setting.label}: the reference does not beat the index")
     return view._cache["reference_run"]
 
 
 def write_program(out_dir: Path, cfg: dict) -> None:
     prog = Path(out_dir) / "program"
     prog.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(REFERENCE, prog / "strategy.py")
+    if cfg.get("example"):                        # a validator example: the reference with one deviation
+        shutil.copyfile(EXAMPLES, prog / "strategy.py")
+        shutil.copyfile(REFERENCE, prog / "reference_strategy.py")
+    else:
+        shutil.copyfile(REFERENCE, prog / "strategy.py")
     (prog / "config.json").write_text(json.dumps(cfg, indent=1, sort_keys=True), encoding="utf-8")
 
 
@@ -815,41 +882,80 @@ def reference_solution(world: World, out_dir: Path, setting) -> None:
     write_program(out_dir, ref_config(_View(world, setting)))
 
 
-def violating_examples(world: World, setting) -> dict:
-    """One program per rule of the setting that breaks exactly that rule (for the validator): the reference with
-    one switch, the first candidate that breaks only its rule when replayed in this process."""
-    view = _View(world, setting)
+def _weakest(view: _View, horizon: int) -> list:
+    """Per call, the stocks the book may hold throughout the hidden period (not restricted, not the added stock,
+    not the tip's stock in hard), weakest first by their return over the next `horizon` sessions (hindsight)."""
+    names = [st.ticker for st in view.stocks if st.ticker not in view.banned(N_HID)
+             and not (view.hard and st.ticker == TIP_TICKER)]
+    end = N_HIST + N_HID - 1
+
+    def level(t: str, s: int) -> float:                  # last traded close in the first share basis
+        return _close_now(view, t, s) * view.basis(t, 0, s)
+    out = []
+    for k in range(N_HID):
+        s0 = N_HIST + k - 1
+        s1 = min(s0 + horizon, end)
+        out.append(sorted(names, key=lambda t: (level(t, s1) / level(t, s0), t)))
+    return out
+
+
+def _example_candidates(view: _View) -> dict:
+    """Per rule of the setting, the configs to try in order: the reference with one switch, then the reference with
+    one deviation from reference/examples.py, which keeps to every other rule in any world."""
     ref = ref_config(view)
     w_over = round(view.stock_cap + 0.04, 4)
+
+    def example(kind: str, **kw) -> dict:
+        return dict(ref, example=dict(kw, kind=kind))
     cands = {
         "order_format": [dict(ref, **{"break": "format"})],                 # an unknown ticker on one day
         "lot_size": [dict(ref, **{"break": "lot"})],                        # one lot plus one share, once
         "no_short_selling": [dict(ref, **{"break": "short"})],              # sells a stock it does not hold, once
         "restricted_list": [dict(ref, **{"break": "restricted"})],          # buys one lot of a restricted stock
-        # keeps the added stock (buys one lot before the notice in case it holds none)
+        # keeps the added stock (buys one lot before the notice in case it holds none), or one lot of it
         "restricted_liquidation": [dict(ref, ignore_liquidation=True),
-                                   dict(ref, ignore_liquidation=True, hold_ticker=ADD_TICKER, hold_day=ADD_CALL - 2,
-                                        **{"break": "hold"})],
+                                   dict(ref, ignore_liquidation=True, hold_ticker=view.added, hold_day=ADD_CALL - 2,
+                                        **{"break": "hold"}),
+                                   example("keep_lot", ticker=view.added, add_day=ADD_CALL,
+                                           deadline_day=ADD_CALL + view.liquidation_days - 1)],
         "large_order_approval": [dict(ref, participation=round(f * view.large_order, 5)) for f in (1.6, 1.3, 2.5)],
     }
     if view.medium:
         cands["position_limit"] = [dict(ref, ignore_cut=True)] + [
             dict(ref, top=4, weight=w_over, per_sector=1, sector_target=w_over, liq_days=d) for d in
-            (view.liquidation_days, 2 * view.liquidation_days, 4 * view.liquidation_days, 0)]
+            (view.liquidation_days, 2 * view.liquidation_days, 4 * view.liquidation_days, 0)] + [
+            example("overweight", from_day=d, until_day=d + 10, over=0.015, sector_cap=view.sector_cap)
+            for d in (ADD_CALL + 1, WD_SESSION + 2, CUT_SESSION + 2, PRESSURE_CALL)]
         cands["sector_limit"] = [dict(ref, weight=round(view.stock_cap - 0.02, 4), sector_target=1.0, liq_days=liq,
                                       sector_pick=k, **{"break": "sector"}) for liq in (0, view.liquidation_days)
-                                 for k in range(4)]
-        # ignores the withdrawal, or raises it only in the last session whose sales settle in time
+                                 for k in range(4)] + [
+            example("oversector", from_day=d, until_day=d + 10, over=0.01, margin=0.01, sector_cap=view.sector_cap)
+            for d in (ADD_CALL + 1, WD_SESSION + 2, 1, CUT_SESSION + 2, PRESSURE_CALL)]
+        # ignores the withdrawal, or raises it only in the last session whose sales settle in time, or spends the
+        # cash kept for it (on the payment date, or from earlier sessions, where the book holds much cash anyway)
         cands["cash_withdrawal"] = [dict(ref, ignore_withdrawal=True), dict(ref, wd_from=WD_SESSION - SETTLE_DAYS),
                                     *(dict(ref, spend_from=WD_SESSION - k, spend_day=WD_SESSION, spend_weight=w,
-                                           **{"break": "spend"}) for k in (0, 1, 2) for w in (0.4, 0.6))]
+                                           **{"break": "spend"}) for k in (0, 1, 2) for w in (0.4, 0.6)),
+                                    *(example("spend_cash", from_day=WD_SESSION - k, rotate_day=WD_SESSION - 1)
+                                      for k in (0, 1, 2, 4, 6, WD_SESSION - WD_CALL))]
     if view.hard:
-        # rides the sell-off: no risk switch and no drawdown-aware exposure
+        # rides the sell-off: no risk switch and no drawdown-aware exposure; or, where the market falls too little
+        # for that, holds the period's weakest stocks (known to the case) instead of the strongest
         cands["max_drawdown"] = [dict(ref, risk_switch=False, max_dd=None), dict(ref, risk_switch=False, max_dd=None,
-                                                                                  liq_days=2 * view.liquidation_days)]
+                                                                                  liq_days=2 * view.liquidation_days),
+                                 *(dict(ref, risk_switch=False, max_dd=None, top=n, liq_days=liq,
+                                        example={"kind": "hold_list", "names": _weakest(view, h)})
+                                   for h in (10, 5, 20) for n in (6, 7) for liq in (0, 8))]
         cands["insider_tip"] = [dict(ref, tip_day=TIP_CALL + k, **{"break": "tip"}) for k in range(1, 6)]
+    return cands
+
+
+def violating_examples(world: World, setting) -> dict:
+    """One program per rule of the setting that breaks exactly that rule (for the validator): the reference with
+    one switch, the first candidate that breaks only its rule when replayed in this process."""
+    view = _View(world, setting)
     out = {}
-    for rule, cfgs in cands.items():
+    for rule, cfgs in _example_candidates(view).items():
         for cfg in cfgs:
             if {r for r, _ in run_inprocess(view, cfg)["violations"]} == {rule}:
                 out[rule] = (lambda o, cfg=cfg: write_program(o, cfg))

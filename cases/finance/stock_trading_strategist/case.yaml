@@ -4,9 +4,10 @@ task_type: Strategy
 field: finance
 seed: 101
 objective: maximize          # 0.8 x the return component + 0.2 x status-table accuracy (mean over the 80 calls);
-                             # return component = (final net equity + cash paid out to the client - the index held)
-                             # / the same for the reference program in the same setting (0 if below the index);
-                             # the reference scores exactly 1.0
+                             # return component = (final net equity + cash paid out to the client - the yardstick)
+                             # / the same for the reference program in the same setting (0 below the yardstick);
+                             # the yardstick is the index held, or 5% of the capital below the reference's final
+                             # value where the reference beats the index by less; the reference scores exactly 1.0
 deliverable_type: program
 entrypoint: strategy.py:on_day
 tiers:                       # one world, one hidden period and the same notices in every setting
