@@ -1,16 +1,19 @@
 """`fdebench2 validate-case`: the checks every native case must pass before it is used.
 
-1. case.yaml is complete; every rule has a class.
+1. case.yaml is complete; every rule has a class; no TODO is left from the
+   scaffold in case.yaml, case.py, README.md or the locales.
 2. All five locales have request.md, requirements.md and targets.yaml, with the
-   same target ids, written in the right script.
-3. Data renders in every locale, deterministically (same bytes twice), with the
-   same file set shape in every locale and no foreign-language labels.
+   same target ids, parameters and setting blocks as en, written in the right script.
+3. Data renders in every locale, deterministically (same bytes twice, and the same
+   bytes in two processes with different PYTHONHASHSEED), with the same file set
+   shape in every locale and no foreign-language labels.
 4. The reference solution is valid and scores quality 1.0; an empty submission
-   is not valid.
+   is not valid; a baseline_solution, when the case has one, is valid and worse
+   than the reference.
 5. Each declared violating example breaks exactly the rule it names; when the
    rule is not physical, relaxing it makes the example valid again.
 
-A case with settings (tiers x rule sets) is checked in every setting (3-5 run
+A case with settings (tiers x rule sets) is checked in every setting (4-5 run
 per setting, with that setting's rules and parameters), and also:
 
 6. request.md has no setting markers or parameters, and the agent's whole view
@@ -21,14 +24,22 @@ per setting, with that setting's rules and parameters), and also:
 
 Every case also stores its data and ground truth in dataset/ (fdebench2.dataset);
 the stored files must match what the generator produces now.
+
+Warnings do not fail a case but point at likely authoring slips: a case without a
+baseline, two tiers with the same answer, a number in a rule that the requirements
+never state, and a "name (ID)" in the texts that the data gives another name.
 """
 
 from __future__ import annotations
 
 import hashlib
+import os
 import re
+import subprocess
+import sys
 import tempfile
 import time
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
@@ -38,10 +49,41 @@ from .transforms.language import detect_locale
 from .transforms.policy import RULE_CLASSES
 
 DISTINCT_MARGIN = 0.01
+BASELINE_REQUIRED = False        # a case without baseline_solution: an error when True, a warning when False
 REQUIRED_META = ("id", "role", "field", "task_type", "objective", "seed", "deliverable_spec", "rules")
 HANGUL = re.compile(r"[가-힣]")
 KANA = re.compile(r"[぀-ヿ]")
 HAN = re.compile(r"[一-鿿]")
+MARKER = re.compile(r"<!-- (tier|ruleset): ([A-Za-z ]+) -->")
+TODO = re.compile(r"(?<![A-Za-z0-9])TODO(?![A-Za-z0-9])")   # also the scaffold's ids (TODO_rule, TODO_target)
+NUMBER = re.compile(r"(?<![\w.,])\d+(?:,\d{3})*(?:\.\d+)?(?!\w)")
+DATE_OR_TIME = re.compile(r"\d{4}-\d{2}-\d{2}|\b\d{1,2}:\d{2}\b")
+# "The Clock Tower café (C11)": capitalized words, at most one lowercase head noun, then the ID in parentheses
+LATIN_NAME = re.compile(r"(?<![A-Za-zÀ-ÿ])((?:[A-ZÀ-Þ][A-Za-zÀ-ÿ'-]* )*[A-ZÀ-Þ][A-Za-zÀ-ÿ'-]*)"
+                        r"(?: [a-zß-ÿ][A-Za-zÀ-ÿ'-]*)? ?[(（]([A-Z]{1,3}\d{1,4})[)）]")
+CJK_NAME = re.compile(r"([぀-ヿ가-힣一-鿿]{2,}) ?[(（]([A-Z]{1,3}\d{1,4})[)）]")
+ARTICLES = {"the", "a", "an", "our", "la", "el", "los", "las"}
+DATA_TEXT = (".csv", ".tsv", ".txt", ".md", ".sql", ".eml", ".json")
+HASH_SEEDS = ("1", "2")
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+_RENDER = """
+import sys
+from pathlib import Path
+from fdebench2.cases import NativeCase
+case, out = NativeCase(Path(sys.argv[1])), Path(sys.argv[2])
+case.materialize_data("en", out / "data")
+(out / "reference").mkdir()
+case.write_reference(out / "reference")
+"""
+
+
+@dataclass
+class Report:
+    """What validate-case found: problems fail the case; warnings and notes are printed for its author."""
+
+    problems: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
 
 
 def _tree_digest(root: Path) -> str:
@@ -66,6 +108,124 @@ def _script_problem(text: str, lang: str) -> str | None:
     if lang in ("en", "es") and detect_locale(text) not in (lang, None):
         return f"reads as {detect_locale(text)}"
     return None
+
+
+def _todos(root: Path) -> list[str]:
+    """Scaffold placeholders still in the case's own files: a new case fails until every TODO is filled."""
+    problems = []
+    for p in [root / "case.yaml", root / "case.py", root / "README.md"] + sorted((root / "locales").rglob("*")):
+        if p.is_file():
+            lines = [str(i) for i, line in enumerate(p.read_text(encoding="utf-8", errors="replace").splitlines(), 1)
+                     if TODO.search(line)]
+            if lines:
+                more = f" and {len(lines) - 3} more" if len(lines) > 3 else ""
+                problems.append(f"{p.relative_to(root).as_posix()}: TODO left on line {', '.join(lines[:3])}{more}")
+    return problems
+
+
+def _difference(want, got) -> str:
+    missing, extra = sorted(set(want) - set(got)), sorted(set(got) - set(want))
+    return "; ".join(([f"missing {missing}"] if missing else []) + ([f"extra {extra}"] if extra else []))
+
+
+def _locale_parity(requirements: dict[str, str], targets: dict[str, list[dict]]) -> list[str]:
+    """Every locale has en's parameters, setting blocks and target ids: a translation must not drop or add one."""
+    def blocks(text: str) -> list[str]:
+        return [f"{kind}: {' '.join(names.split())}" for kind, names in MARKER.findall(text)]
+
+    problems = []
+    en_ids = [t.get("id") for t in targets["en"]]
+    en_params = {t.get("id"): PARAM.findall(t.get("text", "")) for t in targets["en"]}
+    for lang in requirements:
+        if lang == "en":
+            continue
+        diff = _difference(PARAM.findall(requirements["en"]), PARAM.findall(requirements[lang]))
+        if diff:
+            problems.append(f"{lang}/requirements.md: parameters differ from en ({diff})")
+        want, got = blocks(requirements["en"]), blocks(requirements[lang])
+        if got != want:
+            i = next(i for i in range(max(len(got), len(want))) if got[i:i + 1] != want[i:i + 1])
+            problems.append(f"{lang}/requirements.md: setting markers differ from en at block {i + 1}: "
+                            f"{got[i] if i < len(got) else 'none'!r}, en has {want[i] if i < len(want) else 'none'!r}")
+        ids = [t.get("id") for t in targets[lang]]
+        if ids != en_ids:
+            problems.append(f"{lang}/targets.yaml: target ids differ from en "
+                            f"({_difference(en_ids, ids) or 'same ids in another order'})")
+        for t in targets[lang]:
+            diff = t.get("id") in en_params and _difference(en_params[t["id"]], PARAM.findall(t.get("text", "")))
+            if diff:
+                problems.append(f"{lang}/targets.yaml {t['id']}: parameters differ from en ({diff})")
+    return problems
+
+
+def _rendered_texts(case: NativeCase, lang: str) -> str:
+    """requirements.md and the targets of one locale, rendered in every setting."""
+    out = []
+    for c in case.settings():
+        try:
+            out += [c.requirements(lang)] + [t.text for t in c.targets(lang)]
+        except KeyError:  # reported with the setting's texts
+            pass
+    return "\n".join(out)
+
+
+def _data_rows(data_dir: Path) -> list[str]:
+    """Every line of the text files and every row of the workbooks in a data folder, lowercased."""
+    from openpyxl import load_workbook
+    rows = []
+    for p in sorted(data_dir.rglob("*")):
+        if p.is_file() and p.suffix in DATA_TEXT:
+            rows += p.read_text(encoding="utf-8-sig", errors="replace").splitlines()
+        elif p.is_file() and p.suffix == ".xlsx":
+            wb = load_workbook(p, read_only=True)
+            rows += [",".join(str(v) for v in row if v is not None)
+                     for ws in wb.worksheets for row in ws.iter_rows(values_only=True)]
+            wb.close()
+    return [r.lower() for r in rows]
+
+
+def _name_mismatches(text: str, data_dir: Path) -> list[str]:
+    """A "name (ID)" in the texts whose ID's data rows never mention the name (the data calls it something else)."""
+    rows = _data_rows(data_dir)
+    found = []
+    for pattern in (LATIN_NAME, CJK_NAME):
+        for name, ident in sorted(set(pattern.findall(text))):
+            token = re.compile(rf"(?<![A-Za-z0-9]){ident}(?![A-Za-z0-9])", re.I)
+            hits = [r for r in rows if token.search(r)]
+            if pattern is LATIN_NAME:
+                if name.isupper():  # an acronym (MCU) that the data may spell out
+                    continue
+                words = [w.lower() for w in name.split() if w.lower() not in ARTICLES and len(w) >= 3]
+                if hits and words and not any(words[0] in r for r in hits):
+                    found.append(f'the texts call {ident} "{name}", but no data row with {ident} says "{words[0]}"')
+            elif any(name[-1] in r for r in hits):  # the data names things of this kind (店, 점), so compare
+                if not any(name[i:i + 2] in r for r in hits for i in range(len(name) - 1)):
+                    found.append(f'the texts call {ident} "{name}", but no data row with {ident} says so')
+    return found
+
+
+def check_hash_seed(root: Path) -> list[str]:
+    """The en data and the default setting's reference are the same in processes with different PYTHONHASHSEED
+    (str hashes and set order change between processes, so a generator that uses them is not reproducible)."""
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join(p for p in (str(PACKAGE_ROOT), os.environ.get("PYTHONPATH"))
+                                                       if p)}
+    digests = []
+    with tempfile.TemporaryDirectory() as tmp:
+        for seed in HASH_SEEDS:
+            out = Path(tmp) / seed
+            # -P: no cwd on sys.path, so the child imports this package (PYTHONPATH), not a checkout in the cwd
+            run = subprocess.run([sys.executable, "-P", "-c", _RENDER, str(Path(root).resolve()), str(out)],
+                                 env={**env, "PYTHONHASHSEED": seed}, capture_output=True, text=True, timeout=900)
+            if run.returncode:
+                return [f"rendering in a fresh process fails: {(run.stderr.strip().splitlines() or ['?'])[-1]}"]
+            digests.append({p.relative_to(out).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                            for p in sorted(out.rglob("*")) if p.is_file()})
+    a, b = digests
+    changed = sorted(k for k in a.keys() | b.keys() if a.get(k) != b.get(k))
+    if changed:
+        return [f"data or reference differs between processes with PYTHONHASHSEED {' and '.join(HASH_SEEDS)} "
+                f"({len(changed)} files, e.g. {changed[:3]}): set order or hash() leaks into the output"]
+    return []
 
 
 def check_world_seed(case: NativeCase, seed: int) -> list[str]:
@@ -112,8 +272,19 @@ def check_world_seed(case: NativeCase, seed: int) -> list[str]:
     return problems
 
 
+def _scores_as_reference(case: NativeCase, submission: Path) -> bool:
+    res = case.evaluate(submission, "en")
+    return res["validity_score"] == 1.0 and abs(res["quality_score"] - 1.0) <= 1e-9
+
+
 def validate_case(root: Path, world_seeds: list[int] = ()) -> list[str]:
-    problems: list[str] = []
+    """The problems that fail the case (check_case also returns its warnings and notes)."""
+    return check_case(root, world_seeds).problems
+
+
+def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
+    report = Report()
+    problems, warnings = report.problems, report.warnings
     case = NativeCase(root)
     meta = case.meta
     problems += [f"case.yaml: missing {k}" for k in REQUIRED_META if k not in meta]
@@ -123,6 +294,7 @@ def validate_case(root: Path, world_seeds: list[int] = ()) -> list[str]:
         problems.append(f"case.yaml field {meta.get('field')!r} != parent directory {root.parent.name!r}")
     if meta.get("field") not in load_fields(root.parent.parent):
         problems.append(f"field {meta.get('field')!r} is not listed in cases/fields.yaml")
+    problems += _todos(case.root)
     kind = meta.get("deliverable_type", "batch")
     if kind == "batch" and not meta.get("deliverables"):
         problems.append("case.yaml: batch cases need deliverables")
@@ -164,7 +336,7 @@ def validate_case(root: Path, world_seeds: list[int] = ()) -> list[str]:
             problems.append(f"rule {r.get('id')}: needs a description")
 
     # ── texts ────────────────────────────────────────────────────────────────
-    ids_by_lang = {}
+    requirements_by_lang, targets_by_lang = {}, {}
     for lang in LOCALES:
         d = root / "locales" / lang
         for name in ("request.md", "requirements.md", "targets.yaml"):
@@ -177,19 +349,21 @@ def validate_case(root: Path, world_seeds: list[int] = ()) -> list[str]:
             why = _script_problem(body, lang)
             if why:
                 problems.append(f"{lang}/{name}: {why}")
-            for kind, bad in (("tier", bad_tiers), ("ruleset", bad_rulesets)):
-                opened = re.findall(rf"<!-- {kind}: ([A-Za-z ]+) -->", body)
-                if len(opened) != body.count(f"<!-- /{kind} -->"):
-                    problems.append(f"{lang}/{name}: unbalanced {kind} markers")
+            for marker, bad in (("tier", bad_tiers), ("ruleset", bad_rulesets)):
+                opened = re.findall(rf"<!-- {marker}: ([A-Za-z ]+) -->", body)
+                if len(opened) != body.count(f"<!-- /{marker} -->"):
+                    problems.append(f"{lang}/{name}: unbalanced {marker} markers")
                 if any(bad(o.split()) for o in opened):
-                    problems.append(f"{lang}/{name}: {kind} markers name undeclared {kind}s")
+                    problems.append(f"{lang}/{name}: {marker} markers name undeclared {marker}s")
             unknown = set(PARAM.findall(body)) - params
             if unknown:
                 problems.append(f"{lang}/{name}: unknown parameters {sorted(unknown)}")
             if name == "request.md" and ("<!--" in body or PARAM.search(body)):
                 problems.append(f"{lang}/request.md: must be the same in every setting (no markers or parameters)")
+            if name == "requirements.md":
+                requirements_by_lang[lang] = body
         targets = yaml.safe_load((d / "targets.yaml").read_text(encoding="utf-8")) or []
-        ids_by_lang[lang] = [t.get("id") for t in targets]
+        targets_by_lang[lang] = targets
         for t in targets:
             why = _script_problem(t.get("text", ""), lang)
             if why:
@@ -203,10 +377,10 @@ def validate_case(root: Path, world_seeds: list[int] = ()) -> list[str]:
             unknown = set(PARAM.findall(t.get("text", ""))) - params
             if unknown:
                 problems.append(f"{lang}/targets.yaml {t.get('id')}: unknown parameters {sorted(unknown)}")
-    if ids_by_lang and len({tuple(v) for v in ids_by_lang.values()}) > 1:
-        problems.append(f"target ids differ across locales: {ids_by_lang}")
+    if "en" in targets_by_lang:
+        problems += _locale_parity(requirements_by_lang, targets_by_lang)
     if problems:
-        return problems
+        return report
 
     # ── data: one world for every setting ───────────────────────────────────
     shapes = {}
@@ -236,12 +410,19 @@ def validate_case(root: Path, world_seeds: list[int] = ()) -> list[str]:
                         problems.append(f"{lang}: {p.name} contains CJK labels")
                     if HAN.search(p.name) or HANGUL.search(p.name) or KANA.search(p.name):
                         problems.append(f"{lang}: file name {p.name} is not localized")
+            warnings += [f"{lang}: {w}" for w in _name_mismatches(_rendered_texts(case, lang), a)]
         if len({tuple(v) for v in shapes.values()}) > 1:
             problems.append("data file sets differ in shape across locales")
+    problems += check_hash_seed(root)
 
     # ── scoring, in every setting ───────────────────────────────────────────
     refs: dict[tuple, Path] = {}
     keep = tempfile.TemporaryDirectory()
+    baseline = getattr(case.module, "baseline_solution", None)
+    if baseline is None:
+        (problems if BASELINE_REQUIRED else warnings).append(
+            "case.py has no baseline_solution (the simplest sensible valid deliverable)")
+    ratios, unstated = [], {}
     for c in case.settings():
         at = f"[{c.setting.label}] " if c.tiers else ""
         try:
@@ -249,6 +430,13 @@ def validate_case(root: Path, world_seeds: list[int] = ()) -> list[str]:
         except KeyError as e:
             problems.append(f"{at}texts: {e}")
             continue
+        # A number in a rule (dates and clock times aside) should be one the client can actually tell the agent.
+        stated = {float(n.replace(",", "")) for n in NUMBER.findall(c.requirements("en"))}
+        for rule in c.rules().rules:
+            missing = [n for n in NUMBER.findall(DATE_OR_TIME.sub(" ", rule.description))
+                       if float(n.replace(",", "")) not in stated]
+            if missing:
+                unstated.setdefault((rule.id, tuple(dict.fromkeys(missing))), []).append(c)
         with tempfile.TemporaryDirectory() as tmp:
             ref_dir = Path(keep.name) / f"ref_{c.tier}_{c.ruleset}"
             ref_dir.mkdir()
@@ -265,6 +453,23 @@ def validate_case(root: Path, world_seeds: list[int] = ()) -> list[str]:
             empty.mkdir()
             if c.evaluate(empty, "en")["validity_score"] != 0.0:
                 problems.append(at + "an empty submission is valid")
+            if baseline is not None and first["validity_score"] == 1.0:
+                base_dir = Path(tmp) / "baseline"
+                base_dir.mkdir()
+                try:
+                    baseline(c.world, base_dir, *((c.setting,) if c.tiers else ()))
+                    res = c.raw_score(base_dir)
+                except Exception as e:
+                    res = {"fatal": f"baseline_solution fails: {e!r}"[:400]}
+                ref = c.reference_objective
+                if "fatal" in res or res["violations"]:
+                    problems.append(f"{at}the baseline is not valid: "
+                                    f"{res.get('fatal') or sorted({r for r, _ in res['violations']})}")
+                elif (res["objective"] >= ref) if meta.get("objective") == "maximize" else (res["objective"] <= ref):
+                    problems.append(f"{at}the baseline ({res['objective']}) is not worse than the reference ({ref})")
+                else:
+                    ratio = f"{res['objective'] / ref:.3f}" if ref else "n/a (reference 0)"
+                    ratios.append(f"{c.setting.label} {ratio}" if c.tiers else ratio)
             examples = c.violating_examples()
             for rule_id in [r.id for r in c.rules().rules]:
                 if rule_id not in examples:
@@ -284,6 +489,12 @@ def validate_case(root: Path, world_seeds: list[int] = ()) -> list[str]:
                     relaxed = c.evaluate(ex, "en", relaxed=frozenset({rule_id}))
                     if relaxed["validity_score"] != 1.0:
                         problems.append(f"{at}rule {rule_id}: example still invalid when the rule is relaxed: {relaxed}")
+    if ratios:
+        report.notes.append("baseline/reference objective: " + ", ".join(ratios))
+    for (rule_id, numbers), where in unstated.items():
+        at = f"[{where[0].setting.label}{f' and {len(where) - 1} more' if len(where) > 1 else ''}] " if tiers else ""
+        warnings.append(f"{at}rule {rule_id}: its description says {', '.join(numbers)}, "
+                        f"which en/requirements.md never says")
 
     # ── rule sets are different ground truths ───────────────────────────────
     for tier in tiers:
@@ -295,6 +506,25 @@ def validate_case(root: Path, world_seeds: list[int] = ()) -> list[str]:
                 if res["validity_score"] == 1.0 and res["quality_score"] > 1.0 - DISTINCT_MARGIN:
                     problems.append(f"[{tier}] rule set {x}'s reference scores {res['quality_score']:.4f} under "
                                     f"rule set {y}: the two rule sets do not lead to different solutions")
+
+    # ── tiers add signal: two tiers with the same answer test the same thing ─
+    for i, low in enumerate(tiers):
+        for high in tiers[i + 1:]:
+            same, scored = [], []
+            for r in rulesets:
+                if (low, r) not in refs or (high, r) not in refs:
+                    continue
+                if _tree_digest(refs[(low, r)]) == _tree_digest(refs[(high, r)]):
+                    same.append(r)
+                elif (_scores_as_reference(case.at(high, r), refs[(low, r)])
+                      and _scores_as_reference(case.at(low, r), refs[(high, r)])):
+                    scored.append(r)
+            if same:
+                warnings.append(f"[{low} vs {high}] the references are byte-identical in rule set(s) "
+                                f"{', '.join(same)}: the tier adds no signal")
+            if scored:
+                warnings.append(f"[{low} vs {high}] each reference scores as the other tier's reference in rule "
+                                f"set(s) {', '.join(scored)}: the tier adds no signal")
     keep.cleanup()
 
     # ── the stored dataset matches the generator ────────────────────────────
@@ -316,7 +546,7 @@ def validate_case(root: Path, world_seeds: list[int] = ()) -> list[str]:
         if len(set(views.values())) > 1:
             problems.append(f"the agent's view differs between settings: {sorted(views)} -> "
                             f"{len(set(views.values()))} distinct views")
-    return problems
+    return report
 
 
 def agent_view(case: NativeCase, lang: str = "en") -> str:
