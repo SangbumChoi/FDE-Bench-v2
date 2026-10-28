@@ -142,3 +142,19 @@ def test_exception_requests_are_mapped_to_one_rule(cases_root, tmp_path):
     assert s.request_exception("van capacity", "one extra tray fits").startswith("[DENY]")
     recs = [r for r in read_transcript(tmp_path / "run") if r["kind"] == "exception"]
     assert [(r["rule_id"], r["decision"]) for r in recs] == [("premium_first", "approve"), ("van_capacity", "deny")]
+
+
+def test_clarification_judges_see_the_answers():
+    """With answers, a target counts only if the conversation actually revealed it."""
+    from fdebench2.cases import Target
+    from fdebench2.scoring.clarify import score_clarification
+    seen = []
+
+    def judge(messages):
+        seen.append(messages[-1]["content"])
+        return ChatResponse(content='{"covered": true, "questions": [1]}')
+    t = Target(id="cap", text="Each van carries 40 trays.", source_text="Each van carries 40 trays.")
+    res = score_clarification([t], ["How many trays fit in a van?\nWhen do shifts start?"], [ScriptedModel(judge)],
+                              answers=["40 trays per van; shifts start at 5:00."])
+    assert "Client's answer: 40 trays per van" in seen[0] and "did the client's answer state it" in seen[0]
+    assert res.recall == 1.0 and res.precision == 0.5 and res.n_questions == 2

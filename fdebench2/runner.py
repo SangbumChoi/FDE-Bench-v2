@@ -173,11 +173,12 @@ class Bench:
 
         transcript = read_transcript(run_dir)
         asks = [r["questions"] for r in transcript if r["kind"] == "ask"]
+        answers = [r.get("answer", "") for r in transcript if r["kind"] == "ask"]
         clar_path = run_dir / "clarify.json"
         if clar_path.is_file():
             clar = json.loads(clar_path.read_text(encoding="utf-8"))
         elif variant.can_ask:
-            clar = score_clarification(variant.targets, asks, self.registry.judges()).to_dict()
+            clar = score_clarification(variant.targets, asks, self.registry.judges(), answers=answers).to_dict()
             clar_path.write_text(json.dumps(clar, ensure_ascii=False, indent=2), encoding="utf-8")
         else:
             clar = None

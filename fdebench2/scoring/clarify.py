@@ -7,6 +7,10 @@ requirement? Judged by a fixed panel with a majority vote.
     judges that read all locales in the campaign.
   - Targets added by transforms (noise) are scored too; `recall_case` reports
     recall over the case's own targets only.
+  - When the client's answers are given, judges see them under each round of
+    questions: a target counts only if a specific question asked for it and the
+    answer actually told the engineer (what was learned, not what might have
+    been). Questions are still numbered for precision.
 """
 
 from __future__ import annotations
@@ -25,11 +29,14 @@ _USER = """Hidden requirement (as annotated):
 Same requirement in the client's language:
 {text}
 
-The engineer's questions to the client, numbered:
+The engineer's questions to the client, numbered{answered}:
 {questions}
 
-Would a client who knows this requirement, answering these questions honestly, reveal it? A question counts only if it is specific enough that the answer would state this requirement; a broad "anything else?" does not.
-Return {{"covered": true|false, "questions": [<numbers of the questions that would reveal it>]}}"""
+{criterion} A question counts only if it is specific enough that the answer would state this requirement; a broad "anything else?" does not.
+Return {{"covered": true|false, "questions": [<numbers of the questions that revealed it>]}}"""
+_CRITERION_Q = "Would a client who knows this requirement, answering these questions honestly, reveal it?"
+_CRITERION_QA = ("Did this conversation reveal the requirement to the engineer: did a specific question ask for it and "
+                 "did the client's answer state it?")
 
 
 @dataclass
@@ -58,7 +65,9 @@ def split_questions(asks: list[str]) -> list[str]:
     return out
 
 
-def score_clarification(targets: list[Target], asks: list[str], judges: list[ChatModel]) -> ClarifyScore:
+def score_clarification(targets: list[Target], asks: list[str], judges: list[ChatModel],
+                        answers: list[str] | None = None) -> ClarifyScore:
+    """`answers[i]` is the client's reply to the block of questions `asks[i]` (optional)."""
     questions = split_questions(asks)
     usage = Usage()
     if not targets:
@@ -70,13 +79,24 @@ def score_clarification(targets: list[Target], asks: list[str], judges: list[Cha
     if not judges:
         raise ValueError("clarification scoring needs at least one judge model")
 
-    numbered = "\n".join(f"{i + 1}. {q}" for i, q in enumerate(questions))
+    if answers is not None and len(answers) == len(asks):
+        lines, n = [], 0
+        for block, ans in zip(asks, answers):
+            for q in split_questions([block]):
+                n += 1
+                lines.append(f"{n}. {q}")
+            lines.append(f"   Client's answer: {' '.join(str(ans).split())}")
+        numbered, answered, criterion = "\n".join(lines), ", each round followed by the client's answer", _CRITERION_QA
+    else:
+        numbered = "\n".join(f"{i + 1}. {q}" for i, q in enumerate(questions))
+        answered, criterion = "", _CRITERION_Q
     covered: dict[str, bool] = {}
     useful: set[int] = set()
     for t in targets:
         votes, cited = 0, set()
         for judge in judges:
-            text, u = complete_text(judge, _SYSTEM, _USER.format(source=t.source_text, text=t.text, questions=numbered))
+            text, u = complete_text(judge, _SYSTEM, _USER.format(source=t.source_text, text=t.text, questions=numbered,
+                                                                       answered=answered, criterion=criterion))
             usage.add(u)
             try:
                 doc = parse_json_reply(text)
