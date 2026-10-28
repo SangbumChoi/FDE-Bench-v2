@@ -149,7 +149,8 @@ def test_program_case_end_to_end_through_the_benchmark(tmp_path):
                   registry=reg)
     result = bench.run(VariantSpec("finance/toy_fraud_screener", condition="full"), AgentSpec("reference", "agent"))
     assert result["extraction"]["method"] == "program"
-    assert result["evaluator"]["validity_score"] == 1.0 and result["score"]["final"] == 1.0
+    assert result["evaluator"]["validity_score"] == 1.0
+    assert abs(result["score"]["final"] - 1 / result["score"]["quality_cap"]) < 1e-6   # matching the reference
 
 
 def test_session_feeds_inputs_one_at_a_time(tmp_path):

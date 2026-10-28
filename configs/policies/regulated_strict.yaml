@@ -10,3 +10,4 @@ notes_required: true
 communication_locale: customer
 hard_gates: [validity, notes]
 weights: {quality: 0.6, clarification: 0.2, communication: 0.2}
+quality_cap: 1.5    # normalized quality (baseline 0, reference 1) that earns full quality credit
