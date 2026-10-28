@@ -170,14 +170,27 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
             rel, _ = held
             correction = (rel, f"inbox/{Path(rel).name}")
 
-    events, event_facts = build_events(eng.events, rng, volunteer_facts=[t.text for t in targets if t.origin == "case"],
-                                       correction=correction, time_budget_s=eng.time_budget_s)
+    # The client volunteers the same target in every setting (its wording may follow the rule set): one drawn
+    # with its own rng among the ids that every tier and rule set has, so `rng` stays setting-independent.
+    volunteer = None
+    if any(e["kind"] == "customer_volunteer" for e in eng.events):
+        settings = [case.at(t, r) for t in case.tiers for r in case.rulesets] or [case]
+        shared = sorted(set.intersection(*({t.id for t in c.targets(src)} for c in settings)))
+        if shared:
+            pick = random.Random(f"{spec.case_id}|{spec.engagement}|{spec.seed}|volunteer").choice(shared)
+            volunteer = (pick, next(t.text for t in targets if t.id == pick))
+
+    events = build_events(eng.events, rng, volunteer=volunteer, correction=correction,
+                          time_budget_s=eng.time_budget_s)
     for ev in events:
         ev.message = say(ev.payload.pop("msg"))
         if "fact" in ev.payload:
             ev.message = f"{ev.message} {ev.payload['fact']}"
-    extra_facts += event_facts
+        if "client_fact" in ev.payload:
+            ev.payload["client_fact"] = say(ev.payload["client_fact"])
 
+    # Noise facts describe the data as delivered, so the client knows them from the start. What it knows about an
+    # event reaches it only when the event fires (Session.poll_events), and so never shows under condition full.
     if extra_facts:
         header = say({"t": "Additional facts (known to the client)"})
         information += f"\n\n## {header}\n\n" + "\n".join(f"- {say(f)}" for f in extra_facts)
@@ -187,6 +200,12 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
         title, *lines = policy_brief_msgs(policy)
         brief = f"# {say(title, agent)}\n\n" + "\n".join(
             say(m, agent) if i == 0 else f"- {say(m, agent)}" for i, m in enumerate(lines)) + "\n"
+    if case.deliverable_type == "program":
+        # The entry point and call contract, which no condition may withhold (the same in every setting). Until the
+        # variant has a field for it, it travels with the policy brief, the setting-independent prompt part.
+        from ..prompts import program_interface
+        block = program_interface(agent, case.entrypoint, case.deliverable_spec())
+        brief = f"{brief}\n{block}\n" if brief else f"{block}\n"
 
     return Variant(
         spec=spec, condition=condition, persona=eng.persona, customer_locale=cust, agent_locale=agent,

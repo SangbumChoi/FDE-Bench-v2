@@ -70,6 +70,28 @@
   ja: 地域支社
   es: la oficina regional
 
+# ── client channel ───────────────────────────────────────────────────────────
+"(Only your first {n} questions in this message were answered; the others were not.)":
+  zh: （这条消息里只回答了你的前 {n} 个问题，其余问题没有回答。）
+  ko: (이 메시지에서는 앞의 질문 {n}개에만 답변했고, 나머지 질문에는 답변하지 않았습니다.)
+  ja: （このメッセージでは最初の{n}件の質問にのみ回答しました。残りの質問には回答していません。）
+  es: (Solo se respondieron sus primeras {n} preguntas de este mensaje; las demás no.)
+"Exception request for rule `{rule}`: approved.":
+  zh: 规则 `{rule}` 的例外申请：已批准。
+  ko: "규칙 `{rule}`에 대한 예외 요청: 승인되었습니다."
+  ja: ルール `{rule}` の例外申請：承認されました。
+  es: "Solicitud de excepción para la regla `{rule}`: aprobada."
+"Exception request for rule `{rule}`: denied.":
+  zh: 规则 `{rule}` 的例外申请：未获批准。
+  ko: "규칙 `{rule}`에 대한 예외 요청: 거절되었습니다."
+  ja: ルール `{rule}` の例外申請：却下されました。
+  es: "Solicitud de excepción para la regla `{rule}`: denegada."
+"Exception request: it does not match exactly one of our rules, so it is denied.":
+  zh: 例外申请：它没有恰好对应我们的某一条规则，因此未获批准。
+  ko: "예외 요청: 저희 규칙 중 정확히 하나에 해당하지 않아 거절되었습니다."
+  ja: 例外申請：当社のルールのうち一つだけに当てはまるものではないため、却下されました。
+  es: "Solicitud de excepción: no corresponde exactamente a una de nuestras reglas, así que se deniega."
+
 # ── data noise ───────────────────────────────────────────────────────────────
 "Our export tool sometimes writes the same record twice. Exact duplicate rows in `{file}` are export errors and must be removed before use; they are not real records.":
   zh: 我们的导出工具有时会把同一条记录写两次。`{file}` 中完全重复的行是导出错误，使用前要去掉，它们不是真实记录。

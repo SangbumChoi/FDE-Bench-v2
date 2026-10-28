@@ -33,17 +33,23 @@ interact: |
 
   The request is written in the client's own words. It will not spell out every detail you need: data conventions, units, edge-case handling and similar points are often left implicit because the client considers them obvious.
 
-  The client is reachable through the `ask_customer` tool and expects to be consulted on requirements. You may ask more than once, at any point in the work. For anything you choose not to ask about, make a reasonable assumption and record it in `NOTES.md`.
+  The client is reachable through the `ask_customer` tool and expects to be consulted on requirements. You may ask more than once, at any point in the work; the client answers at most {max_questions} questions per message. For anything you choose not to ask about, make a reasonable assumption and record it in `NOTES.md`.
 interact_req: |
   ## Missing information
 
   The request is written in the client's own words. It will not spell out every detail you need: data conventions, units, edge-case handling and similar points are often left implicit because the client considers them obvious.
 
-  The client is reachable through the `ask_customer` tool. Before writing any solution code, ask the client about anything the request and the data do not settle, and keep asking until you have what you need. You may ask across several rounds.
+  The client is reachable through the `ask_customer` tool. Before writing any solution code, ask the client about anything the request and the data do not settle, and keep asking until you have what you need. You may ask across several rounds; the client answers at most {max_questions} questions per message.
 events: |
   ## While you work
 
   The client may send you messages while you work. They appear after tool results and as files in `inbox/`. Check them and act on them.
+program_interface: |
+  ## Program interface
+
+  The deliverable is a program that the client's engine runs on inputs you will not see. Its format is fixed by this contract, which it must follow exactly. Entry point (file:function): `{entrypoint}`
+
+  {spec}
 delivering: |
   ## Delivering
 
