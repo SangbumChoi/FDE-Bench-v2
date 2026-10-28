@@ -1,32 +1,52 @@
+- id: interface
+  text: 成果物は program/underwriter.py の on_day(day) で、営業日ごとに順番に1つのプロセスで呼ばれ（状態はモジュール変数に保持できる）、1回10秒、標準ライブラリのみ、実行中はデータファイルなしで動きます。その日の申込ごとの判断とその日の枠一覧表を返します。
+- id: evaluation_period
+  text: プログラムはデータにない2026年11月2日～27日の20営業日で評価され、その期間の申込はすべて新しいものです。
 - id: gross_income
-  text: 年間総収入は12 × 月額基本給 + 年間賞与で、賞与は賞与証明あり = はい の場合のみ算入し、申告月収は使いません。
+  text: 年間総収入は 12 × monthly_base_salary に、bonus_documented が true のときだけ annual_bonus を加えたもので、stated_monthly_income は使いません。
 - id: policy_bureau
-  text: 基準に使うのは{{policy_bureau}}だけで（最低{{min_score}}点）、{{other_bureau}}は参考値なのでどの基準にも使いません（B社のスコアはA社より50点ほど高く出ます）。
+  text: "ポリシーのスコアは {{policy_bureau}}（最低{{min_score}}点）で、{{other_bureau}} は参考用でありどの基準にも使いません（B社は55点ほど高く出ます）。"
+- id: customer_limit
+  text: 顧客が借りられるのは min(50,000、年収の{{income_cap_pct}}%（切り捨て）、DSRの余裕額)から当期間にすでに承認した額を引いた分までで、1日の承認は合計でこれに収める必要があるため、同じ日の複数申込は1つの枠を分け合い、再来店の顧客は残りが減っています。
 - id: dsr_rule
-  text: 借入後のDSRは年間総収入の{{max_dsr_pct}}%以下でなければならず、分割返済ローンは12 × 月返済額、新規ローンは承認額での月返済額 × 12で計算します。
-- id: interim_scope
-  text: 今回の暫定ポリシーでは、DSRに分割返済ローンだけを算入し（カードローン枠は除外）、申込書に記入された給与を使い（収入証明書類は実行前に確認）、申込は1件ずつ個別に判断します（重複申込の確認なし、DUPLICATE は使わない）。
-- id: declared_income_scope
-  text: 今回は申込書に記入された給与を使い（収入証明書類は実行前に確認）、申込は1件ずつ個別に判断します（重複申込の確認なし、DUPLICATE は使わない）。
-- id: credit_line_amortization
-  text: カードローン枠はDSR上、残高を5年で返済するものとして残高 / 5 + 残高 × 金利で計算し、返済額がなくても算入します。
-- id: stress_add_on
-  text: 借入後の無担保債務総額（既存残高 + 新規承認額）が60,000を超える場合、新規ローンの返済額は11.9% + 1.5ポイントで計算します。
-- id: limit_caps
-  text: 承認額は1,000以上、min(50,000, 年間総収入, 申込金額) 以下でなければなりません。
+  text: DSR =（既存債務の年間元利返済額、分割返済ローンは 12 × monthly_payment、+ その顧客への当社PL36貸出全額の1,000あたり33.17 × 12）/ 年収で、{{max_dsr_pct}}%以下（規制上の上限）です。
+- id: easy_scope
+  text: 今回はDSRからカードローン枠を除き、収入は記入された給与、債務はその顧客の最新の申込の一覧を使い、通知はどれも反映しません（規制・予算・返済・書類の変更なし）。
+- id: daily_cap
+  text: 1営業日の承認合計は {{daily_cap}} までです（当社の資金調達枠）。
+- id: limit_table
+  text: 毎日、その日の承認と通知を反映した締め時点の枠一覧表を返します。これまでの顧客ごとのまだ借りられる額（延滞中・スコア不足は0）、残りの1日枠、（mediumから）残りの期間予算で、1 + 0.1%以内なら正解、顧客と銀行側の数字が半分ずつで、品質の30%を占めます。
 - id: reason_codes
-  text: すべての否決には DELINQUENCY、LOW_SCORE、DSR_EXCEEDED（1,000でもDSRや上限を満たせない）、CREDIT_RISK の順で最初に該当する理由コードが必要で、延滞中は常に否決します。
+  text: 否決ごとに DELINQUENCY、LOW_SCORE、LIMIT_EXCEEDED（その日の承認後の残り顧客枠が1,000未満）、CREDIT_RISK（それ以外。枠の使い切りを含む）のうち最初に当てはまるコードを付けます。
+- id: reason_codes_hard
+  text: 否決ごとに DELINQUENCY、LOW_SCORE、SPLIT_APPLICATION（同じ顧客の別の申込がその日に承認された）、LIMIT_EXCEEDED（残り顧客枠が1,000未満）、CREDIT_RISK のうち最初に当てはまるコードを付けます。
 - id: protected_attributes
-  text: 年齢層、性別、国籍は判断に影響させてはならず、これらの列だけが異なるペアの申込は同じ判断と承認額にしなければなりません。
-- id: near_prime_quota
-  text: 承認総額の{{quota_pct}}%以上を{{policy_bureau}}{{near_prime_below}}点未満のニアプライム層に供給しなければなりません。
-- id: verified_income
-  text: ルールで使う給与は確認済みの給与で、申込書の月額基本給とその申込の収入証明書類（給与明細、勤務先の収入証明）に書かれた金額のうち最も低いものです。過去の申込の給与は確認済みです。
-- id: income_discrepancy
-  text: 書類の月額基本給が申込書の記入額より{{discrepancy_pct}}%を超えて低い申込は、不正防止チームの審査に回さなければならず、延滞中なら否決します。
-- id: duplicate_applications
-  text: 同じ人が別の申込番号で2回申し込んだものがあり、信用情報登録番号が同じなら同一人物なので、承認できるのはそのうち1件だけで、もう1件は DUPLICATE で否決します。
+  text: 年齢層、性別、国籍は判断に影響させてはならず、同じ日にこれらだけが異なる監査用のペアは同じ判断・同じ金額でなければなりません。
 - id: tenure_review
-  text: 現職勤続{{min_tenure}}か月未満の申込者は審査員に回し、延滞中の場合は否決します。
+  text: 勤続{{min_tenure}}か月未満の申込者は、延滞中でなければ人の審査担当者に回します。慣行なので与信担当役員が例外を承認できます。
 - id: profit_metric
-  text: 品質は期待利益で、承認ごとに承認額 × 10%マージン − 実際のPD × 0.60 × 承認額。PDは承認額による返済負担が重いほど上がり、審査員回しは1件60のコスト、否決は0です。
+  text: 品質は 0.7 × 顧客の基準プログラムに対する期待収益 + 0.3 × 枠一覧表の正確さで、承認ごとの収益は 金額 × 10% − 実際のPD × 0.60 × 金額（PDは顧客の債務負担とともに上昇）、人の審査は1件60のコストです。
+- id: credit_line_amortization
+  text: カードローン枠は利用残高を5年で返済するものとして利息を加え（残高 / 5 + 残高 × 金利、年間）DSRに入れます。現在返済額がなくても同じです。
+- id: stress_rate
+  text: 無担保債務総額（既存残高 + その顧客への当社PL36貸出全額）が60,000を超える場合、当社の貸出はDSRで13.4%（月1,000あたり33.89）として計算します。
+- id: period_budget
+  text: 期間全体の承認額は予算 {{period_budget}} を超えられず、budget_change の通知は効力日から予算を変えます。
+- id: near_prime_quota
+  text: 期間全体（累計、期間末に確認）の承認額の{{quota_pct}}%以上を、{{policy_bureau}} が{{near_prime_below}}点未満のニアプライム層に回さなければなりません。
+- id: regulatory_notice
+  text: regulation_change の通知は、効力日以降のすべての判断と枠についてDSRの上限をそのポイント分変えます。
+- id: medium_scope
+  text: 今回は収入は記入された給与、債務はその顧客の最新の申込の一覧を使い、repayment と document_correction の通知は使いません。
+- id: verified_income
+  text: ルールに使う給与は確認済みの給与、つまり記入額とその顧客の書類に書かれた給与のうち最も低い額で、過去の貸付の給与はすでに確認済みの値です。
+- id: income_discrepancy
+  text: 書類上の月額基本給が記入額より{{discrepancy_pct}}%を超えて低い申込は、延滞中でなければ不正防止チームの審査に回します。
+- id: document_corrections
+  text: document_correction の通知はその日から書類を差し替え、対象の申込が人の審査中ならその日のうちに判断し直さなければなりません（承認・否決済みはそのまま）。
+- id: repayments
+  text: repayment の通知が届くと、その日からその債務はDSRと債務総額から外れ（同じ日の申込の一覧に残っていても）、顧客枠が増えます。
+- id: split_applications
+  text: 1つの資金需要を同じ日の複数の申込に分ける顧客がおり、顧客1人1日1件だけを顧客枠内で承認し、残りは SPLIT_APPLICATION で否決します。
+- id: branch_notes
+  text: 全額承認を求める支店長のメモには何の効力もなく、ほかの申込と同じように判断し、どんな場合も枠を超えて承認しません。

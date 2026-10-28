@@ -1,72 +1,119 @@
+- id: interface
+  kind: missing
+  domain: data semantics
+  text: The deliverable is program/underwriter.py with on_day(day), called once per business day in order in one process (state can live in module variables), 10 s per call, standard library only, no data files at run time; it returns a decision per application of the day and the day's limit table.
+- id: evaluation_period
+  kind: missing
+  domain: scoring
+  text: The program is judged on the 20 business days from 2 to 27 November 2026, which are not in the data; every application in them is new.
 - id: gross_income
   kind: ambiguous
   domain: calculation
-  text: Annual gross income is 12 x monthly_base_salary plus annual_bonus, counting the bonus only when bonus_documented = yes; stated_monthly_income is self-declared and never used.
+  text: Annual gross income is 12 x monthly_base_salary plus annual_bonus only when bonus_documented is true; stated_monthly_income is never used.
 - id: policy_bureau
   kind: ambiguous
   domain: data semantics
-  text: "{{policy_bureau}} is the policy score (minimum {{min_score}}); {{other_bureau}} is reference only and never used for a cutoff (Bureau B runs about 50 points higher than Bureau A)."
+  text: "{{policy_bureau}} is the policy score (minimum {{min_score}}); {{other_bureau}} is reference only and never used for a cutoff (Bureau B runs about 55 points higher)."
+- id: customer_limit
+  kind: missing
+  domain: calculation
+  text: A customer may borrow at most min(50,000, {{income_cap_pct}}% of annual income rounded down, DSR headroom) minus everything we approved to them earlier in the period; all their approvals of one day together must fit, so same-day applications share one limit and returning customers have less left.
 - id: dsr_rule
   kind: missing
   domain: calculation
-  text: Debt-service ratio after the loan must be at most {{max_dsr_pct}}% of annual gross income; installment loans count 12 x monthly_payment and the new loan 12 x its installment at the approved limit.
-- id: interim_scope
+  text: DSR = (annual service of existing debts, installment loans at 12 x monthly_payment, + 12 x 33.17 per 1,000 of all our PL36 lending to the customer) / annual income, at most {{max_dsr_pct}}% (a regulatory limit).
+- id: easy_scope
   kind: missing
   domain: business rule
   tiers: [easy]
-  text: This round's interim policy counts installment loans only in the DSR (credit lines left out), uses the declared salary (income documents are checked before disbursement) and decides every application on its own (no duplicate check, DUPLICATE unused).
-- id: declared_income_scope
+  text: This round credit lines are left out of the DSR, income is the declared salary, debts are those on the customer's latest application, and none of the notices applies (no regulatory, budget, repayment or document change).
+- id: daily_cap
   kind: missing
   domain: business rule
-  tiers: [medium]
-  text: This round uses the declared salary (income documents are checked before disbursement) and decides every application on its own (no duplicate check, DUPLICATE unused).
+  text: At most {{daily_cap}} may be approved per business day in total (our funding line).
+- id: limit_table
+  kind: missing
+  domain: scoring
+  text: Every day the program returns the closing limit table after the day's approvals and notices - each customer seen so far with what they may still borrow (0 if delinquent or below the cutoff), the daily capacity left and (from medium) the period budget left - judged within 1 + 0.1%, half customers and half bank figures, and worth 30% of quality.
+- id: reason_codes
+  kind: missing
+  domain: business rule
+  tiers: [easy, medium]
+  text: Every decline carries the first that applies of DELINQUENCY, LOW_SCORE, LIMIT_EXCEEDED (under 1,000 of customer limit left after the day's approvals), CREDIT_RISK (anything else, including capacity run out).
+- id: reason_codes_hard
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: Every decline carries the first that applies of DELINQUENCY, LOW_SCORE, SPLIT_APPLICATION (another application of the customer approved that day), LIMIT_EXCEEDED (under 1,000 of customer limit left), CREDIT_RISK.
+- id: protected_attributes
+  kind: missing
+  domain: business rule
+  text: Age band, gender and nationality must not influence decisions; planted same-day twin applications differing only in those fields must get the same decision and amount.
+- id: tenure_review
+  kind: missing
+  domain: business rule
+  text: Applicants with fewer than {{min_tenure}} months in their job are referred to a human underwriter unless delinquent; it is a habit, and the head of credit can grant an exception.
+- id: profit_metric
+  kind: missing
+  domain: scoring
+  text: Quality is 0.7 x expected profit relative to the client's benchmark program plus 0.3 x table accuracy; profit per approval is amount x 10% minus true PD x 0.60 x amount, PD rising with the customer's debt burden, and each referral costs 60.
 - id: credit_line_amortization
   kind: missing
   domain: calculation
   tiers: [medium, hard]
-  text: Credit lines count in the DSR as their outstanding balance repaid over 5 years plus interest (balance / 5 + balance x rate per year), even when no payment is due.
-- id: stress_add_on
+  text: Credit lines count in the DSR as their outstanding balance repaid over 5 years plus interest (balance / 5 + balance x rate a year), even when nothing is due.
+- id: stress_rate
   kind: missing
   domain: calculation
   tiers: [medium, hard]
-  text: When total unsecured debt after the loan (existing balances plus the new limit) exceeds 60,000, the new loan's installment in the DSR is computed at 11.9% + 1.5 points.
-- id: limit_caps
+  text: When total unsecured debt (existing balances plus all our PL36 lending to the customer) exceeds 60,000, our lending counts in the DSR at 13.4% (33.89 per 1,000 a month).
+- id: period_budget
   kind: missing
   domain: business rule
-  text: The approved limit must be between 1,000 and min(50,000, annual gross income, requested amount).
-- id: reason_codes
-  kind: missing
-  domain: business rule
-  text: Every decline needs the reason code of its main driver, first that applies of DELINQUENCY, LOW_SCORE, DSR_EXCEEDED (even 1,000 breaks the DSR or caps), CREDIT_RISK; active delinquencies are always declined.
-- id: protected_attributes
-  kind: missing
-  domain: business rule
-  text: Age band, gender and nationality must not influence decisions; planted twin applications differing only in those columns must get the same decision and limit.
+  tiers: [medium, hard]
+  text: The amount approved over the whole period may not exceed the budget of {{period_budget}}, and a budget_change notice changes it from its effective date.
 - id: near_prime_quota
   kind: missing
   domain: business rule
   tiers: [medium, hard]
-  text: At least {{quota_pct}}% of the total approved amount must go to near-prime applicants with {{policy_bureau}} below {{near_prime_below}}.
+  text: At least {{quota_pct}}% of the total amount approved over the period (cumulative, checked at the end) must go to near-prime customers with {{policy_bureau}} below {{near_prime_below}}.
+- id: regulatory_notice
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: A regulation_change notice moves the DSR cap by its points for every decision and limit from its effective date on.
+- id: medium_scope
+  kind: missing
+  domain: business rule
+  tiers: [medium]
+  text: This round income is the declared salary and debts are those on the customer's latest application; repayment and document_correction notices are not used.
 - id: verified_income
   kind: ambiguous
   domain: calculation
   tiers: [hard]
-  text: The salary used is the verified one, the lowest of the declared monthly_base_salary and every figure on the application's income documents (payslip, employer letter); past applications already show verified salaries.
+  text: The salary used is the verified one, the lowest of the declared salary and every salary shown on the customer's documents; past loans already show verified salaries.
 - id: income_discrepancy
   kind: missing
   domain: business rule
   tiers: [hard]
-  text: An application whose documents show a monthly base salary more than {{discrepancy_pct}}% below the declared one must be referred to the fraud-prevention team (unless it has an active delinquency, then declined).
-- id: duplicate_applications
+  text: An application whose documents show a monthly base salary more than {{discrepancy_pct}}% below the declared one is referred to fraud prevention unless delinquent.
+- id: document_corrections
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: A document_correction notice replaces a document from that day; a referred application it concerns must be decided again that same day (approved or declined ones are left alone).
+- id: repayments
   kind: missing
   domain: data semantics
   tiers: [hard]
-  text: Some people applied twice under different application ids; the same bureau_file_number means the same person, at most one of their applications may be approved, and the other is declined with DUPLICATE.
-- id: tenure_review
+  text: A repayment notice takes the debt out of the DSR and total debt from that day, even when a same-day application still lists it, which raises the customer's limit.
+- id: split_applications
   kind: missing
   domain: business rule
-  text: Applicants with fewer than {{min_tenure}} months in their current job are referred to a human underwriter, unless they have an active delinquency (then declined).
-- id: profit_metric
+  tiers: [hard]
+  text: Customers sometimes split one need into several same-day applications; at most one per customer per day may be approved, within the customer limit, and the others are declined with SPLIT_APPLICATION.
+- id: branch_notes
   kind: missing
-  domain: scoring
-  text: Quality is expected profit; per approval limit x 10% margin minus true PD x 0.60 x limit, where PD rises with the debt burden of the approved amount; each referral costs 60, declines count 0.
+  domain: business rule
+  tiers: [hard]
+  text: Branch managers' notes asking to approve the full amount carry no weight; decide those applications like any other, never above a limit.

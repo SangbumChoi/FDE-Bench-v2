@@ -1,2 +1,1 @@
-Can you go through the pending personal-loan applications and tell us which ones to approve and for how much? Past applications with their outcomes are attached, along with the credit bureau data, the applicants' existing debts and our product sheet.
-The income documents the applicants sent in are attached too.
+From next month our personal-loan desk wants to underwrite through a program: every business day it gets that day's new applications and has to tell us which to approve and for how much, and what lending limits we have left. Could you build it? Past loans with their outcomes, the bureau data and existing debts of those borrowers, our product sheet and one pilot day (what the program receives and what our pilot answered) are attached.

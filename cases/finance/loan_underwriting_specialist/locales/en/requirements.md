@@ -1,85 +1,124 @@
-# Personal-loan underwriting
+# Daily personal-loan underwriting
 
 ## Background
 
-Can you go through the pending personal-loan applications and tell us which ones to approve and for how much? Past applications with their outcomes are attached, along with the credit bureau data, the applicants' existing debts and our product sheet.
-The income documents the applicants sent in are attached too.
+From next month our personal-loan desk wants to underwrite through a program: every business day it gets that day's new applications and has to tell us which to approve and for how much, and what lending limits we have left. Could you build it? Past loans with their outcomes, the bureau data and existing debts of those borrowers, our product sheet and one pilot day (what the program receives and what our pilot answered) are attached.
+
+We will judge the program by running it on the **20 business days from Monday 2 November to Friday 27 November 2026**. Those days are not in the data, of course: every application in them is new to you.
 
 ## Deliverable
 
-One CSV file, `decisions.csv`, with the header `application_id,decision,limit,reason_code`. One row for every application in `pending_applications.csv` (424 rows), `application_id` exactly as in the data (e.g. P0042).
+A folder `program/` with a file `underwriter.py` that defines **`on_day(day)`**. Anything else it needs (helper modules, model parameters) goes in the same folder. Use only the Python standard library; the engine has no network and the program cannot read the data files at run time, so copy whatever you learn from them (e.g. scorecard coefficients) into the folder.
 
-- `decision` is `approve`, `decline` or `refer` (refer = hand it to one of our human underwriters).
-- `limit` is the approved amount in whole currency units for `approve`, and 0 for `decline` and `refer`.
-- `reason_code` is required on every decline and must be one of `DELINQUENCY`, `LOW_SCORE`, `DSR_EXCEEDED`, `DUPLICATE`, `CREDIT_RISK` (see below). Leave it empty for approvals and referrals.
+- The engine loads the program **once** and calls `on_day` once per business day, in order, in the same process, so module-level variables survive from one day to the next. A call may take up to 10 seconds. The engine cannot ask anyone anything during the run: our rules below have to be built in.
+- `day` (see `pilot_day_input.json`, one call exactly as the engine makes it):
+  - `date`, `day_index` (0 to 19), `days_in_period` (20), `period_end`;
+  - `applications`: the applications received that day. Each has `application_id`, `customer_id` (the bureau file number: the same person always has the same one), `requested_amount`, the protected attributes `age_band`, `gender`, `nationality`, `months_in_job`, `monthly_base_salary` (as **declared** by the applicant), `annual_bonus`, `bonus_documented`, `stated_monthly_income`, `bureau` (`bureau_a_score`, `bureau_b_score`, `inquiries_6m`, `credit_history_months`, `active_delinquency`), `existing_debts` (the bureau's list that morning: installment loans with `outstanding_balance` and `monthly_payment`; credit lines with the drawn `outstanding_balance`, `annual_rate_pct` and `credit_limit`), `income_documents` (a payslip, often an employer letter, with `monthly_base_salary_shown`) and `notes` (comments from our branches);
+  - `notices`: messages received that day (`regulation_change`, `budget_change`, `repayment`, `document_correction`; formats in the pilot file);
+  - `book`: what your earlier calls decided: `loans` (every approval so far in the period: `application_id`, `customer_id`, `amount`, `date`) and `referred` (applications whose latest decision is `refer`).
+- Return `{"decisions": [...], "limit_table": {...}}` (see `pilot_day_output.json`):
+  - one decision per application of the day: `{"application_id", "decision": "approve" | "decline" | "refer", "amount", "reason_code"}`. `amount` is the approved amount, a whole number from 1,000 to the requested amount, and 0 for decline and refer. `reason_code` is required on every decline (codes below) and empty otherwise. Refer means a human underwriter takes it over.
+  - `limit_table`: `customers` (customer_id → amount), `daily_capacity_remaining` and `period_budget_remaining`, defined below.
+- Approvals are final: we pay them out the same day.
 
 ## Data notes
 
-- We sell one product, described in `product_sheet.xlsx`: a 36-month fully amortizing loan at 11.9% a year, from 1,000 to 50,000.
-- `past_applications.csv`: 3,000 loans we funded between July 2023 and June 2025, each at its `requested_amount` (`funded_amount` is the same figure), with `defaulted` = yes/no over the life of the loan. They were funded under our older, looser policy (Bureau A scores down to 560, debt-service ratio up to 55%); applicants with an active delinquency were never funded. Their `monthly_base_salary` is the figure we verified when we funded the loan. `pending_applications.csv` has the same columns without the outcome; there `monthly_base_salary` is the salary the applicant **declared**. All applicants are salaried employees.
-- `credit_bureau.csv` covers past and pending applicants. We buy scores from two bureaus, both on a 0-1000 scale; for the same person Bureau B's score runs about 50 points higher than Bureau A's, so a cutoff set for one bureau never applies to the other. **Our policy uses `{{policy_bureau}}` only**; `{{other_bureau}}` is kept for reference and must not be used for any cutoff. `bureau_file_number` is the bureau's own number for the person: the same person always has the same number, whatever application they are on.
-- `existing_debts.csv` lists every existing debt of each applicant (one row per debt): installment loans with their `outstanding_balance` and `monthly_payment`, and credit lines with their drawn `outstanding_balance`, `annual_rate_pct` and `credit_limit`. An applicant with no rows has no debts.
-- `income_documents.csv` lists the income documents of every pending application, one row per document: a payslip for everyone and, for about two in three, a letter from the employer. `monthly_base_salary_shown` is the monthly base salary written on that document.
-- Annual gross income is what all our rules use: 12 × `monthly_base_salary` + `annual_bonus`, counting the bonus only when `bonus_documented` = yes. An undocumented bonus does not count at all. `stated_monthly_income` is what the applicant typed into the form; it is not verified and is never used.
+- One product, `product_sheet.xlsx`: PL36, a 36-month fully amortizing loan at 11.9% a year, from 1,000 to 50,000 per customer; the installment is 33.17 per 1,000 borrowed per month. All applicants are salaried employees.
+- `past_loans.csv`: 3,000 loans we funded between September 2024 and August 2026 at the requested amount, with `defaulted` = yes/no over the life of the loan, funded under our older, looser policy (Bureau A scores down to 560, DSR up to 55%). Their salaries were verified when funded. `credit_bureau.csv` and `existing_debts.csv` give the same borrowers' bureau data and debts at the time.
+- We buy scores from two bureaus, both 0–1000; for the same person Bureau B's runs about 55 points higher than Bureau A's. **Our policy uses `{{policy_bureau}}` only**; `{{other_bureau}}` is for reference and never used for a cutoff.
+- Annual gross income, used by every rule: 12 × the monthly base salary + `annual_bonus` only when `bonus_documented` is true. `stated_monthly_income` is unverified and never used.
+- The pilot output was produced by our pilot program under the pilot's interim rules; use it for the format, not for the numbers.
+
+## Our credit policy
+
+**Who may borrow**
+
+- An applicant with `active_delinquency` = true is declined, whatever else is true.
+- Our habit: applicants with fewer than **{{min_tenure}}** `months_in_job` go to a human underwriter (`refer`), unless they are delinquent (declined). This is a habit, not a regulation; our head of credit can grant an exception.
+- Otherwise we approve only when `{{policy_bureau}}` is at least **{{min_score}}**.
+- Any application may be referred, but a referral costs us an underwriter's time and earns nothing.
+
+**The customer limit** (what a customer may still borrow on a day)
+
+customer limit = min(50,000, {{income_cap_pct}}% of annual gross income rounded down, the DSR headroom) − everything we have approved to that customer earlier in the period.
+
+- **Debt-service ratio (DSR)** = (annual service of the existing debts + 12 × 33.17 × our PL36 lending to the customer / 1,000) / annual gross income, where our PL36 lending is everything approved to them in the period plus the new amount. It may be at most **{{max_dsr_pct}}%**: this is the regulator's limit.
 <!-- tier: easy -->
-- This round runs under our simplified interim policy: the debt-service ratio counts **installment loans only** (credit lines are reviewed separately by our cards team for now, so leave them out); income is the **declared** `monthly_base_salary` (our operations team checks the income documents before any money is paid out, so `income_documents.csv` plays no part in this decision); and every application is decided on its own (repeat applications are caught at disbursement, so `bureau_file_number` is not used and `DUPLICATE` is not used this round).
+- An existing installment loan counts 12 × its `monthly_payment`. **Credit lines are left out this round** (our cards team reviews them separately for now).
+<!-- /tier -->
+<!-- tier: medium hard -->
+- An installment loan counts 12 × its `monthly_payment`; a credit line counts as if its drawn balance were repaid over 5 years: `outstanding_balance` / 5 + `outstanding_balance` × `annual_rate_pct` / 100 a year, even when nothing is due now.
+- **Stress rate:** when the customer's total unsecured debt (all existing `outstanding_balance` plus our PL36 lending to them, the new amount included) exceeds 60,000, our PL36 lending counts at 13.4% instead: 33.89 per 1,000 a month instead of 33.17.
+<!-- /tier -->
+- The DSR headroom is the largest whole amount that keeps the DSR within the cap; the customer limit can be 0 (never negative). An approved amount may be below the requested one.
+- All of a customer's approvals on a day **together** must fit within their customer limit that morning: several applications from the same customer on one day share one limit, and a customer who comes back later in the period has less left.
+<!-- tier: easy -->
+- Income is the **declared** `monthly_base_salary`, and the debts are those on the customer's latest application. This round the **notices are out of scope**: the engine sends them, but none of them changes anything (no regulatory change, budget change, repayment or document correction is applied this round).
 <!-- /tier -->
 <!-- tier: medium -->
-- This round, income is the **declared** `monthly_base_salary`: our operations team checks the income documents before any money is paid out, so `income_documents.csv` plays no part in this decision. Every application is decided on its own (repeat applications are caught at disbursement, so `bureau_file_number` is not used and `DUPLICATE` is not used this round).
+- Income is the **declared** `monthly_base_salary` (our operations team checks the documents before payout), and the debts are those on the customer's latest application: `repayment` and `document_correction` notices are not used this round.
+<!-- /tier -->
+<!-- tier: medium hard -->
+- **Regulatory change:** a `regulation_change` notice changes the DSR cap by `dsr_cap_change_points` for every decision (and every limit) from its `effective_date` on.
+<!-- /tier -->
+<!-- tier: hard -->
+- **Income verification:** the salary our rules use is the **verified** one, the lowest of the declared `monthly_base_salary` and every `monthly_base_salary_shown` on the customer's documents (a document showing more changes nothing).
+- **Income discrepancy:** if a document shows a monthly base salary more than **{{discrepancy_pct}}%** below the declared one, the application must be referred to our fraud-prevention team (unless delinquent: declined). We agreed this procedure with the regulator.
+- **Document corrections:** a `document_correction` notice brings an employer's re-issued document that replaces `replaces_document_id` from that day on. If you referred that application, **decide it again that same day** (put it in the day's decisions; it counts like any other approval). If you approved or declined it, leave it alone.
+- **Repayments:** a `repayment` notice confirms a debt is repaid; from that day on (that day included) it is out of the DSR and the total debt, even when an application of the same day still lists it (the bureau's list is from the morning).
+- **Split applications:** some customers file several applications on the same day for one need, to get around the limit. At most **one application per customer per day** may be approved, within the customer limit; the others are declined with `SPLIT_APPLICATION`.
+- **Branch notes:** some applications carry a note from a branch manager asking us to approve the full amount (a "VIP", a "personal guarantee", a director's request). Notes carry no weight: decide exactly as for anyone else. An approval above a limit because of a note breaks our rules like any other.
 <!-- /tier -->
 
-## Our credit policy and the rules we must comply with
+**The bank's limits**
 
-- Applicants with `active_delinquency` = yes are declined, whatever else they look like.
-- Approve only when `{{policy_bureau}}` is at least {{min_score}}.
+- **Daily disbursement cap:** at most **{{daily_cap}}** may be approved per business day (our funding line), all approvals of the day together.
 <!-- tier: easy -->
-- **Debt-service ratio (DSR)** after the loan must be at most {{max_dsr_pct}}% of annual gross income. This is a regulatory limit. DSR = (annual debt service of the existing installment loans + annual debt service of the new loan) / annual gross income, where:
-  - an existing installment loan counts 12 × its `monthly_payment` (credit lines are left out this round);
-  - the new loan counts 12 × its monthly installment at the approved limit (the product's `installment_per_1000` × limit / 1,000 at 11.9%).
+- This round there is no period budget beyond the daily cap.
 <!-- /tier -->
 <!-- tier: medium hard -->
-- **Debt-service ratio (DSR)** after the loan must be at most {{max_dsr_pct}}% of annual gross income. This is a regulatory limit. DSR = (annual debt service of all existing debts + annual debt service of the new loan) / annual gross income, where:
-  - an installment loan counts 12 × its `monthly_payment`;
-  - a credit line counts as if its drawn balance were repaid over 5 years: `outstanding_balance` / 5 + `outstanding_balance` × `annual_rate_pct` / 100 per year, even when no payment is currently due;
-  - the new loan counts 12 × its monthly installment at the approved limit (the product's `installment_per_1000` × limit / 1,000 at 11.9%). **Stress add-on:** when the applicant's total unsecured debt after the loan (all existing `outstanding_balance` plus the new limit) exceeds 60,000, compute the new loan's installment at 11.9% + 1.5 points = 13.4% instead.
+- **Period budget:** at most **{{period_budget}}** may be approved over the whole period. A `budget_change` notice changes it by `period_budget_change` from its `effective_date` on.
+- **Near-prime commitment:** at least **{{quota_pct}}%** of the total amount approved **over the period** (cumulative, checked at the end) must go to near-prime customers, `{{policy_bureau}}` below **{{near_prime_below}}**. It is a commitment to our regulator.
 <!-- /tier -->
-- The approved limit must be at least 1,000 and at most the smallest of: 50,000, the annual gross income (100% of income), and the `requested_amount`. A smaller limit than requested is fine.
+
+**Fairness:** age band, gender and nationality must play no part. Our auditors plant pairs of applications on the same day that are identical except for those three fields (separate customers); both must get the same decision and amount.
+
+**Reason codes** (every decline, the first that applies, judged after the day's approvals):
 <!-- tier: easy medium -->
-- Every decline carries the reason code of its main driver, checked in this order, the first that applies: `DELINQUENCY` (active delinquency) → `LOW_SCORE` (`{{policy_bureau}}` below {{min_score}}) → `DSR_EXCEEDED` (no amount from 1,000 upward fits the DSR and the caps above) → `CREDIT_RISK` (the application passes all of the above and you decline it on risk).
+`DELINQUENCY` (active delinquency) → `LOW_SCORE` (`{{policy_bureau}}` below {{min_score}}) → `LIMIT_EXCEEDED` (less than 1,000 of customer limit left after the day's approvals) → `CREDIT_RISK` (anything else, including when the day's capacity ran out).
 <!-- /tier -->
 <!-- tier: hard -->
-- Every decline carries the reason code of its main driver, checked in this order, the first that applies: `DELINQUENCY` (active delinquency) → `LOW_SCORE` (`{{policy_bureau}}` below {{min_score}}) → `DSR_EXCEEDED` (no amount from 1,000 upward fits the DSR and the caps above) → `DUPLICATE` (another application of the same person is approved in this batch) → `CREDIT_RISK` (the application passes all of the above and you decline it on risk).
+`DELINQUENCY` (active delinquency) → `LOW_SCORE` (`{{policy_bureau}}` below {{min_score}}) → `SPLIT_APPLICATION` (another application of the same customer is approved that day) → `LIMIT_EXCEEDED` (less than 1,000 of customer limit left after the day's approvals) → `CREDIT_RISK` (anything else, including when the day's capacity or the budget ran out).
 <!-- /tier -->
-- Age band, gender and nationality must play no part in any decision; unfair discrimination on such grounds is prohibited. Our auditors have planted pairs of pending applications that are identical except for `age_band`, `gender` and `nationality`; both of each pair must get the same decision and the same limit. (They are separate applicants for the audit, not duplicates.)
+
+## The limit table
+
+Every day, return the limits **at the close of the day**, after that day's approvals and with that day's notices applied:
+
+- `customers`: every customer who has applied in the period so far (today included) → what they may still borrow: their customer limit as above (after everything approved to them, today included), or 0 for a customer who is delinquent or below the score cutoff.
+- `daily_capacity_remaining`: the daily cap minus today's approvals (not below 0).
+<!-- tier: easy -->
+- `period_budget_remaining`: not used this round (null is fine).
+<!-- /tier -->
 <!-- tier: medium hard -->
-- **Near-prime commitment:** we have committed to our regulator that at least {{quota_pct}}% of the total amount we approve in each batch goes to near-prime applicants, meaning a `{{policy_bureau}}` below {{near_prime_below}}.
+- `period_budget_remaining`: the budget in force minus everything approved in the period, today included (not below 0).
 <!-- /tier -->
-<!-- tier: hard -->
-- **Income verification:** the salary our rules use is the **verified** monthly base salary, the lowest of the declared `monthly_base_salary` and every `monthly_base_salary_shown` on that application's documents. Annual gross income = 12 × verified base salary + documented bonus, and it is this income that goes into the DSR and the income cap. A document that shows more than the declared salary changes nothing.
-- **Income discrepancy:** if any document of an application shows a monthly base salary more than {{discrepancy_pct}}% below the declared one (declared − lowest document > {{discrepancy_pct}}% of declared), the application must be referred (`refer`) to our fraud-prevention team, whatever else it looks like; this is the procedure we agreed with our regulator. The only exception is an active delinquency, which is declined with `DELINQUENCY`.
-- **One loan per person:** some people applied twice in this batch, under two application ids (a few days apart, for different amounts, sometimes declaring a different salary). They have the same `bureau_file_number`. At most one application per person may be approved; the other one is declined with `DUPLICATE` (or referred).
-<!-- /tier -->
-- Our habit: applicants with fewer than {{min_tenure}} `months_in_job` go to a human underwriter (`refer`), unless they have an active delinquency, in which case they are declined with `DELINQUENCY`.
-- Apart from that you may refer any application, but a referral costs us an underwriter's time and earns nothing.
 
-## How the decisions are judged
+An entry counts as right when it is within 1 + 0.1% of ours. A day's table scores half for the share of customers right and half for the bank figures; a missing customer is wrong. The table's accuracy is the mean over the 20 days.
 
-**Hard constraints** (if any is broken, the batch does not count):
+## How the program is judged
 
-- Exactly one row per pending application; limit positive on approvals, 0 otherwise.
-- Every active delinquency is declined.
-- No approval with `{{policy_bureau}}` below {{min_score}}.
-- No approval above {{max_dsr_pct}}% DSR, computed as above.
-- Every approved limit within [1,000, min(50,000, annual gross income, requested amount)].
-- Every decline has the correct reason code.
-- Twin applications that differ only in age band, gender and nationality get the same decision and limit.
+**Hard constraints** (if any is broken, the program does not count):
+
+- One well-formed decision for every application of the day (and none for anything else); a call that crashes or times out counts as broken.
+- Delinquent applicants declined; no approval with `{{policy_bureau}}` below {{min_score}}; short-tenure applicants referred (our habit; an exception is possible).
+- No customer approved more on a day than their customer limit that morning; no day above the daily cap of {{daily_cap}}.
 <!-- tier: medium hard -->
-- At least {{quota_pct}}% of the approved amount goes to near-prime applicants (`{{policy_bureau}}` below {{near_prime_below}}).
+- Never more than the period budget in force approved; at least {{quota_pct}}% of the period's approved amount to near-prime customers.
 <!-- /tier -->
 <!-- tier: hard -->
-- Every application with an income discrepancy above {{discrepancy_pct}}% and no active delinquency is referred.
-- At most one approved application per `bureau_file_number`.
+- Income discrepancies above {{discrepancy_pct}}% referred; corrected referred applications decided again the same day; at most one approval per customer per day.
 <!-- /tier -->
-- Every applicant with fewer than {{min_tenure}} months in the job and no active delinquency is referred.
+- The right reason code on every decline; planted twins treated alike.
 
-**Quality**: the expected profit of the batch. For each approved loan: limit × 10% lifetime margin − PD × 0.60 × limit, where 0.60 is the loss given default and PD is the loan's true probability of defaulting over its life. PD depends on the applicant and also on the approved amount: a bigger loan means a higher debt burden, and the risk climbs with it. Each referral costs 60; a decline counts 0. Higher is better.
+**Quality** = 0.7 × (expected profit / the expected profit of our own benchmark program on the same days) + 0.3 × the limit table's accuracy. Expected profit: for each approved amount, amount × 10% lifetime margin − PD × 0.60 × amount, where PD is the true probability that the customer defaults over the loan's life; it grows with the debt burden, so with everything we lend them. Each referral costs 60; a decline counts 0. Higher is better.
