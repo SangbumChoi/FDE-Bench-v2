@@ -12,7 +12,9 @@ annotation:
   deadline_change       the client pulls the deadline in
 
 Triggers count agent tool steps (reference harness) or elapsed seconds (any
-harness, including CLI agents whose steps the benchmark cannot see).
+harness, including CLI agents whose steps the benchmark cannot see). The
+client learns about an event only when it fires (Session.poll_events), so it
+cannot reveal one before it happens.
 """
 
 from __future__ import annotations
@@ -82,17 +84,18 @@ def msg(template: str, **params: Any) -> dict[str, Any]:
     return {"t": template, "p": params}
 
 
-def build_events(specs: list[dict[str, Any]], rng: random.Random, *, volunteer_facts: list[str],
-                 correction: tuple[str, str] | None, time_budget_s: float) -> tuple[list[Event], list[str]]:
-    """Instantiate event specs from a difficulty profile.
+def build_events(specs: list[dict[str, Any]], rng: random.Random, *, volunteer: tuple[str, str] | None,
+                 correction: tuple[str, str] | None, time_budget_s: float) -> list[Event]:
+    """Instantiate event specs from an engagement.
 
-    `volunteer_facts` are already in the customer locale. Each event carries its
-    message as a `msg` in payload["msg"]; the variant builder localizes it.
-    Also returns the facts (msgs) the customer must additionally know so the
-    events stay resolvable.
+    `volunteer` is the (target id, fact in the customer locale) the client
+    remembers; the caller picks it the same way in every setting. Each event
+    carries its message as a `msg` in payload["msg"], and what the client
+    learns when it fires (if it did not send the message itself) in
+    payload["client_fact"]; the variant builder localizes both. `rng` must be
+    consumed the same way in every setting.
     """
     events: list[Event] = []
-    knowledge: list[dict[str, Any]] = []
     for i, spec in enumerate(specs):
         spec = dict(spec)
         kind = spec.pop("kind")
@@ -109,18 +112,19 @@ def build_events(specs: list[dict[str, Any]], rng: random.Random, *, volunteer_f
             rel, inbox_rel = correction
             ev.payload = {"msg": msg(CORRECTION_MESSAGE, file=rel, inbox=inbox_rel), "file": rel, "inbox": inbox_rel}
         elif kind == "customer_volunteer":
-            if not volunteer_facts:
+            if volunteer is None:
                 continue
-            ev.payload = {"msg": msg(VOLUNTEER_MESSAGE), "fact": rng.choice(volunteer_facts)}
+            target, fact = volunteer
+            ev.payload = {"msg": msg(VOLUNTEER_MESSAGE), "fact": fact, "target": target}
         elif kind == "stakeholder_conflict":
             name, dept = rng.choice(_NAMES)
             ev.payload = {"msg": msg(STAKEHOLDER_MESSAGE, name=name, dept=msg(dept),
-                                     demand=msg(rng.choice(STAKEHOLDER_DEMANDS))), "from": name}
-            knowledge.append(msg(STAKEHOLDER_TRUTH, name=name, dept=msg(dept)))
+                                     demand=msg(rng.choice(STAKEHOLDER_DEMANDS))), "from": name,
+                          "client_fact": msg(STAKEHOLDER_TRUTH, name=name, dept=msg(dept))}
         elif kind == "deadline_change":
             factor = float(spec.get("factor", 0.5))
             remaining = time_budget_s * factor
             ev.payload = {"msg": msg(DEADLINE_MESSAGE, minutes=round(remaining / 60)),
                           "new_budget_seconds_from_now": remaining}
         events.append(ev)
-    return events, knowledge
+    return events

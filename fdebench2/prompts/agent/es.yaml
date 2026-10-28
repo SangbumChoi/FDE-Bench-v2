@@ -33,17 +33,23 @@ interact: |
 
   La solicitud está escrita con las palabras del propio cliente y no detalla todo lo que usted necesita: las convenciones de datos, las unidades, el tratamiento de casos límite y aspectos similares suelen quedar implícitos porque el cliente los considera obvios.
 
-  Puede contactar al cliente con la herramienta `ask_customer`, y el cliente espera que se le consulte sobre los requisitos. Puede preguntar varias veces, en cualquier momento del trabajo. Para lo que decida no preguntar, haga una suposición razonable y regístrela en `NOTES.md`.
+  Puede contactar al cliente con la herramienta `ask_customer`, y el cliente espera que se le consulte sobre los requisitos. Puede preguntar varias veces, en cualquier momento del trabajo; el cliente responde como máximo {max_questions} preguntas por mensaje. Para lo que decida no preguntar, haga una suposición razonable y regístrela en `NOTES.md`.
 interact_req: |
   ## Información faltante
 
   La solicitud está escrita con las palabras del propio cliente y no detalla todo lo que usted necesita: las convenciones de datos, las unidades, el tratamiento de casos límite y aspectos similares suelen quedar implícitos porque el cliente los considera obvios.
 
-  Puede contactar al cliente con la herramienta `ask_customer`. Antes de escribir cualquier código de la solución, pregunte al cliente todo lo que la solicitud y los datos no aclaren, y siga preguntando hasta tener lo que necesita. Puede preguntar en varias rondas.
+  Puede contactar al cliente con la herramienta `ask_customer`. Antes de escribir cualquier código de la solución, pregunte al cliente todo lo que la solicitud y los datos no aclaren, y siga preguntando hasta tener lo que necesita. Puede preguntar en varias rondas; el cliente responde como máximo {max_questions} preguntas por mensaje.
 events: |
   ## Mientras trabaja
 
   El cliente puede enviarle mensajes mientras trabaja. Aparecen después de los resultados de las herramientas y como archivos en `inbox/`. Revíselos y actúe en consecuencia.
+program_interface: |
+  ## Interfaz del programa
+
+  El entregable es un programa que el motor del cliente ejecuta con entradas que usted no verá. Su formato lo fija este contrato, que debe cumplir exactamente; lo que dice «Entrega» sobre el formato de archivo no especificado no se aplica a él. Punto de entrada (archivo:función): `{entrypoint}`
+
+  {spec}
 delivering: |
   ## Entrega
 

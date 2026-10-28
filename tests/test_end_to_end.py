@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from fdebench2.cases import NativeCase
@@ -32,7 +33,8 @@ def registry(agent_model, answer="OK") -> ModelRegistry:
                         {"customer": "client", "judges": ["judge"]})
     reg._cache["agent"] = agent_model
     reg._cache["client"] = ScriptedModel(lambda m: ChatResponse(content=answer))
-    reg._cache["judge"] = ScriptedModel(lambda m: ChatResponse(content='{"covered": true, "questions": [1]}'))
+    reg._cache["judge"] = ScriptedModel(lambda m: ChatResponse(content=json.dumps(
+        {"covered": True, "questions": [1], "quote": answer})))
     return reg
 
 
@@ -130,18 +132,17 @@ def test_client_unavailable_after_questions(cases_root, tmp_path):
 
 
 def test_exception_requests_are_mapped_to_one_rule(cases_root, tmp_path):
-    """The client maps a request to one of the setting's rules; only a bendable rule can be approved."""
-    import json as _json
+    """A request is mapped to one of the setting's rules; only a bendable rule can be approved."""
     case = NativeCase(cases_root / NATIVE)
     v = build_variant(VariantSpec(NATIVE, policy="enterprise_balanced"), case, tmp_path / "ws",
                       Translator(None, tmp_path / "c"))
     assert {"premium_first", "van_capacity"} <= {r["id"] for r in v.rules}
-    replies = iter([_json.dumps({"rule_id": "premium_first", "decision": "approve", "reply": "ok"}),
-                    _json.dumps({"rule_id": "van_capacity", "decision": "approve", "reply": "ok"})])
+    replies = iter([json.dumps({"rule_id": "premium_first", "reason_given": True}),
+                    json.dumps({"rule_id": "van_capacity", "reason_given": True})])
     s = Session(v, tmp_path / "run", tmp_path / "ws", ScriptedModel(lambda m: ChatResponse(content=next(replies))))
     (tmp_path / "run").mkdir(exist_ok=True)
     assert s.request_exception("premium cafés first", "saves 20 minutes of driving").startswith("[APPROVE]")
-    # A physical rule is never approved, whatever the client model says.
+    # A physical rule is never approved, whatever the classifier says.
     assert s.request_exception("van capacity", "one extra tray fits").startswith("[DENY]")
     recs = [r for r in read_transcript(tmp_path / "run") if r["kind"] == "exception"]
     assert [(r["rule_id"], r["decision"]) for r in recs] == [("premium_first", "approve"), ("van_capacity", "deny")]
@@ -155,7 +156,7 @@ def test_clarification_judges_see_the_answers():
 
     def judge(messages):
         seen.append(messages[-1]["content"])
-        return ChatResponse(content='{"covered": true, "questions": [1]}')
+        return ChatResponse(content='{"covered": true, "questions": [1], "quote": "40 trays per van"}')
     t = Target(id="cap", text="Each van carries 40 trays.", source_text="Each van carries 40 trays.")
     res = score_clarification([t], ["How many trays fit in a van?\nWhen do shifts start?"], [ScriptedModel(judge)],
                               answers=["40 trays per van; shifts start at 5:00."])
