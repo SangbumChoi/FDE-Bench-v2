@@ -28,21 +28,37 @@ class VariantSpec:
     agent_locale: str = "en"
     policy: str = "baseline"
     difficulty: str = "medium"        # content tier of cases that declare settings
-    seed: int = 0
+    noise_seed: int = 0               # seeds the engagement: its data noise and events
     condition: str | None = None      # override the engagement's condition (ablations)
     ruleset: str = DEFAULT_RULESET    # rule parameters of cases that declare settings (A / B / C)
     engagement: str = "standard"      # how the work is handed over (configs/engagement.yaml)
     world_seed: int | None = None     # generate the case's world from this seed instead of its public one
+    trial: int = 0                    # repeat index (pass^k): changes nothing in the variant
+
+    @property
+    def seed(self) -> int:
+        """The older name of noise_seed."""
+        return self.noise_seed
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "VariantSpec":
+        d = dict(d)
+        if "seed" in d:                   # saved before noise_seed and trial were split
+            d.setdefault("noise_seed", d.pop("seed"))
+        return cls(**d)
 
     def key(self) -> str:
-        """Run-directory name (outside the agent's sandbox: the agent never sees it)."""
+        """Run-directory name (outside the agent's sandbox: the agent never sees it).
+
+        Trial 0 keeps the name runs had before trials existed.
+        """
         parts = [self.case_id, f"c-{self.customer_locale}", f"a-{self.agent_locale}", f"p-{self.policy}",
                  f"d-{self.difficulty}", f"r-{self.ruleset}", f"e-{self.engagement}"]
         if self.condition:
             parts.append(f"x-{self.condition}")
         if self.world_seed is not None:
             parts.append(f"w-{self.world_seed}")
-        return "__".join(parts) + f"__s{self.seed}"
+        return "__".join(parts) + f"__s{self.noise_seed}" + (f"__t{self.trial}" if self.trial else "")
 
 
 @dataclass
@@ -100,7 +116,7 @@ class Variant:
     @classmethod
     def load(cls, directory: Path) -> "Variant":
         doc = json.loads((directory / "variant.json").read_text(encoding="utf-8"))
-        doc["spec"] = VariantSpec(**doc["spec"])
+        doc["spec"] = VariantSpec.from_dict(doc["spec"])
         doc["targets"] = [Target(**t) for t in doc["targets"]]
         doc["policy"] = Policy.from_dict(doc["policy"])
         doc["events"] = [Event(**e) for e in doc["events"]]
@@ -126,7 +142,7 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
     case = case.with_world_seed(spec.world_seed).at(spec.difficulty, spec.ruleset)
     # Nothing the agent sees may depend on the difficulty or the rule set: noise and events are
     # seeded by the engagement only.
-    rng = random.Random(f"{spec.case_id}|{spec.engagement}|{spec.seed}")
+    rng = random.Random(f"{spec.case_id}|{spec.engagement}|{spec.noise_seed}")
     src = case.source_locale
 
     def text(getter, kind: str) -> str:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -46,13 +47,25 @@ def tool_schemas(ctx: RunContext) -> list[dict[str, Any]]:
 
 
 def _resolve(ctx: RunContext, rel: str) -> Path:
+    """A path inside the working directory reached without any symbolic link; anything else is refused.
+
+    The file tools run on the host (the agent's shell may be in a container), so a link the agent made, or a
+    FIFO that would block a read, must never be opened from here.
+    """
     rel = (rel or ".").strip()
     if rel.startswith(ctx.sandbox.workdir_label + "/"):
         rel = rel[len(ctx.sandbox.workdir_label) + 1:]
-    path = (ctx.workspace / rel).resolve()
     root = ctx.workspace.resolve()
+    path = Path(os.path.normpath(root / rel))
     if path != root and root not in path.parents:
         raise PermissionError(f"{rel!r} is outside the working directory")
+    for p in (path, *path.parents):
+        if p == root:
+            break
+        if p.is_symlink():
+            raise PermissionError(f"{rel!r} goes through a symbolic link")
+    if path.exists() and not (path.is_file() or path.is_dir()):
+        raise PermissionError(f"{rel!r} is not a regular file or directory")
     return path
 
 
