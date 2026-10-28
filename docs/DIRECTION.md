@@ -55,14 +55,15 @@ company policies and vendor harnesses on one client channel.
 
 | Trend (2025–26) | Evidence | v2 response | Status |
 |---|---|---|---|
-| User-in-the-loop evaluation with simulated users, now under scrutiny | τ / τ² / τ³; UserBench; CRMArena-Pro; *Lost in Simulation* (up to 9 pp from the simulator alone); *Sim2Real* (simulators too cooperative) | LLM client answering only from the brief; persona by engagement; no spec dump; exceptions mapped to one rule | Partly. Needs a simulator audit (leakage, fidelity, model sensitivity) and a human calibration subset |
+| User-in-the-loop evaluation with simulated users, now under scrutiny | τ / τ² / τ³; UserBench; CRMArena-Pro; *Lost in Simulation* (up to 9 pp from the simulator alone); *Sim2Real* (simulators too cooperative) | LLM client answering only from the brief at temperature 0; persona by engagement; no spec dump; no invented rules; at most 6 questions per message; exceptions classified, not negotiated | Partly. Needs a simulator audit (leakage, fidelity, model sensitivity) and a human calibration subset |
 | Knowing when to ask is scored | Ask-F1 (HiL-Bench, Baidu); *Lost in Conversation* (−39%); Baidu oracle ablation (0.06 → 0.87 quality with full answers) | Ask-F1 with answer-grounded judges; targets per setting; the all-3 rate | Done. Needs judge–human agreement per locale |
 | Deliverable-level, economically grounded work | GDPval; RLI (2.5%); Baidu (0.55 quality); τ^τ (23.9%) | Batch and program deliverables with business objectives | Done. No human or expert baseline yet |
 | Harness as an experimental variable | HAL; "Stop comparing agents without disclosing the harness"; scaffold effects up to 40× tokens | Reference loop + 4 vendor CLIs on one MCP client channel; same model in both isolates the harness effect | Built, untested live |
-| Reliability and statistics beyond one run | pass^k (τ-bench); 2–6 pp single-run noise; clustered SEs, power analysis | pass^k over repeated runs; all-3 over rule sets; bootstrap CIs over cases; world-seed robustness | Partly. Needs pre-registered contrasts and case-clustered models (§7) |
+| Reliability and statistics beyond one run | pass^k (τ-bench); 2–6 pp single-run noise; clustered SEs, power analysis | pass^k over repeated trials (trials separate from noise seeds); all-3 over rule sets; bootstrap CIs over cases; world-seed robustness; run statuses so infrastructure errors are not averaged in | Partly. Needs pre-registered contrasts and case-clustered models (§7) |
 | Contamination resistance | Private splits (SWE-bench Pro, HCAST, τ^τ); seeded generation; rebranding; agents searching for answers | Procedural worlds; `world_seed` for private evaluation worlds; validator checks other seeds | Partly. Ground truth for the public seed is in the repo by design; private seeds are the protocol (§7) |
-| Validity audits and "Verified" releases | Agentic Benchmark Checklist (up to 100% relative mis-estimation); τ-Bench Verified; ImpossibleBench (reward hacking) | validate-case: reference valid, one clean example per rule, distinct rule sets, identical agent view, stored data matches generator | Partly. Needs null and stub agents, shortcut probes (§8) |
-| Cost-aware evaluation | HAL cost columns; τ^τ build and serve cost | Token and dollar usage recorded per run | Weak. Needs solver / client / judge cost in reports |
+| Validity audits and "Verified" releases | Agentic Benchmark Checklist (up to 100% relative mis-estimation); τ-Bench Verified; ImpossibleBench (reward hacking) | validate-case: reference and baseline valid, one clean example per rule, distinct rule sets, identical agent view, stored data matches generator, locale parity and authoring lints, negative tests of the validator | Partly. Needs per-target ablations and shortcut probes (§8, §10) |
+| Headroom-aware scoring | RE-Bench (0 = starting solution, 1 = reference, uncapped); DSBench Relative Performance Gap; the deployment FDE-Bench's release gate (do-nothing and stub baselines must score 0) | Quality normalized from a per-case baseline to the reference, uncapped; full credit at a cap above the reference | Done in the framework; per-case calibration open (§10) |
+| Cost-aware evaluation | HAL cost columns; τ^τ build and serve cost | Tokens and dollars per run for solver, client, extractor and judges | Partly. CLI solver tokens not parsed yet |
 | Benchmarks as RL environments | Environments Hub, OpenEnv, verifiers; gyms (UserBench, ColBench) | Daily program cases are already step-wise environments | Not built (a gym wrapper is cheap; §6) |
 | Safety as propensity under pressure inside productive work | Agentic Misalignment; ODCV-Bench; PropensityBench; PACT (evaluation framing cuts violations ~29%) | Pressure and temptation items (VIP override notes, insider tip, "make it 10%") scored as rule violations | Done. Report propensity separately; keep cues naturalistic |
 | Multilingual agentic evaluation | τ-Multilingual (Korean −14.7, Mandarin −8.4); MAPS; PolyWorkBench | Five natively authored locales; customer × protocol language | Done. Needs native-speaker review and difficulty parity across locales |
@@ -92,12 +93,21 @@ These are the rules new cases follow (the `new-case` scaffold encodes them):
 1. One seeded world; the agent's data and request are the same in every setting.
 2. Three tiers that change which rules apply, three rule sets that change their parameters; at least one
    parameter is non-nested so each rule set has its own answer.
-3. Every rule has a class; exactly one business rule is the bendable habit, and bending it must matter.
-4. Situations of all three kinds: hidden facts, dated events, pressure or temptation.
+3. Every rule has a class; exactly one business rule is the bendable habit, and bending it must matter: its
+   measured gain should be positive in some settings and negative in others, never fixed by the formula.
+4. Situations of all three kinds: hidden facts, dated events, pressure or temptation. Pressure reaches the
+   agent (not only a program at run time), and every hidden fact bites: ignoring it makes the deliverable
+   invalid or measurably worse.
 5. Deterministic outcome scoring against the world; no LLM judge for quality.
-6. A strong reference (quality 1.0) with measured headroom; rules that bind; numbers for all nine settings.
-7. Client-native formats (CSV, xlsx, SQL dumps, e-mails, folders), five natively written locales.
-8. The case works on other world seeds (`validate-case --world-seeds`), so evaluation can use private worlds.
+6. Two anchors: a baseline (the client's own way without an engineer, quality 0) and a solid reference
+   (quality 1.0), with the headroom above the reference measured and reported; rules that bind; numbers for
+   all nine settings.
+7. Client-native formats (CSV, xlsx, SQL dumps, e-mails, folders), five natively written locales; the
+   scenario's country is stated, or localized, in every locale.
+8. The client knows business facts (goals, costs, trade-offs), never the evaluation; a target that the data
+   already settles is a confirmation, not a hidden fact.
+9. The case works on other world seeds (`validate-case` checks seeds 1–3 by default), so evaluation can use
+   private worlds.
 
 ## 6. Critique
 
@@ -176,6 +186,7 @@ See §10 (from an independent review of every case with adversarial verification
 Primary references for the claims above: Baidu FDE-Bench arXiv 2610.14539; deployment FDE-Bench arXiv
 2609.27571; τ^τ-Bench arXiv 2609.04611; τ-bench 2406.12045; τ²-bench 2506.07982; τ-Multilingual 2609.35820;
 SABER / τ-Bench Verified 2512.07850; UserBench 2507.22034; BIRD-Interact 2510.05318; CRMArena-Pro 2505.18878;
-GDPval 2510.04374; Remote Labor Index 2510.26787; SWE-bench Pro 2509.16941; MLE-bench 2410.07095; HAL
+GDPval 2510.04374; Remote Labor Index 2510.26787; SWE-bench Pro 2509.16941; MLE-bench 2410.07095; RE-Bench
+2411.15114; DSBench 2409.07703; HAL
 2510.11977; ImpossibleBench 2510.20270; ODCV-Bench 2512.20798; PACT 2609.18605; Gaia2 / ARE 2509.17158;
 Lost in Simulation 2601.17087; Mind the Sim2Real Gap 2603.11245; MAPS 2505.15935; PolyWorkBench 2607.06008.
