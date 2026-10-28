@@ -858,15 +858,29 @@ def _safe_name(s: str) -> str:
     return s.strip(" .") or "untitled"
 
 
+NAME_BYTES = 255      # a file system's limit on one file name
+
+
+def _fit(folder: str, stem: str, tail: str) -> str:
+    """stem + tail, the stem cut so that the name, and its flattened copy "<folder>__<name>" in _review/, fit in
+    NAME_BYTES (a long full-width title is a real name on a drive, but no longer than the drive allows)."""
+    budget = NAME_BYTES - len(f"{folder}__".encode())
+    if len((stem + tail).encode()) <= budget:
+        return stem + tail
+    while stem and len((stem + tail).encode()) > budget:
+        stem = stem[:-1]
+    return re.sub(r"[\s._]+$", "", stem) + tail          # no cut name ends in a space (also U+3000) or a dot
+
+
 class _Names:
     def __init__(self):
         self.used: set = set()
 
     def take(self, folder: str, name: str) -> str:
         stem, dot, ext = name.rpartition(".")
-        cand, k = name, 2
+        cand, k = _fit(folder, stem, f"{dot}{ext}"), 2
         while f"{folder}/{cand}".casefold() in self.used:
-            cand = f"{stem} ({k}).{ext}"
+            cand = _fit(folder, stem, f" ({k}){dot}{ext}")
             k += 1
         self.used.add(f"{folder}/{cand}".casefold())
         return f"{folder}/{cand}"
@@ -1020,7 +1034,9 @@ def _render_corpus(books: list[Book], rng: random.Random) -> dict:
                 continue
             if s.folder == "zip":
                 z = sorted(zips, key=lambda c: (len(zips[c]), c))[0]
-                member = f"{'backup' if 'old' in z else 'handover'}/{s.name}"
+                inner = "backup" if "old" in z else "handover"
+                stem, dot, ext = s.name.rpartition(".")
+                member = f"{inner}/{_fit(inner, stem, dot + ext)}"
                 zips[z].append((member, _render_file(s, b.lang, rng)))
                 b.files.append(f"{z}!{member}")
                 continue
