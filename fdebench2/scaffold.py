@@ -26,7 +26,8 @@ objective: maximize             # or minimize; the quantity score() returns as "
 deliverable_type: {kind}
 {deliverable}
 deliverable_spec: |
-  TODO: the exact format of the deliverable, the same in every setting (the extractor sees it, the agent does not).
+  TODO: the exact format of the deliverable, the same in every setting (the agent never sees it; a batch case's
+  extractor reshapes the agent's files into it, a program case's entry function follows it).
 tiers:                          # difficulty -> which rules apply; the data is the same in every tier
   easy: TODO the core problem
   medium: TODO easy + more domain rules

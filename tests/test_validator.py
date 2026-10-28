@@ -5,9 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from fdebench2.explain import write_page
+from fdebench2.cli import main
+from fdebench2.explain import check_page, write_page
 from fdebench2.scaffold import new_case
-from fdebench2.validate import check_case, validate_case
+from fdebench2.validate import Report, check_case, check_hash_seed, validate_case
 
 REPO = Path(__file__).resolve().parents[1]
 FAST = "logistics/bakery_delivery_dispatcher"         # the quickest full validation
@@ -25,6 +26,11 @@ SAME_BASELINE = '''
 
 def baseline_solution(world, out_dir):
     reference_solution(world, out_dir)
+'''
+EMPTY_BASELINE = '''
+
+def baseline_solution(world, out_dir):
+    pass
 '''
 
 
@@ -74,10 +80,21 @@ def test_parameter_missing_from_one_locale(tmp_path):
     assert "ko/requirements.md: parameters differ from en (missing ['usd_krw'])" in validate_case(root)
 
 
-def test_todo_left_in_readme(tmp_path):
+@pytest.mark.parametrize("name, text", [("README.md", "\nTODO: the numbers for world seed 2.\n"),
+                                        ("case.yaml", "# rules:\n#   - id: TODO_rule\n")], ids=["readme", "scaffold-id"])
+def test_todo_left(tmp_path, name, text):
     root = _copy(tmp_path, SETTINGS)
-    _append(root / "README.md", "\nTODO: the numbers for world seed 2.\n")
-    assert any(p.startswith("README.md: TODO left on line") for p in validate_case(root))
+    _append(root / name, text)
+    assert any(p.startswith(f"{name}: TODO left on line") for p in validate_case(root))
+
+
+def test_setting_blocks_differ_in_one_locale(tmp_path):
+    root = _copy(tmp_path, SETTINGS)
+    path = root / "locales/ja/requirements.md"
+    path.write_text(path.read_text(encoding="utf-8").replace("<!-- tier: medium hard -->", "<!-- tier: hard -->", 1),
+                    encoding="utf-8")
+    assert ("ja/requirements.md: setting markers differ from en at block 5: 'tier: hard', en has 'tier: medium hard'"
+            in validate_case(root))
 
 
 def test_target_missing_in_one_locale(tmp_path):
@@ -88,15 +105,18 @@ def test_target_missing_in_one_locale(tmp_path):
     assert "es/targets.yaml: target ids differ from en (missing ['expected_cost'])" in validate_case(root)
 
 
-@pytest.mark.parametrize("baseline, ok", [(WORSE_BASELINE, True), (SAME_BASELINE, False)], ids=["worse", "same"])
-def test_baseline_must_be_valid_and_worse(tmp_path, baseline, ok):
+@pytest.mark.parametrize("baseline, problem", [(WORSE_BASELINE, None),
+                                               (SAME_BASELINE, "is not worse than the reference"),
+                                               (EMPTY_BASELINE, "the baseline is not valid: missing routes.json")],
+                         ids=["worse", "same", "invalid"])
+def test_baseline_must_be_valid_and_worse(tmp_path, baseline, problem):
     root = _copy(tmp_path, FAST)
     _append(root / "case.py", baseline)
     report = check_case(root)
-    if ok:
+    if problem is None:
         assert report.problems == [] and report.notes == ["baseline/reference objective: 1.188"]
     else:
-        assert any("is not worse than the reference" in p for p in report.problems)
+        assert any(problem in p for p in report.problems)
 
 
 def test_hash_seed_leaking_into_data(tmp_path):
@@ -113,9 +133,39 @@ def write_data(world, data_dir, lang):
     assert any("differs between processes with PYTHONHASHSEED" in p for p in validate_case(root))
 
 
+def test_hash_seed_check_imports_this_package(tmp_path, monkeypatch):
+    """The two processes run this checkout's fdebench2, not one that happens to sit in the working directory."""
+    root = _copy(tmp_path, FAST)
+    (tmp_path / "fdebench2").mkdir()
+    (tmp_path / "fdebench2" / "__init__.py").write_text("raise ImportError('another checkout')\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    assert check_hash_seed(root) == []
+
+
+def test_review_findings_in_explainer(tmp_path):
+    root = _copy(tmp_path, FAST)
+    (root / "REVIEW.md").write_text("# Findings\n\n- C11 is the Clock Tower café in the texts only.\n", encoding="utf-8")
+    assert check_page(root) == ["explainer.html is out of date: run `fdebench2 explain-case` (or export-dataset)"]
+    page = write_page(root).read_text(encoding="utf-8")
+    assert '<section id="review">' in page and "C11 is the Clock Tower café in the texts only." in page
+    assert "Deliverable spec (shown to the extractor that reshapes the agent's files, not to the agent)" in page
+    assert check_page(root) == []
+
+
+@pytest.mark.parametrize("args, seeds", [([], [1, 2, 3]), (["--world-seeds", "7"], [7]), (["--world-seeds", ""], []),
+                                         (["--no-world-seeds"], [])], ids=["default", "given", "empty", "none"])
+def test_cli_world_seed_panel(monkeypatch, args, seeds):
+    asked = []
+    monkeypatch.setattr("fdebench2.validate.check_case", lambda path, world_seeds: asked.append(world_seeds) or Report())
+    with pytest.raises(SystemExit) as done:
+        main(["validate-case", "cases/logistics/bakery_delivery_dispatcher", *args])
+    assert done.value.code == 0 and asked == [seeds]
+
+
 def test_new_case_fails_until_filled(tmp_path):
     shutil.copy2(REPO / "cases" / "fields.yaml", tmp_path / "fields.yaml")
     root = new_case("retail/shelf_planner", tmp_path)
     problems = validate_case(root)
     assert {"case.yaml", "case.py", "README.md", "locales/en/request.md"} <= {p.split(":")[0] for p in problems
                                                                             if "TODO left" in p}
+    assert "locales/en/targets.yaml: TODO left on line 1, 4" in problems     # the id TODO_target, then its text

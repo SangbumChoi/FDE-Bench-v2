@@ -55,7 +55,7 @@ HANGUL = re.compile(r"[가-힣]")
 KANA = re.compile(r"[぀-ヿ]")
 HAN = re.compile(r"[一-鿿]")
 MARKER = re.compile(r"<!-- (tier|ruleset): ([A-Za-z ]+) -->")
-TODO = re.compile(r"\bTODO\b")
+TODO = re.compile(r"(?<![A-Za-z0-9])TODO(?![A-Za-z0-9])")   # also the scaffold's ids (TODO_rule, TODO_target)
 NUMBER = re.compile(r"(?<![\w.,])\d+(?:,\d{3})*(?:\.\d+)?(?!\w)")
 DATE_OR_TIME = re.compile(r"\d{4}-\d{2}-\d{2}|\b\d{1,2}:\d{2}\b")
 # "The Clock Tower café (C11)": capitalized words, at most one lowercase head noun, then the ID in parentheses
@@ -213,7 +213,8 @@ def check_hash_seed(root: Path) -> list[str]:
     with tempfile.TemporaryDirectory() as tmp:
         for seed in HASH_SEEDS:
             out = Path(tmp) / seed
-            run = subprocess.run([sys.executable, "-c", _RENDER, str(Path(root).resolve()), str(out)],
+            # -P: no cwd on sys.path, so the child imports this package (PYTHONPATH), not a checkout in the cwd
+            run = subprocess.run([sys.executable, "-P", "-c", _RENDER, str(Path(root).resolve()), str(out)],
                                  env={**env, "PYTHONHASHSEED": seed}, capture_output=True, text=True, timeout=900)
             if run.returncode:
                 return [f"rendering in a fresh process fails: {(run.stderr.strip().splitlines() or ['?'])[-1]}"]
