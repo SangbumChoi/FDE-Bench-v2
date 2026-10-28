@@ -50,7 +50,7 @@ select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);borde
 <section id="request"><h2>What the agent is asked</h2>
 <p class="muted">The client's request, the only text the agent gets up front. It is the same in every setting.</p>
 <details><summary>中文</summary><p>麻烦帮客服团队排一下下周（11月9日周一到15日周日）的班表吧。我们支持的每个语种都要有足够的人接电话，别让客户等太久。员工名单和预计话务量在附件里。</p></details><details open><summary>English</summary><p>Could you put together next week's roster (Monday 9 to Sunday 15 November) for our support team? We need enough people on the phones so customers aren't left waiting, in every language we support. The staff list and the expected call volume are attached.</p></details><details open><summary>한국어</summary><p>다음 주(11월 9일 월요일~15일 일요일) 상담팀 근무표를 짜 주실 수 있을까요? 지원하는 모든 언어에서 고객이 오래 기다리지 않도록 전화 받을 인원이 충분했으면 합니다. 상담원 명단과 예상 콜 물량을 첨부합니다.</p></details><details><summary>日本語</summary><p>来週（11月9日月曜日〜15日日曜日）のサポートチームのシフト表を作っていただけますか。対応しているどの言語でもお客様をお待たせしないよう、電話に出られる人数を十分に確保したいです。担当者一覧と入電の見込みを添付します。</p></details><details><summary>Español</summary><p>¿Podría preparar el cuadrante de la próxima semana (del lunes 9 al domingo 15 de noviembre) para nuestro equipo de soporte? Necesitamos suficiente gente al teléfono para que los clientes no esperen, en todos los idiomas que atendemos. Le adjunto la lista de personal y el volumen de llamadas previsto.</p></details>
-<h3>Deliverable spec (agent-visible)</h3><pre>roster.json = {&quot;assignments&quot;: [{&quot;agent&quot;: &quot;&lt;agent id, e.g. A01&gt;&quot;, &quot;day&quot;: &quot;YYYY-MM-DD (2026-11-09 .. 2026-11-15)&quot;,
+<h3>Deliverable spec (shown to the extractor that reshapes the agent's files, not to the agent)</h3><pre>roster.json = {&quot;assignments&quot;: [{&quot;agent&quot;: &quot;&lt;agent id, e.g. A01&gt;&quot;, &quot;day&quot;: &quot;YYYY-MM-DD (2026-11-09 .. 2026-11-15)&quot;,
                                 &quot;shift&quot;: &quot;&lt;shift id from the shift list, e.g. S0800 or P1600&gt;&quot;,
                                 &quot;language&quot;: &quot;&lt;language the agent takes calls in for this shift: ko | ja | en | zh | es&gt;&quot;}, ...]}
 One entry per agent per worked shift; ids exactly as in the data; language as the ASCII code
@@ -83,7 +83,9 @@ leave.csv  <span class='muted'>202 B</span>
 shifts.csv  <span class='muted'>277 B</span></pre>
 <h3>Hidden inputs</h3><p class='muted'>(none)</p>
 <h3>Reference score per setting</h3>
-<div class="scroll"><table><thead><tr><th>Setting</th><th>Objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>25584.0</td><td>assignments=116, labor_cost=18264.0, under_covered_agent_slots=183</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
+<p class="muted">Quality is normalized per setting: the baseline (the simplest valid deliverable) is 0, the reference
+is 1, and better than the reference goes above 1 (full credit at the policy's quality cap).</p>
+<div class="scroll"><table><thead><tr><th>Setting</th><th>Reference objective</th><th>Baseline objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>25584.0</td><td>–</td><td>assignments=116, labor_cost=18264.0, under_covered_agent_slots=183</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
 <h3>One answer folder: <code>gt/default</code></h3>
 <p class='muted'>3 files, 12,827 bytes</p><pre class='tree'>reference/roster.json  <span class='muted'>12,669 B</span>
 score.json  <span class='muted'>155 B</span>

@@ -50,7 +50,7 @@ select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);borde
 <section id="request"><h2>What the agent is asked</h2>
 <p class="muted">The client's request, the only text the agent gets up front. It is the same in every setting.</p>
 <details><summary>中文</summary><p>你好，采购那边有大概四十份供应商合同在等着签。麻烦帮我们审一下这些合同，告诉我们哪些在签之前需要改。合同台账和合同文本都在附件里。</p></details><details open><summary>English</summary><p>Hi, procurement has lined up about forty supplier contracts that are waiting for signature. Please review these supplier contracts and tell us which ones need changes before we sign. The contract register and the contract texts are attached.</p></details><details open><summary>한국어</summary><p>안녕하세요. 구매팀에서 서명을 기다리고 있는 공급업체 계약이 40건 정도 있습니다. 이 계약서들을 검토해서 서명 전에 수정이 필요한 계약이 어떤 것인지 알려 주시겠어요? 계약대장과 계약서 원문을 첨부합니다.</p></details><details><summary>日本語</summary><p>お世話になっております。購買部門で署名待ちになっている取引先との契約が40件ほどあります。これらの契約書をレビューしていただき、署名前に修正が必要なものを教えていただけますでしょうか。契約台帳と契約書の本文を添付いたします。</p></details><details><summary>Español</summary><p>Buenos días: el departamento de compras tiene preparados unos cuarenta contratos con proveedores pendientes de firma. ¿Podría revisar estos contratos e indicarnos cuáles necesitan cambios antes de firmarlos? Le adjuntamos el registro de contratos y los textos de los contratos.</p></details>
-<h3>Deliverable spec (agent-visible)</h3><pre>review.json = {&quot;C001&quot;: {&quot;issues&quot;: [&quot;LIABILITY_CAP&quot;, ...], &quot;decision&quot;: &quot;sign&quot; | &quot;negotiate&quot; | &quot;reject&quot;}, ...}
+<h3>Deliverable spec (shown to the extractor that reshapes the agent's files, not to the agent)</h3><pre>review.json = {&quot;C001&quot;: {&quot;issues&quot;: [&quot;LIABILITY_CAP&quot;, ...], &quot;decision&quot;: &quot;sign&quot; | &quot;negotiate&quot; | &quot;reject&quot;}, ...}
 One entry per contract in the register, keyed by contract id exactly as in the data.
 Issue codes (ASCII, exactly these): LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS,
 DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY. An empty list means no issue found.</pre></section>
@@ -118,7 +118,9 @@ contracts/C039.txt  <span class='muted'>2,411 B</span>
 contracts/C040.txt  <span class='muted'>2,208 B</span></pre>
 <h3>Hidden inputs</h3><p class='muted'>(none)</p>
 <h3>Reference score per setting</h3>
-<div class="scroll"><table><thead><tr><th>Setting</th><th>Objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>0.7677235772357723</td><td>decision_accuracy=0.7, fn=20, fp=5, issue_f1=0.7967</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
+<p class="muted">Quality is normalized per setting: the baseline (the simplest valid deliverable) is 0, the reference
+is 1, and better than the reference goes above 1 (full credit at the policy's quality cap).</p>
+<div class="scroll"><table><thead><tr><th>Setting</th><th>Reference objective</th><th>Baseline objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>0.7677235772357723</td><td>–</td><td>decision_accuracy=0.7, fn=20, fp=5, issue_f1=0.7967</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
 <h3>One answer folder: <code>gt/default</code></h3>
 <p class='muted'>3 files, 4,067 bytes</p><pre class='tree'>reference/review.json  <span class='muted'>3,845 B</span>
 score.json  <span class='muted'>219 B</span>

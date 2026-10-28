@@ -50,7 +50,7 @@ select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);borde
 <section id="request"><h2>What the agent is asked</h2>
 <p class="muted">The client's request, the only text the agent gets up front. It is the same in every setting.</p>
 <details><summary>中文</summary><p>能帮我们排一下下周（3月22日周一到28日周日）储能电池什么时候充电、什么时候放电吗？目标是尽量多赚钱。附件里有电价预测、隔壁光伏电站的出力预测、电池规格表、并网协议和上周的调度记录。</p></details><details open><summary>English</summary><p>Can you plan when our battery should charge and discharge next week (Monday 22 to Sunday 28 March) to make the most money? I've attached the price forecast, the solar forecast for the farm next door, the battery spec sheet, our connection agreement and last week's dispatch log.</p></details><details open><summary>한국어</summary><p>다음 주(3월 22일 월요일부터 28일 일요일까지) 저희 배터리를 언제 충전하고 언제 방전해야 수익이 가장 많이 날지 계획을 세워 주실 수 있을까요? 가격 예측, 옆 태양광 발전소의 발전량 예측, 배터리 사양서, 계통연계계약, 지난주 운전 기록을 첨부합니다.</p></details><details><summary>日本語</summary><p>来週（3月22日の月曜日から28日の日曜日まで）、当社の蓄電池をいつ充電し、いつ放電すれば一番収益が上がるか、計画を立てていただけますか。価格予測、隣の太陽光発電所の発電予測、蓄電池の仕様書、系統連系契約、先週の運転記録を添付します。</p></details><details><summary>Español</summary><p>¿Podría planificar cuándo debe cargar y descargar nuestra batería la semana que viene (del lunes 22 al domingo 28 de marzo) para ganar el máximo dinero posible? Le adjunto la previsión de precios, la previsión de producción de la planta solar de al lado, la ficha técnica de la batería, nuestro contrato de conexión y el registro de despacho de la semana pasada.</p></details>
-<h3>Deliverable spec (agent-visible)</h3><pre>dispatch.csv, ASCII header: timestamp,charge_mw,discharge_mw
+<h3>Deliverable spec (shown to the extractor that reshapes the agent's files, not to the agent)</h3><pre>dispatch.csv, ASCII header: timestamp,charge_mw,discharge_mw
 One row per 15-minute interval of the week 2027-03-22 00:00 .. 2027-03-28 23:45, local time, timestamp = interval
 start as &quot;YYYY-MM-DD HH:MM&quot; (only clock times that exist locally). charge_mw / discharge_mw = average battery
 power at the meter over the interval in MW, both &gt;= 0.</pre></section>
@@ -82,7 +82,9 @@ price_forecast.csv  <span class='muted'>3,845 B</span>
 solar_forecast.csv  <span class='muted'>14,530 B</span></pre>
 <h3>Hidden inputs</h3><p class='muted'>(none)</p>
 <h3>Reference score per setting</h3>
-<div class="scroll"><table><thead><tr><th>Setting</th><th>Objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>18084.350179250043</td><td>battery_profit_eur=18084.35, curtailed_mwh=36.493, degradation_eur=3662.8, end_soc_pct=50.0</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
+<p class="muted">Quality is normalized per setting: the baseline (the simplest valid deliverable) is 0, the reference
+is 1, and better than the reference goes above 1 (full credit at the policy's quality cap).</p>
+<div class="scroll"><table><thead><tr><th>Setting</th><th>Reference objective</th><th>Baseline objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>18084.350179250043</td><td>–</td><td>battery_profit_eur=18084.35, curtailed_mwh=36.493, degradation_eur=3662.8, end_soc_pct=50.0</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
 <h3>One answer folder: <code>gt/default</code></h3>
 <p class='muted'>3 files, 17,391 bytes</p><pre class='tree'>reference/dispatch.csv  <span class='muted'>16,998 B</span>
 score.json  <span class='muted'>390 B</span>

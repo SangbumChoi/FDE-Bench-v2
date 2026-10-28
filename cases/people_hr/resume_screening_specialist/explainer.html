@@ -50,7 +50,7 @@ select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);borde
 <section id="request"><h2>What the agent is asked</h2>
 <p class="muted">The client's request, the only text the agent gets up front. It is the same in every setting.</p>
 <details><summary>中文</summary><p>这三个岗位收到的简历实在太多了，能不能帮我们挑出最值得面试的候选人，做一份面试名单？职位说明和招聘系统导出的候选人数据都在附件里，另外还有一些我们以前招这几个岗位的人员数据。</p></details><details open><summary>English</summary><p>We got too many applications for these three roles. Can you shortlist the best candidates for interviews? The job descriptions and the applicant export from our recruiting system are attached, along with some data on people we hired for the same roles before.</p></details><details open><summary>한국어</summary><p>이번 세 개 직무에 지원서가 너무 많이 들어왔습니다. 면접 볼 만한 후보자를 추려서 쇼트리스트를 만들어 주실 수 있을까요? 직무기술서와 채용 시스템에서 내려받은 지원자 데이터를 첨부했고, 예전에 같은 직무로 채용했던 사람들의 데이터도 함께 보내드립니다.</p></details><details><summary>日本語</summary><p>今回の3つの職種に応募が多すぎて、手が回っておりません。面接に呼ぶべき候補者を絞り込んで、ショートリストを作っていただけますか。求人票と採用システムから出力した応募者データを添付いたします。以前に同じ職種で採用した社員のデータもお送りします。</p></details><details><summary>Español</summary><p>Hemos recibido demasiadas solicitudes para estos tres puestos. ¿Podría preseleccionar a los mejores candidatos para entrevistarlos? Le adjunto las descripciones de los puestos y la exportación de candidatos de nuestro sistema de selección, además de algunos datos de las personas que contratamos antes para estos mismos puestos.</p></details>
-<h3>Deliverable spec (agent-visible)</h3><pre>shortlist.csv with ASCII header role_id,candidate_id,rank
+<h3>Deliverable spec (shown to the extractor that reshapes the agent's files, not to the agent)</h3><pre>shortlist.csv with ASCII header role_id,candidate_id,rank
 One row per shortlisted candidate and role; role_id and candidate_id exactly as in the data (e.g. R2, C017);
 rank = position within that role&#x27;s shortlist, 1 = strongest, consecutive integers.</pre></section>
 <section id="settings"><h2>Settings</h2><p>This case has no settings: one fixed problem at every difficulty.</p></section>
@@ -81,7 +81,9 @@ past_hires.csv  <span class='muted'>44,966 B</span>
 work_history.csv  <span class='muted'>32,343 B</span></pre>
 <h3>Hidden inputs</h3><p class='muted'>(none)</p>
 <h3>Reference score per setting</h3>
-<div class="scroll"><table><thead><tr><th>Setting</th><th>Objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>1254.49</td><td>fit_by_role={&#x27;R1&#x27;: 400.8, &#x27;R2&#x27;: 419.6, &#x27;R3&#x27;: 434.09}, fit_sum=1254.49, min_ai_ratio=0.727, ndcg_by_role={&#x27;R1&#x27;: 0.8954, &#x27;R2&#x27;: 0.8661, &#x27;R3&#x27;: 0.9135}</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
+<p class="muted">Quality is normalized per setting: the baseline (the simplest valid deliverable) is 0, the reference
+is 1, and better than the reference goes above 1 (full credit at the policy's quality cap).</p>
+<div class="scroll"><table><thead><tr><th>Setting</th><th>Reference objective</th><th>Baseline objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>1254.49</td><td>–</td><td>fit_by_role={&#x27;R1&#x27;: 400.8, &#x27;R2&#x27;: 419.6, &#x27;R3&#x27;: 434.09}, fit_sum=1254.49, min_ai_ratio=0.727, ndcg_by_role={&#x27;R1&#x27;: 0.8954, &#x27;R2&#x27;: 0.8661, &#x27;R3&#x27;: 0.9135}</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
 <h3>One answer folder: <code>gt/default</code></h3>
 <p class='muted'>3 files, 562 bytes</p><pre class='tree'>reference/shortlist.csv  <span class='muted'>269 B</span>
 score.json  <span class='muted'>290 B</span>

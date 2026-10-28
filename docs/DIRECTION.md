@@ -110,6 +110,15 @@ These are the rules new cases follow (the `new-case` scaffold encodes them):
 | Every run used the public world, whose answers are in the repo | Memorization and search-time contamination | `world_seed` for private worlds; `validate-case --world-seeds` checks other seeds |
 | Several cases broke on other seeds | Private-seed evaluation would crash or mis-score | Generators, references and examples fixed to work across seeds (see §6.3) |
 | No uncertainty in reports | With 13 cases most differences are noise | 95% bootstrap intervals over cases; unclipped quality next to the capped component |
+| Quality clipped at a modest reference, no null anchor | Competent agents saturated; hidden facts that only move quality, and bendable rules, were free or worthless; do-nothing deliverables scored 0.24–0.6 | Quality normalized from a per-case baseline (0) to the reference (1), not clipped at 1; full credit at `quality_cap` (1.5 or the case's known best); a perfect minimize answer no longer scores 0; NaN objectives are invalid |
+| `request_exception` was a free-text side channel | Its prompt held the client's whole brief and its reply was free text | A classifier sees only the rule list; the decision is computed from the policy; the reply is a fixed template; the first decision binds; escalation costs a question round |
+| Client prompt gaps | Business costs under "how judged" were unreachable; the client invented defaults; engineer text could steer it | The client states business facts but never the evaluation, says it has no rule instead of inventing one, treats engineer text as untrusted, answers at most 6 questions per message, runs at temperature 0 |
+| Events leaked or varied by setting | The client knew future events from t = 0; the volunteered fact and inbox names depended on the setting or revealed the event type | Event knowledge arrives when the event fires; one volunteered target id across settings; neutral inbox names |
+| Program interface unknowable without asking | In the hidden condition a program case could not be delivered | The entry point and interface spec are shown to the agent in every condition |
+| Question budget counted rounds | 30 questions in one message cost one | Budgets and the per-message cap count questions |
+| Isolation holes | Agent symlinks could make the host copy ground truth; the extractor had a host shell over data/; the mount path named the setting; the bridge had no auth; every API key reached every container | Workspace sanitized before any host read; extractor without shell, sees only the agent's files; opaque staging path; per-run bearer token; per-harness env |
+| Campaign bookkeeping | One `seed` meant both trial and noise (no pass^k); duplicate runs raced; stale results reused after edits; errors averaged in as 0 | `noise_seed` and `trial` split, τ-bench pass^k; dedup and per-run locks; fingerprinted cache; run statuses with infra errors excluded; cost columns for solver, client, extractor, judges |
+| The validator only checked what authors remembered | Defects found by hand in review (wrong café name, a rule saying 2 where the data says 6, TODOs, locale drift) | Baseline, locale-parity, hash-seed determinism, TODO, number and name–ID lints, cross-tier warnings, a default world-seed panel, and negative tests of the validator itself |
 
 ### 6.2 Open (ordered by importance)
 1. **No live run yet.** No API keys in the build environment; vendor CLI flags and docker isolation are
@@ -118,30 +127,34 @@ These are the rules new cases follow (the `new-case` scaffold encodes them):
    client model need an audit and a small human-client calibration.
 3. **Statistical power.** 13 cases (5 with settings). Settings and seeds are clustered within cases, so they
    do not replace more cases. The axis grid multiplies cells faster than evidence.
-4. **Ceiling and headroom.** Quality is capped at the reference; some settings have little headroom (hospital
-   +0.1–1.5%, corpus easy 0%), and some bendable rules gain nothing (procurement hard) or dominate (stock
-   +28–90%).
+4. **Headroom and bite are not yet measured per case.** The scale now credits beating the reference, but
+   whether each hidden fact and the bendable rule move the score by a meaningful amount is still a per-case
+   property (§10). Proposed: an `ablations()` hook checked by the validator.
 5. **No human baseline.** References are written with full knowledge of the ground truth.
 6. **Synthetic realism and language quality.** Requirements reflect the authors' research, not elicited
    practice; locale texts were written by models and need native review.
 7. **Eight cases are single fixed problems** (no tiers × rule sets yet).
-8. **Cost reporting** covers the solver only partly; client and judge costs are not reported.
+8. **Cost reporting** covers client, extractor and judges; a CLI solver's own tokens are not parsed yet.
+9. **Open network in the agent container.** Model APIs need egress; an allowlist needs a proxy. Web search
+   should be off or logged per harness.
 
 ### 6.3 Case-level critique
-See §10 (filled from an independent review of every case with adversarial verification of each finding).
+See §10 (from an independent review of every case with adversarial verification of each finding).
 
 ## 7. How to run and report an evaluation (protocol)
 
-- **Primary metrics:** final score and its components; validity; DSR (quality ≥ reference); all-3 (valid
-  under every rule set); Ask-F1; propensity (violations on pressure items, reported separately).
+- **Primary metrics:** final score and its components; validity; normalized quality (baseline 0, reference
+  1, uncapped) next to the plain ratio to the reference; DSR (normalized quality ≥ 1); all-3 (valid under
+  every rule set); Ask-F1; propensity (violations on pressure items, reported separately).
 - **Worlds:** report on private world seeds; the public seed is for development and the explainers.
-- **Repetition:** at least 3 repeated runs per (case, setting) for pass^k (all repeated runs valid). World
-  robustness (valid across world seeds) is a separate quantity; do not call it pass^k.
+- **Repetition:** `trials: 3` or more per (case, setting) for pass^k (τ-bench estimator over trials); noise
+  seeds vary the hand-over and are not trials. World robustness (valid across world seeds) is a separate
+  quantity; do not call it pass^k. Report run statuses and keep harness or infrastructure errors out of means.
 - **Uncertainty:** case-cluster bootstrap intervals; compare systems with paired, within-case differences.
   Pre-register the primary contrasts (e.g. harness effect at fixed model; Korean vs English customer) instead
   of reading the full grid.
 - **Harness disclosure:** model, harness, version, flags, tool access (web search off or logged), budgets.
-- **Cost:** tokens and dollars for the solver, the client and the judges; wall-clock.
+- **Cost:** tokens and dollars for the solver, the client, the extractor and the judges; wall-clock.
 - **Simulator disclosure:** client model, persona, engagement; judge models (not from the solver's family).
 
 ## 8. Roadmap

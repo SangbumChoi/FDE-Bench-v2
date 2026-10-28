@@ -50,7 +50,7 @@ select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);borde
 <section id="request"><h2>What the agent is asked</h2>
 <p class="muted">The client's request, the only text the agent gets up front. It is the same in every setting.</p>
 <details><summary>中文</summary><p>我们家庭生活补助的申请积压了大约300件。能帮我们判定哪些家庭符合条件、每月各发多少吗？申请清单、家庭成员、资产申报、去年的金额表以及发给居民的须知都附上了。</p></details><details open><summary>English</summary><p>We have a backlog of about 300 applications for our Household Living Support benefit. Can you decide who qualifies and how much they get each month? The applications, the household members, the declared assets, last year's amount table and the leaflet we give to citizens are attached.</p></details><details open><summary>한국어</summary><p>가구 생활지원금 신청이 300건 가까이 밀려 있습니다. 어느 가구가 대상인지, 매달 얼마를 지급해야 하는지 결정해 주실 수 있을까요? 신청 목록, 가구원 정보, 재산 신고 내역, 작년 지급액표, 그리고 시민들께 드리는 안내문을 첨부합니다.</p></details><details><summary>日本語</summary><p>世帯生活支援金の申請が300件ほど滞っています。どの世帯が対象になるか、毎月いくら支給するかを決めていただけますか。申請一覧、世帯員、資産申告、昨年度の支給額表、それから市民向けにお配りしているご案内を添付します。</p></details><details><summary>Español</summary><p>Tenemos acumuladas unas 300 solicitudes de nuestra Ayuda de Subsistencia para Hogares. ¿Podría decidir quién tiene derecho y cuánto le corresponde cada mes? Le adjuntamos las solicitudes, los miembros de cada hogar, el patrimonio declarado, la tabla de importes del año pasado y el folleto que entregamos a los ciudadanos.</p></details>
-<h3>Deliverable spec (agent-visible)</h3><pre>determinations.csv with ASCII header household_id,eligible,monthly_amount,reason_code
+<h3>Deliverable spec (shown to the extractor that reshapes the agent's files, not to the agent)</h3><pre>determinations.csv with ASCII header household_id,eligible,monthly_amount,reason_code
 One row per application (household_id exactly as in the data, e.g. H001);
 eligible = yes | no; monthly_amount = this year&#x27;s monthly benefit (a number, 0 when not eligible);
 reason_code = one of APPROVED, RENEWAL, DENY_RESIDENCY, DENY_ASSETS, DENY_INCOME
@@ -83,7 +83,9 @@ citizen_leaflet.md  <span class='muted'>1,208 B</span>
 household_members.csv  <span class='muted'>28,011 B</span></pre>
 <h3>Hidden inputs</h3><p class='muted'>(none)</p>
 <h3>Reference score per setting</h3>
-<div class="scroll"><table><thead><tr><th>Setting</th><th>Objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>17928.0</td><td>abs_amount_error=12728.0, households=300, wrong_decisions=13</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
+<p class="muted">Quality is normalized per setting: the baseline (the simplest valid deliverable) is 0, the reference
+is 1, and better than the reference goes above 1 (full credit at the policy's quality cap).</p>
+<div class="scroll"><table><thead><tr><th>Setting</th><th>Reference objective</th><th>Baseline objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>17928.0</td><td>–</td><td>abs_amount_error=12728.0, households=300, wrong_decisions=13</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
 <h3>One answer folder: <code>gt/default</code></h3>
 <p class='muted'>3 files, 6,819 bytes</p><pre class='tree'>reference/determinations.csv  <span class='muted'>6,667 B</span>
 score.json  <span class='muted'>149 B</span>

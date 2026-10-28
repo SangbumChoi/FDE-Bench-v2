@@ -50,7 +50,7 @@ select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);borde
 <section id="request"><h2>What the agent is asked</h2>
 <p class="muted">The client's request, the only text the agent gets up front. It is the same in every setting.</p>
 <details><summary>中文</summary><p>管理层发来了一批问题，能麻烦您根据数据库导出的数据帮忙回答一下吗？数据表、简单的数据字典和问题清单都在附件里，每个问题给一个数字就行。</p></details><details open><summary>English</summary><p>Our managers sent these questions. Can you answer them from the database export? The tables, a short data dictionary and the list of questions are attached — please send back one number per question.</p></details><details open><summary>한국어</summary><p>경영진이 질문을 몇 가지 보내왔습니다. 데이터베이스 추출본으로 답을 내 주실 수 있을까요? 테이블, 간단한 데이터 사전, 질문 목록을 첨부합니다. 질문마다 숫자 하나씩 주시면 됩니다.</p></details><details><summary>日本語</summary><p>経営陣から質問がいくつか届きました。データベースのエクスポートから回答していただけますでしょうか。テーブル一式、簡単なデータ辞書、質問一覧を添付しています。質問ごとに数値をひとつずつお返しください。</p></details><details><summary>Español</summary><p>Nuestros directivos nos han enviado estas preguntas. ¿Podría responderlas a partir de la exportación de la base de datos? Le adjuntamos las tablas, un pequeño diccionario de datos y la lista de preguntas; con un número por pregunta nos basta.</p></details>
-<h3>Deliverable spec (agent-visible)</h3><pre>answers.json = {&quot;Q01&quot;: &lt;number&gt;, &quot;Q02&quot;: &lt;number&gt;, ..., &quot;Q12&quot;: &lt;number&gt;}
+<h3>Deliverable spec (shown to the extractor that reshapes the agent's files, not to the agent)</h3><pre>answers.json = {&quot;Q01&quot;: &lt;number&gt;, &quot;Q02&quot;: &lt;number&gt;, ..., &quot;Q12&quot;: &lt;number&gt;}
 One JSON number per question id from the questions file (Q01..Q12). Money in KRW,
 percentages in percent (e.g. 4.25 for 4.25%), customer ids as the numeric customer_id.</pre></section>
 <section id="settings"><h2>Settings</h2><p>This case has no settings: one fixed problem at every difficulty.</p></section>
@@ -86,7 +86,9 @@ questions.md  <span class='muted'>1,051 B</span>
 refunds.csv  <span class='muted'>41,504 B</span></pre>
 <h3>Hidden inputs</h3><p class='muted'>(none)</p>
 <h3>Reference score per setting</h3>
-<div class="scroll"><table><thead><tr><th>Setting</th><th>Objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>9.0</td><td>correct=9, of=12, wrong=[&#x27;Q06&#x27;, &#x27;Q07&#x27;, &#x27;Q09&#x27;]</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
+<p class="muted">Quality is normalized per setting: the baseline (the simplest valid deliverable) is 0, the reference
+is 1, and better than the reference goes above 1 (full credit at the policy's quality cap).</p>
+<div class="scroll"><table><thead><tr><th>Setting</th><th>Reference objective</th><th>Baseline objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>9.0</td><td>–</td><td>correct=9, of=12, wrong=[&#x27;Q06&#x27;, &#x27;Q07&#x27;, &#x27;Q09&#x27;]</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
 <h3>One answer folder: <code>gt/default</code></h3>
 <p class='muted'>3 files, 393 bytes</p><pre class='tree'>reference/answers.json  <span class='muted'>236 B</span>
 score.json  <span class='muted'>154 B</span>

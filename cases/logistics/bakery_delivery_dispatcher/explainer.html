@@ -50,7 +50,7 @@ select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);borde
 <section id="request"><h2>What the agent is asked</h2>
 <p class="muted">The client's request, the only text the agent gets up front. It is the same in every setting.</p>
 <details><summary>中文</summary><p>明天（周一）早上，中央厨房要用我们的 4 辆车把面包送到所有门店。能不能帮我排一下哪辆车去哪些店，让门店按时拿到托盘，司机也别在外面跑太久？门店清单和车辆清单在附件里。</p></details><details open><summary>English</summary><p>Tomorrow (Monday) morning our central kitchen has to get the bread out to all our cafés with our four vans. Can you plan who drives where, so the cafés get their trays in time and the drivers aren't out longer than they need to be? The café list and the van list are attached.</p></details><details open><summary>한국어</summary><p>내일(월요일) 아침에 중앙 주방에서 저희 차량 4대로 모든 매장에 빵을 배송해야 합니다. 매장에 트레이가 늦지 않게 도착하고, 기사님들이 필요 이상으로 오래 운행하지 않도록 어느 차가 어디로 갈지 짜 주실 수 있을까요? 매장 목록과 차량 목록을 첨부합니다.</p></details><details><summary>日本語</summary><p>明日（月曜日）の朝、セントラルキッチンから当社の車両4台で全店舗にパンを届けなければなりません。店舗にトレーが間に合うように、またドライバーが必要以上に長く走らなくて済むように、どの車がどこを回るか組んでもらえますか。店舗一覧と車両一覧を添付します。</p></details><details><summary>Español</summary><p>Mañana (lunes) por la mañana nuestra cocina central tiene que repartir el pan a todas nuestras cafeterías con nuestras cuatro furgonetas. ¿Puede planificar qué furgoneta va a cada sitio, para que las cafeterías reciban sus bandejas a tiempo y los conductores no estén fuera más de lo necesario? Le adjunto la lista de cafeterías y la de furgonetas.</p></details>
-<h3>Deliverable spec (agent-visible)</h3><pre>routes.json = {&quot;routes&quot;: [{&quot;van&quot;: &quot;&lt;van id, e.g. V1&gt;&quot;, &quot;depart&quot;: &quot;HH:MM (optional, default 05:00)&quot;,
+<h3>Deliverable spec (shown to the extractor that reshapes the agent's files, not to the agent)</h3><pre>routes.json = {&quot;routes&quot;: [{&quot;van&quot;: &quot;&lt;van id, e.g. V1&gt;&quot;, &quot;depart&quot;: &quot;HH:MM (optional, default 05:00)&quot;,
                            &quot;stops&quot;: [&quot;&lt;cafe id in visiting order, e.g. C03&gt;&quot;, ...]}, ...]}
 One entry per van that is used; ids exactly as in the data.</pre></section>
 <section id="settings"><h2>Settings</h2><p>This case has no settings: one fixed problem at every difficulty.</p></section>
@@ -78,7 +78,9 @@ folder per setting. <code>validate-case</code> checks the files still match the 
 vans.csv  <span class='muted'>74 B</span></pre>
 <h3>Hidden inputs</h3><p class='muted'>(none)</p>
 <h3>Reference score per setting</h3>
-<div class="scroll"><table><thead><tr><th>Setting</th><th>Objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>625.5512902630212</td><td>late_minutes=10.94, route_minutes=592.74</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
+<p class="muted">Quality is normalized per setting: the baseline (the simplest valid deliverable) is 0, the reference
+is 1, and better than the reference goes above 1 (full credit at the policy's quality cap).</p>
+<div class="scroll"><table><thead><tr><th>Setting</th><th>Reference objective</th><th>Baseline objective</th><th>Metrics (first four)</th><th>Folder</th></tr></thead><tbody><tr><td><code>default</code></td><td>625.5512902630212</td><td>–</td><td>late_minutes=10.94, route_minutes=592.74</td><td><a href="dataset/gt/default/">open</a></td></tr></tbody></table></div>
 <h3>One answer folder: <code>gt/default</code></h3>
 <p class='muted'>3 files, 734 bytes</p><pre class='tree'>reference/routes.json  <span class='muted'>599 B</span>
 score.json  <span class='muted'>132 B</span>
