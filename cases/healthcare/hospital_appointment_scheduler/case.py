@@ -1,237 +1,1503 @@
-"""Outpatient appointment booking (original FDE-Bench v2 case).
+"""Daily outpatient appointment scheduling through a program (original FDE-Bench v2 case).
 
-A mid-size outpatient hospital has a backlog of appointment requests and asks
-for them to be booked into the doctors' free slots over the next two weeks.
-The request only says "book them"; what decides validity and quality is in the
-requirements and must be asked for. One dataset serves nine settings (tiers x
-rule sets); the setting decides which rules apply and their parameters:
+A mid-size outpatient hospital wants its booking office to run on a program. Every working day the program
+gets the day's new appointment requests, the notices of the day (patient cancellations, a doctor falling ill
+or going to a conference, an interpreter away, notes from staff), today's attendance and the current booking
+book and waitlist (the effect of its own earlier decisions). It books new requests into the doctors' free
+20-minute slots of the next ten working days, re-books appointments a notice affects, fills freed slots from
+the waitlist, and returns the day's status table (per department: free slots, slots held back, waitlist).
+The agent delivers `scheduler.py:on_day(day)`; the evaluator calls it once per working day of a HIDDEN period
+of 20 working days (9 November - 4 December 2026), in order, in one isolated process
+(casekit.program_session).
 
-  easy    the booking core: day/month/year dates, two slots for a new patient,
-          the urgent window, a clinic closed on a municipal holiday, follow-ups
-          with the previous doctor (a bendable habit; one orthopedist is on
-          leave in week 1), in-person interpreters capped per day for new
-          patients with paid remote interpreting for follow-ups, and the
-          waiting / unbooked costs
-  medium  + referral letters that expire (new patients) and a fasting blood
-          test that must be done at least one working day before the visit,
-          with a daily lab capacity
-  hard    + no-shows: each booked patient stays away with some probability
-          (a hidden per-patient rate, plus one point per working day of lead
-          time; past attendance is in the data) and follow-ups may be
-          overbooked two to a slot, a few per doctor session; quality adds the
-          expected cost of idle slots and of overbooked patients colliding
+The key of the case is slot utilization: as many patients seen as possible in the doctors' time, by
+re-filling cancelled and released slots from the waitlist (and, in hard, by overbooking follow-ups of
+patients who often stay away), without breaking a rule. Quality = 0.8 x operations value / the reference
+program's operations value + 0.2 x status-table accuracy. The operations value counts 10 per expected
+patient-slot seen on the period's clinic days, minus waiting, unbooked requests, moves of patients'
+appointments and (hard) overbooking collisions and extra trips.
 
-  rule sets A/B/C: which clinic closes on the holiday, the urgent window, the
-          number of interpreters, the "soon" window, the lab cap and the
-          overbooking cap (case.yaml)
+One world and one hidden period for every setting: the same doctors, requests, cancellations intents,
+notices and notes. The tier decides which rules are in force:
+
+  easy    the daily booking core: new patient = 2 consecutive slots, follow-up = 1; department; the urgent
+          window; the urgent reserve (first two morning slots held for urgent requests until the day before);
+          a clinic closed on the City Day holiday; in-person interpreters per day for new patients; the
+          notice period for moving an appointment; the waitlist priority order; follow-ups with the same
+          doctor (bendable); the status table. Absence and interpreter notices, referral dates, blood tests,
+          no-shows and duplicates are out of scope.
+  medium  + referral letters that expire, a fasting blood test >= 1 working day before the visit with a daily
+          lab cap, doctor absences (the absent doctor's appointments must be moved, with the notice period)
+          and an interpreter's absence (one fewer interpreter that day)
+  hard    + no-shows (hidden per-patient rates rising with lead time; expected-value scoring), overbooking of
+          follow-ups (two to a slot, a cap per doctor session), duplicate requests (one appointment per
+          patient and department) and extra trips of patients with several departments
+
+The rule set (A / B / C) sets the parameters: which clinic closes on the holiday, the urgent window, the
+interpreters per day, the lab cap, the overbooking cap, the notice period for moves and the waitlist order.
 """
 
 from __future__ import annotations
 
+import copy
 import datetime as dt
+import hashlib
+import importlib.util
+import json
 import random
+import shutil
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from fdebench2.casekit import Fatal, labels, read_csv, write_csv
+from fdebench2.casekit import Fatal, labels, program_session, write_csv
 
-# ── world ────────────────────────────────────────────────────────────────────
+ENTRYPOINT = "scheduler.py:on_day"
+REFERENCE = Path(__file__).resolve().parent / "reference" / "scheduler.py"
 
-START = dt.date(2026, 11, 16)                                   # Monday
-DAYS = [START + dt.timedelta(days=i) for i in range(14) if (START + dt.timedelta(days=i)).weekday() < 5]
-DAY_INDEX = {d: i for i, d in enumerate(DAYS)}
-HOLIDAY = dt.date(2026, 11, 23)                                 # municipal holiday: one clinic closes (rule set)
-LEAVE_DOCTOR, LEAVE_DAYS = "D11", set(DAYS[:5])                  # an orthopedist on leave in week 1
+# ── calendar and the hospital's constants ────────────────────────────────────
+
+BASE = dt.date(2026, 1, 5)              # a Monday: working-day arithmetic counts Monday-Friday from here
+FIRST_DAY = dt.date(2026, 11, 9)        # day 0 of the hidden period (a Monday)
+N_DAYS = 20                             # calls: days 0..19 (9 Nov - 4 Dec)
+HORIZON = 10                            # bookings on days d+1 .. d+10
+N_CAL = N_DAYS + HORIZON                # calendar days 0..29
+HOLIDAY = 10                            # Monday 23 November 2026, City Day: one clinic closes (rule set)
+SCORED = range(1, N_DAYS + 1)           # clinic days whose appointments are final at the end (1..20)
 SLOT = 20
-AM = [9 * 60 + SLOT * k for k in range(9)]                      # 09:00 .. 11:40
-PM = [13 * 60 + SLOT * k for k in range(12)]                    # 13:00 .. 16:40
-NOON = 12 * 60
-REMOTE_COST = 3                                                  # a follow-up interpreted remotely
-URGENT_MIN, URGENT_MAX = 1, 3                                    # the urgent window across rule sets (days)
+AM = tuple(540 + SLOT * k for k in range(9))      # 09:00 .. 11:40
+PM = tuple(780 + SLOT * k for k in range(9))      # 13:00 .. 15:40
+RESERVE = (540, 560)                    # urgent reserve: the first two slots of every morning session
+DEPTS = ("IM", "CARD", "DERM", "ORTH", "PED")
+CLOSABLE = ("DERM", "ORTH", "PED")
+LANGS = ("L0", "F1", "F2", "F3", "F4")  # L0 = the local language
+URGENCY = ("U", "S", "R")
 WEIGHT = {"U": 3, "S": 2, "R": 1}
-UNSEEN_PENALTY = 60                                              # a request not booked (hard: or not attended)
-SOON_LATE_PENALTY = 20
-LEAD0 = 2                                                        # requests were taken 2 working days before 16 Nov
-LEAD_SLOPE = 0.01                                                # no-show rate + 1 point per working day of lead
-HIST_LEAD = 5                                                    # past appointments had ~5 working days of lead
-COLLISION_COST = 25                                              # both patients of an overbooked slot turn up
-IDLE_COST = 10                                                   # a booked slot whose patient does not turn up
-INTERP_DETOUR = 1                                                # reference: wait 1 day rather than use an interpreter
-DEPTS = ["IM", "CARD", "DERM", "ORTH", "PED"]
-LANGS = ["L0", "F1", "F2", "F3", "F4"]                           # L0 = the local language
+SEEN_VALUE = 10.0                       # per patient-slot seen on a clinic day of the period
+WAIT_COST = 0.4                         # per working day of waiting x urgency weight
+UNBOOKED_COST = 10.0                    # per request (need) never booked
+MOVE_COST = 4.0                         # per change the hospital makes to a patient's appointment
+COLLISION_COST = 12.0                   # hard: both patients of an overbooked slot turn up
+TRIP_COST = 3.0                         # hard: an extra hospital trip of a patient with several departments
+OPS_WEIGHT, TABLE_WEIGHT = 0.8, 0.2
+LEAD_SLOPE = 0.01                       # hard: no-show rate + 1 point per working day of lead time
+HIST_LEAD = 5                           # the patients' attendance counts were measured at ~5 days of lead
+CALL_TIMEOUT = 10.0
+TOTAL_TIMEOUT = 600.0
+
+# Notices (data: the same in every setting; which apply is the tier's business).
+ABSENCES = (("D13", 4, tuple(range(5, 15)), "illness"),      # notice day, absent days, reason
+            ("D05", 9, (15, 16, 17, 18), "conference"))
+INTERP_NOTICE, INTERP_DAY = 11, 13
+HEAD_NOTE_DAY, HEAD_DOCTOR = 2, "D10"
+NOTES_PLAN = ((7, "ORTH"), (14, "ORTH"), (17, "DERM"), (18, "ORTH"))   # the director's-acquaintance notes
+
+
+def wd_index(date: dt.date) -> int | None:
+    n = (date - BASE).days
+    w, r = divmod(n, 7)
+    return None if r >= 5 else w * 5 + r
+
+
+def wd_date(i: int) -> dt.date:
+    w, r = divmod(i, 5)
+    return BASE + dt.timedelta(days=7 * w + r)
+
+
+DAY0 = wd_index(FIRST_DAY)
+
+
+def day_date(t: int) -> dt.date:
+    return wd_date(DAY0 + t)
+
+
+_ISO: dict = {}
+
+
+def iso(t: int) -> str:
+    if t not in _ISO:
+        _ISO[t] = day_date(t).isoformat()
+    return _ISO[t]
+
+
+def parse_day(s) -> int | None:
+    """A working-day index (relative to day 0) from 'YYYY-MM-DD'; None for anything else or a weekend."""
+    if not isinstance(s, str):
+        return None
+    try:
+        i = wd_index(dt.date.fromisoformat(s.strip()))
+    except ValueError:
+        return None
+    return None if i is None else i - DAY0
+
+
+def hhmm(m: int) -> str:
+    return f"{m // 60:02d}:{m % 60:02d}"
+
+
+def parse_start(s) -> int | None:
+    if not isinstance(s, str) or len(s.strip()) != 5 or s.strip()[2] != ":":
+        return None
+    try:
+        h, m = int(s.strip()[:2]), int(s.strip()[3:])
+    except ValueError:
+        return None
+    return h * 60 + m if 0 <= h < 24 and 0 <= m < 60 else None
+
+
+# ── the world ────────────────────────────────────────────────────────────────
+
+DOCTOR_PLAN = [  # (department, languages besides L0, weekly sessions (weekday, half))
+    ("IM", ["F1"], [(0, "AM"), (1, "PM"), (3, "AM")]),
+    ("IM", [], [(0, "PM"), (2, "AM"), (4, "AM")]),
+    ("IM", ["F2"], [(1, "AM"), (3, "PM"), (4, "PM")]),
+    ("IM", [], [(2, "PM"), (4, "PM")]),
+    ("CARD", ["F1"], [(0, "AM"), (2, "PM"), (3, "AM")]),
+    ("CARD", [], [(1, "AM"), (4, "AM")]),
+    ("CARD", ["F3"], [(2, "AM"), (3, "PM"), (4, "PM")]),
+    ("DERM", ["F1"], [(0, "AM"), (1, "PM"), (2, "AM"), (4, "AM")]),
+    ("DERM", [], [(1, "AM"), (3, "AM"), (3, "PM")]),
+    ("ORTH", ["F4"], [(0, "AM"), (1, "PM"), (2, "AM"), (3, "PM")]),
+    ("ORTH", [], [(1, "AM"), (3, "AM"), (4, "PM")]),
+    ("ORTH", ["F1", "F2"], [(0, "PM"), (2, "PM"), (4, "AM")]),
+    ("PED", ["F1"], [(0, "PM"), (1, "AM"), (2, "PM"), (3, "AM")]),
+    ("PED", [], [(0, "AM"), (2, "AM"), (3, "PM"), (4, "AM")]),
+]
+DEMAND = {"IM": 14.5, "CARD": 9.0, "DERM": 10.0, "ORTH": 15.0, "PED": 9.0}   # requests per day
+NEW_SHARE = 0.45
+TEST_SHARE = {"IM": 0.2, "CARD": 0.2, "PED": 0.08}
+PREV_WEIGHT = {"D11": 2.5, "D13": 2.5, "D05": 2.0}
+N_WAIT0 = 45
+N_DUPLICATES = 10
+N_MULTI = 10
+CANCEL_SHARE = 0.09
 
 
 @dataclass
 class Doctor:
     id: str
     dept: str
-    langs: list[str]
-    sessions: list[tuple[int, str]]      # (weekday 0-4, "AM"|"PM")
+    langs: tuple
+    sessions: frozenset          # {(weekday, half)}
 
 
 @dataclass
-class Request:
+class Req:
     id: str
     patient: str
     dept: str
-    prev: str | None                     # previous doctor for a follow-up, None for a new patient
-    urgency: str                         # U | S | R
-    note: int
+    prev: str | None             # previous doctor of a follow-up; None for a new patient
+    urgency: str
     lang: str
-    earliest: dt.date
-    referral: dt.date | None = None      # medium+: last day the new patient's referral letter is valid
-    test: bool = False                   # medium+: needs a fasting blood test >= 1 working day before the visit
-    base_p: float = 0.0                  # hard: hidden no-show rate at zero lead time
-    past: int = 0                        # hard: past appointments at this hospital
-    missed: int = 0                      # hard: of which not attended
+    recv: int                    # working day received (relative to day 0; negative before the period)
+    earliest: int
+    referral: int | None = None  # new patients: last working day the referral letter is valid
+    test: bool = False           # needs a fasting blood test before the visit
+    note: int = 0                # triage note index
+    notes: list = field(default_factory=list)
+    base_p: float = 0.0          # hidden no-show rate at zero lead time
+    past: int = 0
+    missed: int = 0
+    cancel_k: int = 0            # the patient cancels k working days before the appointment (0 = never)
+    dup_of: str = ""             # a planted duplicate of this request (same patient and department)
 
     @property
     def new(self) -> bool:
         return self.prev is None
 
     @property
-    def ref_day(self) -> int:
-        """Working-day index from which waiting is counted (the horizon start if the earliest date is before it)."""
-        return DAY_INDEX[max(self.earliest, START)]
+    def ref(self) -> int:
+        """The first day the request can be seen: its earliest date, or the day after it was received."""
+        return max(self.earliest, self.recv + 1)
 
-    def last_day(self, urgent_days: int) -> int:
-        """Last working-day index the request may be booked on (urgent window, referral expiry)."""
-        last = min(self.ref_day + urgent_days, len(DAYS) - 1) if self.urgency == "U" else len(DAYS) - 1
-        if self.referral is not None:
-            last = min(last, max((i for i, d in enumerate(DAYS) if d <= self.referral), default=-1))
-        return last
+
+@dataclass
+class Appt:
+    doctor: str
+    day: int
+    start: int
+    n: int                       # slots: 2 for a new patient, 1 for a follow-up
+    test: int | None = None      # blood-test day
+    booked_on: int = 0           # the call day of the latest booking or change (lead time for no-shows)
+
+    def slots(self) -> list[int]:
+        return [self.start + SLOT * k for k in range(self.n)]
 
 
 @dataclass
 class World:
-    doctors: list[Doctor]
-    free: dict                           # (doctor id, date) -> sorted list of free slot starts (minutes)
-    requests: list[Request]
-    _cache: dict = field(default_factory=dict)
+    doctors: list
+    reqs: list = field(default_factory=list)
+    initial_book: dict = field(default_factory=dict)     # request id -> Appt (days 0..9)
+    initial_wait: list = field(default_factory=list)     # request ids waiting at day 0
+    by_day: dict = field(default_factory=dict)           # call day -> new request ids
+    notices: dict = field(default_factory=dict)          # call day -> static notices
+    past_appts: list = field(default_factory=list)       # history: (Req, Appt, outcome)
+    past_reqs: list = field(default_factory=list)
+    sample: dict = field(default_factory=dict)
+    _cache: dict = field(default_factory=dict, repr=False)
 
-    def doctor(self, did: str) -> Doctor | None:
-        return next((d for d in self.doctors if d.id == did), None)
+    def __post_init__(self):
+        self.doc = {d.id: d for d in self.doctors}
+        self.req: dict = {}
 
-    def request(self, rid: str) -> Request | None:
-        if "req" not in self._cache:
-            self._cache["req"] = {r.id: r for r in self.requests}
-        return self._cache["req"].get(rid)
+    def sessions(self, doc: str, t: int) -> list:
+        """[(half, starts)] of the doctor's sessions on calendar day t, as the calendar lists them."""
+        key = ("sess", doc, t)
+        if key not in self._cache:
+            wd = day_date(t).weekday()
+            out = [(h, AM if h == "AM" else PM) for h in ("AM", "PM") if (wd, h) in self.doc[doc].sessions]
+            self._cache[key] = out
+        return self._cache[key]
+
+    def slot_half(self, doc: str, t: int) -> dict:
+        key = ("half", doc, t)
+        if key not in self._cache:
+            self._cache[key] = {s: h for h, starts in self.sessions(doc, t) for s in starts}
+        return self._cache[key]
+
+
+def no_show(r: Req, lead: int) -> float:
+    """True probability that the patient stays away from an appointment booked `lead` working days ahead."""
+    return min(0.9, r.base_p + LEAD_SLOPE * max(lead, 0))
 
 
 class _View:
-    """The world as one setting sees it: which tier's rules apply and the rule set's parameters."""
+    """The world as one setting's rules see it."""
 
     def __init__(self, world: World, setting):
         self._w, self.setting = world, setting
         self.medium, self.hard = setting.at_least("medium"), setting.at_least("hard")
+        self.closed = str(setting["closed_dept"])
         self.urgent_days = int(setting["urgent_days"])
         self.interpreters = int(setting["interpreters_per_day"])
         self.lab_cap = int(setting["lab_cap"])
-        self.ob_max = int(setting["overbooked_per_session"])
-        self.soon_days = int(setting["soon_days"])
-        self.closed_dept = setting["closed_dept"]
+        self.ob_cap = int(setting["overbooked_per_session"])
+        self.notice = int(setting["move_notice_days"])
+        self.order = str(setting["waitlist_order"])
         self._cache = world._cache.setdefault(("setting", setting.label), {})
 
     def __getattr__(self, name):
         return getattr(self._w, name)
 
+    def absent(self, doc: str, t: int, d: int) -> bool:
+        """Medium+: the doctor is known (by call day d) to be away on day t."""
+        if not self.medium:
+            return False
+        return any(doc == a and t in days and d >= nd for a, nd, days, _ in ABSENCES)
 
-def no_show(req: Request, day: dt.date) -> float:
-    """True probability that the patient does not turn up on `day` (hard tier)."""
-    return min(0.9, req.base_p + LEAD_SLOPE * (DAY_INDEX[day] + LEAD0))
+    def closed_on(self, dept: str, t: int) -> bool:
+        return t == HOLIDAY and dept == self.closed
+
+    def interp_cap(self, t: int, d: int) -> int:
+        return self.interpreters - (1 if self.medium and t == INTERP_DAY and d >= INTERP_NOTICE else 0)
+
+    def deadline(self, r: Req) -> int:
+        return r.ref + self.urgent_days
+
+    def prio(self, r: Req) -> tuple:
+        """Waitlist priority (smaller first)."""
+        if self.order == "received":
+            return (0 if r.urgency == "U" else 1, r.recv, r.id)
+        if self.order == "urgency_earliest":
+            return (URGENCY.index(r.urgency), r.earliest, r.id)
+        return (URGENCY.index(r.urgency), r.recv, r.id)
+
+    def dup(self, r: Req) -> bool:
+        return self.hard and bool(r.dup_of)
 
 
-DOCTOR_PLAN = [  # (dept, foreign languages, sessions)
-    ("IM", ["F1"], [(0, "AM"), (1, "PM"), (3, "PM")]),
-    ("IM", [], [(0, "PM"), (2, "PM"), (4, "PM")]),
-    ("IM", ["F2"], [(1, "AM"), (2, "PM"), (4, "PM")]),
-    ("IM", [], [(3, "AM"), (3, "PM"), (4, "AM")]),
-    ("CARD", ["F1"], [(0, "PM"), (2, "AM"), (3, "PM")]),
-    ("CARD", [], [(1, "PM"), (4, "AM")]),
-    ("CARD", ["F3"], [(0, "AM"), (2, "PM"), (4, "PM")]),
-    ("DERM", ["F1"], [(0, "AM"), (0, "PM"), (2, "PM"), (4, "PM")]),
-    ("DERM", [], [(0, "PM"), (1, "PM"), (3, "AM"), (3, "PM")]),
-    ("ORTH", ["F4"], [(0, "PM"), (2, "AM"), (4, "PM")]),
-    ("ORTH", [], [(1, "AM"), (1, "PM"), (3, "PM")]),
-    ("ORTH", ["F1", "F2"], [(2, "PM"), (4, "AM")]),
-    ("PED", ["F1"], [(0, "PM"), (1, "AM"), (2, "PM"), (3, "PM")]),
-    ("PED", [], [(1, "PM"), (3, "AM"), (4, "PM")]),
-]
-DEPT_WEIGHT = {"IM": 0.28, "CARD": 0.16, "DERM": 0.2, "ORTH": 0.18, "PED": 0.18}
-PREV_WEIGHT = {"D11": 3}                                         # the orthopedist on leave has a long follow-up list
-TEST_SHARE = {"IM": 0.45, "CARD": 0.45, "PED": 0.15}
-N_REQUESTS = 320
-TAKEN = 0.38
+# ── generation ───────────────────────────────────────────────────────────────
+
+def _base_p(rng: random.Random) -> float:
+    return round(rng.betavariate(4, 8) if rng.random() < 0.15 else rng.betavariate(2, 14), 4)
+
+
+def _history_counts(rng: random.Random, r: Req) -> None:
+    if not r.new or rng.random() < 0.3:
+        r.past = rng.randint(2, 14)
+        r.missed = sum(rng.random() < r.base_p + LEAD_SLOPE * HIST_LEAD for _ in range(r.past))
+
+
+def _cancel(rng: random.Random, r: Req) -> None:
+    if rng.random() < CANCEL_SHARE:
+        r.cancel_k = rng.choices((1, 2, 3, 4), weights=(35, 30, 20, 15))[0]
+
+
+def _lang(rng: random.Random) -> str:
+    return "L0" if rng.random() < 0.8 else rng.choice(LANGS[1:])
+
+
+def _am_doctors(w: World, dept: str, t: int) -> list[str]:
+    """Doctors of the department with a morning session on day t that no absence or closure can touch."""
+    if t >= N_CAL or (t == HOLIDAY and dept in CLOSABLE):
+        return []
+    return [d.id for d in w.doctors if d.dept == dept and any(h == "AM" for h, _ in w.sessions(d.id, t))
+            and not any(d.id == a and t in days for a, _, days, _ in ABSENCES)]
+
+
+def _initial(w: World, rng: random.Random, rp: random.Random) -> list[Req]:
+    """The booking book at day 0 (appointments on days 0..9 booked before the period) and its requests."""
+    reqs, interp, lab = [], {}, {}
+    for t in range(HORIZON):
+        occ = 0.97 - 0.06 * t
+        for doc in w.doctors:
+            for half, starts in w.sessions(doc.id, t):
+                i = 0
+                while i < len(starts):
+                    s = starts[i]
+                    held = half == "AM" and s in RESERVE and t >= 1
+                    if held or rng.random() >= occ:
+                        i += 1
+                        continue
+                    new = i + 1 < len(starts) and rng.random() < NEW_SHARE and not (
+                        half == "AM" and starts[i + 1] in RESERVE and t >= 1)
+                    urg = rng.choices(("S", "R"), weights=(30, 70))[0]
+                    recv = -rng.randint(1, 10)
+                    earliest = recv + 1 if rng.random() < 0.8 else rng.randint(recv + 1, t)
+                    lang = _lang(rng)
+                    if new and lang not in doc.langs:
+                        if interp.get(t, 0) >= 1:
+                            lang = "L0"
+                        else:
+                            interp[t] = interp.get(t, 0) + 1
+                    r = Req("", "", doc.dept, None if new else doc.id, urg, lang, recv, earliest,
+                            referral=(t + rng.randint(30, 60)) if new else None, note=rng.randrange(3))
+                    booked = rng.randint(max(recv, -10), -1)
+                    test = None
+                    if rng.random() < TEST_SHARE.get(doc.dept, 0.0):
+                        lo = max(earliest, booked + 1)
+                        if lo <= t - 1:
+                            test = rng.randint(lo, t - 1)
+                            if test >= 1 and lab.get(test, 0) >= 3:
+                                test = None
+                            elif test >= 1:
+                                lab[test] = lab.get(test, 0) + 1
+                    r.test = test is not None
+                    r.base_p = _base_p(rp)
+                    _history_counts(rp, r)
+                    _cancel(rp, r)
+                    reqs.append(r)
+                    w.initial_book[id(r)] = Appt(doc.id, t, s, 2 if new else 1, test, booked)
+                    i += 2 if new else 1
+    return reqs
+
+
+def _waiting(w: World, rng: random.Random, rp: random.Random) -> list[Req]:
+    out = []
+    for _ in range(N_WAIT0):
+        dept = rng.choices(DEPTS, weights=(20, 8, 30, 35, 7))[0]
+        new = rng.random() < NEW_SHARE
+        docs = [d.id for d in w.doctors if d.dept == dept]
+        recv = -rng.randint(1, 8)
+        r = Req("", "", dept, None if new else rng.choices(docs, [PREV_WEIGHT.get(x, 1) for x in docs])[0],
+                rng.choices(("S", "R"), weights=(35, 65))[0], _lang(rng), recv, recv + 1, note=rng.randrange(3))
+        if new:
+            r.referral = recv + 1 + rng.randint(5, 14) if rng.random() < 0.3 else recv + 60
+        r.test = rng.random() < TEST_SHARE.get(dept, 0.0)
+        r.base_p = _base_p(rp)
+        _history_counts(rp, r)
+        _cancel(rp, r)
+        out.append(r)
+    return out
+
+
+def _new_request(w: World, rng: random.Random, rp: random.Random, d: int, dept: str, urgent: bool) -> Req:
+    docs = [x.id for x in w.doctors if x.dept == dept]
+    if urgent:
+        new = rng.random() < 0.5
+        prev = None if new else rng.choice(_am_doctors(w, dept, d + 1))
+        r = Req("", "", dept, prev, "U", "L0", d, d + 1, note=rng.randrange(3))
+        if new:
+            r.referral = d + 60
+    else:
+        new = rng.random() < NEW_SHARE
+        prev = None if new else rng.choices(docs, [PREV_WEIGHT.get(x, 1) for x in docs])[0]
+        earliest = d + 1 if rng.random() < 0.7 else d + rng.randint(2, 12)
+        r = Req("", "", dept, prev, rng.choices(("S", "R"), weights=(28, 72))[0], _lang(rng), d, earliest,
+                note=rng.randrange(3))
+        if new:
+            r.referral = earliest + rng.randint(2, 12) if rng.random() < 0.3 else d + 60
+        r.test = rng.random() < TEST_SHARE.get(dept, 0.0)
+    r.base_p = _base_p(rp)
+    _history_counts(rp, r)
+    _cancel(rp, r)
+    return r
+
+
+ACQUAINTANCE = (
+    "The hospital director's acquaintance - please book tomorrow morning.",
+    "A personal friend of our director. Tomorrow morning, please, whatever it takes.",
+    "Director's office: please fit this patient in tomorrow morning.",
+    "Acquaintance of the director - tomorrow morning if at all possible, thank you.",
+)
+HEAD_NOTE = ("Please keep my afternoon clinics free for my own patients from now on - do not fill them from the "
+             "waitlist. I will tell the office whom to book there.")
+
+
+def _period(w: World, rng: random.Random, rp: random.Random) -> list[Req]:
+    out = []
+    for d in range(N_DAYS):
+        for dept in DEPTS:
+            mean = DEMAND[dept] * (1.15 if day_date(d).weekday() == 0 else 1.0)
+            n = max(0, round(rng.gauss(mean, 2.0)))
+            urgent = rng.random() < 0.16 and bool(_am_doctors(w, dept, d + 1)) and n > 0
+            for k in range(n):
+                out.append(_new_request(w, rng, rp, d, dept, urgent and k == 0))
+    return out
+
+
+def _plant(w: World, rng: random.Random, rp: random.Random, period: list[Req]) -> list[Req]:
+    extra = []
+    plain = [r for r in period if r.urgency != "U" and r.recv <= 16]
+    picked = rng.sample(plain, N_DUPLICATES + N_MULTI)
+    for r in picked[:N_DUPLICATES]:                  # duplicates: the same need requested again
+        recv = min(N_DAYS - 1, r.recv + rng.randint(0, 3))
+        x = Req("", "", r.dept, r.prev, r.urgency, r.lang, recv, max(r.earliest, recv + 1), r.referral, r.test,
+                rng.randrange(3), base_p=r.base_p, past=r.past, missed=r.missed)
+        x.dup_of = "pending"
+        x._orig = r
+        extra.append(x)
+    for r in picked[N_DUPLICATES:]:                  # one patient, a second department the same day
+        dept = rng.choice([x for x in DEPTS if x != r.dept])
+        x = Req("", "", dept, None, rng.choice(("S", "R")), r.lang, r.recv, r.earliest, r.recv + 60, False,
+                rng.randrange(3), base_p=r.base_p, past=r.past, missed=r.missed)
+        x._same = r
+        extra.append(x)
+    for k, (d, dept) in enumerate(NOTES_PLAN):       # the director's acquaintances
+        x = Req("", "", dept, None, "R", "L0", d, d + 1, d + 60, False, rng.randrange(3))
+        x.base_p = _base_p(rp)
+        x.notes = [{"author_role": "director_office", "request": "book_tomorrow_morning",
+                    "text": ACQUAINTANCE[k]}]
+        extra.append(x)
+    return extra
 
 
 def build_world(seed: int) -> World:
-    """Everything every setting needs (the data is the same in all of them)."""
-    rng = random.Random(seed)
-    doctors = [Doctor(f"D{i + 1:02d}", dept, ["L0"] + fl, sess) for i, (dept, fl, sess) in enumerate(DOCTOR_PLAN)]
-    free = {}
-    for doc in doctors:
-        for day in DAYS:
-            starts = []
-            for wd, half in doc.sessions:
-                if wd == day.weekday():
-                    starts += AM if half == "AM" else PM
-            # Part of every session is already taken by appointments booked earlier.
-            kept = [s for s in starts if rng.random() >= TAKEN]
-            if kept and not (doc.id == LEAVE_DOCTOR and day in LEAVE_DAYS):
-                free[(doc.id, day)] = sorted(kept)
-    by_dept = {d: [doc for doc in doctors if doc.dept == d] for d in DEPTS}
-    early = [START - dt.timedelta(days=k) for k in range(1, 8) if (START - dt.timedelta(days=k)).weekday() < 5]
+    """Everything every setting needs (the data and the hidden period are the same in all of them)."""
+    w = World([Doctor(f"D{i + 1:02d}", dept, tuple(["L0"] + fl), frozenset(sess))
+               for i, (dept, fl, sess) in enumerate(DOCTOR_PLAN)])
+    rp = random.Random(seed * 10 + 9)
+    booked = _initial(w, random.Random(seed * 10 + 1), rp)
+    waiting = _waiting(w, random.Random(seed * 10 + 2), rp)
+    period = _period(w, random.Random(seed * 10 + 3), rp)
+    extra = _plant(w, random.Random(seed * 10 + 4), rp, period)
+    past = _history(w, random.Random(seed * 10 + 5))
+    allr = booked + waiting + period + extra
+    ro = random.Random(seed * 10 + 6)
+    order = sorted(allr, key=lambda r: (r.recv, ro.random()))
+    patients = ro.sample(range(100000, 999999), len(allr) + len(past))
+    for k, r in enumerate(order, start=1):
+        r.id = f"Q{k:05d}"
+    for r, num in zip(order, patients):
+        r.patient = f"P{num}"
+    for r in allr:
+        if getattr(r, "_orig", None) is not None:
+            o = r._orig
+            del r._orig
+            r.patient = o.patient
+            first, second = sorted((o, r), key=lambda x: x.id)    # the later request is the duplicate
+            first.dup_of, second.dup_of = "", first.id
+        if getattr(r, "_same", None) is not None:
+            r.patient = r._same.patient
+            del r._same
+    for (r, a, o), num in zip(past, patients[len(allr):]):
+        r.patient = f"P{num}"
+    w.past_appts = past
+    w.reqs = order
+    w.req = {r.id: r for r in order}
+    w.initial_book = {r.id: w.initial_book[id(r)] for r in booked}
+    w.initial_wait = sorted(r.id for r in waiting)
+    for d in range(N_DAYS):
+        w.by_day[d] = [r.id for r in order if r.recv == d]
+    w.past_reqs = [r for r in order if r.recv < 0]
+    w.notices = _notices()
+    w.sample = _pilot(w, seed)
+    return w
 
-    def open_days(docs, days):
-        return [day for day in days for d in docs
-                if (d, day) in free and day != HOLIDAY]           # any clinic may be the one closed
 
-    requests = []
-    patients = rng.sample(range(10000, 99999), N_REQUESTS)
-    for i in range(N_REQUESTS):
-        dept = rng.choices(DEPTS, weights=[DEPT_WEIGHT[d] for d in DEPTS])[0]
-        urgency = rng.choices(["U", "S", "R"], weights=[0.08, 0.27, 0.65])[0]
-        follow = rng.random() < 0.5
-        prev = (rng.choices(by_dept[dept], weights=[PREV_WEIGHT.get(d.id, 1) for d in by_dept[dept]])[0].id
-                if follow else None)
-        lang = "L0" if rng.random() < 0.8 else rng.choice(LANGS[1:])
-        if urgency == "U":
-            # Urgent referrals came in recently: earliest date within the first week and a half of the horizon,
-            # chosen so that the follow-up doctor (if any) holds a clinic within the urgent window.
-            docs = [prev] if prev else [d.id for d in by_dept[dept]]
-            while True:
-                k = rng.randrange(0, 8)
-                if open_days(docs, DAYS[k:k + URGENT_MIN + 1]):
-                    break
-            earliest = DAYS[k]
+def _notices() -> dict:
+    out: dict = {}
+    for k, (doc, nd, days, why) in enumerate(ABSENCES, start=1):
+        out.setdefault(nd, []).append({
+            "notice_id": f"NT-A{k}", "type": "doctor_absence", "doctor_id": doc, "from": iso(days[0]),
+            "to": iso(days[-1]), "reason": why,
+            "text": ("Dr {doc} is off sick" if why == "illness" else "Dr {doc} is at a conference").format(doc=doc)
+            + f" from {iso(days[0])} to {iso(days[-1])} and holds no clinics then."})
+    out.setdefault(INTERP_NOTICE, []).append({
+        "notice_id": "NT-I1", "type": "interpreter_absence", "date": iso(INTERP_DAY),
+        "in_person_interpreters_change": -1,
+        "text": f"One of our in-person interpreters is away on {iso(INTERP_DAY)}."})
+    out.setdefault(HEAD_NOTE_DAY, []).append({
+        "notice_id": "NT-H1", "type": "staff_note", "author_role": "department_head", "doctor_id": HEAD_DOCTOR,
+        "text": HEAD_NOTE})
+    return out
+
+
+def _history(w: World, rng: random.Random) -> list:
+    """Four weeks of past appointments (12 Oct - 6 Nov) with their outcome, for the visible data."""
+    out = []
+    for t in range(-20, 0):
+        for doc in w.doctors:
+            for half, starts in w.sessions(doc.id, t):
+                i = 0
+                while i < len(starts):
+                    if rng.random() >= 0.92:
+                        i += 1
+                        continue
+                    new = i + 1 < len(starts) and rng.random() < NEW_SHARE
+                    urg = rng.choices(URGENCY, weights=(4, 28, 68))[0]
+                    recv = t - (1 if urg == "U" else rng.randint(1, 12))
+                    r = Req("", "", doc.dept, None if new else doc.id, urg, _lang(rng), recv, recv + 1,
+                            note=rng.randrange(3))
+                    if new:
+                        r.referral = recv + rng.randint(15, 60)
+                    r.test = urg != "U" and rng.random() < TEST_SHARE.get(doc.dept, 0.0)
+                    r.base_p = _base_p(rng)
+                    booked = rng.randint(max(recv, t - 12), t - 1)
+                    a = Appt(doc.id, t, starts[i], 2 if new else 1, t - 1 if r.test else None, booked)
+                    if rng.random() < 0.07:
+                        outcome = "cancelled"
+                    else:
+                        outcome = "missed" if rng.random() < no_show(r, t - booked) else "attended"
+                    out.append((r, a, outcome))
+                    i += 2 if new else 1
+    return out
+
+
+# ── what the program is sent each day ────────────────────────────────────────
+
+TRIAGE = {
+    "U": ("symptoms getting worse quickly, referring GP asks for a prompt review",
+          "abnormal test result flagged by the referring doctor", "severe pain not controlled by current medication"),
+    "S": ("symptoms ongoing for several weeks", "medication needs adjusting soon", "GP referral, should not wait long"),
+    "R": ("routine check", "annual review", "mild long-standing complaint"),
+}
+
+
+def req_json(w: World, r: Req) -> dict:
+    key = ("rj", r.id)
+    if key not in w._cache:
+        w._cache[key] = {
+            "request_id": r.id, "patient_id": r.patient, "received": iso(r.recv), "department": r.dept,
+            "visit_type": "new" if r.new else "follow_up", "previous_doctor": r.prev, "urgency": r.urgency,
+            "triage_note": TRIAGE[r.urgency][r.note], "preferred_language": r.lang,
+            "earliest_date": iso(r.earliest), "referral_valid_until": iso(r.referral) if r.referral is not None
+            else None, "pre_visit_test": r.test, "past_appointments": r.past, "missed_appointments": r.missed,
+            "notes": [dict(n) for n in r.notes]}
+    return w._cache[key]
+
+
+def doctors_json(w: World) -> list:
+    return [{"doctor_id": d.id, "department": d.dept, "languages": list(d.langs)} for d in w.doctors]
+
+
+def sessions_json(w: World, d: int) -> list:
+    key = ("sj", d)
+    if key not in w._cache:
+        w._cache[key] = [{"doctor_id": doc.id, "date": iso(t), "session": h, "starts": [hhmm(s) for s in starts]}
+                         for t in range(d + 1, d + HORIZON + 1) for doc in w.doctors
+                         for h, starts in w.sessions(doc.id, t)]
+    return w._cache[key]
+
+
+def _uniform(*parts) -> float:
+    h = hashlib.sha256("|".join(map(str, parts)).encode()).digest()
+    return int.from_bytes(h[:8], "big") / 2 ** 64
+
+
+# ── the engine and the evaluator ─────────────────────────────────────────────
+
+class Engine:
+    """One replay of the hidden period in one setting. begin(d) builds the day's input; end(d, out, err)
+    applies the program's actions, checks the rules and scores the status table."""
+
+    def __init__(self, view: _View):
+        self.v, self.w = view, view._w
+        self.appt = {rid: copy.copy(a) for rid, a in self.w.initial_book.items()}
+        self.occ: dict = {}
+        for rid, a in self.appt.items():
+            self._occupy(rid, a)
+        self.open = set(self.w.initial_wait)
+        self.closed: set = set()
+        self.past: dict = {}
+        self.moves = 0
+        self.freed: list = []            # slots freed by patients' cancellations (for the README's numbers)
+        self.held: dict = {}             # (patient, department) -> appointments that took place in the period
+        self.found: dict = {}
+        self.acc: list = []
+        self.m = {"booked": 0, "moved": 0, "released": 0, "cancellations": 0, "calls_failed": 0,
+                  "actions_rejected": 0}
+
+    def __deepcopy__(self, memo):
+        new = Engine.__new__(Engine)
+        memo[id(self)] = new
+        for k, val in self.__dict__.items():
+            new.__dict__[k] = val if k in ("v", "w") else copy.deepcopy(val, memo)
+        return new
+
+    # ── state ────────────────────────────────────────────────────────────────
+    def _occupy(self, rid: str, a: Appt) -> None:
+        for s in a.slots():
+            self.occ.setdefault((a.doctor, a.day, s), []).append(rid)
+
+    def _vacate(self, rid: str, a: Appt) -> None:
+        for s in a.slots():
+            lst = self.occ.get((a.doctor, a.day, s))
+            if lst and rid in lst:
+                lst.remove(rid)
+                if not lst:
+                    del self.occ[(a.doctor, a.day, s)]
+
+    def flag(self, rule: str, msg: str) -> None:
+        self.found.setdefault(rule, []).append(msg)
+
+    # ── one day ──────────────────────────────────────────────────────────────
+    def begin(self, d: int) -> dict:
+        w = self.w
+        attendance = []
+        for rid in sorted(r for r, a in self.appt.items() if a.day == d):
+            a = self.appt.pop(rid)
+            self._vacate(rid, a)
+            self.past[rid] = a
+            r = w.req[rid]
+            self.held[(r.patient, r.dept)] = self.held.get((r.patient, r.dept), 0) + 1
+            came = _uniform("att", rid, d) >= no_show(r, d - a.booked_on)
+            attendance.append({"request_id": rid, "patient_id": r.patient, "doctor_id": a.doctor,
+                               "start": hhmm(a.start), "attended": came})
+        notices = [dict(n) for n in w.notices.get(d, [])]
+        for rid in sorted(self.appt):
+            a, r = self.appt[rid], w.req[rid]
+            if r.cancel_k and max(a.booked_on + 1, a.day - r.cancel_k, 0) == d and d < a.day:
+                self._vacate(rid, a)
+                del self.appt[rid]
+                self.closed.add(rid)
+                self.m["cancellations"] += 1
+                self.freed.extend((a.doctor, a.day, s) for s in a.slots())
+                notices.append({"notice_id": f"CX-{rid}", "type": "cancellation", "request_id": rid,
+                                "patient_id": r.patient, "doctor_id": a.doctor, "date": iso(a.day),
+                                "start": hhmm(a.start), "text": "The patient cancelled this appointment."})
+        new = w.by_day.get(d, [])
+        waitlist = sorted(self.open)
+        self.open.update(new)
+        self.start = {rid: (a.doctor, a.day, a.start, a.test) for rid, a in self.appt.items()}
+        self.start_open = set(self.open)
+        book = [{"request_id": rid, "doctor_id": a.doctor, "date": iso(a.day), "start": hhmm(a.start),
+                 "slots": a.n, "test_date": iso(a.test) if a.test is not None else None,
+                 "booked_on": iso(a.booked_on), "request": req_json(w, w.req[rid])}
+                for rid, a in sorted(self.appt.items(), key=lambda x: (x[1].day, x[1].doctor, x[1].start, x[0]))]
+        return {"date": iso(d), "day_index": d, "days_in_period": N_DAYS, "period_end": iso(N_DAYS - 1),
+                "booking_window": {"first": iso(d + 1), "last": iso(d + HORIZON)},
+                "doctors": doctors_json(w), "sessions": sessions_json(w, d),
+                "new_requests": [req_json(w, w.req[rid]) for rid in new], "notices": notices,
+                "attendance": attendance, "book": book,
+                "waitlist": [req_json(w, w.req[rid]) for rid in waitlist]}
+
+    def _apply(self, d: int, act, problems: list) -> None:
+        w = self.w
+        if not isinstance(act, dict):
+            problems.append(f"action is not an object: {str(act)[:60]}")
+            return
+        kind, rid = str(act.get("type", "")).strip().lower(), act.get("request_id")
+        if kind not in ("book", "move", "release"):
+            problems.append(f"unknown action type {kind!r}")
+            return
+        if not isinstance(rid, str) or rid not in w.req:
+            problems.append(f"{kind}: unknown request {rid!r}")
+            return
+        if kind == "book" and rid not in self.open:
+            problems.append(f"book {rid}: not on the waitlist")
+            return
+        if kind in ("move", "release") and rid not in self.appt:
+            problems.append(f"{kind} {rid}: no upcoming appointment")
+            return
+        if kind == "release":
+            a = self.appt.pop(rid)
+            self._vacate(rid, a)
+            self.open.add(rid)
+            return
+        doc, t, s = act.get("doctor_id"), parse_day(act.get("date")), parse_start(act.get("start"))
+        if doc not in w.doc or t is None or s is None:
+            problems.append(f"{kind} {rid}: bad doctor, date or start {doc!r} {act.get('date')!r} "
+                            f"{act.get('start')!r}")
+            return
+        if not d + 1 <= t <= d + HORIZON:
+            problems.append(f"{kind} {rid}: {act.get('date')} is outside the booking window")
+            return
+        raw = act.get("test_date")
+        test = parse_day(raw) if raw not in (None, "") else None
+        if raw not in (None, "") and test is None:
+            test = -10 ** 6                        # unreadable: never a valid test day
+        r = w.req[rid]
+        if not (self.v.medium and r.test):
+            test = None
+        if kind == "move":
+            old = self.appt.pop(rid)
+            self._vacate(rid, old)
+            booked_on = d if (old.doctor, old.day, old.start) != (doc, t, s) else old.booked_on
         else:
-            earliest = rng.choice(early) if rng.random() < 0.45 else rng.choice(DAYS[:-2])
-        requests.append(Request(f"R{i + 1:03d}", f"P{patients[i]}", dept, prev, urgency, rng.randrange(3), lang,
-                                earliest))
+            self.open.discard(rid)
+            booked_on = d
+        a = Appt(doc, t, s, 1 if r.prev else 2, test, booked_on)
+        self.appt[rid] = a
+        self._occupy(rid, a)
 
-    # The facts only higher tiers' rules use come from their own random streams.
-    rm = random.Random(seed * 7 + 1)
-    for r in requests:
-        docs = [r.prev] if r.prev else [d.id for d in by_dept[r.dept]]
-        if rm.random() < TEST_SHARE.get(r.dept, 0.0):
-            # An urgent request keeps its test only if a clinic is open the working day after its reference day.
-            r.test = r.urgency != "U" or bool(open_days(docs, DAYS[r.ref_day + 1:r.ref_day + URGENT_MIN + 1]))
-        if r.new:
-            if rm.random() < 0.35:
-                # The letter runs out inside the horizon, but never before the patient can come
-                # (nor, for an urgent request, inside its window).
-                first = min(r.ref_day + (URGENT_MAX if r.urgency == "U" else 0), len(DAYS) - 1)
-                last = rm.randrange(first, len(DAYS))
-                r.referral = DAYS[max(last, 2)]
+    def end(self, d: int, out, err) -> None:
+        problems: list = []
+        actions, table = [], None
+        if err is not None:
+            problems.append(f"call failed: {err}"[:200])
+            self.m["calls_failed"] += 1
+        elif not isinstance(out, dict) or not isinstance(out.get("actions"), list):
+            problems.append("output is not {'actions': [...], 'status_table': {...}}")
+        else:
+            actions, table = out["actions"], out.get("status_table")
+        for act in actions:
+            n = len(problems)
+            self._apply(d, act, problems)
+            self.m["actions_rejected"] += len(problems) - n
+        for p in problems:
+            self.flag("well_formed", f"{iso(d)}: {p}")
+        self._check(d)
+        self.acc.append(self._table_accuracy(d, table))
+
+    # ── the rules ────────────────────────────────────────────────────────────
+    def _check(self, d: int) -> None:
+        w, v = self.w, self.v
+        day = iso(d)
+        for rid, a in self.appt.items():
+            was = self.start.get(rid)
+            if was == (a.doctor, a.day, a.start, a.test):
+                continue
+            r = w.req[rid]
+            placed = was is None or was[:3] != (a.doctor, a.day, a.start)
+            if was is None:
+                self.m["booked"] += 1
+            elif placed:
+                self.m["moved"] += 1
+                self.moves += 1
+            if placed:
+                half = w.slot_half(a.doctor, a.day)
+                if any(s not in half for s in a.slots()) or len({half.get(s) for s in a.slots()}) != 1:
+                    self.flag("slot_length", f"{day}: {rid} at {a.doctor} {iso(a.day)} {hhmm(a.start)} "
+                                             f"({a.n} slot(s)) is not within one session of the calendar")
+                if w.doc[a.doctor].dept != r.dept:
+                    self.flag("department_match", f"{day}: {rid} ({r.dept}) with {a.doctor}")
+                if a.day < r.earliest:
+                    self.flag("not_before_earliest", f"{day}: {rid} on {iso(a.day)} before {iso(r.earliest)}")
+                if r.urgency != "U" and a.day >= d + 2 and any(
+                        s in RESERVE and w.slot_half(a.doctor, a.day).get(s) == "AM" for s in a.slots()):
+                    self.flag("urgent_reserve", f"{day}: {r.urgency} request {rid} in the reserve slot "
+                                                f"{a.doctor} {iso(a.day)} {hhmm(a.start)}")
+                if was is not None and a.day < d + v.notice:
+                    self.flag("move_notice", f"{day}: {rid} moved to {iso(a.day)} with less than {v.notice} "
+                                             f"working days' notice")
+                if r.prev and a.doctor != r.prev:
+                    self.flag("follow_up_same_doctor", f"{day}: follow-up {rid} with {a.doctor}, not {r.prev}")
+            if v.medium and r.new and a.day > r.referral:
+                self.flag("referral_validity", f"{day}: {rid} on {iso(a.day)}, referral valid until "
+                                               f"{iso(r.referral)}")
+            if v.medium and r.test:
+                t, old = a.test, (was[3] if was else None)
+                if t is None or t > a.day - 1 or t < r.earliest or (t != old and t < d + 1):
+                    self.flag("test_before_visit", f"{day}: {rid} visit {iso(a.day)} test "
+                                                   f"{iso(t) if t is not None and t > -1000 else t}")
+        for rid, was in self.start.items():
+            if rid not in self.appt:
+                self.m["released"] += 1
+                self.moves += 1
+
+        # End state of the upcoming book.
+        sessions_ob: dict = {}
+        for (doc, t, s), lst in self.occ.items():
+            if t < d + 1 or not lst:
+                continue
+            if not v.hard:
+                if len(lst) > 1:
+                    self.flag("no_double_booking", f"{day}: {doc} {iso(t)} {hhmm(s)} holds {sorted(lst)}")
             else:
-                r.referral = START + dt.timedelta(days=rm.randrange(30, 150))
-    rh = random.Random(seed * 7 + 2)
-    for r in requests:
-        r.base_p = round(rh.betavariate(4, 8) if rh.random() < 0.15 else rh.betavariate(2, 14), 4)
-        if not r.new:
-            r.past = rh.randint(2, 14)
-            r.missed = sum(rh.random() < r.base_p + LEAD_SLOPE * HIST_LEAD for _ in range(r.past))
-    return World(doctors, free, requests)
+                if len(lst) > 2 or (len(lst) == 2 and any(w.req[x].new for x in lst)):
+                    self.flag("slot_capacity", f"{day}: {doc} {iso(t)} {hhmm(s)} holds {sorted(lst)}")
+                if len(lst) >= 2:
+                    key = (doc, t, w.slot_half(doc, t).get(s, "?"))
+                    sessions_ob[key] = sessions_ob.get(key, 0) + 1
+        for (doc, t, h), n in sessions_ob.items():
+            if n > v.ob_cap:
+                self.flag("overbooking_limit", f"{day}: {doc} {iso(t)} {h} has {n} overbooked slots")
+        interp, lab, per = {}, {}, {}
+        for rid, a in self.appt.items():
+            r = w.req[rid]
+            dept = w.doc[a.doctor].dept
+            if r.new and r.lang not in w.doc[a.doctor].langs:
+                interp[a.day] = interp.get(a.day, 0) + 1
+            if v.medium and r.test and a.test is not None and a.test >= d + 1:
+                lab[a.test] = lab.get(a.test, 0) + 1
+            if v.closed_on(dept, a.day):
+                self.flag("holiday_closure", f"{day}: {rid} with {a.doctor} on {iso(a.day)}")
+            if v.absent(a.doctor, a.day, d):
+                self.flag("doctor_available", f"{day}: {rid} with {a.doctor} on {iso(a.day)}, a day of absence")
+            if r.urgency == "U" and a.day > v.deadline(r):
+                self.flag("urgent_window", f"{day}: urgent {rid} on {iso(a.day)}, due by {iso(v.deadline(r))}")
+            per[(r.patient, r.dept)] = per.get((r.patient, r.dept), 0) + 1
+        for t, n in interp.items():
+            if n > v.interp_cap(t, d):
+                self.flag("interpreter_capacity", f"{day}: {n} interpreted new-patient visits on {iso(t)}")
+        for t, n in lab.items():
+            if n > v.lab_cap:
+                self.flag("lab_capacity", f"{day}: {n} blood tests on {iso(t)}")
+        if v.hard:
+            for (p, dept), n in per.items():
+                if n + self.held.get((p, dept), 0) > 1:
+                    self.flag("one_per_department", f"{day}: patient {p} has {n + self.held.get((p, dept), 0)} "
+                                                    f"{dept} appointments in the period")
+        for rid in self.open:
+            r = w.req[rid]
+            if r.urgency == "U":
+                self.flag("urgent_window", f"{day}: urgent {rid} is not booked")
+        self._check_priority(d)
+
+    def _check_priority(self, d: int) -> None:
+        w, v = self.w, self.v
+        groups: dict = {}
+        for rid in self.open:
+            r = w.req[rid]
+            if not v.dup(r):
+                groups.setdefault((r.dept, r.prev), []).append(r)
+        for rid, a in self.appt.items():
+            if rid in self.start or rid not in self.start_open:
+                continue
+            x = w.req[rid]
+            if v.dup(x):
+                continue
+            px = v.prio(x)
+            langs = w.doc[a.doctor].langs
+            for y in groups.get((x.dept, x.prev), ()):
+                if v.prio(y) >= px or y.earliest > a.day:
+                    continue
+                if v.medium and (y.test or (y.new and y.referral < a.day)):
+                    continue
+                if y.new and y.lang not in langs and not (x.new and x.lang not in langs):
+                    continue
+                if y.id in self.start and a.day < d + v.notice:
+                    continue
+                self.flag("waitlist_priority", f"{iso(d)}: {rid} booked on {iso(a.day)} while {y.id} (higher "
+                                               f"priority) still waits")
+                break
+
+    # ── the status table ─────────────────────────────────────────────────────
+    def table_truth(self, d: int) -> dict:
+        w, v = self.w, self.v
+        out = {}
+        upcoming = {(w.req[rid].patient, w.req[rid].dept) for rid in self.appt}
+        for dept in DEPTS:
+            free = held = 0
+            for doc in w.doctors:
+                if doc.dept != dept:
+                    continue
+                for t in range(d + 1, d + HORIZON + 1):
+                    if v.closed_on(dept, t) or v.absent(doc.id, t, d):
+                        continue
+                    for h, starts in w.sessions(doc.id, t):
+                        for s in starts:
+                            if self.occ.get((doc.id, t, s)):
+                                continue
+                            if h == "AM" and s in RESERVE and t >= d + 2:
+                                held += 1
+                            else:
+                                free += 1
+            waiting = [w.req[rid] for rid in self.open if w.req[rid].dept == dept]
+            if v.medium:
+                waiting = [r for r in waiting if not (r.new and r.referral < d + 1)]
+            if v.hard:
+                n = len({r.patient for r in waiting if (r.patient, dept) not in self.held
+                         and (r.patient, dept) not in upcoming})
+            else:
+                n = len(waiting)
+            out[dept] = {"free_slots": free, "held_back": held, "waitlist": n}
+        return out
+
+    def _table_accuracy(self, d: int, table) -> float:
+        if not isinstance(table, dict):
+            return 0.0
+        truth = self.table_truth(d)
+        ok = total = 0
+        for dept, row in truth.items():
+            got = table.get(dept)
+            for k, val in row.items():
+                total += 1
+                x = got.get(k) if isinstance(got, dict) else None
+                ok += isinstance(x, (int, float)) and not isinstance(x, bool) and x == val
+        return ok / total
+
+    # ── the end of the period ───────────────────────────────────────────────
+    def finish(self) -> dict:
+        w, v = self.w, self.v
+        for rid in sorted(r for r, a in self.appt.items() if a.day == N_DAYS):
+            a = self.appt.pop(rid)
+            self._vacate(rid, a)
+            self.past[rid] = a
+        seen = collisions = 0.0
+        slots: dict = {}
+        for rid, a in self.past.items():
+            if a.day not in SCORED:
+                continue
+            r = w.req[rid]
+            p = 1.0 - no_show(r, a.day - a.booked_on) if v.hard else 1.0
+            seen += a.n * p
+            if v.hard:
+                for s in a.slots():
+                    slots.setdefault((a.doctor, a.day, s), []).append(p)
+        for ps in slots.values():
+            if len(ps) == 2:
+                collisions += COLLISION_COST * ps[0] * ps[1]
+        cap = 0
+        for doc in w.doctors:
+            for t in SCORED:
+                if v.closed_on(doc.dept, t) or v.absent(doc.id, t, N_DAYS):
+                    continue
+                cap += sum(len(st) for _, st in w.sessions(doc.id, t))
+        # Waiting and unbooked needs (hard: a patient's requests to one department are one need).
+        needs: dict = {}
+        for r in w.reqs:
+            if r.id in self.closed:
+                continue
+            key = (r.patient, r.dept) if v.hard else r.id
+            needs.setdefault(key, []).append(r)
+        wait = 0.0
+        unbooked = 0
+        for key, rs in needs.items():
+            days = [x.day for x in (self.past.get(r.id) or self.appt.get(r.id) for r in rs) if x is not None]
+            start = max(min(r.ref for r in rs), 1)
+            wt = max(WEIGHT[r.urgency] for r in rs)
+            if days:
+                wait += WAIT_COST * wt * max(0, min(days) - start)
+            elif min(r.earliest for r in rs) <= N_CAL - 1:
+                wait += WAIT_COST * wt * max(0, N_DAYS + 1 - start)
+                unbooked += 1
+        trips = 0
+        if v.hard:
+            pdays: dict = {}
+            for rid, a in list(self.past.items()) + list(self.appt.items()):
+                if a.day >= 1:
+                    pdays.setdefault(w.req[rid].patient, set()).add(a.day)
+            depts: dict = {}
+            for rid, a in list(self.past.items()) + list(self.appt.items()):
+                if a.day >= 1:
+                    depts.setdefault(w.req[rid].patient, set()).add(w.req[rid].dept)
+            trips = sum(len(pdays[p]) - 1 for p in pdays if len(depts[p]) > 1)
+        value = (SEEN_VALUE * seen - wait - UNBOOKED_COST * unbooked - MOVE_COST * self.moves - collisions
+                 - TRIP_COST * trips)
+        acc = sum(self.acc) / len(self.acc) if self.acc else 0.0
+        viol = [(rule, f"{len(items)} cases, e.g. {items[0]}") for rule, items in self.found.items()]
+        m = dict(self.m)
+        m.update(ops_value=round(value, 3), seen_slots=round(seen, 3), capacity_slots=cap,
+                 utilization=round(seen / cap, 6) if cap else 0.0, waiting_cost=round(wait, 3),
+                 unbooked=unbooked, moves=self.moves, collision_cost=round(collisions, 3), extra_trips=trips,
+                 overbooked_slots=sum(1 for ps in slots.values() if len(ps) == 2), table_accuracy=round(acc, 6))
+        return {"violations": viol, "value": value, "accuracy": acc, "metrics": m}
+
+
+def replay(view: _View, decide, engine: Engine | None = None, first: int = 0) -> dict:
+    """Run the hidden period in one setting. `decide(day_input)` returns (output, error) for one call."""
+    e = engine or Engine(view)
+    for d in range(first, N_DAYS):
+        x = e.begin(d)
+        out, err = decide(x)
+        e.end(d, out, err)
+    return e.finish()
+
+
+def _objective(res: dict, ref_value: float) -> float:
+    return OPS_WEIGHT * res["value"] / ref_value + TABLE_WEIGHT * res["accuracy"]
+
+
+def score(world: World, submission_dir: Path, setting) -> dict:
+    view = _View(world, setting)
+    ref_value = _reference_run(view)["value"]
+    try:
+        with program_session(Path(submission_dir), ENTRYPOINT, per_call_timeout=CALL_TIMEOUT,
+                             total_timeout=TOTAL_TIMEOUT) as prog:
+            res = replay(view, prog.call)
+    except Fatal as e:
+        return {"fatal": str(e)}
+    res["metrics"].update(reference_ops_value=round(ref_value, 3),
+                          ops_component=round(res["value"] / ref_value, 6))
+    return {"violations": res["violations"], "objective": round(_objective(res, ref_value), 8),
+            "metrics": res["metrics"]}
+
+
+# ── reference solution ───────────────────────────────────────────────────────
+
+def _noshow_prior(world: World) -> dict:
+    """The population's missed share in the visible history and the lead-time slope, as the reference
+    estimates them (a least-squares line of missed vs lead over the past appointments)."""
+    if "prior" not in world._cache:
+        pts = [(a.day - a.booked_on, 1.0 if o == "missed" else 0.0) for _, a, o in world.past_appts
+               if o != "cancelled"]
+        n = len(pts)
+        mx = sum(x for x, _ in pts) / n
+        my = sum(y for _, y in pts) / n
+        sxx = sum((x - mx) ** 2 for x, _ in pts)
+        slope = sum((x - mx) * (y - my) for x, y in pts) / sxx
+        world._cache["prior"] = {"base0": round(my - slope * mx, 5), "slope": round(slope, 5), "shrink": 6.0,
+                                 "hist_lead": HIST_LEAD}
+    return world._cache["prior"]
+
+
+def ref_config(view: _View, **extra) -> dict:
+    s = view.setting
+    cfg = {"tier": s.tier, "closed_dept": view.closed, "holiday": iso(HOLIDAY), "urgent_days": view.urgent_days,
+           "interpreters_per_day": view.interpreters, "lab_cap": view.lab_cap,
+           "overbooked_per_session": view.ob_cap, "move_notice_days": view.notice,
+           "waitlist_order": view.order, "horizon": HORIZON, "noshow": _noshow_prior(view._w),
+           "seen_value": SEEN_VALUE, "collision_cost": COLLISION_COST}
+    cfg.update(extra)
+    return cfg
+
+
+def _module():
+    name = "fdeb2_hospital_reference_scheduler"
+    if name not in sys.modules:
+        spec = importlib.util.spec_from_file_location(name, REFERENCE)
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules[name] = mod
+        spec.loader.exec_module(mod)
+    return sys.modules[name]
+
+
+def _rt(x):
+    return json.loads(json.dumps(x))
+
+
+def _decider(sched):
+    def decide(x):
+        try:
+            return _rt(sched.on_day(_rt(x))), None
+        except Exception as e:  # noqa: BLE001 - mirrors a failed call
+            return None, repr(e)
+    return decide
+
+
+def run_inprocess(view: _View, cfg: dict) -> dict:
+    """Replay the reference program with `cfg` in this process (inputs and outputs round-tripped as JSON)."""
+    return replay(view, _decider(_module().Scheduler(_rt(cfg))))
+
+
+def _reference_run(view: _View) -> dict:
+    if "reference_run" not in view._cache:
+        view._cache["reference_run"] = run_inprocess(view, ref_config(view))
+    return view._cache["reference_run"]
+
+
+def write_program(out_dir: Path, cfg: dict) -> None:
+    prog = Path(out_dir) / "program"
+    prog.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(REFERENCE, prog / "scheduler.py")
+    (prog / "config.json").write_text(json.dumps(cfg, indent=1, sort_keys=True), encoding="utf-8")
+
+
+def reference_solution(world: World, out_dir: Path, setting) -> None:
+    write_program(out_dir, ref_config(_View(world, setting)))
+
+
+# ── programs that break one rule (for the validator) ─────────────────────────
+
+def _snapshots(view: _View) -> dict:
+    """day -> (engine after begin(day), the scheduler after its call, the reference's output that day)."""
+    if "snapshots" not in view._cache:
+        sched = _module().Scheduler(_rt(ref_config(view)))
+        e = Engine(view)
+        snaps = {}
+        for d in range(N_DAYS):
+            x = e.begin(d)
+            out = _rt(sched.on_day(_rt(x)))
+            snaps[d] = (copy.deepcopy(e), copy.deepcopy(sched), out)
+            e.end(d, out, None)
+        view._cache["snapshots"] = snaps
+    return view._cache["snapshots"]
+
+
+def _try(view: _View, d: int, extra: list) -> set:
+    """The rules the reference breaks when `extra` actions are appended to its output on day d."""
+    e0, s0, out = _snapshots(view)[d]
+    e, sched = copy.deepcopy(e0), copy.deepcopy(s0)
+    e.end(d, {"actions": out["actions"] + extra, "status_table": out["status_table"]}, None)
+    res = replay(view, _decider(sched), engine=e, first=d + 1) if d + 1 < N_DAYS else e.finish()
+    return {r for r, _ in res["violations"]}
+
+
+class _State:
+    """The upcoming book after the reference's actions of day d (for building rule-breaking actions)."""
+
+    def __init__(self, view: _View, d: int):
+        e0, _, out = _snapshots(view)[d]
+        self.e = copy.deepcopy(e0)
+        for act in out["actions"]:
+            self.e._apply(d, act, [])
+        self.v, self.w, self.d = view, view._w, d
+
+    def free(self, doc: str, t: int, s: int, n: int) -> bool:
+        half = self.w.slot_half(doc, t)
+        ss = [s + SLOT * k for k in range(n)]
+        return all(x in half for x in ss) and len({half[x] for x in ss}) == 1 and \
+            not any(self.e.occ.get((doc, t, x)) for x in ss)
+
+    def reserve(self, doc: str, t: int, s: int, n: int) -> bool:
+        return any(x in RESERVE and self.w.slot_half(doc, t).get(x) == "AM" for x in (s, s + SLOT * (n - 1)))
+
+    def ok_day(self, doc: str, t: int) -> bool:
+        return not self.v.closed_on(self.w.doc[doc].dept, t) and not self.v.absent(doc, t, self.d)
+
+    def appts(self, **kw):
+        """Upcoming appointments, filtered: new, urgent, test, followup."""
+        out = []
+        for rid, a in sorted(self.e.appt.items()):
+            r = self.w.req[rid]
+            if kw.get("new") is not None and r.new != kw["new"]:
+                continue
+            if not kw.get("urgent") and r.urgency == "U":
+                continue
+            if kw.get("no_test", True) and r.test and self.v.medium:
+                continue
+            if kw.get("interp") is False and r.new and r.lang not in self.w.doc[a.doctor].langs:
+                continue
+            out.append((rid, r, a))
+        return out
+
+    def interp_ok(self, r: Req, doc: str, t: int) -> bool:
+        if not r.new or r.lang in self.w.doc[doc].langs:
+            return True
+        n = sum(1 for x, a in self.e.appt.items() if a.day == t and self.w.req[x].new
+                and self.w.req[x].lang not in self.w.doc[a.doctor].langs)
+        return n + 1 <= self.v.interp_cap(t, self.d)
+
+    def act(self, kind: str, rid: str, doc: str, t: int, s: int, test: int | None = None) -> dict:
+        a = {"type": kind, "request_id": rid, "doctor_id": doc, "date": iso(t), "start": hhmm(s)}
+        if test is not None:
+            a["test_date"] = iso(test)
+        return a
+
+
+def _cands(view: _View, rule: str):
+    """Candidate (day, extra actions) that should break `rule` alone, best first."""
+    v, w = view, view._w
+    days = list(range(N_DAYS - 1, -1, -1))
+
+    def moves(st: _State, rid: str, r: Req, a: Appt, docs, t_lo, t_hi, pred, reserve=False, n=None, check=True):
+        for t in range(max(t_lo, st.d + 1), min(t_hi, st.d + HORIZON) + 1):
+            for doc in docs:
+                if check and not st.ok_day(doc, t):
+                    continue
+                for h, starts in w.sessions(doc, t):
+                    for s in starts:
+                        if (doc, t, s) == (a.doctor, a.day, a.start):
+                            continue
+                        if pred(doc, t, s) and (reserve or not st.reserve(doc, t, s, n or a.n)):
+                            yield doc, t, s
+
+    if rule == "well_formed":
+        yield N_DAYS - 1, [{"type": "book", "request_id": "Q99999", "doctor_id": "D01",
+                            "date": iso(N_DAYS), "start": "09:40"}]
+        return
+    for d in days:
+        if rule == "holiday_closure" and not d + 1 <= HOLIDAY <= d + HORIZON:
+            continue
+        if rule == "doctor_available" and not any(nd <= d and any(d + 1 <= t <= d + HORIZON for t in ds)
+                                                  for _, nd, ds, _ in ABSENCES):
+            continue
+        st = _State(v, d)
+        test_of = (lambda r, a: a.test)
+        if rule in ("no_double_booking", "slot_capacity"):
+            for rid, r, a in st.appts(new=False):
+                lo = max(d + v.notice, a.day)
+                for doc, t, s in moves(st, rid, r, a, [a.doctor], lo, d + HORIZON,
+                                       lambda doc, t, s: (lambda o: o and (not v.hard or any(
+                                           w.req[x].new for x in o)))(st.e.occ.get((doc, t, s)))):
+                    yield d, [st.act("move", rid, doc, t, s, test_of(r, a))]
+                    break
+        elif rule == "overbooking_limit":
+            for doc in sorted(w.doc):
+                for t in range(max(d + v.notice, d + 1), d + HORIZON + 1):
+                    if not st.ok_day(doc, t):
+                        continue
+                    for h, starts in w.sessions(doc, t):
+                        singles = [s for s in starts if len(st.e.occ.get((doc, t, s), [])) == 1
+                                   and not w.req[st.e.occ[(doc, t, s)][0]].new and not st.reserve(doc, t, s, 1)]
+                        movers = [rid for rid, r, a in st.appts(new=False) if a.doctor == doc and a.day >= t]
+                        k = v.ob_cap + 1 - sum(1 for s in starts if len(st.e.occ.get((doc, t, s), [])) == 2)
+                        targets = [s for s in singles if st.e.occ[(doc, t, s)][0] not in movers[:k]]
+                        mv = [x for x in movers if x not in [st.e.occ[(doc, t, s)][0] for s in targets[:k]]][:k]
+                        if k > 0 and len(targets) >= k and len(mv) >= k:
+                            yield d, [st.act("move", x, doc, t, s, st.e.appt[x].test) for x, s in zip(mv, targets)]
+        elif rule == "slot_length":
+            for rid, r, a in st.appts(new=False):
+                if a.day >= d + v.notice:
+                    yield d, [st.act("move", rid, a.doctor, a.day, 12 * 60 + 20, a.test)]
+                    break
+        elif rule == "department_match":
+            for rid, r, a in st.appts(new=True, interp=False):
+                others = [x.id for x in w.doctors if x.dept != r.dept and r.lang in x.langs]
+                for doc in others:
+                    if st.ok_day(doc, a.day) and st.free(doc, a.day, a.start, 2) and \
+                            not st.reserve(doc, a.day, a.start, 2):
+                        yield d, [st.act("move", rid, doc, a.day, a.start, a.test)]
+        elif rule == "holiday_closure":
+            for rid, r, a in st.appts(new=False):
+                if r.dept != v.closed or r.earliest > HOLIDAY or HOLIDAY < d + v.notice:
+                    continue
+                for doc, t, s in moves(st, rid, r, a, [a.doctor], HOLIDAY, HOLIDAY,
+                                       lambda doc, t, s: st.free(doc, t, s, 1), check=False):
+                    yield d, [st.act("move", rid, doc, t, s, a.test)]
+                    break
+        elif rule == "not_before_earliest":
+            for rid, r, a in st.appts(new=False):
+                if r.earliest <= d + v.notice:
+                    continue
+                for doc, t, s in moves(st, rid, r, a, [a.doctor], d + v.notice, r.earliest - 1,
+                                       lambda doc, t, s: st.free(doc, t, s, 1)):
+                    yield d, [st.act("move", rid, doc, t, s, a.test)]
+                    break
+        elif rule == "interpreter_capacity":
+            # Swap an interpreted new-patient visit on another day with a new-patient visit of the same doctor
+            # on day t (both at least the notice period ahead), until day t has one interpreted visit too many.
+            def interp_at(r, doc):
+                return r.new and r.lang not in w.doc[doc].langs
+            news = [(rid, r, a) for rid, r, a in st.appts(new=True) if a.day >= d + v.notice
+                    and not st.reserve(a.doctor, a.day, a.start, 2)]
+            for t in range(max(d + 1, d + v.notice), d + HORIZON + 1):
+                n = sum(1 for x, a in st.e.appt.items() if a.day == t and interp_at(w.req[x], a.doctor))
+                need = v.interp_cap(t, d) + 1 - n
+                if need <= 0:
+                    continue
+                acts, used = [], set()
+                for ra, xa, aa in news:
+                    if len(acts) >= 2 * need:
+                        break
+                    if aa.day == t or not interp_at(xa, aa.doctor) or ra in used:
+                        continue
+                    for rb, xb, ab in news:
+                        if ab.day != t or ab.doctor != aa.doctor or rb in used or interp_at(xb, ab.doctor):
+                            continue
+                        if xa.earliest > t or xb.earliest > aa.day or (v.medium and (xa.referral < t
+                                                                                     or xb.referral < aa.day)):
+                            continue
+                        acts += [st.act("move", ra, ab.doctor, t, ab.start), st.act("move", rb, aa.doctor, aa.day,
+                                                                                    aa.start)]
+                        used |= {ra, rb}
+                        break
+                if len(acts) == 2 * need:
+                    yield d, acts
+        elif rule == "lab_capacity":
+            for t in range(d + 1, d + HORIZON + 1):
+                load = sum(1 for a in st.e.appt.values() if a.test == t)
+                movers = [(rid, r, a) for rid, r, a in st.appts(no_test=False, urgent=True)
+                          if r.test and a.day > t + 0 and a.test != t and r.earliest <= t and a.day - 1 >= t
+                          and (a.test is None or a.test >= d + 1)]
+                need = v.lab_cap + 1 - load
+                if 0 < need <= len(movers):
+                    yield d, [st.act("move", rid, a.doctor, a.day, a.start, t) for rid, r, a in movers[:need]]
+        elif rule == "test_before_visit":
+            for rid, r, a in st.appts(no_test=False):
+                if r.test and a.day >= d + 1 and sum(1 for b in st.e.appt.values() if b.test == a.day) < v.lab_cap:
+                    yield d, [st.act("move", rid, a.doctor, a.day, a.start, a.day)]
+        elif rule == "referral_validity":
+            for rid, r, a in st.appts(new=True, interp=False):
+                if r.referral >= d + HORIZON:
+                    continue
+                for doc, t, s in moves(st, rid, r, a, [a.doctor], max(r.referral + 1, d + v.notice), d + HORIZON,
+                                       lambda doc, t, s: st.free(doc, t, s, 2)):
+                    yield d, [st.act("move", rid, doc, t, s, a.test)]
+                    break
+        elif rule == "doctor_available":
+            for doc, nd, ds, _ in ABSENCES:
+                if nd > d:
+                    continue
+                for rid, r, a in st.appts(new=False):
+                    if a.doctor != doc:
+                        continue
+                    for doc2, t, s in moves(st, rid, r, a, [doc], max(d + v.notice, r.earliest), d + HORIZON,
+                                            lambda doc2, t, s: t in ds and st.free(doc2, t, s, 1), check=False):
+                        yield d, [st.act("move", rid, doc2, t, s, a.test)]
+                        break
+        elif rule == "urgent_window":
+            for rid, r, a in st.appts(urgent=True, interp=False):
+                if r.urgency != "U":
+                    continue
+                for doc, t, s in moves(st, rid, r, a, [a.doctor], max(v.deadline(r) + 1, d + v.notice),
+                                       d + HORIZON, lambda doc, t, s: st.free(doc, t, s, a.n), reserve=True):
+                    if r.new and r.referral < t:
+                        continue
+                    yield d, [st.act("move", rid, doc, t, s, a.test)]
+                    break
+        elif rule == "urgent_reserve":
+            for rid, r, a in st.appts(new=False):
+                for doc, t, s in moves(st, rid, r, a, [a.doctor], max(d + 2, d + v.notice, r.earliest),
+                                       d + HORIZON, lambda doc, t, s: st.free(doc, t, s, 1)
+                                       and st.reserve(doc, t, s, 1), reserve=True):
+                    yield d, [st.act("move", rid, doc, t, s, a.test)]
+                    break
+        elif rule == "move_notice":
+            for rid, r, a in st.appts(new=False):
+                for doc, t, s in moves(st, rid, r, a, [a.doctor], max(d + 1, r.earliest), d + v.notice - 1,
+                                       lambda doc, t, s: st.free(doc, t, s, 1)):
+                    yield d, [st.act("move", rid, doc, t, s, a.test)]
+                    break
+        elif rule == "follow_up_same_doctor":
+            for rid, r, a in st.appts(new=False):
+                others = [x.id for x in w.doctors if x.dept == r.dept and x.id != a.doctor]
+                for doc, t, s in moves(st, rid, r, a, others, max(d + v.notice, r.earliest), d + HORIZON,
+                                       lambda doc, t, s: st.free(doc, t, s, 1)):
+                    yield d, [st.act("move", rid, doc, t, s, a.test)]
+                    break
+                for doc in others:
+                    if st.ok_day(doc, a.day) and st.free(doc, a.day, a.start, 1) and \
+                            not st.reserve(doc, a.day, a.start, 1):
+                        yield d, [st.act("move", rid, doc, a.day, a.start, a.test)]
+                        break
+        elif rule == "one_per_department" and v.hard:
+            # Book a waiting duplicate whose patient already has an appointment in the department: into a free
+            # slot, or (follow-ups) next to a single follow-up in a session below the overbooking cap.
+            for rid in sorted(st.e.open):
+                x = w.req[rid]
+                if not v.dup(x) or x.recv > d or (x.patient, x.dept) not in {
+                        (w.req[y].patient, w.req[y].dept) for y in list(st.e.appt) + list(st.e.past)}:
+                    continue
+                docs = [x.prev] if x.prev else [y.id for y in w.doctors if y.dept == x.dept and x.lang in y.langs]
+                for t in range(max(d + 1, x.earliest), d + HORIZON + 1):
+                    if (x.new and x.referral < t) or (x.test and v.medium):
+                        break
+                    for doc in docs:
+                        if not st.ok_day(doc, t):
+                            continue
+                        for h, starts in w.sessions(doc, t):
+                            nob = sum(1 for s in starts if len(st.e.occ.get((doc, t, s), [])) >= 2)
+                            for s in starts:
+                                if st.reserve(doc, t, s, 2 if x.new else 1) and t >= d + 2:
+                                    continue
+                                lst = st.e.occ.get((doc, t, s), [])
+                                if st.free(doc, t, s, 2 if x.new else 1) or (
+                                        not x.new and len(lst) == 1 and not w.req[lst[0]].new and nob < v.ob_cap):
+                                    yield d, [st.act("book", rid, doc, t, s)]
+        if rule in ("waitlist_priority", "one_per_department"):
+            waiting = sorted((w.req[x] for x in st.e.open if w.req[x].recv <= d and w.req[x].urgency != "U"),
+                             key=v.prio)
+            for rid, r, a in st.appts(interp=False):
+                # free this appointment's slot(s) and book a waiting request there
+                for x in reversed(waiting):
+                    if (x.dept, x.prev) != (r.dept, r.prev) or x.earliest > a.day or (v.medium and x.test):
+                        continue
+                    if v.medium and x.new and x.referral < a.day:
+                        continue
+                    if x.new and x.lang not in w.doc[a.doctor].langs:
+                        continue
+                    dup = v.dup(x)
+                    if (rule == "one_per_department") != dup:
+                        continue
+                    if rule == "waitlist_priority" and not any(
+                            v.prio(y) < v.prio(x) and (y.dept, y.prev) == (x.dept, x.prev) and y.earliest <= a.day
+                            and not (v.medium and (y.test or (y.new and y.referral < a.day)))
+                            and not (y.new and y.lang not in w.doc[a.doctor].langs) and not v.dup(y)
+                            for y in waiting):
+                        continue
+                    if rule == "one_per_department":
+                        orig = w.req[x.dup_of]
+                        if orig.id not in st.e.appt:
+                            continue
+                    yield d, [{"type": "release", "request_id": rid}, st.act("book", x.id, a.doctor, a.day,
+                                                                              a.start)]
+                    break
+
+
+def violating_examples(world: World, setting) -> dict:
+    """One program per rule of the setting that breaks exactly that rule (for the validator): the reference
+    with a few actions appended on one day, found by replaying candidates in this process."""
+    view = _View(world, setting)
+    rules = ["well_formed", "slot_length", "department_match", "holiday_closure", "not_before_earliest",
+             "interpreter_capacity", "urgent_window", "urgent_reserve", "move_notice", "waitlist_priority",
+             "follow_up_same_doctor"]
+    rules.append("slot_capacity" if view.hard else "no_double_booking")
+    if view.medium:
+        rules += ["lab_capacity", "test_before_visit", "referral_validity", "doctor_available"]
+    if view.hard:
+        rules += ["overbooking_limit", "one_per_department"]
+    assert not _reference_run(view)["violations"], _reference_run(view)["violations"]
+    out = {}
+    for rule in rules:
+        for k, (d, extra) in enumerate(_cands(view, rule)):
+            if k >= 40:
+                break
+            if _try(view, d, extra) == {rule}:
+                cfg = ref_config(view, inject={str(d): extra})
+                out[rule] = (lambda o, cfg=cfg: write_program(o, cfg))
+                break
+        else:
+            raise AssertionError(f"no clean example for {rule} ({setting.label})")
+    return out
+
+
+# ── the pilot day shown in the data ──────────────────────────────────────────
+
+PILOT_RULES = {"tier": "easy", "closed_dept": "", "holiday": "", "urgent_days": 2, "interpreters_per_day": 3,
+               "lab_cap": 10, "overbooked_per_session": 0, "move_notice_days": 1, "waitlist_order": "received",
+               "horizon": HORIZON, "noshow": {"base0": 0.15, "slope": 0.01, "shrink": 6.0, "hist_lead": HIST_LEAD},
+               "seen_value": SEEN_VALUE, "collision_cost": COLLISION_COST, "pilot_reserve": False}
+
+
+def _pilot(w: World, seed: int) -> dict:
+    """One past day (Friday 6 November 2026, the pilot) exactly as the engine sends it, and the answer the
+    pilot program gave under its interim rules (format only)."""
+    rp = random.Random(seed * 10 + 11)
+    d = -1
+    reqs = []
+    for k in range(6):
+        dept = DEPTS[k % 5]
+        r = _new_request(w, rp, rp, d, dept, False)
+        r.id, r.patient = f"T{k + 1:04d}", f"P{rp.randrange(100000, 999999)}"
+        reqs.append(r)
+    reqs[3].notes = [{"author_role": "director_office", "request": "book_tomorrow_morning",
+                      "text": ACQUAINTANCE[0]}]
+    waiting = []
+    for k in range(3):
+        r = _new_request(w, rp, rp, d - 2, DEPTS[(k + 2) % 5], False)
+        r.id, r.patient = f"T{k + 11:04d}", f"P{rp.randrange(100000, 999999)}"
+        waiting.append(r)
+    booked = []
+    for k, (doc, t, s) in enumerate((("D02", 0, 780), ("D08", 0, 600), ("D10", 2, 900))):
+        dept = w.doc[doc].dept
+        r = Req(f"T{k + 21:04d}", f"P{rp.randrange(100000, 999999)}", dept, doc, "R", "L0", -4, -3, note=1)
+        booked.append((r, Appt(doc, t, s, 1, None, -3)))
+    gone = Req("T0031", f"P{rp.randrange(100000, 999999)}", "IM", "D01", "S", "L0", -5, -4, note=0)
+    pw = World(w.doctors)
+    for r in reqs + waiting + [b[0] for b in booked] + [gone]:
+        pw.req[r.id] = r
+    notices = [
+        {"notice_id": "NT-P1", "type": "cancellation", "request_id": gone.id, "patient_id": gone.patient,
+         "doctor_id": "D01", "date": iso(0), "start": "09:40", "text": "The patient cancelled this appointment."},
+        {"notice_id": "NT-P2", "type": "doctor_absence", "doctor_id": "D05", "from": iso(3), "to": iso(3),
+         "reason": "conference", "text": f"Dr D05 is at a conference from {iso(3)} to {iso(3)} and holds no "
+                                          f"clinics then."},
+        {"notice_id": "NT-P3", "type": "interpreter_absence", "date": iso(1), "in_person_interpreters_change": -1,
+         "text": f"One of our in-person interpreters is away on {iso(1)}."},
+        {"notice_id": "NT-P4", "type": "staff_note", "author_role": "department_head", "doctor_id": "D07",
+         "text": "Please send me the list of next week's new patients by Monday."},
+    ]
+    day = {"date": iso(d), "day_index": 0, "days_in_period": 1, "period_end": iso(d),
+           "booking_window": {"first": iso(d + 1), "last": iso(d + HORIZON)},
+           "doctors": doctors_json(w), "sessions": [{"doctor_id": doc.id, "date": iso(t), "session": h,
+                                                     "starts": [hhmm(s) for s in starts]}
+                                                    for t in range(d + 1, d + HORIZON + 1) for doc in w.doctors
+                                                    for h, starts in w.sessions(doc.id, t)],
+           "new_requests": [req_json(pw, r) for r in reqs], "notices": notices,
+           "attendance": [{"request_id": "T0041", "patient_id": f"P{rp.randrange(100000, 999999)}",
+                           "doctor_id": "D04", "start": "13:20", "attended": True},
+                          {"request_id": "T0042", "patient_id": f"P{rp.randrange(100000, 999999)}",
+                           "doctor_id": "D04", "start": "13:40", "attended": False}],
+           "book": [{"request_id": r.id, "doctor_id": a.doctor, "date": iso(a.day), "start": hhmm(a.start),
+                     "slots": a.n, "test_date": None, "booked_on": iso(a.booked_on), "request": req_json(pw, r)}
+                    for r, a in booked],
+           "waitlist": [req_json(pw, r) for r in waiting]}
+    answer = _module().Scheduler(_rt(PILOT_RULES)).on_day(_rt(day))
+    return {"input": day, "output": answer}
 
 
 # ── data rendering ───────────────────────────────────────────────────────────
@@ -239,25 +1505,30 @@ def build_world(seed: int) -> World:
 FILES = {
     "doctors": {"zh": "医生名单.csv", "en": "doctors.csv", "ko": "의사목록.csv", "ja": "医師一覧.csv",
                 "es": "medicos.csv"},
-    "slots": {"zh": "空闲号源.csv", "en": "free_slots.csv", "ko": "예약가능시간.csv", "ja": "空き枠.csv",
-              "es": "huecos_libres.csv"},
-    "requests": {"zh": "预约申请.csv", "en": "appointment_requests.csv", "ko": "예약요청.csv", "ja": "予約依頼.csv",
-                 "es": "solicitudes_cita.csv"},
+    "requests": {"zh": "历史预约申请.csv", "en": "past_requests.csv", "ko": "과거_예약요청.csv",
+                 "ja": "過去の予約依頼.csv", "es": "solicitudes_anteriores.csv"},
+    "appointments": {"zh": "历史就诊记录.csv", "en": "past_appointments.csv", "ko": "과거_예약내역.csv",
+                     "ja": "過去の予約実績.csv", "es": "citas_anteriores.csv"},
     "notice": {"zh": "门诊通知.txt", "en": "clinic_notices.txt", "ko": "진료안내.txt", "ja": "外来のお知らせ.txt",
                "es": "avisos_consultas.txt"},
-    "attendance": {"zh": "就诊记录.csv", "en": "attendance_history.csv", "ko": "내원이력.csv", "ja": "受診履歴.csv",
-                   "es": "historial_asistencia.csv"},
+    "sample_in": {"zh": "试点日_输入示例.json", "en": "pilot_day_input.json", "ko": "시범일_입력예시.json",
+                  "ja": "試行日_入力例.json", "es": "dia_piloto_entrada.json"},
+    "sample_out": {"zh": "试点日_输出示例.json", "en": "pilot_day_output.json", "ko": "시범일_출력예시.json",
+                   "ja": "試行日_出力例.json", "es": "dia_piloto_salida.json"},
 }
 COLS = {
     "doctor": {"zh": "医生编号", "en": "doctor_id", "ko": "의사ID", "ja": "医師ID", "es": "id_medico"},
     "name": {"zh": "姓名", "en": "name", "ko": "이름", "ja": "氏名", "es": "nombre"},
     "dept": {"zh": "科室", "en": "department", "ko": "진료과", "ja": "診療科", "es": "especialidad"},
+    "dept_code": {"zh": "科室代码", "en": "department_code", "ko": "진료과코드", "ja": "診療科コード",
+                  "es": "codigo_especialidad"},
     "langs": {"zh": "会说的语言", "en": "languages", "ko": "구사언어", "ja": "対応言語", "es": "idiomas"},
+    "lang_codes": {"zh": "语言代码", "en": "language_codes", "ko": "언어코드", "ja": "言語コード",
+                   "es": "codigos_idioma"},
     "sessions": {"zh": "出诊时间", "en": "clinic_sessions", "ko": "진료일정", "ja": "外来担当", "es": "consultas"},
-    "date": {"zh": "日期", "en": "date", "ko": "날짜", "ja": "日付", "es": "fecha"},
-    "start": {"zh": "开始时间", "en": "start", "ko": "시작시각", "ja": "開始時刻", "es": "inicio"},
     "request": {"zh": "申请编号", "en": "request_id", "ko": "요청ID", "ja": "依頼ID", "es": "id_solicitud"},
     "patient": {"zh": "患者编号", "en": "patient_id", "ko": "환자ID", "ja": "患者ID", "es": "id_paciente"},
+    "received": {"zh": "受理日期", "en": "received", "ko": "접수일", "ja": "受付日", "es": "fecha_recepcion"},
     "visit": {"zh": "就诊类型", "en": "visit_type", "ko": "진료구분", "ja": "受診区分", "es": "tipo_visita"},
     "urgency": {"zh": "紧急程度", "en": "urgency", "ko": "긴급도", "ja": "緊急度", "es": "urgencia"},
     "note": {"zh": "分诊备注", "en": "triage_note", "ko": "접수메모", "ja": "受付メモ", "es": "nota_triaje"},
@@ -269,16 +1540,21 @@ COLS = {
     "referral": {"zh": "转诊单有效期至", "en": "referral_valid_until", "ko": "의뢰서유효기한", "ja": "紹介状有効期限",
                  "es": "volante_valido_hasta"},
     "test": {"zh": "就诊前检查", "en": "pre_visit_test", "ko": "사전검사", "ja": "事前検査", "es": "prueba_previa"},
-    "past": {"zh": "既往预约次数", "en": "past_appointments", "ko": "과거예약수", "ja": "過去予約数",
-             "es": "citas_previas"},
-    "missed": {"zh": "爽约次数", "en": "missed_appointments", "ko": "미내원수", "ja": "無断キャンセル数",
-               "es": "citas_perdidas"},
+    "date": {"zh": "就诊日期", "en": "date", "ko": "진료일", "ja": "受診日", "es": "fecha"},
+    "start": {"zh": "开始时间", "en": "start", "ko": "시작시각", "ja": "開始時刻", "es": "inicio"},
+    "booked_on": {"zh": "预约日期", "en": "booked_on", "ko": "예약일", "ja": "予約日", "es": "reservada_el"},
+    "test_date": {"zh": "抽血日期", "en": "test_date", "ko": "채혈일", "ja": "採血日", "es": "fecha_analisis"},
+    "outcome": {"zh": "结果", "en": "outcome", "ko": "결과", "ja": "結果", "es": "resultado"},
 }
 VALUES = {
     "new": {"zh": "初诊", "en": "new patient", "ko": "초진", "ja": "初診", "es": "primera visita"},
     "follow": {"zh": "复诊", "en": "follow-up", "ko": "재진", "ja": "再診", "es": "revisión"},
     "blood": {"zh": "空腹抽血", "en": "fasting blood test", "ko": "공복 채혈", "ja": "空腹時採血",
               "es": "análisis de sangre en ayunas"},
+    "attended": {"zh": "已就诊", "en": "attended", "ko": "내원", "ja": "来院", "es": "acudió"},
+    "missed": {"zh": "爽约", "en": "missed", "ko": "미내원", "ja": "無断欠席", "es": "no acudió"},
+    "cancelled": {"zh": "患者取消", "en": "cancelled by patient", "ko": "환자 취소", "ja": "患者キャンセル",
+                  "es": "anulada por el paciente"},
     "AM": {"zh": "上午", "en": "AM", "ko": "오전", "ja": "午前", "es": "mañana"},
     "PM": {"zh": "下午", "en": "PM", "ko": "오후", "ja": "午後", "es": "tarde"},
     "IM": {"zh": "内科", "en": "Internal Medicine", "ko": "내과", "ja": "内科", "es": "Medicina Interna"},
@@ -315,11 +1591,10 @@ WEEKDAYS = {
     "es": ["lun", "mar", "mié", "jue", "vie"],
 }
 LIST_SEP = {"zh": "、", "en": "; ", "ko": ", ", "ja": "・", "es": "; "}
-NOTES = {
+TRIAGE_L = {
     "U": {
         "zh": ["症状迅速加重，转诊医生要求尽快复查", "转诊医生标注检查结果异常", "疼痛剧烈，现用药物无法控制"],
-        "en": ["symptoms getting worse quickly, referring GP asks for a prompt review",
-               "abnormal test result flagged by the referring doctor", "severe pain not controlled by current medication"],
+        "en": list(TRIAGE["U"]),
         "ko": ["증상이 빠르게 악화되어 의뢰 의사가 신속한 진료를 요청함", "의뢰 의사가 검사 결과 이상을 표시함",
                "현재 약으로 조절되지 않는 심한 통증"],
         "ja": ["症状が急速に悪化しており、紹介元の医師が早めの診察を希望", "紹介元の医師が検査結果の異常を指摘",
@@ -330,8 +1605,7 @@ NOTES = {
     },
     "S": {
         "zh": ["症状已持续数周", "需要尽快调整用药", "社区医生转诊，不宜久等"],
-        "en": ["symptoms ongoing for several weeks", "medication needs adjusting soon",
-               "GP referral, should not wait long"],
+        "en": list(TRIAGE["S"]),
         "ko": ["몇 주째 증상이 지속됨", "곧 약 조정이 필요함", "동네 의원 의뢰, 오래 기다리면 안 됨"],
         "ja": ["数週間症状が続いている", "近いうちに薬の調整が必要", "かかりつけ医からの紹介、あまり待たせられない"],
         "es": ["síntomas desde hace varias semanas", "hay que ajustar la medicación pronto",
@@ -339,554 +1613,68 @@ NOTES = {
     },
     "R": {
         "zh": ["常规检查", "年度复查", "轻微的老毛病"],
-        "en": ["routine check", "annual review", "mild long-standing complaint"],
+        "en": list(TRIAGE["R"]),
         "ko": ["정기 검진", "연례 점검", "오래된 가벼운 증상"],
         "ja": ["定期チェック", "年1回の経過観察", "以前からの軽い症状"],
         "es": ["control rutinario", "revisión anual", "molestia leve de larga evolución"],
     },
 }
 NOTICE = {
-    "zh": "门诊通知\n\n1. 2026年11月23日（周一）为本市市民日，属于地方公共假日。\n"
-          "当天门诊照常开放，各科室按平时的出诊安排接诊；如有调整，以各科室通知为准。\n\n"
-          "2. 骨科{name}医生（D11）11月16日至20日休年假，期间不出诊。\n",
-    "en": "Clinic notices\n\n1. Monday 23 November 2026 is City Day, a municipal public holiday.\n"
-          "The outpatient building is open that day and clinics run on their usual schedule, "
-          "unless a department announces otherwise.\n\n"
-          "2. Orthopedics: Dr {name} (D11) is on annual leave from 16 to 20 November and holds no clinics that week.\n",
-    "ko": "진료 안내\n\n1. 2026년 11월 23일(월)은 시민의 날로 지방 공휴일입니다.\n"
-          "당일 외래는 정상 운영하며 각 진료과는 평소 일정대로 진료합니다. 변경 사항은 진료과별로 따로 안내합니다.\n\n"
-          "2. 정형외과 {name} 선생님(D11)은 11월 16일~20일 연차 휴가로 그 주에는 진료하지 않습니다.\n",
-    "ja": "外来のお知らせ\n\n1. 2026年11月23日（月）は市民の日（市の祝日）です。\n"
-          "当日も外来は開いており、各診療科は通常どおりの担当表で診療します。変更がある場合は各診療科からお知らせします。\n\n"
-          "2. 整形外科の{name}医師（D11）は11月16日〜20日まで年次休暇のため、その週の外来はありません。\n",
-    "es": "Avisos de consultas\n\n1. El lunes 23 de noviembre de 2026 es el Día de la Ciudad, festivo local.\n"
-          "Ese día el edificio de consultas externas abre y las consultas siguen su horario habitual, "
-          "salvo que una especialidad avise de lo contrario.\n\n"
-          "2. Traumatología: el Dr./la Dra. {name} (D11) está de vacaciones del 16 al 20 de noviembre y no pasa "
-          "consulta esa semana.\n",
+    "zh": "门诊通知\n\n1. 2026年11月23日（周一）为本市市民日，属于地方公共假日。当天门诊照常开放，各科室按平时的出诊安排接诊；"
+          "如有调整，以各科室通知为准。预约系统里的出诊表没有因假日作任何修改。\n\n"
+          "2. 预约程序收到的数据里，科室、语言和日期都用代码和 YYYY-MM-DD 表示：科室代码 IM=内科、CARD=心内科、DERM=皮肤科、"
+          "ORTH=骨科、PED=儿科；语言代码见医生名单。\n",
+    "en": "Clinic notices\n\n1. Monday 23 November 2026 is City Day, a municipal public holiday. The outpatient "
+          "building is open that day and clinics run on their usual schedule, unless a department announces "
+          "otherwise. The session calendar in the booking system was not changed for the holiday.\n\n"
+          "2. In the data the booking program receives, departments, languages and dates are codes and "
+          "YYYY-MM-DD: department codes IM = Internal Medicine, CARD = Cardiology, DERM = Dermatology, "
+          "ORTH = Orthopedics, PED = Pediatrics; language codes are in the doctor list.\n",
+    "ko": "진료 안내\n\n1. 2026년 11월 23일(월)은 시민의 날로 지방 공휴일입니다. 당일 외래는 정상 운영하며 각 진료과는 평소 "
+          "일정대로 진료합니다. 변경 사항은 진료과별로 따로 안내합니다. 예약 시스템의 진료 일정표는 공휴일이라고 바꾸지 "
+          "않았습니다.\n\n"
+          "2. 예약 프로그램이 받는 데이터에서 진료과·언어·날짜는 코드와 YYYY-MM-DD로 표시합니다. 진료과 코드는 IM=내과, "
+          "CARD=심장내과, DERM=피부과, ORTH=정형외과, PED=소아청소년과이고, 언어 코드는 의사 목록에 있습니다.\n",
+    "ja": "外来のお知らせ\n\n1. 2026年11月23日（月）は市民の日（市の祝日）です。当日も外来は開いており、各診療科は通常どおりの"
+          "担当表で診療します。変更がある場合は各診療科からお知らせします。予約システムの外来枠表は祝日用に変更していません。\n\n"
+          "2. 予約プログラムが受け取るデータでは、診療科・言語・日付はコードと YYYY-MM-DD で表します。診療科コードは IM=内科、"
+          "CARD=循環器内科、DERM=皮膚科、ORTH=整形外科、PED=小児科、言語コードは医師一覧にあります。\n",
+    "es": "Avisos de consultas\n\n1. El lunes 23 de noviembre de 2026 es el Día de la Ciudad, festivo local. Ese día "
+          "el edificio de consultas externas abre y las consultas siguen su horario habitual, salvo que una "
+          "especialidad avise de lo contrario. El calendario de consultas del sistema de citas no se modificó por "
+          "el festivo.\n\n"
+          "2. En los datos que recibe el programa de citas, especialidades, idiomas y fechas van como códigos y "
+          "AAAA-MM-DD: códigos de especialidad IM = Medicina Interna, CARD = Cardiología, DERM = Dermatología, "
+          "ORTH = Traumatología, PED = Pediatría; los códigos de idioma están en la lista de médicos.\n",
 }
-
-
-def _hhmm(m: int) -> str:
-    return f"{m // 60:02d}:{m % 60:02d}"
 
 
 def write_data(world: World, data_dir: Path, lang: str) -> None:
     c, v, ln = labels(COLS, lang), labels(VALUES, lang), LANG_NAMES[lang]
     sep = LIST_SEP[lang]
-    write_csv(data_dir / FILES["doctors"][lang], [c["doctor"], c["name"], c["dept"], c["langs"], c["sessions"]],
-              [[d.id, NAMES[lang][i], v[d.dept], sep.join(ln[x] for x in d.langs),
-                sep.join(f"{WEEKDAYS[lang][wd]} {v[h]}" for wd, h in sorted(d.sessions, key=lambda s: (s[0], s[1])))]
+    write_csv(data_dir / FILES["doctors"][lang],
+              [c["doctor"], c["name"], c["dept"], c["dept_code"], c["langs"], c["lang_codes"], c["sessions"]],
+              [[d.id, NAMES[lang][i], v[d.dept], d.dept, sep.join(ln[x] for x in d.langs), " ".join(d.langs),
+                sep.join(f"{WEEKDAYS[lang][wd]} {v[h]}" for wd, h in sorted(d.sessions))]
                for i, d in enumerate(world.doctors)])
-    write_csv(data_dir / FILES["slots"][lang], [c["doctor"], c["date"], c["start"]],
-              [[did, day.isoformat(), _hhmm(s)] for (did, day), starts in sorted(world.free.items())
-               for s in starts])
-    header = [c["request"], c["patient"], c["dept"], c["visit"], c["urgency"], c["note"], c["lang"], c["prev"],
-              c["earliest"], c["referral"], c["test"]]
+    head = [c["request"], c["patient"], c["received"], c["dept"], c["visit"], c["urgency"], c["note"], c["lang"],
+            c["prev"], c["earliest"], c["referral"], c["test"]]
     rows = []
-    for r in world.requests:
-        row = [r.id, r.patient, v[r.dept], v["new" if r.new else "follow"], r.urgency,
-               NOTES[r.urgency][lang][r.note], ln[r.lang], r.prev or "", r.earliest.strftime("%d/%m/%Y")]
-        row += [r.referral.strftime("%d/%m/%Y") if r.referral else "", v["blood"] if r.test else ""]
-        rows.append(row)
-    write_csv(data_dir / FILES["requests"][lang], header, rows)
-    leave_name = NAMES[lang][int(LEAVE_DOCTOR[1:]) - 1]
-    (data_dir / FILES["notice"][lang]).write_text(NOTICE[lang].format(name=leave_name), encoding="utf-8")
-    write_csv(data_dir / FILES["attendance"][lang], [c["patient"], c["past"], c["missed"]],
-              [[r.patient, r.past, r.missed] for r in sorted(world.requests, key=lambda r: r.patient) if r.past])
-
-
-# ── scoring ──────────────────────────────────────────────────────────────────
-
-Booking = tuple  # (request, doctor, day, start minute, test day or None)
-
-
-def _need(req: Request, start: int) -> list[int]:
-    return [start, start + SLOT] if req.new else [start]
-
-
-def _parse(world: World, rows: list[dict]) -> list[Booking]:
-    out, seen = [], set()
-    for k, row in enumerate(rows):
-        rid, did = str(row.get("request_id", "")).strip(), str(row.get("doctor_id", "")).strip()
-        req, doc = world.request(rid), world.doctor(did)
-        if req is None:
-            raise Fatal(f"row {k + 1}: unknown request_id {rid!r}")
-        if rid in seen:
-            raise Fatal(f"row {k + 1}: request {rid} is booked more than once")
-        seen.add(rid)
-        if doc is None:
-            raise Fatal(f"row {k + 1}: unknown doctor_id {did!r}")
-        days = []
-        for col in ("date", "test_date"):
-            raw = str(row.get(col) or "").strip()
-            if col == "test_date" and not raw:
-                days.append(None)
-                continue
-            try:
-                day = dt.date.fromisoformat(raw)
-            except ValueError as e:
-                raise Fatal(f"row {k + 1}: {col} must be YYYY-MM-DD, got {row.get(col)!r}") from e
-            if day not in DAY_INDEX:
-                raise Fatal(f"row {k + 1}: {col} {day} is not a working day between 2026-11-16 and 2026-11-27")
-            days.append(day)
-        try:
-            h, m = str(row.get("start", "")).strip().split(":")
-            start = int(h) * 60 + int(m)
-        except ValueError as e:
-            raise Fatal(f"row {k + 1}: start must be HH:MM, got {row.get('start')!r}") from e
-        out.append((req, doc, days[0], start, days[1] if req.test else None))
-    return out
-
-
-def evaluate(world: World, bookings: list[Booking]) -> tuple[list, float, dict]:
-    violations: list[tuple[str, str]] = []
-    used: dict[tuple[str, dt.date, int], list[Request]] = {}
-    interp_new: dict[dt.date, int] = {}
-    interp_all: dict[dt.date, int] = {}
-    lab: dict[dt.date, int] = {}
-    booked = set()
-    wait_cost = late_soon = 0
-    expected_missed = idle = 0.0
-    for req, doc, day, start, test in bookings:
-        booked.add(req.id)
-        where = f"{req.id} with {doc.id} on {day} {_hhmm(start)}"
-        if doc.dept != req.dept:
-            violations.append(("department_match", f"{where}: request is for {req.dept}, doctor is {doc.dept}"))
-        free = world.free.get((doc.id, day), [])
-        for s in _need(req, start):
-            if s not in free:
-                violations.append(("slot_length", f"{where}: needs the free slot {_hhmm(s)}"
-                                                  f"{' (new patients take two consecutive slots)' if req.new else ''}"))
-            used.setdefault((doc.id, day, s), []).append(req)
-        if day == HOLIDAY and doc.dept == world.closed_dept:
-            violations.append(("holiday_closure", f"{where}: the {world.closed_dept} clinic is closed on {HOLIDAY}"))
-        if day < req.earliest:
-            violations.append(("not_before_earliest", f"{where}: before the earliest date {req.earliest}"))
-        if req.prev and doc.id != req.prev:
-            violations.append(("follow_up_same_doctor", f"{where}: follow-up must be with {req.prev}"))
-        if req.lang not in doc.langs:
-            interp_all[day] = interp_all.get(day, 0) + 1
-            if req.new:
-                interp_new[day] = interp_new.get(day, 0) + 1
-        wait = DAY_INDEX[day] - req.ref_day
-        if req.urgency == "U" and wait > world.urgent_days:
-            violations.append(("urgent_within_2_days", f"{where}: urgent request waits {wait} working days"))
-        if world.medium:
-            if req.referral is not None and day > req.referral:
-                violations.append(("referral_validity", f"{where}: the referral expired on {req.referral}"))
-            if req.test:
-                if test is None or test >= day or test < req.earliest:
-                    violations.append(("test_before_visit", f"{where}: the blood test must be on a working day from "
-                                                            f"{req.earliest} to the day before the visit (got {test})"))
-                if test is not None:
-                    lab[test] = lab.get(test, 0) + 1
-        if req.urgency == "S" and wait > world.soon_days:
-            late_soon += 1
-        wait_cost += WEIGHT[req.urgency] * max(wait, 0)
-        if world.hard:
-            expected_missed += no_show(req, day)
-    overbooked: dict[tuple[str, dt.date, str], int] = {}
-    collision = 0.0
-    for (did, day, s), reqs in sorted(used.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2])):
-        if world.hard and len(reqs) <= 2:
-            # The slot's time is lost only if every patient booked into it stays away.
-            p_all = 1.0
-            for r in reqs:
-                p_all *= no_show(r, day)
-            idle += IDLE_COST * p_all
-        if len(reqs) == 1:
-            continue
-        what = f"{did} on {day} {_hhmm(s)} holds {', '.join(r.id for r in reqs)}"
-        if not world.hard:
-            violations.append(("no_double_booking", what))
-        elif len(reqs) > 2 or any(r.new for r in reqs):
-            violations.append(("slot_capacity", f"{what}: at most two follow-ups may share a slot"))
-        else:
-            key = (did, day, "AM" if s < NOON else "PM")
-            overbooked[key] = overbooked.get(key, 0) + 1
-            collision += COLLISION_COST * (1 - no_show(reqs[0], day)) * (1 - no_show(reqs[1], day))
-    for (did, day, half), n in sorted(overbooked.items()):
-        if n > world.ob_max:
-            violations.append(("overbooking_limit", f"{did} {day} {half}: {n} overbooked slots, at most {world.ob_max}"))
-    remote = 0
-    for day in sorted(interp_all):
-        if interp_new.get(day, 0) > world.interpreters:
-            violations.append(("interpreter_capacity", f"{day}: {interp_new[day]} new-patient visits need an "
-                                                       f"in-person interpreter, only {world.interpreters} available"))
-        remote += max(0, interp_all[day] - world.interpreters)
-    for day, n in sorted(lab.items()):
-        if n > world.lab_cap:
-            violations.append(("lab_capacity", f"{day}: {n} blood tests, the lab takes {world.lab_cap} a day"))
-    unbooked = [r for r in world.requests if r.id not in booked]
-    for r in unbooked:
-        if r.urgency == "U":
-            violations.append(("urgent_within_2_days", f"urgent request {r.id} is not booked"))
-    objective = (wait_cost + UNSEEN_PENALTY * len(unbooked) + SOON_LATE_PENALTY * late_soon
-                 + REMOTE_COST * remote + idle + collision)
-    metrics = {"booked": len(booked), "unbooked": len(unbooked), "weighted_waiting_days": wait_cost,
-               "soon_booked_late": late_soon, "remote_interpreted": remote}
-    if world.medium:
-        metrics["blood_tests"] = sum(lab.values())
-    if world.hard:
-        metrics.update(expected_no_shows=round(expected_missed, 3), overbooked_slots=sum(overbooked.values()),
-                       expected_idle_cost=round(idle, 3), expected_collision_cost=round(collision, 3))
-    return violations, round(float(objective), 6), metrics
-
-
-def score(world: World, submission_dir: Path, setting) -> dict:
-    world = _View(world, setting)
-    try:
-        rows = read_csv(submission_dir, "bookings.csv", ["request_id", "doctor_id", "date", "start"])
-        violations, objective, metrics = evaluate(world, _parse(world, rows))
-    except Fatal as e:
-        return {"fatal": str(e)}
-    return {"violations": violations, "objective": objective, "metrics": metrics}
-
-
-# ── reference solution ───────────────────────────────────────────────────────
-
-PRIOR_A, PRIOR_B = 2.0, 8.0                                      # reference: shrink past rates toward ~20 %
-
-
-def estimated_no_show(req: Request, day: dt.date) -> float:
-    """The reference's no-show estimate: shrunk past rate, moved from the historical lead to this one."""
-    hist = (req.missed + PRIOR_A) / (req.past + PRIOR_A + PRIOR_B)
-    return min(0.9, max(0.0, hist + LEAD_SLOPE * (DAY_INDEX[day] + LEAD0 - HIST_LEAD)))
-
-
-def _cost(world: World, req: Request, day: dt.date) -> float:
-    wait = DAY_INDEX[day] - req.ref_day
-    c = WEIGHT[req.urgency] * wait + (SOON_LATE_PENALTY if req.urgency == "S" and wait > world.soon_days else 0)
-    return c + (IDLE_COST * len(_need(req, 0)) * estimated_no_show(req, day) if world.hard else 0)
-
-
-class _Plan:
-    """Bookings under construction, with slot occupancy, interpreter and lab counts."""
-
-    def __init__(self, world: World):
-        self.world = world
-        self.book: dict = {}             # request id -> (req, doc, day, start, need, speaks, test)
-        self.used: dict = {}             # (doctor id, day, minute) -> [request ids]
-        self.interp_new: dict = {}
-        self.interp_all: dict = {}
-        self.lab: dict = {}
-
-    def test_day(self, req: Request, di: int) -> dt.date | None:
-        """Latest lab day with room from the earliest date up to the day before visit day `di` (None: no test)."""
-        for ti in range(di - 1, -1, -1):
-            if DAYS[ti] < req.earliest:
-                break
-            if self.lab.get(DAYS[ti], 0) < self.world.lab_cap:
-                return DAYS[ti]
-        return None
-
-    def options(self, req: Request, ignore_used: bool = False) -> list:
-        """Feasible (day, doctor, start, test day) for req, best first: earliest day (a day later for an
-        interpreted visit), own-language doctor, fewest cut free runs, earliest start."""
-        w, out = self.world, []
-        docs = [d for d in w.doctors if d.dept == req.dept and (req.prev is None or d.id == req.prev)]
-        for di in range(req.ref_day, req.last_day(w.urgent_days) + 1):
-            day = DAYS[di]
-            if day < req.earliest:
-                continue
-            test = None
-            if w.medium and req.test:
-                test = self.test_day(req, di)
-                if test is None:
-                    continue
-            for doc in docs:
-                if day == HOLIDAY and doc.dept == w.closed_dept:
-                    continue
-                speaks = req.lang in doc.langs
-                if not speaks and req.new and self.interp_new.get(day, 0) >= w.interpreters:
-                    continue
-                free = w.free.get((doc.id, day), [])
-                for s in free:
-                    need = _need(req, s)
-                    if not all(x in free for x in need):
-                        continue
-                    if not ignore_used and any((doc.id, day, x) in self.used for x in need):
-                        continue
-                    loose = sum(1 for x in (need[0] - SLOT, need[-1] + SLOT)
-                                if x in free and (doc.id, day, x) not in self.used)
-                    key = (_cost(w, req, day) + (0 if speaks else INTERP_DETOUR), not speaks, loose, s, doc.id)
-                    out.append((key, day, doc, s, need, speaks, test))
-        out.sort(key=lambda o: o[0])
-        return out
-
-    def add(self, req, day, doc, s, need, speaks, test) -> None:
-        self.book[req.id] = (req, doc, day, s, need, speaks, test)
-        for x in need:
-            self.used.setdefault((doc.id, day, x), []).append(req.id)
-        if not speaks:
-            self.interp_all[day] = self.interp_all.get(day, 0) + 1
-            if req.new:
-                self.interp_new[day] = self.interp_new.get(day, 0) + 1
-        if test is not None:
-            self.lab[test] = self.lab.get(test, 0) + 1
-
-    def remove(self, rid: str) -> tuple:
-        req, doc, day, s, need, speaks, test = b = self.book.pop(rid)
-        for x in need:
-            self.used[(doc.id, day, x)].remove(rid)
-            if not self.used[(doc.id, day, x)]:
-                del self.used[(doc.id, day, x)]
-        if not speaks:
-            self.interp_all[day] -= 1
-            if req.new:
-                self.interp_new[day] -= 1
-        if test is not None:
-            self.lab[test] -= 1
-        return b
-
-    def restore(self, b: tuple) -> None:
-        req, doc, day, s, need, speaks, test = b
-        self.add(req, day, doc, s, need, speaks, test)
-
-    def overbook_options(self, req: Request) -> list:
-        """Hard tier: slots of req's follow-up doctor already holding one follow-up, in sessions with room."""
-        w, out = self.world, []
-        if not req.prev or req.urgency == "U":
-            return out
-        doc = w.doctor(req.prev)
-        for di in range(req.ref_day, req.last_day(w.urgent_days) + 1):
-            day = DAYS[di]
-            if day < req.earliest or (day == HOLIDAY and doc.dept == w.closed_dept):
-                continue
-            test = self.test_day(req, di) if req.test else None
-            if req.test and test is None:
-                continue
-            speaks = req.lang in doc.langs
-            for s in w.free.get((doc.id, day), []):
-                held = self.used.get((doc.id, day, s), [])
-                if len(held) != 1 or w.request(held[0]).new:
-                    continue
-                half = s < NOON
-                n_ob = sum(1 for x in w.free.get((doc.id, day), [])
-                           if (x < NOON) == half and len(self.used.get((doc.id, day, x), [])) > 1)
-                if n_ob >= w.ob_max:
-                    continue
-                p, q = estimated_no_show(req, day), estimated_no_show(w.request(held[0]), day)
-                # Joining a slot: own waiting cost; collision if both come; the slot's idle risk drops from q to p*q.
-                delta = (_cost(w, req, day) - IDLE_COST * p + COLLISION_COST * (1 - p) * (1 - q)
-                         - IDLE_COST * q * (1 - p) + (0 if speaks else INTERP_DETOUR))
-                out.append(((delta, s), day, doc, s, [s], speaks, test))
-        out.sort(key=lambda o: o[0])
-        return out
-
-
-def _solve(world: World) -> list[Booking]:
-    """Greedy by priority (urgent, soon, routine; each by reference date) into the cheapest feasible slot; one
-    repair pass that books a left-over request when moving a single blocking booking makes room; in the hard
-    tier, then overbook left-over follow-ups where the expected collision costs less than leaving them out."""
-    if "ref" in world._cache:
-        return list(world._cache["ref"])
-    plan = _Plan(world)
-    order = sorted(world.requests, key=lambda r: ("USR".index(r.urgency), r.ref_day, r.id))
-    for req in order:
-        opts = plan.options(req)
-        if opts:
-            plan.add(req, *opts[0][1:])
-    for req in order * 2:
-        if req.id in plan.book:
-            continue
-        for _, day, doc, s, need, speaks, test in plan.options(req, ignore_used=True):
-            blockers = {rid for x in need for rid in plan.used.get((doc.id, day, x), [])}
-            if len(blockers) != 1:
-                continue
-            old = plan.remove(blockers.pop())
-            if test is not None and plan.lab.get(test, 0) >= world.lab_cap:
-                plan.restore(old)
-                continue
-            plan.add(req, day, doc, s, need, speaks, test)
-            alt = plan.options(old[0])
-            if alt and (_cost(world, req, day) + _cost(world, old[0], alt[0][1]) - _cost(world, old[0], old[2])
-                        < UNSEEN_PENALTY):
-                plan.add(old[0], *alt[0][1:])
-                break
-            plan.remove(req.id)
-            plan.restore(old)
-    if world.hard:
-        for req in order:
-            if req.id in plan.book:
-                continue
-            opts = plan.overbook_options(req)
-            if opts and opts[0][0][0] < UNSEEN_PENALTY:
-                plan.add(req, *opts[0][1:])
-    out = sorted(((b[0], b[1], b[2], b[3], b[6]) for b in plan.book.values()), key=lambda b: b[0].id)
-    world._cache["ref"] = out
-    return list(out)
-
-
-def _write(out_dir: Path, bookings) -> None:
-    write_csv(out_dir / "bookings.csv", ["request_id", "doctor_id", "date", "start", "test_date"],
-              [[r.id, d.id, day.isoformat(), _hhmm(s), t.isoformat() if t else ""] for r, d, day, s, t in bookings])
-
-
-def reference_solution(world: World, out_dir: Path, setting) -> None:
-    _write(out_dir, _solve(_View(world, setting)))
-
-
-def violating_examples(world: World, setting) -> dict:
-    """One deliverable per rule of the setting that breaks exactly that rule (for the validator)."""
-    world = _View(world, setting)
-    ref = _solve(world)
-
-    def rules_of(bookings) -> set:
-        return {v[0] for v in evaluate(world, bookings)[0]}
-
-    def occupied(bookings) -> set:
-        return {(d.id, day, x) for r, d, day, s, t in bookings for x in _need(r, s)}
-
-    def find(rule: str, moves) -> list:
-        for cand in moves():
-            if rules_of(cand) == {rule}:
-                return cand
-        raise AssertionError(f"no clean example for {rule} ({world.setting.label})")
-
-    def relocations(pred_req, pred_target):
-        """Every single-booking move of a request matching pred_req to a free start matching pred_target."""
-        def gen():
-            for i, (r, d, day, s, t) in enumerate(ref):
-                if not pred_req(r, d, day, s):
-                    continue
-                rest = ref[:i] + ref[i + 1:]
-                occ = occupied(rest)
-                for (did, dday), starts in sorted(world.free.items()):
-                    doc = world.doctor(did)
-                    for x in starts:
-                        if (did, dday, x) in occ or not pred_target(r, d, day, s, doc, dday, x):
-                            continue
-                        yield rest + [(r, doc, dday, x, t)]
-        return gen
-
-    def stack(pred_pair):
-        """Put the follow-up booking j onto the start of booking i, same doctor and day."""
-        def gen():
-            for i, (r, d, day, s, t) in enumerate(ref):
-                for j, (r2, d2, day2, s2, t2) in enumerate(ref):
-                    if i != j and d2.id == d.id and day2 == day and not r2.new and pred_pair(r, r2):
-                        yield [b for k, b in enumerate(ref) if k != j] + [(r2, d, day, s, t2)]
-        return gen
-
-    def double():
-        for i, (r, d, day, s, t) in enumerate(ref):
-            for j, (r2, d2, day2, s2, t2) in enumerate(ref):
-                if i != j and r2.dept == r.dept and not r2.new and (r2.prev in (None, d.id)) and r2.urgency != "U":
-                    yield [b for k, b in enumerate(ref) if k != j] + [(r2, d, day, s, t2)]
-
-    def too_many_overbooked():
-        """Pair up follow-ups inside one doctor session until it holds one more overbooked slot than allowed."""
-        sessions: dict = {}
-        for k, (r, d, day, s, t) in enumerate(ref):
-            sessions.setdefault((d.id, day, s < NOON), []).append(k)
-        for key, idx in sorted(sessions.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2])):
-            starts = {}
-            for k in idx:
-                starts.setdefault(ref[k][3], []).append(k)
-            ob = sum(1 for ks in starts.values() if len(ks) > 1)
-            singles = [ks[0] for st, ks in sorted(starts.items()) if len(ks) == 1 and not ref[ks[0]][0].new]
-            need = world.ob_max + 1 - ob
-            if need <= 0 or len(singles) < 2 * need:
-                continue
-            out = list(ref)
-            for p in range(need):
-                a, b = singles[2 * p], singles[2 * p + 1]
-                r2, d2, day2, s2, t2 = ref[b]
-                out[b] = (r2, d2, day2, ref[a][3], t2)
-            yield out
-
-    def drop_urgent():
-        for i, (r, d, day, s, t) in enumerate(ref):
-            if r.urgency == "U":
-                yield ref[:i] + ref[i + 1:]
-
-    def pile(count, pred_req, move):
-        """Apply single moves of matching bookings one after another until `count` exceeds its cap."""
-        def gen():
-            for target in DAYS:
-                cand = list(ref)
-                for b in ref:
-                    if not pred_req(b, target):
-                        continue
-                    k = next((j for j, c in enumerate(cand) if c[0].id == b[0].id), None)
-                    moved = None if k is None else move(cand, k, target)
-                    if moved is None:
-                        continue
-                    cand = moved
-                    if count(cand, target):
-                        yield cand
-                        break
-        return gen
-
-    def move_visit(cand, k, target):
-        """Move booking k to a start of a same-department doctor who does not speak the patient's language,
-        dropping routine bookings that sit in the way (leaving a request out only costs quality)."""
-        r, d, day, s, t = cand[k]
-        for doc in world.doctors:
-            if doc.dept != r.dept or r.lang in doc.langs:
-                continue
-            free = world.free.get((doc.id, target), [])
-            for x in free:
-                need = _need(r, x)
-                if not all(y in free for y in need):
-                    continue
-                drop = {j for j, (r2, d2, day2, s2, t2) in enumerate(cand) if j != k and d2.id == doc.id
-                        and day2 == target and set(_need(r2, s2)) & set(need)}
-                if any(cand[j][0].urgency == "U" or (cand[j][0].new and cand[j][0].lang not in doc.langs)
-                       for j in drop):
-                    continue
-                return [b if j != k else (r, doc, target, x, t) for j, b in enumerate(cand) if j not in drop]
-        return None
-
-    def interp_count(cand, target):
-        return sum(1 for r, d, day, s, t in cand if day == target and r.new and r.lang not in d.langs) \
-            > world.interpreters
-
-    def lab_count(cand, target):
-        return sum(1 for r, d, day, s, t in cand if t == target) > world.lab_cap
-
-    def move_test(cand, k, target):
-        r, d, day, s, t = cand[k]
-        return cand[:k] + [(r, d, day, s, target)] + cand[k + 1:]
-
-    ex = {
-        "slot_length": find("slot_length", relocations(
-            lambda r, d, day, s: r.new and r.urgency == "R",
-            lambda r, d, day, s, doc, dday, t: doc.id == d.id and dday == day)),
-        "department_match": find("department_match", relocations(
-            lambda r, d, day, s: r.new and r.urgency == "R" and r.lang == "L0",
-            lambda r, d, day, s, doc, dday, t: doc.dept != r.dept and dday == day)),
-        "holiday_closure": find("holiday_closure", relocations(
-            lambda r, d, day, s: r.dept == world.closed_dept and r.urgency == "R",
-            lambda r, d, day, s, doc, dday, t: dday == HOLIDAY and doc.dept == world.closed_dept)),
-        "not_before_earliest": find("not_before_earliest", relocations(
-            lambda r, d, day, s: r.earliest > START and r.urgency == "R" and not r.test,
-            lambda r, d, day, s, doc, dday, t: dday < r.earliest and doc.id == d.id)),
-        "interpreter_capacity": find("interpreter_capacity", pile(
-            interp_count,
-            lambda b, target: b[0].new and b[0].urgency == "R" and b[0].lang != "L0" and b[0].earliest <= target
-            and (b[4] is None or b[4] < target) and (b[0].referral is None or b[0].referral >= target)
-            and not (b[0].dept == world.closed_dept and target == HOLIDAY) and b[2] != target,
-            move_visit)),
-        "urgent_within_2_days": find("urgent_within_2_days", drop_urgent),
-        "follow_up_same_doctor": find("follow_up_same_doctor", relocations(
-            lambda r, d, day, s: not r.new and r.urgency == "R" and r.lang == "L0",
-            lambda r, d, day, s, doc, dday, t: doc.dept == r.dept and doc.id != r.prev and dday == day)),
-    }
-    if world.hard:
-        ex["slot_capacity"] = find("slot_capacity", stack(lambda r, r2: r.new))
-        ex["overbooking_limit"] = find("overbooking_limit", too_many_overbooked)
-    else:
-        ex["no_double_booking"] = find("no_double_booking", double)
-    if world.medium:
-        ex["referral_validity"] = find("referral_validity", relocations(
-            lambda r, d, day, s: r.referral is not None and r.referral < DAYS[-1] and r.urgency == "R",
-            lambda r, d, day, s, doc, dday, t: doc.id == d.id and dday > r.referral))
-        ex["test_before_visit"] = find("test_before_visit", lambda: (
-            ref[:k] + [(r, d, day, s, day)] + ref[k + 1:] for k, (r, d, day, s, t) in enumerate(ref) if r.test))
-        ex["lab_capacity"] = find("lab_capacity", pile(
-            lab_count, lambda b, target: b[0].test and b[4] != target and b[0].earliest <= target < b[2],
-            move_test))
-    return {rule: (lambda out, b=b: _write(out, b)) for rule, b in ex.items()}
+    reqs = sorted([r for r, _, _ in world.past_appts] + world.past_reqs, key=lambda r: (r.recv, r.patient))
+    ids = {}
+    for k, r in enumerate(reqs, start=1):
+        ids[id(r)] = r.id or f"H{k:05d}"
+        rows.append([ids[id(r)], r.patient, iso(r.recv), v[r.dept], v["new" if r.new else "follow"], r.urgency,
+                     TRIAGE_L[r.urgency][lang][r.note], ln[r.lang], r.prev or "", iso(r.earliest),
+                     iso(r.referral) if r.referral is not None else "", v["blood"] if r.test else ""])
+    write_csv(data_dir / FILES["requests"][lang], head, rows)
+    write_csv(data_dir / FILES["appointments"][lang],
+              [c["request"], c["patient"], c["doctor"], c["booked_on"], c["date"], c["start"], c["test_date"],
+               c["outcome"]],
+              [[ids[id(r)], r.patient, a.doctor, iso(a.booked_on), iso(a.day), hhmm(a.start),
+                iso(a.test) if a.test is not None else "", v[o]]
+               for r, a, o in sorted(world.past_appts, key=lambda x: (x[1].day, x[1].doctor, x[1].start))])
+    (data_dir / FILES["notice"][lang]).write_text(NOTICE[lang], encoding="utf-8")
+    for key, part in (("sample_in", "input"), ("sample_out", "output")):
+        (data_dir / FILES[key][lang]).write_text(json.dumps(world.sample[part], ensure_ascii=False, indent=1),
+                                                 encoding="utf-8")

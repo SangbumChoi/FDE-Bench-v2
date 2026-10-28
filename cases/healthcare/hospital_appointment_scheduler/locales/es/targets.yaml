@@ -1,24 +1,48 @@
-- id: date_format
-  text: fecha_desde está escrita como día/mes/año; es el primer día en que el paciente puede venir, y una fecha anterior al 16 de noviembre significa que puede venir desde el 16 (la espera se cuenta desde entonces).
+- id: interface
+  text: El entregable es program/scheduler.py con on_day(day), llamado una vez por día laborable al final de la jornada, en orden y en un solo proceso (el estado puede vivir en variables del módulo), 10 s por llamada, solo biblioteca estándar y sin archivos de datos en ejecución; devuelve acciones book / move / release (citas desde mañana y dentro de los 10 días laborables siguientes) y la tabla de situación del día.
+- id: evaluation_period
+  text: El programa se evalúa en los 20 días laborables del 9 de noviembre al 4 de diciembre de 2026, que no están en los datos; todas las solicitudes de ese periodo son nuevas.
 - id: visit_length
-  text: Una primera visita ocupa dos huecos libres consecutivos de 20 minutos del mismo médico el mismo día (inicio = primer hueco); una revisión ocupa un hueco.
+  text: Una primera visita ocupa dos huecos consecutivos de 20 minutos del mismo médico en una sesión (inicio = primer hueco); una revisión ocupa uno.
 - id: urgent_window
-  text: Toda solicitud urgente (U) debe citarse dentro de los {{urgent_days}} días laborables siguientes a su fecha de referencia (fecha desde, o el 16 de noviembre si es anterior).
+  text: Toda solicitud urgente (U) debe citarse el día en que llega, dentro de los {{urgent_days}} días laborables siguientes a su primer día posible (fecha más temprana o el día laborable tras recibirla), y seguir dentro de ese plazo si se cambia.
+- id: urgent_reserve
+  text: Los dos primeros huecos de cada sesión de mañana (09:00 y 09:20) se reservan para urgentes a dos o más días laborables vista; el día anterior (para las consultas de mañana) se liberan para cualquiera.
 - id: follow_up_doctor
-  text: Citar la revisión con el médico anterior es una costumbre de admisión, no una obligación contractual, y admite excepciones (el médico D11 está de vacaciones la primera semana).
+  text: Una revisión se cita con el médico anterior del paciente; es una costumbre, no una regla del contrato, y la jefa de la oficina de consultas externas puede autorizar una excepción.
 - id: interpreters
-  text: Una visita con un médico que no habla el idioma del paciente necesita intérprete; solo hay {{interpreters_per_day}} intérpretes presenciales al día, obligatorios en primeras visitas, y las revisiones que excedan usan interpretación por vídeo de pago (3 por visita).
+  text: Una primera visita con un médico que no habla el idioma del paciente necesita uno de los {{interpreters_per_day}} intérpretes presenciales diarios del hospital; las revisiones usan interpretación telefónica sin límite.
 - id: holiday_clinic
-  text: "{{closed_dept}} cierra el 23 de noviembre (Día de la Ciudad) aunque la lista de huecos todavía muestre sus huecos."
-- id: referral_expiry
-  text: La primera visita debe hacerse como muy tarde en la fecha de volante_valido_hasta (día/mes/año); después el volante caduca y es mejor no citar la solicitud.
-- id: blood_test
-  text: El análisis de sangre en ayunas debe hacerse al menos un día laborable antes de la visita y no antes de la fecha desde, con su fecha en test_date; el laboratorio admite como máximo {{lab_cap}} por día laborable.
-- id: no_show_rates
-  text: La tasa de ausencias varía según el paciente (historial de asistencia; en total, una de cada cinco) y sube un punto por cada día laborable de antelación; el historial se midió con unos 5 días de antelación y las solicitudes se recibieron 2 días laborables antes del 16 de noviembre.
-- id: overbooking
-  text: Un hueco puede tener dos revisiones (nunca una primera visita), con un máximo de {{overbooked_per_session}} huecos sobrecitados por médico en cada consulta de mañana o de tarde.
+  text: La consulta de {{closed_dept}} cierra el Día de la Ciudad, lunes 23 de noviembre, aunque el calendario aún muestra sus sesiones; las demás funcionan.
+- id: move_notice
+  text: Cuando el hospital cambia la fecha o la hora de la cita de un paciente, la nueva debe ser al menos {{move_notice_days}} días laborables después de hoy (misma fecha y hora con otro médico no necesita preaviso); cada cambio cuesta.
+- id: waitlist_priority
+  text: Las solicitudes en espera se citan en orden de prioridad, {{waitlist_order}}; no se cita una mientras otra de mayor prioridad de la misma especialidad, tipo de visita y médico anterior sigue esperando y podría haber ocupado ese hueco.
+- id: status_table
+  text: Cada día el programa devuelve por especialidad, para los 10 días laborables siguientes y tras sus acciones, free_slots (huecos libres citables, sin reserva ni consultas cerradas), held_back (huecos libres de la reserva de urgencias a dos o más días) y waitlist (solicitudes en espera); cada entrada debe ser exacta y la tabla es el 20% de la calidad.
 - id: scoring
-  text: Calidad = días laborables de espera ponderados U 3 / S 2 / R 1, más 20 por cada solicitud S citada con más de {{soon_days}} días laborables de retraso, más 60 por solicitud sin citar, más 3 por revisión con interpretación por vídeo; cuanto más bajo, mejor.
-- id: scoring_no_shows
-  text: En el nivel difícil la calidad suma además 10 por cada hueco que se espera que quede vacío y 25 por cada hueco sobrecitado al que se espera que acudan los dos pacientes.
+  text: La calidad es 0,8 × el valor operativo respecto al programa de referencia del cliente + 0,2 × la precisión de la tabla; el valor operativo es +10 por hueco de paciente atendido en los días de consulta del 10 de noviembre al 7 de diciembre, menos 0,4 × peso de urgencia (U 3, S 2, R 1) por día laborable de espera, menos 10 por solicitud nunca citada y menos 4 por cambio en la cita de un paciente.
+- id: easy_scope
+  text: En esta ronda quedan fuera los avisos de ausencia e intérpretes, los volantes, los análisis y las ausencias de pacientes (test_date en null, todo citado cuenta como que viene), y cada solicitud es su propia visita.
+- id: medium_scope
+  text: En esta ronda quedan fuera las ausencias de pacientes (todo citado cuenta como que viene y no hay sobrecitación) y cada solicitud es su propia visita, aunque el paciente pida dos veces.
+- id: referral_expiry
+  text: Una primera visita debe hacerse en o antes de referral_valid_until; después ya no se puede citar y no cuenta en la lista de espera.
+- id: blood_test
+  text: El análisis en ayunas debe hacerse al menos un día laborable antes de la visita y no antes de la fecha más temprana, anotado en test_date; el laboratorio admite como mucho {{lab_cap}} por día laborable, contando los ya citados.
+- id: doctor_absence
+  text: Desde el día en que llega un aviso doctor_absence no puede quedar ninguna cita con ese médico en sus días de ausencia; se cambian en esa llamada (con preaviso, salvo otro médico a la misma hora) o se devuelven a la lista de espera, y esos días salen de la tabla.
+- id: interpreter_absence
+  text: Un aviso interpreter_absence significa un intérprete presencial menos en esa fecha desde el día en que llega; las primeras visitas con intérprete que sobren ese día se cambian o se devuelven.
+- id: no_show_rates
+  text: Las tasas de ausencia varían por paciente (citas previas y perdidas en la solicitud; cerca del 22% perdidas en el historial) y suben alrededor de un punto por día laborable de antelación; el historial de los pacientes se midió con unos 5 días laborables de antelación.
+- id: overbooking
+  text: Un hueco puede tener dos revisiones (nunca una primera visita), como mucho {{overbooked_per_session}} huecos así sobrecitados por médico y sesión de mañana o tarde.
+- id: duplicates
+  text: Una segunda solicitud del mismo paciente para la misma especialidad es la misma necesidad; un paciente tiene como mucho una cita por especialidad en el periodo y la tabla cuenta pacientes en espera, no solicitudes.
+- id: several_departments
+  text: Un paciente citado en varias especialidades debería venir un solo día si se puede; cada día de hospital de más para ese paciente cuesta 3 en la puntuación.
+- id: staff_notes
+  text: Las notas no tienen peso - el conocido del director espera su turno como cualquiera y el deseo de una jefatura de servicio de reservar sus tardes no es una regla; sus huecos se llenan con la lista de espera.
+- id: scoring_hard
+  text: En esta ronda los huecos atendidos son esperanzas sobre la probabilidad de ausencia de cada paciente, y cada hueco sobrecitado resta 12 × la probabilidad de que acudan ambos pacientes.

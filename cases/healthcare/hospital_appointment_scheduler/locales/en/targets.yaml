@@ -1,53 +1,108 @@
-- id: date_format
-  kind: ambiguous
+- id: interface
+  kind: missing
   domain: data semantics
-  text: earliest_date is written day/month/year; it is the first day the patient can come, and a date before 16 November means the patient can come from 16 November (waiting is counted from then).
+  text: The deliverable is program/scheduler.py with on_day(day), called once per working day at the end of the day, in order, in one process (state can live in module variables), 10 s per call, standard library only, no data files at run time; it returns book / move / release actions (bookings from tomorrow, within the next 10 working days) and the day's status table.
+- id: evaluation_period
+  kind: missing
+  domain: scoring
+  text: The program is judged on the 20 working days from 9 November to 4 December 2026, which are not in the data; every request in them is new.
 - id: visit_length
   kind: missing
   domain: calculation
-  text: A new-patient visit takes two consecutive free 20-minute slots of the same doctor on the same day (start = first slot); a follow-up takes one slot.
+  text: A new-patient visit takes two consecutive 20-minute slots of the same doctor in one session (start = first slot); a follow-up takes one slot.
 - id: urgent_window
   kind: missing
   domain: business rule
-  text: Every urgent (U) request must be booked within {{urgent_days}} working days of its reference date (earliest date, or 16 November if earlier).
+  text: Every urgent (U) request must be booked the day it arrives, within {{urgent_days}} working days of its first possible day (earliest date or the next working day after receipt), and stay within that window if moved.
+- id: urgent_reserve
+  kind: missing
+  domain: business rule
+  text: The first two slots of every morning session (09:00 and 09:20) are held for urgent requests two or more working days ahead; the day before (for tomorrow's clinics) they are released to anyone.
 - id: follow_up_doctor
   kind: missing
   domain: business rule
-  text: A follow-up is booked with the patient's previous doctor; this is a front-desk habit, not a contract, and an exception is possible (Dr D11 is on leave in week 1).
+  text: A follow-up is booked with the patient's previous doctor; this is a habit, not a contract rule, and the head of the outpatient office can grant an exception.
 - id: interpreters
   kind: missing
   domain: business rule
-  text: A visit with a doctor who does not speak the patient's language needs an interpreter; only {{interpreters_per_day}} in-person interpreters per day, which new-patient visits must have; follow-ups beyond that use paid video interpreting (3 per visit).
+  text: A new-patient visit with a doctor who does not speak the patient's language needs one of the {{interpreters_per_day}} in-person interpreters per day (hospital-wide); follow-ups use telephone interpreting without limit.
 - id: holiday_clinic
   kind: missing
   domain: business rule
-  text: The {{closed_dept}} clinic is closed on 23 November (City Day) even though the free-slot list still shows its slots.
+  text: The {{closed_dept}} clinic is closed on City Day, Monday 23 November, although the calendar still lists its sessions; all other clinics work.
+- id: move_notice
+  kind: missing
+  domain: business rule
+  text: When the hospital changes the date or time of a patient's appointment, the new one must be at least {{move_notice_days}} working days after today (same date and time with another doctor needs no notice); every change costs.
+- id: waitlist_priority
+  kind: missing
+  domain: business rule
+  text: Waiting requests are booked in priority order, {{waitlist_order}}; a request may not be booked while a higher-priority request of the same department, visit type and previous doctor still waits and could have taken that slot.
+- id: status_table
+  kind: missing
+  domain: scoring
+  text: Every day the program returns per department, over the next 10 working days after its actions, free_slots (empty bookable slots, not held back, closed clinics excluded), held_back (empty urgent-reserve slots two or more days ahead) and waitlist (waiting requests); each entry must be exact, and the table is 20% of quality.
+- id: scoring
+  kind: missing
+  domain: scoring
+  text: Quality is 0.8 x operations value relative to the client's benchmark program plus 0.2 x table accuracy; the operations value is +10 per patient-slot seen on the clinic days 10 November - 7 December, minus 0.4 x urgency weight (U 3, S 2, R 1) per working day of waiting, minus 10 per request never booked, minus 4 per change to a patient's appointment.
+- id: easy_scope
+  kind: missing
+  domain: business rule
+  tiers: [easy]
+  text: This round absence and interpreter notices, referral dates, blood tests and no-shows are out of scope (test_date stays null, everyone booked counts as coming), and each request is its own visit.
+- id: medium_scope
+  kind: missing
+  domain: business rule
+  tiers: [medium]
+  text: This round no-shows are out of scope (everyone booked counts as coming, no overbooking) and each request is its own visit, even when a patient asks twice.
 - id: referral_expiry
   kind: missing
   domain: business rule
   tiers: [medium, hard]
-  text: A new patient's visit must be on or before referral_valid_until (day/month/year); after that the referral is void and the request is better left unbooked.
+  text: A new patient's visit must be on or before referral_valid_until; after that the request can no longer be booked and does not count on the waitlist.
 - id: blood_test
   kind: missing
   domain: business rule
   tiers: [medium, hard]
-  text: A fasting blood test must be done at least one working day before the visit and not before the earliest date, written in test_date; the lab takes at most {{lab_cap}} tests per working day.
+  text: A fasting blood test is needed at least one working day before the visit, not before the earliest date, written in test_date; the lab takes at most {{lab_cap}} tests per working day including those already booked.
+- id: doctor_absence
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: From the day a doctor_absence notice arrives no appointment may remain with that doctor on the absent days; they are moved in that call (with the notice period, or another doctor at the same time) or released to the waitlist, and absent days leave the table.
+- id: interpreter_absence
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: An interpreter_absence notice means one in-person interpreter fewer on that date from the day it arrives; excess interpreted new-patient visits that day must be moved or released.
 - id: no_show_rates
   kind: missing
   domain: data semantics
   tiers: [hard]
-  text: No-show rates differ per patient (attendance history; about 1 in 5 overall) and rise about one percentage point per working day of lead time; history was measured at about 5 working days of lead, requests taken 2 working days before 16 November.
+  text: No-show rates differ per patient (past and missed appointments in the request; about 22% missed in the history) and rise about one percentage point per working day of lead time; the patients' records were measured at about 5 working days of lead.
 - id: overbooking
   kind: missing
   domain: business rule
   tiers: [hard]
   text: A slot may hold two follow-ups (never a new-patient visit), at most {{overbooked_per_session}} such overbooked slots per doctor per morning or afternoon session.
-- id: scoring
+- id: duplicates
   kind: missing
-  domain: scoring
-  text: Quality = waiting working days weighted U 3 / S 2 / R 1, plus 20 per S request booked more than {{soon_days}} working days late, plus 60 per unbooked request, plus 3 per video-interpreted visit; lower is better.
-- id: scoring_no_shows
+  domain: business rule
+  tiers: [hard]
+  text: A second request of the same patient for the same department is the same need; a patient has at most one appointment per department in the period, and the table counts waiting patients, not requests.
+- id: several_departments
   kind: missing
   domain: scoring
   tiers: [hard]
-  text: The hard-tier quality also counts 10 per slot expected to stand empty (all its patients stay away) and 25 per overbooked slot expected to have both patients turn up.
+  text: A patient booked in several departments should come on one day when possible; every extra hospital day of such a patient costs 3.
+- id: staff_notes
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: Notes carry no weight - a director's acquaintance waits their turn like anyone else and a department head's wish to keep their afternoons free is not a rule; their slots are filled from the waitlist.
+- id: scoring_hard
+  kind: missing
+  domain: scoring
+  tiers: [hard]
+  text: In the hard round seen slots are expected values over each patient's no-show probability, and every overbooked slot costs 12 x the probability that both patients come.
