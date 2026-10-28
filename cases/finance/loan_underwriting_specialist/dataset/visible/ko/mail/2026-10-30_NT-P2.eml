@@ -1,8 +1,7 @@
-From: =?utf-8?b?7J6Q6riI67aA?= <treasury@lender.example>
-To: =?utf-8?b?6rCc7J2464yA7LacIOywveq1rA==?= <loans.desk@lender.example>
+From: 자금부 <treasury@lender.example>
+To: 개인대출 창구 <loans.desk@lender.example>
 Date: Fri, 30 Oct 2026 08:25:00 +0000
-Subject: =?utf-8?b?7J6Q6riI67aAIE5ULVAyOiDsi5zrspQg7JiI7IKwIOuzgOqyvSDsl4Y=?=
- =?utf-8?b?7J2M?=
+Subject: 자금부 NT-P2: 시범 예산 변경 없음
 Message-ID: <NT-P2.2026-10-30@lender.example>
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit

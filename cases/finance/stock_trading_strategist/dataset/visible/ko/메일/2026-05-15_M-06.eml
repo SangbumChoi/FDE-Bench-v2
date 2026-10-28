@@ -1,28 +1,16 @@
-From: =?utf-8?b?67Cx7YWM7Iqk7Yq4IOyXlOynhO2MgA==?= <backtest@desk.example>
-To: =?utf-8?b?7Yq466CI7J2065SpIOuNsOyKpO2BrA==?= <trading.desk@desk.example>
+From: 백테스트 엔진팀 <backtest@desk.example>
+To: 트레이딩 데스크 <trading.desk@desk.example>
 Date: Fri, 15 May 2026 18:30:00 +0000
-Subject: =?utf-8?b?67Cx7YWM7Iqk7Yq4IOyXlOynhCDsi5zrspQg7Jq07Jqp?=
+Subject: 백테스트 엔진 시범 운용
 Message-ID: <M-06@desk.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-7JWI64WV7ZWY7IS47JqULg0KDQrsi6TsoJwg7Jq07Jqp7JeQIOyVnuyEnCDqs7zqsbAg6riw6rCE
-IOyViOyXkOyEnCDsl5Tsp4TsnYQg7Ken6rKMIOyLnOuylCDsmrTsmqntlojsirXri4jri6QuIO2F
-jOyKpO2KuCDqs4TsoozripQgMjAyNi0wMi0wNiDrp4jqsJAg7Iuc7KCQ7JeQIO2YhOq4iCAxMCww
-MDAsMDAw7Jy866GcIOyLnOyeke2VtCDri6TsnYwg6rGw656Y7J28IOyLnOqwgOyXkCDrp6TsiJjt
-lojqs6AsIOuniOyngOuniSDrkZAg6rGw656Y7J287JeQIO2VnCDsooXrqqnsnZgg7J2867aA66W8
-IOunpOuPhO2WiOyKteuLiOuLpC4g7JeU7KeE7J2AIOyghOyytCDrqqjrk5wo66ek64+EIOyLnCDq
-sbDrnpjshLggMC4yJSwgVCsyIOqysOygnCnroZwg64+M66C47Iq164uI64ukLiDssrTqsrAsIOuz
-tOycoCDsooXrqqksIOunpCDrp4jqsJAg7Iuc7KCQ7J2YIOyDge2DnO2RnOuKlCDrjbDsnbTthLDr
-sqDsnbTsiqQg64K067O064K06riwIO2MjOydvCjrjbDsiqTtgaxf642w7J207YSw67Kg7J207Iqk
-LnNxbOydmCBwaWxvdF9maWxscywgcGlsb3RfcG9zaXRpb25zLCBwaWxvdF9zdGF0dXMsIHBpbG90
-X3dlaWdodHMg7YWM7J2067iUKeyXkCDsnojsirXri4jri6QuIO2YuOy2nOyYiOyLnC5qc29u7J2A
-IOyXlOynhOydtCAyMDI2LTAyLTIwIOuniOqwkCDtm4Qg67O064K4IO2YuOy2nCDqt7jrjIDroZzs
-nbTqs6AsIOuwmO2ZmOyYiOyLnC5qc29u7J2AIOyLnOuylCDtlITroZzqt7jrnqjsnbQg64+M66Ck
-7KSAIOqysOqzvOyeheuLiOuLpCjtmJXsi50g7LC46rOg7JqpKS4NCg0K6re4IO2YuOy2nOyXkCDr
-k6TslrQg7J6I64qUIO2GteyngOuKlCDthYzsiqTtirgg66mU7Iuc7KeA7J28IOu/kCDslYTrrLQg
-7J2Y66+46rCAIOyXhuyKteuLiOuLpC4g7Iuk7KCcIOyatOyaqeyXkOyEnCDtlITroZzqt7jrnqjs
-nYAg6re464Kg7J2YIOuplOyLnOyngOulvCDrp6Trsogg7Zi47LacIOyViOyXkOyEnOunjCgibm90
-aWNlcyIg66qp66GdKSDrsJvsnLzrqbAsIOuplOydvOydgCDsnb3snYQg7IiYIOyXhuyKteuLiOuL
-pC4NCg0K67Cx7YWM7Iqk7Yq4IOyXlOynhO2MgA0K
+안녕하세요.
+
+실제 운용에 앞서 과거 기간 안에서 엔진을 짧게 시범 운용했습니다. 테스트 계좌는 2026-02-06 마감 시점에 현금 10,000,000으로 시작해 다음 거래일 시가에 매수했고, 마지막 두 거래일에 한 종목의 일부를 매도했습니다. 엔진은 전체 모드(매도 시 거래세 0.2%, T+2 결제)로 돌렸습니다. 체결, 보유 종목, 매 마감 시점의 상태표는 데이터베이스 내보내기 파일(데스크_데이터베이스.sql의 pilot_fills, pilot_positions, pilot_status, pilot_weights 테이블)에 있습니다. 호출예시.json은 엔진이 2026-02-20 마감 후 보낸 호출 그대로이고, 반환예시.json은 시범 프로그램이 돌려준 결과입니다(형식 참고용).
+
+그 호출에 들어 있는 통지는 테스트 메시지일 뿐 아무 의미가 없습니다. 실제 운용에서 프로그램은 그날의 메시지를 매번 호출 안에서만("notices" 목록) 받으며, 메일은 읽을 수 없습니다.
+
+백테스트 엔진팀

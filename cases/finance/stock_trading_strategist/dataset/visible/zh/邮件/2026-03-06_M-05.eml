@@ -1,13 +1,14 @@
-From: =?utf-8?b?5ZCI6KeE6YOo?= <compliance@desk.example>
-To: =?utf-8?b?5Lqk5piT5Y+w?= <trading.desk@desk.example>
+From: 合规部 <compliance@desk.example>
+To: 交易台 <trading.desk@desk.example>
 Date: Fri, 06 Mar 2026 17:40:00 +0000
-Subject: =?utf-8?b?6ZmQ5Yi25ZCN5Y2V77yaRFVORSDoh6ogMjAyNi0wMy0wOSDotbfnp7s=?=
- =?utf-8?b?5Ye6?=
+Subject: 限制名单：DUNE 自 2026-03-09 起移出
 Message-ID: <M-05@desk.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-5ZCE5Lqk5piT5Y+w77yaDQoNCuivpeWnlOaJmOW3sue7j+e7k+adn+OAguiHqiAyMDI2LTAzLTA5
-IOi1t++8jERVTkUg56e75Ye65YWs5Y+455qE6ZmQ5Yi25ZCN5Y2V77yM5ZCE6LSm5oi36Ieq6K+l
-5pel6LW35Y+v5Lul6YeN5paw5Lqk5piT44CCDQoNCuWQiOinhOmDqA0K
+各交易台：
+
+该委托已经结束。自 2026-03-09 起，DUNE 移出公司的限制名单，各账户自该日起可以重新交易。
+
+合规部

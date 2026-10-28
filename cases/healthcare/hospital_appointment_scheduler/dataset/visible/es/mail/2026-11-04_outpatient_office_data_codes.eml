@@ -1,19 +1,14 @@
-From: =?utf-8?q?Direcci=C3=B3n?= de consultas externas
- <outpatient-office@hospital.example>
+From: Dirección de consultas externas <outpatient-office@hospital.example>
 To: Oficina de citas de consultas externas <booking-office@hospital.example>
 Date: Wed, 04 Nov 2026 12:48:00 +0100
-Subject: =?utf-8?q?C=C3=B3digos?= en los datos del programa de citas
+Subject: Códigos en los datos del programa de citas
 Message-ID: <2026-11-04_outpatient_office_data_codes.es@hospital.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
 A la oficina de citas:
 
-En los datos que recibe el programa de citas, especialidades, idiomas y fecha=
-s van como c=C3=B3digos y AAAA-MM-DD: c=C3=B3digos de especialidad IM =3D Med=
-icina Interna, CARD =3D Cardiolog=C3=ADa, DERM =3D Dermatolog=C3=ADa, ORTH =
-=3D Traumatolog=C3=ADa, PED =3D Pediatr=C3=ADa; los c=C3=B3digos de idioma es=
-t=C3=A1n en la tabla languages de la exportaci=C3=B3n del sistema.
+En los datos que recibe el programa de citas, especialidades, idiomas y fechas van como códigos y AAAA-MM-DD: códigos de especialidad IM = Medicina Interna, CARD = Cardiología, DERM = Dermatología, ORTH = Traumatología, PED = Pediatría; los códigos de idioma están en la tabla languages de la exportación del sistema.
 
-Direcci=C3=B3n de consultas externas
+Dirección de consultas externas

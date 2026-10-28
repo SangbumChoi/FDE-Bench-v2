@@ -1,15 +1,16 @@
-From: =?utf-8?b?7J247IKs67aAIOq4ieyXrO2MgA==?= <payroll@employer.example>
-To: =?utf-8?b?6rCc7J2464yA7LacIOywveq1rA==?= <loans.desk@lender.example>
+From: 인사부 급여팀 <payroll@employer.example>
+To: 개인대출 창구 <loans.desk@lender.example>
 Date: Fri, 30 Oct 2026 10:00:00 +0000
-Subject: =?utf-8?b?7IaM65Od7ISc66WYIOygleyglSBOVC1QNDog7Iug7LKt?= T0099
+Subject: 소득서류 정정 NT-P4: 신청 T0099
 Message-ID: <NT-P4.2026-10-30@lender.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-7JWI64WV7ZWY7IS47JqULg0KDQrsoIDtnawg7KeB7JuQKOqzoOqwnSBCRjAwMDAwMDAsIOyLoOyy
-rSBUMDA5OSnsnZgg6riJ7Jes66qF7IS47ISc66W8IOuLpOyLnCDrsJzquIntlojsirXri4jri6Qu
-IOydtOyghCDshJzrpZggQkYwMDAwMDAwLVMx7JeQ64qUIOq4ieyXrOqwgCDsnpjrqrsg7KCB7ZiA
-IOyeiOyXiOyKteuLiOuLpC4NCuyDiCDshJzrpZggQkYwMDAwMDAwLVMxUuydmCDsm5Qg6riw67O4
-6riJ7J2AIDQsMjAw7J6F64uI64ukLg0KDQrrrLjshJzrsojtmLg6IE5ULVA0DQrsnbjsgqzrtoAg
-6riJ7Jes7YyADQo=
+안녕하세요.
+
+저희 직원(고객 BF0000000, 신청 T0099)의 급여명세서를 다시 발급했습니다. 이전 서류 BF0000000-S1에는 급여가 잘못 적혀 있었습니다.
+새 서류 BF0000000-S1R의 월 기본급은 4,200입니다.
+
+문서번호: NT-P4
+인사부 급여팀

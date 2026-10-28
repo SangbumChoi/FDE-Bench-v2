@@ -1,16 +1,16 @@
-From: =?utf-8?b?5Yuk5YuZ5YWIIOS6uuS6i+mDqOe1puS4juiqsg==?=
- <payroll@employer.example>
-To: =?utf-8?b?5YCL5Lq644Ot44O844Oz56qT5Y+j?= <loans.desk@lender.example>
+From: 勤務先 人事部給与課 <payroll@employer.example>
+To: 個人ローン窓口 <loans.desk@lender.example>
 Date: Wed, 11 Nov 2026 10:00:00 +0000
-Subject: =?utf-8?b?5Y+O5YWl5pu46aGe44Gu6KiC5q2jIE5UMDEw77ya55Sz6L68?= N0127
+Subject: 収入書類の訂正 NT010：申込 N0127
 Message-ID: <NT010.2026-11-11@lender.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-44GK5LiW6Kmx44Gr44Gq44Gj44Gm44GK44KK44G+44GZ44CCDQoNCuW9k+ekvuW+k+alreWToe+8
-iOmhp+WuoiBCRjgxMzIwMTXjgIHnlLPovrwgTjAxMjfvvInjga7ntabkuI7mmI7ntLDjgpLlho3n
-mbrooYzjgZfjgb7jgZfjgZ/jgILku6XliY3jga7mm7jpoZ4gQkY4MTMyMDE1LVMxIOOBrue1puS4
-jumhjeOBq+iqpOOCiuOBjOOBguOCiuOBvuOBl+OBn+OAgg0K5paw44GX44GE5pu46aGeIEJGODEz
-MjAxNS1TMVIg44Gu5pyI6aGN5Z+65pys57Wm44GvIDUsNTAwIOOBp+OBmeOAgg0KDQrmlofmm7jn
-larlj7fvvJpOVDAxMA0K5Yuk5YuZ5YWIIOS6uuS6i+mDqOe1puS4juiqsg0K
+お世話になっております。
+
+当社従業員（顧客 BF8132015、申込 N0127）の給与明細を再発行しました。以前の書類 BF8132015-S1 の給与額に誤りがありました。
+新しい書類 BF8132015-S1R の月額基本給は 5,500 です。
+
+文書番号：NT010
+勤務先 人事部給与課

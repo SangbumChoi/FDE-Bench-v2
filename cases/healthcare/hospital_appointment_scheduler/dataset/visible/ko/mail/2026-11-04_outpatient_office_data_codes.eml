@@ -1,17 +1,14 @@
-From:
- =?utf-8?b?7Jm4656YIOyatOyYge2MgA==?= <outpatient-office@hospital.example>
-To: =?utf-8?b?7Jm4656YIOyYiOyVveyLpA==?= <booking-office@hospital.example>
+From: 외래 운영팀 <outpatient-office@hospital.example>
+To: 외래 예약실 <booking-office@hospital.example>
 Date: Wed, 04 Nov 2026 12:48:00 +0900
-Subject: =?utf-8?b?7JiI7JW9IO2UhOuhnOq3uOueqCDrjbDsnbTthLDsnZgg7L2U65Oc?=
+Subject: 예약 프로그램 데이터의 코드
 Message-ID: <2026-11-04_outpatient_office_data_codes.ko@hospital.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-7JiI7JW97IukIOyXrOufrOu2hOq7mA0KDQrsmIjslb0g7ZSE66Gc6re4656o7J20IOuwm+uKlCDr
-jbDsnbTthLDsl5DshJwg7KeE66OM6rO8wrfslrjslrTCt+uCoOynnOuKlCDsvZTrk5zsmYAgWVlZ
-WS1NTS1EROuhnCDtkZzsi5ztlanri4jri6QuIOynhOujjOqzvCDsvZTrk5zripQgSU0964K06rO8
-LCBDQVJEPeyLrOyepeuCtOqzvCwgREVSTT3tlLzrtoDqs7wsIE9SVEg97KCV7ZiV7Jm46rO8LCBQ
-RUQ97IaM7JWE7LKt7IaM64WE6rO87J206rOgLCDslrjslrQg7L2U65Oc64qUIOyLnOyKpO2FnCDr
-grTrs7TrgrTquLAg7YyM7J287J2YIGxhbmd1YWdlcyDthYzsnbTruJTsl5Ag7J6I7Iq164uI64uk
-Lg0KDQrsmbjrnpgg7Jq07JiB7YyADQo=
+예약실 여러분께
+
+예약 프로그램이 받는 데이터에서 진료과·언어·날짜는 코드와 YYYY-MM-DD로 표시합니다. 진료과 코드는 IM=내과, CARD=심장내과, DERM=피부과, ORTH=정형외과, PED=소아청소년과이고, 언어 코드는 시스템 내보내기 파일의 languages 테이블에 있습니다.
+
+외래 운영팀

@@ -1,12 +1,14 @@
-From: =?utf-8?b?7KeA7KCQ7J6l?= <branch.manager@lender.example>
-To: =?utf-8?b?6rCc7J2464yA7LacIOywveq1rA==?= <loans.desk@lender.example>
+From: 지점장 <branch.manager@lender.example>
+To: 개인대출 창구 <loans.desk@lender.example>
 Date: Fri, 30 Oct 2026 11:00:00 +0000
-Subject: =?utf-8?b?7Iug7LKtIFQwMDAzKOqzoOqwnQ==?= BF8587779)
+Subject: 신청 T0003(고객 BF8587779)
 Message-ID: <note_T0003.2026-10-30@lender.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-7KCA7Z2sIOyngOygkCBWSVAg6rOg6rCd7J6F64uI64ukLiDsmKTripgg7Iug7LKt6riI7JWhIOyg
-hOyVoeycvOuhnCDsirnsnbgg67aA7YOB65Oc66a964uI64ukLg0KDQrsmpTssq06IOyLoOyyreq4
-iOyVoSDsoITslaEg7Iq57J24KDUwLDAwMCkuDQoNCuyngOygkOyepQ0K
+저희 지점 VIP 고객입니다. 오늘 신청금액 전액으로 승인 부탁드립니다.
+
+요청: 신청금액 전액 승인(50,000).
+
+지점장

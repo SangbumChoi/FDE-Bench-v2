@@ -1,18 +1,16 @@
-From: Departamento de =?utf-8?q?n=C3=B3minas?= <payroll@employer.example>
-To: Mesa de =?utf-8?q?pr=C3=A9stamos?= personales <loans.desk@lender.example>
+From: Departamento de nóminas <payroll@employer.example>
+To: Mesa de préstamos personales <loans.desk@lender.example>
 Date: Thu, 12 Nov 2026 10:00:00 +0000
 Subject: Documento de ingresos corregido NT011: solicitud N0182
 Message-ID: <NT011.2026-11-12@lender.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
 Hola:
 
-Hemos vuelto a emitir la n=C3=B3mina de nuestro empleado (cliente BF6753351, =
-solicitud N0182): el documento anterior BF6753351-S1 mostraba un salario inco=
-rrecto.
+Hemos vuelto a emitir la nómina de nuestro empleado (cliente BF6753351, solicitud N0182): el documento anterior BF6753351-S1 mostraba un salario incorrecto.
 El nuevo documento BF6753351-S1R muestra un salario base mensual de 8.590.
 
 Referencia: NT011
-Departamento de n=C3=B3minas
+Departamento de nóminas

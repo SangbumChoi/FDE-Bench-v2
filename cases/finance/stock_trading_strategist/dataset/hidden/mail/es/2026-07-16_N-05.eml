@@ -1,18 +1,14 @@
-From: =?utf-8?q?Gesti=C3=B3n?= de riesgos <risk@desk.example>
-To: Mesa de =?utf-8?q?negociaci=C3=B3n?= <trading.desk@desk.example>
+From: Gestión de riesgos <risk@desk.example>
+To: Mesa de negociación <trading.desk@desk.example>
 Date: Thu, 16 Jul 2026 17:40:00 +0000
-Subject: El =?utf-8?q?l=C3=ADmite?= por valor baja 5 puntos desde el
- 2026-07-21
+Subject: El límite por valor baja 5 puntos desde el 2026-07-21
 Message-ID: <N-05@desk.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
 A la mesa:
 
-Tras la ca=C3=ADda del mercado, el l=C3=ADmite por valor de todas las cartera=
-s de clientes baja 5 puntos desde el 2026-07-21. Al cierre de ese d=C3=ADa to=
-das las posiciones deben estar dentro del nuevo l=C3=ADmite, se hayan comprad=
-o ese d=C3=ADa o no.
+Tras la caída del mercado, el límite por valor de todas las carteras de clientes baja 5 puntos desde el 2026-07-21. Al cierre de ese día todas las posiciones deben estar dentro del nuevo límite, se hayan comprado ese día o no.
 
-Gesti=C3=B3n de riesgos
+Gestión de riesgos

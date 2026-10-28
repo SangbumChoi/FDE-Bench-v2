@@ -1,14 +1,17 @@
-From: =?utf-8?b?6LS35qy+5pyN5YqhIOi/mOasvuehruiupA==?=
- <confirmations@creditor.example>
-To: =?utf-8?b?5Liq5Lq66LS35qy+5p+c5Y+w?= <loans.desk@lender.example>
+From: 贷款服务 还款确认 <confirmations@creditor.example>
+To: 个人贷款柜台 <loans.desk@lender.example>
 Date: Thu, 26 Nov 2026 09:00:00 +0000
-Subject: =?utf-8?b?6L+Y5qy+56Gu6K6kIE5UMDI077ya6LSf5YC6?= BF6164966-D2
+Subject: 还款确认 NT024：负债 BF6164966-D2
 Message-ID: <NT024.2026-11-26@lender.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-5oKo5aW977yaDQoNCuWFueehruiupOWuouaItyBCRjYxNjQ5NjbvvIjlvoHkv6HmoaPmoYjlj7fv
-vInnmoTotJ/lgLogQkY2MTY0OTY2LUQyIOW3suS6jiAyMDI2LTExLTI2IOWFqOmDqOe7k+a4heOA
-gg0K5paw55qE5pyq5YG/5L2Z6aKd77yaMA0K5paw55qE5pyI6L+Y5qy+6aKd77yaMA0KDQrnvJbl
-j7fvvJpOVDAyNA0K6LS35qy+5pyN5YqhIOi/mOasvuehruiupA0K
+您好：
+
+兹确认客户 BF6164966（征信档案号）的负债 BF6164966-D2 已于 2026-11-26 全部结清。
+新的未偿余额：0
+新的月还款额：0
+
+编号：NT024
+贷款服务 还款确认

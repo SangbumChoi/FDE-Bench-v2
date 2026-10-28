@@ -1,14 +1,14 @@
-From: =?utf-8?b?6Zi/55m75Lqk5piT5omAIOW4guWcuui/kOiQpemDqA==?=
- <market.operations@arden-exchange.example>
-To: =?utf-8?b?5Lqk5piT5Y+w?= <trading.desk@desk.example>
+From: 阿登交易所 市场运营部 <market.operations@arden-exchange.example>
+To: 交易台 <trading.desk@desk.example>
 Date: Fri, 26 Jun 2026 17:40:00 +0000
-Subject: 2026-06-26 =?utf-8?b?5YWo5biC5Zy654aU5pat?=
+Subject: 2026-06-26 全市场熔断
 Message-ID: <N-04@desk.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-5ZCE5Lya5ZGY77yaDQoNCjIwMjYtMDYtMjYg5byA55uY5pe26Kem5Y+R5LqG5YWo5biC5Zy654aU
-5pat77yI5oyH5pWwIC00LjUl77yJ44CC5Lqk5piT5pqC5YGc6Iez5pS255uY6ZuG5ZCI56ue5Lu3
-77yM5pS255uY5Lu355Sx5pS255uY6ZuG5ZCI56ue5Lu35Lqn55Sf44CCDQoNCumYv+eZu+S6pOaY
-k+aJgCDluILlnLrov5DokKXpg6gNCg==
+各会员：
+
+2026-06-26 开盘时触发了全市场熔断（指数 -4.5%）。交易暂停至收盘集合竞价，收盘价由收盘集合竞价产生。
+
+阿登交易所 市场运营部

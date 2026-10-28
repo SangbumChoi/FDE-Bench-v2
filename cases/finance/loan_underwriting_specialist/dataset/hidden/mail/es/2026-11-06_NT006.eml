@@ -1,20 +1,17 @@
-From: Servicio de =?utf-8?q?pr=C3=A9stamos?= - Confirmaciones
- <confirmations@creditor.example>
-To: Mesa de =?utf-8?q?pr=C3=A9stamos?= personales <loans.desk@lender.example>
+From: Servicio de préstamos - Confirmaciones <confirmations@creditor.example>
+To: Mesa de préstamos personales <loans.desk@lender.example>
 Date: Fri, 06 Nov 2026 09:07:00 +0000
-Subject: =?utf-8?q?Confirmaci=C3=B3n_de_amortizaci=C3=B3n?= NT006: deuda
- BF2576752-D1
+Subject: Confirmación de amortización NT006: deuda BF2576752-D1
 Message-ID: <NT006.2026-11-06@lender.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
 Hola:
 
-Confirmamos que la deuda BF2576752-D1 del cliente BF2576752 (n=C3=BAmero de e=
-xpediente del bur=C3=B3) qued=C3=B3 amortizada por completo el 2026-11-06.
+Confirmamos que la deuda BF2576752-D1 del cliente BF2576752 (número de expediente del buró) quedó amortizada por completo el 2026-11-06.
 Nuevo saldo pendiente: 0
 Nueva cuota mensual: 0
 
 Referencia: NT006
-Servicio de pr=C3=A9stamos - Confirmaciones
+Servicio de préstamos - Confirmaciones

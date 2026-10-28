@@ -4,13 +4,12 @@ Date: Wed, 04 Nov 2026 09:00:00 +0000
 Subject: Repayment confirmation NT001: debt BF3379733-D3
 Message-ID: <NT001.2026-11-04@lender.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
 Hello,
 
-We confirm that debt BF3379733-D3 of customer BF3379733 (bureau file number) =
-was repaid in full on 2026-11-04.
+We confirm that debt BF3379733-D3 of customer BF3379733 (bureau file number) was repaid in full on 2026-11-04.
 New outstanding balance: 0
 New monthly payment: 0
 

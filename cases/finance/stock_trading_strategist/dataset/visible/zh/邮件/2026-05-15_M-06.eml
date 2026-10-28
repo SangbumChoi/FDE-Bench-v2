@@ -1,25 +1,16 @@
-From: =?utf-8?b?5Zue5rWL5byV5pOO57uE?= <backtest@desk.example>
-To: =?utf-8?b?5Lqk5piT5Y+w?= <trading.desk@desk.example>
+From: 回测引擎组 <backtest@desk.example>
+To: 交易台 <trading.desk@desk.example>
 Date: Fri, 15 May 2026 18:30:00 +0000
-Subject: =?utf-8?b?5Zue5rWL5byV5pOO6K+V6L+Q6KGM?=
+Subject: 回测引擎试运行
 Message-ID: <M-06@desk.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-5L2g5aW977yaDQoNCuato+W8j+i/kOihjOS5i+WJje+8jOaIkeS7rOWcqOWOhuWPsuacn+mXtOmH
-jOWBmuS6huS4gOasoeeugOefreeahOivlei/kOihjO+8muS4gOS4qua1i+ivlei0puaIt+WcqCAy
-MDI2LTAyLTA2IOaUtuebmOaXtuaMgeacieeOsOmHkSAxMCwwMDAsMDAw77yM5Zyo5LiL5LiA5Lqk
-5piT5pel5byA55uY5Lmw5YWl77yM5bm25Zyo5pyA5ZCO5Lik5Liq5Lqk5piT5pel5Y2W5Ye65LqG
-5LiA5Y+q6IKh56Wo55qE5LiA6YOo5YiG77yM5byV5pOO6YeH55So5a6M5pW05qih5byP77yI5Y2W
-5Ye65b6B5pS2IDAuMiUg5Lqk5piT56iO77yMVCsyIOS6pOaUtu+8ieOAguWug+eahOaIkOS6pOOA
-geaMgeS7k+WSjOavj+S4quaUtuebmOaXtueahOeKtuaAgeihqOmDveWcqOaVsOaNruW6k+WvvOWH
-uuaWh+S7tumHjO+8iOS6pOaYk+WPsOaVsOaNruW6ky5zcWzvvJrooaggcGlsb3RfZmlsbHPjgIFw
-aWxvdF9wb3NpdGlvbnPjgIFwaWxvdF9zdGF0dXPjgIFwaWxvdF93ZWlnaHRz77yJ44CC6LCD55So
-56S65L6LLmpzb24g5piv5byV5pOO5ZyoIDIwMjYtMDItMjAg5pS255uY5ZCO5Y+R5Ye655qE6YKj
-5qyh6LCD55So77yM5Y6f5qC35L+d5a2Y77yb6L+U5Zue56S65L6LLmpzb24g5piv6K+V6L+Q6KGM
-56iL5bqP57uZ5Ye655qE6L+U5Zue77yI5LuF5L6b5Y+C6ICD5qC85byP77yJ44CCDQoNCumCo+as
-oeiwg+eUqOmHjOeahOmAmuefpemDveaYr+a1i+ivlea2iOaBr++8jOayoeacieS7u+S9leWQq+S5
-ieOAguato+W8j+i/kOihjOaXtu+8jOeoi+W6j+WPquiDveWcqOavj+asoeiwg+eUqOS4re+8iCJu
-b3RpY2VzIiDliJfooajvvInmlLbliLDlvZPlpKnnmoTmtojmga/vvIzlroPor7vkuI3liLDpgq7k
-u7bjgIINCg0K5Zue5rWL5byV5pOO57uEDQo=
+你好：
+
+正式运行之前，我们在历史期间里做了一次简短的试运行：一个测试账户在 2026-02-06 收盘时持有现金 10,000,000，在下一交易日开盘买入，并在最后两个交易日卖出了一只股票的一部分，引擎采用完整模式（卖出征收 0.2% 交易税，T+2 交收）。它的成交、持仓和每个收盘时的状态表都在数据库导出文件里（交易台数据库.sql：表 pilot_fills、pilot_positions、pilot_status、pilot_weights）。调用示例.json 是引擎在 2026-02-20 收盘后发出的那次调用，原样保存；返回示例.json 是试运行程序给出的返回（仅供参考格式）。
+
+那次调用里的通知都是测试消息，没有任何含义。正式运行时，程序只能在每次调用中（"notices" 列表）收到当天的消息，它读不到邮件。
+
+回测引擎组

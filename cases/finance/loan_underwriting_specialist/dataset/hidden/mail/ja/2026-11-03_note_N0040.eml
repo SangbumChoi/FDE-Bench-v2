@@ -1,13 +1,14 @@
-From: =?utf-8?b?5pSv5bqX6ZW3?= <branch.manager@lender.example>
-To: =?utf-8?b?5YCL5Lq644Ot44O844Oz56qT5Y+j?= <loans.desk@lender.example>
+From: 支店長 <branch.manager@lender.example>
+To: 個人ローン窓口 <loans.desk@lender.example>
 Date: Tue, 03 Nov 2026 11:00:00 +0000
-Subject: =?utf-8?b?55Sz6L68IE4wMDQw77yI6aGn5a6iIEJGNjMwMTM2OO+8iQ==?=
+Subject: 申込 N0040（顧客 BF6301368）
 Message-ID: <note_N0040.2026-11-03@lender.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-5b2T5pSv5bqX44Gu6YeN6KaB44Gq57Wm5LiO5oyv6L685YWI44Gu44GK5a6i5qeY44Gn44GZ44CC
-5rqA6aGN44Gn5om/6KqN44KS44GK6aGY44GE44GX44G+44GZ44CCRFNS44Gv5LiA5pmC55qE44Gq
-44KC44Gu44Gn44GZ44CCDQoNCuS+nemgvO+8mueUs+i+vOmHkemhjeOBrua6gOmhjeaJv+iqje+8
-iDQ4LDUwMO+8ieOAgg0KDQrmlK/lupfplbcNCg==
+当支店の重要な給与振込先のお客様です。満額で承認をお願いします。DSRは一時的なものです。
+
+依頼：申込金額の満額承認（48,500）。
+
+支店長

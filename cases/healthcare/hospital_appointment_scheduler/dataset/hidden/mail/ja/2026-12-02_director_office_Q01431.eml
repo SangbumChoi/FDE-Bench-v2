@@ -1,13 +1,14 @@
-From: =?utf-8?b?6Zmi6ZW35a6k?= <director-office@hospital.example>
-To: =?utf-8?b?5aSW5p2l5LqI57SE5L+C?= <booking-office@hospital.example>
+From: 院長室 <director-office@hospital.example>
+To: 外来予約係 <booking-office@hospital.example>
 Date: Wed, 02 Dec 2026 11:56:00 +0900
-Subject: =?utf-8?b?5L6d6aC8IFEwMTQzMe+8iOaCo+iAhSBQNDYzMTE177yJ?=
+Subject: 依頼 Q01431（患者 P463115）
 Message-ID: <2026-12-02_director_office_Q01431.ja@hospital.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-5LqI57SE5L+CIOW+oeS4rQ0KDQrkvp3poLwgUTAxNDMx77yI5oKj6ICFIFA0NjMxMTXjgIHnmq7o
-hprnp5HjgIHliJ3oqLrvvInvvJrpmaLplbflrqTjgojjgorvvJrjgZPjga7mgqPogIXjgZXjgpPj
-gpLmmI7ml6Xjga7ljYjliY3jgavlhaXjgozjgabjgY/jgaDjgZXjgYTjgIINCg0K6Zmi6ZW35a6k
-DQo=
+予約係 御中
+
+依頼 Q01431（患者 P463115、皮膚科、初診）：院長室より：この患者さんを明日の午前に入れてください。
+
+院長室

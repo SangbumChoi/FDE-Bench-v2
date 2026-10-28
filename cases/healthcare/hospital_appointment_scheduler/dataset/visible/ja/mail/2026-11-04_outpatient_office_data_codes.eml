@@ -1,17 +1,14 @@
-From: =?utf-8?b?5aSW5p2l566h55CG5a6k?= <outpatient-office@hospital.example>
-To: =?utf-8?b?5aSW5p2l5LqI57SE5L+C?= <booking-office@hospital.example>
+From: 外来管理室 <outpatient-office@hospital.example>
+To: 外来予約係 <booking-office@hospital.example>
 Date: Wed, 04 Nov 2026 12:48:00 +0900
-Subject: =?utf-8?b?5LqI57SE44OX44Ot44Kw44Op44Og44Gu44OH44O844K/44Gu44Kz44O8?=
- =?utf-8?b?44OJ?=
+Subject: 予約プログラムのデータのコード
 Message-ID: <2026-11-04_outpatient_office_data_codes.ja@hospital.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-5LqI57SE5L+C5ZCE5L2NDQoNCuS6iOe0hOODl+ODreOCsOODqeODoOOBjOWPl+OBkeWPluOCi+OD
-h+ODvOOCv+OBp+OBr+OAgeiouueZguenkeODu+iogOiqnuODu+aXpeS7mOOBr+OCs+ODvOODieOB
-qCBZWVlZLU1NLUREIOOBp+ihqOOBl+OBvuOBmeOAguiouueZguenkeOCs+ODvOODieOBryBJTT3l
-hoXnp5HjgIFDQVJEPeW+queSsOWZqOWGheenkeOAgURFUk0955qu6Iaa56eR44CBT1JUSD3mlbTl
-vaLlpJbnp5HjgIFQRUQ95bCP5YWQ56eR44CB6KiA6Kqe44Kz44O844OJ44Gv44K344K544OG44Og
-44Gu44Ko44Kv44K544Od44O844OI44GuIGxhbmd1YWdlcyDjg4bjg7zjg5bjg6vjgavjgYLjgorj
-gb7jgZnjgIINCg0K5aSW5p2l566h55CG5a6kDQo=
+予約係各位
+
+予約プログラムが受け取るデータでは、診療科・言語・日付はコードと YYYY-MM-DD で表します。診療科コードは IM=内科、CARD=循環器内科、DERM=皮膚科、ORTH=整形外科、PED=小児科、言語コードはシステムのエクスポートの languages テーブルにあります。
+
+外来管理室

@@ -1,15 +1,17 @@
-From: =?utf-8?b?44Ot44O844Oz566h55CGIOi/lOa4iOeiuuiqjQ==?=
- <confirmations@creditor.example>
-To: =?utf-8?b?5YCL5Lq644Ot44O844Oz56qT5Y+j?= <loans.desk@lender.example>
+From: ローン管理 返済確認 <confirmations@creditor.example>
+To: 個人ローン窓口 <loans.desk@lender.example>
 Date: Fri, 06 Nov 2026 09:00:00 +0000
-Subject: =?utf-8?b?5a6M5riI56K66KqNIE5UMDA177ya5YK15YuZ?= BF1182786-D1
+Subject: 完済確認 NT005：債務 BF1182786-D1
 Message-ID: <NT005.2026-11-06@lender.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-44GK5LiW6Kmx44Gr44Gq44Gj44Gm44GK44KK44G+44GZ44CCDQoNCumhp+WuoiBCRjExODI3ODbv
-vIjkv6HnlKjmg4XloLHnmbvpjLLnlarlj7fvvInjga7lgrXli5kgQkYxMTgyNzg2LUQxIOOBjCAy
-MDI2LTExLTA2IOOBq+WFqOmhjei/lOa4iOOBleOCjOOBn+OBk+OBqOOCkueiuuiqjeOBhOOBn+OB
-l+OBvuOBmeOAgg0K5paw44GX44GE5q6L6auY77yaMA0K5paw44GX44GE5pyI6L+U5riI6aGN77ya
-MA0KDQrmlofmm7jnlarlj7fvvJpOVDAwNQ0K44Ot44O844Oz566h55CGIOi/lOa4iOeiuuiqjQ0K
+お世話になっております。
+
+顧客 BF1182786（信用情報登録番号）の債務 BF1182786-D1 が 2026-11-06 に全額返済されたことを確認いたします。
+新しい残高：0
+新しい月返済額：0
+
+文書番号：NT005
+ローン管理 返済確認

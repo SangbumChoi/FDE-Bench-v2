@@ -125,11 +125,12 @@ def write_sql(path: Path, tables: Mapping[str, tuple[Sequence[tuple[str, str]], 
 
 def write_eml(path: Path, *, sender: str, to: str, date: str, subject: str, body: str,
               cc: str = "", message_id: str = "") -> None:
-    """One e-mail as an .eml file (RFC 5322, UTF-8). `date` is an RFC 2822 date string; deterministic."""
+    """One e-mail as an .eml file (RFC 5322, UTF-8 body in 8bit so it reads as plain text). `date` is an
+    RFC 2822 date string; deterministic."""
     from email.message import EmailMessage
-    from email.policy import SMTP
+    from email.policy import SMTPUTF8
 
-    msg = EmailMessage(policy=SMTP)
+    msg = EmailMessage(policy=SMTPUTF8)              # UTF-8 headers, not =?utf-8?b?...?= words
     msg["From"] = sender
     msg["To"] = to
     if cc:
@@ -138,7 +139,7 @@ def write_eml(path: Path, *, sender: str, to: str, date: str, subject: str, body
     msg["Subject"] = subject
     if message_id:
         msg["Message-ID"] = message_id
-    msg.set_content(body, charset="utf-8")
+    msg.set_content(body, charset="utf-8", cte="8bit")      # readable as plain text, any script
     path.write_bytes(msg.as_bytes())
 
 

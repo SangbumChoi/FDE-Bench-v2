@@ -1,15 +1,17 @@
-From: =?utf-8?b?64yA7Lac6rSA66asIOyDge2ZmO2ZleyduA==?=
- <confirmations@creditor.example>
-To: =?utf-8?b?6rCc7J2464yA7LacIOywveq1rA==?= <loans.desk@lender.example>
+From: 대출관리 상환확인 <confirmations@creditor.example>
+To: 개인대출 창구 <loans.desk@lender.example>
 Date: Wed, 04 Nov 2026 09:00:00 +0000
-Subject: =?utf-8?b?7IOB7ZmYIO2ZleyduCBOVDAwMTog67aA7LGE?= BF3379733-D3
+Subject: 상환 확인 NT001: 부채 BF3379733-D3
 Message-ID: <NT001.2026-11-04@lender.example>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-7JWI64WV7ZWY7IS47JqULg0KDQrqs6DqsJ0gQkYzMzc5NzMzKOyLoOyaqeygleuztCDqs6DsnKDr
-sojtmLgp7J2YIOu2gOyxhCBCRjMzNzk3MzMtRDMg6rG07J20IDIwMjYtMTEtMDTsl5Ag7KCE7JWh
-IOyDge2ZmOuQmOyXiOydjOydhCDtmZXsnbjtlanri4jri6QuDQrsg4gg7J6U7JWhOiAwDQrsg4gg
-7JuU7IOB7ZmY7JWhOiAwDQoNCuusuOyEnOuyiO2YuDogTlQwMDENCuuMgOy2nOq0gOumrCDsg4Ht
-mZjtmZXsnbgNCg==
+안녕하세요.
+
+고객 BF3379733(신용정보 고유번호)의 부채 BF3379733-D3 건이 2026-11-04에 전액 상환되었음을 확인합니다.
+새 잔액: 0
+새 월상환액: 0
+
+문서번호: NT001
+대출관리 상환확인
