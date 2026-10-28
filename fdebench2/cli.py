@@ -3,6 +3,7 @@
   fdebench2 validate-case cases/<id> ...                  check native cases against the case contract
   fdebench2 export-dataset cases/<id> ...                 write each case's data and ground truth to dataset/
   fdebench2 explain-case cases/<id> ...                   write each case's explainer.html
+  fdebench2 new-case <field>/<role> [--program]          skeleton of a new case with settings
   fdebench2 cases                                        list cases
   fdebench2 prepare   --case ID [axes]                   materialize a variant, print the agent prompt
   fdebench2 run       --case ID --harness reference --model gpt [axes]
@@ -63,6 +64,10 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
     p = sub.add_parser("export-dataset")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
+    p = sub.add_parser("new-case")
+    p.add_argument("case_id", help="<field>/<role>")
+    p.add_argument("--program", action="store_true", help="the deliverable is a program, not files")
+    p.add_argument("--cases", dest="cases_root", type=Path, default=Path("cases"))
     p = sub.add_parser("explain-case")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
     p = sub.add_parser("cases"); _common(p)
@@ -100,10 +105,14 @@ def main(argv: list[str] | None = None) -> None:
             write_page(path)
             n = sum(1 for f in dest.rglob("*") if f.is_file())
             print(f"{path.parent.name}/{path.name}: {n} files in {dest.relative_to(Path.cwd()) if dest.is_relative_to(Path.cwd()) else dest}")
+    elif a.cmd == "new-case":
+        from .scaffold import new_case
+        print(new_case(a.case_id, a.cases_root, kind="program" if a.program else "batch"))
     elif a.cmd == "explain-case":
-        from .explain import write_page
+        from .explain import write_index, write_page
         for path in a.paths:
             print(write_page(path))
+        print(write_index(a.paths[0].resolve().parent.parent))
     elif a.cmd == "policies":
         print("\n".join(list_policies()))
     elif a.cmd == "cases":

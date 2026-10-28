@@ -297,16 +297,44 @@ s.onchange=show;l.onchange=show;show();})();
 """
 
 
-def _shell(title: str, body: str) -> str:
+def _shell(title: str, body: str, script: bool = True) -> str:
+    js = f"<script>{JS}</script>" if script else ""
     return (f'<!doctype html>\n<html lang="en"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width, initial-scale=1">'
             f"<title>{_esc(title)}</title><style>{CSS}</style></head>"
-            f"<body><main>{body}</main><script>{JS}</script></body></html>\n")
+            f"<body><main>{body}</main>{js}</body></html>\n")
 
 
 def write_page(case_root: Path) -> Path:
     path = Path(case_root) / PAGE
     path.write_text(build_page(case_root), encoding="utf-8")
+    return path
+
+
+def build_index(cases_root: Path) -> str:
+    """cases/index.html: every built case with its settings and a link to its explainer."""
+    from .cases import discover, load_fields
+    fields = load_fields(cases_root)
+    rows = []
+    for cid, case in discover(cases_root).items():
+        meta = case.meta
+        kind = meta.get("deliverable_type", "batch")
+        settings = f"{len(case.tiers)}×{len(case.rulesets)}" if case.tiers else "–"
+        rel = f"{cid}/{PAGE}"
+        rows.append([_esc(fields.get(case.field, {}).get("en", case.field)),
+                     f'<a href="{_esc(rel)}">{_esc(case.role)}</a>', f"<code>{_esc(cid)}</code>",
+                     _esc("program" if kind == "program" else "batch"), _esc(settings),
+                     _esc(meta.get("task_type", ""))])
+    body = f"""<header><p class="eyebrow">FDE-Bench v2</p><h1>Built cases</h1>
+<p class="muted">{len(rows)} cases. Each link opens the case's explainer: request, settings, rules, hidden requirements,
+targets, stored data and answers. The full catalog of planned roles is in README.md next to this page.</p></header>
+<section>{_table(["Field", "Role", "Case id", "Deliverable", "Settings", "Task type"], rows)}</section>"""
+    return _shell("FDE-Bench v2 cases", body, script=False)
+
+
+def write_index(cases_root: Path) -> Path:
+    path = Path(cases_root) / "index.html"
+    path.write_text(build_index(cases_root), encoding="utf-8")
     return path
 
 

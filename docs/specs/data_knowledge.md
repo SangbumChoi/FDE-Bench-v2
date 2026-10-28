@@ -29,6 +29,9 @@ deterministic ground truth.
 
 ### Book QA Assistant Builder — `data_knowledge/book_qa_assistant_builder`
 
+> **Not built.** Replaced by the program case `data_knowledge/multilingual_corpus_curator` (organize a
+> multilingual book folder); the research below is kept as background.
+
 - **Why it matters** — In late 2025 Amazon shipped "Ask this Book" in the Kindle iOS app (US only). It answers
   only from text before the reader's current position, gives publishers no opt-out, and blocks copying of
   answers. Publishers now want the same thing on their own terms. The research gives two warnings. Multilingual

@@ -18,6 +18,7 @@ import csv
 import io
 import json
 import random
+import re
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -28,6 +29,7 @@ from .events import msg
 MAX_CSV_BYTES = 50 * 1024 * 1024
 MAX_XLSX_BYTES = 5 * 1024 * 1024     # openpyxl loads whole workbooks; bigger ones take minutes
 MAX_JSON_BYTES = 20 * 1024 * 1024
+MAX_SQL_BYTES = 8_000_000
 MAX_SHEET_ROWS = 200_000             # sheets padded to Excel's row limit are formatting, not data
 MIN_ROWS = 10
 
@@ -97,11 +99,42 @@ def _scale(v: float | int, rng: random.Random) -> float | int:
     return round(out) if isinstance(v, int) else round(out, 4)
 
 
-def candidates(data_dir: Path, kinds: tuple[str, ...] = (".csv", ".xlsx")) -> list[Path]:
-    caps = {".csv": MAX_CSV_BYTES, ".xlsx": MAX_XLSX_BYTES, ".json": MAX_JSON_BYTES}
+def candidates(data_dir: Path, kinds: tuple[str, ...] = (".csv", ".xlsx", ".sql")) -> list[Path]:
+    caps = {".csv": MAX_CSV_BYTES, ".xlsx": MAX_XLSX_BYTES, ".json": MAX_JSON_BYTES, ".sql": MAX_SQL_BYTES}
     files = [p for p in data_dir.rglob("*")
              if p.is_file() and p.suffix.lower() in kinds and p.stat().st_size <= caps[p.suffix.lower()]]
     return sorted(files, key=lambda p: (p.stat().st_size, p.as_posix()))
+
+
+_SQL_NUMBER = re.compile(r"(?<![\w.])-?\d+(?:\.\d+)?(?![\w.])")
+
+
+def _sql_lines(path: Path) -> tuple[list[str], str]:
+    raw = path.read_bytes()
+    for enc in ("utf-8", "gb18030", "cp949", "shift_jis", "cp1252"):
+        try:
+            return raw.decode(enc).split("\n"), enc
+        except UnicodeDecodeError:
+            continue
+    raise UnicodeDecodeError("sql", raw, 0, 1, "unknown encoding")
+
+
+def _perturb_insert(line: str, rng: random.Random, share: float) -> tuple[str, int]:
+    """Scale numbers outside string literals in the VALUES part of one INSERT line."""
+    head, sep, values = line.partition(" VALUES ")
+    if not sep:
+        return line, 0
+    parts, changed = values.split("'"), 0
+    for i in range(0, len(parts), 2):                       # even segments are outside quotes ('' keeps parity)
+        def sub(m: re.Match) -> str:
+            nonlocal changed
+            v = float(m.group(0))
+            if ("." in m.group(0) or abs(v) >= 10) and rng.random() < share:
+                changed += 1
+                return f"{v * rng.uniform(0.7, 1.3):.4g}"
+            return m.group(0)
+        parts[i] = _SQL_NUMBER.sub(sub, parts[i])
+    return head + sep + "'".join(parts), changed
 
 
 # ── ops ──────────────────────────────────────────────────────────────────────
@@ -110,7 +143,24 @@ def duplicate_rows(workspace: Path, rng: random.Random, lang: str = "zh", frac: 
     """Re-insert a few exact copies of existing rows, as a flaky export would."""
     for path in candidates(workspace / "data"):
         rel = path.relative_to(workspace).as_posix()
-        if path.suffix.lower() == ".csv":
+        if path.suffix.lower() == ".sql":
+            lines, enc = _sql_lines(path)
+            # Only tables without a key can hold exact duplicates and still load.
+            keyed = {m.group(1) for ln in lines if ln.startswith("CREATE TABLE")
+                     and re.search(r"PRIMARY KEY|UNIQUE", ln, re.I)
+                     for m in [re.match(r'CREATE TABLE "?([^"\s(]+)', ln)] if m}
+            inserts = [i for i, ln in enumerate(lines) if ln.startswith("INSERT INTO")
+                       and re.match(r'INSERT INTO "?([^"\s(]+)', ln).group(1) not in keyed]
+            if len(inserts) < MIN_ROWS or len({lines[i] for i in inserts}) != len(inserts):
+                continue
+            picks = set(rng.sample(inserts, k=max(1, min(200, int(len(inserts) * frac)))))
+            out = []
+            for i, ln in enumerate(lines):
+                out.append(ln)
+                if i in picks:
+                    out.append(ln)
+            path.write_bytes("\n".join(out).encode(enc))
+        elif path.suffix.lower() == ".csv":
             rows, enc, dialect = _read_csv(path)
             header, body = rows[:1], rows[1:]
             if len(body) < MIN_ROWS or len({tuple(r) for r in body}) != len(body):
@@ -166,7 +216,14 @@ def _perturb(path: Path, dest: Path, rng: random.Random, share: float = 0.15) ->
     """Copy `path` to `dest`, scaling a share of numeric cells by 0.7-1.3. Returns cells changed."""
     changed = 0
     suffix = path.suffix.lower()
-    if suffix == ".csv":
+    if suffix == ".sql":
+        lines, enc = _sql_lines(path)
+        for i, ln in enumerate(lines):
+            if ln.startswith("INSERT INTO"):
+                lines[i], c = _perturb_insert(ln, rng, share)
+                changed += c
+        dest.write_bytes("\n".join(lines).encode(enc))
+    elif suffix == ".csv":
         rows, enc, dialect = _read_csv(path)
         for r in rows[1:]:
             for j, v in enumerate(r):
@@ -191,7 +248,7 @@ def _perturb(path: Path, dest: Path, rng: random.Random, share: float = 0.15) ->
     return changed
 
 
-_PERTURBABLE = (".csv", ".xlsx", ".json")
+_PERTURBABLE = (".csv", ".xlsx", ".json", ".sql")
 
 
 def stale_copy(workspace: Path, rng: random.Random, lang: str = "zh") -> NoiseResult | None:
@@ -210,9 +267,10 @@ def stale_copy(workspace: Path, rng: random.Random, lang: str = "zh") -> NoiseRe
 
 
 def legacy_encoding(workspace: Path, rng: random.Random, lang: str = "zh") -> NoiseResult | None:
-    """Re-encode a UTF-8 CSV with non-ASCII text in the locale's legacy code page, like an old ERP export."""
+    """Re-encode a UTF-8 CSV or SQL dump with non-ASCII text in the locale's legacy code page, like an old ERP
+    export."""
     encoding = LEGACY_ENCODING[lang]
-    for path in candidates(workspace / "data", (".csv",)):
+    for path in candidates(workspace / "data", (".csv", ".sql")):
         try:
             text = path.read_bytes().decode("utf-8-sig")
             if text.isascii():

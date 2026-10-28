@@ -29,7 +29,7 @@ itself is [`cases/README.md`](../cases/README.md).
 | [Retail](retail.md) | 7 | |
 | [Logistics](logistics.md) | 6 | Bike-Share Rebalancing replaced by Freight Invoice Auditor; per-locale limits to collapse (see 1.) |
 | [Customer Service](customer_service.md) | 5 | |
-| [Data & Knowledge](data_knowledge.md) | 6 | Book QA designed in depth (seeded fact graph, 24-book multilingual corpus, editions, held-out questions); Report Automation becomes a Program on hidden future months |
+| [Data & Knowledge](data_knowledge.md) | 6 | Book QA researched in depth (now replaced by the built `multilingual_corpus_curator` program case); Report Automation becomes a Program on hidden future months |
 | [Legal & Compliance](legal_compliance.md) | 4 | Regulatory Reporting Analyst replaced by Breach Notification Assessor |
 | [People & HR](people_hr.md) | 4 | Thinner sourcing; several legal points to verify |
 | [Energy & Utilities](energy_utilities.md) | 5 | EV tariff and outage restoration thinly sourced |
