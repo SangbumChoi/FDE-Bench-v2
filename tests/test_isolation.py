@@ -2,7 +2,9 @@
 
 import json
 import os
+import signal
 import socket
+import stat
 import subprocess
 import sys
 import tempfile
@@ -67,6 +69,20 @@ def test_sanitize_removes_links_and_special_files(tmp_path):
     assert secret.read_text(encoding="utf-8") == "ground truth" and (tmp_path / "other_run").is_dir()
 
 
+def test_sanitize_unlocks_what_the_agent_locked(tmp_path):
+    """A file or folder the agent made unreadable would break collection and the move back from staging."""
+    ws, secret = _ws(tmp_path)
+    (ws / "out").mkdir()
+    (ws / "out" / "routes.json").write_text("{}", encoding="utf-8")
+    (ws / "out" / "gt").symlink_to(secret)
+    os.chmod(ws / "out" / "routes.json", 0)
+    os.chmod(ws / "out", 0)
+    os.chmod(ws, 0o100)
+    assert sanitize(ws) == [f"out/gt -> {secret}"]
+    assert all(stat.S_IMODE(os.stat(d).st_mode) & 0o700 == 0o700 for d in (ws, ws / "out"))
+    assert stat.S_IMODE(os.stat(ws / "out" / "routes.json").st_mode) & 0o600 == 0o600
+
+
 def test_program_collection_does_not_enter_a_linked_directory(tmp_path):
     ws, _ = _ws(tmp_path)
     outside = tmp_path / "elsewhere"
@@ -89,6 +105,9 @@ def test_file_tools_stay_in_the_workspace(tmp_path):
     assert not (tmp_path / "new.txt").exists()
     assert "not a regular file" in call_tool(ctx, "read_file", {"path": "pipe"})     # and does not block
     assert call_tool(ctx, "read_file", {"path": "data/stores.csv"}) == "id\nC1"
+    docker = SimpleNamespace(workspace=ws, sandbox=DockerSandbox(ws, image="img"))  # paths as the container sees them
+    assert "data/stores.csv" in call_tool(docker, "list_files", {"path": "/workspace"})
+    assert call_tool(docker, "read_file", {"path": "/workspace/data/stores.csv"}) == "id\nC1"
 
 
 def test_notes_are_read_from_the_root_else_the_shallowest_outside_data_and_inbox(tmp_path):
@@ -175,6 +194,13 @@ experiments:
         load_campaign(cfg)
 
 
+def test_the_old_sandbox_env_list_is_not_dropped_silently(tmp_path, capsys):
+    cfg = tmp_path / "c.yaml"
+    cfg.write_text("defaults: {models: m.yaml, sandbox: {kind: docker, image: img, env: [OPENAI_API_KEY]}}\n")
+    load_campaign(cfg)
+    assert "sandbox.env is no longer read" in capsys.readouterr().err
+
+
 def test_a_run_directory_is_claimed_by_one_worker(tmp_path):
     run_dir = tmp_path / "runs" / "agent" / "key"
     with claim(run_dir):
@@ -187,9 +213,25 @@ def test_a_run_directory_is_claimed_by_one_worker(tmp_path):
     dead.wait()
     lock = run_dir.with_name("key.lock")
     lock.write_text(json.dumps({"host": socket.gethostname(), "pid": dead.pid}))
-    with claim(run_dir):                                   # a dead owner's lock is taken over
+    with claim(run_dir):                                   # a file left by a dead worker holds nothing
         assert json.loads(lock.read_text())["pid"] == os.getpid()
     assert not lock.exists()
+
+    # Another process holds it until it ends, even when it is killed and never cleans up.
+    holder = subprocess.Popen([sys.executable, "-c", "import fcntl, os, sys, time\n"
+                               "fd = os.open(sys.argv[1], os.O_CREAT | os.O_RDWR)\n"
+                               "fcntl.flock(fd, fcntl.LOCK_EX)\nprint('held', flush=True)\ntime.sleep(60)",
+                               str(lock)], stdout=subprocess.PIPE, text=True)
+    try:
+        assert holder.stdout.readline().strip() == "held"
+        with pytest.raises(RunLocked):
+            with claim(run_dir):
+                pass
+    finally:
+        holder.send_signal(signal.SIGKILL)
+        holder.wait()
+    with claim(run_dir):
+        pass
 
 
 def _bench(cases_root, tmp_path, steps=None) -> Bench:
@@ -275,6 +317,8 @@ def test_report_counts_statuses_and_leaves_errors_out_of_the_means(tmp_path):
         d = tmp_path / "out" / "m" / str(i)
         d.mkdir(parents=True)
         (d / "result.json").write_text(json.dumps(r), encoding="utf-8")
+    (tmp_path / "out" / "m" / "0" / "workspace").mkdir()
+    (tmp_path / "out" / "m" / "0" / "workspace" / "result.json").write_text("an agent's own file", encoding="utf-8")
     text = report(tmp_path / "out")
     policy_row = next(line for line in text.splitlines() if line.startswith("| reference--m | baseline |"))
     cells = [c.strip() for c in policy_row.strip("|").split("|")]
@@ -322,6 +366,20 @@ def test_docker_mounts_an_opaque_copy_of_the_workspace(cases_root, tmp_path):
     assert sorted(p.name for p in workspace.iterdir()) == ["data", "routes.json"] and not sb.workspace.exists()
 
 
+def test_a_run_that_fails_before_the_agent_starts_still_puts_the_staged_copy_back(cases_root, tmp_path,
+                                                                                  monkeypatch):
+    import fdebench2.runner as runner
+    real_stage, staged = runner.stage, []
+    monkeypatch.setattr(runner, "stage", lambda ws: staged.append(real_stage(ws)) or staged[-1])
+    monkeypatch.setattr(runner, "render_task_prompt", lambda *a: (_ for _ in ()).throw(RuntimeError("no prompt")))
+    bench = Bench(Settings(cases_root=cases_root, models=tmp_path / "none.yaml", out=tmp_path / "runs",
+                           sandbox={"kind": "docker", "image": "img"}, isolation="strict"))
+    spec, agent = VariantSpec(NATIVE, condition="full"), AgentSpec("reference", "agent")
+    result = bench.run(spec, agent)                 # docker itself may be missing too: stop() is then a no-op
+    assert result["status"] == "infra_error" and "no prompt" in result["agent_run"]["detail"]["error"]
+    assert not staged[0].exists() and (bench.run_dir(spec, agent) / "workspace" / "data").is_dir()
+
+
 def test_cli_harness_gets_only_its_own_variables_and_the_bridge_token(tmp_path, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant")
     monkeypatch.setenv("OPENAI_API_KEY", "sk-oai")
@@ -365,10 +423,12 @@ def test_bridge_requires_the_runs_bearer_token(cases_root, tmp_path):
     init = {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
         "protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "t", "version": "1"}}}
     head = {"Accept": "application/json, text/event-stream", "Content-Type": "application/json"}
-    with TestClient(http_app(build_server(session), "TOK"), base_url="http://127.0.0.1:9000") as client:
-        assert client.post("/mcp", json=init, headers=head).status_code == 401
-        assert client.post("/mcp", json=init, headers={**head, "Authorization": "Bearer nope"}).status_code == 401
-        assert client.post("/mcp", json=init, headers={**head, "Authorization": "Bearer TOK"}).status_code == 200
+    # On this host, and as a container reaches it (whose Host header is not localhost).
+    for host, url in [("127.0.0.1", "http://127.0.0.1:9000"), ("0.0.0.0", "http://host.docker.internal:9000")]:
+        with TestClient(http_app(build_server(session), "TOK", host), base_url=url) as client:
+            assert client.post("/mcp", json=init, headers=head).status_code == 401
+            assert client.post("/mcp", json=init, headers={**head, "Authorization": "Bearer nope"}).status_code == 401
+            assert client.post("/mcp", json=init, headers={**head, "Authorization": "Bearer TOK"}).status_code == 200
 
     env = {k: v for k, v in os.environ.items() if k != "FDEB2_BRIDGE_TOKEN"}
     p = subprocess.run([sys.executable, "-m", "fdebench2.mcp_bridge", "--run-dir", str(run_dir),

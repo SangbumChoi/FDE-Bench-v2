@@ -182,8 +182,13 @@ class CLIAgent:
             except subprocess.TimeoutExpired:
                 status, detail = "out_of_time", {"version": version, "isolated": isolated}
         finally:
-            if bridge is not None:
+            if bridge is not None:          # gone before the runner sanitizes and moves the workspace it writes to
                 bridge.terminate()
+                try:
+                    bridge.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    bridge.kill()
+                    bridge.wait()
         # Token usage is in each CLI's own log format (agent_stdout.log) and is not parsed yet.
         # Steps and events are counted by the bridge process and land in transcript.jsonl.
         return AgentResult(status, detail=detail)

@@ -77,7 +77,10 @@ def http_app(server, token: str, host: str = "127.0.0.1"):
     try:
         app = server.streamable_http_app(host=host)           # mcp >= 2
     except TypeError:
-        app = server.streamable_http_app()                    # mcp 1.x
+        # mcp 1.x: its DNS-rebinding check would accept only a localhost Host header; the token replaces it.
+        if getattr(server.settings, "transport_security", None) is not None:
+            server.settings.transport_security = None
+        app = server.streamable_http_app()
     expected = f"Bearer {token}".encode()
 
     async def guarded(scope, receive, send):

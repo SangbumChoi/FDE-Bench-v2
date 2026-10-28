@@ -62,7 +62,8 @@ def _num(x: float | None, digits: int = 3) -> str:
 
 
 def load_results(out: Path) -> list[dict[str, Any]]:
-    return [json.loads(p.read_text(encoding="utf-8")) for p in sorted(out.rglob("result.json"))]
+    """Every out/<agent>/<run key>/result.json (never a file of that name an agent left in its workspace)."""
+    return [json.loads(p.read_text(encoding="utf-8")) for p in sorted(out.glob("*/*/result.json"))]
 
 
 def status(r: dict[str, Any]) -> str:

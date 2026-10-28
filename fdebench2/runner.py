@@ -9,6 +9,7 @@ import json
 import os
 import shutil
 import socket
+import sys
 import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -98,40 +99,33 @@ def tree_hash(root: Path, skip: set[str] = frozenset()) -> str:
 
 @contextmanager
 def claim(run_dir: Path):
-    """Hold `<run_dir>.lock` (created with O_EXCL) while a run is in progress, so that no two workers, threads
-    or processes, run the same key at once. A lock left by a dead process on this host is taken over."""
+    """Hold an exclusive lock on `<run_dir>.lock` while a run is in progress, so that no two workers, threads
+    or processes, run the same key at once. The lock is the OS's (flock): it ends with the process holding it,
+    so a worker that died never leaves a lock behind that someone would have to judge stale."""
+    import fcntl
+
     lock = run_dir.with_name(run_dir.name + ".lock")
     lock.parent.mkdir(parents=True, exist_ok=True)
-    for attempt in (0, 1):
+    while True:
+        fd = os.open(lock, os.O_CREAT | os.O_RDWR, 0o644)
         try:
-            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            break
-        except FileExistsError:
-            if attempt or not _stale(lock):
-                raise RunLocked(f"{run_dir.name} is being run by another worker (lock: {lock})") from None
-            lock.unlink(missing_ok=True)
-    with os.fdopen(fd, "w") as f:
-        json.dump({"host": socket.gethostname(), "pid": os.getpid(), "started_at": time.time()}, f)
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            os.close(fd)
+            raise RunLocked(f"{run_dir.name} is being run by another worker (lock: {lock})") from None
+        try:
+            if os.path.samestat(os.fstat(fd), os.stat(lock)):
+                break
+        except FileNotFoundError:
+            pass
+        os.close(fd)                        # the last holder removed the file as we opened it: lock the new one
+    os.ftruncate(fd, 0)                     # who holds it, for people
+    os.write(fd, json.dumps({"host": socket.gethostname(), "pid": os.getpid(), "started_at": time.time()}).encode())
     try:
         yield
     finally:
         lock.unlink(missing_ok=True)
-
-
-def _stale(lock: Path) -> bool:
-    try:
-        owner = json.loads(lock.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return False                        # just created, not written yet
-    if owner.get("host") != socket.gethostname() or not isinstance(owner.get("pid"), int):
-        return False
-    try:
-        os.kill(owner["pid"], 0)
-    except ProcessLookupError:
-        return True
-    except OSError:
-        pass
-    return False
+        os.close(fd)
 
 
 def run_status(agent_status: str, extraction: dict[str, Any], valid: bool) -> str:
@@ -263,19 +257,16 @@ class Bench:
         sandbox = self._sandbox(spec.case_id, workspace)
         live = sandbox.workspace            # what the agent and the client channel work on during the run
         started = time.time()
-        (run_dir / "session.json").write_text(json.dumps({
-            "workspace": str(live.resolve()), "models_config": str(self.s.models.resolve()),
-            "started_at": started, "agent": asdict(agent), "fingerprint": fp}), encoding="utf-8")
-
         session = Session(variant, run_dir, live, customer, use_steps=agent.harness == "reference",
                           started_at=started)
-        system, user = render_task_prompt(variant, sandbox.workdir_label, data_files)
-        (run_dir / "prompt.md").write_text(f"{system}\n\n---\n\n{user}", encoding="utf-8")
-        ctx = RunContext(variant, session, sandbox, live, run_dir, system, user)
-
-        try:
+        try:                                # from here on, a staged copy always goes back in place
+            (run_dir / "session.json").write_text(json.dumps({
+                "workspace": str(live.resolve()), "models_config": str(self.s.models.resolve()),
+                "started_at": started, "agent": asdict(agent), "fingerprint": fp}), encoding="utf-8")
+            system, user = render_task_prompt(variant, sandbox.workdir_label, data_files)
+            (run_dir / "prompt.md").write_text(f"{system}\n\n---\n\n{user}", encoding="utf-8")
             sandbox.start()
-            result = self._agent(agent).run(ctx)
+            result = self._agent(agent).run(RunContext(variant, session, sandbox, live, run_dir, system, user))
         except Exception as e:
             result = AgentResult("infra_error", detail={"error": repr(e), "traceback": traceback.format_exc()[-4000:]})
         finally:
@@ -414,6 +405,9 @@ def load_campaign(path: Path) -> tuple[Settings, list[AgentSpec], list[tuple[str
     settings = Settings(cases_root=Path(d.get("cases_root", "cases")),
                         models=Path(d["models"]), out=Path(d.get("out", "runs")),
                         sandbox=d.get("sandbox", {"kind": "local"}), isolation=d.get("isolation", "strict"))
+    if "env" in settings.sandbox:
+        print("note: sandbox.env is no longer read: a CLI harness gets only its own API key and base URL "
+              "(agents.cli.HARNESS_ENV); set env on the agent to pass others", file=sys.stderr)
     agents = [AgentSpec(**a) for a in doc.get("agents", [])]
     labels = [a.label for a in agents]
     if len(set(labels)) < len(labels):

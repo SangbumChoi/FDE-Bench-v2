@@ -53,8 +53,9 @@ def _resolve(ctx: RunContext, rel: str) -> Path:
     FIFO that would block a read, must never be opened from here.
     """
     rel = (rel or ".").strip()
-    if rel.startswith(ctx.sandbox.workdir_label + "/"):
-        rel = rel[len(ctx.sandbox.workdir_label) + 1:]
+    label = ctx.sandbox.workdir_label
+    if rel == label or rel.startswith(label + "/"):
+        rel = rel[len(label) + 1:] or "."
     root = ctx.workspace.resolve()
     path = Path(os.path.normpath(root / rel))
     if path != root and root not in path.parents:

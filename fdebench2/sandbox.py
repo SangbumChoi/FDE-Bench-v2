@@ -20,6 +20,7 @@ from __future__ import annotations
 import os
 import shlex
 import shutil
+import stat
 import subprocess
 import tempfile
 import uuid
@@ -44,7 +45,9 @@ class ExecResult:
 
 
 def sanitize(root: Path) -> list[str]:
-    """Remove every symbolic link and special file (FIFO, socket, device) under root, never following a link.
+    """Remove every symbolic link and special file (FIFO, socket, device) under root, never following a link,
+    and give the owner back read and write access to what stays: a file or directory the agent locked would
+    otherwise break collection, the move back from staging and cleanup.
 
     Returns what was removed (for the run record); a directory that cannot be read is left in place and listed.
     """
@@ -52,6 +55,7 @@ def sanitize(root: Path) -> list[str]:
     stack = [Path(root)]
     while stack:
         d = stack.pop()
+        _grant(d, stat.S_IRWXU)
         try:
             entries = list(os.scandir(d))
         except OSError:
@@ -67,7 +71,19 @@ def sanitize(root: Path) -> list[str]:
             elif not e.is_file(follow_symlinks=False):
                 removed.append(f"{rel} (special file)")
                 os.unlink(e.path)
+            else:
+                _grant(e.path, stat.S_IRUSR | stat.S_IWUSR)
     return sorted(removed)
+
+
+def _grant(path: str | Path, bits: int) -> None:
+    """Add permission bits to a file or directory (never a link); one this user does not own is left as it is."""
+    try:
+        mode = os.lstat(path).st_mode
+        if mode & bits != bits:
+            os.chmod(path, stat.S_IMODE(mode) | bits)
+    except OSError:
+        pass
 
 
 def stage(workspace: Path) -> Path:
@@ -142,7 +158,10 @@ class DockerSandbox:
         subprocess.run(self.run_argv(), check=True, capture_output=True)
 
     def stop(self) -> None:
-        subprocess.run(["docker", "rm", "-f", self.name], capture_output=True)
+        try:
+            subprocess.run(["docker", "rm", "-f", self.name], capture_output=True)
+        except OSError:
+            pass                            # no docker client: start() failed and said so
 
     def gateway(self) -> str | None:
         """The host's IPv4 address on the container's network, if docker reports one."""
