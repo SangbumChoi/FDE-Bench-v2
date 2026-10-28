@@ -13,8 +13,8 @@ Each day:
   * (hard) one approval per customer per day: the largest of a customer's same-day applications;
   * approve candidates whose predicted expected profit (a logistic scorecard fitted on the history) is
     positive, most profitable first, within the day's allowance: the daily cap and, from medium, the period
-    budget paced over the days left; planted twins (same application apart from protected attributes) are
-    one unit, so they get the same answer;
+    budget paced over the days left; planted twins (same application apart from protected attributes, two
+    customers) are one unit, so they get the same answer;
   * (medium+) top up near-prime approvals until the cumulative near-prime share is above the quota;
   * give each decline its reason code and report the closing limit table.
 
@@ -195,9 +195,12 @@ class Underwriter:
                     decision[a["application_id"]] = "decline"
             cands = [a for a in cands if best[a["customer_id"]] is a]
 
-        groups = {}
+        groups, nth = {}, {}
         for a in sorted(cands, key=lambda a: a["application_id"]):
-            groups.setdefault(self.signature(a), []).append(a)
+            # twins are two customers: one customer's equal same-day applications (a split need) are not one unit
+            key = (self.signature(a), a["customer_id"])
+            nth[key] = nth.get(key, -1) + 1
+            groups.setdefault((key[0], nth[key]), []).append(a)
         units = list(groups.values())
         today = {}
 

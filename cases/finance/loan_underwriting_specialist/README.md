@@ -241,6 +241,17 @@ reference run under another rule set also gets its table wrong (different cutoff
   daily cap on one day, believe a larger budget, skip the quota top-up, ignore corrections, allow two
   approvals per customer and day), chosen by replaying candidates until exactly one rule breaks.
   `validate-case` (9 settings, ~200 replays) takes about **40 seconds**.
+- **Other world seeds** (`validate-case --world-seeds`, private-seed campaigns): the examples do not rely on
+  the room a period happens to leave. An override that approves more on a day already at the daily cap (or the
+  budget) cuts another approval of that day by as much; when the reference approves no second split
+  application (no twin) by itself, the example moves 1,000 to a second one (approves one twin); when demand
+  stays under the cap, the budget or above the quota, the example approves credit-risk declines, tops up
+  near-prime approvals without end, or declines near-prime approvals. The generator keeps every notice inside
+  the period and gives each rule set at least one applicant under its score cutoff who is otherwise approvable
+  in all its tiers (a world without one gets new bureau scores for a random applicant with no other part).
+  The reference's twin units join two customers only: a split need in equal parts (e.g. 24,000 + 24,000) is
+  two units, each within what is left of the customer's limit. The public seed has the below-cutoff
+  applicants and no equal-part split, so its world, data, decisions and limit tables are unchanged.
 - Scores, salaries, debts and default probabilities are synthetic; the true PD uses no protected attribute.
   The history and the customers come from the same generator as the batch version of this case; the hidden
   period has its own random streams for customers, credit lines, documents and situations.
