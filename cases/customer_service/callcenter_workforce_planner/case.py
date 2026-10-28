@@ -352,7 +352,13 @@ def reference_solution(world: World, out_dir: Path) -> None:
 
 
 def violating_examples(world: World) -> dict:
-    """One deliverable per rule that breaks exactly that rule (for the validator)."""
+    """One deliverable per rule that breaks exactly that rule (for the validator).
+
+    Small edits of the reference, tried in this order: change the language of one assignment, add one
+    assignment, move one assignment of an agent to another day, shift or language. Moving matters when every
+    agent who could break a rule is already at their weekly maximum (e.g. all approved-leave agents are
+    part-timers with 3 shifts): adding a shift would then also break max_shifts, moving one does not.
+    """
     ref = _solve(world)
     wanted = {"skill_valid", "shift_type", "max_shifts", "min_rest", "leave_respected", "buddy_rule"}
     found: dict[str, list] = {}
@@ -364,11 +370,24 @@ def violating_examples(world: World) -> dict:
             if r in wanted and r not in found:
                 found[r] = cand
 
-    # Change the language of one assignment, or add one assignment.
-    cands = [ref[:i] + [(aid, d, sh, l2)] + ref[i + 1:]
-             for i, (aid, d, sh, l) in enumerate(ref) for l2 in LANGS if l2 != l]
-    cands += [ref + [(a.id, d, sh, l)] for a in world.agents for d in range(7) for sh in SHIFTS for l in a.langs]
-    for cand in cands:
+    def candidates():
+        for i, (aid, d, sh, l) in enumerate(ref):
+            for l2 in LANGS:
+                if l2 != l:
+                    yield ref[:i] + [(aid, d, sh, l2)] + ref[i + 1:]
+        for a in world.agents:
+            for d in range(7):
+                for sh in SHIFTS:
+                    for l in a.langs:
+                        yield ref + [(a.id, d, sh, l)]
+        for i, (aid, d, sh, l) in enumerate(ref):
+            for d2 in range(7):
+                for sh2 in SHIFTS:
+                    for l2 in world.agent(aid).langs:
+                        if (d2, sh2, l2) != (d, sh, l):
+                            yield ref[:i] + [(aid, d2, sh2, l2)] + ref[i + 1:]
+
+    for cand in candidates():
         consider(cand)
         if len(found) == len(wanted):
             break
