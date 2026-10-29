@@ -1,0 +1,16 @@
+# The explainer's case texts in Simplified Chinese (English comes from case.yaml).
+role: 呼叫中心人力排班规划师
+task_type: 组合优化
+deliverable_spec: |
+  roster.json = {"assignments": [{"agent": "<坐席工号，例如 A01>", "day": "YYYY-MM-DD (2026-11-09 .. 2026-11-15)",
+                                  "shift": "<班次表中的班次编号，例如 S0800 或 P1600>",
+                                  "language": "<该坐席在本班次接听的语种：ko | ja | en | zh | es>"}, ...]}
+  每位坐席每上一个班记一条；编号与数据中完全一致；语种用 ASCII 代码填写
+  （ko = 韩语，ja = 日语，en = 英语，zh = 中文，es = 西班牙语）。
+rules:
+  skill_valid: 坐席只接听其语言技能中列出的语种。
+  min_rest: 同一坐席上一个班结束到下一个班开始之间至少间隔 11 小时（因此每天最多一个班）。
+  shift_type: 全职只上 8 小时班，兼职只上 4 小时班。
+  max_shifts: 全职每周最多上 5 个班，兼职每周最多 3 个班。
+  leave_respected: 已批准的请假日不给任何人排班。
+  buddy_rule: 只要有新员工在岗接听，同一时间同一语种上就至少有一位非新员工坐席。

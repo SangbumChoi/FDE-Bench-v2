@@ -1,0 +1,16 @@
+# The explainer's case texts in Japanese (English comes from case.yaml).
+role: コールセンター要員計画担当
+task_type: 組合せ最適化
+deliverable_spec: |
+  roster.json = {"assignments": [{"agent": "<担当者ID、例: A01>", "day": "YYYY-MM-DD (2026-11-09 .. 2026-11-15)",
+                                  "shift": "<シフト一覧のシフトコード、例: S0800 または P1600>",
+                                  "language": "<このシフトで担当者が電話対応する言語: ko | ja | en | zh | es>"}, ...]}
+  担当者が勤務するシフト1回につき1件です。IDはデータのとおりに記載し、言語はASCIIコードで記載します
+  （ko = 韓国語、ja = 日本語、en = 英語、zh = 中国語、es = スペイン語）。
+rules:
+  skill_valid: 担当者は自分の対応言語に記載された言語でのみ電話対応します。
+  min_rest: 1つのシフトの終了から同じ担当者の次のシフト開始まで、11時間以上空けます（そのため1日1回まで）。
+  shift_type: 正社員は8時間シフトのみ、パートは4時間シフトのみ勤務します。
+  max_shifts: 正社員は週5回まで、パートは週3回まで勤務します。
+  leave_respected: 承認済みの休暇日には誰も配置しません。
+  buddy_rule: 新人が電話に出ているときは常に、同じ時間・同じ言語に新人ではない担当者が少なくとも1名います。

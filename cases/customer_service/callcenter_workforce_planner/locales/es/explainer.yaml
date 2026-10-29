@@ -1,0 +1,16 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Planificador de personal del centro de llamadas
+task_type: Optimización combinatoria
+deliverable_spec: |
+  roster.json = {"assignments": [{"agent": "<id del agente, p. ej. A01>", "day": "YYYY-MM-DD (2026-11-09 .. 2026-11-15)",
+                                  "shift": "<id del turno de la lista de turnos, p. ej. S0800 o P1600>",
+                                  "language": "<idioma en el que el agente atiende llamadas en este turno: ko | ja | en | zh | es>"}, ...]}
+  Una entrada por agente y por turno trabajado; los ids exactamente como en los datos; el idioma como código ASCII
+  (ko = coreano, ja = japonés, en = inglés, zh = chino, es = español).
+rules:
+  skill_valid: Un agente solo atiende llamadas en un idioma que figure entre sus idiomas.
+  min_rest: Al menos 11 horas entre el final de un turno y el inicio del siguiente turno del mismo agente (por tanto, como mucho un turno al día).
+  shift_type: El personal de jornada completa solo hace turnos de 8 horas; el de media jornada, solo turnos de 4 horas.
+  max_shifts: Una persona de jornada completa trabaja como máximo 5 turnos a la semana; una de media jornada, como máximo 3.
+  leave_respected: No se programa a nadie en un día de ausencia aprobada.
+  buddy_rule: Siempre que una persona de nuevo ingreso está al teléfono, hay al menos un agente que no es de nuevo ingreso en el mismo idioma y a la misma hora.
