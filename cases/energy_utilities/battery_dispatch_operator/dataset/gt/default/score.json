@@ -1,4 +1,10 @@
 {
+  "baseline_objective": 0.0,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.0,
+    "quality_score": 0.0
+  },
   "metrics": {
     "battery_profit_eur": 18084.35,
     "curtailed_mwh": 36.493,
@@ -12,5 +18,10 @@
     "throughput_mwh": 732.56
   },
   "objective": 18084.350179250043,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
   "violations": []
 }
