@@ -31,6 +31,7 @@ DISABILITY_SUPPLEMENT = 120           # per disabled member living at the addres
 ASSET_BASE, ASSET_PER_EXTRA = 6000, 3000
 RESIDENCY_MONTHS = 6
 WRONG_DECISION_PENALTY = 400
+WRONG_REASON_PENALTY = 100            # denying an ineligible household for a test other than the first one it fails
 # last year's (2025) table: household size -> (standard amount, maximum housing allowance)
 LAST_YEAR = {1: (640, 380), 2: (1020, 460), 3: (1310, 540), 4: (1580, 610), 5: (1820, 670),
              6: (2040, 720), 7: (2250, 720), 8: (2460, 720), 9: (2670, 720), 10: (2880, 720)}
@@ -459,7 +460,7 @@ def score(world: World, submission_dir: Path) -> dict:
         return {"fatal": str(e)}
     violations: list[tuple[str, str]] = []
     abs_err = 0.0
-    wrong = 0
+    wrong = wrong_reason = 0
     for h in world.households:
         elig, amt, code = sub[h.id]
         paid = amt if elig else 0.0
@@ -469,6 +470,11 @@ def score(world: World, submission_dir: Path) -> dict:
             violations.append(("reason_code_required", f"{h.id}: reason_code {code!r} is not one of {REASON_CODES}"))
         elif (code in APPROVE_CODES) != elig:
             violations.append(("reason_code_required", f"{h.id}: reason_code {code} does not match eligible"))
+        elif elig and (code == "RENEWAL") != h.renewal:
+            violations.append(("reason_code_required", f"{h.id}: an approved {'renewal' if h.renewal else 'new application'}"
+                                                       f" must be coded {'RENEWAL' if h.renewal else 'APPROVED'}, not {code}"))
+        elif not elig and not h.eligible and code != h.reason:
+            wrong_reason += 1           # denied, but not for the first test it fails (residency, assets, income)
         if elig and h.resident_since > months_before(h.applied, RESIDENCY_MONTHS):
             violations.append(("residency_requirement", f"{h.id} approved with less than 6 months of residence"))
         if elig and countable_assets(h) > asset_limit(h.size):
@@ -478,10 +484,10 @@ def score(world: World, submission_dir: Path) -> dict:
         if h.renewal and (not elig or abs(amt - h.last_amount) > 0.5):
             violations.append(("auto_approve_renewals",
                                f"{h.id} is a renewal: must be approved at last year's {h.last_amount}"))
-    objective = abs_err + WRONG_DECISION_PENALTY * wrong
+    objective = abs_err + WRONG_DECISION_PENALTY * wrong + WRONG_REASON_PENALTY * wrong_reason
     return {"violations": violations, "objective": round(objective, 4),
             "metrics": {"abs_amount_error": round(abs_err, 2), "wrong_decisions": wrong,
-                        "households": len(world.households)}}
+                        "wrong_denial_reasons": wrong_reason, "households": len(world.households)}}
 
 
 # ── reference solution ───────────────────────────────────────────────────────
@@ -509,6 +515,27 @@ def reference_solution(world: World, out_dir: Path) -> None:
     _write(out_dir, _decide(world))
 
 
+def baseline_solution(world: World, out_dir: Path) -> None:
+    """The counter's worksheet without an engineer: renewals rolled over at last year's amount (the office's
+    practice); new applications screened on residency and assets, then paid last year's published table
+    (standard amount + rent up to the housing maximum) minus all income at the address counted in full,
+    within the cap. No uprating, no earned-income disregard, no disability supplement."""
+    rows = []
+    for h in world.households:
+        if h.renewal:
+            rows.append([h.id, "yes", h.last_amount, "RENEWAL"])
+        elif h.resident_since > months_before(h.applied, RESIDENCY_MONTHS):
+            rows.append([h.id, "no", 0, "DENY_RESIDENCY"])
+        elif countable_assets(h) > asset_limit(h.size):
+            rows.append([h.id, "no", 0, "DENY_ASSETS"])
+        else:
+            std, house = LAST_YEAR[min(h.size, 10)]
+            income = sum(m.income[k] for m in h.members if m.at_address for k in INCOME_TYPES)
+            amount = min(cap(h.size), math.floor(std + min(h.rent, house) - income))
+            rows.append([h.id, "yes", amount, "APPROVED"] if amount > 0 else [h.id, "no", 0, "DENY_INCOME"])
+    _write(out_dir, rows)
+
+
 def violating_examples(world: World) -> dict:
     """One deliverable per rule that breaks exactly that rule (for the validator)."""
     base = _decide(world)
@@ -530,10 +557,13 @@ def violating_examples(world: World) -> dict:
     ast = next(h for h in world.households if h.reason == "DENY_ASSETS" and not h.renewal and would_be_paid(h) > 0)
     new_ok = next(h for h in world.households if h.eligible and not h.renewal)
     ren = next(h for h in world.households if h.renewal and h.last_amount > 20)
+    # the swapped-code submission: approvals coded the other way round and every denial DENY_INCOME
+    swap = {"APPROVED": "RENEWAL", "RENEWAL": "APPROVED"}
+    swapped = [[r[0], r[1], r[2], swap.get(r[3], "DENY_INCOME")] for r in base]
     return {
         "residency_requirement": with_row(res.id, [res.id, "yes", would_be_paid(res), "APPROVED"]),
         "asset_limit": with_row(ast.id, [ast.id, "yes", would_be_paid(ast), "APPROVED"]),
         "amount_cap": with_row(new_ok.id, [new_ok.id, "yes", cap(new_ok.size) + 50, "APPROVED"]),
-        "reason_code_required": with_row(new_ok.id, [new_ok.id, "yes", new_ok.amount, "OK"]),
+        "reason_code_required": lambda out: _write(out, swapped),
         "auto_approve_renewals": with_row(ren.id, [ren.id, "yes", ren.last_amount - 10, "RENEWAL"]),
     }

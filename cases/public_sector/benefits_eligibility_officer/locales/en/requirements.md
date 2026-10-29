@@ -2,7 +2,7 @@
 
 ## Background
 
-We have a backlog of about 300 applications for our Household Living Support benefit. Can you decide who qualifies and how much they get each month? The applications, the household members, the declared assets, last year's amount table and the leaflet we give to citizens are attached. The leaflet is written for citizens and deliberately avoids numbers; the exact rules are below.
+We have a backlog of about 300 applications for our Household Living Support benefit. Can you decide who qualifies and how much they get each month? The applications, the household members, the declared assets, last year's amount table and the leaflet we give to citizens are attached. The leaflet is written for citizens and deliberately avoids numbers; the exact rules are below. What matters to us is that every household is paid exactly what it is entitled to under this year's rules and, above all, that no household is wrongly approved or wrongly turned down; a refusal must also give the right reason.
 
 ## Deliverable
 
@@ -32,7 +32,7 @@ One CSV file, `determinations.csv`, with the ASCII header `household_id,eligible
 - No household with less than 6 months of residence is approved.
 - No household above the asset limit is approved.
 - No monthly amount exceeds the cap for the household size.
-- Every row has a valid reason code that matches the decision.
+- Every row has a valid reason code that matches the decision (an approval is `APPROVED` for a new application and `RENEWAL` for a renewal).
 - Renewals are approved at exactly last year's monthly amount.
 
-**Quality**: the sum over all households of the absolute difference between the amount you pay (0 if not eligible) and the household's true entitlement under this year's rules, plus 400 for every wrong eligibility decision. Lower is better.
+**Quality**: the sum over all households of the absolute difference between the amount you pay (0 if not eligible) and the household's true entitlement under this year's rules, plus 400 for every wrong eligibility decision, plus 100 for every household that is rightly refused but with a reason code other than the first condition it fails (residency, assets, income). Lower is better.

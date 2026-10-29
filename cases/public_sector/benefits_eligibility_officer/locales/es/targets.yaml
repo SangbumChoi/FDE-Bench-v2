@@ -15,4 +15,4 @@
 - id: renewals
   text: Las renovaciones se aprueban con el importe mensual del año pasado sin volver a evaluarlas, con el código de motivo RENEWAL.
 - id: scoring
-  text: La calidad es la suma de diferencias absolutas entre el importe pagado y el que corresponde, más 400 por cada decisión de derecho equivocada; el código de motivo debe coincidir con la decisión (residencia, luego patrimonio, luego ingresos).
+  text: El objetivo es pagar a cada hogar exactamente lo que le corresponde según las reglas de este año y, sobre todo, acertar en cada decisión de sí o no; un rechazo indica el primer requisito que el hogar no cumple, en el orden residencia, patrimonio, ingresos.

@@ -4,6 +4,7 @@ task_type: Rule-Based Decisioning
 field: public_sector
 seed: 20261026
 objective: minimize          # total |monthly_amount - true entitlement| + 400 per wrong eligibility decision
+                             # + 100 per ineligible household denied with the wrong reason code
 deliverables: [determinations.csv]
 deliverable_spec: |
   determinations.csv with ASCII header household_id,eligible,monthly_amount,reason_code
@@ -23,7 +24,7 @@ rules:
     description: No monthly amount exceeds this year's budget-law cap for the household size (1050 / 1450 / 1800 / 2100 / 2350 / 2550 for 1 / 2 / 3 / 4 / 5 / 6 or more people).
   - id: reason_code_required
     class: contractual
-    description: Every determination carries a reason code from the fixed list that matches the decision.
+    description: Every determination carries a reason code from the fixed list that matches the decision (an approval is RENEWAL for a renewal and APPROVED for a new application).
   - id: auto_approve_renewals
     class: business_policy
     description: Renewal applications are approved at last year's monthly amount without re-assessment.
