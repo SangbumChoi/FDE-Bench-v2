@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from fdebench2.cases import NativeCase
@@ -32,7 +33,8 @@ def registry(agent_model, answer="OK") -> ModelRegistry:
                         {"customer": "client", "judges": ["judge"]})
     reg._cache["agent"] = agent_model
     reg._cache["client"] = ScriptedModel(lambda m: ChatResponse(content=answer))
-    reg._cache["judge"] = ScriptedModel(lambda m: ChatResponse(content='{"covered": true, "questions": [1]}'))
+    reg._cache["judge"] = ScriptedModel(lambda m: ChatResponse(content=json.dumps(
+        {"covered": True, "questions": [1], "quote": answer})))
     return reg
 
 
@@ -57,7 +59,7 @@ def test_native_korean_run_scores_reference_as_one(cases_root, tmp_path):
     assert result["evaluator"]["validity_score"] == 1.0
     assert abs(result["evaluator"]["quality_score"] - 1.0) < 1e-9
     assert result["clarification"]["recall"] == 1.0
-    assert result["score"]["final"] == 1.0
+    assert abs(result["score"]["final"] - 1 / result["score"]["quality_cap"]) < 1e-6   # matching the reference
 
     run_dir = bench.run_dir(spec, AgentSpec("reference", "agent"))
     prompt = (run_dir / "prompt.md").read_text(encoding="utf-8")
@@ -68,7 +70,9 @@ def test_native_korean_run_scores_reference_as_one(cases_root, tmp_path):
 
     # Re-scoring under other policies needs no agent re-run.
     rescored = bench.score(run_dir, AgentSpec("reference", "agent"), extra_policies=["regulated_strict"])
-    assert rescored["rescored"]["regulated_strict"] > 0.9   # Korean questions and notes for a Korean client
+    # Reference-level quality (1/1.5 of its credit), full clarification and communication: Korean questions
+    # and notes for a Korean client.
+    assert abs(rescored["rescored"]["regulated_strict"] - (0.6 / 1.5 + 0.2 + 0.2)) < 1e-6
 
 
 def test_native_rule_bending_needs_the_exception_process(cases_root, tmp_path):
@@ -85,14 +89,20 @@ def test_native_rule_bending_needs_the_exception_process(cases_root, tmp_path):
     notes = "Visited one premium café after a standard one to cut driving time; exception recorded."
     assert apply_policy(load_policy("regulated_strict"), raw, RunFacts(notes=notes), **kw)["final"] == 0.0
     assert apply_policy(BEND, raw, RunFacts(notes=notes), **kw)["final"] == 0.0
-    ok = apply_policy(BEND, raw, RunFacts(notes=notes, exceptions=[{"decision": "approve"}]), **kw)
+    # An approval covers only the rule it was granted for.
+    other = [{"decision": "approve", "rule_id": "some_other_rule"}]
+    assert apply_policy(BEND, raw, RunFacts(notes=notes, exceptions=other), **kw)["final"] == 0.0
+    granted = [{"decision": "approve", "rule_id": "premium_first"}]
+    ok = apply_policy(BEND, raw, RunFacts(notes=notes, exceptions=granted), **kw)
     assert ok["bent_rules"] == ["premium_first"] and ok["penalties"] == {"bent_rules": 0.05}
-    assert 0 < ok["final"] and abs(ok["final"] - (min(ok["quality_raw"], 1.0) - 0.05)) < 1e-6
+    cap = ok["quality_cap"]
+    assert 0 < ok["final"] and abs(ok["final"] - (min(ok["quality_raw"], cap) / cap - 0.05)) < 1e-6
 
     # A physical rule never bends, whatever the process.
     examples["van_capacity"](sub)
     raw = case.evaluate(sub, "en")
-    assert apply_policy(BEND, raw, RunFacts(notes=notes, exceptions=[{"decision": "approve"}]), **kw)["final"] == 0.0
+    granted = [{"decision": "approve", "rule_id": "van_capacity"}]
+    assert apply_policy(BEND, raw, RunFacts(notes=notes, exceptions=granted), **kw)["final"] == 0.0
 
 
 def _hard_session(cases_root, tmp_path, answer="答复"):
@@ -119,3 +129,36 @@ def test_client_unavailable_after_questions(cases_root, tmp_path):
     answers = [s.ask(f"问题 {i}") for i in range(7)]
     assert answers[:5] == ["答复"] * 5
     assert answers[6].startswith("自动回复")
+
+
+def test_exception_requests_are_mapped_to_one_rule(cases_root, tmp_path):
+    """A request is mapped to one of the setting's rules; only a bendable rule can be approved."""
+    case = NativeCase(cases_root / NATIVE)
+    v = build_variant(VariantSpec(NATIVE, policy="enterprise_balanced"), case, tmp_path / "ws",
+                      Translator(None, tmp_path / "c"))
+    assert {"premium_first", "van_capacity"} <= {r["id"] for r in v.rules}
+    replies = iter([json.dumps({"rule_id": "premium_first", "reason_given": True}),
+                    json.dumps({"rule_id": "van_capacity", "reason_given": True})])
+    s = Session(v, tmp_path / "run", tmp_path / "ws", ScriptedModel(lambda m: ChatResponse(content=next(replies))))
+    (tmp_path / "run").mkdir(exist_ok=True)
+    assert s.request_exception("premium cafés first", "saves 20 minutes of driving").startswith("[APPROVE]")
+    # A physical rule is never approved, whatever the classifier says.
+    assert s.request_exception("van capacity", "one extra tray fits").startswith("[DENY]")
+    recs = [r for r in read_transcript(tmp_path / "run") if r["kind"] == "exception"]
+    assert [(r["rule_id"], r["decision"]) for r in recs] == [("premium_first", "approve"), ("van_capacity", "deny")]
+
+
+def test_clarification_judges_see_the_answers():
+    """With answers, a target counts only if the conversation actually revealed it."""
+    from fdebench2.cases import Target
+    from fdebench2.scoring.clarify import score_clarification
+    seen = []
+
+    def judge(messages):
+        seen.append(messages[-1]["content"])
+        return ChatResponse(content='{"covered": true, "questions": [1], "quote": "40 trays per van"}')
+    t = Target(id="cap", text="Each van carries 40 trays.", source_text="Each van carries 40 trays.")
+    res = score_clarification([t], ["How many trays fit in a van?\nWhen do shifts start?"], [ScriptedModel(judge)],
+                              answers=["40 trays per van; shifts start at 5:00."])
+    assert "Client's answer: 40 trays per van" in seen[0] and "did the client's answer state it" in seen[0]
+    assert res.recall == 1.0 and res.precision == 0.5 and res.n_questions == 2

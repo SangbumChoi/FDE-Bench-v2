@@ -1,6 +1,6 @@
 {
  "gt/default/reference/routes.json": "a338a6a44fda2447e58aaff86ef92af72772b7c4f5f764bf134797a627cdefe2",
- "gt/default/score.json": "a3e539ab383b875d26f7d4d2ea412797850be46dac8b71a249cce1c070cdf6ab",
+ "gt/default/score.json": "fd676c8276a60cf8068c84efc2191252049066c3575a38638956a257d87cd78c",
  "gt/default/setting.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
  "visible/en/cafes.csv": "d6c4a055e9e4be4505819e09325c8a84558b614dc43df748b975f8fdeb108e61",
  "visible/en/vans.csv": "2d0ad512c86d4d646a0234b0eaa349737b307f2d4f6735f62ef37f1d6540fd31",
@@ -8,7 +8,7 @@
  "visible/es/furgonetas.csv": "54593ded29619ee6454fef5ded1742ed6571de7caec77176c761fc5cf94e1ffc",
  "visible/ja/\u5e97\u8217\u4e00\u89a7.csv": "5e6b664d9e5b04d6cee90e01ca3a92a303eb5a0ac19feed6d53aaff35b844eb0",
  "visible/ja/\u8eca\u4e21.csv": "7448adca73e72589ee2473d1e4d48995b50cb04b5794d5d4e36467df96c97b18",
- "visible/ko/\ub9e4\uc7a5\ubaa9\ub85d.csv": "9dd51f6952e8b88c1b05d4e3b182c885c1e25e32d2495c0df5e6454fa698dafa",
+ "visible/ko/\ub9e4\uc7a5\ubaa9\ub85d.csv": "40b4e33969be3524eabb7a544713f5834c1907b590af6425eeb767e565eb9f93",
  "visible/ko/\ucc28\ub7c9.csv": "b2cee85d66bb9ddefbbce09f6f8ffccb6eb45b008dc2f97b10f9ad31d7785859",
  "visible/zh/\u8f66\u8f86.csv": "557424ea2814525f0cb61280ad5e535cb5c3c8f5ff80f7f02906eaa3dfed020b",
  "visible/zh/\u95e8\u5e97\u6e05\u5355.csv": "63e8c2668ea926bfaf7da97b872699eabf09b3d5809d24bf3076a004b57bfab8"

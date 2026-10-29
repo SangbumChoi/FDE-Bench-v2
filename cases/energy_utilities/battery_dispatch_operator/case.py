@@ -40,7 +40,7 @@ RESERVE = 0.20 * CAPACITY               # MWh held at every quarter boundary 17:
 RES_FROM, RES_TO = 17 * 60, 21 * 60
 DEGRADATION = 5.0                       # EUR per MWh throughput (charge + discharge energy at the meter)
 SOLAR_MW = 30.0
-P_TOL, E_TOL = 1e-4, 1e-3
+P_TOL, E_TOL = 1e-4, 0.02               # MW; MWh (0.05% of capacity: a plan rounded to 2-3 decimals stays valid)
 
 
 @dataclass
@@ -141,7 +141,7 @@ FILES = {
 }
 COLS = {
     "ts": {"zh": "时间", "en": "timestamp", "ko": "시각", "ja": "日時", "es": "fecha_hora"},
-    "price": {"zh": "日前电价_欧元每MWh", "en": "day_ahead_price_eur_mwh", "ko": "전일가격_EUR_MWh",
+    "price": {"zh": "日前电价_欧元每MWh", "en": "day_ahead_price_eur_mwh", "ko": "하루전가격_EUR_MWh",
               "ja": "前日価格_EUR_MWh", "es": "precio_diario_eur_mwh"},
     "solar": {"zh": "光伏出力_MW", "en": "solar_mw", "ko": "태양광출력_MW", "ja": "太陽光出力_MW", "es": "solar_mw"},
     "param": {"zh": "参数", "en": "parameter", "ko": "항목", "ja": "項目", "es": "parametro"},
@@ -170,7 +170,7 @@ SPEC = {
 AGREEMENT = {
     "en": """# Connection agreement (summary of the signed agreement, 2024)
 
-Site: Llano Verde solar and storage park, one shared point of connection.
+Site: Llano Verde solar and storage park (Spain), one shared point of connection.
 
 - Maximum export capacity at the point of connection: {exp} MW.
 - Maximum import capacity at the point of connection: {imp} MW.
@@ -180,7 +180,7 @@ Site: Llano Verde solar and storage park, one shared point of connection.
 """,
     "es": """# Contrato de conexión (resumen del contrato firmado, 2024)
 
-Emplazamiento: parque solar con almacenamiento Llano Verde, un único punto de conexión compartido.
+Emplazamiento: parque solar con almacenamiento Llano Verde (España), un único punto de conexión compartido.
 
 - Capacidad máxima de vertido en el punto de conexión: {exp} MW.
 - Capacidad máxima de consumo desde la red en el punto de conexión: {imp} MW.
@@ -190,7 +190,7 @@ Emplazamiento: parque solar con almacenamiento Llano Verde, un único punto de c
 """,
     "zh": """# 并网协议（2024 年签署协议摘要）
 
-场站：绿原光储电站，光伏与储能共用一个并网点。
+场站：利亚诺韦尔德光储电站（西班牙），光伏与储能共用一个并网点。
 
 - 并网点最大上网容量：{exp} MW。
 - 并网点最大下网（从电网取电）容量：{imp} MW。
@@ -200,7 +200,7 @@ Emplazamiento: parque solar con almacenamiento Llano Verde, un único punto de c
 """,
     "ko": """# 계통연계계약 (2024년 체결 계약 요약)
 
-사업장: 야노베르데 태양광·ESS 발전소, 공용 연계점 1개.
+사업장: 야노베르데 태양광·ESS 발전소(스페인), 공용 연계점 1개.
 
 - 연계점 최대 송전(역송) 용량: {exp} MW.
 - 연계점 최대 수전 용량: {imp} MW.
@@ -210,7 +210,7 @@ Emplazamiento: parque solar con almacenamiento Llano Verde, un único punto de c
 """,
     "ja": """# 系統連系契約（2024年締結契約の要約）
 
-サイト：リャノ・ベルデ太陽光・蓄電所、共用の連系点が1か所です。
+サイト：リャノ・ベルデ太陽光・蓄電所（スペイン）、共用の連系点が1か所です。
 
 - 連系点での最大逆潮流（送電）容量：{exp} MW
 - 連系点での最大受電容量：{imp} MW
@@ -397,6 +397,13 @@ def _write_plan(world: World, out_dir: Path, ch: list[float], dis: list[float]) 
 def reference_solution(world: World, out_dir: Path) -> None:
     ch, dis = _heuristic(world.week)
     _write_plan(world, out_dir, ch, dis)
+
+
+def baseline_solution(world: World, out_dir: Path) -> None:
+    """The site without a dispatch plan: the battery rests at 50% all week and the farm sells solar alone
+    (battery profit 0; nothing to break, since export, import and reserve rules only bite when it moves)."""
+    n = len(world.week.slots)
+    _write_plan(world, out_dir, [0.0] * n, [0.0] * n)
 
 
 def violating_examples(world: World) -> dict:

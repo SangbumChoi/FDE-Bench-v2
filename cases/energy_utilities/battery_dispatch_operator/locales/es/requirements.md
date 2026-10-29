@@ -2,7 +2,7 @@
 
 ## Contexto
 
-¿Podría planificar cuándo debe cargar y descargar nuestra batería la semana que viene (del lunes 22 al domingo 28 de marzo) para ganar el máximo dinero posible? Le adjunto la previsión de precios, la previsión de producción de la planta solar de al lado, la ficha técnica de la batería, nuestro contrato de conexión y el registro de despacho de la semana pasada.
+¿Podría planificar cuándo debe cargar y descargar la batería de nuestro emplazamiento en España la semana que viene (del lunes 22 al domingo 28 de marzo) para ganar el máximo dinero posible? Le adjunto la previsión de precios, la previsión de producción de la planta solar del mismo emplazamiento, la ficha técnica de la batería, nuestro contrato de conexión y el registro de despacho de la semana pasada.
 
 ## Entregable
 

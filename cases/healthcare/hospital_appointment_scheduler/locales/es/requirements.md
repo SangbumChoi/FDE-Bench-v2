@@ -54,29 +54,29 @@ Una carpeta `program/` con un archivo `scheduler.py` que defina **`on_day(day)`*
 
 **Cambiar la cita de un paciente**
 
-- Cuando cambiamos la **fecha o la hora** de la cita de un paciente (un cambio, o anularla y volver a citarlo el mismo día), la nueva cita debe ser al menos **{{move_notice_days}} días laborables después de hoy**: el paciente necesita ese preaviso. Mantener la misma fecha y hora con otro médico no necesita preaviso.
+- Cuando cambiamos la **fecha o la hora** de la cita de un paciente (un cambio, o anularla y volver a citarlo ese mismo día o más adelante), la nueva cita debe ser al menos **{{move_notice_days}} días laborables después del día del cambio** (si se anuló, del día de la anulación): el paciente necesita ese preaviso. Mantener la misma fecha y hora con otro médico no necesita preaviso.
 - Cada cambio que hacemos en la cita de un paciente (cambio o anulación) es una molestia para él y resta en la puntuación; no mueva citas sin motivo.
 
 **La lista de espera**
 
 - Las solicitudes en espera se citan en nuestro **orden de prioridad**: {{waitlist_order}}.
-- No se puede citar una solicitud mientras otra de **mayor prioridad** de la misma especialidad, el mismo tipo de visita y (en revisiones) el mismo médico anterior sigue esperando al final del día y podría haber ocupado ese hueco. No se lo tendremos en cuenta cuando la que espera no podía ocuparlo: su fecha más temprana es posterior a ese hueco<!-- tier: medium hard -->, su volante caduca antes, necesita análisis de sangre (los análisis se planifican aparte)<!-- /tier -->, es una primera visita que con ese médico necesitaría intérprete y la citada no, o usted anuló su cita hoy y el hueco está dentro del plazo de preaviso.
+- No se puede citar una solicitud mientras otra de **mayor prioridad** de la misma especialidad, el mismo tipo de visita y (en revisiones) el mismo médico anterior sigue esperando al final del día y podría haber ocupado ese hueco. No se lo tendremos en cuenta cuando la que espera no podía ocuparlo: su fecha más temprana es posterior a ese hueco<!-- tier: medium hard -->, su volante caduca antes, necesita análisis de sangre y el laboratorio no tiene sitio para él ningún día laborable antes de ese hueco (desde mañana y no antes de su fecha más temprana; la plaza del análisis de la solicitud citada cuenta como libre)<!-- /tier -->, es una primera visita que con ese médico necesitaría intérprete y la citada no, y ese día ya están ocupados todos los intérpretes presenciales, o usted anuló su cita y el hueco está dentro del plazo de preaviso contado desde el día de la anulación.
 - En la práctica: rellene los huecos libres y los que se liberan con la lista de espera, por orden. Las anulaciones y la reserva de urgencias liberada para mañana son donde más tiempo de médico perdemos hoy.
 <!-- tier: easy -->
 
 **Alcance de esta ronda**
 
 - Avisos `doctor_absence` e `interpreter_absence`: fuera del alcance esta ronda (los cubren un médico sustituto y una agencia de intérpretes); cite como si no hubiera pasado nada.
-- `referral_valid_until` y `pre_visit_test`: fuera del alcance esta ronda; `test_date` se queda en null.
-- Ausencias de pacientes: fuera del alcance; todo paciente citado cuenta como que viene. `attendance` es informativo.
-- Cada solicitud es su propia visita, aunque el mismo paciente pida dos veces.
+- Volantes y análisis: esta ronda los volantes los revisa admisión y el laboratorio cita él mismo los análisis en ayunas con los pacientes, así que no tenga en cuenta `referral_valid_until` ni `pre_visit_test` y deje `test_date` en null.
+- Ausencias de pacientes: esta ronda no contamos con que falten; todo paciente citado cuenta como que viene. `attendance` es informativo.
+- Una segunda solicitud del mismo paciente: por la solicitud no sabemos si es la misma dolencia, así que esta ronda cada solicitud lleva su propia cita; la consulta comprueba con el paciente si es un duplicado.
 <!-- /tier -->
 <!-- tier: medium -->
 
 **Alcance de esta ronda**
 
-- Ausencias de pacientes: fuera del alcance; todo paciente citado cuenta como que viene. `attendance` es informativo. Sin sobrecitación: una cita por hueco.
-- Cada solicitud es su propia visita, aunque el mismo paciente pida dos veces.
+- Ausencias de pacientes: esta ronda no contamos con que falten; todo paciente citado cuenta como que viene, así que no hay sobrecitación: una cita por hueco. `attendance` es informativo.
+- Una segunda solicitud del mismo paciente: por la solicitud no sabemos si es la misma dolencia, así que esta ronda cada solicitud lleva su propia cita; la consulta comprueba con el paciente si es un duplicado.
 <!-- /tier -->
 <!-- tier: medium hard -->
 
@@ -95,7 +95,7 @@ Una carpeta `program/` con un archivo `scheduler.py` que defina **`on_day(day)`*
 **Ausencias de pacientes y sobrecitación**
 
 - Algunos pacientes no acuden. Cada paciente tiene su propia tasa de ausencias; `past_appointments` y `missed_appointments` son su historial (en la tabla `attendance` de la exportación no se acudió a cerca del 22% de las citas; las primeras visitas a menudo no tienen historial). Cuanto más tiempo pasa entre la cita y la visita, más se falta: alrededor de **un punto porcentual más por cada día laborable de antelación** (desde el día en que se dio o se cambió la cita por última vez). El historial de los pacientes se recogió con unos 5 días laborables de antelación.
-- Por las ausencias permitimos **sobrecitar revisiones**: un hueco puede tener **dos revisiones** (nunca una primera visita, que se queda sus dos huecos para ella sola). Cada médico puede tener como mucho **{{overbooked_per_session}} huecos sobrecitados por sesión** (mañana o tarde). La reserva de urgencias también vale para la sobrecitación.
+- Por las ausencias permitimos **sobrecitar revisiones**: un hueco puede tener **dos revisiones** (nunca una primera visita, que se queda sus dos huecos para ella sola). Cada médico puede tener como mucho **{{overbooked_per_session}} huecos sobrecitados por sesión** (mañana o tarde). La reserva de urgencias también vale para la sobrecitación. Si en un hueco sobrecitado acuden los dos pacientes, el médico se retrasa, y eso nos cuesta algo más que un hueco vacío.
 
 **Duplicados, varias especialidades, notas**
 

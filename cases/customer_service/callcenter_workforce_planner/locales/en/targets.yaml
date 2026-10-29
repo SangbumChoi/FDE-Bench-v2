@@ -9,7 +9,7 @@
 - id: holiday_wednesday
   kind: missing
   domain: data semantics
-  text: Wednesday 11 November is a public holiday; the demand for that day is 60% of the forecast, rounded up, and the file was not updated.
+  text: Wednesday 11 November is a regional public holiday in the client's main market; the demand for that day is 60% of the forecast, rounded up, and the file was not updated.
 - id: contract_limits
   kind: missing
   domain: business rule

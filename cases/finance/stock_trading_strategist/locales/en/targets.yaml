@@ -58,7 +58,7 @@
 - id: objective
   kind: missing
   domain: scoring
-  text: Quality is 0.8 x the return component + 0.2 x table accuracy; the return component is the book's excess over the index bought at the first session and held (final net equity plus cash paid out to the client, minus the index's value) relative to the client's benchmark program's excess, 0 below the index.
+  text: Quality is 0.8 x the return component + 0.2 x table accuracy; the return component is the book's excess over the index bought at the first session and held (final net equity plus cash paid out to the client, minus the index's value) relative to the client's benchmark program's excess, 0 below the index (if the benchmark program beats the index by less than 5% of the capital, or trails it, the yardstick is 5% of the capital below its final value instead).
 - id: easy_scope
   kind: missing
   domain: business rule

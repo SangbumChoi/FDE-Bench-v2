@@ -22,4 +22,4 @@ rules:
     description: Store S4 is closed on Sundays; its Sunday forecasts are 0.
   - id: min_display_stock
     class: business_policy
-    description: Core items (fresh produce and dairy) are never forecast below 2 units on a day the store is open.
+    description: Core items (fresh produce and dairy) are never forecast below 6 units on a day the store is open.

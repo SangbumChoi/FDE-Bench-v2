@@ -21,6 +21,7 @@ and so the ground truth. Texts mark setting-specific passages with
 from __future__ import annotations
 
 import importlib.util
+import math
 import re
 import sys
 import tempfile
@@ -32,7 +33,7 @@ from typing import Any
 
 import yaml
 
-from .transforms.policy import CaseRule, CaseRules
+from .transforms.policy import RATIO_CAP, CaseRule, CaseRules
 
 LOCALES = ("zh", "en", "ko", "ja", "es")
 TIERS = ("easy", "medium", "hard")
@@ -42,6 +43,32 @@ DEFAULT_RULESET = "A"
 _BLOCK = {kind: re.compile(rf"<!-- {kind}: ([A-Za-z ]+) -->\n?(.*?)<!-- /{kind} -->\n?", re.S)
           for kind in ("tier", "ruleset")}
 PARAM = re.compile(r"\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}")
+BASELINE_MIN_GAP = 0.05   # quality's zero point is at least this share of the reference away from it
+
+
+def quality_fields(obj: float, ref: float, base: float | None, maximize: bool) -> dict[str, Any]:
+    """An objective's quality against the reference (and the baseline, when the case has one).
+
+    quality_ratio is obj/ref (ref/obj when minimizing); quality_score is normalized so that the baseline
+    scores 0 and the reference 1, or is the ratio itself when there is no baseline strictly worse than the
+    reference (quality_anchor says which). The zero point is never closer to the reference than
+    BASELINE_MIN_GAP of it, so a baseline that is nearly as good as the reference cannot blow small
+    differences up. Both are capped at RATIO_CAP; the score is floored at 0.
+    """
+    if obj == ref:
+        ratio = 1.0
+    elif (ref if maximize else obj) > 0:
+        ratio = min(obj / ref if maximize else ref / obj, RATIO_CAP)
+    else:  # no meaningful ratio (e.g. zero cost): beating the reference earns the cap, falling short 0
+        ratio = RATIO_CAP if (obj > ref) == maximize else 0.0
+    if base is not None and (base < ref if maximize else base > ref):
+        gap = BASELINE_MIN_GAP * abs(ref)
+        zero = min(base, ref - gap) if maximize else max(base, ref + gap)
+        score, anchor = (obj - zero) / (ref - zero), "baseline"
+    else:
+        score, anchor = ratio, "ratio"
+    return {"quality_ratio": round(ratio, 8), "quality_score": round(min(max(score, 0.0), RATIO_CAP), 8) + 0.0,
+            "quality_anchor": anchor}
 
 
 def filter_blocks(text: str, kind: str, value: str | None) -> str:
@@ -135,10 +162,16 @@ class Case:
         raise NotImplementedError
 
     def evaluate(self, submission_dir: Path, lang: str, relaxed: frozenset[str] = frozenset()) -> dict[str, Any]:
-        """{validity_score, quality_score, violations: [{rule, message}], metrics, error_info}."""
+        """{validity_score, quality_score, violations: [{rule, message}], metrics, error_info}; a valid
+        submission adds objective, reference_objective, baseline_objective and quality_fields()."""
         raise NotImplementedError
 
     def rules(self) -> CaseRules | None:
+        return None
+
+    @property
+    def quality_cap(self) -> float | None:
+        """The normalized quality that earns full quality credit on this case; None: the policy's."""
         return None
 
     @property
@@ -157,6 +190,10 @@ class Case:
 
     def at_tier(self, tier: str | None) -> "Case":
         return self.at(tier)
+
+    def with_world_seed(self, seed: int | None) -> "Case":
+        """This case on a world generated from another seed (itself for None or the case's own seed)."""
+        return self
 
     @property
     def submission_files(self) -> list[str]:
@@ -193,16 +230,19 @@ class NativeCase(Case):
       build_world(seed) -> world                    ground truth and everything the data is rendered from
       write_data(world, data_dir, lang)             render the agent-visible data in one locale
       reference_solution(world, out_dir)           write the reference deliverable (scores quality 1.0)
+      baseline_solution(world, out_dir)            the simplest sensible valid deliverable (do nothing, first-fit,
+                                                    a naive rule); it scores quality 0 (optional)
       score(world, submission_dir) -> dict          {"violations": [(rule_id, message)], "objective": float,
                                                      "metrics": {...}} or {"fatal": message}
                                                     Program cases call casekit.run_program(submission_dir,
                                                     ENTRYPOINT, hidden_inputs) here.
       violating_examples(world) -> {rule_id: fn(out_dir)}   for the validator (optional)
     A case that declares settings (`tiers:` and `rulesets:` in case.yaml) gets the setting as a last
-    argument of reference_solution, score and violating_examples; build_world and write_data never see
-    it, so the data is the same in every setting.
+    argument of reference_solution, baseline_solution, score and violating_examples; build_world and
+    write_data never see it, so the data is the same in every setting.
     case.yaml declares objective direction, the deliverable (`deliverable_type: batch` with `deliverables`,
-    or `deliverable_type: program` with `entrypoint`), its spec, and rule classes.
+    or `deliverable_type: program` with `entrypoint`), its spec, rule classes and optionally `quality_cap`
+    (the normalized quality of the best known solution, which then earns full quality credit).
     """
 
     def __init__(self, root: Path, tier: str | None = None, ruleset: str | None = None,
@@ -281,9 +321,27 @@ class NativeCase(Case):
         return self._family["module"]
 
     @property
+    def world_seed(self) -> int:
+        return int(self._family.get("world_seed", self.meta.get("seed", 0)))
+
+    def with_world_seed(self, seed: int | None) -> "NativeCase":
+        """The same case on a fresh world: same rules, texts and settings, data and answers from `seed`.
+
+        The stored dataset/ uses the case's own (public) seed; campaigns can run on other seeds so that scores
+        do not depend on worlds whose answers are published.
+        """
+        if seed is None or int(seed) == self.world_seed:
+            return self
+        fam = self._family.setdefault("other_worlds", {})
+        if seed not in fam:
+            fam[seed] = NativeCase(self.root, self.tier, self.ruleset,
+                                   _family={"module": self.module, "world_seed": int(seed)})
+        return fam[seed].at(self.tier, self.ruleset)
+
+    @property
     def world(self) -> Any:
         if "world" not in self._family:
-            self._family["world"] = self.module.build_world(int(self.meta.get("seed", 0)))
+            self._family["world"] = self.module.build_world(self.world_seed)
         return self._family["world"]
 
     # ── texts ───────────────────────────────────────────────────────────────
@@ -324,6 +382,9 @@ class NativeCase(Case):
     def write_reference(self, out_dir: Path) -> None:
         self.module.reference_solution(self.world, Path(out_dir), *self._args())
 
+    def write_baseline(self, out_dir: Path) -> None:
+        self.module.baseline_solution(self.world, Path(out_dir), *self._args())
+
     def violating_examples(self) -> dict:
         fn = getattr(self.module, "violating_examples", None)
         return fn(self.world, *self._args()) if fn else {}
@@ -331,15 +392,43 @@ class NativeCase(Case):
     def raw_score(self, submission_dir: Path) -> dict:
         return self.module.score(self.world, Path(submission_dir), *self._args())
 
-    @cached_property
-    def reference_objective(self) -> float:
+    def _valid_objective(self, write, name: str) -> float:
         with tempfile.TemporaryDirectory() as tmp:
-            self.write_reference(Path(tmp))
+            write(Path(tmp))
             res = self.raw_score(Path(tmp))
-        if "fatal" in res or res["violations"]:
-            raise AssertionError(f"{self.id} {self.setting.label if self.tiers else ''}: reference solution is "
+        if "fatal" in res or res["violations"] or not math.isfinite(float(res["objective"])):
+            raise AssertionError(f"{self.id} {self.setting.label if self.tiers else ''}: {name} solution is "
                                  f"not valid: {res}")
         return float(res["objective"])
+
+    @cached_property
+    def reference_objective(self) -> float:
+        return self._valid_objective(self.write_reference, "reference")
+
+    @cached_property
+    def baseline_objective(self) -> float | None:
+        """The objective of case.py's baseline_solution; None when the case has none."""
+        if not hasattr(self.module, "baseline_solution"):
+            return None
+        return self._valid_objective(self.write_baseline, "baseline")
+
+    @cached_property
+    def _scoring_baseline(self) -> tuple[float | None, str]:
+        """(baseline objective or None, why it is unusable). A baseline that fails on some world (a case bug the
+        validator reports) must not stop scoring: quality then falls back to the plain ratio."""
+        try:
+            return self.baseline_objective, ""
+        except AssertionError as e:
+            return None, str(e)[:300]
+
+    @property
+    def quality_cap(self) -> float | None:
+        cap = self.meta.get("quality_cap")
+        if cap is None:
+            return None
+        if not 0 < float(cap) <= RATIO_CAP:     # above RATIO_CAP full credit could never be reached
+            raise ValueError(f"{self.id}: quality_cap must be in (0, {RATIO_CAP:g}], got {cap!r}")
+        return float(cap)
 
     def evaluate(self, submission_dir: Path, lang: str, relaxed: frozenset[str] = frozenset()) -> dict[str, Any]:
         out: dict[str, Any] = {"validity_score": 0.0, "quality_score": 0.0, "violations": [], "metrics": {},
@@ -358,14 +447,16 @@ class NativeCase(Case):
         if blocking:
             out["error_info"] = {"constraint": [f"{v['rule']}: {v['message']}" for v in blocking[:8]]}
             return out
-        obj, ref = float(res["objective"]), self.reference_objective
+        obj = float(res["objective"])
+        if not math.isfinite(obj):      # NaN fails every comparison and would earn full credit
+            out["error_info"] = {"fatal": f"the objective is not a finite number: {obj}"}
+            return out
+        ref, (base, base_error) = self.reference_objective, self._scoring_baseline
         higher = self.meta.get("objective", "minimize") == "maximize"
-        if higher:
-            quality = obj / ref if ref > 0 else 0.0
-        else:
-            quality = ref / obj if obj > 0 else (1.0 if ref == 0 else 0.0)
-        out.update(validity_score=1.0, quality_score=round(quality, 8), objective=obj, reference_objective=ref,
-                   relaxed_violations=len(out["violations"]))
+        out.update(validity_score=1.0, **quality_fields(obj, ref, base, higher), objective=obj,
+                   reference_objective=ref, baseline_objective=base, relaxed_violations=len(out["violations"]))
+        if base_error:
+            out["baseline_error"] = base_error
         return out
 
     def rules(self) -> CaseRules:
@@ -388,7 +479,9 @@ class NativeCase(Case):
         return self.meta.get("entrypoint", "")
 
     def deliverable_spec(self) -> str:
-        return self.meta.get("deliverable_spec", "")      # agent-visible: the same in every setting
+        # The same in every setting. Batch cases: shown to the extractor, not the agent (the format is open).
+        # Program cases: shown to the agent as the program interface.
+        return self.meta.get("deliverable_spec", "")
 
 
 def load_fields(cases_root: str | Path = "cases") -> dict[str, dict[str, str]]:

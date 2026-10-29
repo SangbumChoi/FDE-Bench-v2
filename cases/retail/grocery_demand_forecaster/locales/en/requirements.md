@@ -10,7 +10,7 @@ One CSV file, `forecast.csv`, with the header `store_id,item_id,date,forecast`. 
 
 ## Data notes
 
-- `sales_history.csv` covers 2024-11-04 to 2026-11-01, one row per store, item and trading day. `stores.csv` and `items.csv` are the store and item lists; `holidays.csv` lists the public holidays in that period; `promo_plan.csv` is the promotion plan for the forecast period.
+- `sales_history.csv` covers 2024-11-04 to 2026-11-01, one sales row per store, item and trading day, plus separate return rows (see below). `stores.csv` and `items.csv` are the store and item lists; `holidays.csv` lists the public holidays in that period; `promo_plan.csv` is the promotion plan for the forecast period.
 - We need a forecast of customer demand, not of what the till recorded. On days with `stockout = yes` the shelf ran empty, so `units_sold` is only what was in stock and true demand was higher. Do not treat those days as normal sales.
 - Customer returns are logged in `sales_history.csv` as separate rows with a negative `units_sold`, on the day the item was brought back. Returns are not demand: leave those rows out; do not net them against the day's sales.
 - The Old Town store (S4) is closed on Sundays, which is why it has no Sunday rows. Its Sunday forecast must be 0.

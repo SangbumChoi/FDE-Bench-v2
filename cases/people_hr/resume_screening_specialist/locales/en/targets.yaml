@@ -25,11 +25,11 @@
 - id: past_hire_bias
   kind: ambiguous
   domain: data semantics
-  text: performance_score_1y in the past hires is the signal of a strong hire, but managers rated men, younger staff and Singaporeans higher, so only the job-related columns should be learned from.
+  text: performance_score_1y in the past hires is the signal of a strong hire, but managers rated men, younger staff and Singaporeans higher; the demographic columns must not be inputs to the screening score, but may be used to measure and remove that bias from the past scores.
 - id: adverse_impact
   kind: missing
   domain: scoring
-  text: Gender, age band, nationality and stand-ins such as graduation year, languages or location must not drive the ranking; among qualified candidates every gender, under-40/40-and-over and Singapore/other group of at least 15 must reach 0.8 times the top group's selection rate, with a one-person tolerance.
+  text: Gender, age band, nationality and stand-ins such as graduation year, languages or location must not drive the ranking; among qualified candidates a gender, under-40/40-and-over or Singapore/other group of at least 15 fails only if its selection rate is below 0.8 times the top group's and a two-sided Fisher exact test against that group gives p < 0.05.
 - id: referral_habit
   kind: missing
   domain: business rule

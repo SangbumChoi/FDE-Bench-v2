@@ -4,8 +4,10 @@ task_type: Data Engineering
 field: data_knowledge
 seed: 20261027
 objective: maximize          # 100 x mean per-book credit on the hidden corpus: 1 for the exact library path with the
-                             # right description (0.4 content + 0.2 each for year, title, author when the path is off),
-                             # 1 for a review row with the right reason code; medium+: -0.5 per library file that is no book
+                             # right description (0.4 content + 0.2 each for year, title, author when the path is off;
+                             # 0.2 for the right path with another text), 1 when every manifest row naming a review
+                             # book's files gives its reason code; x0.8 when the book's manifest row is missing or
+                             # wrong; medium+: -0.5 per library file that is no book
 deliverable_type: program
 entrypoint: organize.py:organize
 content_dirs: [corpus]       # the client's books: multilingual in every locale
@@ -52,7 +54,7 @@ param_labels:
     first:
       zh: 首次出版的年份
       en: the year of first publication
-      ko: 초판이 처음 나온 연도
+      ko: 초판 발행 연도
       ja: 初版の刊行年
       es: el año de la primera publicación
     edition:
@@ -65,45 +67,45 @@ param_labels:
     original:
       zh: 原文文字（中文、韩文、日文书保留原文文字）
       en: the original script (Chinese, Korean and Japanese books keep their own script)
-      ko: 원래 문자(중국어·한국어·일본어 책은 원래 문자 그대로)
+      ko: 원래 문자로 씁니다. 중국어·한국어·일본어 책도 원래 문자 그대로 씁니다.
       ja: 原語の文字（中国語・韓国語・日本語の本は原語の文字のまま）
       es: la escritura original (los libros en chino, coreano y japonés conservan su escritura)
     latin:
       zh: 拉丁字母（中文、韩文、日文书使用资料中给出的罗马字写法）
       en: the Latin script (Chinese, Korean and Japanese books use the romanized form given in their metadata)
-      ko: 로마자(중국어·한국어·일본어 책은 메타데이터에 있는 로마자 표기)
+      ko: 로마자로 씁니다. 중국어·한국어·일본어 책은 메타데이터에 있는 로마자 표기를 씁니다.
       ja: ラテン文字（中国語・韓国語・日本語の本はメタデータにあるローマ字表記）
       es: el alfabeto latino (los libros en chino, coreano y japonés usan la forma romanizada que da su metadata)
   multi_author:
     first:
       zh: 只写第一作者
       en: only the first author
-      ko: 첫 번째 저자만
+      ko: 첫 번째 저자만 씁니다.
       ja: 筆頭著者のみ
       es: solo el primer autor
     all:
       zh: '全部作者，按原顺序用 `" & "` 连接'
       en: 'all authors in their order, joined with `" & "`'
-      ko: '모든 저자를 순서대로 `" & "`로 연결'
+      ko: '모든 저자를 순서대로 `" & "`로 이어 씁니다.'
       ja: '全著者を順番どおり `" & "` でつなぐ'
       es: 'todos los autores en su orden, unidos con `" & "`'
   sep:
     "_":
       zh: 下划线 `_`
       en: an underscore `_`
-      ko: 밑줄 `_`
+      ko: 밑줄 `_` 하나로
       ja: アンダースコア `_`
       es: un guion bajo `_`
     "-":
       zh: 连字符 `-`
       en: a hyphen `-`
-      ko: 하이픈 `-`
+      ko: 하이픈 `-` 하나로
       ja: ハイフン `-`
       es: un guion `-`
     " ":
       zh: 一个普通空格（空格保留）
       en: a single plain space (spaces are kept)
-      ko: 일반 공백 하나(공백 유지)
+      ko: 일반 공백 하나로(공백은 그대로 둠)
       ja: 半角スペース1つ（スペースはそのまま）
       es: un espacio normal (los espacios se mantienen)
 deliverable_spec: |
@@ -132,7 +134,7 @@ rules:
   - id: no_fabrication
     class: contractual
     tiers: [hard]
-    description: A book whose sources have no description is not placed in library/ (no invented or placeholder descriptions), and no library file is empty.
+    description: A book whose sources have no description is not placed in library/, and every library file holds a description taken from the sources (none is empty, invented or a placeholder).
   - id: missing_author_review
     class: business_policy
     tiers: [hard]

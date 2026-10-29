@@ -8,8 +8,8 @@ deliverables: [dispatch.csv]
 deliverable_spec: |
   dispatch.csv, ASCII header: timestamp,charge_mw,discharge_mw
   One row per 15-minute interval of the week 2027-03-22 00:00 .. 2027-03-28 23:45, local time, timestamp = interval
-  start as "YYYY-MM-DD HH:MM" (only clock times that exist locally). charge_mw / discharge_mw = average battery
-  power at the meter over the interval in MW, both >= 0.
+  start as "YYYY-MM-DD HH:MM". charge_mw / discharge_mw = average battery power at the meter over the interval in
+  MW, both >= 0.
 rules:
   - id: soc_limits
     class: physical

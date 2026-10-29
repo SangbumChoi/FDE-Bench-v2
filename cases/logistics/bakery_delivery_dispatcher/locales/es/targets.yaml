@@ -7,7 +7,7 @@
 - id: shift
   text: Las furgonetas pueden salir desde las 05:00 y deben volver a la cocina a las 09:30 como muy tarde.
 - id: closed_c11
-  text: La Cafetería Torre del Reloj (C11) está cerrada esta semana por reformas y no debe atenderse.
+  text: La Cafetería Colina Sur (C11) está cerrada esta semana por reformas y no debe atenderse.
 - id: cold_chain
   text: Las cafeterías de marca asociada venden productos refrigerados y solo puede atenderlas la furgoneta refrigerada V4.
 - id: one_visit

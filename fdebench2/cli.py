@@ -35,7 +35,10 @@ def _axes(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--ruleset", default="A", help="rule parameters of cases with settings: A | B | C")
     ap.add_argument("--engagement", default="standard", help="standard | full_spec | messy (configs/engagement.yaml)")
     ap.add_argument("--condition", default=None)
-    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--world-seed", type=int, default=None, help="generate the case world from this seed")
+    ap.add_argument("--noise-seed", "--seed", dest="noise_seed", type=int, default=0,
+                    help="seed of the engagement's data noise and events")
+    ap.add_argument("--trial", type=int, default=0, help="repeat index of the same variant (for pass^k)")
 
 
 def _common(ap: argparse.ArgumentParser) -> None:
@@ -47,8 +50,8 @@ def _common(ap: argparse.ArgumentParser) -> None:
 
 def _spec(a) -> VariantSpec:
     return VariantSpec(case_id=a.case, customer_locale=a.customer_locale, agent_locale=a.agent_locale,
-                       policy=a.policy, difficulty=a.difficulty, seed=a.seed, condition=a.condition,
-                       ruleset=a.ruleset, engagement=a.engagement)
+                       policy=a.policy, difficulty=a.difficulty, noise_seed=a.noise_seed, condition=a.condition,
+                       ruleset=a.ruleset, engagement=a.engagement, world_seed=a.world_seed, trial=a.trial)
 
 
 def _bench(a) -> Bench:
@@ -62,6 +65,8 @@ def main(argv: list[str] | None = None) -> None:
 
     p = sub.add_parser("validate-case")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
+    p.add_argument("--world-seeds", default="1,2,3", help="also check the case on these world seeds ('' skips)")
+    p.add_argument("--no-world-seeds", action="store_true", help="skip the other-world check")
     p = sub.add_parser("export-dataset")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
     p = sub.add_parser("new-case")
@@ -70,6 +75,10 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--cases", dest="cases_root", type=Path, default=Path("cases"))
     p = sub.add_parser("explain-case")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
+    p = sub.add_parser("build-site", help="the explainers as a static site (GitHub Pages)")
+    p.add_argument("--out", type=Path, default=Path("site"))
+    p.add_argument("--github", default=None, help="repository URL for links into case files (default: origin)")
+    p.add_argument("--ref", default=None, help="branch or tag those links point to (default: current branch)")
     p = sub.add_parser("cases"); _common(p)
     sub.add_parser("policies")
     p = sub.add_parser("prepare"); _common(p); _axes(p)
@@ -90,12 +99,15 @@ def main(argv: list[str] | None = None) -> None:
 
     a = ap.parse_args(argv)
     if a.cmd == "validate-case":
-        from .validate import validate_case
+        from .validate import check_case
         failed = 0
+        seeds = [] if a.no_world_seeds else [int(x) for x in a.world_seeds.split(",") if x.strip()]
         for path in a.paths:
-            problems = validate_case(path)
-            failed += bool(problems)
-            print(f"{path.parent.name}/{path.name}: " + ("OK" if not problems else "\n  - " + "\n  - ".join(problems)))
+            rep = check_case(path, world_seeds=seeds)
+            failed += bool(rep.problems)
+            print(f"{path.parent.name}/{path.name}: " + ("OK" if not rep.problems else "\n  - " + "\n  - ".join(rep.problems)))
+            for line in [f"warning: {w}" for w in rep.warnings] + rep.notes:
+                print(f"  {line}")
         sys.exit(1 if failed else 0)
     elif a.cmd == "export-dataset":
         from .dataset import export_dataset
@@ -113,6 +125,10 @@ def main(argv: list[str] | None = None) -> None:
         for path in a.paths:
             print(write_page(path))
         print(write_index(a.paths[0].resolve().parent.parent))
+    elif a.cmd == "build-site":
+        from .site import build_site
+        pages = build_site(Path("."), a.out, github=a.github, ref=a.ref)
+        print(f"{len(pages)} pages in {a.out}")
     elif a.cmd == "policies":
         print("\n".join(list_policies()))
     elif a.cmd == "cases":
@@ -134,12 +150,14 @@ def main(argv: list[str] | None = None) -> None:
         bench = _bench(a)
         agent = AgentSpec(harness=a.harness, model=a.model, max_steps=a.max_steps)
         result = bench.run(_spec(a), agent, force=a.force)
-        print(json.dumps(result["score"], ensure_ascii=False, indent=2))
+        shown = result["score"] if result.get("score") else {"status": result["status"], "error": result.get("error")}
+        print(json.dumps(shown, ensure_ascii=False, indent=2))
     elif a.cmd == "score":
         bench = _bench(a)
         meta = json.loads((a.run_dir / "session.json").read_text(encoding="utf-8"))
         result = bench.score(a.run_dir, AgentSpec(**meta["agent"]), extra_policies=a.policy)
-        print(json.dumps({"score": result["score"], "rescored": result["rescored"]}, ensure_ascii=False, indent=2))
+        print(json.dumps({"status": result["status"], "score": result["score"], "rescored": result["rescored"]},
+                         ensure_ascii=False, indent=2))
     elif a.cmd == "campaign":
         run_campaign(a.config, dry_run=a.dry_run, concurrency=a.concurrency)
     elif a.cmd == "report":

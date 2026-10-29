@@ -4,6 +4,7 @@
 
 Ensamblamos dos modelos de placa de control y compramos unos veinte componentes a varios proveedores. ¿Podría planificar qué debemos pedir y a qué proveedor durante los próximos dos meses, para que la producción no se detenga y no gastemos de más? Le adjunto el plan de producción, la lista de materiales, el inventario actual, los pedidos abiertos, las cotizaciones de los proveedores, la lista de proveedores homologados y el presupuesto.
 Últimamente el suministro anda inestable, así que también le añado el historial de entregas de los proveedores de los últimos seis meses y el aviso de asignación que recibimos. La lista de materiales ya incluye el cambio que ingeniería tiene previsto en la memoria flash de las dos placas.
+Para calcular los precios de los pedidos, tenga en cuenta también el correo adjunto del proveedor.
 
 ## Entregable
 
@@ -26,7 +27,7 @@ Un archivo CSV, `orders.csv`, con la cabecera `order_week,component_id,supplier_
 <!-- /tier -->
 - `cotizaciones_proveedores.xlsx`, hoja `cotizaciones`: una fila por componente y proveedor, con el precio por pieza `precio_unitario` en la `moneda` indicada. Pacific Parts (S04) cotiza en dólares estadounidenses y todos los demás en KRW. Nuestro presupuesto está en KRW y convertimos con un tipo de cambio fijo de planificación de **{{usd_krw}} KRW por USD**, no con el tipo de mercado.
 <!-- tier: easy -->
-- En esta ronda planificamos a precio de lista: cada línea se paga a `precio_unitario` por pieza, sea cual sea su tamaño; ignore las columnas de tramos.
+- En esta ronda planificamos a precio de lista: cada línea se paga a `precio_unitario` por pieza (con el cambio aprobado del correo del proveedor), sea cual sea su tamaño; ignore las columnas de tramos.
 - También tratamos los plazos como semanas completas en esta ronda: divida `plazo_entrega_dias` entre 5 y redondee hacia arriba para obtener L semanas, sin tener en cuenta los festivos. El pedido se emite el lunes de su semana, y un pedido emitido en la semana w con un plazo de L semanas puede usarse a partir de la semana w+L (pedido en W1 con 12 días = 3 semanas → disponible en W4). Lo recibido está disponible para toda la necesidad de la semana de llegada.
 - `pedido_minimo` es la cantidad mínima por línea de pedido, es decir, por proveedor, componente y semana de pedido. Por debajo, el proveedor no envía. Las cantidades pedidas en semanas distintas nunca se suman para el pedido mínimo.
 <!-- /tier -->
@@ -48,6 +49,8 @@ Un archivo CSV, `orders.csv`, con la cabecera `order_week,component_id,supplier_
 - Retrasos: los proveedores no siempre entregan en la semana prometida. `historial_entregas.csv` recoge nuestras entregas de los últimos seis meses con la fecha prometida (un lunes) y la fecha en que recibimos la mercancía. Recibida en la fecha prometida o antes, cuenta como puntual; de 1 a 7 días después, como una semana de retraso; de 8 a 14 días después, como dos semanas. Nunca hubo retrasos mayores. Esperamos que cada proveedor se comporte en las próximas semanas como en su historial. Una entrega retrasada puede usarse una o dos semanas más tarde de lo previsto (lo que llegue después de W10 sigue sin valer). Una entrega es todo lo que un proveedor envía de un componente para la misma semana de llegada; cada entrega llega a tiempo o con retraso independientemente de las demás.
 - Asignación: Mirae Semicon (S03) tiene en asignación el microcontrolador (C01) y la DRAM (C03), y Nara Display (S08) la pantalla (C06). `asignaciones.csv` indica lo máximo que cada uno confirmará por mes natural, contando todos nuestros pedidos de ese componente emitidos en ese mes (por el lunes de la semana de pedido, como en el presupuesto). Lo que pase de ahí no se confirma.
 <!-- /tier -->
+
+El correo del proveedor revisa los precios cotizados: aplique el cambio aprobado según la semana del pedido, también a los tramos de descuento aplicables; ignore la propuesta pendiente.
 
 ## Cómo se evalúa el plan
 
@@ -75,6 +78,3 @@ El coste de compra usa el tramo de precio que alcanza cada línea.
 
 Además, la C04 que quede en stock al final de W5 cuesta su `costo_estandar_krw` por pieza (desecho), y la C04 no se simula después de W5. Como las entregas pueden retrasarse, el almacenamiento, la espera, el déficit y el desecho se cuentan como valores esperados según las probabilidades reales de cada proveedor de llegar una o dos semanas tarde (el historial es solo una muestra de ellas). Las compras se pagan completas, llegue la entrega a tiempo o no.
 <!-- /tier -->
-
-
-Aplique el cambio aprobado del correo del proveedor según la semana del pedido, también a los descuentos aplicables; ignore la propuesta pendiente.

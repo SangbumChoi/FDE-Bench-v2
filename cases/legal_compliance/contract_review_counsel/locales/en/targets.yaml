@@ -26,10 +26,14 @@
   kind: missing
   domain: business rule
   text: Indemnities must be mutual; a clause where only we indemnify the supplier is an issue.
-- id: decision_and_scoring
+- id: issue_codes
   kind: missing
-  domain: scoring
-  text: Issue codes are LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS, DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY; reject with two or more critical issues (liability cap, data protection, indemnity), negotiate with any issue, else sign; judged by 0.7 x issue F1 + 0.3 x decision accuracy.
+  domain: deliverable
+  text: Every playbook point that fails is one issue with its code; the codes are LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS, DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY.
+- id: decision_rule
+  kind: missing
+  domain: business rule
+  text: LIABILITY_CAP, DATA_PROTECTION and INDEMNITY are critical; the decision is reject with two or more critical issues, negotiate with any issue, otherwise sign.
 - id: small_contract_fast_track
   kind: missing
   domain: business rule

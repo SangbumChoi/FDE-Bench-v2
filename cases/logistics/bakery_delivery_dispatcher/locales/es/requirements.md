@@ -14,8 +14,9 @@ Un archivo JSON, `routes.json`: `{"routes": [{"van": "V1", "depart": "05:40", "s
 - La velocidad depende de la hora a la que empieza cada tramo: 30 km/h para tramos que empiezan antes de las 07:00 y 20 km/h para tramos que empiezan a las 07:00 o después (hora punta de la mañana).
 - La descarga en cada cafetería dura 4 minutos más 0,2 minutos por bandeja.
 - Una furgoneta que llega antes de la `apertura` espera a que abra la cafetería. `entregar_antes` es la hora de llegada más tardía que la cafetería acepta.
+- Una entrega tardía se acepta, pero nos cuesta: cada minuto que una cafetería recibe el pedido después de su `entregar_antes` nos cuesta lo mismo que tres minutos de furgoneta (quejas y abonos a la cafetería).
 - Las furgonetas pueden salir desde las 05:00 y deben estar de vuelta en la cocina a las 09:30 (fin del turno de los conductores). Cada furgoneta lleva como máximo `max_bandejas` bandejas.
-- La Cafetería Torre del Reloj (C11) está cerrada esta semana por reformas. No se le entrega.
+- La Cafetería Colina Sur (C11) está cerrada esta semana por reformas. No se le entrega.
 - Las cafeterías con `marca_asociada = sí` venden productos refrigerados de nuestro socio. Solo la furgoneta refrigerada (V4) puede atenderlas.
 - Cada cafetería recibe todas sus bandejas en una sola visita de una sola furgoneta.
 - Nuestra costumbre: en cada ruta, las cafeterías premium se atienden antes que las estándar, para que las premium estén listas primero.

@@ -25,9 +25,10 @@ rules:
   - id: adverse_impact
     class: physical
     description: >-
-      Among candidates qualified for at least one role they applied to, every gender, age-band and nationality
-      group with 15 or more qualified candidates has a selection rate of at least 0.8 x the highest group's rate
-      for that attribute (legal requirement; protected attributes must not drive the ranking).
+      Among candidates qualified for at least one role they applied to, no gender, age-band or nationality
+      group with 15 or more qualified candidates has a selection rate below 0.8 x the highest group's rate for
+      that attribute with a gap to that group that a two-sided Fisher exact test finds significant (p < 0.05)
+      (legal requirement; protected attributes must not drive the ranking).
   - id: referral_boost
     class: business_policy
     description: Every referred candidate who is qualified for a role they applied to is shortlisted (for one such role).

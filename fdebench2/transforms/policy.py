@@ -24,6 +24,10 @@ POLICY_DIR = Path(__file__).resolve().parents[2] / "configs" / "policies"
 
 EXCEPTION_MODES = ("forbidden", "escalate", "justify")
 RULE_CLASSES = ("physical", "contractual", "business_policy")
+HARD_GATES = ("validity", "notes", "budget")
+BUDGETS = ("wall_seconds", "total_tokens", "cost_usd")
+COMPONENTS = ("quality", "clarification", "communication", "efficiency")
+RATIO_CAP = 10.0          # upper bound of a quality ratio or normalized quality
 
 
 @dataclass
@@ -43,12 +47,24 @@ class Policy:
     communication_locale: str = "customer"  # "customer" | "agent" | a locale code
     budgets: dict[str, float] = field(default_factory=dict)   # wall_seconds / total_tokens / cost_usd
     hard_budgets: bool = False              # exceeding a budget fails the run instead of costing points
-    hard_gates: list[str] = field(default_factory=lambda: ["validity"])
+    hard_gates: list[str] = field(default_factory=lambda: ["validity"])   # validity | notes | budget
     weights: dict[str, float] = field(default_factory=lambda: {"quality": 1.0})
+    quality_cap: float = 1.5                # normalized quality (baseline 0, reference 1) earning full credit
 
     def __post_init__(self) -> None:
         if self.exceptions not in EXCEPTION_MODES:
             raise ValueError(f"{self.id}: exceptions must be one of {EXCEPTION_MODES}")
+        unknown = sorted(set(self.hard_gates) - set(HARD_GATES))
+        if unknown:
+            raise ValueError(f"{self.id}: unknown hard_gates {unknown}; known: {HARD_GATES}")
+        unknown = sorted(set(self.budgets) - set(BUDGETS))
+        if unknown:
+            raise ValueError(f"{self.id}: unknown budgets {unknown}; known: {BUDGETS}")
+        unknown = sorted(set(self.weights) - set(COMPONENTS))
+        if unknown:
+            raise ValueError(f"{self.id}: unknown weights {unknown}; known: {COMPONENTS}")
+        if not 0 < self.quality_cap <= RATIO_CAP:
+            raise ValueError(f"{self.id}: quality_cap must be in (0, {RATIO_CAP:g}]")
         for cls, mode in self.rule_classes.items():
             if cls not in RULE_CLASSES or mode not in ("hard", "soft"):
                 raise ValueError(f"{self.id}: bad rule_classes entry {cls}: {mode}")
@@ -145,7 +161,8 @@ def policy_brief_msgs(policy: Policy) -> list[dict[str, Any]]:
         lines.append(msg("Write to the client, and write `NOTES.md`, in the client's language."))
     elif policy.communication_locale != "agent":
         lines.append(msg("Write to the client, and write `NOTES.md`, in locale `{loc}`.", loc=policy.communication_locale))
-    for key in ("wall_seconds", "total_tokens", "cost_usd"):
+    hard = policy.hard_budgets or "budget" in policy.hard_gates
+    for key in BUDGETS:
         if key in policy.budgets:
-            lines.append(msg(_BUDGET_LINES[(key, policy.hard_budgets)], n=policy.budgets[key]))
+            lines.append(msg(_BUDGET_LINES[(key, hard)], n=policy.budgets[key]))
     return lines

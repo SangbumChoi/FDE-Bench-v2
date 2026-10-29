@@ -33,4 +33,4 @@
 - id: scoring
   kind: missing
   domain: scoring
-  text: Quality is the total absolute difference between paid and true monthly amounts plus 400 per wrong eligibility decision; reason codes must match the decision (residency, then assets, then income).
+  text: The goal is to pay every household exactly its entitlement under this year's rules and above all to get every yes/no decision right; a refusal gives the first condition the household fails, in the order residency, assets, income.

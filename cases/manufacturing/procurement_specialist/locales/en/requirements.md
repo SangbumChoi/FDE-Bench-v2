@@ -4,6 +4,7 @@
 
 We assemble two models of control board and buy about two dozen components from a handful of suppliers. Can you plan what we should order from which supplier over the next two months so production doesn't stop and we don't overspend? I've attached the production plan, the bill of materials, our current stock, open orders, the supplier quotes, the approved-vendor list and the budget.
 Supply has been shaky lately, so I've also added our suppliers' delivery history for the last six months and the allocation notice we got. The BOM already includes engineering's planned change to the flash memory on both boards.
+Please also use the attached supplier price email when pricing orders.
 
 ## Deliverable
 
@@ -26,7 +27,7 @@ One CSV file, `orders.csv`, with the header `order_week,component_id,supplier_id
 <!-- /tier -->
 - `supplier_quotes.xlsx`, sheet `quotes`: one row per component and supplier, with the price per piece `unit_price` in `currency`. Pacific Parts (S04) quotes in US dollars, everyone else in KRW. Our budget is in KRW and we convert at a fixed planning rate of **{{usd_krw}} KRW per USD**, not at the market rate.
 <!-- tier: easy -->
-- This round we plan at list prices: use `unit_price` per piece, adjusted for the approved email, whatever its size; ignore the `break1_*` and `break2_*` columns.
+- This round we plan at list prices: every order line is priced at `unit_price` per piece regardless of its size (with the approved change from the supplier price email); ignore the `break1_*` and `break2_*` columns.
 - This round we also treat lead times as whole weeks: divide `lead_time_days` by 5 and round up to get L weeks, and ignore holidays. An order is placed on the Monday of its order week, and an order placed in week w with a lead time of L weeks can be used from week w+L on (ordered in W1 with 12 days = 3 weeks → usable in W4). Goods are available for the whole arrival week's demand.
 - `moq` is the minimum quantity per order line, i.e. per supplier, component and order week. Below it the supplier will not ship. Quantities ordered in different weeks are never added up for the MOQ.
 <!-- /tier -->

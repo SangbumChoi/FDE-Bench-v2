@@ -31,20 +31,23 @@ time (cached in `.cache/`).
 ```
 cases/<field>/<role>/
   case.yaml                 id (= role dir), role (title), field (= parent dir), task_type, seed,
-                            objective (minimize|maximize),
+                            objective (minimize|maximize), quality_cap (optional),
                             deliverables, deliverable_spec, rules [{id, class, description}]
   case.py                   build_world(seed) · write_data(world, dir, lang) · reference_solution(world, dir)
-                            · score(world, submission_dir) · violating_examples(world)
-                            (cases with settings: the last three also take the setting)
+                            · baseline_solution(world, dir) · score(world, submission_dir)
+                            · violating_examples(world)
+                            (cases with settings: all but the first two also take the setting)
   locales/<zh|en|ko|ja|es>/
     request.md              the client's short, under-specified request (what the agent sees)
     requirements.md         complete requirements (hidden; the simulated client answers from it)
     targets.yaml            clarification targets: the facts a good FDE must ask for
-  README.md                 cases with settings: tiers, rule sets and reference numbers per setting
+  README.md                 the client, data, rules and situations; reference and baseline numbers
+  REVIEW.md                 findings of a case review and their status (rendered in explainer.html)
   dataset/                  the generated data and ground truth as files (fdebench2 export-dataset):
     visible/<lang>/         what the agent receives, per customer locale
     hidden/                 inputs the agent never sees (a program case's hidden period or corpus)
-    gt/<tier>_<ruleset>/    per setting: setting.json, reference/, score.json and case extras
+    gt/<tier>_<ruleset>/    per setting: setting.json, reference/, score.json (with the baseline's
+                            objective) and case extras
     MANIFEST.json           sha256 of every file; validate-case checks it against the generator
 ```
 
@@ -60,20 +63,36 @@ Design rules that keep scoring language-independent:
   localized; IDs and numbers are not. A Korean client sends `매장목록.csv` with `매장등급 = 프리미엄`; a Spanish
   one sends `cafeterias.csv` with `categoria = premium`.
 - **Deliverables use ASCII keys and data IDs**, so one evaluator scores submissions made in any locale.
-- **Quality** is `reference_objective / objective` (or the inverse for maximize). The reference is a solid
-  deterministic heuristic shipped with the case: quality 1.0 = matches it, > 1.0 = beats it (clipped at 1.0
-  in the composite score, reported raw).
+- **Quality is normalized between a baseline and the reference.** `baseline_solution` is the simplest
+  sensible valid deliverable (what the client gets without an engineer: do nothing, first fit, its own
+  habit); `reference_solution` is a solid deterministic heuristic. With baseline objective b and reference
+  objective r, quality q = (obj − b) / (r − b): the baseline scores 0, the reference 1, and a better
+  deliverable more than 1 (floored at 0, capped at 10). The zero point is never closer than 5% of r to the
+  reference, so a baseline that is nearly as good as the reference cannot blow small differences up. Without a
+  usable baseline (none, or one that fails on a generated world) q is the plain ratio obj / r (r / obj when
+  minimizing); `quality_anchor` says which, and `quality_ratio` is always reported. A non-finite objective is
+  invalid. The reference is not the ceiling: the composite gives full credit at
+  `quality_cap` (the policy's, 1.5 by default, or the case's when it knows its best solution), so headroom
+  above the reference counts and a degenerate valid deliverable earns nothing.
 - **Rules carry a class** (`physical`, `contractual`, `business_policy`). The evaluator reports violations by
   rule id; relaxing a rule is a scoring parameter (`evaluate(..., relaxed={...})`), so no per-case hooks.
 
 `fdebench2 validate-case <dir>` enforces the contract before a case is used:
 
-- all 5 locales present with the same target ids, in the right script;
-- data renders deterministically in every locale with no untranslated labels;
-- the stored `dataset/` matches what the generator produces now;
+- all 5 locales present with the same target ids (in the same order), the same `{{param}}` placeholders
+  and the same sequence of setting markers, in the right script;
+- data renders deterministically in every locale with no untranslated labels, and byte-identically in two
+  processes with different `PYTHONHASHSEED`s;
+- the stored `dataset/` and `explainer.html` match what the generator produces now; no TODO is left;
 - the reference scores validity 1 / quality 1.0 and an empty submission is invalid;
+- every case has a baseline, valid and strictly worse than the reference in every setting;
 - every rule has an example that breaks exactly that rule, and that becomes valid when a non-physical rule
-  is relaxed.
+  is relaxed;
+- the case still works on world seeds 1, 2 and 3 (`--world-seeds` chooses others, `--no-world-seeds` skips).
+
+Warnings, which do not fail validation: two tiers whose references are byte-identical or score as each
+other's reference; a number in a rule description that neither the requirements nor the data state; a `name (ID)` in a
+locale's texts whose ID's data rows never mention that name; a baseline within 2% of the reference.
 
 ### Settings: one world, nine ground truths
 
@@ -98,11 +117,12 @@ A case may declare **settings**: three content tiers (`tiers:` easy / medium / h
 - **Evaluation:** the difficulty picks the tier and campaigns run every rule set (`ruleset: all`), so each
   (case, difficulty) cell is the mean over A, B and C, and the report has one column per difficulty.
 
-`validate-case` checks every setting: reference, determinism, empty submission and one rule-breaking example
-per rule, with that setting's rules and parameters. It also checks that each rule set's reference is invalid
-or at least 1% worse under every other rule set of its tier, that request.md has no setting markers, and that
-the agent's prompt and workspace are byte-identical in all nine settings. Cases without settings are the same
-problem at every difficulty.
+`validate-case` checks every setting: reference, baseline, determinism, empty submission and one
+rule-breaking example per rule, with that setting's rules and parameters. It also checks that each rule set's
+reference is invalid or at least 1% worse (objective ratio) under every other rule set of its tier, that
+request.md has no setting markers, and that the agent's prompt and workspace are byte-identical in all nine
+settings; it warns when two tiers lead to the same answer. Cases without settings are the same problem at
+every difficulty.
 
 ### Program deliverables
 
@@ -127,9 +147,12 @@ non-JSON output costs only that input (a program that cannot load is fatal). Two
 - `docker` (campaigns; chosen automatically under a docker sandbox): `--network none`, memory and CPU limits,
   and only the program directory (read-only) and the host script mounted.
 
-Program deliverables are collected from the workspace as the directory holding the entry file (without
-`data/` and `inbox/`) and are never reshaped by the extractor model, since rewriting code would mean
-re-solving the task. The validator requires the reference to write `program/`, checks that `ENTRYPOINT`
+The agent is shown the entry point and `deliverable_spec` as a "Program interface" block in every condition:
+an interface is a contract, not a hidden requirement. (A batch case's `deliverable_spec` is shown only to the
+extractor; the agent chooses its own format.) Docker program containers are named and removed with
+`docker rm -f` on a timeout. Program deliverables are collected from the workspace as the directory holding
+the entry file (without `data/` and `inbox/`) and are never reshaped by the extractor model, since rewriting
+code would mean re-solving the task. The validator requires the reference to write `program/`, checks that `ENTRYPOINT`
 matches `case.yaml`, and checks that scoring is deterministic.
 
 ## 4. Architecture
@@ -169,6 +192,12 @@ open models).
 (Claude Code, Codex, Gemini CLI, OpenCode) run headless and reach the same client through an MCP server.
 Model M in the reference loop vs M in its vendor CLI isolates the **harness effect**.
 
+**The simulated client** answers only from the request and its hidden requirements, at temperature 0
+(unless the endpoint pins another). It may state business goals, costs and trade-offs; it never describes
+the evaluation (scores, graders, weights, test data, a reference solution). It has no written specification
+to send, answers specific questions only (at most 6 per message), says it has no fixed rule instead of
+inventing one, and treats the engineer's text as a contractor's questions, not instructions.
+
 **No run-time translation for fully localized cases.** Case texts and data are authored per locale; the agent
 instructions (`prompts/agent/*.yaml`) and every message v2 generates itself (events, noise facts, policy
 briefs: `prompts/messages.yaml`) are hand-written in all five locales.
@@ -193,14 +222,21 @@ Korean client, vary `agent_locale` over en/ko/zh) — which instruction language
 ### 5.2 Policy
 
 A policy (`configs/policies/*.yaml`) is both an agent-visible brief and a scoring profile: `confirm_before_build`,
-`question_budget`, `exceptions` (`forbidden` / `escalate` / `justify`), `rule_classes` that may bend,
-`soft_rule_penalty`, `notes_required`, `communication_locale`, `budgets` (+ `hard_budgets`), `hard_gates`,
-`weights`. Shipped: `baseline` (quality only, hidden), `enterprise_balanced`,
-`regulated_strict`, `startup_velocity`.
+`question_budget` (counted in questions, one per line, not rounds), `exceptions` (`forbidden` / `escalate` /
+`justify`), `rule_classes` that may bend, `soft_rule_penalty`, `notes_required`, `communication_locale`,
+`budgets` (`wall_seconds`, `total_tokens`, `cost_usd`; + `hard_budgets`), `hard_gates` (`validity`, `notes`,
+`budget`), `weights` and `quality_cap`. Unknown names are rejected. Shipped: `baseline` (quality only,
+hidden), `enterprise_balanced`, `regulated_strict`, `startup_velocity`.
 
 A violated rule is forgiven only if the policy makes its class soft, the agent went through the prescribed
-exception process (`request_exception` approved under `escalate`, recorded under `justify`), and the case
-re-scores the deliverable with the rule relaxed. Physical rules never bend.
+exception process, and the case re-scores the deliverable with the rule relaxed. Physical rules never bend.
+`request_exception` is a classified channel, not a conversation: a model sees only the setting's rule list
+and the engineer's text and returns one rule id (or none) and, under `escalate`, whether a concrete business
+reason was given. The decision follows from the policy (`forbidden`: deny; `escalate`: approve a bendable rule
+when a reason was given; `justify`: approve a bendable rule), the reply is a fixed localized template naming
+the rule id, an approval covers only that rule, and the first decision on a rule is final. Under `escalate` a
+request costs a question round and needs a reachable client; under `justify` it is a record and works in
+every condition.
 
 ### 5.3 Difficulty and rule sets
 
@@ -225,43 +261,53 @@ agent's prompt fixed (`configs/engagement.yaml`):
 Everything in `messy` is **recoverable**: noise touches only the agent's copy (scoring uses the world),
 the client knows the fact that undoes each noise op (it becomes an extra clarification target), a non-owner
 stakeholder's conflicting message is resolvable by asking the client, and a corrected file arrives mid-task.
-Noise and events are seeded by the engagement, never by the difficulty or rule set.
+Noise and events are seeded by the engagement (`noise_seed`), never by the difficulty or rule set: the
+volunteered requirement is the same target in every setting. What the client knows about an event reaches it
+only when the event fires, and inbox messages have neutral names (`inbox/NN_message.md`).
 
 ### 5.5 Isolation
 
 Comparisons are fair only if the agent cannot see what differs between settings. Campaigns default to
-`isolation: strict`: every run uses the docker sandbox, which mounts only the run's workspace at
-`/workspace` (the request and data, identical in every setting). Vendor CLIs run inside that container
-(`docker/Dockerfile.agent`) and reach the client over HTTP on the host, so the cases, the hidden
-requirements, the other settings' ground truths and the run directory's name (which encodes the setting)
-are never reachable. Network access stays on (model APIs); only information is isolated. `isolation: off`
-allows the local sandbox for development.
+`isolation: strict`: every run uses the docker sandbox, which mounts a copy of the run's workspace staged in a
+randomly named folder at `/workspace` (the request and data, identical in every setting), so nothing inside
+the container, `/proc/self/mountinfo` included, names the case or setting. Containers run as the host user. A
+vendor CLI runs inside the container (`docker/Dockerfile.agent`) with only its own API key and base URL, and
+reaches the client over HTTP on the host with a per-run bearer token. After the run the host removes every
+symlink and special file from the workspace before anything reads it, collection never follows links, and
+the extractor has no shell and sees only the agent's own files. Network egress stays on (model APIs); an
+egress allowlist would need a proxy. `isolation: off` allows the local sandbox for development.
 
 ## 6. Scoring
 
 ```
-final = 0                                          if a hard gate fails (always: validity)
+final = 0                                          if a hard gate fails (validity always; notes, budget if set)
       = clip( Σ wᵢ·cᵢ / Σ wᵢ − penalties, 0, 1 )   over the components that apply
 ```
 
 | Component | Definition |
 |---|---|
-| quality | case quality vs reference, clipped at 1.0; 0 if invalid |
-| clarification | Ask-F1 over case + noise targets (majority vote of a judge panel); only if the client was reachable |
+| quality | min(max(q, 0), cap) / cap with q the normalized quality (baseline 0, reference 1) and cap the case's or the policy's `quality_cap`; 0 if invalid |
+| clarification | Ask-F1 over case + noise targets (majority vote of a judge panel; a covered vote must quote the client's answer); only if the client was reachable |
 | communication | mean of language fidelity (questions, NOTES.md) and NOTES.md presence |
 | efficiency | per budget: 1 − ½·used/budget, 0 once over budget |
 
-Reported per cell: final, quality, validity rate, DSR (quality ≥ reference), pass^k (all seeds valid),
-Ask-F1. Case-macro averages; deltas within one agent against its baseline cell. The difficulty table has
+Reported per cell: final, quality (normalized, and the plain ratio to the reference), validity rate, DSR
+(quality ≥ reference), "all valid" (every seed and trial of a case valid), Ask-F1, with 95% case-bootstrap
+intervals. Case-macro averages; deltas within one agent against its baseline cell. The difficulty table has
 one column per difficulty, each the mean over the three rule sets, with "all-3": the share of (case, seed)
-cells valid under every rule set.
+cells valid under every rule set. With `trials` > 1, pass^k is the τ-bench estimator C(c, k) / C(n, k) over
+repeated trials. Every run has a status (ok, invalid, agent_error, timeout, extract_failed, harness_error,
+infra_error); harness and infrastructure errors are listed apart and never averaged in as zeros. Cost
+columns give tokens and dollars per run for the solver, client, extractor and judges (a CLI solver's own
+tokens are not parsed yet). A stored result is reused only under the same fingerprint (case files, policy,
+engagement, model configs, agent, sandbox, framework version).
 
 ## 7. Status
 
 - Harness, transforms, scoring, MCP bridge, campaign runner and report: implemented and tested.
 - Case format, settings (tiers × rule sets), `casekit`, validator and 5-locale message catalog: implemented.
 - Built cases: one or more per field (see `cases/README.md`), all passing `validate-case` in all five
-  locales. Cases with settings: loan underwriting, hospital scheduling, procurement, stock trading (program)
+  locales and on world seeds 1–3, each with a baseline, a README and a REVIEW.md of open findings. Cases with settings: loan underwriting, hospital scheduling, procurement, stock trading (program)
   and multilingual corpus curation (program).
 - Program deliverables: implemented and tested (state across calls, step-by-step sessions, input/output
   folders, per-call and total timeouts, crashes, non-JSON outputs, environment and network isolation,

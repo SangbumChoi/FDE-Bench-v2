@@ -35,7 +35,7 @@ A folder `program/` with `organize.py` defining `organize(task)`, where `task = 
 - Conflicts between ranks are settled by the ranking (e.g. a title page whose edition year disagrees with the metadata loses).
 <!-- /tier -->
 <!-- tier: medium -->
-- This round we check every readable book. The exceptions (missing fields, scans, archives, catalogs, junk) are not checked yet, but the program must not stop on them.
+- This round we check every readable book. The exceptions (missing fields, scans, archives, catalogs, junk) are not scored yet, but anything that is not a book must not end up in the library, and the program must not stop on them.
 <!-- /tier -->
 <!-- tier: hard -->
 - Exceptions, and how to handle them:
@@ -65,8 +65,9 @@ We run the program on the full drive and compare the library with our own catalo
 <!-- tier: hard -->
 - Every book is counted.
 <!-- /tier -->
-- A book filed at exactly the right path with its description earns 1. A library file with the right description at a wrong path earns 0.4 plus 0.2 for each of year, title and author that is right; the right path with a wrong description earns 0.6.
-- A book that belongs in review earns 1 for a review row (matching one of its files) with the right reason code, 0.4 with another code.
+- A book filed at exactly the right path with its description earns 1. A library file with the right description at a wrong path earns 0.4 plus 0.2 for each of year, title and author that is right; the right path with a wrong description earns 0.2.
+- A book that belongs in review earns 1 when every manifest row naming its files says `review` with the right reason code, 0.4 when they agree on another code, and nothing when the rows disagree or the book also has a library file.
+- Each book's manifest row is checked too: it must be the only row naming the book's files, list all of them, and say `placed` with the book's library path, or `review` with the files copied under `_review/`. A missing or wrong row costs a fifth of the book's credit.
 <!-- tier: hard -->
 - A book with no author waiting in review earns 0.7 (it is not on the shelf); shelved under "{{fallback_author}}" with the right description it would earn 1, but only with an approved exception.
 <!-- /tier -->
@@ -81,6 +82,6 @@ We run the program on the full drive and compare the library with our own catalo
 - One library file per book.
 - Every `review` row carries one of the six reason codes.
 <!-- tier: hard -->
-- No library file for a book without a description, and no empty library file.
+- No library file for a book without a description, and every library file holds a description taken from our files (nothing empty, made up or placeholder).
 - Books without an author go to review (our policy; an exception is possible).
 <!-- /tier -->

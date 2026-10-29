@@ -24,7 +24,7 @@ fdebench2 = "fdebench2.cli:main"
 include = ["fdebench2*"]
 
 [tool.setuptools.package-data]
-fdebench2 = ["prompts/agent/*.yaml", "prompts/*.md"]
+fdebench2 = ["prompts/agent/*.yaml", "prompts/*.yaml", "prompts/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

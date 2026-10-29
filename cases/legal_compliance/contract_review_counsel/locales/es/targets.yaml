@@ -12,7 +12,9 @@
   text: Los contratos con un importe anual superior a 150.000 USD deben permitirnos desistir por conveniencia, en cualquier momento y sin causa; la resolución por incumplimiento no basta.
 - id: indemnity_mutual
   text: Las indemnidades deben ser recíprocas; una cláusula en la que solo nosotros indemnizamos al proveedor es una incidencia.
-- id: decision_and_scoring
-  text: Los códigos son LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS, DATA_PROTECTION, TERMINATION_CONVENIENCE e INDEMNITY; reject con dos o más incidencias críticas (límite de responsabilidad, protección de datos, indemnidad), negotiate con alguna incidencia y, si no, sign; se evalúa con 0,7 × F1 de incidencias + 0,3 × acierto en la decisión.
+- id: issue_codes
+  text: Cada punto de nuestros criterios que no se cumple es una incidencia con su código; los códigos son LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS, DATA_PROTECTION, TERMINATION_CONVENIENCE e INDEMNITY.
+- id: decision_rule
+  text: LIABILITY_CAP, DATA_PROTECTION e INDEMNITY son las incidencias críticas; la decisión es reject cuando hay dos o más incidencias críticas, negotiate cuando hay alguna incidencia y sign en los demás casos.
 - id: small_contract_fast_track
   text: Los contratos con un importe anual inferior a 20.000 USD se marcan como sign sin incidencias y sin revisión jurídica.

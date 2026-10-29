@@ -35,7 +35,7 @@ Una carpeta `program/` con `organize.py`, que define `organize(task)`, donde `ta
 - Los desacuerdos entre rangos se resuelven por el rango (p. ej., una portadilla cuyo año de edición no coincide con los metadatos pierde).
 <!-- /tier -->
 <!-- tier: medium -->
-- En esta ronda revisamos todos los libros legibles. Las excepciones (datos que faltan, escaneos, archivos comprimidos, catálogos, archivos basura) todavía no se revisan, pero el programa no debe detenerse por ellas.
+- En esta ronda revisamos todos los libros legibles. Las excepciones (datos que faltan, escaneos, archivos comprimidos, catálogos, archivos basura) todavía no puntúan, pero nada que no sea un libro debe acabar en la biblioteca, y el programa no debe detenerse por ellas.
 <!-- /tier -->
 <!-- tier: hard -->
 - Excepciones y cómo tratarlas:
@@ -65,8 +65,9 @@ Ejecutamos el programa sobre la unidad completa y comparamos la biblioteca con n
 <!-- tier: hard -->
 - Cuentan todos los libros.
 <!-- /tier -->
-- Un libro archivado exactamente en la ruta correcta con su sinopsis suma 1. Un archivo de la biblioteca con la sinopsis correcta en una ruta equivocada suma 0,4 más 0,2 por cada acierto entre año, título y autor; la ruta correcta con una sinopsis equivocada suma 0,6.
-- Un libro que debe ir a revisión suma 1 por una fila de revisión (que corresponda a uno de sus archivos) con el código de motivo correcto, 0,4 con otro código.
+- Un libro archivado exactamente en la ruta correcta con su sinopsis suma 1. Un archivo de la biblioteca con la sinopsis correcta en una ruta equivocada suma 0,4 más 0,2 por cada acierto entre año, título y autor; la ruta correcta con una sinopsis equivocada suma 0,2.
+- Un libro que debe ir a revisión suma 1 cuando todas las filas del manifiesto que nombran sus archivos dicen `review` con el código de motivo correcto, 0,4 cuando coinciden en otro código, y nada cuando las filas se contradicen o el libro tiene además un archivo en la biblioteca.
+- También se revisa la fila de cada libro en el manifiesto: debe ser la única fila que nombra los archivos del libro, listarlos todos y decir `placed` con la ruta del libro en la biblioteca, o `review` con los archivos copiados bajo `_review/`. Una fila que falta o está mal cuesta una quinta parte del crédito del libro.
 <!-- tier: hard -->
 - Un libro sin autor que espera en revisión suma 0,7 (no está en la estantería); colocado como "{{fallback_author}}" con la sinopsis correcta sumaría 1, pero solo con una excepción aprobada.
 <!-- /tier -->
@@ -81,6 +82,6 @@ Ejecutamos el programa sobre la unidad completa y comparamos la biblioteca con n
 - Un solo archivo de biblioteca por libro.
 - Cada fila `review` lleva uno de los seis códigos de motivo.
 <!-- tier: hard -->
-- Ningún archivo de biblioteca para un libro sin sinopsis, y ningún archivo de biblioteca vacío.
+- Ningún archivo de biblioteca para un libro sin sinopsis, y cada archivo de biblioteca contiene una sinopsis tomada de nuestros archivos (nada vacío, inventado ni de relleno).
 - Los libros sin autor van a revisión (nuestra política; cabe una excepción).
 <!-- /tier -->

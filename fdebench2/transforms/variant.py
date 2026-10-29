@@ -28,18 +28,37 @@ class VariantSpec:
     agent_locale: str = "en"
     policy: str = "baseline"
     difficulty: str = "medium"        # content tier of cases that declare settings
-    seed: int = 0
+    noise_seed: int = 0               # seeds the engagement: its data noise and events
     condition: str | None = None      # override the engagement's condition (ablations)
     ruleset: str = DEFAULT_RULESET    # rule parameters of cases that declare settings (A / B / C)
     engagement: str = "standard"      # how the work is handed over (configs/engagement.yaml)
+    world_seed: int | None = None     # generate the case's world from this seed instead of its public one
+    trial: int = 0                    # repeat index (pass^k): changes nothing in the variant
+
+    @property
+    def seed(self) -> int:
+        """The older name of noise_seed."""
+        return self.noise_seed
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "VariantSpec":
+        d = dict(d)
+        if "seed" in d:                   # saved before noise_seed and trial were split
+            d.setdefault("noise_seed", d.pop("seed"))
+        return cls(**d)
 
     def key(self) -> str:
-        """Run-directory name (outside the agent's sandbox: the agent never sees it)."""
+        """Run-directory name (outside the agent's sandbox: the agent never sees it).
+
+        Trial 0 keeps the name runs had before trials existed.
+        """
         parts = [self.case_id, f"c-{self.customer_locale}", f"a-{self.agent_locale}", f"p-{self.policy}",
                  f"d-{self.difficulty}", f"r-{self.ruleset}", f"e-{self.engagement}"]
         if self.condition:
             parts.append(f"x-{self.condition}")
-        return "__".join(parts) + f"__s{self.seed}"
+        if self.world_seed is not None:
+            parts.append(f"w-{self.world_seed}")
+        return "__".join(parts) + f"__s{self.noise_seed}" + (f"__t{self.trial}" if self.trial else "")
 
 
 @dataclass
@@ -71,7 +90,7 @@ class Variant:
     information: str            # hidden from the agent unless condition == full
     targets: list[Target]
     policy: Policy
-    policy_brief: str           # in agent locale; "" when the policy is not agent-visible
+    policy_brief: str           # in agent locale: the policy (when agent-visible) and, for programs, the interface
     events: list[Event]
     noise: list[dict[str, Any]]
     time_budget_s: float
@@ -79,10 +98,20 @@ class Variant:
     submission_files: list[str]
     case_tier: str | None = None      # the content tier the case was scored at (None: no settings)
     ruleset: str | None = None        # the rule set the case was scored at (None: no settings)
+    world_seed: int | None = None     # the world the case was built from (None: its public seed)
+    rules: list[dict[str, str]] = field(default_factory=list)   # the setting's rules {id, class, description};
+                                                                 # not shown to the agent (an exception reply names
+                                                                 # only the id it was mapped to)
 
     @property
     def can_ask(self) -> bool:
         return self.condition in ("interact", "interact_req")
+
+    @property
+    def can_request_exceptions(self) -> bool:
+        """Escalating needs a client who answers; recording an exception (justify) does not."""
+        p = self.policy
+        return p.agent_visible and (p.exceptions == "justify" or (p.exceptions == "escalate" and self.can_ask))
 
     def save(self, directory: Path) -> None:
         directory.mkdir(parents=True, exist_ok=True)
@@ -93,7 +122,7 @@ class Variant:
     @classmethod
     def load(cls, directory: Path) -> "Variant":
         doc = json.loads((directory / "variant.json").read_text(encoding="utf-8"))
-        doc["spec"] = VariantSpec(**doc["spec"])
+        doc["spec"] = VariantSpec.from_dict(doc["spec"])
         doc["targets"] = [Target(**t) for t in doc["targets"]]
         doc["policy"] = Policy.from_dict(doc["policy"])
         doc["events"] = [Event(**e) for e in doc["events"]]
@@ -116,10 +145,10 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
     if condition not in CONDITIONS:
         raise ValueError(f"unknown condition {condition!r}")
     policy = load_policy(spec.policy)
-    case = case.at(spec.difficulty, spec.ruleset)
+    case = case.with_world_seed(spec.world_seed).at(spec.difficulty, spec.ruleset)
     # Nothing the agent sees may depend on the difficulty or the rule set: noise and events are
     # seeded by the engagement only.
-    rng = random.Random(f"{spec.case_id}|{spec.engagement}|{spec.seed}")
+    rng = random.Random(f"{spec.case_id}|{spec.engagement}|{spec.noise_seed}")
     src = case.source_locale
 
     def text(getter, kind: str) -> str:
@@ -163,14 +192,27 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
             rel, _ = held
             correction = (rel, f"inbox/{Path(rel).name}")
 
-    events, event_facts = build_events(eng.events, rng, volunteer_facts=[t.text for t in targets if t.origin == "case"],
-                                       correction=correction, time_budget_s=eng.time_budget_s)
+    # The client volunteers the same target in every setting (its wording may follow the rule set): one drawn
+    # with its own rng among the ids that every tier and rule set has, so `rng` stays setting-independent.
+    volunteer = None
+    if any(e["kind"] == "customer_volunteer" for e in eng.events):
+        settings = [case.at(t, r) for t in case.tiers for r in case.rulesets] or [case]
+        shared = sorted(set.intersection(*({t.id for t in c.targets(src)} for c in settings)))
+        if shared:
+            pick = random.Random(f"{spec.case_id}|{spec.engagement}|{spec.seed}|volunteer").choice(shared)
+            volunteer = (pick, next(t.text for t in targets if t.id == pick))
+
+    events = build_events(eng.events, rng, volunteer=volunteer, correction=correction,
+                          time_budget_s=eng.time_budget_s)
     for ev in events:
         ev.message = say(ev.payload.pop("msg"))
         if "fact" in ev.payload:
             ev.message = f"{ev.message} {ev.payload['fact']}"
-    extra_facts += event_facts
+        if "client_fact" in ev.payload:
+            ev.payload["client_fact"] = say(ev.payload["client_fact"])
 
+    # Noise facts describe the data as delivered, so the client knows them from the start. What it knows about an
+    # event reaches it only when the event fires (Session.poll_events), and so never shows under condition full.
     if extra_facts:
         header = say({"t": "Additional facts (known to the client)"})
         information += f"\n\n## {header}\n\n" + "\n".join(f"- {say(f)}" for f in extra_facts)
@@ -180,11 +222,19 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
         title, *lines = policy_brief_msgs(policy)
         brief = f"# {say(title, agent)}\n\n" + "\n".join(
             say(m, agent) if i == 0 else f"- {say(m, agent)}" for i, m in enumerate(lines)) + "\n"
+    if case.deliverable_type == "program":
+        # The entry point and call contract, which no condition may withhold (the same in every setting). Until the
+        # variant has a field for it, it travels with the policy brief, the setting-independent prompt part.
+        from ..prompts import program_interface
+        block = program_interface(agent, case.entrypoint, case.deliverable_spec())
+        brief = f"{brief}\n{block}\n" if brief else f"{block}\n"
 
     return Variant(
         spec=spec, condition=condition, persona=eng.persona, customer_locale=cust, agent_locale=agent,
         instruction=instruction, information=information, targets=targets, policy=policy, policy_brief=brief,
         events=events, noise=applied, time_budget_s=eng.time_budget_s,
         max_question_rounds=eng.max_question_rounds, submission_files=case.submission_files,
-        case_tier=getattr(case, "tier", None), ruleset=getattr(case, "ruleset", None),
+        case_tier=getattr(case, "tier", None), ruleset=getattr(case, "ruleset", None), world_seed=spec.world_seed,
+        rules=[{"id": r.id, "class": r.rule_class, "description": r.description}
+               for r in (case.rules().rules if case.rules() is not None else [])],
     )

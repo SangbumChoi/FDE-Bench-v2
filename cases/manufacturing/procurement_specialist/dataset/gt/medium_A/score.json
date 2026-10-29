@@ -1,18 +1,29 @@
 {
+  "baseline_objective": 532539881.43999994,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.97976524,
+    "quality_score": 0.58694678
+  },
   "metrics": {
     "backlog_krw": 0,
     "backlog_unit_weeks": {},
-    "holding_krw": 7792997,
+    "holding_krw": 7717697,
     "order_lines": 94,
-    "purchase_krw": 517048468,
+    "purchase_krw": 514046368,
     "safety_shortfall_krw": 0,
     "scrap_krw": 0,
     "spend_by_month": {
       "2026-11": 123172955,
-      "2026-12": 317024381,
+      "2026-12": 314022281,
       "2027-01": 76851133
     }
   },
-  "objective": 524841465.04,
+  "objective": 521764065.04,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
   "violations": []
 }

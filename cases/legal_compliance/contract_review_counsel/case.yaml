@@ -4,6 +4,7 @@ task_type: Information Extraction
 field: legal_compliance
 seed: 20261026
 objective: maximize          # 0.7 x issue-detection F1 (micro, over contract x issue code) + 0.3 x decision accuracy
+                             # (a fast-tracked contract is right when signed with no issues, unless the rule is bent)
 deliverables: [review.json]
 deliverable_spec: |
   review.json = {"C001": {"issues": ["LIABILITY_CAP", ...], "decision": "sign" | "negotiate" | "reject"}, ...}

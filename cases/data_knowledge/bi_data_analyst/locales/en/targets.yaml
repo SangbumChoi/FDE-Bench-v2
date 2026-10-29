@@ -17,7 +17,7 @@
 - id: net_revenue
   kind: ambiguous
   domain: calculation
-  text: Net revenue = order subtotal (before tax) minus refunds without tax (refund amount × subtotal / total), booked in the period of the order date; within an order, refunds are spread over lines pro rata for category figures.
+  text: Net revenue = order subtotal (before tax) minus refunds without tax (refund amount × subtotal / total), booked in the period of the order date, including refunds made after the reference date (the export runs to 2026-10-31); within an order, refunds are spread over lines pro rata for category figures.
 - id: fx_order_date
   kind: missing
   domain: calculation
@@ -33,4 +33,4 @@
 - id: report_rounding
   kind: missing
   domain: scoring
-  text: Finance requires every money answer rounded to the nearest thousand KRW; answers are checked against exact figures (counts and ids exact, others within 0.5 %).
+  text: Finance requires every money answer rounded to the nearest thousand KRW; answers are checked against exact figures (counts and ids exact, money within 0.5 % or 500 KRW, the month-on-month change within 0.05 percentage points, others within 0.5 %).

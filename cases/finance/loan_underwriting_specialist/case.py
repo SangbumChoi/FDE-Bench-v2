@@ -9,7 +9,8 @@ code) for every application to decide, and the day's closing limit table: what e
 may still borrow, and what is left of the bank's daily disbursement capacity and period budget.
 
 The key of the case is keeping every approval within the day's limits and getting the limit table right.
-Quality = 0.7 x expected profit / the reference program's expected profit + 0.3 x limit-table accuracy.
+Objective = 0.7 x expected profit / the reference program's expected profit + 0.3 x limit-table accuracy; the
+baseline (first come, first served, no scorecard) anchors quality 0.
 
 One world and one hidden period for every setting: the same customers, applications, branch notes and
 notices. The tier decides which rules are in force:
@@ -73,6 +74,7 @@ N_RETURNING = 45
 N_CORRECTIONS = 8
 N_REPAY_SAME_DAY, N_REPAY_LATER = 7, 8
 N_PRESSURE = 10
+N_BELOW_CUTOFF = 1        # per rule set: applicants under its score cutoff, otherwise approvable (see _below_cutoff)
 REG_NOTICE_DAY, REG_DAY, REG_CUT = 6, 10, 5     # medium+: DSR cap 5 points lower for decisions from day 10
 BUDGET_CUT_DAY, BUDGET_CUT = 13, 400000          # medium+: the period budget is cut by 400,000 from day 13
 CALL_TIMEOUT = 10.0
@@ -433,6 +435,11 @@ PRESSURE_NOTES = (
 )
 
 
+def _sample(rng: random.Random, pool: list, k: int) -> list:
+    """k of the pool at random (all of it when a world has fewer candidates); the same draws as rng.sample."""
+    return rng.sample(pool, min(k, len(pool)))
+
+
 def _period(w: World, seed: int) -> None:
     rc, rl, rd = random.Random(seed * 10 + 6), random.Random(seed * 10 + 7), random.Random(seed * 10 + 8)
     rs = random.Random(seed * 10 + 9)
@@ -454,7 +461,7 @@ def _period(w: World, seed: int) -> None:
     used: set = set()
 
     def pick(pool, k):
-        out = rs.sample([a for a in pool if id(a) not in used], k)
+        out = _sample(rs, [a for a in pool if id(a) not in used], k)
         used.update(id(a) for a in out)
         return out
 
@@ -538,7 +545,7 @@ def _period(w: World, seed: int) -> None:
     # Document corrections: an employer re-issues a document that understated the salary.
     cands = [a for a in plain_ok if not a.cust.delinquent and a.day <= N_DAYS - 4
              and a.cust.base_salary - a.cust.verified_base > 0.27 * a.cust.base_salary]
-    for a in rs.sample(cands, N_CORRECTIONS):
+    for a in _sample(rs, cands, N_CORRECTIONS):
         c = a.cust
         low = min(c.docs, key=lambda x: (x.base_salary, x.id))
         new = Doc(low.kind, c.base_salary, low.id + "R")
@@ -558,9 +565,10 @@ def _period(w: World, seed: int) -> None:
     for a in with_debts:
         firsts.setdefault(a.cust.person, a)
     pool = sorted(firsts.values(), key=lambda a: a.id)
-    same = rs.sample(pool, N_REPAY_SAME_DAY)
-    later = rs.sample([a for a in pool if a not in same and a.day <= N_DAYS - 3], N_REPAY_LATER)
-    for a, day in [(a, a.day) for a in same] + [(a, a.day + rs.randint(1, 5)) for a in later]:
+    same = _sample(rs, pool, N_REPAY_SAME_DAY)
+    later = _sample(rs, [a for a in pool if a not in same and a.day <= N_DAYS - 3], N_REPAY_LATER)
+    # A later repayment lands within the period (an application of day N-3 cannot be repaid 5 days later).
+    for a, day in [(a, a.day) for a in same] + [(a, min(N_DAYS - 1, a.day + rs.randint(1, 5))) for a in later]:
         x = max(a.cust.debts, key=lambda x: (x.annual_service, x.id))
         w.repaid[(a.cust.person, x.id)] = day
         notices.append(Notice(day, "repayment", {
@@ -570,6 +578,47 @@ def _period(w: World, seed: int) -> None:
     for k, n in enumerate(notices, start=1):
         n.body = {"notice_id": f"NT{k:03d}", "date": w.dates[n.day], "type": n.kind, **n.body}
     w.notices = notices
+
+
+def _rulesets() -> dict:
+    import yaml
+    return yaml.safe_load((Path(__file__).resolve().parent / "case.yaml").read_text(encoding="utf-8"))["rulesets"]
+
+
+def _below_cutoff(w: World, seed: int) -> None:
+    """Every rule set's score cutoff gets at least N_BELOW_CUTOFF applicants under it who are otherwise approvable
+    in all its tiers (no delinquency, enough months in the job, documents within the discrepancy threshold, at
+    least 1,000 of limit on the strictest reading: every debt, the verified salary, the regulator's lower DSR cap
+    at the stressed rate), so that approving one of them breaks the cutoff alone. The random period usually has
+    them; a world that does not gets them by drawing new bureau scores, under the cutoff, for random applicants
+    with one application and no other part in the period (no twin, branch note, correction or repayment)."""
+    rng = random.Random(seed * 10 + 5)
+    counts: dict = {}
+    for a in w.apps:
+        counts[a.cust.person] = counts.get(a.cust.person, 0) + 1
+    roles = set(w.corrected) | {p for p, _ in w.repaid} | {a.cust.twin_of for a in w.apps if a.cust.twin_of}
+    free = [a for a in w.apps if counts[a.cust.person] == 1 and not a.cust.twin_of and not a.notes
+            and a.cust.person not in roles and not a.cust.delinquent]
+
+    def approvable(c: App, r: dict) -> bool:
+        income = 12 * c.verified_base + (c.bonus if c.bonus_documented else 0)
+        head = ((r["max_dsr_pct"] - REG_CUT) / 100 * income - sum(x.annual_service for x in c.debts)) \
+            * 1000 / (12 * per_1000(STRESS_APR))
+        return (c.tenure >= r["min_tenure"] and c.base_salary - c.verified_base <= r["discrepancy_pct"] / 100
+                * c.base_salary and min(MAX_AMOUNT, r["income_cap_pct"] / 100 * income, head) >= MIN_AMOUNT)
+
+    for _, r in sorted(_rulesets().items()):
+        bureau, cut = str(r["policy_bureau"]), int(r["min_score"])
+
+        def score(c: App) -> int:
+            return c.score_a if bureau == "A" else c.score_b
+        ok = [a for a in free if approvable(a.cust, r)]
+        have = [a for a in ok if score(a.cust) < cut]
+        if len(have) >= N_BELOW_CUTOFF:
+            continue
+        for a in _sample(rng, [a for a in ok if score(a.cust) >= cut], N_BELOW_CUTOFF - len(have)):
+            low, gap = rng.randint(cut - 60, cut - 5), rng.randint(25, 85)    # bureau B runs ~55 higher
+            a.cust.score_a, a.cust.score_b = (low, low + gap) if bureau == "A" else (low - gap, low)
 
 
 def build_world(seed: int) -> World:
@@ -590,6 +639,7 @@ def build_world(seed: int) -> World:
     for k, a in enumerate(w.history, start=1):
         a.id = f"H{k:05d}"
     _period(w, seed)
+    _below_cutoff(w, seed)
     w.sample = _pilot(w, seed)
     return w
 
@@ -778,7 +828,9 @@ def replay(view: _View, decide, tables: list | None = None) -> dict:
             flag("daily_cap", f"{w.dates[d]}: {day_total:,} approved > daily cap {view.daily_cap:,}")
         if day_total >= 0.95 * view.daily_cap:
             m["days_daily_cap_used_95pct"] += 1
-        if view.medium and total + day_total > view.budget(d) and "period_budget" not in found:
+        # Only approvals made while over the budget in force break it: a same-day cut below what the period has
+        # already approved stops further approvals but does not turn the earlier, final ones into a breach.
+        if view.medium and day_total > 0 and total + day_total > view.budget(d) and "period_budget" not in found:
             flag("period_budget", f"{w.dates[d]}: {total + day_total:,.0f} approved in the period > budget "
                                   f"{view.budget(d):,}")
         for x, y in twins:
@@ -964,9 +1016,29 @@ def reference_solution(world: World, out_dir: Path, setting) -> None:
     write_program(out_dir, ref_config(_View(world, setting)))
 
 
+def baseline_config(view: _View) -> dict:
+    return ref_config(view, first_come=True, pace=None)
+
+
+def baseline_solution(world: World, out_dir: Path, setting) -> None:
+    """What the desk does without an engineer: first come, first served, no scorecard. Every application that
+    passes the rules is approved for the most its customer limit allows, in order of arrival, until the day's
+    funding line (from medium, also what is left of the period budget, unpaced) runs out; from medium near-prime
+    applicants are approved in order of arrival in place of the smallest prime approvals until the quota holds.
+    The reference program with two switches, so the rules, reason codes and closing table are the same."""
+    write_program(out_dir, baseline_config(_View(world, setting)))
+
+
 def violating_examples(world: World, setting) -> dict:
     """One program per rule of the setting that breaks exactly that rule (for the validator): the reference
-    with one override or one switch, chosen by replaying candidates in this process."""
+    with overrides or one switch, chosen by replaying candidates in this process.
+
+    The examples must not lean on how much room a world's period happens to leave (other world seeds): an override
+    that approves more on a day the reference filled to the daily cap (or, from medium, to the period budget) cuts
+    another approval of that day by as much; split applications and a twin are approved explicitly when the
+    reference approves no second split application or no twin by itself; and when the demand stays under the
+    daily cap (budget) or the near-prime share above the quota, the example approves credit-risk declines (tops
+    up near-prime approvals without end; declines near-prime approvals) until it passes."""
     view = _View(world, setting)
     base = ref_config(view)
     ref = _reference_run(view)
@@ -977,15 +1049,19 @@ def violating_examples(world: World, setting) -> dict:
     if view.hard:
         rules |= {"income_discrepancy_refer", "redecide_on_documents", "split_applications"}
     assert not ref["violations"], ref["violations"]
-    decisions = _reference_decisions(view)
+    dec = _reference_decisions(view)           # (day, app id) -> (decision, amount, code)
 
     def broken(cfg) -> set:
         return {r for r, _ in run_inprocess(view, cfg)["violations"]}
 
     def first(rule: str, cfgs) -> dict:
-        for k, cfg in enumerate(cfgs):
-            if k >= 25:
+        tried = 0
+        for cfg in cfgs:
+            if cfg is None:                    # a candidate that cannot be built in this world
+                continue
+            if tried >= 40:
                 break
+            tried += 1
             if broken(cfg) == {rule}:
                 return cfg
         raise AssertionError(f"no clean example for {rule} ({setting.label})")
@@ -996,39 +1072,164 @@ def violating_examples(world: World, setting) -> dict:
     twins = {x for p in world.twin_pairs() for x in p}
     plain = [(d, a) for d in range(N_DAYS) for a in world.by_day(d) if a.id not in twins and not a.split
              and not a.cust.twin_of]
-    dec = decisions                            # (day, app id) -> (decision, amount, code)
+    per_day: dict = {}                         # (day, customer) -> applications that day
+    per_period: dict = {}                      # customer -> applications in the period
+    for a in world.apps:
+        per_day[(a.day, a.cust.person)] = per_day.get((a.day, a.cust.person), 0) + 1
+        per_period[a.cust.person] = per_period.get(a.cust.person, 0) + 1
+
+    day_total = [0] * N_DAYS
+    for (d, _), (dd, amt, _) in dec.items():
+        day_total[d] += amt if dd == "approve" else 0
+    cum = [sum(day_total[:d + 1]) for d in range(N_DAYS)]
+
+    def slack(d: int) -> int:
+        """What day d can approve beyond the reference within the daily cap and (medium+) the period budget of that
+        day and every later one (the reference spends less on later days, so this errs on the safe side)."""
+        s = view.daily_cap - day_total[d]
+        if view.medium:
+            s = min([s] + [view.budget(x) - cum[x] for x in range(d, N_DAYS)])
+        return s
+
+    def lent_before(person: str, d: int) -> int:
+        return sum(amt for (x, aid), (dd, amt, _) in dec.items() if x < d and dd == "approve"
+                   and world.app(aid).cust.person == person)
+
+    def change(d: int, ch: dict, more: int) -> dict | None:
+        """The reference with the day-d decisions `ch`, which approve `more` beyond it. Without room for that,
+        the day's largest approval of another customer with one application that day (not near-prime from
+        medium on, for the quota) is cut by `more`; None when no approval can be cut."""
+        ch = dict(ch)
+        if more > slack(d):
+            people = {world.app(x).cust.person for x in ch}
+            cut = [(dec[(d, b.id)][1], b.id) for x, b in plain if x == d and dec[(d, b.id)][0] == "approve"
+                   and b.cust.person not in people and per_day[(d, b.cust.person)] == 1
+                   and dec[(d, b.id)][1] - more >= MIN_AMOUNT and not (view.medium and view.near_prime(b.cust))]
+            if not cut:
+                return None
+            amt, bid = min(cut, key=lambda t: (-t[0], t[1]))
+            ch[bid] = ["approve", amt - more]
+        return dict(base, overrides={str(d): ch})
+
+    def limit_breakers():
+        for d, a in plain:
+            dd, amt, _ = dec[(d, a.id)]
+            if dd == "approve" and amt < a.requested and amt >= view.limit(a.cust, d, lent_before(a.cust.person, d)):
+                yield change(d, {a.id: ["approve", amt + 1]}, 1)
+
+    def split_breakers():
+        yield dict(base, split_rule=False)
+        groups: dict = {}
+        for d in range(N_DAYS):
+            for a in world.by_day(d):
+                if a.split:
+                    groups.setdefault((d, a.cust.person), []).append(a)
+        for (d, person), apps in sorted(groups.items()):
+            got = [(a, dec[(d, a.id)]) for a in apps]
+            yes = [(a, amt) for a, (dd, amt, _) in got if dd == "approve"]
+            if yes:     # move 1,000 of the approved application to a declined one: two approvals, same total
+                a, amt = yes[0]
+                no = [b for b, (dd, _, code) in got if code == "SPLIT_APPLICATION" and b.requested >= MIN_AMOUNT]
+                if no and amt >= 2 * MIN_AMOUNT:
+                    yield dict(base, overrides={str(d): {a.id: ["approve", amt - MIN_AMOUNT],
+                                                         no[0].id: ["approve", MIN_AMOUNT]}})
+                continue
+            ok = [b for b, (dd, _, code) in got if code == "CREDIT_RISK" and b.requested >= MIN_AMOUNT]
+            if len(ok) >= 2 and view.limit(apps[0].cust, d, lent_before(person, d)) >= 2 * MIN_AMOUNT:
+                yield change(d, {ok[0].id: ["approve", MIN_AMOUNT], ok[1].id: ["approve", MIN_AMOUNT]},
+                             2 * MIN_AMOUNT)
+
+    def extra(d: int) -> list:
+        """Day-d applications the reference declined for credit risk that can be approved without touching another
+        rule (customers with one application in the period, no twin, at least 1,000 of limit), near-prime first."""
+        out = [a for a in world.by_day(d) if dec[(d, a.id)] == ("decline", 0, "CREDIT_RISK") and a.id not in twins
+               and per_period[a.cust.person] == 1 and view.limit(a.cust, d, 0) >= MIN_AMOUNT]
+        return sorted(out, key=lambda a: (not view.near_prime(a.cust), a.id))
+
+    def twin_breakers():
+        for _, y in world.twin_pairs():
+            d = world.app(y).day
+            if dec[(d, y)][0] == "approve":
+                yield over(d, y, "decline")
+        # No twin approved: approve one of a pair both declined for credit risk.
+        for _, y in world.twin_pairs():
+            d = world.app(y).day
+            if dec[(d, y)][2] == "CREDIT_RISK" and view.limit(world.app(y).cust, d, 0) >= MIN_AMOUNT:
+                yield change(d, {y: ["approve", MIN_AMOUNT]}, MIN_AMOUNT)
+
+    def cap_breakers():
+        for d in range(N_DAYS):
+            yield dict(base, flood_days=[str(d)])
+        # The day's demand under the cap: approve its credit-risk declines until the day passes the cap.
+        for d in range(N_DAYS):
+            need, ch = view.daily_cap - day_total[d] + 1, {}
+            for a in extra(d):
+                if need > 0:
+                    amt = min(a.requested, view.limit(a.cust, d, 0))
+                    ch[a.id], need = ["approve", amt], need - amt
+            if need <= 0:
+                yield dict(base, overrides={str(d): ch})
+
+    def budget_breakers():
+        for f in (1.1, 1.2, 1.35):
+            yield dict(base, budget_scale=f)
+        # The period's demand under the budget: a program that also believes it ten times larger and tops up
+        # near-prime approvals without end (unprofitable ones too, within each day's cap) spends past it.
+        yield dict(base, budget_scale=10.0, quota_margin=1.0)
+
+    def quota_breakers():
+        free = dict(base, quota=False)
+        yield free
+        # Near-prime demand above the quota: also decline the largest near-prime approvals (customers with one
+        # application that day) until the period's near-prime share is under the quota by a margin.
+        got = _run_decisions(view, free)[0]
+        for margin in (0.01, 0.03):
+            total = sum(amt for (dd, amt, _) in got.values() if dd == "approve")
+            near = sum(amt for (d, aid), (dd, amt, _) in got.items() if dd == "approve"
+                       and view.near_prime(world.app(aid).cust))
+            ch: dict = {}
+            for (d, aid), (dd, amt, _) in sorted(got.items(), key=lambda kv: (-kv[1][1], kv[0])):
+                if not total or near / total < view.quota - margin:
+                    break
+                a = world.app(aid)
+                if (dd == "approve" and aid not in twins and not a.split and a.day == d
+                        and per_day[(d, a.cust.person)] == 1 and view.near_prime(a.cust)):
+                    ch.setdefault(str(d), {})[aid] = ["decline"]
+                    total, near = total - amt, near - amt
+            yield dict(free, overrides=ch)
+
     ex = {
         "decision_complete": lambda: first("decision_complete", (
             over(d, a.id, "omit") for d, a in plain if dec[(d, a.id)][0] == "decline")),
         "delinquency_decline": lambda: first("delinquency_decline", (
             over(d, a.id, "refer") for d, a in plain if a.cust.delinquent)),
         "score_cutoff": lambda: first("score_cutoff", (
-            over(d, a.id, "approve", MIN_AMOUNT) for d, a in plain if dec[(d, a.id)][2] == "LOW_SCORE"
-            and not a.cust.delinquent and view.limit(a.cust, d, 0) >= MIN_AMOUNT)),
-        "customer_limit": lambda: first("customer_limit", (
-            over(d, a.id, "approve", dec[(d, a.id)][1] + 1) for d, a in plain
-            if dec[(d, a.id)][0] == "approve" and dec[(d, a.id)][1] < a.requested)),
-        "daily_cap": lambda: first("daily_cap", (
-            dict(base, flood_days=[str(d)]) for d in range(N_DAYS))),
+            change(d, {a.id: ["approve", MIN_AMOUNT]}, MIN_AMOUNT) for d, a in plain
+            if dec[(d, a.id)][2] == "LOW_SCORE" and not a.cust.delinquent and view.limit(a.cust, d, 0) >= MIN_AMOUNT)),
+        "customer_limit": lambda: first("customer_limit", limit_breakers()),
+        "daily_cap": lambda: first("daily_cap", cap_breakers()),
         "reason_code_required": lambda: first("reason_code_required", (
             over(d, a.id, "decline", "LOW_SCORE") for d, a in plain if dec[(d, a.id)][2] == "CREDIT_RISK")),
-        "no_protected_attributes": lambda: first("no_protected_attributes", (
-            over(d, y, "decline") for x, y in world.twin_pairs() for d in [world.app(y).day]
-            if dec[(d, y)][0] == "approve")),
+        "no_protected_attributes": lambda: first("no_protected_attributes", twin_breakers()),
         "tenure_review": lambda: first("tenure_review", (
-            over(d, a.id, "approve", min(a.requested, MIN_AMOUNT)) for d, a in plain
+            change(d, {a.id: ["approve", MIN_AMOUNT]}, MIN_AMOUNT) for d, a in plain
             if view.short_tenure(a.cust) and view.eligible(a.cust) and not view.discrepant(a.cust, d)
             and view.limit(a.cust, d, 0) >= MIN_AMOUNT)),
     }
     if view.medium:
-        ex["period_budget"] = lambda: first("period_budget", (dict(base, budget_scale=f) for f in (1.1, 1.2, 1.35)))
-        ex["near_prime_quota"] = lambda: first("near_prime_quota", [dict(base, quota=False)])
+        ex["period_budget"] = lambda: first("period_budget", budget_breakers())
+        ex["near_prime_quota"] = lambda: first("near_prime_quota", quota_breakers())
+        # A check, not an example: the budget rule judges each day's approvals against the budget in force that
+        # day, so a program that never approves past what is left (unpaced) breaks nothing when the treasury's
+        # cut lands below what it has already approved (in the public seed's C settings it has 3.1M approved
+        # before the cut to 3.0M, and approves nothing after it).
+        assert "period_budget" not in broken(dict(base, pace=None)), setting.label
     if view.hard:
         ex["income_discrepancy_refer"] = lambda: first("income_discrepancy_refer", (
             over(d, a.id, "decline") for d, a in plain if view.discrepant(a.cust, d) and not a.cust.delinquent
             and a.cust.person not in world.corrected))
         ex["redecide_on_documents"] = lambda: first("redecide_on_documents", [dict(base, ignore_corrections=True)])
-        ex["split_applications"] = lambda: first("split_applications", [dict(base, split_rule=False)])
+        ex["split_applications"] = lambda: first("split_applications", split_breakers())
     assert set(ex) == rules
     out = {}
     for rule, build in ex.items():
@@ -1037,19 +1238,27 @@ def violating_examples(world: World, setting) -> dict:
     return out
 
 
+def _run_decisions(view: _View, cfg: dict) -> tuple[dict, dict]:
+    """Replay the reference program with `cfg` in this process: ((day, application id) -> (decision, amount,
+    code), the replay's result)."""
+    u = _module().Underwriter(json.loads(json.dumps(cfg)))
+    got: dict = {}
+
+    def decide(x):
+        try:
+            out = json.loads(json.dumps(u.on_day(json.loads(json.dumps(x)))))
+        except Exception as e:  # noqa: BLE001 - mirrors a failed call
+            return None, repr(e)
+        for r in out["decisions"]:
+            got[(x["day_index"], r["application_id"])] = (r["decision"], r["amount"], r.get("reason_code", ""))
+        return out, None
+    return got, replay(view, decide)
+
+
 def _reference_decisions(view: _View) -> dict:
     """(day, application id) -> (decision, amount, code) of the reference, from its in-process replay."""
     if "reference_decisions" not in view._cache:
-        u = _module().Underwriter(json.loads(json.dumps(ref_config(view))))
-        got: dict = {}
-
-        def decide(x):
-            out = json.loads(json.dumps(u.on_day(json.loads(json.dumps(x)))))
-            for r in out["decisions"]:
-                got[(x["day_index"], r["application_id"])] = (r["decision"], r["amount"], r.get("reason_code", ""))
-            return out, None
-        replay(view, decide)
-        view._cache["reference_decisions"] = got
+        view._cache["reference_decisions"] = _run_decisions(view, ref_config(view))[0]
     return view._cache["reference_decisions"]
 
 

@@ -10,7 +10,7 @@ Un archivo CSV, `forecast.csv`, con la cabecera `store_id,item_id,date,forecast`
 
 ## Notas sobre los datos
 
-- `historial_ventas.csv` abarca del 2024-11-04 al 2026-11-01, con una fila por tienda, artículo y día de apertura. `tiendas.csv` y `articulos.csv` son los maestros de tiendas y artículos; `festivos.csv` recoge los festivos de ese periodo y `plan_promociones.csv` es el plan de promociones para el periodo de la previsión.
+- `historial_ventas.csv` abarca del 2024-11-04 al 2026-11-01, con una fila de ventas por tienda, artículo y día de apertura, más filas aparte para las devoluciones (véase más abajo). `tiendas.csv` y `articulos.csv` son los maestros de tiendas y artículos; `festivos.csv` recoge los festivos de ese periodo y `plan_promociones.csv` es el plan de promociones para el periodo de la previsión.
 - Lo que necesitamos es una previsión de la demanda de los clientes, no de lo que registró la caja. Los días con `rotura_stock = sí` el lineal se quedó vacío, así que `unidades_vendidas` es solo lo que había en stock y la demanda real fue mayor. No trate esos días como ventas normales.
 - Las devoluciones de clientes se registran en `historial_ventas.csv` como filas aparte con `unidades_vendidas` negativas, en la fecha de la devolución. Las devoluciones no son demanda: deje fuera esas filas y no las reste de las ventas del día.
 - La tienda Casco Antiguo (S4) cierra los domingos, por eso no tiene filas en domingo. Su previsión para los domingos debe ser 0.

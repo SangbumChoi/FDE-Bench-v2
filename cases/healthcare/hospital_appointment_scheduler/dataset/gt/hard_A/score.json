@@ -1,4 +1,10 @@
 {
+  "baseline_objective": 0.69367497,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.69367497,
+    "quality_score": 0.0
+  },
   "metrics": {
     "actions_rejected": 0,
     "booked": 1207,
@@ -21,5 +27,10 @@
     "waiting_cost": 3204.8
   },
   "objective": 1.0,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
   "violations": []
 }

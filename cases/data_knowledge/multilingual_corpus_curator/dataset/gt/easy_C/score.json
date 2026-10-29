@@ -1,14 +1,26 @@
 {
+  "baseline_objective": 10.0,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.1,
+    "quality_score": 0.0
+  },
   "metrics": {
     "books_scored": 30,
     "books_without_credit": 0,
     "credit": 30.0,
     "extra_files": 0,
     "library_files": 79,
+    "manifest_rows_wrong": 0,
     "placed_exactly": 30,
     "program_error": "",
     "reviewed_correctly": 0
   },
   "objective": 100.0,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
   "violations": []
 }

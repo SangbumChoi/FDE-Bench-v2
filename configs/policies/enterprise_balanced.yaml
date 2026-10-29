@@ -13,3 +13,4 @@ communication_locale: customer
 budgets: {wall_seconds: 43200}
 hard_gates: [validity]
 weights: {quality: 0.6, clarification: 0.15, communication: 0.15, efficiency: 0.1}
+quality_cap: 1.5    # normalized quality (baseline 0, reference 1) that earns full quality credit

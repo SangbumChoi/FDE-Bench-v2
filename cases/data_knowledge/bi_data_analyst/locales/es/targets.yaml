@@ -7,7 +7,7 @@
 - id: counted_orders
   text: Solo cuentan los pedidos «completado»; los «cancelado» y «pago_fallido» no cuentan nunca, aunque payments.csv tenga una fila de pago para ellos.
 - id: net_revenue
-  text: Ingreso neto = subtotal del pedido (sin impuestos) menos los reembolsos sin impuesto (importe × subtotal / total), imputados al periodo de la fecha del pedido; por categoría, los reembolsos se reparten entre las líneas en proporción a su importe.
+  text: Ingreso neto = subtotal del pedido (sin impuestos) menos los reembolsos sin impuesto (importe × subtotal / total), imputados al periodo de la fecha del pedido, también los reembolsos posteriores a la fecha de referencia (la exportación llega al 2026-10-31); por categoría, los reembolsos se reparten entre las líneas en proporción a su importe.
 - id: fx_order_date
   text: Los importes están en la moneda del pedido y se convierten a KRW con el krw_per_unit de fx_rates de la fecha del pedido (hora de Corea); los reembolsos usan el mismo tipo que su pedido.
 - id: active_customer
@@ -15,4 +15,4 @@
 - id: category_rename
   text: La categoría snacks se renombró como despensa el 2025-10-01 y los productos antiguos conservan la etiqueta vieja; las preguntas sobre despensa incluyen ambas etiquetas.
 - id: report_rounding
-  text: Finanzas exige redondear toda respuesta monetaria al millar de KRW más cercano; las respuestas se comparan con las cifras exactas (recuentos e identificadores exactos, el resto dentro del 0,5 %).
+  text: Finanzas exige redondear toda respuesta monetaria al millar de KRW más cercano; las respuestas se comparan con las cifras exactas (recuentos e identificadores exactos, importes dentro del 0,5 % o de 500 KRW, la variación mensual dentro de 0,05 puntos porcentuales, el resto dentro del 0,5 %).

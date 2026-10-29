@@ -8,7 +8,9 @@ the entry function once per hidden input, in order, inside a separate process:
   minimal environment, memory/CPU limits, and no network where the OS allows
   (`unshare -n`). For development; the program can still read the filesystem.
 * `docker` runner: `docker run --network none` with only the program directory
-  (read-only) and the host script mounted. Use this for real campaigns.
+  (read-only) and the host script mounted. Use this for real campaigns. The
+  container is named, so a timeout removes it (`docker rm -f`) rather than only
+  killing the docker client, which would leave it running.
 
 Two ways to drive it:
 
@@ -35,9 +37,12 @@ import subprocess
 import sys
 import tempfile
 import time
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from .sandbox import host_user, sanitize
 
 HOST = Path(__file__).resolve().parent / "program_host.py"
 MAX_PROGRAM_BYTES = 500 * 1024 * 1024
@@ -58,6 +63,11 @@ class ProgramResult:
     @property
     def n_errors(self) -> int:
         return sum(e is not None for e in self.errors)
+
+    @property
+    def status(self) -> str:
+        """ok | not_loaded | timeout (the whole run hit total_timeout and its process was killed)."""
+        return "timeout" if self.timed_out else "ok" if self.loaded else "not_loaded"
 
 
 @dataclass
@@ -130,12 +140,19 @@ def _substitute(x: Any, paths: dict[str, str]) -> Any:
     return x
 
 
-def _launch(cfg: _Config, tmp: Path, has_io: bool) -> tuple[subprocess.Popen, dict[str, str]]:
-    """Start the host on the private copy tmp/program; returns the process and the in-process io paths."""
+def _launch(cfg: _Config, tmp: Path, has_io: bool) -> tuple[subprocess.Popen, dict[str, str], str | None]:
+    """Start the host on the private copy tmp/program; returns the process, the in-process io paths and the
+    docker container's name (None for the local runner)."""
     work = tmp / "program"
+    container = None
     if cfg.kind == "docker":
-        cmd = ["docker", "run", "--rm", "-i", "--network", "none", "--memory", f"{cfg.memory_mb}m",
-               "--cpus", str(cfg.cpus), "-v", f"{work}:/program:ro", "-v", f"{HOST}:/fdeb2_host.py:ro"]
+        container = f"fdeb2-prog-{uuid.uuid4().hex[:12]}"
+        cmd = ["docker", "run", "--rm", "-i", "--name", container, "--network", "none",
+               "--memory", f"{cfg.memory_mb}m", "--cpus", str(cfg.cpus),
+               "-v", f"{work}:/program:ro", "-v", f"{HOST}:/fdeb2_host.py:ro"]
+        user = host_user()
+        if user:
+            cmd += ["--user", user]              # what it writes to /output stays removable by the host
         paths = {}
         if has_io:
             cmd += ["-v", f"{tmp / 'input'}:/input:ro", "-v", f"{tmp / 'output'}:/output"]
@@ -150,7 +167,7 @@ def _launch(cfg: _Config, tmp: Path, has_io: bool) -> tuple[subprocess.Popen, di
         cwd = work
     proc = subprocess.Popen(cmd, cwd=cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             env=env, preexec_fn=preexec, text=True, encoding="utf-8", errors="replace")
-    return proc, paths
+    return proc, paths, container
 
 
 def run_program(program_dir: Path, entry: str, inputs: list[Any], *, per_call_timeout: float = 5.0,
@@ -170,7 +187,7 @@ def run_program(program_dir: Path, entry: str, inputs: list[Any], *, per_call_ti
         if input_dir is not None:
             shutil.copytree(input_dir, tmp / "input")
             (tmp / "output").mkdir()
-        proc, paths = _launch(cfg, tmp, input_dir is not None)
+        proc, paths, container = _launch(cfg, tmp, input_dir is not None)
         payload = "\n".join([json.dumps({"entry": entry, "per_call_timeout": per_call_timeout}),
                              *(json.dumps(_substitute(x, paths), ensure_ascii=False) for x in inputs)]) + "\n"
         timed_out = False
@@ -178,12 +195,13 @@ def run_program(program_dir: Path, entry: str, inputs: list[Any], *, per_call_ti
             out, err = proc.communicate(payload, timeout=total_timeout)
         except subprocess.TimeoutExpired:
             timed_out = True
-            _kill(proc)
+            _kill(proc, container)
             out, err = proc.communicate()
         if output_to is not None and input_dir is not None:
             if Path(output_to).exists():
                 shutil.rmtree(output_to)
-            shutil.copytree(tmp / "output", output_to, symlinks=False)
+            sanitize(tmp / "output")             # links the program made would point the scorer at host files
+            shutil.copytree(tmp / "output", output_to, symlinks=True)
     wall = time.monotonic() - t0
     return _parse(out or "", err or "", len(inputs), timed_out, wall)
 
@@ -219,7 +237,7 @@ class ProgramSession:
         tmp = Path(self._tmp.name)
         shutil.copytree(self.program_dir, tmp / "program")
         self._t0 = time.monotonic()
-        self._proc, _ = _launch(_current(), tmp, False)
+        self._proc, _, self._container = _launch(_current(), tmp, False)
         self._lines: "queue.Queue[str | None]" = queue.Queue()
 
         def pump() -> None:
@@ -254,7 +272,7 @@ class ProgramSession:
         left = self.total_timeout - (time.monotonic() - self._t0)
         if left <= 0:
             self.dead = "run timed out"
-            _kill(self._proc)
+            _kill(self._proc, self._container)
             return None, self.dead
         self.calls += 1
         try:
@@ -265,7 +283,7 @@ class ProgramSession:
         doc = self._read(min(left, self.per_call_timeout + 10))
         if doc is None:
             self.dead = "run timed out" if time.monotonic() - self._t0 >= self.total_timeout else "program process died"
-            _kill(self._proc)
+            _kill(self._proc, self._container)
             return None, self.dead
         return (doc.get("output"), None) if doc.get("ok") else (None, str(doc.get("error", "error")))
 
@@ -276,12 +294,19 @@ class ProgramSession:
                 try:
                     self._proc.wait(timeout=5)
                 except subprocess.TimeoutExpired:
-                    _kill(self._proc)
+                    _kill(self._proc, self._container)
         finally:
             self._tmp.cleanup()
 
 
-def _kill(proc: subprocess.Popen) -> None:
+def _kill(proc: subprocess.Popen, container: str | None = None) -> None:
+    """Stop the program: its docker container by name (killing the docker client alone leaves the container
+    running), and the process (group) we started."""
+    if container:
+        try:
+            subprocess.run(["docker", "rm", "-f", container], capture_output=True, timeout=60)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
     try:
         os.killpg(proc.pid, 9)
     except (ProcessLookupError, PermissionError, OSError):

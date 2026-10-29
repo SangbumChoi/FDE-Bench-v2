@@ -1,6 +1,6 @@
 # Contrato de conexión (resumen del contrato firmado, 2024)
 
-Emplazamiento: parque solar con almacenamiento Llano Verde, un único punto de conexión compartido.
+Emplazamiento: parque solar con almacenamiento Llano Verde (España), un único punto de conexión compartido.
 
 - Capacidad máxima de vertido en el punto de conexión: 30 MW.
 - Capacidad máxima de consumo desde la red en el punto de conexión: 20 MW.

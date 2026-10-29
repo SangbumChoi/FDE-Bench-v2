@@ -6,13 +6,15 @@ defaults:
   cases_root: cases
   models: configs/models.yaml
   out: runs
-  seeds: [0, 1, 2]
+  noise_seeds: [0]               # engagement noise and events; each seed is a different messy hand-over
+  trials: 3                      # repeats of every run, for pass^k (all k repeats valid)
   # strict: every run in docker; the agent sees only /workspace (same in every setting).
   isolation: strict
   sandbox:
     kind: docker
     image: "fde-bench-agent:latest"     # docker/Dockerfile.agent: python, data libraries, the vendor CLIs
-    env: [OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY]   # passed to CLI agents in the container
+    # A CLI harness gets only its own API key and base URL in the container (agents.cli.HARNESS_ENV);
+    # set `env:` on an agent below to pass more.
   cases: all                     # all | field:<field> | a subset name | list of <field>/<role> ids
 
 subsets: {}

@@ -11,7 +11,8 @@ tiers:                       # one world, one hidden period and the same notices
   easy: >-
     The daily underwriting core for one product (PL36): income = 12 x declared base salary + documented bonus;
     the policy bureau's score with a cutoff; active delinquency declined; a customer limit = min(50,000, income
-    cap, DSR headroom counting installment loans only) minus what we already lent the customer in the period
+    cap, DSR headroom counting installment loans only: the client's own affordability cap this round, the
+    regulator's ratio being a separate compliance check) minus what we already lent the customer in the period
     (earlier days and the same day); a daily disbursement cap; ordered decline reason codes; protected attributes
     never used (planted twins); the tenure referral habit; a closing limit table every day (customer limits and
     the daily capacity left). The notices in the input are out of scope this round.
@@ -61,14 +62,14 @@ rules:
     description: Approvals only when the policy bureau's score ({{policy_bureau}}) is at least {{min_score}}.
   - id: customer_limit
     class: physical
-    description: What a customer is approved on a day (all their applications together) is at most their customer limit that morning, min(50,000, {{income_cap_pct}}% of annual income, DSR headroom at {{max_dsr_pct}}%) minus our approvals to them earlier in the period. The DSR and income caps are regulatory, so it never bends (medium+, the cap is 5 points lower from the regulator's effective date; hard, repayments and verified income count).
+    description: What a customer is approved on a day (all their applications together) is at most their customer limit that morning, min(50,000, {{income_cap_pct}}% of annual income, DSR headroom at {{max_dsr_pct}}%) minus our approvals to them earlier in the period. It never bends, since the income cap is regulatory and so is the DSR cap from medium (medium+, the cap moves by the regulator's notice from its effective date; hard, repayments and verified income count); in easy the DSR cap is our own affordability limit on installment loans, with no exception, and the regulator's notice does not reach it.
   - id: daily_cap
     class: contractual
     description: The amount approved on one day is at most the daily disbursement capacity of {{daily_cap}} (our funding line).
   - id: period_budget
     class: contractual
     tiers: [medium, hard]
-    description: The amount approved in the period never exceeds the period budget of {{period_budget}} (400,000 less from the treasury's budget cut).
+    description: No day's approvals take the amount approved in the period above the period budget in force that day, {{period_budget}} (400,000 less from the treasury's budget cut); a cut below what is already approved stops further approvals but does not undo earlier ones.
   - id: reason_code_required
     class: contractual
     description: Every decline carries the code of its main driver after the day's approvals, the first that applies of DELINQUENCY, LOW_SCORE, SPLIT_APPLICATION (hard), LIMIT_EXCEEDED (less than 1,000 of customer limit left), CREDIT_RISK.
