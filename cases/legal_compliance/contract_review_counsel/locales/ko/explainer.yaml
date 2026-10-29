@@ -1,0 +1,14 @@
+# The explainer's case texts in Korean (English comes from case.yaml).
+role: 계약 검토 변호사
+task_type: 정보 추출
+deliverable_spec: |
+  review.json = {"C001": {"issues": ["LIABILITY_CAP", ...], "decision": "sign" | "negotiate" | "reject"}, ...}
+  계약대장의 계약마다 항목 하나를 두며, 키는 데이터에 있는 계약번호 그대로입니다.
+  이슈 코드(ASCII, 정확히 다음 코드만): LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS,
+  DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY. 빈 리스트는 발견한 이슈가 없다는 뜻입니다.
+rules:
+  all_contracts_reviewed: 계약대장의 모든 계약에 review.json 항목이 있습니다.
+  decision_consistency: >-
+    결정은 플레이북에 따라 기록한 이슈로부터 나옵니다. 중대 이슈(LIABILITY_CAP, DATA_PROTECTION, INDEMNITY)가
+    2개 이상이면 reject, 이슈가 하나라도 있으면 negotiate, 그렇지 않으면 sign입니다.
+  small_contract_fast_track: 연간금액이 20,000달러 미만인 계약은 검토하지 않고 이슈 없이 "sign"으로 표시합니다.

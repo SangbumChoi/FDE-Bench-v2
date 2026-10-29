@@ -1,0 +1,16 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Asesor jurídico de revisión de contratos
+task_type: Extracción de información
+deliverable_spec: |
+  review.json = {"C001": {"issues": ["LIABILITY_CAP", ...], "decision": "sign" | "negotiate" | "reject"}, ...}
+  Una entrada por cada contrato del registro, cuya clave es el identificador del contrato tal como aparece en los datos.
+  Códigos de incidencia (ASCII, exactamente estos): LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS,
+  DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY. Una lista vacía significa que no se ha detectado ninguna incidencia.
+rules:
+  all_contracts_reviewed: Cada contrato del registro tiene una entrada en review.json.
+  decision_consistency: >-
+    La decisión se deduce de las incidencias indicadas, según los criterios de contratación: reject si hay dos o más
+    incidencias críticas (LIABILITY_CAP, DATA_PROTECTION, INDEMNITY), negotiate si hay alguna incidencia y sign en los
+    demás casos.
+  small_contract_fast_track: >-
+    Los contratos con un importe anual inferior a 20.000 USD se marcan como "sign" sin incidencias y sin revisión.

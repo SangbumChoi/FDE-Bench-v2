@@ -1,0 +1,12 @@
+# The explainer's case texts in Japanese (English comes from case.yaml).
+role: 契約審査担当弁護士
+task_type: 情報抽出
+deliverable_spec: |
+  review.json = {"C001": {"issues": ["LIABILITY_CAP", ...], "decision": "sign" | "negotiate" | "reject"}, ...}
+  契約台帳の契約ごとに1項目とし、キーはデータ上の契約番号そのままです。
+  論点コード（ASCII、次のものに限る）：LIABILITY_CAP、GOVERNING_LAW、AUTO_RENEWAL、PAYMENT_TERMS、
+  DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY。空リストは論点が見つからなかったことを意味します。
+rules:
+  all_contracts_reviewed: 契約台帳のすべての契約について review.json に項目があります。
+  decision_consistency: 判定はプレイブックに従い、記録した論点から導かれます。重大な論点（LIABILITY_CAP、DATA_PROTECTION、INDEMNITY）が2つ以上あれば reject、論点が1つでもあれば negotiate、なければ sign です。
+  small_contract_fast_track: 年間金額が20,000米ドル未満の契約は、レビューを行わずに論点なしの "sign" とします。

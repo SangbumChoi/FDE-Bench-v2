@@ -1,0 +1,12 @@
+# The explainer's case texts in Simplified Chinese (English comes from case.yaml).
+role: 合同审查法律顾问
+task_type: 信息抽取
+deliverable_spec: |
+  review.json = {"C001": {"issues": ["LIABILITY_CAP", ...], "decision": "sign" | "negotiate" | "reject"}, ...}
+  台账中的每份合同各一条，键为合同编号，与数据中完全一致。
+  问题代码（ASCII，仅限以下几个）：LIABILITY_CAP、GOVERNING_LAW、AUTO_RENEWAL、PAYMENT_TERMS、
+  DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY。空列表表示未发现问题。
+rules:
+  all_contracts_reviewed: 台账中的每份合同在 review.json 中都有一条记录。
+  decision_consistency: 结论按手册由列出的问题得出：有两个及以上关键问题（LIABILITY_CAP、DATA_PROTECTION、INDEMNITY）为 reject，有任何问题为 negotiate，否则为 sign。
+  small_contract_fast_track: 年度金额低于 20,000 美元的合同不经审查，直接标为 "sign"，问题列表为空。
