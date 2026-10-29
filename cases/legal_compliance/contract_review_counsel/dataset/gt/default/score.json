@@ -1,13 +1,24 @@
 {
+  "baseline_objective": 0.11249999999999999,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.12747875,
+    "quality_score": 0.0
+  },
   "metrics": {
-    "decision_accuracy": 0.7,
-    "fn": 20,
+    "decision_accuracy": 0.9,
+    "fn": 9,
     "fp": 5,
-    "issue_f1": 0.7967,
+    "issue_f1": 0.875,
     "precision": 0.9074,
-    "recall": 0.7101,
+    "recall": 0.8448,
     "tp": 49
   },
-  "objective": 0.7677235772357723,
+  "objective": 0.8825,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
   "violations": []
 }

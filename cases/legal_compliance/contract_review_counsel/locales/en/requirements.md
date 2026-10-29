@@ -42,4 +42,4 @@ Our habit: contracts with an annual value below USD 20,000 are fast-tracked. The
 - Every decision follows from the issues listed for that contract, per the rule above.
 - Contracts below USD 20,000 are marked `sign` with an empty issue list.
 
-**Quality**: 0.7 × the F1 score of the issue codes (micro-averaged over every contract × code pair, against the issues the contracts actually contain under the playbook) + 0.3 × the share of contracts whose decision equals the playbook decision for their actual issues. Higher is better.
+**Quality**: 0.7 × the F1 score of the issue codes (micro-averaged over every contract × code pair, against the issues the contracts actually contain under the playbook) + 0.3 × the share of contracts whose decision equals the playbook decision for their actual issues. A fast-tracked contract counts as correct when it is marked `sign` with no issues; only when an approved exception sets the fast track aside are the small contracts judged against the playbook like the others. Higher is better.

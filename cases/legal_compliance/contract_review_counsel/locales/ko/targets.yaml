@@ -12,7 +12,9 @@
   text: 연간금액이 150,000달러를 초과하는 계약은 저희가 언제든 사유 없이 해지할 수 있어야 하며, 위반 해지만으로는 부족합니다.
 - id: indemnity_mutual
   text: 배상 조항은 상호적이어야 하며, 저희만 공급업체에 배상하는 조항은 이슈입니다.
-- id: decision_and_scoring
-  text: 이슈 코드는 LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS, DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY입니다. 중대 이슈(책임 한도, 데이터 보호, 배상)가 2개 이상이면 reject, 이슈가 있으면 negotiate, 없으면 sign이고, 0.7 × 이슈 F1 + 0.3 × 결정 정확도로 평가합니다.
+- id: issue_codes
+  text: 충족하지 못한 플레이북 항목마다 해당 코드로 이슈 하나를 기록하며, 코드는 LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS, DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY입니다.
+- id: decision_rule
+  text: LIABILITY_CAP, DATA_PROTECTION, INDEMNITY는 중대 이슈이며, 중대 이슈가 2개 이상이면 reject, 이슈가 하나라도 있으면 negotiate, 없으면 sign입니다.
 - id: small_contract_fast_track
   text: 연간금액 20,000달러 미만 계약은 검토 없이 이슈 없이 sign으로 표시합니다.

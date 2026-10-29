@@ -9,7 +9,8 @@ convenience above a value, mutual indemnity), the issue codes, the decision
 logic and the small-contract fast track are in the requirements and must be
 asked for. Clauses are written with varied wording, so plain keyword matching
 misses some of them; some contracts are on the supplier's paper in another
-language.
+language. The reference is such a literal keyword checklist on the English
+wording; the baseline signs every contract as it stands.
 """
 
 from __future__ import annotations
@@ -395,6 +396,28 @@ def _law(c: Contract, lang: str) -> str:
     return f"{law}{ven}" if lang in ("zh", "ja") else f"{law} {ven}"
 
 
+ZH_DIGIT = "〇一二三四五六七八九"
+
+
+def _wan(a: int, lang: str) -> str:
+    """A fixed cap in the paraphrased style of zh, ko and ja: in units of 10,000 (万/만) from 10,000 up, and as
+    natives write smaller sums below that (五千美元, 5천 달러, 5,000米ドル), never 0.5万."""
+    man, rest = divmod(a, 10_000)
+    if lang == "zh":
+        if man:
+            return f"{a / 10_000:g}万美元"
+        k, h = divmod(a, 1000)
+        return ("两" if k == 2 else ZH_DIGIT[k]) + "千" + (f"{ZH_DIGIT[h // 100]}百" if h else "") + "美元"
+    if lang == "ko":
+        if man:
+            return f"{a / 10_000:g}만 달러" if rest % 1000 == 0 else f"{man}만 {rest:,}달러"
+        k, h = divmod(a, 1000)
+        return f"{k}천" + (f"{h // 100}백" if h else "") + " 달러"
+    if man:
+        return f"{a / 10_000:g}万米ドル" if rest % 1000 == 0 else f"{man}万{rest:,}米ドル"
+    return f"{a:,}米ドル"
+
+
 ZH_NUM = {30: "三十", 45: "四十五", 60: "六十", 90: "九十"}
 ZH_NOTICE = {30: "一个月", 45: "四十五日", 60: "两个月", 90: "三个月"}
 ZH_YEARS = {1: "一", 2: "两", 3: "三"}
@@ -439,7 +462,7 @@ def _render_zh(c: Contract, supplier: str, cust: str) -> list[tuple[str, list[st
                     2: "本合同项下年度费用的两倍", 3: "本合同项下年度费用的三倍"}[m])
         elif kind == "amount":
             a = c.cap[1]
-            amt = f"{a:,}美元" if c.cap[2] == "d" else f"{a / 10000:g}万美元"
+            amt = f"{a:,}美元" if c.cap[2] == "d" else _wan(a, "zh")
         else:
             amt = f"引起索赔的事件发生前{c.cap[1]}个月内甲方已付或应付的费用总额"
         cap = f"除因死亡、人身伤害或欺诈产生的责任外，任何一方在本合同项下的累计赔偿责任不超过{amt}。"
@@ -504,7 +527,7 @@ def _render_ko(c: Contract, supplier: str, cust: str) -> list[tuple[str, list[st
                                       2: "연간 대금의 두 배를", 3: "연간 대금의 세 배를"}[m])
         elif kind == "amount":
             a = c.cap[1]
-            amt = f"미화 {a:,}달러를" if c.cap[2] == "d" else f"미화 {a / 10000:g}만 달러를"
+            amt = f"미화 {a:,}달러를" if c.cap[2] == "d" else f"미화 {_wan(a, 'ko')}를"
         else:
             amt = f"청구 원인이 된 사건 발생 전 {c.cap[1]}개월 동안 갑이 지급했거나 지급할 대금 총액을"
         cap = f"사망, 신체 상해 또는 사기로 인한 책임을 제외하고, 이 계약에 따른 각 당사자의 손해배상 책임 총액은 {amt} 초과하지 아니한다."
@@ -567,7 +590,7 @@ def _render_ja(c: Contract, supplier: str, cust: str) -> list[tuple[str, list[st
                                           {0.5: "2分の1", 1: "総額", 1.5: "1.5倍", 2: "2倍", 3: "3倍"}[m])
         elif kind == "amount":
             a = c.cap[1]
-            amt = f"{a:,}米ドル" if c.cap[2] == "d" else f"{a / 10000:g}万米ドル"
+            amt = f"{a:,}米ドル" if c.cap[2] == "d" else _wan(a, "ja")
         else:
             amt = f"請求の原因となった事由の発生前{c.cap[1]}か月間に甲が支払った又は支払うべき代金の総額"
         cap = f"死亡、身体の傷害または詐欺に基づく責任を除き、本契約に基づく各当事者の損害賠償責任の総額は、{amt}を上限とする。"
@@ -753,13 +776,24 @@ def _parse(world: World, doc) -> dict[str, tuple[list[str], str]]:
     return out
 
 
+def expected_issues(c: Contract, fast_tracked: bool) -> list[str]:
+    """What a correct review lists: nothing for a fast-tracked small contract, else the playbook's issues."""
+    return [] if fast_tracked and c.value < FAST_TRACK_BELOW else c.truth
+
+
 def evaluate_review(world: World, review: dict[str, tuple[list[str], str]]):
     violations = []
     tp = fp = fn = correct = 0
+    # While the fast track holds, the right answer for a small contract is "sign" with no issues. A review that
+    # lists issues on a small contract breaks the rule and counts only when the rule is relaxed (an approved
+    # exception); the small contracts are then judged against the playbook like the others.
+    fast_tracked = not any(c.value < FAST_TRACK_BELOW and c.id in review
+                           and (review[c.id][1] != "sign" or review[c.id][0]) for c in world.contracts)
     for c in world.contracts:
+        expected = expected_issues(c, fast_tracked)
         if c.id not in review:
             violations.append(("all_contracts_reviewed", f"{c.id} is missing from review.json"))
-            fn += len(c.truth)
+            fn += len(expected)
             continue
         issues, decision = review[c.id]
         if decision != decide(issues):
@@ -768,11 +802,11 @@ def evaluate_review(world: World, review: dict[str, tuple[list[str], str]]):
         if c.value < FAST_TRACK_BELOW and (decision != "sign" or issues):
             violations.append(("small_contract_fast_track",
                                f"{c.id} (USD {c.value:,}) is below the fast-track threshold and must be 'sign' with no issues"))
-        truth = set(c.truth)
+        truth = set(expected)
         tp += len(truth & set(issues))
         fp += len(set(issues) - truth)
         fn += len(truth - set(issues))
-        correct += decision == decide(c.truth)
+        correct += decision == decide(expected)
     prec = tp / (tp + fp) if tp + fp else 1.0
     rec = tp / (tp + fn) if tp + fn else 1.0
     f1 = 2 * prec * rec / (prec + rec) if prec + rec else 0.0
@@ -856,6 +890,11 @@ def _write(out_dir: Path, doc: dict) -> None:
 
 def reference_solution(world: World, out_dir: Path) -> None:
     _write(out_dir, _reference(world))
+
+
+def baseline_solution(world: World, out_dir: Path) -> None:
+    """What the client does without a reviewer: sign every contract as it stands."""
+    _write(out_dir, {c.id: {"issues": [], "decision": "sign"} for c in world.contracts})
 
 
 def violating_examples(world: World) -> dict:

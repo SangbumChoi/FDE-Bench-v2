@@ -12,7 +12,9 @@
   text: 年度金额超过 150,000 美元的合同必须允许我方无理由随时解除；只有违约解除不够。
 - id: indemnity_mutual
   text: 赔偿必须是双向的；只由我方赔偿供应商的条款算问题。
-- id: decision_and_scoring
-  text: 问题代码为 LIABILITY_CAP、GOVERNING_LAW、AUTO_RENEWAL、PAYMENT_TERMS、DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY；两个及以上关键问题（责任上限、数据保护、赔偿）为 reject，有任何问题为 negotiate，否则 sign；按 0.7 × 问题 F1 + 0.3 × 结论准确率评分。
+- id: issue_codes
+  text: 每有一点手册要求不满足就记一个问题，使用对应代码：LIABILITY_CAP、GOVERNING_LAW、AUTO_RENEWAL、PAYMENT_TERMS、DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY。
+- id: decision_rule
+  text: LIABILITY_CAP、DATA_PROTECTION、INDEMNITY 是关键问题；有两个及以上关键问题为 reject，有任何问题为 negotiate，否则 sign。
 - id: small_contract_fast_track
   text: 年度金额低于 20,000 美元的合同不做审查，直接标为 sign，问题列表为空。

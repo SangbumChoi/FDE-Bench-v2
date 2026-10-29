@@ -12,7 +12,9 @@
   text: 年間金額が150,000米ドルを超える契約では、当社がいつでも理由なく解約できる必要があり、違反による解除だけでは足りません。
 - id: indemnity_mutual
   text: 補償は相互的である必要があり、当社だけが取引先を補償する条項は論点です。
-- id: decision_and_scoring
-  text: 論点コードは LIABILITY_CAP、GOVERNING_LAW、AUTO_RENEWAL、PAYMENT_TERMS、DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY です。重大な論点（責任上限・データ保護・補償）が2つ以上で reject、論点があれば negotiate、なければ sign とし、0.7 × 論点 F1 ＋ 0.3 × 判定正解率で評価します。
+- id: issue_codes
+  text: 満たしていない基準ごとに該当するコードで論点を1つ記録し、コードは LIABILITY_CAP、GOVERNING_LAW、AUTO_RENEWAL、PAYMENT_TERMS、DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY です。
+- id: decision_rule
+  text: LIABILITY_CAP、DATA_PROTECTION、INDEMNITY は重大な論点で、重大な論点が2つ以上あれば reject、論点が1つでもあれば negotiate、なければ sign です。
 - id: small_contract_fast_track
   text: 年間金額20,000米ドル未満の契約はレビューせず、論点なしの sign とします。
