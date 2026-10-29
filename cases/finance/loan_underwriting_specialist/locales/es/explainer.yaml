@@ -1,0 +1,49 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Especialista en evaluación de préstamos
+task_type: Programa de decisión
+deliverable_spec: |
+  Una carpeta program/ con underwriter.py, que define on_day(day). El motor carga el programa una vez y lo llama una vez
+  por día hábil del período oculto, en orden y en el mismo proceso (el estado a nivel de módulo se conserva entre
+  llamadas); 10 s por llamada, solo la biblioteca estándar de Python, sin red y sin acceso a los archivos de datos durante
+  la ejecución.
+  day = {"date", "day_index", "days_in_period", "period_end", "applications": [...], "notices": [...],
+  "book": {"loans": [...], "referred": [...]}}, exactamente como en el archivo de entrada del día piloto.
+  Devuelve {"decisions": [{"application_id": str, "decision": "approve" | "decline" | "refer",
+  "amount": int (importe aprobado; 0 salvo en approve), "reason_code": str (en cada rechazo; "" en los demás casos)}],
+  "limit_table": {"customers": {customer_id: int}, "daily_capacity_remaining": int,
+  "period_budget_remaining": int o null}}, como en el archivo de salida del día piloto.
+  reason_code es uno de DELINQUENCY | LOW_SCORE | SPLIT_APPLICATION | LIMIT_EXCEEDED | CREDIT_RISK.
+tiers:
+  easy: >-
+    El núcleo de la evaluación diaria de un solo producto (PL36): ingreso = 12 × el salario base declarado + el bonus
+    documentado; la puntuación del buró de la política, con un corte; rechazo de la mora activa; un límite del cliente =
+    mín(50.000, el tope por ingresos, el margen de DSR) menos lo que ya se le prestó al cliente en el período (días
+    anteriores y el mismo día), con un DSR que solo cuenta los préstamos a plazos (en esta ronda es el propio límite de
+    solvencia del cliente; el ratio del regulador es un control de cumplimiento aparte); un tope diario de desembolso;
+    códigos de motivo de rechazo en un orden fijo; los atributos protegidos nunca se usan (parejas de auditoría); la
+    costumbre de derivar por antigüedad; una tabla de límites al cierre cada día (límites de los clientes y capacidad
+    diaria restante). Los avisos de la entrada quedan fuera de esta ronda.
+  medium: >-
+    Lo de easy más las líneas de crédito en el DSR (saldo devuelto en 5 años más intereses), el tipo de estrés cuando la
+    deuda total supera 60.000, un presupuesto del período, una cuota near-prime sobre el importe aprobado acumulado y dos
+    avisos: el recorte del DSR máximo por parte del regulador para los préstamos decididos desde una fecha dada y el
+    recorte del presupuesto por parte de tesorería.
+  hard: >-
+    Lo de medium más la verificación de ingresos (el menor entre el salario declarado y el documentado; una discrepancia
+    grande se deriva), las correcciones de documentos (una solicitud derivada se decide de nuevo el día en que llega su
+    documento corregido), los avisos de amortización (una deuda pagada sale del DSR el día en que llega el aviso) y las
+    solicitudes fraccionadas (como máximo una aprobación por cliente y día; las demás se rechazan con SPLIT_APPLICATION).
+rules:
+  decision_complete: Cada llamada devuelve una decisión bien formada para cada solicitud recibida ese día (importe aprobado entero entre 1.000 y el importe solicitado; 0 en otro caso) y ninguna para nada más; una llamada que falla o se pasa de tiempo también la incumple.
+  delinquency_decline: Las solicitudes de clientes con mora activa se rechazan.
+  score_cutoff: Solo se aprueba cuando la puntuación del buró de la política ({{policy_bureau}}) es al menos {{min_score}}.
+  customer_limit: Lo que se aprueba a un cliente en un día (todas sus solicitudes juntas) es como máximo su límite del cliente de esa mañana, mín(50.000, el {{income_cap_pct}} % del ingreso anual, el margen de DSR al {{max_dsr_pct}} %), menos lo aprobado antes en el período. Nunca se flexibiliza, porque el tope por ingresos es regulatorio y también lo es el tope de DSR desde medium (en medium y hard el tope cambia con el aviso del regulador desde su fecha de efecto; en hard cuentan las amortizaciones y el ingreso verificado); en easy el tope de DSR es el propio límite de solvencia sobre los préstamos a plazos, sin excepciones, y el aviso del regulador no lo afecta.
+  daily_cap: El importe aprobado en un día es como máximo la capacidad diaria de desembolso de {{daily_cap}} (la línea de financiación).
+  period_budget: Ningún día puede llevar con sus aprobaciones el importe aprobado en el período por encima del presupuesto vigente ese día, {{period_budget}} (400.000 menos tras el recorte de tesorería); un recorte por debajo de lo ya aprobado detiene las aprobaciones posteriores, pero no deshace las anteriores.
+  reason_code_required: Cada rechazo lleva el código de su causa principal tras las aprobaciones del día, el primero que aplique de DELINQUENCY, LOW_SCORE, SPLIT_APPLICATION (hard), LIMIT_EXCEEDED (quedan menos de 1.000 de límite del cliente) y CREDIT_RISK.
+  no_protected_attributes: El tramo de edad, el género y la nacionalidad nunca influyen en una decisión; las parejas de auditoría que solo difieren en ellos reciben la misma decisión y el mismo importe.
+  near_prime_quota: Al menos el {{quota_pct}} % del importe total aprobado en el período va a clientes near-prime ({{policy_bureau}} por debajo de {{near_prime_below}}), un compromiso con el regulador.
+  income_discrepancy_refer: Una solicitud cuyos justificantes muestran un salario base mensual más de un {{discrepancy_pct}} % por debajo del declarado se deriva (salvo que se rechace por mora); es el procedimiento de prevención del fraude acordado con el regulador.
+  redecide_on_documents: Una solicitud derivada cuyo justificante de ingresos corregido llega en un aviso se decide de nuevo ese mismo día (un compromiso de servicio con los clientes).
+  split_applications: Como máximo se aprueba una solicitud por cliente y día; fraccionar una necesidad en varias solicitudes del mismo día no debe servir para esquivar el límite.
+  tenure_review: Los solicitantes con menos de {{min_tenure}} meses en su empleo actual se derivan a un analista humano (salvo que se rechacen por mora); es una costumbre a la que el director de riesgos puede conceder excepciones.

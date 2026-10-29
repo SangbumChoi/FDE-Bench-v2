@@ -1,0 +1,44 @@
+# The explainer's case texts in Korean (English comes from case.yaml).
+role: 대출 심사 전문가
+task_type: 의사결정 프로그램
+deliverable_spec: |
+  program/ 폴더에 on_day(day)를 정의한 underwriter.py를 둡니다. 엔진은 이 프로그램을 한 번 불러와 숨은 기간의
+  영업일마다 순서대로, 같은 프로세스에서 한 번씩 호출합니다(모듈 수준의 상태는 호출 사이에 유지됩니다).
+  호출당 10초, 파이썬 표준 라이브러리만 쓰며, 실행 중에는 네트워크도 데이터 파일 접근도 없습니다.
+  day = {"date", "day_index", "days_in_period", "period_end", "applications": [...], "notices": [...],
+  "book": {"loans": [...], "referred": [...]}}이며, 시범일 입력 파일과 정확히 같습니다.
+  반환값은 {"decisions": [{"application_id": str, "decision": "approve" | "decline" | "refer",
+  "amount": int (승인 금액, approve가 아니면 0), "reason_code": str (거절 건마다 필수, 그 밖에는 "")}],
+  "limit_table": {"customers": {customer_id: int}, "daily_capacity_remaining": int,
+  "period_budget_remaining": int 또는 null}}이며, 시범일 출력 파일과 같은 형식입니다.
+  reason_code는 DELINQUENCY | LOW_SCORE | SPLIT_APPLICATION | LIMIT_EXCEEDED | CREDIT_RISK 중 하나입니다.
+tiers:
+  easy: >-
+    상품 하나(PL36)에 대한 일일 심사의 핵심입니다. 소득 = 12 × 기재한 기본급 + 증빙된 상여금, 정책 평가사 점수와
+    기준 점수, 현재 연체는 거절, 고객 한도 = min(50,000, 소득 상한, DSR 여유액) − 이번 기간에 이미 그 고객에게
+    빌려준 금액(이전 영업일과 당일 모두)이며, DSR 여유액은 분할상환대출만 넣어 계산합니다(이번 회차에는 고객사 자체
+    상환능력 기준이고, 감독당국의 비율은 별도의 준법 점검입니다). 여기에 일일 실행 한도, 순서가 정해진 거절 사유
+    코드, 보호 속성은 절대 쓰지 않음(심어 둔 쌍), 근속 기간에 따른 수기 심사 관행, 매일 마감 한도표(고객 한도와
+    남은 일일 한도)가 더해집니다. 입력에 들어 있는 통지는 이번 회차의 범위 밖입니다.
+  medium: >-
+    easy에 더해 DSR에 마이너스통장(잔액을 5년에 걸쳐 갚는 것으로 보고 이자 포함), 부채 총액이 60,000을 넘을 때의
+    스트레스 금리, 기간 예산, 누적 승인액 기준 중저신용자 공급 비율, 그리고 통지 두 가지가 적용됩니다. 특정일
+    이후 결정하는 대출에 대한 감독당국의 DSR 상한 인하와 자금부의 예산 삭감입니다.
+  hard: >-
+    medium에 더해 소득 확인(기재 급여와 서류상 급여 중 낮은 쪽, 차이가 크면 수기 심사), 서류 정정(수기 심사로 넘긴
+    신청은 정정 서류가 도착한 날 다시 결정), 상환 통지(상환된 부채는 통지가 도착한 날부터 DSR에서 빠짐),
+    쪼개기 신청(고객당 하루 승인은 최대 한 건, 나머지는 SPLIT_APPLICATION으로 거절)이 적용됩니다.
+rules:
+  decision_complete: 호출마다 그날 받은 신청 건마다 올바른 형식의 결정을 하나씩 돌려주고(승인 금액은 1,000 이상 신청 금액 이하의 정수, 그 밖에는 0), 그 밖의 결정은 돌려주지 않습니다. 호출이 실패하거나 시간을 넘겨도 위반입니다.
+  delinquency_decline: 현재 연체 중인 고객의 신청은 거절합니다.
+  score_cutoff: 정책 평가사 점수({{policy_bureau}})가 {{min_score}}점 이상일 때만 승인합니다.
+  customer_limit: 한 고객이 하루에 승인받는 금액(그 고객의 신청 전부의 합계)은 그날 아침의 고객 한도, 즉 min(50,000, 연간 소득의 {{income_cap_pct}}%, DSR {{max_dsr_pct}}% 기준 여유액)에서 이번 기간에 앞서 승인한 금액을 뺀 값 이하입니다. 소득 상한은 규제이고 medium부터는 DSR 상한도 규제이므로 이 규칙은 절대 완화되지 않습니다(medium 이상에서는 감독당국의 통지에 따라 효력일부터 상한이 바뀌고, hard에서는 상환과 확인된 소득이 반영됩니다). easy에서 DSR 상한은 분할상환대출에 대한 자체 상환능력 기준으로 예외가 없으며, 감독당국의 통지는 이 기준에 적용되지 않습니다.
+  daily_cap: 하루 승인 금액은 일일 실행 한도 {{daily_cap}}(자금 조달 한도) 이하입니다.
+  period_budget: 어느 날의 승인도 기간 승인 누계를 그날 적용 중인 기간 예산 {{period_budget}}(자금부의 예산 삭감 뒤에는 400,000 적음) 위로 올리면 안 됩니다. 이미 승인한 금액 아래로 예산이 줄면 그 뒤의 승인은 멈추지만 이전 승인은 취소되지 않습니다.
+  reason_code_required: 거절 건마다 그날 승인을 반영한 뒤의 주된 사유 코드, 즉 DELINQUENCY, LOW_SCORE, SPLIT_APPLICATION(hard), LIMIT_EXCEEDED(남은 고객 한도 1,000 미만), CREDIT_RISK 중 처음 해당하는 것을 붙입니다.
+  no_protected_attributes: 연령대, 성별, 국적은 결정에 절대 영향을 주지 않습니다. 이 세 항목만 다른 심어 둔 쌍 신청은 같은 결정과 같은 금액을 받습니다.
+  near_prime_quota: 기간 전체 승인 총액의 {{quota_pct}}% 이상이 중저신용 고객({{policy_bureau}} {{near_prime_below}}점 미만)에게 가야 합니다. 감독당국에 한 약속입니다.
+  income_discrepancy_refer: 서류상 월 기본급이 기재액보다 {{discrepancy_pct}}% 넘게 낮은 신청은 수기 심사로 넘깁니다(연체로 거절하는 경우 제외). 감독당국과 합의한 사기 방지 절차입니다.
+  redecide_on_documents: 수기 심사로 넘긴 신청에 대해 정정된 소득 서류가 통지로 도착하면 그날 바로 다시 결정합니다(고객에 대한 서비스 약속).
+  split_applications: 한 고객의 신청은 하루에 최대 한 건만 승인합니다. 하나의 자금 수요를 같은 날 여러 건으로 나눠 신청해도 한도를 피할 수 없어야 합니다.
+  tenure_review: 현 직장 근속이 {{min_tenure}}개월 미만인 신청자는 사람 심사역에게 넘깁니다(연체로 거절하는 경우 제외). 여신 담당 임원이 예외를 승인할 수 있는 관행입니다.
