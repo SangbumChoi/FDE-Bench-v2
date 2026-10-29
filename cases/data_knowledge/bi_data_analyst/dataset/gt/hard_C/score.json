@@ -1,0 +1,29 @@
+{
+  "baseline_objective": 0.75,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.76595745,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "accuracy_on_answered": 1.0,
+    "answered": 11,
+    "coverage": 0.916667,
+    "dont_know": 1,
+    "dont_know_questions": [
+      "Q06"
+    ],
+    "reward": 23.5,
+    "right": 11,
+    "scored": 12,
+    "wrong": 0,
+    "wrong_questions": []
+  },
+  "objective": 0.9791666666666666,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

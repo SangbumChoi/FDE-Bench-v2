@@ -1,0 +1,27 @@
+{
+  "baseline_objective": 0.5,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.5,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "accuracy_on_answered": 1.0,
+    "answered": 11,
+    "coverage": 1.0,
+    "dont_know": 0,
+    "dont_know_questions": [],
+    "reward": 22.0,
+    "right": 11,
+    "scored": 11,
+    "wrong": 0,
+    "wrong_questions": []
+  },
+  "objective": 1.0,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

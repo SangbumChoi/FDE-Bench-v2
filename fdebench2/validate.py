@@ -406,7 +406,6 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                 problems.append(f"{lang}/targets.yaml {t.get('id')}: unknown parameters {sorted(unknown)}")
     if "en" in targets_by_lang:
         problems += _locale_parity(requirements_by_lang, targets_by_lang)
-    problems += _translations(case)
     if problems:
         return report
 
@@ -599,6 +598,7 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
         if len(set(views.values())) > 1:
             problems.append(f"the agent's view differs between settings: {sorted(views)} -> "
                             f"{len(set(views.values()))} distinct views")
+    problems += _translations(case)     # last, so a missing translation never hides the other checks
     return report
 
 

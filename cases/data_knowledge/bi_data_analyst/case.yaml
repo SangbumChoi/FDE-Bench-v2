@@ -3,20 +3,77 @@ role: BI Data Analyst
 task_type: Data Analysis
 field: data_knowledge
 seed: 20261026
-objective: maximize          # number of the 12 questions answered correctly (counts/ids exact, money within
-                             # 0.5% or 500 KRW, Q11 within 0.05 percentage points, others within 0.5%)
+objective: maximize          # reward per scored question (right 2, null = "don't know" 0.5-1.5 by rule set, wrong 0)
+                             # / (2 x scored questions): counts/ids exact, money within 0.5% or half the rounding
+                             # unit, Q11 within 0.05 percentage points, others within 0.5%
+tiers:
+  easy: >-
+    Five questions (Q01, Q03, Q04, Q10, Q12) on the core conventions: which orders count, test accounts out and staff
+    in, the fiscal year, the active-customer window and the rounding of money; Q01 and Q04 also rest on the
+    net-revenue and FX definitions. The other seven questions are not needed this round.
+  medium: >-
+    Easy plus six questions that turn on net revenue, FX at the order date and Korea-time days (Q02, Q05, Q07, Q08,
+    Q09, Q11), including the October refunds of September orders (Q11, and Q02 under rule set B). The "pantry"
+    question (Q06) is not needed this round.
+  hard: >-
+    All twelve questions: medium plus the "pantry" revenue (Q06), which needs the snacks-to-pantry category rename.
+rulesets:                    # the client's conventions and how it weighs an answer; same data, three ground truths
+  A: {fy_start: 4, fy2025: 2025-04-01/2026-03-31, fy2026_q1: 2026-04-01/2026-06-30, fy2026_h1: 2026-04-01/2026-09-30,
+      active_days: 90, active_from: "2026-07-03", rounding_unit: 1000,
+      right_reward: 2, dont_know_reward: 1, wrong_reward: 0}
+  B: {fy_start: 7, fy2025: 2025-07-01/2026-06-30, fy2026_q1: 2026-07-01/2026-09-30, fy2026_h1: 2026-07-01/2026-12-31,
+      active_days: 60, active_from: "2026-08-02", rounding_unit: 10000,
+      right_reward: 2, dont_know_reward: 0.5, wrong_reward: 0}
+  C: {fy_start: 1, fy2025: 2025-01-01/2025-12-31, fy2026_q1: 2026-01-01/2026-03-31, fy2026_h1: 2026-01-01/2026-06-30,
+      active_days: 30, active_from: "2026-09-01", rounding_unit: 100,
+      right_reward: 2, dont_know_reward: 1.5, wrong_reward: 0}
+param_labels:                # how a parameter reads in each locale's text
+  fy_start:
+    4: {zh: 4 月, en: April, ko: 4월, ja: 4月, es: abril}
+    7: {zh: 7 月, en: July, ko: 7월, ja: 7月, es: julio}
+    1: {zh: 1 月, en: January, ko: 1월, ja: 1月, es: enero}
+  fy2025:
+    2025-04-01/2026-03-31: {zh: 2025-04-01 至 2026-03-31, en: 2025-04-01 to 2026-03-31, ko: 2025-04-01 ~ 2026-03-31,
+                            ja: 2025-04-01〜2026-03-31, es: del 2025-04-01 al 2026-03-31}
+    2025-07-01/2026-06-30: {zh: 2025-07-01 至 2026-06-30, en: 2025-07-01 to 2026-06-30, ko: 2025-07-01 ~ 2026-06-30,
+                            ja: 2025-07-01〜2026-06-30, es: del 2025-07-01 al 2026-06-30}
+    2025-01-01/2025-12-31: {zh: 2025-01-01 至 2025-12-31, en: 2025-01-01 to 2025-12-31, ko: 2025-01-01 ~ 2025-12-31,
+                            ja: 2025-01-01〜2025-12-31, es: del 2025-01-01 al 2025-12-31}
+  fy2026_q1:
+    2026-04-01/2026-06-30: {zh: 2026-04-01 至 2026-06-30, en: 2026-04-01 to 2026-06-30, ko: 2026-04-01 ~ 2026-06-30,
+                            ja: 2026-04-01〜2026-06-30, es: del 2026-04-01 al 2026-06-30}
+    2026-07-01/2026-09-30: {zh: 2026-07-01 至 2026-09-30, en: 2026-07-01 to 2026-09-30, ko: 2026-07-01 ~ 2026-09-30,
+                            ja: 2026-07-01〜2026-09-30, es: del 2026-07-01 al 2026-09-30}
+    2026-01-01/2026-03-31: {zh: 2026-01-01 至 2026-03-31, en: 2026-01-01 to 2026-03-31, ko: 2026-01-01 ~ 2026-03-31,
+                            ja: 2026-01-01〜2026-03-31, es: del 2026-01-01 al 2026-03-31}
+  fy2026_h1:
+    2026-04-01/2026-09-30: {zh: 2026-04-01 至 2026-09-30, en: 2026-04-01 to 2026-09-30, ko: 2026-04-01 ~ 2026-09-30,
+                            ja: 2026-04-01〜2026-09-30, es: del 2026-04-01 al 2026-09-30}
+    2026-07-01/2026-12-31: {zh: 2026-07-01 至 2026-12-31, en: 2026-07-01 to 2026-12-31, ko: 2026-07-01 ~ 2026-12-31,
+                            ja: 2026-07-01〜2026-12-31, es: del 2026-07-01 al 2026-12-31}
+    2026-01-01/2026-06-30: {zh: 2026-01-01 至 2026-06-30, en: 2026-01-01 to 2026-06-30, ko: 2026-01-01 ~ 2026-06-30,
+                            ja: 2026-01-01〜2026-06-30, es: del 2026-01-01 al 2026-06-30}
+  rounding_unit:
+    1000: {zh: "1,000", en: "1,000", ko: "1,000", ja: "1,000", es: "1.000"}
+    10000: {zh: "10,000", en: "10,000", ko: "10,000", ja: "10,000", es: "10.000"}
+    100: {zh: "100", en: "100", ko: "100", ja: "100", es: "100"}
+  dont_know_reward:
+    1: {zh: "1", en: "1", ko: "1", ja: "1", es: "1"}
+    0.5: {zh: "0.5", en: "0.5", ko: "0.5", ja: "0.5", es: "0,5"}
+    1.5: {zh: "1.5", en: "1.5", ko: "1.5", ja: "1.5", es: "1,5"}
 deliverables: [answers.json]
 deliverable_spec: |
-  answers.json = {"Q01": <number>, "Q02": <number>, ..., "Q12": <number>}
-  One JSON number per question id from the questions file (Q01..Q12). Money in KRW,
-  percentages in percent (e.g. 4.25 for 4.25%), customer ids as the numeric customer_id.
+  answers.json = {"Q01": <number or null>, "Q02": <number or null>, ..., "Q12": <number or null>}
+  Every question id from the questions file (Q01..Q12) is a key. Its value is one JSON number, or null where the
+  engineer gave no figure for that question ("don't know", "not available yet"). Money in KRW, percentages in
+  percent (e.g. 4.25 for 4.25%), customer ids as the numeric customer_id.
 rules:
   - id: answer_format
     class: physical
-    description: Every question Q01..Q12 is answered with a single JSON number.
+    description: Every question id Q01..Q12 is in answers.json, each with a single finite JSON number or null (null means "don't know").
   - id: exclude_test_accounts
     class: contractual
-    description: Test accounts (account_type = test in accounts_meta) are excluded from every figure; a count or customer-id answer (Q03, Q04, Q05, Q10) that equals the figure with test accounts included, where that differs from the figure without them, breaches the finance policy.
+    description: Test accounts (account_type = test in accounts_meta) are excluded from every figure; a count or customer-id answer this round uses (Q03, Q04, Q05, Q10) that equals the figure with test accounts included, where that differs from the figure without them, breaches the finance policy.
   - id: report_rounding
     class: business_policy
-    description: Every money figure (Q01, Q02, Q06, Q07, Q09) is reported rounded to the nearest thousand KRW.
+    description: Every money figure this round uses (Q01, Q02, Q06, Q07, Q09) is reported rounded to the nearest {{rounding_unit}} KRW.

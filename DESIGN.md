@@ -307,8 +307,10 @@ engagement, model configs, agent, sandbox, framework version).
 - Harness, transforms, scoring, MCP bridge, campaign runner and report: implemented and tested.
 - Case format, settings (tiers × rule sets), `casekit`, validator and 5-locale message catalog: implemented.
 - Built cases: one or more per field (see `cases/README.md`), all passing `validate-case` in all five
-  locales and on world seeds 1–3, each with a baseline, a README and a REVIEW.md of open findings. Cases with settings: loan underwriting, hospital scheduling, procurement, stock trading (program)
-  and multilingual corpus curation (program).
+  locales and on world seeds 1–3, each with a baseline, a README and a REVIEW.md of open findings, and an
+  explainer in every language. Cases with settings: loan underwriting, hospital scheduling, procurement, stock
+  trading (program), multilingual corpus curation (program) and BI analysis (answers may be "don't know"; the
+  rule set prices right, don't-know and wrong answers).
 - Program deliverables: implemented and tested (state across calls, step-by-step sessions, input/output
   folders, per-call and total timeouts, crashes, non-JSON outputs, environment and network isolation,
   collection, an end-to-end run).
