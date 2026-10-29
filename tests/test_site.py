@@ -22,7 +22,7 @@ def test_site_pages_and_links(tmp_path):
         prefix = "" if lang == "en" else "../"
         home = (root / "index.html").read_text(encoding="utf-8")
         expected += 1
-        assert all(f'href="{c}/index.html"' in home for c in cases)
+        assert all(f'href="{prefix}{"" if lang == "en" else lang + "/"}{c}/index.html"' in home for c in cases)
         for c in cases:
             if not (REPO / "cases" / c / page_name(lang)).is_file():
                 continue
