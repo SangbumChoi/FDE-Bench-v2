@@ -109,6 +109,25 @@ These are the rules new cases follow (the `new-case` scaffold encodes them):
 9. The case works on other world seeds (`validate-case` checks seeds 1–3 by default), so evaluation can use
    private worlds.
 
+**Forecasting and other ML cases.** A forecast has no single correct answer: many models are reasonable, and
+one realized future mixes skill with luck. Such cases follow four rules instead of "match the reference":
+
+- *Score the expected loss, not one draw.* The world knows the demand distribution it samples from, so the
+  scorer computes the deliverable's expected loss under it (exactly, or over many sampled futures). The result
+  is deterministic and its optimum is known: the Bayes forecast of the true process. That optimum, not a
+  reference heuristic, sets `quality_cap`; seasonal naive is the baseline.
+- *The client's decision picks the loss.* Absolute error is minimized by the median, squared error by the mean,
+  a newsvendor cost with under- and over-stock prices by a quantile. Which one applies is a business fact to
+  elicit (what a lost sale costs against an unsold unit), so a good model scored under the wrong loss is worse,
+  for a reason the client can explain.
+- *Rules constrain decisions, not forecasts.* A shelf minimum, case-pack sizes or a delivery capacity apply to
+  an order plan derived from the forecast; a forecast itself should never be "invalid" for being low. Ask for
+  both (forecast and order) or score the order only.
+- *Elicitation is about the target.* The hidden facts are what is being forecast (demand or recorded sales
+  when stockouts censor it, units or kilograms, returns netted or not), the calendar (holidays, promotions,
+  closures) and the horizon. Each changes the expected loss measurably, which the validator can check with
+  ablations; the model family is left entirely to the agent.
+
 ## 6. Critique
 
 ### 6.1 Fixed in this review
