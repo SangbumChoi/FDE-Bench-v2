@@ -67,9 +67,11 @@ Design rules that keep scoring language-independent:
   sensible valid deliverable (what the client gets without an engineer: do nothing, first fit, its own
   habit); `reference_solution` is a solid deterministic heuristic. With baseline objective b and reference
   objective r, quality q = (obj − b) / (r − b): the baseline scores 0, the reference 1, and a better
-  deliverable more than 1 (floored at 0, capped at 10). Without a usable baseline q is the plain ratio
-  obj / r (r / obj when minimizing); `quality_anchor` says which, and `quality_ratio` is always reported. A
-  non-finite objective is invalid. The reference is not the ceiling: the composite gives full credit at
+  deliverable more than 1 (floored at 0, capped at 10). The zero point is never closer than 5% of r to the
+  reference, so a baseline that is nearly as good as the reference cannot blow small differences up. Without a
+  usable baseline (none, or one that fails on a generated world) q is the plain ratio obj / r (r / obj when
+  minimizing); `quality_anchor` says which, and `quality_ratio` is always reported. A non-finite objective is
+  invalid. The reference is not the ceiling: the composite gives full credit at
   `quality_cap` (the policy's, 1.5 by default, or the case's when it knows its best solution), so headroom
   above the reference counts and a degenerate valid deliverable earns nothing.
 - **Rules carry a class** (`physical`, `contractual`, `business_policy`). The evaluator reports violations by
@@ -83,8 +85,7 @@ Design rules that keep scoring language-independent:
   processes with different `PYTHONHASHSEED`s;
 - the stored `dataset/` and `explainer.html` match what the generator produces now; no TODO is left;
 - the reference scores validity 1 / quality 1.0 and an empty submission is invalid;
-- the baseline is valid and strictly worse than the reference in every setting (a missing baseline is a
-  warning until `validate.BASELINE_REQUIRED` is switched on);
+- every case has a baseline, valid and strictly worse than the reference in every setting;
 - every rule has an example that breaks exactly that rule, and that becomes valid when a non-physical rule
   is relaxed;
 - the case still works on world seeds 1, 2 and 3 (`--world-seeds` chooses others, `--no-world-seeds` skips).
@@ -306,7 +307,7 @@ engagement, model configs, agent, sandbox, framework version).
 - Harness, transforms, scoring, MCP bridge, campaign runner and report: implemented and tested.
 - Case format, settings (tiers × rule sets), `casekit`, validator and 5-locale message catalog: implemented.
 - Built cases: one or more per field (see `cases/README.md`), all passing `validate-case` in all five
-  locales. Cases with settings: loan underwriting, hospital scheduling, procurement, stock trading (program)
+  locales and on world seeds 1–3, each with a baseline, a README and a REVIEW.md of open findings. Cases with settings: loan underwriting, hospital scheduling, procurement, stock trading (program)
   and multilingual corpus curation (program).
 - Program deliverables: implemented and tested (state across calls, step-by-step sessions, input/output
   folders, per-call and total timeouts, crashes, non-JSON outputs, environment and network isolation,

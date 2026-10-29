@@ -3,7 +3,7 @@
   "baseline_quality": {
     "quality_anchor": "baseline",
     "quality_ratio": 0.82209757,
-    "quality_score": -0.0
+    "quality_score": 0.0
   },
   "metrics": {
     "backlog_krw": 8146169,

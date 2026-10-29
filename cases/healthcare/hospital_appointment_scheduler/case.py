@@ -791,7 +791,8 @@ class Engine:
                         s in RESERVE and w.slot_half(a.doctor, a.day).get(s) == "AM" for s in a.slots()):
                     self.flag("urgent_reserve", f"{day}: {r.urgency} request {rid} in the reserve slot "
                                                 f"{a.doctor} {iso(a.day)} {hhmm(a.start)}")
-                if was is not None and a.day < d + v.notice:
+                # Notice is for a changed date or time; the same slot with another doctor needs none.
+                if was is not None and (a.day, a.start) != was[1:3] and a.day < d + v.notice:
                     self.flag("move_notice", f"{day}: {rid} moved to {iso(a.day)} with less than {v.notice} "
                                              f"working days' notice")
                 elif was is None and rid in self.released_on:

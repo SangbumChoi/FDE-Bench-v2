@@ -3,7 +3,7 @@
   "baseline_quality": {
     "quality_anchor": "baseline",
     "quality_ratio": 0.52698109,
-    "quality_score": -0.0
+    "quality_score": 0.0
   },
   "metrics": {
     "mean_wape": 0.14701,

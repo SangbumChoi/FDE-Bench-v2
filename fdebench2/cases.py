@@ -43,6 +43,7 @@ DEFAULT_RULESET = "A"
 _BLOCK = {kind: re.compile(rf"<!-- {kind}: ([A-Za-z ]+) -->\n?(.*?)<!-- /{kind} -->\n?", re.S)
           for kind in ("tier", "ruleset")}
 PARAM = re.compile(r"\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}")
+BASELINE_MIN_GAP = 0.05   # quality's zero point is at least this share of the reference away from it
 
 
 def quality_fields(obj: float, ref: float, base: float | None, maximize: bool) -> dict[str, Any]:
@@ -50,7 +51,9 @@ def quality_fields(obj: float, ref: float, base: float | None, maximize: bool) -
 
     quality_ratio is obj/ref (ref/obj when minimizing); quality_score is normalized so that the baseline
     scores 0 and the reference 1, or is the ratio itself when there is no baseline strictly worse than the
-    reference (quality_anchor says which). Both are capped at RATIO_CAP; the score is floored at 0.
+    reference (quality_anchor says which). The zero point is never closer to the reference than
+    BASELINE_MIN_GAP of it, so a baseline that is nearly as good as the reference cannot blow small
+    differences up. Both are capped at RATIO_CAP; the score is floored at 0.
     """
     if obj == ref:
         ratio = 1.0
@@ -59,10 +62,12 @@ def quality_fields(obj: float, ref: float, base: float | None, maximize: bool) -
     else:  # no meaningful ratio (e.g. zero cost): beating the reference earns the cap, falling short 0
         ratio = RATIO_CAP if (obj > ref) == maximize else 0.0
     if base is not None and (base < ref if maximize else base > ref):
-        score, anchor = (obj - base) / (ref - base), "baseline"
+        gap = BASELINE_MIN_GAP * abs(ref)
+        zero = min(base, ref - gap) if maximize else max(base, ref + gap)
+        score, anchor = (obj - zero) / (ref - zero), "baseline"
     else:
         score, anchor = ratio, "ratio"
-    return {"quality_ratio": round(ratio, 8), "quality_score": round(min(max(score, 0.0), RATIO_CAP), 8),
+    return {"quality_ratio": round(ratio, 8), "quality_score": round(min(max(score, 0.0), RATIO_CAP), 8) + 0.0,
             "quality_anchor": anchor}
 
 
@@ -407,6 +412,15 @@ class NativeCase(Case):
             return None
         return self._valid_objective(self.write_baseline, "baseline")
 
+    @cached_property
+    def _scoring_baseline(self) -> tuple[float | None, str]:
+        """(baseline objective or None, why it is unusable). A baseline that fails on some world (a case bug the
+        validator reports) must not stop scoring: quality then falls back to the plain ratio."""
+        try:
+            return self.baseline_objective, ""
+        except AssertionError as e:
+            return None, str(e)[:300]
+
     @property
     def quality_cap(self) -> float | None:
         cap = self.meta.get("quality_cap")
@@ -437,10 +451,12 @@ class NativeCase(Case):
         if not math.isfinite(obj):      # NaN fails every comparison and would earn full credit
             out["error_info"] = {"fatal": f"the objective is not a finite number: {obj}"}
             return out
-        ref, base = self.reference_objective, self.baseline_objective
+        ref, (base, base_error) = self.reference_objective, self._scoring_baseline
         higher = self.meta.get("objective", "minimize") == "maximize"
         out.update(validity_score=1.0, **quality_fields(obj, ref, base, higher), objective=obj,
                    reference_objective=ref, baseline_objective=base, relaxed_violations=len(out["violations"]))
+        if base_error:
+            out["baseline_error"] = base_error
         return out
 
     def rules(self) -> CaseRules:

@@ -213,3 +213,25 @@ def test_dataset_stores_the_baseline_only_when_the_case_has_one(tmp_path):
                                                   "quality_score": 1.0}
             assert score["baseline_quality"] == {"quality_anchor": "baseline", "quality_ratio": 0.5,
                                                  "quality_score": 0.0}
+
+
+def test_a_baseline_close_to_the_reference_does_not_blow_up_quality():
+    # maximize: baseline 98, reference 100 -> zero point 95 (5% below the reference), not 98
+    q = quality_fields(101.0, 100.0, 98.0, maximize=True)
+    assert q["quality_anchor"] == "baseline" and abs(q["quality_score"] - 6 / 5) < 1e-9
+    assert quality_fields(98.0, 100.0, 98.0, maximize=True)["quality_score"] == 0.6
+    # minimize: baseline 102, reference 100 -> zero point 105
+    assert abs(quality_fields(99.0, 100.0, 102.0, maximize=False)["quality_score"] - 6 / 5) < 1e-9
+    # a baseline far from the reference is the zero point itself
+    assert quality_fields(40.0, 80.0, 40.0, maximize=True)["quality_score"] == 0.0
+    assert str(quality_fields(40.0, 80.0, 40.0, maximize=True)["quality_score"]) == "0.0"   # never -0.0
+
+
+def test_a_baseline_that_fails_on_a_world_falls_back_to_the_ratio(tmp_path):
+    case = make_case(tmp_path, "maximize", ref=80.0, base=40.0)
+    with (case.root / "case.py").open("a") as f:      # a baseline that breaks a rule on this world
+        f.write("\n\ndef baseline_solution(world, out_dir, setting=None):\n    _write(out_dir, BASE, ['habit'])\n")
+    case = NativeCase(case.root)
+    res = case.evaluate(submit(tmp_path, 100.0), "en")
+    assert res["validity_score"] == 1.0 and res["quality_anchor"] == "ratio" and res["quality_score"] == 1.25
+    assert "baseline solution is not valid" in res["baseline_error"]

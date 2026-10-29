@@ -44,13 +44,12 @@ from pathlib import Path
 
 import yaml
 
-from .cases import LOCALES, PARAM, RULESETS, TIERS, NativeCase, load_fields
+from .cases import BASELINE_MIN_GAP, LOCALES, PARAM, RULESETS, TIERS, NativeCase, load_fields
 from .transforms.language import detect_locale
 from .transforms.policy import RULE_CLASSES
 
 DISTINCT_MARGIN = 0.01           # on the objective ratio: rule sets whose answers differ by less look the same
-BASELINE_GAP = 0.02              # a baseline closer than this to the reference makes normalized quality unstable
-BASELINE_REQUIRED = False        # a case without baseline_solution: an error when True, a warning when False
+BASELINE_REQUIRED = True         # a case without baseline_solution fails validation
 REQUIRED_META = ("id", "role", "field", "task_type", "objective", "seed", "deliverable_spec", "rules")
 HANGUL = re.compile(r"[가-힣]")
 KANA = re.compile(r"[぀-ヿ]")
@@ -423,7 +422,7 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
     if baseline is None:
         (problems if BASELINE_REQUIRED else warnings).append(
             "case.py has no baseline_solution (the simplest sensible valid deliverable)")
-    ratios, unstated = [], {}
+    ratios, unstated, close = [], {}, []
     broken_baseline = False
     try:
         case.quality_cap
@@ -481,9 +480,8 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                 else:
                     ratio = f"{base_obj / ref:.3f}" if ref else "n/a (reference 0)"
                     ratios.append(f"{c.setting.label} {ratio}" if c.tiers else ratio)
-                    if abs(ref - base_obj) < BASELINE_GAP * max(abs(ref), 1e-9):
-                        warnings.append(f"{at}the baseline is within {BASELINE_GAP:.0%} of the reference: "
-                                        "normalized quality will swing on tiny objective differences")
+                    if abs(ref - base_obj) < BASELINE_MIN_GAP * abs(ref):
+                        close.append(c.setting.label if c.tiers else "the case")
             examples = c.violating_examples()
             for rule_id in [r.id for r in c.rules().rules]:
                 if rule_id not in examples:
@@ -505,6 +503,9 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                         problems.append(f"{at}rule {rule_id}: example still invalid when the rule is relaxed: {relaxed}")
     if ratios:
         report.notes.append("baseline/reference objective: " + ", ".join(ratios))
+    if close:
+        report.notes.append(f"baseline within {BASELINE_MIN_GAP:.0%} of the reference in {', '.join(close)}: "
+                            f"quality's zero point sits {BASELINE_MIN_GAP:.0%} from the reference there")
     for (rule_id, numbers), where in unstated.items():
         at = f"[{where[0].setting.label}{f' and {len(where) - 1} more' if len(where) > 1 else ''}] " if tiers else ""
         warnings.append(f"{at}rule {rule_id}: its description says {', '.join(numbers)}, "

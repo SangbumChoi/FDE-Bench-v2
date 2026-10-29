@@ -117,10 +117,10 @@ counting as room; `move_notice` now also covers a released request booked again 
 day; the released date and time again need none), and the matching release excuse counts from the release day.
 The requirements (five locales), the move-notice target, case.yaml and the README say so. The reference now
 remembers its own releases; its results are unchanged in all nine settings. In A and C the validator's
-`move_notice` example is now the release path. Not changed (owner's call): a follow-up booked with another
-doctor is still compared only with its previous doctor's queue, and the move check still asks notice for the
-same date and time with another doctor, which the text exempts (reachable only for IM on Friday afternoons,
-where D03 and D04 overlap).
+`move_notice` example is now the release path. A move to the same date and time with another doctor no longer
+asks for notice, as the text says (it was reachable only for IM on Friday afternoons, where D03 and D04
+overlap). Not changed (owner's call): a follow-up booked with another doctor is still compared only with its
+previous doctor's queue.
 
 ### F9 — Korean term choices (low, confirmed)
 

@@ -171,13 +171,15 @@ See §10 (from an independent review of every case with adversarial verification
 
 | Priority | Item |
 |---|---|
-| P0 | First live campaign on a small grid; null and stub agents per case; signal-to-noise per case |
+| P0 | Calibrate every case before the first campaign: `quality_cap` from its best known solution, anchors that hold on 10+ private seeds (stock first), bending that pays in some settings and not others (§10) |
+| P0 | `ablations()` per case: every quality-relevant hidden fact must bite, checked by the validator |
+| P0 | First live campaign on a small grid with `trials: 3`; null and stub agents per case; signal-to-noise per case |
 | P0 | Client audit: leakage and fidelity per locale, sensitivity to the client model; consider a fact-ID knowledge boundary |
-| P0 | Private evaluation seeds and a canary string; web tools off or logged in harness configs |
+| P0 | Private evaluation seeds and a canary string; web tools off or logged in harness configs; an egress proxy for the agent container |
+| P1 | Convert the eight single-problem cases to settings with all three situation types (each REVIEW.md has a concrete proposal) |
 | P1 | Human-FDE baseline on a subset (time and quality); expert review of each case's requirements |
-| P1 | Native-speaker review of the five locales; difficulty parity across locales |
-| P1 | Cost columns (solver / client / judges) and Pareto plots |
-| P1 | Convert the eight single-problem cases to settings; fix headroom and bending balance where flagged |
+| P1 | Native-speaker review of the five locales; difficulty parity across locales; declare or localize each scenario's country |
+| P1 | A `confirm` target kind for facts the data already settles; CLI solver token parsing; Pareto plots |
 | P2 | Grow to 40–50 cases across the catalog with the scaffold; pre-registered contrasts and power analysis |
 | P2 | Gym wrapper over daily program cases (observation = day input, action = program output, reward = daily score minus violations) |
 
@@ -190,3 +192,71 @@ GDPval 2510.04374; Remote Labor Index 2510.26787; SWE-bench Pro 2509.16941; MLE-
 2411.15114; DSBench 2409.07703; HAL
 2510.11977; ImpossibleBench 2510.20270; ODCV-Bench 2512.20798; PACT 2609.18605; Gaia2 / ARE 2509.17158;
 Lost in Simulation 2601.17087; Mind the Sim2Real Gap 2603.11245; MAPS 2505.15935; PolyWorkBench 2607.06008.
+
+## 10. Case-level critique (appendix)
+
+An independent reviewer read each of the 13 cases (code, data, five locales, stored dataset) and a second agent
+tried to refute every finding by re-running the reviewer's evidence. 121 findings: 82 confirmed, 39 confirmed in
+part, none refuted (the verifiers were lenient: read "partly" as "the direction is right, a detail is overstated").
+Each case's findings, with what was fixed and what is left as a proposal, are in its `REVIEW.md` and in the
+"Review findings" section of its `explainer.html`.
+
+### 10.1 Patterns across cases
+
+| Pattern | Cases | Consequence | Response |
+|---|---|---|---|
+| The reference is a modest heuristic and quality was clipped at 1.0 | 12 of 13 | Every competent agent saturates; hidden facts that only move quality are free to ignore; the case cannot tell good from excellent | Framework: quality is normalized between a naive baseline (0) and the reference (1) and is not clipped at 1; the composite gives full credit at `quality_cap` (1.5, or the case's known best) |
+| Degenerate valid deliverables score well | stock (do-nothing 0.24–0.32), callcenter (one shift 0.38), corpus (placeholders 0.60) | A null agent looks competent | Every case gets `baseline_solution`; the validator checks it is valid and worse than the reference; the baseline scores 0 |
+| The bendable rule never pays, or dominates | never: 10 cases; dominates: stock (+28–90%); non-monotone: benefits | "When to bend a habit" has one answer, so the exception process measures nothing | Partly framework (headroom above the reference now counts); the rest is case calibration: bending should pay a bounded, visible amount in some settings and lose in others |
+| Hidden requirements readable from the visible data | battery, stock, grocery, hospital, bi, resume, callcenter | Ask-F1 penalizes an agent that correctly infers instead of asking | Proposal: a `confirm` target kind (credited by a question or by a correct NOTES.md statement) |
+| Business facts sit under "How the work is judged", which the client may not discuss | loan, bakery, hospital, contract, benefits | Whether the agent can learn a cost depends on the simulator disobeying its prompt | Framework: the client may state business goals, costs and trade-offs; cases move unit economics into business sections |
+| Missing situation types (dated event, pressure) | 10 of 13; vacuous pressure in loan and stock | Two of the three situation types are untested in most cases | Case work, part of each 3×3 conversion |
+| No settings | 8 single-problem cases | Their easy/medium/hard columns are identical | Case work; each REVIEW.md proposes concrete tiers and rule-set parameters |
+| Correctness bugs | bakery (wrong café name), grocery (rule says 2, data says 6), bi (rounding rule contradicts tolerance), loan (budget cut invalidates earlier approvals), contract (obeying the fast-track rule penalized), benefits (a perfect answer scored 0), corpus (review rows and placeholder text gameable), hospital (waitlist loophole), resume (adverse-impact test is a lottery), procurement (reference re-sizing bug) | Wrong ground truth or a free score | Fixed in this round (see each REVIEW.md) |
+| Country neutrality and realism | most cases (Korean regulation in loan, a Korean plant in procurement, a Spanish site in battery, Singapore in resume, a Western holiday calendar in grocery) | Locale effects are confounded with scenario familiarity | Either declare the provenance in every locale or localize; record it in the README |
+| Locale text quality | all | Small meaning changes in ko/ja/zh | The specific Korean fixes found were applied; a native review is still open |
+| One global quality cap fits no case (found after the scale change) | best known normalized quality: hospital 1.01–1.06, benefits 1.03 (compliant), grocery 1.07, bakery 1.07 (compliant), bi 1.09, contract 1.15, callcenter 1.18 (exact MILP), battery 1.18 (forecast LP); while procurement and resume saturate | With the policy cap of 1.5 a perfect agent earns about 70% of the quality credit in most cases, and in two cases a modest improvement already earns all of it | Calibrate `quality_cap` per case to its best known solution (an exact optimum, an LP or a perfect answer), or strengthen the reference; owner's decision per case, listed in each REVIEW.md |
+| Baseline nearly as good as the reference | procurement easy/medium (plain MRP within 2–3%), resume (relevant years only, within about 2%) | Normalized quality would blow small differences up 40–50 times | Framework: quality's zero point is never closer than 5% of the reference; the case-level fix is a stronger reference or a sharper objective |
+
+### 10.2 Per case
+
+Baseline/reference is the objective ratio on the public seed (above 1 for cases that minimize cost).
+
+| Case | Fixed in this round | Main open item (proposal for the owner) | Baseline / reference |
+|---|---|---|---|
+| callcenter_workforce_planner | Under-staffing weight explained as a business cost; neutral holiday framing; Korean wording; fixed-rota baseline; README | No settings; the bendable buddy rule never pays; the greedy reference is 8% above the exact MILP optimum (normalized 1.18) | 1.46 (min) |
+| bi_data_analyst | A rule-compliant rounded answer now scores, so 12/12 is reachable without bending; refund cut-off stated; Q11 tolerance in percentage points; Korean wording | No settings, no dated event or pressure; several target clauses never change an answer | 0.00 |
+| multilingual_corpus_curator | Review-row spamming, placeholder descriptions and a header-only manifest no longer score; Korean labels; medium scope wording | One reference serves all tiers (no tier signal); one mis-decoded file invalidates the hard tier; era notations in implausible places | 0.10–0.14 |
+| battery_dispatch_operator | SOC tolerance no longer turns on rounding; no DST hint to the extractor; the site is in Spain in every locale | The visible dispatch log reveals the hidden rules; a forecast LP reaches 1.18; a daily-bid program would be closer to practice | 0.00 |
+| loan_underwriting_specialist | A treasury cut no longer invalidates earlier approvals; unit economics are business facts; easy scope consistent with the regulator | Referring every hard decline is a cheap escape hatch and sizing alone reaches the reference; bending never pays; Korean regulatory provenance | 0.38–0.75 |
+| stock_trading_strategist | Easy scope names the large-order rule; Korean terms consistent; do-nothing baseline | On many private worlds the reference ends below cash (the do-nothing baseline beats it on seeds 0, 3, 7, 42, ...): measure excess over max(index, cash) and average several hidden paths; bound the large-order exception | 0.24–… (seed-dependent) |
+| hospital_appointment_scheduler | Waiting-list excuses only when capacity was really gone; notice after a release; a same-slot doctor swap needs no notice; client-voiced scope; Korean terms | Demand is about equal to capacity, so utilization barely varies (best known 1.01–1.06); overbooking economics do not reward risk selection | 0.69–0.81 |
+| contract_review_counsel | Obeying the fast-track rule is no longer penalized; target split into issue codes and decision rule; natural amounts in ko/ja/zh; README | The decision field carries no information of its own; contracts are templated; a perfect review is 1.15 | 0.13 |
+| bakery_delivery_dispatcher | The closed café is C11 = South Hill (the texts named C10); lateness cost is a business fact; Korean wording; README | Bending premium-first is worth far more (1.31) than the best compliant plan (1.07); two rules never bind; no settings | 1.54 (min) |
+| procurement_specialist | Reference deferral re-size bug; garbled easy sentence; Korean lines; the price e-mail paragraph placed consistently (content unchanged) | The plain-MRP baseline is within 2–3% of the greedy reference in easy/medium and a local search beats the reference by 3–11%; the price e-mail does not change the answer (owner's scenario) | 1.02–1.22 (min) |
+| resume_screening_specialist | The adverse-impact check no longer fails protected-blind shortlists by chance (85% passed, now 100%; biased learners still fail); past-hire instruction; Korean | The constant 30-point fit floor compresses quality; the requested ranking is not scored; no settings | 0.98 |
+| benefits_eligibility_officer | Reason codes scored (RENEWAL vs APPROVED, precedence of refusals); business-goal target; Korean terms; README | A fixed renewal error caps compliant answers at 1.03 and bending the renewal rule always pays | 3.28 (min) |
+| grocery_demand_forecaster | The display-floor rule says 6, as everything else does (it said 2); row-cardinality text; Korean wording; README | A forecast from the true generator mean reaches only 1.07; censoring is uninformative; no settings or situations | 1.90 (min) |
+
+### 10.3 What this changes in the direction
+
+- **Headroom is part of validity.** A score that saturates at a modest reference cannot measure the thing the
+  benchmark claims (optimization on top of elicitation). Precedents: RE-Bench scores 0 = starting solution and
+  1 = reference with no cap; DSBench's Relative Performance Gap normalizes between a baseline and the best human;
+  the deployment FDE-Bench's release gate rejects tasks that do-nothing or stub baselines solve.
+- **Every hidden fact and every bendable rule must bite, measurably.** The review found many facts that change no
+  answer and bendable rules whose payoff is fixed by the scoring formula. The next case-authoring contract adds
+  an `ablations()` hook next to `violating_examples()`: for each quality-relevant target, a deliverable that
+  ignores only that fact, which the validator requires to be invalid or to lose at least 3% normalized quality;
+  and for the bendable rule, the measured gain of the best bent deliverable per setting, which should be positive
+  in some settings and negative in others.
+- **The client knows business facts, not the evaluation.** Costs, margins and trade-offs belong in the client's
+  business knowledge; formulas and weights do not.
+- **Calibrate each case against its best known solution.** A single quality cap is wrong for every case: the
+  room between the reference and the best possible answer ranges from 1% to more than 20%. Each case should
+  report its best known normalized quality (an exact optimum where one is cheap, an LP or perfect answer
+  otherwise) and set `quality_cap` from it, so full credit means "as good as is known".
+- **Robustness across worlds is part of the case, not the seed.** The stock case's reference loses to cash on
+  many generated worlds; a case's anchors (baseline, reference) must hold on the private seeds it will be
+  evaluated on, which the validator's seed panel now checks for three seeds and should check for more before a
+  campaign.
