@@ -187,6 +187,19 @@ TARGETS_EN = """- id: TODO_target
 TARGETS = """- id: TODO_target
   text: TODO (same ids and parameters as en/targets.yaml, e.g. {{example_param}}, written in this language)
 """
+EXPLAINER = """# The explainer's case texts in this language (English comes from case.yaml).
+role: TODO the role title
+task_type: TODO
+deliverable_spec: |
+  TODO a reading translation of case.yaml's deliverable_spec (the agent and the extractor get the English)
+tiers:
+  easy: TODO
+  medium: TODO
+  hard: TODO
+rules:
+  TODO_rule: TODO
+  TODO_habit: TODO
+"""
 
 
 def new_case(case_id: str, cases_root: Path = Path("cases"), kind: str = "batch", seed: int = 20270101) -> Path:
@@ -212,4 +225,7 @@ def new_case(case_id: str, cases_root: Path = Path("cases"), kind: str = "batch"
         (d / "request.md").write_text(REQUEST, encoding="utf-8")
         (d / "requirements.md").write_text(REQUIREMENTS, encoding="utf-8")
         (d / "targets.yaml").write_text(TARGETS_EN if lang == "en" else TARGETS, encoding="utf-8")
+        if lang != "en":    # the explainer and the README in every language
+            (d / "explainer.yaml").write_text(EXPLAINER, encoding="utf-8")
+            (root / f"README.{lang}.md").write_text(f"TODO: README.md in {lang}.\n", encoding="utf-8")
     return root

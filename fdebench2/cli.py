@@ -123,8 +123,8 @@ def main(argv: list[str] | None = None) -> None:
     elif a.cmd == "explain-case":
         from .explain import write_index, write_page
         for path in a.paths:
-            print(write_page(path))
-        print(write_index(a.paths[0].resolve().parent.parent))
+            print(write_page(path), "(+ zh, ko, ja, es)")
+        print(write_index(a.paths[0].resolve().parent.parent), "(+ zh, ko, ja, es)")
     elif a.cmd == "build-site":
         from .site import build_site
         pages = build_site(Path("."), a.out, github=a.github, ref=a.ref)

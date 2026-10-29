@@ -1,0 +1,493 @@
+# Interface text of the case explainers and the site, in the five locales. {name} fields are filled in code.
+en:
+  language: Language
+  case_eyebrow: "{field} · FDE-Bench v2 case"
+  task_type: Task type
+  deliverable: Deliverable
+  objective: Objective
+  settings: Settings
+  maximize: maximize
+  minimize: minimize
+  program: "Program {entry}"
+  batch_files: "Batch files: {files}"
+  settings_value: "{tiers} tiers × {rulesets} rule sets = {n} ground truths"
+  one_problem: one fixed problem
+  nav_request: Request
+  nav_settings: Settings
+  nav_rules: Rules
+  nav_requirements: Hidden requirements
+  nav_targets: Targets
+  nav_data: Data & answers
+  nav_readme: Case notes
+  nav_review: Review findings
+  request_title: What the agent is asked
+  request_intro: The client's request, the only text the agent gets up front. It is the same in every setting.
+  spec_title: "Deliverable spec ({label})"
+  spec_program: the program interface
+  spec_batch: shown to the extractor that reshapes the agent's files, not to the agent
+  spec_translation: "Translation for reading; the agent and the extractor get the English original:"
+  settings_title: "Settings: one dataset, {n} ground truths"
+  settings_intro: >-
+    The agent sees the same request and data in every setting. The <strong>tier</strong> (= difficulty) decides
+    which rules apply; the <strong>rule set</strong> gives their parameters. Each difficulty is reported as the mean
+    over rule sets A, B and C.
+  tiers: Tiers
+  tier: Tier
+  in_force: What is in force
+  rulesets: Rule sets
+  parameter: Parameter
+  no_settings: "This case has no settings: one fixed problem at every difficulty."
+  rules_title: Rules
+  rules_intro: >-
+    Breaking any rule makes the deliverable invalid, unless the rule's class may bend under the run's company
+    policy and the agent went through the exception process.
+  rule: Rule
+  class: Class
+  description: "Description (parameters in {{…}} come from the rule set)"
+  class_physical: physical
+  class_contractual: contractual
+  class_business_policy: business policy
+  note_physical: never bends
+  note_contractual: bends only if the policy allows contractual exceptions
+  note_business_policy: may bend through the policy's exception process
+  requirements_title: Hidden requirements
+  requirements_intro: >-
+    What the simulated client knows and answers from. The agent only learns it by asking (in the
+    <code>full_spec</code> engagement it is handed over).
+  setting: Setting
+  not_available: (not available)
+  targets_title: Clarification targets
+  targets_intro: >-
+    The facts a good engineer should ask the client for; Ask-F1 is scored against them.
+    <code>{{param}}</code> is filled from the rule set.
+  target: Target
+  kind: Kind
+  all_tiers: all
+  data_title: Data & answers
+  data_intro: >-
+    Everything is stored as files next to the case. <code>visible/</code> is what the agent receives;
+    <code>hidden/</code> is what it never sees (a program's hidden period or corpus); <code>gt/</code> holds one
+    answer folder per setting. <code>validate-case</code> checks the files still match the generator.
+  visible_data: "Agent-visible data ({language} locale)"
+  hidden_inputs: Hidden inputs
+  scores_title: Reference score per setting
+  scores_intro: >-
+    Quality is normalized per setting: the baseline (the simplest valid deliverable) is 0, the reference is 1, and
+    better than the reference goes above 1 (full credit at the policy's quality cap).
+  reference_objective: Reference objective
+  baseline_objective: Baseline objective
+  metrics: Metrics (first four)
+  folder: Folder
+  open: open
+  no_dataset: (no dataset yet)
+  answer_folder: "One answer folder: {folder}"
+  readme_title: Case notes (README)
+  no_readme: (no README)
+  untranslated: "Not translated into this language yet; showing the English version."
+  review_title: Review findings (REVIEW)
+  index_eyebrow: FDE-Bench v2
+  index_title: Built cases
+  index_intro: >-
+    {n} cases. Each link opens the case's explainer: request, settings, rules, hidden requirements, targets, stored
+    data and answers, and review findings.
+  field: Field
+  role: Role
+  case_id: Case id
+  site_cases: All cases
+  site_direction: Direction
+  site_design: Design
+  site_catalog: Catalog
+  site_source: Source on GitHub
+  site_english_only: (English)
+ko:
+  language: 언어
+  case_eyebrow: "{field} · FDE-Bench v2 케이스"
+  task_type: 과제 유형
+  deliverable: 산출물
+  objective: 목표
+  settings: 설정
+  maximize: 최대화
+  minimize: 최소화
+  program: "프로그램 {entry}"
+  batch_files: "결과 파일: {files}"
+  settings_value: "티어 {tiers}개 × 규칙 세트 {rulesets}개 = 정답 {n}개"
+  one_problem: 고정된 문제 하나
+  nav_request: 요청
+  nav_settings: 설정
+  nav_rules: 규칙
+  nav_requirements: 숨은 요구사항
+  nav_targets: 질문 목표
+  nav_data: 데이터와 정답
+  nav_readme: 케이스 설명
+  nav_review: 리뷰 결과
+  request_title: 에이전트가 받는 요청
+  request_intro: 고객의 요청입니다. 에이전트가 처음에 받는 유일한 글이며, 모든 설정에서 같습니다.
+  spec_title: "산출물 명세 ({label})"
+  spec_program: 프로그램 인터페이스
+  spec_batch: 에이전트가 아니라, 에이전트의 파일을 정해진 형식으로 옮기는 추출기에게만 주어짐
+  spec_translation: "읽기용 번역입니다. 에이전트와 추출기는 영어 원문을 받습니다:"
+  settings_title: "설정: 데이터 하나, 정답 {n}개"
+  settings_intro: >-
+    에이전트는 모든 설정에서 같은 요청과 데이터를 봅니다. <strong>티어</strong>(= 난이도)는 어떤 규칙이 적용되는지를,
+    <strong>규칙 세트</strong>는 그 규칙의 파라미터를 정합니다. 난이도별 점수는 규칙 세트 A, B, C의 평균으로 보고합니다.
+  tiers: 티어
+  tier: 티어
+  in_force: 적용되는 내용
+  rulesets: 규칙 세트
+  parameter: 파라미터
+  no_settings: "이 케이스에는 설정이 없습니다. 모든 난이도에서 같은 문제 하나를 풉니다."
+  rules_title: 규칙
+  rules_intro: >-
+    규칙을 하나라도 어기면 산출물은 무효입니다. 다만 그 규칙의 등급이 실행의 회사 정책상 완화될 수 있고, 에이전트가
+    예외 절차를 거쳤다면 예외입니다.
+  rule: 규칙
+  class: 등급
+  description: "설명 ({{…}} 안의 파라미터는 규칙 세트에서 정해짐)"
+  class_physical: 물리적
+  class_contractual: 계약상
+  class_business_policy: 업무 관행
+  note_physical: 절대 완화되지 않음
+  note_contractual: 정책이 계약상 예외를 허용할 때만 완화됨
+  note_business_policy: 정책의 예외 절차를 거치면 완화될 수 있음
+  requirements_title: 숨은 요구사항
+  requirements_intro: >-
+    시뮬레이션 고객이 알고 있고 답변의 근거로 삼는 내용입니다. 에이전트는 질문해야만 알 수 있습니다
+    (<code>full_spec</code> 진행 방식에서는 처음부터 전달됩니다).
+  setting: 설정
+  not_available: (없음)
+  targets_title: 질문 목표
+  targets_intro: >-
+    좋은 엔지니어라면 고객에게 물어봐야 하는 사실들이며, Ask-F1은 이를 기준으로 채점합니다.
+    <code>{{param}}</code>은 규칙 세트에서 채워집니다.
+  target: 목표
+  kind: 종류
+  all_tiers: 전체
+  data_title: 데이터와 정답
+  data_intro: >-
+    모든 것이 케이스 옆에 파일로 저장되어 있습니다. <code>visible/</code>은 에이전트가 받는 데이터,
+    <code>hidden/</code>은 에이전트가 보지 못하는 입력(프로그램의 숨은 기간이나 코퍼스), <code>gt/</code>는 설정마다 하나씩
+    있는 정답 폴더입니다. <code>validate-case</code>가 파일이 생성기와 여전히 일치하는지 확인합니다.
+  visible_data: "에이전트가 보는 데이터 ({language})"
+  hidden_inputs: 숨은 입력
+  scores_title: 설정별 참조 점수
+  scores_intro: >-
+    품질은 설정마다 정규화됩니다. 기준선(가장 단순하지만 유효한 산출물)이 0, 참조 해답이 1이며, 참조 해답보다 나으면
+    1을 넘습니다(정책의 품질 상한에서 만점).
+  reference_objective: 참조 해답 목표값
+  baseline_objective: 기준선 목표값
+  metrics: 지표 (처음 네 개)
+  folder: 폴더
+  open: 열기
+  no_dataset: (아직 데이터셋 없음)
+  answer_folder: "정답 폴더 예시: {folder}"
+  readme_title: 케이스 설명 (README)
+  no_readme: (README 없음)
+  untranslated: "아직 이 언어로 번역되지 않아 영어판을 보여 줍니다."
+  review_title: 리뷰 결과 (REVIEW)
+  index_eyebrow: FDE-Bench v2
+  index_title: 구축된 케이스
+  index_intro: >-
+    케이스 {n}개. 각 링크는 케이스 설명 페이지로 이어집니다: 요청, 설정, 규칙, 숨은 요구사항, 질문 목표, 저장된
+    데이터와 정답, 리뷰 결과.
+  field: 분야
+  role: 역할
+  case_id: 케이스 ID
+  site_cases: 전체 케이스
+  site_direction: 방향성
+  site_design: 설계
+  site_catalog: 카탈로그
+  site_source: GitHub 소스
+  site_english_only: (영어)
+ja:
+  language: 言語
+  case_eyebrow: "{field} · FDE-Bench v2 ケース"
+  task_type: タスクの種類
+  deliverable: 成果物
+  objective: 目的
+  settings: 設定
+  maximize: 最大化
+  minimize: 最小化
+  program: "プログラム {entry}"
+  batch_files: "成果物ファイル: {files}"
+  settings_value: "ティア {tiers} × ルールセット {rulesets} = 正解 {n} 通り"
+  one_problem: 固定された一つの問題
+  nav_request: 依頼
+  nav_settings: 設定
+  nav_rules: ルール
+  nav_requirements: 隠れた要件
+  nav_targets: 確認すべき事項
+  nav_data: データと正解
+  nav_readme: ケースの説明
+  nav_review: レビュー結果
+  request_title: エージェントへの依頼
+  request_intro: 顧客からの依頼です。エージェントが最初に受け取る唯一の文章で、どの設定でも同じです。
+  spec_title: "成果物の仕様（{label}）"
+  spec_program: プログラムのインターフェース
+  spec_batch: エージェントではなく、エージェントのファイルを所定の形式に変換する抽出器にだけ渡される
+  spec_translation: "参考訳です。エージェントと抽出器には英語の原文が渡されます:"
+  settings_title: "設定: データは一つ、正解は {n} 通り"
+  settings_intro: >-
+    エージェントはどの設定でも同じ依頼とデータを見ます。<strong>ティア</strong>（= 難易度）はどのルールが適用されるかを、
+    <strong>ルールセット</strong>はそのパラメータを決めます。難易度ごとのスコアはルールセット A・B・C の平均です。
+  tiers: ティア
+  tier: ティア
+  in_force: 適用される内容
+  rulesets: ルールセット
+  parameter: パラメータ
+  no_settings: "このケースには設定がありません。どの難易度でも同じ一つの問題です。"
+  rules_title: ルール
+  rules_intro: >-
+    ルールを一つでも破ると成果物は無効になります。ただし、そのルールの区分が実行時の会社方針で緩和でき、
+    エージェントが例外手続きを経た場合は除きます。
+  rule: ルール
+  class: 区分
+  description: "説明（{{…}} のパラメータはルールセットで決まる）"
+  class_physical: 物理的
+  class_contractual: 契約上
+  class_business_policy: 業務慣行
+  note_physical: 決して緩和されない
+  note_contractual: 方針が契約上の例外を認める場合にのみ緩和される
+  note_business_policy: 方針の例外手続きを経れば緩和されうる
+  requirements_title: 隠れた要件
+  requirements_intro: >-
+    シミュレーションの顧客が知っていて、回答の根拠にする内容です。エージェントは質問しなければ知ることができません
+    （<code>full_spec</code> の進め方では最初から渡されます）。
+  setting: 設定
+  not_available: （なし）
+  targets_title: 確認すべき事項
+  targets_intro: >-
+    優れたエンジニアなら顧客に確認すべき事実で、Ask-F1 はこれを基準に採点されます。
+    <code>{{param}}</code> はルールセットから埋められます。
+  target: 事項
+  kind: 種類
+  all_tiers: 全体
+  data_title: データと正解
+  data_intro: >-
+    すべてケースの隣にファイルとして保存されています。<code>visible/</code> はエージェントが受け取るデータ、
+    <code>hidden/</code> はエージェントが見ない入力（プログラムの隠れた期間やコーパス）、<code>gt/</code> は設定ごとの
+    正解フォルダです。<code>validate-case</code> がファイルと生成器の一致を確認します。
+  visible_data: "エージェントが見るデータ（{language}）"
+  hidden_inputs: 隠れた入力
+  scores_title: 設定ごとの参照スコア
+  scores_intro: >-
+    品質は設定ごとに正規化されます。ベースライン（最も単純で有効な成果物）が 0、参照解が 1 で、参照解より良ければ
+    1 を超えます（方針の品質上限で満点）。
+  reference_objective: 参照解の目的値
+  baseline_objective: ベースラインの目的値
+  metrics: 指標（最初の四つ）
+  folder: フォルダ
+  open: 開く
+  no_dataset: （データセットはまだありません）
+  answer_folder: "正解フォルダの例: {folder}"
+  readme_title: ケースの説明（README）
+  no_readme: （README なし）
+  untranslated: "この言語にはまだ翻訳されていないため、英語版を表示しています。"
+  review_title: レビュー結果（REVIEW）
+  index_eyebrow: FDE-Bench v2
+  index_title: 構築済みのケース
+  index_intro: >-
+    {n} 件のケース。各リンクからケースの説明ページを開けます: 依頼、設定、ルール、隠れた要件、確認すべき事項、
+    保存されたデータと正解、レビュー結果。
+  field: 分野
+  role: 役割
+  case_id: ケース ID
+  site_cases: すべてのケース
+  site_direction: 方向性
+  site_design: 設計
+  site_catalog: カタログ
+  site_source: GitHub のソース
+  site_english_only: （英語）
+zh:
+  language: 语言
+  case_eyebrow: "{field} · FDE-Bench v2 案例"
+  task_type: 任务类型
+  deliverable: 交付物
+  objective: 目标
+  settings: 设置
+  maximize: 最大化
+  minimize: 最小化
+  program: "程序 {entry}"
+  batch_files: "结果文件：{files}"
+  settings_value: "{tiers} 个层级 × {rulesets} 个规则集 = {n} 套标准答案"
+  one_problem: 一个固定的问题
+  nav_request: 需求
+  nav_settings: 设置
+  nav_rules: 规则
+  nav_requirements: 隐藏需求
+  nav_targets: 应问事项
+  nav_data: 数据与答案
+  nav_readme: 案例说明
+  nav_review: 评审结果
+  request_title: 智能体收到的需求
+  request_intro: 客户的需求，是智能体一开始收到的唯一文字，在所有设置下都相同。
+  spec_title: "交付物规格（{label}）"
+  spec_program: 程序接口
+  spec_batch: 不给智能体，只给把智能体的文件转换成规定格式的提取器
+  spec_translation: "仅供阅读的译文；智能体和提取器收到的是英文原文："
+  settings_title: "设置：一份数据，{n} 套标准答案"
+  settings_intro: >-
+    智能体在所有设置下看到的需求和数据都相同。<strong>层级</strong>（= 难度）决定适用哪些规则，
+    <strong>规则集</strong>给出这些规则的参数。每个难度的得分取规则集 A、B、C 的平均值。
+  tiers: 层级
+  tier: 层级
+  in_force: 适用内容
+  rulesets: 规则集
+  parameter: 参数
+  no_settings: "此案例没有设置：每个难度下都是同一个固定问题。"
+  rules_title: 规则
+  rules_intro: >-
+    违反任何一条规则，交付物即无效；除非该规则的类别在本次运行的公司政策下可以放宽，且智能体走了例外流程。
+  rule: 规则
+  class: 类别
+  description: "说明（{{…}} 中的参数来自规则集）"
+  class_physical: 物理约束
+  class_contractual: 合同约束
+  class_business_policy: 业务惯例
+  note_physical: 绝不放宽
+  note_contractual: 仅当政策允许合同例外时放宽
+  note_business_policy: 经政策的例外流程可以放宽
+  requirements_title: 隐藏需求
+  requirements_intro: >-
+    模拟客户知道并据以回答的内容。智能体只有提问才能得知（在 <code>full_spec</code> 交接方式下会直接交给它）。
+  setting: 设置
+  not_available: （无）
+  targets_title: 应问事项
+  targets_intro: >-
+    优秀的工程师应当向客户问清的事实，Ask-F1 据此评分。<code>{{param}}</code> 由规则集填入。
+  target: 事项
+  kind: 类型
+  all_tiers: 全部
+  data_title: 数据与答案
+  data_intro: >-
+    所有内容都以文件形式保存在案例旁边。<code>visible/</code> 是智能体收到的数据，<code>hidden/</code> 是它看不到的输入
+    （程序的隐藏时段或语料），<code>gt/</code> 是每个设置一份的答案文件夹。<code>validate-case</code> 会检查这些文件是否仍与生成器一致。
+  visible_data: "智能体看到的数据（{language}）"
+  hidden_inputs: 隐藏输入
+  scores_title: 各设置的参考得分
+  scores_intro: >-
+    质量按设置归一化：基线（最简单的有效交付物）为 0，参考解为 1，优于参考解则超过 1（达到政策的质量上限即满分）。
+  reference_objective: 参考解目标值
+  baseline_objective: 基线目标值
+  metrics: 指标（前四个）
+  folder: 文件夹
+  open: 打开
+  no_dataset: （尚无数据集）
+  answer_folder: "答案文件夹示例：{folder}"
+  readme_title: 案例说明（README）
+  no_readme: （无 README）
+  untranslated: "尚未翻译成此语言，显示英文版。"
+  review_title: 评审结果（REVIEW）
+  index_eyebrow: FDE-Bench v2
+  index_title: 已构建的案例
+  index_intro: >-
+    共 {n} 个案例。每个链接打开案例说明页：需求、设置、规则、隐藏需求、应问事项、保存的数据与答案、评审结果。
+  field: 领域
+  role: 角色
+  case_id: 案例 ID
+  site_cases: 全部案例
+  site_direction: 方向
+  site_design: 设计
+  site_catalog: 目录
+  site_source: GitHub 源码
+  site_english_only: （英文）
+es:
+  language: Idioma
+  case_eyebrow: "{field} · caso de FDE-Bench v2"
+  task_type: Tipo de tarea
+  deliverable: Entregable
+  objective: Objetivo
+  settings: Configuraciones
+  maximize: maximizar
+  minimize: minimizar
+  program: "Programa {entry}"
+  batch_files: "Archivos de resultados: {files}"
+  settings_value: "{tiers} niveles × {rulesets} conjuntos de reglas = {n} soluciones correctas"
+  one_problem: un único problema fijo
+  nav_request: Solicitud
+  nav_settings: Configuraciones
+  nav_rules: Reglas
+  nav_requirements: Requisitos ocultos
+  nav_targets: Preguntas clave
+  nav_data: Datos y respuestas
+  nav_readme: Notas del caso
+  nav_review: Resultados de la revisión
+  request_title: Lo que se le pide al agente
+  request_intro: La solicitud del cliente, el único texto que el agente recibe de entrada. Es la misma en todas las configuraciones.
+  spec_title: "Especificación del entregable ({label})"
+  spec_program: la interfaz del programa
+  spec_batch: la recibe el extractor que convierte los archivos del agente al formato fijado, no el agente
+  spec_translation: "Traducción de lectura; el agente y el extractor reciben el original en inglés:"
+  settings_title: "Configuraciones: un conjunto de datos, {n} soluciones correctas"
+  settings_intro: >-
+    El agente ve la misma solicitud y los mismos datos en todas las configuraciones. El <strong>nivel</strong>
+    (= dificultad) decide qué reglas se aplican; el <strong>conjunto de reglas</strong> fija sus parámetros. Cada
+    dificultad se informa como la media de los conjuntos A, B y C.
+  tiers: Niveles
+  tier: Nivel
+  in_force: Qué se aplica
+  rulesets: Conjuntos de reglas
+  parameter: Parámetro
+  no_settings: "Este caso no tiene configuraciones: es el mismo problema fijo en todas las dificultades."
+  rules_title: Reglas
+  rules_intro: >-
+    Romper cualquier regla invalida el entregable, salvo que la política de la empresa en esa ejecución permita
+    flexibilizar su tipo de regla y el agente haya seguido el procedimiento de excepción.
+  rule: Regla
+  class: Tipo
+  description: "Descripción (los parámetros entre {{…}} vienen del conjunto de reglas)"
+  class_physical: física
+  class_contractual: contractual
+  class_business_policy: costumbre del negocio
+  note_physical: nunca se flexibiliza
+  note_contractual: solo se flexibiliza si la política admite excepciones contractuales
+  note_business_policy: puede flexibilizarse mediante el procedimiento de excepción de la política
+  requirements_title: Requisitos ocultos
+  requirements_intro: >-
+    Lo que sabe el cliente simulado y en lo que basa sus respuestas. El agente solo lo descubre preguntando (en la
+    modalidad <code>full_spec</code> se le entrega desde el principio).
+  setting: Configuración
+  not_available: (no disponible)
+  targets_title: Preguntas clave
+  targets_intro: >-
+    Los hechos que un buen ingeniero debería preguntar al cliente; el Ask-F1 se calcula con ellos.
+    <code>{{param}}</code> se completa con el conjunto de reglas.
+  target: Pregunta
+  kind: Clase
+  all_tiers: todos
+  data_title: Datos y respuestas
+  data_intro: >-
+    Todo se guarda como archivos junto al caso. <code>visible/</code> es lo que recibe el agente;
+    <code>hidden/</code>, lo que nunca ve (el periodo oculto o el corpus de un programa); <code>gt/</code> tiene una
+    carpeta de respuestas por configuración. <code>validate-case</code> comprueba que los archivos siguen
+    coincidiendo con el generador.
+  visible_data: "Datos que ve el agente ({language})"
+  hidden_inputs: Entradas ocultas
+  scores_title: Puntuación de referencia por configuración
+  scores_intro: >-
+    La calidad se normaliza por configuración: la línea base (el entregable válido más simple) vale 0, la solución
+    de referencia 1, y lo que la supera pasa de 1 (puntuación completa en el tope de calidad de la política).
+  reference_objective: Objetivo de la referencia
+  baseline_objective: Objetivo de la línea base
+  metrics: Métricas (las cuatro primeras)
+  folder: Carpeta
+  open: abrir
+  no_dataset: (todavía sin conjunto de datos)
+  answer_folder: "Una carpeta de respuestas: {folder}"
+  readme_title: Notas del caso (README)
+  no_readme: (sin README)
+  untranslated: "Aún no está traducido a este idioma; se muestra la versión en inglés."
+  review_title: Resultados de la revisión (REVIEW)
+  index_eyebrow: FDE-Bench v2
+  index_title: Casos construidos
+  index_intro: >-
+    {n} casos. Cada enlace abre la página explicativa del caso: solicitud, configuraciones, reglas, requisitos
+    ocultos, preguntas clave, datos y respuestas guardados, y resultados de la revisión.
+  field: Área
+  role: Rol
+  case_id: Id del caso
+  site_cases: Todos los casos
+  site_direction: Dirección
+  site_design: Diseño
+  site_catalog: Catálogo
+  site_source: Código en GitHub
+  site_english_only: (en inglés)

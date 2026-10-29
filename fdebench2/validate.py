@@ -113,7 +113,7 @@ def _script_problem(text: str, lang: str) -> str | None:
 def _todos(root: Path) -> list[str]:
     """Scaffold placeholders still in the case's own files: a new case fails until every TODO is filled."""
     problems = []
-    for p in [root / "case.yaml", root / "case.py", root / "README.md"] + sorted((root / "locales").rglob("*")):
+    for p in [root / "case.yaml", root / "case.py"] + sorted(root.glob("README*.md")) + sorted((root / "locales").rglob("*")):
         if p.is_file():
             lines = [str(i) for i, line in enumerate(p.read_text(encoding="utf-8", errors="replace").splitlines(), 1)
                      if TODO.search(line)]
@@ -126,6 +126,33 @@ def _todos(root: Path) -> list[str]:
 def _difference(want, got) -> str:
     missing, extra = sorted(set(want) - set(got)), sorted(set(got) - set(want))
     return "; ".join(([f"missing {missing}"] if missing else []) + ([f"extra {extra}"] if extra else []))
+
+
+def _translations(case: NativeCase) -> list[str]:
+    """The explainer in every language: locales/<lang>/explainer.yaml covers the case's own words (role, task
+    type, every tier and rule, the deliverable spec), and README.md / REVIEW.md have a README.<lang>.md /
+    REVIEW.<lang>.md next to them."""
+    problems = []
+    rule_ids = [r["id"] for r in case.meta.get("rules", [])]
+    for lang in LOCALES:
+        if lang == "en":
+            continue
+        path = case.root / "locales" / lang / "explainer.yaml"
+        if not path.is_file():
+            problems.append(f"{lang}/explainer.yaml is missing (the explainer's case texts in this language)")
+            continue
+        doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        missing = [k for k in ("role", "task_type", "deliverable_spec") if not doc.get(k)]
+        missing += [f"tiers.{t}" for t in case.tiers if not (doc.get("tiers") or {}).get(t)]
+        missing += [f"rules.{r}" for r in rule_ids if not (doc.get("rules") or {}).get(r)]
+        extra = sorted(set(doc.get("rules") or {}) - set(rule_ids)) + sorted(set(doc.get("tiers") or {}) - set(case.tiers))
+        if missing or extra:
+            problems.append(f"{lang}/explainer.yaml: " + "; ".join(
+                ([f"missing {', '.join(missing)}"] if missing else []) + ([f"unknown {', '.join(extra)}"] if extra else [])))
+        for doc_name in ("README", "REVIEW"):
+            if (case.root / f"{doc_name}.md").is_file() and not (case.root / f"{doc_name}.{lang}.md").is_file():
+                problems.append(f"{doc_name}.{lang}.md is missing (the translation of {doc_name}.md)")
+    return problems
 
 
 def _locale_parity(requirements: dict[str, str], targets: dict[str, list[dict]]) -> list[str]:
@@ -379,6 +406,7 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                 problems.append(f"{lang}/targets.yaml {t.get('id')}: unknown parameters {sorted(unknown)}")
     if "en" in targets_by_lang:
         problems += _locale_parity(requirements_by_lang, targets_by_lang)
+    problems += _translations(case)
     if problems:
         return report
 
