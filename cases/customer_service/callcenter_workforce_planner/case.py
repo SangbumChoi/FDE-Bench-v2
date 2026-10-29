@@ -112,7 +112,10 @@ def build_world(seed: int) -> World:
     for k, aid in enumerate(on_leave):
         start = rng.randrange(0, 5)
         length = rng.choice([1, 2, 3])
-        leave.append({"agent": aid, "from": DAYS[start], "to": DAYS[min(6, start + length - 1)], "approved": k != 3})
+        end = min(6, start + length - 1)
+        if k == 3:  # the rejected request stays within Mon 9 - Thu 12, so no day above 12 gives d/m/y away
+            start, end = min(start, 3), min(end, 3)
+        leave.append({"agent": aid, "from": DAYS[start], "to": DAYS[end], "approved": k != 3})
     return World(agents, demand, leave)
 
 
@@ -152,7 +155,7 @@ COLS = {
     "rate": {"zh": "时薪", "en": "hourly_rate", "ko": "시급", "ja": "時給", "es": "tarifa_hora"},
 }
 VALUES = {
-    "FT": {"zh": "全职", "en": "full-time", "ko": "정규직", "ja": "正社員", "es": "jornada completa"},
+    "FT": {"zh": "全职", "en": "full-time", "ko": "풀타임", "ja": "正社員", "es": "jornada completa"},
     "PT": {"zh": "兼职", "en": "part-time", "ko": "파트타임", "ja": "パート", "es": "media jornada"},
     "yes": {"zh": "是", "en": "yes", "ko": "예", "ja": "はい", "es": "sí"},
     "no": {"zh": "否", "en": "no", "ko": "아니오", "ja": "いいえ", "es": "no"},
@@ -349,6 +352,40 @@ def _dump(assignments) -> dict:
 
 def reference_solution(world: World, out_dir: Path) -> None:
     (out_dir / "roster.json").write_text(json.dumps(_dump(_solve(world)), indent=2), encoding="utf-8")
+
+
+def _baseline(world: World) -> list[tuple[str, int, str, str]]:
+    """The supervisor's fixed rota, drawn up without looking at the forecast: every senior agent works one shift
+    all week in their first language, full-timers their 4 regular days (no overtime) and part-timers 3, on
+    consecutive days from a start staggered within their language and contract; a day of approved leave is
+    just left empty. Each new hire shadows the first senior full-timer on one of their languages (same days,
+    same shift), or stays off the phones if there is none."""
+    by_contract = {ct: [sh for sh, (_, _, c) in SHIFTS.items() if c == ct] for ct in MAX_SHIFTS}
+    count: dict[tuple[str, str], int] = {}
+    pattern: dict[str, tuple[str, list[int]]] = {}
+    out = []
+    for a in world.agents:
+        if a.new_hire:
+            continue
+        lang = a.langs[0]
+        k = count.get((a.contract, lang), 0)
+        count[(a.contract, lang)] = k + 1
+        shift = by_contract[a.contract][k % len(by_contract[a.contract])]
+        n = REGULAR_FT_SHIFTS if a.contract == "FT" else MAX_SHIFTS["PT"]
+        days = [d for d in ((3 * k + i) % 7 for i in range(n)) if not world.on_leave(a.id, d)]
+        out += [(a.id, d, shift, lang) for d in days]
+        if a.contract == "FT":
+            pattern.setdefault(lang, (shift, days))
+    for a in world.agents:
+        lang = next((l for l in a.langs if l in pattern), None) if a.new_hire else None
+        if lang is not None:
+            shift, days = pattern[lang]
+            out += [(a.id, d, shift, lang) for d in days if not world.on_leave(a.id, d)]
+    return out
+
+
+def baseline_solution(world: World, out_dir: Path) -> None:
+    (out_dir / "roster.json").write_text(json.dumps(_dump(_baseline(world)), indent=2), encoding="utf-8")
 
 
 def violating_examples(world: World) -> dict:
