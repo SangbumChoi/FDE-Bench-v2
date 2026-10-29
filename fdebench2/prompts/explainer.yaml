@@ -208,7 +208,7 @@ ja:
   maximize: 最大化
   minimize: 最小化
   program: "プログラム {entry}"
-  batch_files: "成果物ファイル: {files}"
+  batch_files: "成果物ファイル：{files}"
   settings_value: "ティア {tiers} × ルールセット {rulesets} = 正解 {n} 通り"
   one_problem: 固定された一つの問題
   nav_request: 依頼
@@ -217,18 +217,17 @@ ja:
   nav_requirements: 隠れた要件
   nav_targets: 確認すべき事項
   nav_data: データと正解
-  nav_readme: ケースの説明
+  nav_readme: ケースの解説
   nav_review: レビュー結果
   request_title: エージェントへの依頼
   request_intro: 顧客からの依頼です。エージェントが最初に受け取る唯一の文章で、どの設定でも同じです。
   spec_title: "成果物の仕様（{label}）"
   spec_program: プログラムのインターフェース
   spec_batch: エージェントではなく、エージェントのファイルを所定の形式に変換する抽出器にだけ渡される
-  spec_translation: "参考訳です。エージェントと抽出器には英語の原文が渡されます:"
-  settings_title: "設定: データは一つ、正解は {n} 通り"
+  spec_translation: "参考訳です。エージェントと抽出器には英語の原文が渡されます："
+  settings_title: "設定：データは一つ、正解は {n} 通り"
   settings_intro: >-
-    エージェントはどの設定でも同じ依頼とデータを見ます。<strong>ティア</strong>（= 難易度）はどのルールが適用されるかを、
-    <strong>ルールセット</strong>はそのパラメータを決めます。難易度ごとのスコアはルールセット A・B・C の平均です。
+    エージェントはどの設定でも同じ依頼とデータを見ます。<strong>ティア</strong>（= 難易度）はどのルールが適用されるかを、<strong>ルールセット</strong>はそのパラメータを決めます。難易度ごとのスコアはルールセット A・B・C の平均です。
   tiers: ティア
   tier: ティア
   in_force: 適用される内容
@@ -237,8 +236,7 @@ ja:
   no_settings: "このケースには設定がありません。どの難易度でも同じ一つの問題です。"
   rules_title: ルール
   rules_intro: >-
-    ルールを一つでも破ると成果物は無効になります。ただし、そのルールの区分が実行時の会社方針で緩和でき、
-    エージェントが例外手続きを経た場合は除きます。
+    ルールを一つでも破ると成果物は無効になります。ただし、そのルールの区分が実行時の会社方針で緩和でき、エージェントが例外手続きを経た場合は除きます。
   rule: ルール
   class: 区分
   description: "説明（{{…}} のパラメータはルールセットで決まる）"
@@ -250,44 +248,38 @@ ja:
   note_business_policy: 方針の例外手続きを経れば緩和されうる
   requirements_title: 隠れた要件
   requirements_intro: >-
-    シミュレーションの顧客が知っていて、回答の根拠にする内容です。エージェントは質問しなければ知ることができません
-    （<code>full_spec</code> の進め方では最初から渡されます）。
+    シミュレーションの顧客が知っていて、回答の根拠にする内容です。エージェントは質問しなければ知ることができません（<code>full_spec</code> の進め方では最初から渡されます）。
   setting: 設定
   not_available: （なし）
   targets_title: 確認すべき事項
   targets_intro: >-
-    優れたエンジニアなら顧客に確認すべき事実で、Ask-F1 はこれを基準に採点されます。
-    <code>{{param}}</code> はルールセットから埋められます。
+    優れたエンジニアなら顧客に確認すべき事実で、Ask-F1 はこれを基準に採点されます。<code>{{param}}</code> にはルールセットの値が入ります。
   target: 事項
   kind: 種類
-  all_tiers: 全体
+  all_tiers: すべて
   data_title: データと正解
   data_intro: >-
-    すべてケースの隣にファイルとして保存されています。<code>visible/</code> はエージェントが受け取るデータ、
-    <code>hidden/</code> はエージェントが見ない入力（プログラムの隠れた期間やコーパス）、<code>gt/</code> は設定ごとの
-    正解フォルダです。<code>validate-case</code> がファイルと生成器の一致を確認します。
+    すべてケースの隣にファイルとして保存されています。<code>visible/</code> はエージェントが受け取るデータ、<code>hidden/</code> はエージェントが決して見ない入力（プログラムの隠れた期間やコーパス）、<code>gt/</code> は設定ごとの正解フォルダです。<code>validate-case</code> がファイルと生成器の一致を確認します。
   visible_data: "エージェントが見るデータ（{language}）"
   hidden_inputs: 隠れた入力
-  scores_title: 設定ごとの参照スコア
+  scores_title: 設定ごとの参照解のスコア
   scores_intro: >-
-    品質は設定ごとに正規化されます。ベースライン（最も単純で有効な成果物）が 0、参照解が 1 で、参照解より良ければ
-    1 を超えます（方針の品質上限で満点）。
+    品質は設定ごとに正規化されます。ベースライン（最も単純で有効な成果物）が 0、参照解が 1 で、参照解より良ければ 1 を超えます（方針の品質上限で満点）。
   reference_objective: 参照解の目的値
   baseline_objective: ベースラインの目的値
   metrics: 指標（最初の四つ）
   folder: フォルダ
   open: 開く
   no_dataset: （データセットはまだありません）
-  answer_folder: "正解フォルダの例: {folder}"
-  readme_title: ケースの説明（README）
+  answer_folder: "正解フォルダの例：{folder}"
+  readme_title: ケースの解説（README）
   no_readme: （README なし）
   untranslated: "この言語にはまだ翻訳されていないため、英語版を表示しています。"
   review_title: レビュー結果（REVIEW）
   index_eyebrow: FDE-Bench v2
   index_title: 構築済みのケース
   index_intro: >-
-    {n} 件のケース。各リンクからケースの説明ページを開けます: 依頼、設定、ルール、隠れた要件、確認すべき事項、
-    保存されたデータと正解、レビュー結果。
+    全 {n} 件のケースです。各リンクからケースの説明ページ（依頼、設定、ルール、隠れた要件、確認すべき事項、保存されたデータと正解、レビュー結果）を開けます。
   field: 分野
   role: 役割
   case_id: ケース ID
