@@ -1,0 +1,14 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Coordinador de reparto de panadería
+task_type: Optimización combinatoria
+deliverable_spec: |
+  routes.json = {"routes": [{"van": "<código de furgoneta, p. ej. V1>", "depart": "HH:MM (opcional, por defecto 05:00)",
+                             "stops": ["<código de cafetería en orden de visita, p. ej. C03>", ...]}, ...]}
+  Una entrada por cada furgoneta utilizada; los códigos, exactamente como en los datos.
+rules:
+  van_capacity: Una furgoneta lleva como máximo 120 bandejas.
+  shift_window: Las furgonetas no salen antes de las 05:00 y están de vuelta en la cocina a las 09:30 como muy tarde.
+  closed_cafe: No se entrega a ninguna cafetería que esté cerrada esta semana.
+  serve_each_once: Cada cafetería abierta recibe todas sus bandejas en exactamente una visita.
+  cold_chain: Las cafeterías de marca asociada (productos refrigerados) solo las atiende la furgoneta refrigerada.
+  premium_first: En cada ruta, las cafeterías premium se visitan antes que las estándar.

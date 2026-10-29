@@ -1,0 +1,14 @@
+# The explainer's case texts in Korean (English comes from case.yaml).
+role: 베이커리 배송 배차 담당자
+task_type: 조합 최적화
+deliverable_spec: |
+  routes.json = {"routes": [{"van": "<차량 ID, 예: V1>", "depart": "HH:MM (선택, 기본값 05:00)",
+                             "stops": ["<방문 순서대로 매장 ID, 예: C03>", ...]}, ...]}
+  사용하는 차량마다 항목 하나를 두며, ID는 데이터에 있는 그대로 씁니다.
+rules:
+  van_capacity: 차량 한 대에는 트레이를 최대 120개까지 실을 수 있습니다.
+  shift_window: 차량은 05:00부터 출발할 수 있고 09:30까지 주방에 돌아와야 합니다.
+  closed_cafe: 이번 주 휴점인 매장에는 배송하지 않습니다.
+  serve_each_once: 영업 중인 모든 매장은 정확히 한 번의 방문으로 트레이를 모두 받습니다.
+  cold_chain: 제휴브랜드 매장(냉장 상품)은 냉장 차량만 배송합니다.
+  premium_first: 모든 경로에서 프리미엄 매장을 일반 매장보다 먼저 방문합니다.

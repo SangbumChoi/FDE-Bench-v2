@@ -1,0 +1,14 @@
+# The explainer's case texts in Japanese (English comes from case.yaml).
+role: ベーカリー配送の配車担当者
+task_type: 組合せ最適化
+deliverable_spec: |
+  routes.json = {"routes": [{"van": "<車両ID、例: V1>", "depart": "HH:MM（任意、省略時は 05:00）",
+                             "stops": ["<訪問順の店舗ID、例: C03>", ...]}, ...]}
+  使う車両ごとに1件とし、IDはデータのとおりに記載します。
+rules:
+  van_capacity: 車両1台に積めるトレーは最大120枚です。
+  shift_window: 車両は05:00より前には出発せず、09:30までにキッチンへ戻ります。
+  closed_cafe: 今週休業している店舗には配送しません。
+  serve_each_once: 営業中の全店舗が、ちょうど1回の訪問でトレーをすべて受け取ります。
+  cold_chain: 提携ブランドの店舗（冷蔵商品）には冷蔵車だけが配送します。
+  premium_first: どのルートでも、旗艦店を標準店より先に回ります。

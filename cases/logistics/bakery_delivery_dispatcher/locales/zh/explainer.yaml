@@ -1,0 +1,14 @@
+# The explainer's case texts in Simplified Chinese (English comes from case.yaml).
+role: 面包店配送调度员
+task_type: 组合优化
+deliverable_spec: |
+  routes.json = {"routes": [{"van": "<车辆编号，如 V1>", "depart": "HH:MM（可选，默认 05:00）",
+                             "stops": ["<按到访顺序排列的门店编号，如 C03>", ...]}, ...]}
+  每辆用到的车一条；编号与数据中完全一致。
+rules:
+  van_capacity: 每辆车最多装 120 个托盘。
+  shift_window: 车辆不早于 05:00 出发，并在 09:30 前回到厨房。
+  closed_cafe: 不给本周停业的门店送货。
+  serve_each_once: 每家营业门店的全部托盘都在恰好一次到访中送达。
+  cold_chain: 合作品牌门店（冷藏商品）只能由冷藏车配送。
+  premium_first: 每条路线上，旗舰店都先于标准店到访。
