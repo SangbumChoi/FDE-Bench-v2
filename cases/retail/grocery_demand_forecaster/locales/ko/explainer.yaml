@@ -1,0 +1,13 @@
+# The explainer's case texts in Korean (English comes from case.yaml).
+role: 식료품 수요 예측 담당자
+task_type: 머신러닝
+deliverable_spec: |
+  forecast.csv, ASCII 헤더는 store_id,item_id,date,forecast입니다.
+  14일 예측 기간(2026-11-02 .. 2026-11-15)의 점포 x 상품 x 날짜마다 한 행씩 둡니다.
+  store_id / item_id는 데이터에 있는 그대로(예: S1, I01), date는 YYYY-MM-DD 형식으로 쓰며,
+  forecast = 해당 상품의 현재 판매단위 기준 예상 수량입니다(숫자, 소수 가능).
+rules:
+  complete_grid: forecast.csv에는 예측 기간의 점포 × 상품 × 날짜마다 정확히 한 행이 있습니다.
+  non_negative: 음수인 예측은 없습니다.
+  closed_day_zero: 점포 S4는 매주 일요일 휴무이므로 일요일 예측은 0입니다.
+  min_display_stock: 핵심 상품(신선 청과와 유제품)은 점포가 영업하는 날 예측을 6(판매단위 기준) 미만으로 잡지 않습니다.

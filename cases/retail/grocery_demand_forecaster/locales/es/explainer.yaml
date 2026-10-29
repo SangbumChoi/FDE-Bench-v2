@@ -1,0 +1,13 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Analista de previsión de demanda en supermercados
+task_type: Aprendizaje automático
+deliverable_spec: |
+  forecast.csv con la cabecera ASCII store_id,item_id,date,forecast
+  Una fila por cada tienda x artículo x fecha del periodo de 14 días (2026-11-02 .. 2026-11-15);
+  store_id / item_id exactamente como en los datos (p. ej. S1, I01), date en formato YYYY-MM-DD,
+  forecast = unidades previstas en la unidad de venta actual del artículo (un número, se admiten decimales).
+rules:
+  complete_grid: forecast.csv tiene exactamente una fila por cada tienda × artículo × fecha del periodo de la previsión.
+  non_negative: Ninguna previsión es negativa.
+  closed_day_zero: La tienda S4 cierra los domingos; su previsión para los domingos es 0.
+  min_display_stock: Los artículos básicos (fruta y verdura y lácteos) nunca tienen una previsión por debajo de 6 unidades en un día en que la tienda abre.

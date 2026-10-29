@@ -1,0 +1,13 @@
+# The explainer's case texts in Simplified Chinese (English comes from case.yaml).
+role: 生鲜超市需求预测员
+task_type: 机器学习
+deliverable_spec: |
+  forecast.csv，ASCII 表头为 store_id,item_id,date,forecast。
+  14 天预测期（2026-11-02 .. 2026-11-15）内每个门店 x 商品 x 日期一行；
+  store_id / item_id 与数据中完全一致（如 S1、I01），date 格式为 YYYY-MM-DD，
+  forecast = 按该商品当前销售单位计的预期数量（数值，可带小数）。
+rules:
+  complete_grid: forecast.csv 中，预测期内每个门店 × 商品 × 日期恰好一行。
+  non_negative: 预测值都不为负。
+  closed_day_zero: 门店 S4 每周日休息，其周日预测为 0。
+  min_display_stock: 核心商品（果蔬和乳制品）在门店营业的日子，预测量从不低于 6（按销售单位计）。
