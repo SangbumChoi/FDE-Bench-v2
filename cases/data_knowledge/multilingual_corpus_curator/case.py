@@ -45,10 +45,13 @@ from fdebench2.casekit import Fatal, run_program
 ENTRYPOINT = "organize.py:organize"
 HERE = Path(__file__).resolve().parent
 REFERENCE = HERE / "reference" / "organize.py"
+BASELINE = HERE / "reference" / "baseline.py"
 TIER_ORDER = ("easy", "medium", "hard")
 REASONS = ("UNREADABLE", "NO_TITLE", "NO_AUTHOR", "NO_YEAR", "NO_DESCRIPTION", "CONFLICT")
 NO_AUTHOR_REVIEW_CREDIT = 0.7          # a book without an author waiting in review: not on the shelf yet
 EXTRA_PENALTY = 0.5                    # medium+: a library file that is no book
+WRONG_DESC_CREDIT = 0.2                # the right library path holding something other than the book's description
+MANIFEST_SHARE = 0.2                   # share of a book's credit lost when its manifest row is missing or wrong
 CJK = ("zh", "ko", "ja")
 N_BOOKS = 100
 
@@ -1080,7 +1083,7 @@ NOTES = {
           "some old archives and catalog exports.\n"
           "For the real run the program gets the full drive, laid out like this sample.\n",
     "ko": "corpus/ 는 공유 드라이브의 샘플을 정리하지 않고 그대로 복사한 것입니다.\n"
-          "각 지역 사무소, 스캔팀, 판권팀이 모두 파일을 넣어 왔고, 오래된 압축 파일과 목록 내보내기 파일도 있습니다.\n"
+          "각 지역 사무소, 스캔팀, 판권팀이 모두 파일을 넣어 왔고, 오래된 압축 파일과 카탈로그 내보내기 파일도 있습니다.\n"
           "실제 실행 때 프로그램은 이 샘플과 같은 구조의 전체 드라이브를 받습니다.\n",
     "ja": "corpus/ は共有ドライブのサンプルを、整理せずにそのままコピーしたものです。\n"
           "各地のオフィス、スキャン担当、版権チームがそれぞれファイルを置いてきました。古いアーカイブや目録の書き出しもあります。\n"
@@ -1179,25 +1182,35 @@ def _manifest(files: dict) -> list[dict]:
             for r in rows]
 
 
+def _ref(s: str) -> str:
+    """One manifest source, normalized: a corpus path, `archive.zip!member` or `catalog.csv#row`."""
+    s = unicodedata.normalize("NFC", s.strip().replace("\\", "/"))
+    while s.startswith("./"):
+        s = s[2:]
+    path, mark, row = s.rpartition("#")
+    return f"{path}#{int(row)}" if mark and row.strip().isdigit() else s
+
+
 def _refs(source: str) -> set:
-    out = set()
-    for s in source.split(";"):
-        s = re.split(r"[!#]", s.strip().replace("\\", "/"))[0]
-        while s.startswith("./"):
-            s = s[2:]
-        if s:
-            out.add(unicodedata.normalize("NFC", s))
-    return out
+    return {_ref(s) for s in source.split(";") if s.strip()}
+
+
+def _sourced(text: str, paras: set, descs: list) -> bool:
+    """Whether a library file's text comes from the sources: it holds a whole description paragraph of some
+    book, or is a sizeable piece of one (wrapping and spacing ignored). Placeholders and invented text do not."""
+    return any(p in text for p in paras) or (len(text) >= 20 and any(text in d for d in descs))
 
 
 def evaluate(corpus: Corpus, files: dict, v: _View) -> tuple[list, float, dict]:
     violations: list = []
     lib = {rel: body for rel, body in files.items() if rel.startswith("library/")}
     rows = _manifest(files)
-    texts = {}
+    texts, readable = {}, set()
     for rel, body in sorted(lib.items()) + [("manifest.csv", files["manifest.csv"])]:
         texts[rel], ok = _decode(body)
-        if not ok:
+        if ok:
+            readable.add(rel)
+        else:
             violations.append(("utf8_output", f"{rel} is not valid UTF-8"))
     for rel in sorted(files):
         for comp in rel.split("/"):
@@ -1223,57 +1236,88 @@ def evaluate(corpus: Corpus, files: dict, v: _View) -> tuple[list, float, dict]:
             attributed.setdefault(b.bid, []).append(rel)
 
     scope = [b for b in corpus.books if v.in_scope(b)]
-    review_rows = [r for r in rows if r.get("status", "").lower() == "review"]
-    for r in review_rows:
-        if r.get("reason", "").upper() not in REASONS:
+    status = [r.get("status", "").lower() for r in rows]
+    row_refs = [_refs(r.get("source", "")) for r in rows]
+    for r, st in zip(rows, status):
+        if st == "review" and r.get("reason", "").upper() not in REASONS:
             violations.append(("review_reason", f"review row {r.get('source', '')[:60]!r} has reason "
                                                 f"{r.get('reason', '')!r}, not one of {', '.join(REASONS)}"))
-    credit, exact, review_ok, lost = 0.0, 0, 0, []
+    review_copies = {body for rel, body in files.items() if rel.startswith("_review/")}
+
+    def manifest_ok(b: Book, placed_at: list) -> bool:
+        """The book's manifest row: the only row naming its files, naming all of them and nothing else, with
+        status placed and its library path, or status review and its files copied under _review/. A scan
+        that copies a readable file may be in the row, listed as skipped or left out."""
+        spare = {_ref(f) for f in b.files if b.kind == "h_scan_plus" and f.startswith("scans/")}
+        need = {_ref(f) for f in b.files} - spare
+        named = [k for k, refs in enumerate(row_refs) if refs & need]
+        if len(named) != 1 or not need <= row_refs[named[0]] <= need | spare:
+            return False
+        k = named[0]
+        if any(row_refs[j] & spare and status[j] != "skipped" for j in range(len(rows)) if j != k):
+            return False
+        if placed_at:
+            return status[k] == "placed" and _ref(rows[k].get("path", "")) in {_ref(p) for p in placed_at}
+        return status[k] == "review" and all(corpus.files[f] in review_copies for f in b.own)
+
+    credit, exact, review_ok, rows_wrong, lost = 0.0, 0, 0, 0, []
     for b in scope:
         mine = attributed.get(b.bid, [])
         if len(mine) > 1:
             violations.append(("one_file_per_book", f"{b.title[:40]}: {len(mine)} library files ({', '.join(mine[:3])})"))
-        placed = 0.0
-        if b.review in (None, "NO_AUTHOR"):
+        shelved = b.review is None or (b.review == "NO_AUTHOR" and bool(mine))
+        c = 0.0
+        if shelved:
             exp, (y, t, a) = v.path(b), v.parts(b)
             want = norm_text(content_of(b))
             for rel in mine:
                 ok = norm_text(texts[rel]) == want
                 if rel == exp:
-                    c = 1.0 if ok else 0.6
+                    got_c = 1.0 if ok else WRONG_DESC_CREDIT
                 elif ok:
                     got = v.parse(rel)
-                    c = 0.4 + (0.2 * ((got[0] == y) + (got[1] == t) + (got[2] == a)) if got else 0.0)
+                    got_c = 0.4 + (0.2 * ((got[0] == y) + (got[1] == t) + (got[2] == a)) if got else 0.0)
                 else:
-                    c = 0.0
-                placed = max(placed, c)
-        reviewed = 0.0
-        if b.review:
+                    got_c = 0.0
+                c = max(c, got_c)
+            exact += c == 1.0 and b.review is None
+        elif not mine:
+            # Review credit only when every row naming the book's files says review with one and the same code.
             base = NO_AUTHOR_REVIEW_CREDIT if b.review == "NO_AUTHOR" else 1.0
-            for r in review_rows:
-                if _refs(r.get("source", "")) & b.own:
-                    reviewed = max(reviewed, base if r.get("reason", "").upper() == b.review else 0.4 * base)
-            if v.hard and b.review == "NO_AUTHOR" and mine:
+            refs = {_ref(f) for f in b.files}
+            named = [k for k, rr in enumerate(row_refs) if rr & refs]
+            codes = {rows[k].get("reason", "").upper() if status[k] == "review" else None for k in named}
+            if named and len(codes) == 1 and None not in codes:
+                c = base if codes == {b.review} else 0.4 * base
+            review_ok += c == base
+        if b.review and mine:
+            if v.hard and b.review == "NO_AUTHOR":
                 violations.append(("missing_author_review", f"{b.title[:40]} has no author but was placed in the "
                                                             f"library ({mine[0]})"))
-            if v.hard and b.review == "NO_DESCRIPTION" and mine:
+            if v.hard and b.review == "NO_DESCRIPTION":
                 violations.append(("no_fabrication", f"{b.title[:40]} has no description in any source but has a "
                                                      f"library file ({mine[0]})"))
-        c = placed if b.review is None else max(reviewed, placed if b.review == "NO_AUTHOR" else 0.0)
+        if c > 0 and not manifest_ok(b, mine if shelved else []):
+            c *= 1 - MANIFEST_SHARE
+            rows_wrong += 1
         credit += c
-        exact += c == 1.0 and b.review is None
-        review_ok += c >= NO_AUTHOR_REVIEW_CREDIT and b.review is not None
         if c == 0:
             lost.append(b.bid)
     if v.hard:
+        paras = {norm_text(p) for b in corpus.books for p in b.desc}
+        descs = [norm_text(content_of(b)) for b in corpus.books if b.desc]
         for rel in sorted(lib):
-            if not norm_text(texts[rel]):
+            t = norm_text(texts[rel])
+            if not t:
                 violations.append(("no_fabrication", f"{rel} is empty"))
+            elif rel in readable and not _sourced(t, paras, descs):
+                violations.append(("no_fabrication", f"{rel} holds text that is in none of the sources: "
+                                                     f"{texts[rel].strip()[:40]!r}"))
     penalty = EXTRA_PENALTY * len(extras) if v.medium else 0.0
     objective = 100.0 * max(0.0, credit - penalty) / len(scope)
     metrics = {"books_scored": len(scope), "placed_exactly": exact, "reviewed_correctly": review_ok,
-               "books_without_credit": len(lost), "extra_files": len(extras), "library_files": len(lib),
-               "credit": round(credit, 3)}
+               "manifest_rows_wrong": rows_wrong, "books_without_credit": len(lost), "extra_files": len(extras),
+               "library_files": len(lib), "credit": round(credit, 3)}
     return violations, round(objective, 6), metrics
 
 
@@ -1333,10 +1377,10 @@ def score(world: World, submission_dir: Path, setting) -> dict:
 PARAMS = ("layout", "year_basis", "script", "multi_author", "sep", "max_len", "fallback_author")
 
 
-def write_program(out_dir: Path, setting, brk: str | None = None) -> None:
+def write_program(out_dir: Path, setting, brk: str | None = None, source: Path = REFERENCE) -> None:
     prog = Path(out_dir) / "program"
     prog.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(REFERENCE, prog / "organize.py")
+    shutil.copyfile(source, prog / "organize.py")
     cfg = {k: setting[k] for k in PARAMS}
     cfg["break"] = brk
     (prog / "config.json").write_text(json.dumps(cfg, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
@@ -1344,6 +1388,12 @@ def write_program(out_dir: Path, setting, brk: str | None = None) -> None:
 
 def reference_solution(world: World, out_dir: Path, setting) -> None:
     write_program(out_dir, setting)
+
+
+def baseline_solution(world: World, out_dir: Path, setting) -> None:
+    """What the client could script without an engineer: shelve the books with a complete UTF-8 JSON export
+    under the catalogue rules and leave every other file for the team (reference/baseline.py)."""
+    write_program(out_dir, setting, source=BASELINE)
 
 
 def violating_examples(world: World, setting) -> dict:

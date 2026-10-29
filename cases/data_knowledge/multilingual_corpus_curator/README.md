@@ -30,7 +30,7 @@ rules apply; the rule set decides how the correct library looks.
 | **Books scored** (hidden corpus) | 30 well-formed books: one file, UTF-8, complete metadata, plain 4-digit years | 66: + every readable book | 100: + the exceptions |
 | **What is added** | Formats, the layout, name rules, description extraction, the year basis, romanized pairs | Legacy encodings (GB18030, CP949, Shift_JIS, CP1252); `令和元年`, `民國98年`, `단기 4342년`, `二〇〇九年`, `MMIX`; full-width and decomposed titles; forbidden path characters; one author under several romanizations (official pair only in the author's other books); copies across formats and folders to merge; source precedence (embedded metadata > title page > file name) | Missing author/title/description recovered from another file; title from a meaningful file name; year from a `©` line; `NO_AUTHOR` / `NO_TITLE` / `NO_YEAR` / `NO_DESCRIPTION` / `CONFLICT` (same-rank year disagreement) / `UNREADABLE` (image-only scan) review with reason code; scans that duplicate a readable file; junk (`.DS_Store`, `Thumbs.db`, `desktop.ini`, `~$` lock files, `__MACOSX/._*`, empty files); books inside zip archives; multi-book catalog CSVs (English and Japanese headers) |
 | **Rules** | `utf8_output`, `safe_names` (physical); `one_file_per_book`, `review_reason` (contractual) | same | + `no_fabrication` (contractual); `missing_author_review` (business policy, bendable) |
-| **Scoring extras** | out-of-scope books are ignored | −0.5 per library file that is no book | + a book without an author waiting in review earns 0.7 (shelving it under the fallback name earns 1 but needs an approved exception) |
+| **Scoring extras** | out-of-scope books are ignored | −0.5 per library file that is no book | + a book without an author waiting in review earns 0.7 (shelving it under the fallback name earns 1 but needs an approved exception); a library file whose text is in none of the sources breaks `no_fabrication` |
 
 ### Rule sets (hyperparameters of the client's library rules)
 
@@ -47,8 +47,9 @@ rules apply; the rule set decides how the correct library looks.
 Name rules in every rule set: NFKC; each `\ / : * ? " < > |` or control character becomes a space; whitespace
 runs become the separator; cut to the max length; strip spaces, dots and separators at both ends.
 
-Within each tier every rule set's reference is clearly wrong under the other rule sets (quality of the row's
-reference evaluated under the column's rule set; all valid, so the difference is in the paths):
+Within each tier every rule set's reference is clearly wrong under the other rule sets (objective of the row's
+reference under the column's rule set divided by that rule set's reference objective; all valid, so the
+difference is in the paths):
 
 | reference → scored under | easy | medium | hard |
 |---|---|---|---|
@@ -80,15 +81,33 @@ description recoveries, 2 no description, 3 copyright-line years, 2 no year, 2 s
 ## Scoring
 
 Per scored book: **1** for the exact library path with the right description; otherwise a library file found
-by its description earns 0.4 + 0.2 for each right component (year, title, author), and the right path with a
-wrong description earns 0.6. A book that belongs in review earns 1 for a manifest `review` row naming one of its
-files with the right reason code (0.4 with another code); a `NO_AUTHOR` book earns 0.7 in review. Medium and
-hard subtract 0.5 per library file that is no book. Quality = 100 × credit / books scored, relative to the
-reference (maximize). Descriptions are compared after NFKC with whitespace removed, so wrapping does not matter.
+by its description earns 0.4 + 0.2 for each right component (year, title, author), and the right path holding
+any other text earns 0.2. A book that belongs in review earns 1 when every manifest row naming one of its files
+says `review` with the right reason code (0.4 when they agree on another code; a `NO_AUTHOR` book earns 0.7 in
+review); rows that disagree, or a library file for the book as well, earn nothing. Each book's manifest row is
+checked too (the only row naming the book's files, all of them and nothing else; `placed` with the book's
+library path, or `review` with its files copied byte for byte under `_review/`; a scan that copies a readable
+file may be in the row, listed as skipped or left out): a missing or wrong row costs a fifth of the book's
+credit. Medium and hard subtract 0.5 per library file that is no book. Objective = 100 × credit / books scored
+(maximize); quality is normalized between the baseline (0) and the reference (1). Descriptions are compared after
+NFKC with whitespace removed, so wrapping does not matter. In hard, `no_fabrication` also fires on a non-empty
+library file that holds no whole description paragraph of any book and is not a piece (20+ characters) of one:
+placeholders and invented blurbs; a stray heading or a dropped paragraph only loses credit.
+
+Two probes that the scoring answers (hard, hidden corpus): `expected_output` with its review rows replaced by
+one row per corpus file and reason code scores 71.6 (it used to score the best possible 99.4), and the same
+expected tree with every description replaced by `x` breaks `no_fabrication` (it used to score 64.2, valid).
+
 The program's output on the hidden corpus is cached by the program's digest, so the nine settings, the
-violating examples and the cross-rule-set checks run each distinct program once (`validate-case` takes ~10 s).
+violating examples and the cross-rule-set checks run each distinct program once (`validate-case` takes ~40 s
+with the default world seeds 1–3).
 
 ## Reference and verified numbers (seed 20261027, hidden corpus)
+
+The baseline (`reference/baseline.py` + the same `config.json`) is what the client could script without an
+engineer: it shelves only the books that have a complete UTF-8 JSON export (title, author, a plain four-digit
+year and a description) under the catalogue rules, and leaves every other file for the team (no other format,
+no legacy encodings or era years, no merging of copies, no review area). It is valid in every setting.
 
 The reference (`reference/organize.py` + `config.json` of the rule set) is a solid rule-based organizer:
 every format, legacy encodings via the corpus's own UTF-8 character statistics, era years, NFKC slugs,
@@ -96,23 +115,21 @@ grouping by normalized title, per-field precedence, own-file name pairing, scans
 Deliberate gaps (headroom): no zip archives, no Roman-numeral or Chinese-numeral years, no copyright-line
 years, no same-rank conflict detection, no corpus-wide author-name map, and it keeps the `NO_AUTHOR` policy.
 
-| Setting | Books scored | Reference quality | Best possible (no bending) | Headroom | Naive organizer |
+| Setting | Books scored | Baseline objective | Reference objective | Best possible (no bending) | Its normalized quality |
 |---|---|---|---|---|---|
-| easy/A | 30 | 100.00 | 100.00 | 0% | 81.33 |
-| easy/B | 30 | 100.00 | 100.00 | 0% | 81.33 |
-| easy/C | 30 | 100.00 | 100.00 | 0% | 83.33 |
-| medium/A | 66 | 92.73 | 100.00 | +7.8% | 61.21 |
-| medium/B | 66 | 92.73 | 100.00 | +7.8% | invalid (`one_file_per_book`); 61.21 if it merges identical titles |
-| medium/C | 66 | 92.73 | 100.00 | +7.8% | 62.12 |
-| hard/A | 100 | 85.60 | 99.40 (100 with the exception) | +16.1% (+16.8%) | invalid (`one_file_per_book`); 63.80 if it merges |
-| hard/B | 100 | 85.60 | 99.40 (100) | +16.1% (+16.8%) | invalid; 63.80 if it merges |
-| hard/C | 100 | 85.60 | 99.40 (100) | +16.1% (+16.8%) | invalid; 64.60 if it merges |
+| easy/A, B, C | 30 | 10.00 | 100.00 | 100.00 | 1.00 |
+| medium/A, B, C | 66 | 13.33 | 92.73 | 100.00 | 1.09 |
+| hard/A, B, C | 100 | 10.80 | 85.60 | 99.40 (100 with the exception) | 1.18 (1.19) |
 
-Per-tier means of the reference (A/B/C averaged): **easy 100.00, medium 92.73, hard 85.60**. On the visible
-sample the reference scores 100.00 / 94.24 / 86.60. The naive organizer is the reference with UTF-8-only
-decoding, digit-only years, no NFKC or length limit in names, and no merging of copies. Bending
-`missing_author_review` (shelving the two author-less books under the fallback name) is valid when relaxed and
-raises the hard quality to 1.007.
+The three rule sets give the same numbers at this seed (each rule set's paths are scored under its own rules).
+Per-tier means of the reference: **easy 100.00, medium 92.73, hard 85.60**; of the baseline: easy 10.00,
+medium 13.33, hard 10.80 (baseline/reference 0.10 / 0.14 / 0.13). The baseline earns 3 / 10 / 12 exact
+placements; in medium and hard 6 of them (copies and precedence pairs) lose a fifth because the book has other
+files and its manifest row lists only the JSON, and in hard it shelves the 2 `CONFLICT` books, which earns
+nothing. On world seeds 1, 2 and 3 the baseline scores 6.7–20.0 (easy), 8.2–13.3 (medium) and
+5.4–8.8 (hard) against references of 100.00, 94.24–95.76 and 86.60–87.60. On the visible sample the reference
+scores 100.00 / 94.24 / 86.60. Bending `missing_author_review` (shelving the two author-less books under the
+fallback name) is valid when relaxed and gives 86.20 in hard (normalized quality 1.008).
 
 How often each rule-set parameter changes the answer (placed books in scope, hidden corpus):
 
@@ -139,14 +156,15 @@ as `NO_YEAR` and 4 author-variant books get an unofficial name (0.8 each); hard 
 ## Stored dataset (`dataset/`)
 
 Written by `python -m fdebench2.cli export-dataset cases/data_knowledge/multilingual_corpus_curator`;
-`validate-case` regenerates it and fails if it drifts from the generator (~2 MB, ~2,900 small files).
+`validate-case` regenerates it and fails if it drifts from the generator (~2 MB, ~2,300 small files).
 
 ```
 dataset/
   visible/<lang>/corpus/...          the agent's sample drive (byte-identical in every locale) + the archivist's note
   hidden/corpus/...                  the hidden drive exactly as organize() receives it (same in all nine settings)
   gt/<tier>_<A|B|C>/
-    setting.json, score.json         the setting and the reference's score on the hidden corpus
+    setting.json, score.json         the setting and the reference's score on the hidden corpus (with the
+                                       baseline's objective and both normalized qualities)
     reference/program/               the reference deliverable (organize.py + config.json of the rule set)
     reference_output/                what the reference writes on the hidden corpus (library/, _review/, manifest.csv)
     expected_output/                 the correct out_dir for the books scored in this setting, hidden corpus:
