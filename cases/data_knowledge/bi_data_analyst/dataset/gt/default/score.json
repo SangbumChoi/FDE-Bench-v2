@@ -1,13 +1,22 @@
 {
+  "baseline_objective": 0.0,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.0,
+    "quality_score": 0.0
+  },
   "metrics": {
-    "correct": 9,
+    "correct": 11,
     "of": 12,
     "wrong": [
-      "Q06",
-      "Q07",
-      "Q09"
+      "Q06"
     ]
   },
-  "objective": 9.0,
+  "objective": 11.0,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
   "violations": []
 }

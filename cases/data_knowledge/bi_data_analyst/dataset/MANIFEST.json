@@ -1,6 +1,6 @@
 {
  "gt/default/reference/answers.json": "f6c6a548b6d41668e57cec6b382e4139d83cbff862847f213e65ac0f4b8a81ce",
- "gt/default/score.json": "718537e06d8c3f6d9232b1836b4f5bcab8ae04c5f4ac09f9ba15b4e4be73d0ec",
+ "gt/default/score.json": "a45a5d6cef67fa8e6621ff43e0388d9d60a872f1308d18b315bb0728c9acfea2",
  "gt/default/setting.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
  "visible/en/accounts_meta.csv": "544b5016778ce3ff1341d0bbd419c0e94c6ee4328fae34cbe87d1ff8c4863062",
  "visible/en/customers.csv": "4cfc1ea65681693d8a83f76bc6225da22d96e93dbca50af8a5be9a5d872471fb",
@@ -41,7 +41,7 @@
  "visible/ko/products.csv": "db60a55ada62196c9c8d87cfd7c9cd59ee9727f1e82dfb8127ea2331a0505125",
  "visible/ko/refunds.csv": "1f99032a45dad09ad60ab9faf839a611d6e8aa9fcd8d0cf098d7d9be358af4b6",
  "visible/ko/\ub370\uc774\ud130\uc0ac\uc804.md": "a31bfa8c8d7a582a54fc1db6817f9c0d5628e26bd2d0a8e731b9029b3b2b32a3",
- "visible/ko/\uc9c8\ubb38\ubaa9\ub85d.md": "9019793fe25abb4b93262a538d3d278a8da8aefc93ab47344ecdf0f25e9c11cf",
+ "visible/ko/\uc9c8\ubb38\ubaa9\ub85d.md": "b2ac5f7eda7947d2fa14797b7918caff2492a1028dd9d7b3c8636ab4c4862776",
  "visible/zh/accounts_meta.csv": "debee98aa70489ce9a51547ea88b7bb0dff3741a1749d8e7196e09bee4f3c2be",
  "visible/zh/customers.csv": "a8e0cdd6347afb8edf825d758adc31bdf2de23db97fbc919be0842aa0bdd8f0a",
  "visible/zh/fx_rates.csv": "b0d3fb9ec58311d53c4b4fbc0cb830f184d564e6de9f4ea5805fbba89335a97c",

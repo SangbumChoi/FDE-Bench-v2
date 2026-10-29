@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import math
 import random
+import tempfile
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -42,6 +43,8 @@ MONEY_Q = ("Q01", "Q02", "Q06", "Q07", "Q09")
 EXACT_Q = ("Q03", "Q04", "Q05", "Q10")       # counts and ids: exact match
 PERCENT_Q = ("Q08", "Q11")
 REL_TOL = 0.005
+MONEY_ABS_TOL = 500.0 + 1e-6     # half the thousand-KRW rounding unit: the rounded exact figure always counts
+PP_TOL = 0.05                    # Q11 (a change in percent): percentage points, so one decimal place counts
 
 # product id -> (category key, KRW list price, launch date)
 PRODUCTS = {
@@ -295,6 +298,49 @@ def _reference_answers(world: World, rounded=True) -> dict:
     return _round_money(ans) if rounded else ans
 
 
+def _baseline_answers(world: World) -> dict:
+    """The export summed at face value, with none of the client's definitions: calendar-year periods on the
+    stored UTC dates, every order row whatever its status, revenue = order `total` (tax included) less the
+    refunds dated in the period, every currency at the latest rate, active = ordered in the last 30 days, and
+    "pantry" = the products labelled pantry. It keeps the two finance policies the client applies anyway
+    (test accounts out, money rounded to thousands of KRW), so the sheet is valid."""
+    fy, h1 = (date(2025, 1, 1), date(2025, 12, 31)), (date(2026, 1, 1), date(2026, 6, 30))
+    last30 = (AS_OF - timedelta(days=29), AS_OF)
+    rate = {cur: world.fx[(cur, AS_OF)] for cur in DECIMALS}
+
+    def within(d, rng_):
+        return rng_[0] <= d <= rng_[1]
+
+    orders = [o for o in world.orders if world.cust[o.customer].kind != "test"]
+    money = ([(o.customer, o.ts_utc.date(), o.total * rate[o.currency]) for o in orders]
+             + [(o.customer, r[1].date(), -r[2] * rate[o.currency]) for o in orders for r in o.refunds])
+    refunds = [(o.id, r[2] * rate[o.currency]) for o in orders for r in o.refunds if within(r[1].date(), fy)]
+
+    def revenue(rng_):
+        return sum(x for _, d, x in money if within(d, rng_))
+
+    in_fy = [o for o in orders if within(o.ts_utc.date(), fy)]
+    by_cust: dict[int, float] = {}
+    for c, d, x in money:
+        if within(d, fy):
+            by_cust[c] = by_cust.get(c, 0.0) + x
+    ans = {
+        "Q01": revenue(fy),
+        "Q02": revenue((date(2026, 1, 1), date(2026, 3, 31))),
+        "Q03": len({o.customer for o in orders if within(o.ts_utc.date(), last30)}),
+        "Q04": max(by_cust, key=lambda c: (by_cust[c], -c)),
+        "Q05": sum(1 for o in orders if o.ts_utc.date() == SALE_DAY),
+        "Q06": sum(q * u * rate[o.currency] for o in in_fy for p, q, u in o.lines if PRODUCTS[p][0] == "pantry"),
+        "Q07": revenue(h1) / sum(1 for o in orders if within(o.ts_utc.date(), h1)),
+        "Q08": 100.0 * sum(x for _, x in refunds) / sum(o.total * rate[o.currency] for o in in_fy),
+        "Q09": sum(x for _, x in refunds) / len({i for i, _ in refunds}),
+        "Q10": sum(1 for c in world.customers if c.kind != "test" and within(c.signup_utc.date(), fy)),
+        "Q11": 100.0 * (revenue(SEP_2026) / revenue(AUG_2026) - 1.0),
+        "Q12": sum(q for o in in_fy for _, q, _ in o.lines) / len(in_fy),
+    }
+    return _round_money(ans)
+
+
 # ── data rendering ───────────────────────────────────────────────────────────
 
 L = {
@@ -396,14 +442,14 @@ Reference date: 2026-09-30. Please give money figures in KRW. Answer every quest
 - Q02: FY2026 1분기 순매출은 얼마인가요?
 - Q03: 기준일 현재 활성 고객은 몇 명인가요?
 - Q04: FY2025에 순매출이 가장 많았던 고객은 누구인가요? (customer_id로 답해 주세요)
-- Q05: 상반기 결산 세일 당일(2026-07-01)에 주문이 몇 건 들어왔나요?
+- Q05: 여름 세일 당일(2026-07-01)에 주문이 몇 건 들어왔나요?
 - Q06: FY2025 동안 '팬트리' 카테고리의 순매출은 얼마인가요?
 - Q07: FY2026 상반기 평균 주문 금액(객단가)은 얼마인가요?
 - Q08: FY2025 환불률, 즉 환불 전 매출 대비 환불 비율은 몇 퍼센트인가요?
 - Q09: FY2025에 환불이 발생한 주문 1건당 평균 환불액은 얼마인가요?
 - Q10: FY2025에 신규 가입한 고객은 몇 명인가요?
 - Q11: 2026년 9월 순매출은 8월 대비 몇 퍼센트 변했나요? (감소했다면 음수로)
-- Q12: FY2025 주문 1건에 평균 몇 개의 상품이 들어 있었나요?
+- Q12: FY2025 주문 1건당 평균 상품 수량(낱개 기준)은 얼마인가요?
 """,
     "ja": """# 経営陣からの質問
 
@@ -553,8 +599,14 @@ def write_data(world: World, data_dir: Path, lang: str) -> None:
 def _correct(q: str, got: float, truth: float) -> bool:
     if q in EXACT_Q:
         return abs(got - truth) < 1e-9
+    if q == "Q11":
+        tol = PP_TOL
+    elif q in MONEY_Q:
+        tol = max(REL_TOL * abs(truth), MONEY_ABS_TOL)
+    else:
+        tol = REL_TOL * abs(truth)
     cands = [got, got * 100.0] if q in PERCENT_Q else [got]   # a percentage given as a fraction is accepted
-    return any(abs(c - truth) <= REL_TOL * abs(truth) for c in cands)
+    return any(abs(c - truth) <= tol for c in cands)
 
 
 def _is_number(v) -> bool:
@@ -599,7 +651,22 @@ def reference_solution(world: World, out_dir: Path) -> None:
     _write(out_dir, _reference_answers(world))
 
 
+def baseline_solution(world: World, out_dir: Path) -> None:
+    _write(out_dir, _baseline_answers(world))
+
+
+def _score_answers(world: World, ans: dict) -> dict:
+    with tempfile.TemporaryDirectory() as tmp:
+        _write(Path(tmp), ans)
+        return score(world, Path(tmp))
+
+
 def violating_examples(world: World) -> dict:
+    # Following the rounding rule must never cost a question: the exact answers rounded as finance requires
+    # score full marks.
+    full = _score_answers(world, _round_money(compute(world)))
+    if full["violations"] or full["objective"] != len(QIDS):
+        raise AssertionError(f"the exact answers rounded to thousands do not score full marks: {full}")
     ref = _reference_answers(world)
     with_tests = compute(world, exclude_test=False)
 
