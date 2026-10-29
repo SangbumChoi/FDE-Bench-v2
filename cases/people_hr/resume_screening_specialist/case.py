@@ -26,6 +26,7 @@ K = 8                                  # interview slots per role
 PRESENT = (2026, 10)                   # "present" counts up to and including October 2026
 CERT_CUTOFF = "2026-11-01"             # a certificate counts only if it expires on or after this day
 AI_RATIO = 0.8                         # adverse-impact (four-fifths) threshold
+AI_ALPHA = 0.05                        # a gap below the four-fifths line counts only if Fisher's exact p is below this
 AI_MIN_GROUP = 15                      # groups with fewer qualified candidates are not tested
 PROTECTED = ("gender", "age_band", "nationality")
 # Groups the adverse-impact check compares: gender as recorded, age under 40 vs 40 and over,
@@ -371,19 +372,23 @@ def _build(seed: int) -> World | None:
 def build_world(seed: int) -> World:
     """First sub-seed where the reference (with and without the referral habit) and the fit-optimal shortlist
     pass the adverse-impact check, some top candidates qualify for two roles, the fit-optimal shortlist beats
-    the reference by 7% or more, and dropping the referral habit gains the reference 4% or more."""
+    the reference by 7% or more, and dropping the referral habit gains the reference 4% or more. The world is
+    chosen with the stricter design form of the adverse-impact check (four-fifths with a one-person tolerance,
+    no significance test; at these group sizes passing it also passes the scored check), which keeps the world
+    the case was first calibrated on. The baseline must also be valid under the scored check."""
     for attempt in range(200):
         w = _build(seed * 1000 + attempt)
         if w and all(sum(qualified(c, r) for c in w.candidates) >= 20 for r in ROLES):
             ref, best = _solve(w, _ref_score), _solve(w, lambda c, r: c.fit[r])
-            v_ref = check(w, ref)[0]
-            v_best = check(w, best)[0]
-            v_rel, o_rel, _ = check(w, _solve(w, _ref_score, keep_referrals=False))
+            v_ref = check(w, ref, strict_ai=True)[0]
+            v_best = check(w, best, strict_ai=True)[0]
+            v_rel, o_rel, _ = check(w, _solve(w, _ref_score, keep_referrals=False), strict_ai=True)
+            v_base = check(w, _solve(w, _years_score))[0]
             dual = sum(sum(qualified(w.by_id[cid], r) for r in ROLES) > 1 for _, cid, _ in ref)
             _, o_ref, _ = check(w, ref)
             _, o_best, _ = check(w, best)
-            if (not v_ref and not v_best and {x[0] for x in v_rel} == {"referral_boost"} and dual >= 2
-                    and o_best >= 1.07 * o_ref and o_rel >= 1.04 * o_ref):
+            if (not v_ref and not v_best and not v_base and {x[0] for x in v_rel} == {"referral_boost"}
+                    and dual >= 2 and o_best >= 1.07 * o_ref and o_rel >= 1.04 * o_ref):
                 return w
     raise AssertionError("no sub-seed meets the world design conditions")
 
@@ -640,10 +645,24 @@ def write_data(world: World, data_dir: Path, lang: str) -> None:
 
 # ── scoring ──────────────────────────────────────────────────────────────────
 
-def adverse_impact(world: World, selected: set[str]) -> tuple[list[str], float]:
-    """Messages for groups below 0.8 x the best group's selection rate, and the lowest ratio seen."""
+def fisher_p(a: int, n1: int, b: int, n2: int) -> float:
+    """Two-sided Fisher exact p for a of n1 selected against b of n2 selected: with the margins fixed, the
+    probability of every table no more likely than the observed one (the convention of scipy and R). Exact
+    integer arithmetic, so ties are ties."""
+    k = a + b
+    weight = lambda x: math.comb(n1, x) * math.comb(n2, k - x)
+    observed = weight(a)
+    return sum(weight(x) for x in range(max(0, k - n2), min(n1, k) + 1)
+               if weight(x) <= observed) / math.comb(n1 + n2, k)
+
+
+def adverse_impact(world: World, selected: set[str], significance: bool = True) -> tuple[list[str], float, float]:
+    """Messages for tested groups below 0.8 x the best group's selection rate whose gap to that group is
+    significant (two-sided Fisher exact p < AI_ALPHA), the lowest rate ratio and the lowest p seen.
+    significance=False is the generator's stricter design form: four-fifths with a one-person tolerance (a
+    shortfall that moving a single selection from the leading group would fix is not flagged), no test."""
     pool = [c for c in world.candidates if any(qualified(c, r) for r in ROLES)]
-    msgs, lowest = [], 1.0
+    msgs, lowest, lowest_p = [], 1.0, 1.0
     for attr in PROTECTED:
         groups: dict[str, list[Candidate]] = {}
         for c in pool:
@@ -657,17 +676,27 @@ def adverse_impact(world: World, selected: set[str]) -> tuple[list[str], float]:
         lead = min((g for g in rates if rates[g] == top))
         for g, rate in sorted(rates.items()):
             lowest = min(lowest, rate / top)
-            # One-person tolerance: a shortfall that moving a single selection from the leading group would
-            # fix is not flagged.
-            moved = (sel[g] + 1) / len(tested[g]) >= AI_RATIO * (sel[lead] - 1) / len(tested[lead]) - 1e-12
-            if rate < AI_RATIO * top - 1e-12 and not moved:
-                msgs.append(f"{attr}={g}: selection rate {rate:.3f} < 0.8 x {top:.3f} "
-                            f"({sum(c.id in selected for c in groups[g])}/{len(groups[g])} qualified selected)")
-    return msgs, lowest
+            if g == lead:
+                continue
+            p = fisher_p(sel[g], len(tested[g]), sel[lead], len(tested[lead]))
+            lowest_p = min(lowest_p, p)
+            if rate >= AI_RATIO * top - 1e-12:
+                continue
+            if significance:
+                flagged = p < AI_ALPHA
+            else:
+                flagged = (sel[g] + 1) / len(tested[g]) < AI_RATIO * (sel[lead] - 1) / len(tested[lead]) - 1e-12
+            if flagged:
+                msgs.append(f"{attr}={g}: selection rate {rate:.3f} < 0.8 x {top:.3f} ({sel[g]}/{len(tested[g])} "
+                            f"qualified selected against {sel[lead]}/{len(tested[lead])} for {lead}; "
+                            f"Fisher exact p = {p:.4f})")
+    return msgs, lowest, lowest_p
 
 
-def check(world: World, rows: list[tuple[str, str, int]]) -> tuple[list[tuple[str, str]], float, dict]:
-    """rows = [(role, candidate_id, rank)], already shape-checked."""
+def check(world: World, rows: list[tuple[str, str, int]],
+          strict_ai: bool = False) -> tuple[list[tuple[str, str]], float, dict]:
+    """rows = [(role, candidate_id, rank)], already shape-checked. strict_ai: the generator's design form of the
+    adverse-impact check (see adverse_impact)."""
     violations: list[tuple[str, str]] = []
     roles_of: dict[str, list[str]] = {}
     total, per_role = 0.0, {r: 0.0 for r in ROLES}
@@ -683,7 +712,7 @@ def check(world: World, rows: list[tuple[str, str, int]]) -> tuple[list[tuple[st
     for cid, rs in roles_of.items():
         if len(rs) > 1:
             violations.append(("one_role_per_candidate", f"{cid} is shortlisted for {'+'.join(sorted(rs))}"))
-    msgs, lowest = adverse_impact(world, set(roles_of))
+    msgs, lowest, lowest_p = adverse_impact(world, set(roles_of), significance=not strict_ai)
     violations += [("adverse_impact", m) for m in msgs]
     for c in world.candidates:
         if c.referral and any(qualified(c, r) for r in ROLES) and c.id not in roles_of:
@@ -696,7 +725,7 @@ def check(world: World, rows: list[tuple[str, str, int]]) -> tuple[list[tuple[st
         idcg = sum(f / math.log2(i + 2) for i, f in enumerate(ideal))
         ndcg[role] = round(dcg / idcg, 4) if idcg else 0.0
     metrics = {"fit_sum": round(total, 2), "fit_by_role": {r: round(x, 2) for r, x in per_role.items()},
-               "ndcg_by_role": ndcg, "min_ai_ratio": round(lowest, 4)}
+               "ndcg_by_role": ndcg, "min_ai_ratio": round(lowest, 4), "min_ai_p": round(lowest_p, 4)}
     return violations, round(total, 4), metrics
 
 
@@ -770,6 +799,18 @@ def _write(rows, out_dir: Path) -> None:
 
 def reference_solution(world: World, out_dir: Path) -> None:
     _write(_solve(world, _ref_score), out_dir)
+
+
+def _years_score(c: Candidate, role: str) -> float:
+    """What the recruiters do today: most months of relevant experience first."""
+    return c.months_in(ROLES[role]["family"]) / 12
+
+
+def baseline_solution(world: World, out_dir: Path) -> None:
+    """The client's way without an engineer: keep the applicants who meet every must-have, honour the referral
+    habit, then fill each role by relevant years of experience only (no skills beyond the must-haves, no
+    certificates, nothing learned from the past hires)."""
+    _write(_solve(world, _years_score), out_dir)
 
 
 def violating_examples(world: World) -> dict:

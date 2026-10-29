@@ -11,8 +11,8 @@
 - id: one_role_only
   text: Cada candidato puede aparecer, como máximo, en la preselección de un único puesto de los tres.
 - id: past_hire_bias
-  text: La puntuacion_desempeno_1a de las contrataciones previas es la señal de un buen fichaje, pero los responsables puntuaban mejor a hombres, personal joven y singapurenses, así que solo debe aprenderse de las columnas relacionadas con el trabajo.
+  text: La puntuacion_desempeno_1a de las contrataciones previas es la señal de un buen fichaje, pero los responsables puntuaban mejor a hombres, personal joven y singapurenses; las columnas demográficas no deben ser entradas de la puntuación de cribado, pero pueden usarse para medir y eliminar ese sesgo de las puntuaciones pasadas.
 - id: adverse_impact
-  text: El género, el rango de edad, la nacionalidad y sustitutos como el año de graduación, los idiomas o la ubicación no pueden influir en el orden; entre los cualificados, cada grupo de género, menores de 40/40 o más y Singapur/otras con al menos 15 personas debe alcanzar 0,8 veces la tasa de selección del grupo más alto, con tolerancia de una persona.
+  text: El género, el rango de edad, la nacionalidad y sustitutos como el año de graduación, los idiomas o la ubicación no pueden influir en el orden; entre los cualificados, un grupo de género, menores de 40/40 o más o Singapur/otras con al menos 15 personas solo suspende si su tasa de selección es inferior a 0,8 veces la del grupo más alto y una prueba exacta de Fisher bilateral frente a ese grupo da p < 0,05.
 - id: referral_habit
   text: Todo referido que cumpla todos los requisitos imprescindibles de un puesto al que se presentó debe estar en esa preselección; los referidos no cualificados no tienen preferencia.
