@@ -307,7 +307,7 @@ zh:
   maximize: 最大化
   minimize: 最小化
   program: "程序 {entry}"
-  batch_files: "结果文件：{files}"
+  batch_files: "交付文件：{files}"
   settings_value: "{tiers} 个层级 × {rulesets} 个规则集 = {n} 套标准答案"
   one_problem: 一个固定的问题
   nav_request: 需求
@@ -317,12 +317,12 @@ zh:
   nav_targets: 应问事项
   nav_data: 数据与答案
   nav_readme: 案例说明
-  nav_review: 评审结果
+  nav_review: 评审发现
   request_title: 智能体收到的需求
-  request_intro: 客户的需求，是智能体一开始收到的唯一文字，在所有设置下都相同。
+  request_intro: 客户的需求原文，也是智能体一开始收到的唯一文本；在所有设置下都相同。
   spec_title: "交付物规格（{label}）"
   spec_program: 程序接口
-  spec_batch: 不给智能体，只给把智能体的文件转换成规定格式的提取器
+  spec_batch: 仅提供给把智能体的文件整理成规定格式的提取器，不提供给智能体
   spec_translation: "仅供阅读的译文；智能体和提取器收到的是英文原文："
   settings_title: "设置：一份数据，{n} 套标准答案"
   settings_intro: >-
@@ -336,7 +336,7 @@ zh:
   no_settings: "此案例没有设置：每个难度下都是同一个固定问题。"
   rules_title: 规则
   rules_intro: >-
-    违反任何一条规则，交付物即无效；除非该规则的类别在本次运行的公司政策下可以放宽，且智能体走了例外流程。
+    违反任何一条规则都会使交付物无效，除非该规则的类别在本次运行的公司政策下可以放宽，且智能体已走完例外流程。
   rule: 规则
   class: 类别
   description: "说明（{{…}} 中的参数来自规则集）"
@@ -363,7 +363,7 @@ zh:
     （程序的隐藏时段或语料），<code>gt/</code> 是每个设置一份的答案文件夹。<code>validate-case</code> 会检查这些文件是否仍与生成器一致。
   visible_data: "智能体看到的数据（{language}）"
   hidden_inputs: 隐藏输入
-  scores_title: 各设置的参考得分
+  scores_title: 各设置的参考解得分
   scores_intro: >-
     质量按设置归一化：基线（最简单的有效交付物）为 0，参考解为 1，优于参考解则超过 1（达到政策的质量上限即满分）。
   reference_objective: 参考解目标值
@@ -376,11 +376,11 @@ zh:
   readme_title: 案例说明（README）
   no_readme: （无 README）
   untranslated: "尚未翻译成此语言，显示英文版。"
-  review_title: 评审结果（REVIEW）
+  review_title: 评审发现（REVIEW）
   index_eyebrow: FDE-Bench v2
   index_title: 已构建的案例
   index_intro: >-
-    共 {n} 个案例。每个链接打开案例说明页：需求、设置、规则、隐藏需求、应问事项、保存的数据与答案、评审结果。
+    共 {n} 个案例。每个链接打开案例说明页：需求、设置、规则、隐藏需求、应问事项、保存的数据与答案、评审发现。
   field: 领域
   role: 角色
   case_id: 案例 ID

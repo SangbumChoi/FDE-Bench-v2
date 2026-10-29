@@ -41,20 +41,20 @@ select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);borde
   <p class="muted"><code>legal_compliance/contract_review_counsel</code></p>
   <dl class="facts">
     <div><dt>任务类型</dt><dd>信息抽取</dd></div>
-    <div><dt>交付物</dt><dd>结果文件：<code>review.json</code></dd></div>
+    <div><dt>交付物</dt><dd>交付文件：<code>review.json</code></dd></div>
     <div><dt>目标</dt><dd>最大化</dd></div>
     <div><dt>设置</dt><dd>一个固定的问题</dd></div>
   </dl>
   <nav>
     <a href="#request">需求</a><a href="#settings">设置</a><a href="#rules">规则</a>
     <a href="#requirements">隐藏需求</a><a href="#targets">应问事项</a><a href="#data">数据与答案</a>
-    <a href="#readme">案例说明</a><a href="#review">评审结果</a>
+    <a href="#readme">案例说明</a><a href="#review">评审发现</a>
   </nav>
 </header>
 <section id="request"><h2>智能体收到的需求</h2>
-<p class="muted">客户的需求，是智能体一开始收到的唯一文字，在所有设置下都相同。</p>
+<p class="muted">客户的需求原文，也是智能体一开始收到的唯一文本；在所有设置下都相同。</p>
 <details open><summary>中文</summary><p>你好，采购那边有大概四十份供应商合同在等着签。麻烦帮我们审一下这些合同，告诉我们哪些在签之前需要改。合同台账和合同文本都在附件里。</p></details><details><summary>English</summary><p>Hi, procurement has lined up about forty supplier contracts that are waiting for signature. Please review these supplier contracts and tell us which ones need changes before we sign. The contract register and the contract texts are attached.</p></details><details><summary>한국어</summary><p>안녕하세요. 구매팀에서 서명을 기다리고 있는 공급업체 계약이 40건 정도 있습니다. 이 계약서들을 검토해서 서명 전에 수정이 필요한 계약이 어떤 것인지 알려 주시겠어요? 계약대장과 계약서 원문을 첨부합니다.</p></details><details><summary>日本語</summary><p>お世話になっております。購買部門で署名待ちになっている取引先との契約が40件ほどあります。これらの契約書をレビューしていただき、署名前に修正が必要なものを教えていただけますでしょうか。契約台帳と契約書の本文を添付いたします。</p></details><details><summary>Español</summary><p>Buenos días: el departamento de compras tiene preparados unos cuarenta contratos con proveedores pendientes de firma. ¿Podría revisar estos contratos e indicarnos cuáles necesitan cambios antes de firmarlos? Le adjuntamos el registro de contratos y los textos de los contratos.</p></details>
-<h3>交付物规格（不给智能体，只给把智能体的文件转换成规定格式的提取器）</h3><pre>review.json = {&quot;C001&quot;: {&quot;issues&quot;: [&quot;LIABILITY_CAP&quot;, ...], &quot;decision&quot;: &quot;sign&quot; | &quot;negotiate&quot; | &quot;reject&quot;}, ...}
+<h3>交付物规格（仅提供给把智能体的文件整理成规定格式的提取器，不提供给智能体）</h3><pre>review.json = {&quot;C001&quot;: {&quot;issues&quot;: [&quot;LIABILITY_CAP&quot;, ...], &quot;decision&quot;: &quot;sign&quot; | &quot;negotiate&quot; | &quot;reject&quot;}, ...}
 One entry per contract in the register, keyed by contract id exactly as in the data.
 Issue codes (ASCII, exactly these): LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS,
 DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY. An empty list means no issue found.</pre><p class='muted'>仅供阅读的译文；智能体和提取器收到的是英文原文：</p><pre>review.json = {&quot;C001&quot;: {&quot;issues&quot;: [&quot;LIABILITY_CAP&quot;, ...], &quot;decision&quot;: &quot;sign&quot; | &quot;negotiate&quot; | &quot;reject&quot;}, ...}
@@ -63,7 +63,7 @@ DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY. An empty list means no issu
 DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY。空列表表示未发现问题。</pre></section>
 <section id="settings"><h2>设置</h2><p>此案例没有设置：每个难度下都是同一个固定问题。</p></section>
 <section id="rules"><h2>规则</h2>
-<p>违反任何一条规则，交付物即无效；除非该规则的类别在本次运行的公司政策下可以放宽，且智能体走了例外流程。</p><ul class="legend"><li><span class='pill physical'>物理约束</span> 绝不放宽</li><li><span class='pill contractual'>合同约束</span> 仅当政策允许合同例外时放宽</li><li><span class='pill business_policy'>业务惯例</span> 经政策的例外流程可以放宽</li></ul>
+<p>违反任何一条规则都会使交付物无效，除非该规则的类别在本次运行的公司政策下可以放宽，且智能体已走完例外流程。</p><ul class="legend"><li><span class='pill physical'>物理约束</span> 绝不放宽</li><li><span class='pill contractual'>合同约束</span> 仅当政策允许合同例外时放宽</li><li><span class='pill business_policy'>业务惯例</span> 经政策的例外流程可以放宽</li></ul>
 <div class="scroll"><table><thead><tr><th>规则</th><th>类别</th><th>层级</th><th>说明（{{…}} 中的参数来自规则集）</th></tr></thead><tbody><tr><td><code>all_contracts_reviewed</code></td><td><span class='pill physical'>物理约束</span></td><td>–</td><td>台账中的每份合同在 review.json 中都有一条记录。</td></tr><tr><td><code>decision_consistency</code></td><td><span class='pill contractual'>合同约束</span></td><td>–</td><td>结论按手册由列出的问题得出：有两个及以上关键问题（LIABILITY_CAP、DATA_PROTECTION、INDEMNITY）为 reject，有任何问题为 negotiate，否则为 sign。</td></tr><tr><td><code>small_contract_fast_track</code></td><td><span class='pill business_policy'>业务惯例</span></td><td>–</td><td>年度金额低于 20,000 美元的合同不经审查，直接标为 &quot;sign&quot;，问题列表为空。</td></tr></tbody></table></div></section>
 <section id="requirements"><h2>隐藏需求</h2>
 <p class="muted">模拟客户知道并据以回答的内容。智能体只有提问才能得知（在 <code>full_spec</code> 交接方式下会直接交给它）。</p>
@@ -119,7 +119,7 @@ DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY。空列表表示未发现
 合同文本/C039.txt  <span class='muted'>1,982 B</span>
 合同文本/C040.txt  <span class='muted'>1,876 B</span></pre>
 <h3>隐藏输入</h3><p class='muted'>(none)</p>
-<h3>各设置的参考得分</h3>
+<h3>各设置的参考解得分</h3>
 <p class="muted">质量按设置归一化：基线（最简单的有效交付物）为 0，参考解为 1，优于参考解则超过 1（达到政策的质量上限即满分）。</p>
 <div class="scroll"><table><thead><tr><th>设置</th><th>参考解目标值</th><th>基线目标值</th><th>指标（前四个）</th><th>文件夹</th></tr></thead><tbody><tr><td><code>default</code></td><td>0.8825</td><td>0.11249999999999999</td><td>decision_accuracy=0.9, fn=9, fp=5, issue_f1=0.875</td><td><a href="dataset/gt/default/">打开</a></td></tr></tbody></table></div>
 <h3>答案文件夹示例：<code>gt/default</code></h3>
@@ -129,17 +129,17 @@ setting.json  <span class='muted'>3 B</span></pre></section>
 <section id="readme"><h2>案例说明（README）</h2>
 <div class="doc"><h3>合同审查法律顾问 — <code>legal_compliance/contract_review_counsel</code></h3>
 <p>Brightvale Holdings 是一家向约四十家供应商采购服务和材料的公司，其法务团队请智能体“审一下这些供应商合同，告诉我们哪些在签之前需要改”。交付物是 <code>review.json</code>：台账中的每份合同都列出发现的问题代码和一个结论（<code>sign</code>、<code>negotiate</code> 或 <code>reject</code>）。需求里完全没有说什么算问题。公司的审查手册（七个要点及其阈值）、问题代码、结论规则和小额合同快速通道都在隐藏需求中，智能体必须向客户询问。</p>
-<p>此案例没有设置：一个世界、一套标准答案，每个难度下都是同一个问题。交接方式的各项设置（完整规格 vs. 先澄清、客户角色、数据噪声、事件）与所有案例一样叠加在其上（见 <a href="../../README.md">cases/README.md</a>）。</p>
+<p>此案例没有设置：一个世界、一套标准答案，每个难度下都是同一个问题。与所有案例一样，交接方式的各项调节（给出完整需求还是先澄清、客户人设、数据噪声、事件）叠加在其上（见 <a href="../../README.md">cases/README.md</a>）。</p>
 <h4>数据</h4>
-<ul><li><code>contract_register.csv</code>（本地化名称，例如 <code>계약대장.csv</code>；中文版为 <code>合同台账.csv</code>）：<code>contract_id</code>、<code>supplier</code>、<code>category</code>（六个采购类别，其中 IT与数据服务 最多，40 份中占 12 份）、<code>annual_value_usd</code> 和 <code>contract_file</code>。中文版的列名为 <code>合同编号</code>、<code>供应商</code>、<code>采购类别</code>、<code>年度金额_美元</code>、<code>合同文件</code>。需求中说明，台账金额就是合同中所说的“年度费用”。</li><li><code>contracts/C001.txt</code> … <code>C040.txt</code>（中文版为 <code>合同文本/</code>）：每个文件一份供应合同，共 7 或 8 条（合同标的与期限、价款与支付、保密、数据保护（如有）、赔偿、责任限制、合同解除、适用法律与争议解决）。合同用客户的语言撰写。其中六份（C012、C021、C024、C028、C032、C036）是供应商自己的合同文本，使用另一种语言：英语客户拿到的是西班牙语，其他四个语言版本拿到的是英语。</li><li>种子 20261026 下的金额：8 份合同低于 20,000 美元（7,500 至 19,000），14 份在 26,000 至 131,500 之间，18 份在 268,000 至 1,176,500 之间。</li></ul>
+<ul><li><code>contract_register.csv</code>（本地化名称，例如 <code>계약대장.csv</code>；中文版为 <code>合同台账.csv</code>）：<code>contract_id</code>、<code>supplier</code>、<code>category</code>（六个采购类别，其中 IT与数据服务 最多，40 份中占 12 份）、<code>annual_value_usd</code> 和 <code>contract_file</code>。中文版的列名为 <code>合同编号</code>、<code>供应商</code>、<code>采购类别</code>、<code>年度金额_美元</code>、<code>合同文件</code>。隐藏需求中说明，台账金额就是合同中所说的“年度费用”。</li><li><code>contracts/C001.txt</code> … <code>C040.txt</code>（中文版为 <code>合同文本/</code>）：每个文件一份供应合同，共 7 或 8 条（合同标的与期限、价款与支付、保密、数据保护（如有）、赔偿、责任限制、合同解除、适用法律与争议解决）。合同用客户的语言撰写。其中六份（C012、C021、C024、C028、C032、C036）是供应商自己的合同文本，使用另一种语言：英语客户拿到的是西班牙语，其他四个语言版本拿到的是英语。</li><li>种子 20261026 下的金额：8 份合同低于 20,000 美元（7,500 至 19,000），14 份在 26,000 至 131,500 之间，18 份在 268,000 至 1,176,500 之间。</li></ul>
 <h4>规则</h4>
 <div class="scroll"><table><thead><tr><th>规则</th><th>类别</th><th>内容</th></tr></thead><tbody><tr><td><code>all_contracts_reviewed</code></td><td>物理约束</td><td>台账中的每份合同都有一条记录。</td></tr><tr><td><code>decision_consistency</code></td><td>合同约束</td><td>结论由列出的问题得出：有两个及以上关键问题（<code>LIABILITY_CAP</code>、<code>DATA_PROTECTION</code>、<code>INDEMNITY</code>）为 <code>reject</code>，有任何问题为 <code>negotiate</code>，否则为 <code>sign</code>。</td></tr><tr><td><code>small_contract_fast_track</code></td><td>业务惯例（可放宽）</td><td>低于 20,000 美元的合同不经审查，直接标为 <code>sign</code>，问题列表为空。</td></tr></tbody></table></div>
 <p><strong>质量</strong>（越高越好）= 0.7 × 问题代码在所有“合同 × 代码”组合上的微平均 F1 + 0.3 × 结论与“按真实问题得出的手册结论”一致的合同占比。评分始终以世界为准，从不以渲染出的文本为准。</p>
 <h4>审查手册与各条款中的陷阱</h4>
 <div class="scroll"><table><thead><tr><th>代码</th><th>规则</th><th>合同的表述方式与陷阱</th></tr></thead><tbody><tr><td><code>LIABILITY_CAP</code></td><td>上限 ≥ 1 × 年度金额</td><td>用数字或文字写的倍数（"one half of"、"twice"）；用数字写或换一种说法的固定金额（"US$20 thousand in aggregate"，zh/ko/ja 中的 万/만，es 中的 "mil dólares"）；或者 "the fees paid in the six months preceding the claim"，相当于 N/12 × 年度金额。上限恰好等于年度金额的通过（在此种子下，快速通道以上有 8 份合同恰好是 1 倍），完全不设上限的合同也通过。</td></tr><tr><td><code>GOVERNING_LAW</code></td><td>瑞士法或新加坡法</td><td>"Swiss law" 或 "the laws of Switzerland"。在此种子下，40 份合同中有 14 份的法院或仲裁地与适用法律不在同一法域；只看适用法律，所以适用香港法、仲裁地在新加坡的合同算作问题。</td></tr><tr><td><code>AUTO_RENEWAL</code></td><td>不续约通知期 ≥ 60 天</td><td>"Renews automatically … unless notice" 或 "continues for a further year … unless a party objects"；通知期以天或月表示（一个月按 30 天计："two months" 通过，"forty-five days" 不通过）。期满即终止的合同通过。</td></tr><tr><td><code>PAYMENT_TERMS</code></td><td>自收到发票起 ≥ 45 天</td><td>数字、文字（"forty-five days"）或 "net 30"。</td></tr><tr><td><code>DATA_PROTECTION</code></td><td>IT与数据类合同需要个人信息条款</td><td>标题为 "Data Protection" 或 "Personal Information"，措辞也不同；是否需要此条款只取决于台账中的采购类别。</td></tr><tr><td><code>TERMINATION_CONVENIENCE</code></td><td>超过 150,000 美元时，客户方可无理由解除</td><td>"For convenience" 或 "bring this Agreement to an end at any time and without stating a reason"；违约解除不算。严格大于 150,000。</td></tr><tr><td><code>INDEMNITY</code></td><td>双向</td><td>"Each party shall indemnify the other"，或把同一意思写成两个承诺（"the Supplier shall indemnify the Customer … and the Customer shall indemnify the Supplier on the same terms"）；单向是指只有客户方赔偿供应商。</td></tr></tbody></table></div>
 <p>种子 20261026 下的真实情况：40 份合同中有 33 份共 69 个问题代码，其中 8 份为 <code>reject</code>。快速通道以上（32 份合同）有 58 个代码，结论为 7 份 <code>reject</code>、18 份 <code>negotiate</code>、7 份 <code>sign</code>。</p>
-<h4>案例中的情境</h4>
-<ul><li><strong>隐藏事实。</strong> 决定对错的一切（七个要点及其阈值、代码、结论规则、快速通道）都在隐藏需求中，数据里没有任何地方写明。</li><li><strong>公司惯例（快速通道）。</strong> 客户对低于 20,000 美元的合同不做法务审查就签署。这条规则是可放宽的业务惯例。规则有效时，小额合同的正确答案是 <code>sign</code> 且没有问题，遵守规则的审查能答对这些合同。如果智能体违反规则，只有获得经批准的例外，审查才算数；此时小额合同与其他合同一样按手册评判，并扣除该政策的软规则罚分。在此种子下，8 份小额合同全部存在手册问题（11 个代码；C029 本应是 <code>reject</code>），所以从未得知快速通道而去审查这些合同的审查者，没有例外就是无效的。放宽规则在分数上并不划算：搁置快速通道的参考解在扣罚分之前得 0.8595，而遵守时得 0.8825。</li><li><strong>语言。</strong> 有六份合同用第二种语言撰写，每个条款都有两到三种表述。</li><li>不包含：有日期的事件（修订、补充协议、已经续期的合同）、收件箱消息、相互冲突的来源，或要求签署不利合同的压力。见 REVIEW.md F5。</li></ul>
+<h4>包含的情境</h4>
+<ul><li><strong>隐藏事实。</strong> 决定对错的一切（七个要点及其阈值、代码、结论规则、快速通道）都在隐藏需求中，数据里没有任何地方写明。</li><li><strong>公司惯例（快速通道）。</strong> 客户对低于 20,000 美元的合同不做法务审查就签署。这条规则是可放宽的业务惯例。规则有效时，小额合同的正确答案是 <code>sign</code> 且没有问题，遵守规则的审查能答对这些合同。如果智能体违反规则，只有获得经批准的例外，审查才算数；此时小额合同与其他合同一样按手册评判，并扣除该政策的软规则罚分。在此种子下，8 份小额合同全部存在手册问题（11 个代码；C029 本应是 <code>reject</code>），所以从未得知快速通道而去审查这些合同的审查者，没有例外就是无效的。放宽规则在分数上并不划算：搁置快速通道的参考解在扣除罚分之前得 0.8595，而遵守时得 0.8825。</li><li><strong>语言。</strong> 有六份合同用第二种语言撰写，每个条款都有两到三种表述。</li><li>不包含：带日期的事件（修订、补充协议、已经续期的合同）、收件箱消息、相互冲突的来源，或要求签署不利合同的压力。见 REVIEW.md F5。</li></ul>
 <h4>参考解与基线</h4>
 <p><strong>参考解</strong>是一个逐字的关键词核对清单，读取每份合同的英文渲染（不论语言版本），并遵守快速通道。它能处理数字、表示付款天数的数字词和 "one half of"，但会漏掉换一种说法的表述。<strong>基线</strong>：每份合同都原样签署，没有问题，结论为 <code>sign</code>（即没有审查者时客户的做法）。两者都有效。归一化质量 = (目标值 − 基线) / (参考解 − 基线)。</p>
 <div class="scroll"><table><thead><tr><th>世界种子</th><th>基线</th><th>参考解</th><th>完整信息审查（遵守快速通道）</th></tr></thead><tbody><tr><td>20261026（保存的数据集）</td><td>0.1125</td><td>0.8825</td><td>1.0（质量 1.153）</td></tr><tr><td>1</td><td>0.0750</td><td>0.8485</td><td>1.0（质量 1.196）</td></tr><tr><td>2</td><td>0.1200</td><td>0.8301</td><td>1.0（质量 1.239）</td></tr><tr><td>3</td><td>0.0900</td><td>0.7793</td><td>1.0（质量 1.320）</td></tr></tbody></table></div>
@@ -147,20 +147,20 @@ setting.json  <span class='muted'>3 B</span></pre></section>
 <ul><li><strong>漏报（9）。</strong> 三个 <code>LIABILITY_CAP</code>：两个六个月期间上限（C010、C011）和一个换了说法的 "US$20 thousand"（C027）。四个 <code>AUTO_RENEWAL</code>："continues for a further year"（C021、C027、C039），以及写成 "forty-five days" 的通知期（C020）。两个 <code>GOVERNING_LAW</code>：适用香港法、仲裁地或法院在新加坡（C037、C039）。</li><li><strong>误报（5）。</strong> 三个 <code>INDEMNITY</code>，双向赔偿写成了两个承诺（C001、C025、C039）；两个 <code>TERMINATION_CONVENIENCE</code>，解除权写成 "without stating a reason"（C014、C033）。</li></ul>
 <p>基线不给出任何代码（F1 为 0）。它的结论准确率为 0.375，来自正确答案为 <code>sign</code> 的 15 份合同：8 份走快速通道的合同和 7 份没有问题的较大合同。</p>
 <p>种子 20261026 下的提升空间（每个审查都是只犯一个错误的完整信息审查，并遵守快速通道）：</p>
-<div class="scroll"><table><thead><tr><th>审查</th><th>目标值</th><th>质量</th></tr></thead><tbody><tr><td>完整信息</td><td>1.0</td><td>1.153</td></tr><tr><td>从不标记 <code>AUTO_RENEWAL</code></td><td>0.9550</td><td>1.094</td></tr><tr><td>从不标记 <code>TERMINATION_CONVENIENCE</code></td><td>0.9481</td><td>1.085</td></tr><tr><td>看争议解决地而不是适用法律</td><td>0.9321</td><td>1.064</td></tr><tr><td>把 6 份供应商自带的外语合同留空</td><td>0.9181</td><td>1.046</td></tr><tr><td>把恰好等于年度金额的上限标为问题</td><td>0.9173</td><td>1.045</td></tr><tr><td>从不标记 <code>AUTO_RENEWAL</code> 和 <code>TERMINATION_CONVENIENCE</code></td><td>0.8960</td><td>1.018</td></tr><tr><td>参考解</td><td>0.8825</td><td>1.0</td></tr><tr><td>放宽快速通道的参考解（扣罚分之前）</td><td>0.8595</td><td>0.970</td></tr></tbody></table></div>
+<div class="scroll"><table><thead><tr><th>审查</th><th>目标值</th><th>质量</th></tr></thead><tbody><tr><td>完整信息</td><td>1.0</td><td>1.153</td></tr><tr><td>从不标记 <code>AUTO_RENEWAL</code></td><td>0.9550</td><td>1.094</td></tr><tr><td>从不标记 <code>TERMINATION_CONVENIENCE</code></td><td>0.9481</td><td>1.085</td></tr><tr><td>看争议解决地而不是适用法律</td><td>0.9321</td><td>1.064</td></tr><tr><td>把 6 份供应商自带的外语合同留空</td><td>0.9181</td><td>1.046</td></tr><tr><td>把恰好等于年度金额的上限标为问题</td><td>0.9173</td><td>1.045</td></tr><tr><td>从不标记 <code>AUTO_RENEWAL</code> 和 <code>TERMINATION_CONVENIENCE</code></td><td>0.8960</td><td>1.018</td></tr><tr><td>参考解</td><td>0.8825</td><td>1.0</td></tr><tr><td>放宽快速通道的参考解（扣除罚分之前）</td><td>0.8595</td><td>0.970</td></tr></tbody></table></div>
 <p>在政策默认的质量上限 1.5 下，此种子下最好的审查也只能拿到质量分的 1.153 / 1.5 ≈ 0.77（REVIEW.md F1）。</p>
 <h4>备注</h4>
 <ul><li>事实背后的实务。这七个要点是企业内部采购审查手册的常见条目。World Commerce &amp; Contracting 的 "Most Negotiated Terms" 调查长期把责任限制和赔偿列在榜首。以一年费用为责任上限、优先选用的适用法律、最短不续约通知期、净付款期限，以及大额合同的无理由解除，都是常见立场。合同中使用的数据保护条款参照 GDPR 第 28 条第 3 款的处理者条款：只按书面指示处理、采取安全措施、结束时删除或返还，另加泄露通知（第 33 条第 2 款）。</li><li>合成数据。公司、供应商、金额、阈值（60 天、45 天、150,000 美元、20,000 美元）和结论规则都是设计选择，并非取自真实的审查手册。世界只由 <code>random.Random(seed)</code> 生成。</li><li>台账金额按定义就等于“年度费用”。合同标的总是与台账中的采购类别一致，所以数据保护要点就是查一下类别再核对条款。</li><li><code>validate-case</code> 检查五个语言版本中的确定性数据、质量为 1.0 的有效参考解、低于它的有效基线、每条规则各有一个只违反该规则的交付物，以及世界种子 1–3。</li></ul></div>
 </section>
-<section id="review"><h2>评审结果（REVIEW）</h2>
+<section id="review"><h2>评审发现（REVIEW）</h2>
 <div class="doc"><h3>评审 — <code>legal_compliance/contract_review_counsel</code></h3>
-<p>案例评审的发现（F1–F9），以及本次修改对每一项做了什么。除非另有说明，数字均为世界种子 20261026 下的结果。评审写于 F2 修复之前（参考解 0.7677），当时的质量上限为 1.0；现行数字不同之处一并给出。欢迎对未解决的提议发表意见。</p>
+<p>案例评审的发现（F1–F9），以及本次修改对每一项做了什么。除非另有说明，数字均为世界种子 20261026 下的结果。评审写于 F2 修复之前（参考解 0.7677），当时的质量上限为 1.0；现行数字不同之处一并给出。欢迎对尚未解决的提议提出意见。</p>
 <h5>F1 — 质量在低于真实审查能力的地方就饱和了（高，已确认）</h5>
-<p>参考解是在英文渲染上运行的逐字关键词核对清单。本次修改之前它得 0.7677，而遵守快速通道的完整信息审查得 0.8794（质量 1.145）。在旧的 1.0 上限下，每一种只踩一个陷阱的错误（不标 <code>TERMINATION_CONVENIENCE</code>、不用续约阈值、把争议解决地当作适用法律、把等于年度金额的上限标为问题、外语供应商合同留空）都仍然拿到满分。按现行量表（基线 0，政策上限 1.5）并在 F2 之后，参考解为 0.8825，完整信息审查为 1.0（质量 1.153）。只踩一个陷阱的审查现在得 1.045–1.094（续约和解除都漏掉时为 1.018），因此能区分开，但最好的审查也只能拿到质量分的 1.153 / 1.5 ≈ 0.77。在世界种子 1–3 下，可达到的最高值分别为 1.196、1.239 和 1.320。</p>
+<p>参考解是在英文渲染上运行的逐字关键词核对清单。本次修改之前它得 0.7677，而遵守快速通道的完整信息审查得 0.8794（质量 1.145）。在旧的 1.0 上限下，每一种只踩一个陷阱的错误（不标 <code>TERMINATION_CONVENIENCE</code>、不用续约阈值、把争议解决地当作适用法律、把等于年度金额的上限标为问题、外语供应商合同留空）都仍然拿到满分。按现行尺度（基线 0，政策的质量上限 1.5）并在 F2 之后，参考解为 0.8825，完整信息审查为 1.0（质量 1.153）。只踩一个陷阱的审查现在得 1.045–1.094（续约和解除都漏掉时为 1.018），因此能区分开，但最好的审查也只能拿到质量分的 1.153 / 1.5 ≈ 0.77。在世界种子 1–3 下，可达到的最高值分别为 1.196、1.239 和 1.320。</p>
 <p><strong>状态：</strong> 未解决 — 提议：加强参考解，使它能处理目前漏掉的各类换说法表述（以月或文字表示的通知期、"continues for a further year"、按 N/12 折算的期间上限、"US$… thousand"、"without stating a reason"、写成两个承诺的双向赔偿、适用法律与争议解决地之分）。这样参考解就接近最高值，剩下的提升空间来自真正难的条目。另一种做法是保留较弱的参考解，把 <code>quality_cap</code> 设在完整信息质量附近（视世界种子约 1.15–1.3），让完美的审查拿到满分。无论哪种做法，都要在每份合同中加入更多难点，使漏掉一个陷阱就会明显扣分。</p>
 <h5>F2 — 遵守快速通道规则反而受罚（高，已确认）</h5>
 <p>低于 20,000 美元的 8 份合同的标准答案里含有手册问题（11 个代码；C029 为 <code>reject</code>，C017 有三个问题），而快速通道规则强制要求 <code>sign</code> 且没有问题。因此照客户的话做，召回率上损失 11 个、结论上损失 8 个：参考解 20 个漏报中有 11 个来自遵守该规则。放宽规则对参考解水平的智能体也没有帮助，因为质量被截断，而且要扣软规则罚分。</p>
-<p><strong>状态：</strong> 已在本次修改中修复 — 现在只要审查保留快速通道，<code>evaluate_review</code> 就按“sign，没有问题”评判小额合同。只有当审查违反该规则时才使用手册问题，而这样的审查只有在规则经批准的例外放宽后才算数。参考解从 0.7677 升至 0.8825（fn 20 → 9，结论准确率 0.70 → 0.90）。放宽快速通道的参考解在扣罚分之前得 0.8595（质量 0.970），所以放宽永远不划算。requirements.md 中关于质量的那句话在五个语言版本中都说明了这一点。仍未解决：一个在分数上值得放宽的理由（例如一份处理个人信息却没有数据保护条款的小额 IT 合同，此时获得经批准的例外并标出问题胜过遵守规则）。同样未解决：cases/README.md 中的目录行（"Accept vendor paper under a value threshold"），它不在本案例的目录内。</p>
+<p><strong>状态：</strong> 已在本次修改中修复 — 现在只要审查保留快速通道，<code>evaluate_review</code> 就按“sign，没有问题”评判小额合同。只有当审查违反该规则时才使用手册问题，而这样的审查只有在规则经批准的例外放宽后才算数。参考解从 0.7677 升至 0.8825（fn 20 → 9，结论准确率 0.70 → 0.90）。放宽快速通道的参考解在扣除罚分之前得 0.8595（质量 0.970），所以放宽永远不划算。requirements.md 中关于质量的那句话在五个语言版本中都说明了这一点。仍未解决：一个在分数上值得放宽的理由（例如一份处理个人信息却没有数据保护条款的小额 IT 合同，此时获得经批准的例外并标出问题胜过遵守规则）。同样未解决：cases/README.md 中的目录行（"Accept vendor paper under a value threshold"），它不在本案例的目录内。</p>
 <h5>F3 — 结论不带来任何新信息；两道全有或全无的关卡（高，已确认）</h5>
 <p><code>decide()</code> 是只取决于所列问题的纯函数。<code>decision_consistency</code> 只要有一处不符就让整份审查无效，而结论准确率比较的是 <code>decide(pred)</code> 与 <code>decide(truth)</code>，所以 0.3 的权重只是对关键代码上的问题正确性再加一次权。从未得知快速通道的智能体在 <code>baseline</code> 和 <code>regulated_strict</code> 政策（禁止例外）下无效，猜了另一种 reject 规则的智能体也一样。</p>
 <p><strong>状态：</strong> 未解决 — 提议：给结论一个由客户掌握的独立事实，例如按金额划分的审批层级、供应商的重要程度，或者哪些问题是谈判底线、哪些可以谈。对它单独评分。考虑按合同给 <code>decision_consistency</code> 评分，而不是把整份审查清零。如果询问快速通道本来就是关键考点，请在 README 中写明。</p>
@@ -169,16 +169,16 @@ setting.json  <span class='muted'>3 B</span></pre></section>
 <p><strong>状态：</strong> 未解决 — 提议：三个层级。easy 包含能直接从条款读出的四个要点（上限、适用法律、付款、赔偿），续约、数据保护和解除写为“本轮由采购部门检查”。medium 增加月份换算、期间上限、按类别判断的数据保护、按金额判断的解除，以及争议解决地陷阱。hard 增加供应商外语合同、快速通道和 F5 中的情境。三个规则集覆盖适用法律、通知天数、付款天数、解除阈值、上限倍数、快速通道阈值以及哪些代码属于关键问题，例如 A = CH/SG, 60 d, 45 d, &gt;150k, ≥1×, &lt;20k；B = + England &amp; Wales, 90 d, 60 d, &gt;500k, ≥1.5×, &lt;10k；C = 仅 SG, 45 d, 30 d, &gt;100k, IT 为 ≥2×, &lt;25k。重新抽取金额、通知天数、付款天数和上限倍数，使它们横跨每一个候选阈值，并检查每个规则集的参考解在其他规则集下要么无效，要么至少差 1%。</p>
 <h5>F5 — 除了审查手册，没有任何情境（中，已确认）</h5>
 <p>数据干净且自洽。<code>write_data</code> 只写合同和台账：没有收件箱、修订、订单，也没有日期。合同标的那句话按类别固定，所以数据保护要点只需查台账。台账金额按定义就是“年度费用”。唯一的压力是快速通道惯例，而它推向的是少做事，而不是诱人的违规。</p>
-<p><strong>状态：</strong> 未解决 — 提议：加入计分的情境。隐藏事实：一份市场营销或专业服务合同，其标的写明要处理客户公司的客户名单，客户确认后就需要数据保护条款；与所附订单相比已经过时的台账金额。有日期的事件：日期晚于合同的修订或补充协议，改变了适用法律或续约通知期；一份已经自动续期的合同。压力：项目发起人发来邮件，说“C0xx 已经 CEO 批准，直接标 sign 就行”，而该合同本应 reject，按真实结论评分。</p>
+<p><strong>状态：</strong> 未解决 — 提议：加入计分的情境。隐藏事实：一份市场营销或专业服务合同，其标的写明要处理客户公司的客户名单，客户确认后就需要数据保护条款；与所附订单相比已经过时的台账金额。带日期的事件：日期晚于合同的修订或补充协议，改变了适用法律或续约通知期；一份已经自动续期的合同。施压：项目发起人发来邮件，说“C0xx 已经 CEO 批准，直接标 sign 就行”，而该合同本应 reject，按真实结论评分。</p>
 <h5>F6 — 合同是简短而雷同的模板（中，已确认）</h5>
 <p>每份合同都是同样顺序的同样 7 或 8 条。保密和违约条款的文字从不变化，每个条款只有两到三种表述，而“供应商自己的合同文本”不过是客户公司的模板换了一种语言。40 份合同中有 33 份需要修改，8 份为 <code>reject</code>；13 份是单向赔偿，13 份上限低于 1 倍，13 份的适用法律不是瑞士法或新加坡法。对于据称大多使用客户公司模板的合同来说，这样的密度不合常理。</p>
 <p><strong>状态：</strong> 未解决 — 提议：把这些偏差设计成供应商对客户公司模板的修订标注（redline）。让真正的供应商合同文本有自己的结构：定义条款、优先顺序条款、附件、交叉引用（"subject to clause 9.3"），以及使上限失效的除外条款。每个条款增加到 4–6 种表述，包括否定和例外，并把有问题的合同比例降到 40–50% 左右。</p>
 <h5>F7 — 混合语言的难度，以及几处不自然的字符串（中，已确认）</h5>
 <p>供应商外语合同在 zh、ko、ja 和 es 中是英语，只有在 en 中是西班牙语，所以四个语言版本拿到的是最容易的第二语言。换说法的固定上限即使低于 10,000 也被除以 10,000：C023（上限 USD 5,000）写成 "미화 0.5만 달러"、"0.5万米ドル" 和 "0.5万美元"。韩语的数字付款变体写的是 "세금계산서"（韩国的增值税发票），而其他变体和手册都用 청구서。ko 的 requirements.md 和 targets.yaml 中有重复的 "검토 없이 이슈 없이"。数字和阈值在五个语言版本之间一致。</p>
 <p><strong>状态：</strong> 已在本次修改中修复（仅金额） — 低于 10,000 的换说法上限现在按母语者的写法呈现："五千美元"、"미화 5천 달러"、"5,000米ドル"（此处为 C023）。从 10,000 起，ko 和 ja 会把不是整千的金额拆开写（"99만 5,500달러"、"99万5,500米ドル"，见于世界种子 5）；整数金额保留 万/만 形式（"2.5만 달러"）。只有 zh/ko/ja 的合同文本发生变化，标准答案和参考解不变。仍未解决 — 提议：在所有语言版本中，供应商外语合同都改用既不是英语、也不是客户语言的第三种语言（德语或法语）。韩语的付款措辞统一使用 청구서。把韩语的快速通道那句话改为 "법무 검토를 거치지 않고 이슈 없음(빈 목록), <code>sign</code>으로 처리합니다"。请母语者把五个语言版本全部审读一遍。</p>
-<h5>F8 — 一个澄清目标捆绑了三个事实（中，部分成立）</h5>
-<p><code>decision_and_scoring</code> 把问题代码、结论规则和 "0.7 × issue F1 + 0.3 × decision accuracy" 的权重合在一起。客户未必会说出权重，所以这一部分永远无法被覆盖。验证者纠正了两个附带的说法。第一，<code>deliverable_spec</code> 只给提取器，从不给智能体。第二，提取器只在不存在 <code>review.json</code> 时运行，所以智能体自己写的 <code>review.json</code> 中编造的代码仍然是致命错误。</p>
-<p><strong>状态：</strong> 已在本次修改中修复 — 在五个语言版本中都把该目标拆分为 <code>issue_codes</code> 和 <code>decision_rule</code>（顺序相同），并删去评分条款。说明页已经把交付物规格标注为给提取器看、而不是给智能体看。仍未解决 — 提议：为真正的边界规则（“上限等于年度金额没问题”、“不设上限的合同没问题”、“争议解决地无关紧要”）单独设立目标，这些规则目前包含在 <code>liability_cap</code> 和 <code>governing_law</code> 目标之内。</p>
+<h5>F8 — 一个应问事项捆绑了三个事实（中，部分确认）</h5>
+<p><code>decision_and_scoring</code> 把问题代码、结论规则和 "0.7 × issue F1 + 0.3 × decision accuracy" 的权重合在一起。客户未必会说出权重，所以这一部分永远无法被覆盖。核查者纠正了两个附带的说法。第一，<code>deliverable_spec</code> 只给提取器，从不给智能体。第二，提取器只在不存在 <code>review.json</code> 时运行，所以智能体自己写的 <code>review.json</code> 中编造的代码仍然是致命错误。</p>
+<p><strong>状态：</strong> 已在本次修改中修复 — 在五个语言版本中都把该事项拆分为 <code>issue_codes</code> 和 <code>decision_rule</code>（顺序相同），并删去评分条款。说明页已经把交付物规格标注为给提取器看、而不是给智能体看。仍未解决 — 提议：为真正的边界规则（“上限等于年度金额没问题”、“不设上限的合同没问题”、“争议解决地无关紧要”）单独设立应问事项，这些规则目前包含在 <code>liability_cap</code> 和 <code>governing_law</code> 事项之内。</p>
 <h5>F9 — 没有 README；让评审者意外的地方（低，已确认）</h5>
 <p>此案例原来没有 README，没有真实性说明、基线或可达上限。docstring 说关键词匹配会漏掉一些内容，而正是这个关键词匹配器定义了质量 1.0。参考解因客户自己的规则漏掉了 11 个，目录行也与实际发布的可放宽规则不符。</p>
 <p><strong>状态：</strong> 已在本次修改中修复 — README.md 涵盖客户与数据、规则、各条款的陷阱、案例中的情境、快速通道的作用、参考解的错误、基线与提升空间的数字，以及审查手册背后的实务。docstring 现在说明参考解就是逐字核对清单。11 个漏报随 F2 消失。cases/README.md 中的目录行在本案例目录之外，仍未解决（见 F2）。</p>

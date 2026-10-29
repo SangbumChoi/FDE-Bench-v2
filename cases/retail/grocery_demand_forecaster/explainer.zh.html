@@ -41,20 +41,20 @@ select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);borde
   <p class="muted"><code>retail/grocery_demand_forecaster</code></p>
   <dl class="facts">
     <div><dt>任务类型</dt><dd>机器学习</dd></div>
-    <div><dt>交付物</dt><dd>结果文件：<code>forecast.csv</code></dd></div>
+    <div><dt>交付物</dt><dd>交付文件：<code>forecast.csv</code></dd></div>
     <div><dt>目标</dt><dd>最小化</dd></div>
     <div><dt>设置</dt><dd>一个固定的问题</dd></div>
   </dl>
   <nav>
     <a href="#request">需求</a><a href="#settings">设置</a><a href="#rules">规则</a>
     <a href="#requirements">隐藏需求</a><a href="#targets">应问事项</a><a href="#data">数据与答案</a>
-    <a href="#readme">案例说明</a><a href="#review">评审结果</a>
+    <a href="#readme">案例说明</a><a href="#review">评审发现</a>
   </nav>
 </header>
 <section id="request"><h2>智能体收到的需求</h2>
-<p class="muted">客户的需求，是智能体一开始收到的唯一文字，在所有设置下都相同。</p>
+<p class="muted">客户的需求原文，也是智能体一开始收到的唯一文本；在所有设置下都相同。</p>
 <details open><summary>中文</summary><p>能不能帮我们预测一下，从 11 月 2 日（周一）开始的两周里，5 家门店每天每样商品能卖多少？我们订货就靠这个数。销售历史和主数据都在附件里，另外还有几个文件。</p></details><details><summary>English</summary><p>Can you forecast how much of each product each of our five stores will sell every day for the next two weeks, starting Monday 2 November? We place our orders from these numbers. The sales history and our master data are attached, with a couple of other files.</p></details><details><summary>한국어</summary><p>11월 2일(월)부터 2주 동안 저희 5개 점포에서 상품별로 하루에 얼마나 팔릴지 예측해 주실 수 있을까요? 이 숫자를 보고 발주를 넣습니다. 판매 이력과 기준정보, 그리고 파일 몇 개를 더 첨부합니다.</p></details><details><summary>日本語</summary><p>11月2日（月）からの2週間、当社5店舗で各商品が毎日どれくらい売れるか、予測していただけますか。この数字をもとに発注しています。販売履歴とマスタ、ほかにいくつかファイルを添付いたします。</p></details><details><summary>Español</summary><p>¿Podría prevernos cuánto va a vender cada una de nuestras cinco tiendas de cada producto, día a día, durante las próximas dos semanas a partir del lunes 2 de noviembre? Con esas cifras hacemos los pedidos. Le adjunto el historial de ventas, los datos maestros y algún archivo más.</p></details>
-<h3>交付物规格（不给智能体，只给把智能体的文件转换成规定格式的提取器）</h3><pre>forecast.csv with ASCII header store_id,item_id,date,forecast
+<h3>交付物规格（仅提供给把智能体的文件整理成规定格式的提取器，不提供给智能体）</h3><pre>forecast.csv with ASCII header store_id,item_id,date,forecast
 One row per store x item x date in the 14-day horizon (2026-11-02 .. 2026-11-15);
 store_id / item_id exactly as in the data (e.g. S1, I01), date as YYYY-MM-DD,
 forecast = expected units of the item&#x27;s current sales unit (a number, decimals allowed).</pre><p class='muted'>仅供阅读的译文；智能体和提取器收到的是英文原文：</p><pre>forecast.csv，ASCII 表头为 store_id,item_id,date,forecast。
@@ -63,7 +63,7 @@ store_id / item_id 与数据中完全一致（如 S1、I01），date 格式为 Y
 forecast = 按该商品当前销售单位计的预期数量（数值，可带小数）。</pre></section>
 <section id="settings"><h2>设置</h2><p>此案例没有设置：每个难度下都是同一个固定问题。</p></section>
 <section id="rules"><h2>规则</h2>
-<p>违反任何一条规则，交付物即无效；除非该规则的类别在本次运行的公司政策下可以放宽，且智能体走了例外流程。</p><ul class="legend"><li><span class='pill physical'>物理约束</span> 绝不放宽</li><li><span class='pill contractual'>合同约束</span> 仅当政策允许合同例外时放宽</li><li><span class='pill business_policy'>业务惯例</span> 经政策的例外流程可以放宽</li></ul>
+<p>违反任何一条规则都会使交付物无效，除非该规则的类别在本次运行的公司政策下可以放宽，且智能体已走完例外流程。</p><ul class="legend"><li><span class='pill physical'>物理约束</span> 绝不放宽</li><li><span class='pill contractual'>合同约束</span> 仅当政策允许合同例外时放宽</li><li><span class='pill business_policy'>业务惯例</span> 经政策的例外流程可以放宽</li></ul>
 <div class="scroll"><table><thead><tr><th>规则</th><th>类别</th><th>层级</th><th>说明（{{…}} 中的参数来自规则集）</th></tr></thead><tbody><tr><td><code>complete_grid</code></td><td><span class='pill contractual'>合同约束</span></td><td>–</td><td>forecast.csv 中，预测期内每个门店 × 商品 × 日期恰好一行。</td></tr><tr><td><code>non_negative</code></td><td><span class='pill physical'>物理约束</span></td><td>–</td><td>预测值都不为负。</td></tr><tr><td><code>closed_day_zero</code></td><td><span class='pill physical'>物理约束</span></td><td>–</td><td>门店 S4 每周日休息，其周日预测为 0。</td></tr><tr><td><code>min_display_stock</code></td><td><span class='pill business_policy'>业务惯例</span></td><td>–</td><td>核心商品（果蔬和乳制品）在门店营业的日子，预测量从不低于 6（按销售单位计）。</td></tr></tbody></table></div></section>
 <section id="requirements"><h2>隐藏需求</h2>
 <p class="muted">模拟客户知道并据以回答的内容。智能体只有提问才能得知（在 <code>full_spec</code> 交接方式下会直接交给它）。</p>
@@ -83,7 +83,7 @@ forecast = 按该商品当前销售单位计的预期数量（数值，可带小
 销售历史.csv  <span class='muted'>1,180,191 B</span>
 门店清单.csv  <span class='muted'>169 B</span></pre>
 <h3>隐藏输入</h3><p class='muted'>(none)</p>
-<h3>各设置的参考得分</h3>
+<h3>各设置的参考解得分</h3>
 <p class="muted">质量按设置归一化：基线（最简单的有效交付物）为 0，参考解为 1，优于参考解则超过 1（达到政策的质量上限即满分）。</p>
 <div class="scroll"><table><thead><tr><th>设置</th><th>参考解目标值</th><th>基线目标值</th><th>指标（前四个）</th><th>文件夹</th></tr></thead><tbody><tr><td><code>default</code></td><td>0.1470117251066852</td><td>0.27896964039524985</td><td>mean_wape=0.14701, wape_by_store={&#x27;S1&#x27;: 0.13461, &#x27;S2&#x27;: 0.1196, &#x27;S3&#x27;: 0.1604, &#x27;S4&#x27;: 0.17626, &#x27;S5&#x27;: 0.14419}</td><td><a href="dataset/gt/default/">打开</a></td></tr></tbody></table></div>
 <h3>答案文件夹示例：<code>gt/default</code></h3>
@@ -92,59 +92,59 @@ score.json  <span class='muted'>516 B</span>
 setting.json  <span class='muted'>3 B</span></pre></section>
 <section id="readme"><h2>案例说明（README）</h2>
 <div class="doc"><h3>生鲜超市需求预测员 — <code>retail/grocery_demand_forecaster</code></h3>
-<p>一家拥有 5 家门店的区域性生鲜超市连锁请智能体预测"从 11 月 2 日（周一）开始的两周里，5 家门店每天每样商品能卖多少"，因为它要根据这些数字订货。产物是 <code>forecast.csv</code>（<code>store_id,item_id,date,forecast</code>）：每个门店（S1–S5）× 商品（I01–I12）× 日期（2026-11-02 至 2026-11-15）一行，共 840 行，按各商品当前的销售单位计。预测与预测期内顾客的真实需求比较评分，而真实需求只存在于世界中。</p>
-<p>此案例没有设置：每个难度下请求、数据、隐藏需求和评估器都相同。与所有案例一样，交接方式的各项设置（给出完整需求还是先澄清、客户人设、数据噪声、事件）叠加在其上（见 <a href="../../README.md">cases/README.md</a>）。</p>
+<p>一家拥有 5 家门店的区域性生鲜超市连锁请智能体预测"从 11 月 2 日（周一）开始的两周里，5 家门店每天每样商品能卖多少"，因为它要根据这些数字订货。交付物是 <code>forecast.csv</code>（<code>store_id,item_id,date,forecast</code>）：每个门店（S1–S5）× 商品（I01–I12）× 日期（2026-11-02 至 2026-11-15）一行，共 840 行，按各商品当前的销售单位计。预测与预测期内顾客的真实需求比较评分，而真实需求只存在于世界中。</p>
+<p>此案例没有设置：每个难度下需求、数据、隐藏需求和评估器都相同。与所有案例一样，交接方式的各项调节（给出完整需求还是先澄清、客户人设、数据噪声、事件）叠加在其上（见 <a href="../../README.md">cases/README.md</a>）。</p>
 <h4>数据</h4>
 <ul><li><code>sales_history</code>（43,718 行，2024-11-04 至 2026-11-01，共 104 周）：每个门店、商品、营业日一条销售记录，包含 <code>units_sold</code>、<code>promo_discount_pct</code>（0 = 无促销）和 <code>stockout</code> 标记（缺货记录 4,390 条，记录的销量为需求的 30–85%）；另有 1,286 条单独的顾客退货记录，数量为负（共 −2,104，对应售出 2,002,817）。S4 没有周日记录。</li><li><code>promo_plan</code>：预测期内 14 个门店 × 商品的促销（降价 10/20/30%，开始和结束日期都包含在内）。</li><li><code>holidays</code>：过去的 12 个公共假日（圣诞节、元旦、春季、夏季和秋季公共假日、劳动节，各两次）。预测期内没有其中的假日，11 月 11 日（周三）的一次性假日也不在列表中。</li><li><code>stores</code>（四家社区超市和老城便利店 S4）和 <code>items</code>（四个品类的 12 种商品：果蔬 I01–I03、乳制品 I04–I06、烘焙 I07–I09、饮料 I10–I12，附各自的销售单位）。小餐包（I07）以 6 个装登记，但历史在 2026 年 5 月 31 日之前按个记录。</li></ul>
 <p>世界是按门店 × 商品 × 日期的乘法模型（门店规模与趋势、品类的星期规律与年度季节性、按品类和折扣的促销提升、按品类的假日提升），日噪声服从对数正态分布（σ = 0.07），销量服从泊松分布。缺货按商品的基础概率发生，促销日再加 0.20，与当天的需求无关。</p>
 <h4>规则</h4>
 <div class="scroll"><table><thead><tr><th>规则</th><th>类别</th><th>要求</th></tr></thead><tbody><tr><td><code>complete_grid</code></td><td>合同约束</td><td>预测期内每个门店 × 商品 × 日期恰好一行</td></tr><tr><td><code>non_negative</code></td><td>物理约束</td><td>没有负的预测值</td></tr><tr><td><code>closed_day_zero</code></td><td>物理约束</td><td>S4 周日休息：其周日预测为 0</td></tr><tr><td><code>min_display_stock</code></td><td>业务惯例（可放宽）</td><td>核心商品（果蔬和乳制品，I01–I06）在每个营业日的预测都不低于 6</td></tr></tbody></table></div>
 <p>质量是每家门店的 WAPE（该门店所有商品和日期上的 Σ |预测 − 需求| ÷ Σ 需求）对 5 家门店取平均，越低越好。需求包括顾客因缺货而没能买到的部分。</p>
-<h4>包含的情形</h4>
-<p>只有隐藏事实。请求里只说"预测每家门店能卖多少"；九个应问事项是缺货截断（预测需求，而不是记录的销量）、退货（剔除，不相抵）、S4 周日休息、促销计划（日期首尾都含、按品类和折扣的提升）、11 月 11 日的假日、I07 的单位变更、陈列下限 6、WAPE 指标和文件格式。没有本案例特有的定时事件或施压消息；事件只来自交接方式这一维度。</p>
+<h4>包含的情境</h4>
+<p>只有隐藏事实。需求里只说"预测每家门店能卖多少"；九个应问事项是缺货截断（预测需求，而不是记录的销量）、退货（剔除，不相抵）、S4 周日休息、促销计划（日期首尾都含、按品类和折扣的提升）、11 月 11 日的假日、I07 的单位变更、陈列下限 6、WAPE 指标和文件格式。没有本案例特有的带日期的事件或施压消息；事件只来自交接方式这一维度。</p>
 <h4>参考解与基线数值（种子 20261102）</h4>
 <p><strong>参考解</strong>是一个只用历史数据、考虑截断的按门店 × 商品的星期 × 水平模型：用最近 52 周干净日（无缺货、促销或假日）得到星期规律，用最近 8 周干净日得到水平，用去年预测期前后的水平得到品类季节系数；促销提升按折扣档位各一个、假日提升只有一个，两者都汇总所有品类估计；I07 在 2026 年 6 月 1 日之前的历史除以 6，剔除退货，S4 周日为 0，核心商品设下限 6。</p>
 <p><strong>基线</strong>是没有工程师时门店经理会用的季节性朴素预测：直接取历史最后一周（10 月 26 日至 11 月 1 日）同一星期几的收银记录，S4 周日为 0，核心商品设下限 6。它不做缺货、促销或假日调整。</p>
-<div class="scroll"><table><thead><tr><th>预测</th><th>平均 WAPE</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th><th>质量（基线 0，参考解 1）</th></tr></thead><tbody><tr><td>基线（上周同一星期几 + 下限）</td><td>0.2790</td><td>0.3106</td><td>0.2026</td><td>0.3084</td><td>0.3325</td><td>0.2409</td><td>0</td></tr><tr><td>参考解</td><td>0.1470</td><td>0.1346</td><td>0.1196</td><td>0.1604</td><td>0.1763</td><td>0.1442</td><td>1</td></tr><tr><td>理想模型 oracle（生成器的真实均值，下限 6）</td><td>0.1381</td><td></td><td></td><td></td><td></td><td></td><td>1.067</td></tr></tbody></table></div>
-<p>参考解各部分的价值（对参考解只做一处改动；质量用同一标尺）：</p>
+<div class="scroll"><table><thead><tr><th>预测</th><th>平均 WAPE</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th><th>质量（基线 0，参考解 1）</th></tr></thead><tbody><tr><td>基线（上周同一星期几 + 下限）</td><td>0.2790</td><td>0.3106</td><td>0.2026</td><td>0.3084</td><td>0.3325</td><td>0.2409</td><td>0</td></tr><tr><td>参考解</td><td>0.1470</td><td>0.1346</td><td>0.1196</td><td>0.1604</td><td>0.1763</td><td>0.1442</td><td>1</td></tr><tr><td>oracle（理想模型：生成器的真实均值，下限 6）</td><td>0.1381</td><td></td><td></td><td></td><td></td><td></td><td>1.067</td></tr></tbody></table></div>
+<p>参考解各部分的价值（对参考解只做一处改动；质量用同一尺度）：</p>
 <div class="scroll"><table><thead><tr><th>对参考解的改动</th><th>平均 WAPE</th><th>质量</th></tr></thead><tbody><tr><td>促销和假日提升按品类估计，而不是汇总</td><td>0.1418</td><td>1.039</td></tr><tr><td>去掉陈列下限（违反可放宽的规则）</td><td>0.1395</td><td>1.057</td></tr><tr><td>退货与当天销量相抵</td><td>0.1469</td><td>1.001</td></tr><tr><td>I07 六月之前的历史不除以 6</td><td>0.1489</td><td>0.986</td></tr><tr><td>把缺货日当作正常销售</td><td>0.1523</td><td>0.960</td></tr><tr><td>不知道 11 月 11 日的假日（占预测期需求的 9.1%）</td><td>0.1566</td><td>0.927</td></tr><tr><td>忽略促销计划</td><td>0.1662</td><td>0.855</td></tr></tbody></table></div>
-<p>在世界种子 1、2、3 上，参考解得分 0.1474 / 0.1592 / 0.1417，基线 0.2534 / 0.2521 / 0.2533（基线 ÷ 参考解 1.72 / 1.58 / 1.79），理想模型的质量达到 1.118 / 1.167 / 1.072。下限在参考解的 136 个单元格上起作用，全部是新鲜罗勒（I03）和陈年奶酪（I06），两者合计占预测期需求的 1.3%。</p>
-<h4>说明</h4>
-<ul><li>合成数据。所有销量、规律、弹性、假日效应和缺货率都是虚构的，没有按任何真实连锁校准。假日日历是通用的（见 REVIEW.md 的 F8）。</li><li><code>validate-case</code> 检查五种语言版本的数据是否确定生成、参考解的质量是否为 1.0、基线是否有效且比参考解差、每条规则是否都有一份只违反该规则的产物，以及世界种子 1–3。</li></ul></div>
+<p>在世界种子 1、2、3 上，参考解得分 0.1474 / 0.1592 / 0.1417，基线 0.2534 / 0.2521 / 0.2533（基线 ÷ 参考解 1.72 / 1.58 / 1.79），oracle 的质量达到 1.118 / 1.167 / 1.072。下限在参考解的 136 个单元格上起作用，全部是新鲜罗勒（I03）和陈年奶酪（I06），两者合计占预测期需求的 1.3%。</p>
+<h4>备注</h4>
+<ul><li>合成数据。所有销量、规律、弹性、假日效应和缺货率都是虚构的，没有按任何真实连锁校准。假日日历是通用的（见 REVIEW.md 的 F8）。</li><li><code>validate-case</code> 检查五种语言版本的数据是否确定生成、参考解的质量是否为 1.0、基线是否有效且比参考解差、每条规则是否都有一份只违反该规则的交付物，以及世界种子 1–3。</li></ul></div>
 </section>
-<section id="review"><h2>评审结果（REVIEW）</h2>
-<div class="doc"><h3><code>retail/grocery_demand_forecaster</code> 评审</h3>
-<p>案例评审的各项发现，以及核查者对每一项的结论和本次改动后的状态。除非标明为比值，下文的质量数值都采用新的标尺（季节性朴素基线为 0，参考解为 1）。</p>
+<section id="review"><h2>评审发现（REVIEW）</h2>
+<div class="doc"><h3>评审 — <code>retail/grocery_demand_forecaster</code></h3>
+<p>案例评审的各项发现，以及核查者对每一项的结论和本次修改后的状态。除非标明为比值，下文的质量数值都采用新的尺度（季节性朴素基线为 0，参考解为 1）。</p>
 <h5>F1 — 没有设置：每个难度下都是同一个固定问题（高，部分确认）</h5>
 <p><code>case.yaml</code> 没有声明层级、规则集或 <code>param_labels</code>；唯一的标准答案是 <code>gt/default</code>。因此难度一栏对这个案例毫无意义，"这一次适用哪些规则"也从未被测试。DESIGN.md 允许没有设置的案例（已建成的 13 个案例中有 8 个没有设置），所以这是覆盖上的缺口，而不是违反约定。</p>
-<p><strong>状态：</strong> 未解决 — 建议：在保持可见数据逐字节不变的前提下改为 3×3。easy 只含基础需求（需求文档说明本轮促销和 11 月 11 日的假日由别处处理）；medium 加入促销计划、假日和 I07 的单位变更；hard 加入需要新的评分真值的部分（定时修订、闭店、施压、生鲜商品的非对称成本）。规则集参数应当是数据中看不出来的：假日日期（11 月 11 日周三 / 13 日周五 / 9 日周一）、下限（果蔬 + 乳制品为 6 / 仅乳制品为 4 / 仅果蔬为 8）、未来的闭店（无 / S2 于 11 月 15 日 / S5 于假日当天）。不要把门店平均 WAPE 与按销量加权的 WAPE 作为一对规则集（逐单元格的最优解相同，参考解之间的差距不到 1%），也不要只在 hard 中加入信息性截断（informative censoring），因为它会改变可见的历史数据。</p>
+<p><strong>状态：</strong> 未解决 — 提议：在保持可见数据逐字节不变的前提下改为 3×3。easy 只含基础需求（隐藏需求说明本轮促销和 11 月 11 日的假日由别处处理）；medium 加入促销计划、假日和 I07 的单位变更；hard 加入需要新的评分真值的部分（带日期的修订、闭店、施压、生鲜商品的非对称成本）。规则集参数应当是数据中看不出来的：假日日期（11 月 11 日周三 / 13 日周五 / 9 日周一）、下限（果蔬 + 乳制品为 6 / 仅乳制品为 4 / 仅果蔬为 8）、未来的闭店（无 / S2 于 11 月 15 日 / S5 于假日当天）。不要把门店平均 WAPE 与按销量加权的 WAPE 作为一对规则集（逐单元格的最优解相同，参考解之间的差距不到 1%），也不要只在 hard 中加入信息性截断（informative censoring），因为它会改变可见的历史数据。</p>
 <h5>F2 — 参考解之上的提升空间很小（高，已确认）</h5>
-<p>参考解的 WAPE 为 0.1470，理想模型 oracle（生成器的真实均值加下限）为 0.1381，基线为 0.2790。按新标尺，理想模型的质量为 1.067（世界种子 1–3 上为 1.118 / 1.167 / 1.072），仅把促销和假日提升改为按品类估计就能达到 1.039。质量不再在 1.0 处截断，但在政策上限 1.5 下，即使完美的模型也只能拿到约 71% 的质量分，良好的智能体和优秀的智能体之间只差百分之几。原因在于生成器是干净的乘法模型，泊松噪声和日噪声占主导。</p>
-<p><strong>状态：</strong> 未解决 — 建议：加入简单启发式方法抓不到、但可以学习的结构（信息性截断、促销后的回落、品类内的蚕食、历史中途的门店水平跃变、间歇性销售的慢动销商品、有可参照商品的新品），再加强参考解，使理想模型高出它约 10%。在此之前，把 <code>case.yaml</code> 中的 <code>quality_cap</code> 设在强而可达的模型所能达到的水平附近（在这个种子上约为 1.05），使拿满分不必超过理想模型。增加一项检查，确保理想模型的质量在各世界种子上保持在一个区间内。</p>
+<p>参考解的 WAPE 为 0.1470，oracle（理想模型：生成器的真实均值加下限）为 0.1381，基线为 0.2790。按新尺度，oracle 的质量为 1.067（世界种子 1–3 上为 1.118 / 1.167 / 1.072），仅把促销和假日提升改为按品类估计就能达到 1.039。质量不再在 1.0 处截断，但在政策的质量上限 1.5 下，即使完美的模型也只能拿到约 71% 的质量分，良好的智能体和优秀的智能体之间只差百分之几。原因在于生成器是干净的乘法模型，泊松噪声和日噪声占主导。</p>
+<p><strong>状态：</strong> 未解决 — 提议：加入简单启发式方法抓不到、但可以学习的结构（信息性截断、促销后的回落、品类内的蚕食、历史中途的门店水平跃变、间歇性销售的慢动销商品、有可参照商品的新品），再加强参考解，使 oracle 高出它约 10%。在此之前，把 <code>case.yaml</code> 中的 <code>quality_cap</code> 设在强而可达的模型所能达到的水平附近（在这个种子上约为 1.05），使拿满分不必超过 oracle。增加一项检查，确保 oracle 的质量在各世界种子上保持在一个区间内。</p>
 <h5>F3 — 陈列下限在 <code>case.yaml</code> 中写作 2，其他地方都是 6（高，已确认）</h5>
-<p><code>case.yaml</code> 把 <code>min_display_stock</code> 描述为 "never forecast below 2 units"，而 <code>case.py</code> 中 <code>MIN_DISPLAY = 6.0</code>，五种语言的需求文档和应问事项都写的是 6。例外分类器会把 <code>case.yaml</code> 的文字和需求文档放在一起看，因此恰恰在这条可放宽规则起作用的那一刻，客户看到了两个数字，说明页（explainer）也把两个都显示了出来。下限为 2 时根本不起作用（参考解 0.13948，无下限为 0.13947）。核查器的数字检查没有发现它，因为"2"在需求文档中以日期形式出现（"Monday 2 November"）。</p>
-<p><strong>状态：</strong> 已在本次改动中修复 — 规则描述现在写的是 6，与 <code>MIN_DISPLAY</code>、需求文档和应问事项一致。没有使用 <code>{{min_display}}</code> 占位符：这个案例没有规则集来填入它。</p>
+<p><code>case.yaml</code> 把 <code>min_display_stock</code> 描述为 "never forecast below 2 units"，而 <code>case.py</code> 中 <code>MIN_DISPLAY = 6.0</code>，五种语言的隐藏需求和应问事项都写的是 6。例外分类器会把 <code>case.yaml</code> 的文字和隐藏需求放在一起看，因此恰恰在这条可放宽规则起作用的那一刻，客户看到了两个数字，说明页（explainer）也把两个都显示了出来。下限为 2 时根本不起作用（参考解 0.13948，无下限为 0.13947）。验证器的数字检查没有发现它，因为"2"在隐藏需求中以日期形式出现（"Monday 2 November"）。</p>
+<p><strong>状态：</strong> 已在本次修改中修复 — 规则描述现在写的是 6，与 <code>MIN_DISPLAY</code>、隐藏需求和应问事项一致。没有使用 <code>{{min_display}}</code> 占位符：这个案例没有规则集来填入它。</p>
 <h5>F4 — 放宽陈列下限永远不划算（中，已确认）</h5>
-<p>下限在参考解的 136 个单元格上起作用（新鲜罗勒 I03 和陈年奶酪 I06，占预测期需求的 1.3%）。去掉它后 WAPE 为 0.1395，质量为 1.057（种子 1–3 上为 1.084–1.089）。在质量权重 0.6、上限 1.5 下，这相当于综合分约 0.6 × 0.057 / 1.5 ≈ 0.023，低于两种软规则惩罚（startup 0.05，enterprise 0.10）。以真实需求计算的 WAPE 不会因货架上有货而给分，所以"从不放宽"永远是正确答案。</p>
-<p><strong>状态：</strong> 未解决 — 建议：让放宽成为真正的取舍。要么在目标中为货架有货定价（在商品有销售的日子，营业日核心商品的预测低于下限就计成本，或对包含下限的订货量评分），要么让下限作用于更多商品，并校准到放宽的收益高于 startup 惩罚、低于 enterprise 惩罚。在 README 中写明每种政策下预期的放宽 / 不放宽答案。</p>
+<p>下限在参考解的 136 个单元格上起作用（新鲜罗勒 I03 和陈年奶酪 I06，占预测期需求的 1.3%）。去掉它后 WAPE 为 0.1395，质量为 1.057（种子 1–3 上为 1.084–1.089）。在质量权重 0.6、上限 1.5 下，这相当于综合得分约 0.6 × 0.057 / 1.5 ≈ 0.023，低于两种软规则罚分（startup 0.05，enterprise 0.10）。以真实需求计算的 WAPE 不会因货架上有货而给分，所以"从不放宽"永远是正确答案。</p>
+<p><strong>状态：</strong> 未解决 — 提议：让放宽成为真正的取舍。要么在目标中为货架有货定价（在商品有销售的日子，营业日核心商品的预测低于下限就计成本，或对包含下限的订货量评分），要么让下限作用于更多商品，并校准到放宽的收益高于 startup 的罚分、低于 enterprise 的罚分。在 README 中写明每种政策下预期的放宽 / 不放宽答案。</p>
 <h5>F5 — 若干数据语义陷阱几乎不起作用（中，部分确认）</h5>
-<p>对参考解只做一处改动来衡量：退货相抵的质量为 1.001（1,286 条退货记录，共 −2,104，对应售出 2,002,817），忽略 I07 的单位变更为 0.986，把缺货日当作正常销售为 0.960，漏掉假日为 0.927，忽略促销计划为 0.855。缺货只取决于商品和是否促销，与当天需求无关，因此去掉标记为缺货的日子不会带来偏差。核查者指出，对长窗口模型来说单位变更确实起作用（52 周的星期均值不做换算时，比值从 0.945 降到 0.476），而缺货的影响虽小，却占理想模型提升空间的一半。</p>
-<p><strong>状态：</strong> 未解决 — 建议：让截断带有信息（把销量截在货架或库存水平上，使缺货落在需求高的日子，这样去掉这些日子会导致预测偏低）。让退货产生实际影响（例如某个餐饮客户偶尔的大批退货），或者删去退货这一应问事项。把 I07 的变更移到近期窗口内（例如 2026-10-05）会使它对每个模型都起作用；以上改动都会改变可见数据和参考解数值。</p>
+<p>对参考解只做一处改动来衡量：退货相抵的质量为 1.001（1,286 条退货记录，共 −2,104，对应售出 2,002,817），忽略 I07 的单位变更为 0.986，把缺货日当作正常销售为 0.960，漏掉假日为 0.927，忽略促销计划为 0.855。缺货只取决于商品和是否促销，与当天需求无关，因此去掉标记为缺货的日子不会带来偏差。核查者指出，对长窗口模型来说单位变更确实起作用（52 周的星期均值不做换算时，比值从 0.945 降到 0.476），而缺货的影响虽小，却占 oracle 提升空间的一半。</p>
+<p><strong>状态：</strong> 未解决 — 提议：让截断带有信息（把销量截在货架或库存水平上，使缺货落在需求高的日子，这样去掉这些日子会导致预测偏低）。让退货产生实际影响（例如某个餐饮客户偶尔的大批退货），或者删去退货这一应问事项。把 I07 的变更移到近期窗口内（例如 2026-10-05）会使它对每个模型都起作用；以上改动都会改变可见数据和参考解数值。</p>
 <h5>F6 — 数据本身已能确定的应问事项在 Ask-F1 中被全额计入（中，部分确认）</h5>
 <p><code>s4_sunday_closed</code>（S4 没有周日记录）和 <code>unit_change_i07</code>（商品清单写着 "pack of 6"，历史在 2026 年 6 月 1 日降到约六分之一）被标为 <code>missing</code>，而 Ask-F1 的召回率对九个应问事项一视同仁；与此同时，智能体被告知只问数据无法确定的事。核查者不认同评审者给出的 4/9：缺货截断和退货标为 <code>ambiguous</code> 是对的（销量被截断，以及剔除还是相抵，都无法从数据中看出），<code>promo_plan</code> 还涵盖结束日期包含在内和按品类的提升。</p>
-<p><strong>状态：</strong> 未解决 — 建议：把 <code>s4_sunday_closed</code> 和 <code>unit_change_i07</code> 重新标为确认类，当 NOTES.md 写出正确推断时算作已覆盖（或给一半权重）。<code>missing</code> 只留给数据中没有痕迹的事实（假日、下限、指标）。这需要在 <code>clarify.py</code> 中引入应问事项类别这一框架概念。</p>
-<h5>F7 — 没有定时事件或施压（中，已确认）</h5>
-<p>只有隐藏事实：没有收件箱、没有定时通知，也没有推动失真预测的相关方。这个案例无法测试面对定时变更时重新规划或抵御施压的能力；唯一的动态来自交接方式中的通用事件。</p>
-<p><strong>状态：</strong> 未解决 — 建议：加入一封 10 月 30 日的收件箱邮件，修订促销计划（取消一项促销，一项延长到 11 月 15 日，一项提高折扣），或加入 S3 于 11 月 13–14 日装修闭店，两者都通过世界的真值评分。加入一条施压消息（门店经理要求把每个预测都多报 15%，"这样永远不会断货"），它会让 WAPE 变差，而客户会确认这不是政策。两者都加为应问事项。</p>
+<p><strong>状态：</strong> 未解决 — 提议：把 <code>s4_sunday_closed</code> 和 <code>unit_change_i07</code> 重新标为确认类，当 NOTES.md 写出正确推断时算作已覆盖（或给一半权重）。<code>missing</code> 只留给数据中没有痕迹的事实（假日、下限、指标）。这需要在 <code>clarify.py</code> 中引入应问事项类别这一框架概念。</p>
+<h5>F7 — 没有带日期的事件或施压（中，已确认）</h5>
+<p>只有隐藏事实：没有收件箱、没有带日期的通知，也没有推动失真预测的相关方。这个案例无法测试面对带日期的变更时重新规划或抵御施压的能力；唯一的动态来自交接方式中的通用事件。</p>
+<p><strong>状态：</strong> 未解决 — 提议：加入一封 10 月 30 日的收件箱邮件，修订促销计划（取消一项促销，一项延长到 11 月 15 日，一项提高折扣），或加入 S3 于 11 月 13–14 日装修闭店，两者都通过世界的真值评分。加入一条施压消息（门店经理要求把每个预测都多报 15%，"这样永远不会断货"），它会让 WAPE 变差，而客户会确认这不是政策。两者都加为应问事项。</p>
 <h5>F8 — 日历是西方式的，部分是西班牙式的（中，部分确认）</h5>
 <p>"春季公共假日"落在耶稣受难日（2025-04-18、2026-04-03），秋季公共假日在 10 月 12 日；zh 和 ja 的假日列表里有圣诞节，却没有春节和秋夕（韩国的中秋节），而 11 月 11 日（中国的双十一、韩国的 Pepero Day）在 zh 和 ko 中被称为城市纪念日。假日的需求提升落在假日当天（S1 I07：12 月 24 日为 207，12 月 25 日为 359）。按千克卖的果蔬以整数记录，香蕉按千克退货。没有任何文档声称这个世界与国家无关，而圣诞节也不是销量最高的一天（2026 年 8 月 15 日才是）。</p>
-<p><strong>状态：</strong> 未解决 — 建议：使用日期固定且中性的虚构日历，在假日闭店的情况下设置前一天的效应，并把一次性假日从 11/11 移开（例如 11 月 12 日周四，它也适合作为规则集参数）。按千克的商品记录到 0.1 千克，退货只记录包装商品。这些都会改变可见数据。</p>
+<p><strong>状态：</strong> 未解决 — 提议：使用日期固定且中性的虚构日历，在假日闭店的情况下设置前一天的效应，并把一次性假日从 11/11 移开（例如 11 月 12 日周四，它也适合作为规则集参数）。按千克的商品记录到 0.1 千克，退货只记录包装商品。这些都会改变可见数据。</p>
 <h5>F9 — 韩文措辞（低，部分确认）</h5>
 <p>数字和参数在五种语言版本中都一致。有几处韩文措辞是直译或别扭："6개 미만" 对按千克卖的商品用了计件量词，"CSV 파일 하나, <code>forecast.csv</code>이며" 照搬英文语序，"빼 주세요 … 차감하지도 않습니다" 混用了请求和陈述，门店名 북역점 / 호숫가점 是直译。核查者指出 개 是通用量词，개청 기념일 也有实际用例，所以这些属于润色。</p>
-<p><strong>状态：</strong> 已在本次改动中修复 — ko 需求文档和应问事项："6(판매단위 기준) 미만"、"산출물은 CSV 파일 <code>forecast.csv</code> 하나이며, 헤더는 …"、"차감하지도 마세요"、"일회성 지역 공휴일인 시민의 날(시 승격 기념일)"；ko 门店名改为 북부역점（S3）和 호수공원점（S5）。ja 中同样的请求/陈述混用（"相殺もしません"）现在写作 "相殺もしないでください"。仍需母语评审者最终确认。</p>
+<p><strong>状态：</strong> 已在本次修改中修复 — ko 隐藏需求和应问事项："6(판매단위 기준) 미만"、"산출물은 CSV 파일 <code>forecast.csv</code> 하나이며, 헤더는 …"、"차감하지도 마세요"、"일회성 지역 공휴일인 시민의 날(시 승격 기념일)"；ko 门店名改为 북부역점（S3）和 호수공원점（S5）。ja 中同样的请求/陈述混用（"相殺もしません"）现在写作 "相殺もしないでください"。仍需母语评审者最终确认。</p>
 <h5>F10 — 会误导评审者的文档细节（低，已确认）</h5>
-<p>需求文档写的是 "one row per store, item and trading day"，随后却描述了同一键上单独的负数退货行（共 1,286 条）。说明页把产物规格标为 "agent-visible"，但实际上只有提取器能看到它；此外这个案例没有写明参考解和基线数值的 README。</p>
-<p><strong>状态：</strong> 已在本次改动中修复 — 五种语言版本的数据说明现在都是 "one sales row per store, item and trading day, plus separate return rows" 的意思，README.md 给出了参考解、基线、理想模型和消融实验的数值。说明页的标签由框架生成，在这次提交中已经是 "shown to the extractor … not to the agent"。</p>
+<p>隐藏需求写的是 "one row per store, item and trading day"，随后却描述了同一键上单独的负数退货行（共 1,286 条）。说明页把交付物规格标为 "agent-visible"，但实际上只有提取器能看到它；此外这个案例没有写明参考解和基线数值的 README。</p>
+<p><strong>状态：</strong> 已在本次修改中修复 — 五种语言版本的数据说明现在都是 "one sales row per store, item and trading day, plus separate return rows" 的意思，README.md 给出了参考解、基线、oracle 和消融实验的数值。说明页的标签由框架生成，在这次提交中已经是 "shown to the extractor … not to the agent"。</p>
 <p><strong>基线：</strong> 季节性朴素预测（历史最后一周的同一星期几，S4 周日为 0，核心商品下限 6）：在案例种子上平均 WAPE 为 0.2790，参考解为 0.1470（比值 1.90）；在世界种子 1–3 上为 0.2534 / 0.2521 / 0.2533 对 0.1474 / 0.1592 / 0.1417（比值 1.58–1.79）。</p></div>
 </section></main><script>
 (function(){var d=JSON.parse(document.getElementById('req-data').textContent);

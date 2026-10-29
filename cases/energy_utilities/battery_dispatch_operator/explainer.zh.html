@@ -41,20 +41,20 @@ select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);borde
   <p class="muted"><code>energy_utilities/battery_dispatch_operator</code></p>
   <dl class="facts">
     <div><dt>任务类型</dt><dd>组合优化</dd></div>
-    <div><dt>交付物</dt><dd>结果文件：<code>dispatch.csv</code></dd></div>
+    <div><dt>交付物</dt><dd>交付文件：<code>dispatch.csv</code></dd></div>
     <div><dt>目标</dt><dd>最大化</dd></div>
     <div><dt>设置</dt><dd>一个固定的问题</dd></div>
   </dl>
   <nav>
     <a href="#request">需求</a><a href="#settings">设置</a><a href="#rules">规则</a>
     <a href="#requirements">隐藏需求</a><a href="#targets">应问事项</a><a href="#data">数据与答案</a>
-    <a href="#readme">案例说明</a><a href="#review">评审结果</a>
+    <a href="#readme">案例说明</a><a href="#review">评审发现</a>
   </nav>
 </header>
 <section id="request"><h2>智能体收到的需求</h2>
-<p class="muted">客户的需求，是智能体一开始收到的唯一文字，在所有设置下都相同。</p>
+<p class="muted">客户的需求原文，也是智能体一开始收到的唯一文本；在所有设置下都相同。</p>
 <details open><summary>中文</summary><p>能帮我们排一下下周（3月22日周一到28日周日）我们西班牙场站的储能电池什么时候充电、什么时候放电吗？目标是尽量多赚钱。附件里有电价预测、同站光伏电站的出力预测、电池规格表、并网协议和上周的调度记录。</p></details><details><summary>English</summary><p>Can you plan when the battery at our site in Spain should charge and discharge next week (Monday 22 to Sunday 28 March) to make the most money? I've attached the price forecast, the solar forecast for the co-located solar farm, the battery spec sheet, our connection agreement and last week's dispatch log.</p></details><details><summary>한국어</summary><p>다음 주(3월 22일 월요일부터 28일 일요일까지) 스페인 사업장에 있는 저희 배터리를 언제 충전하고 언제 방전해야 수익이 가장 많이 날지 계획을 세워 주실 수 있을까요? 가격 예측, 같은 부지의 태양광 발전소 발전량 예측, 배터리 사양서, 계통연계계약, 지난주 운전 기록을 첨부합니다.</p></details><details><summary>日本語</summary><p>来週（3月22日の月曜日から28日の日曜日まで）、スペインにある当社サイトの蓄電池をいつ充電し、いつ放電すれば一番収益が上がるか、計画を立てていただけますか。価格予測、併設の太陽光発電所の発電予測、蓄電池の仕様書、系統連系契約、先週の運転記録を添付します。</p></details><details><summary>Español</summary><p>¿Podría planificar cuándo debe cargar y descargar la batería de nuestro emplazamiento en España la semana que viene (del lunes 22 al domingo 28 de marzo) para ganar el máximo dinero posible? Le adjunto la previsión de precios, la previsión de producción de la planta solar del mismo emplazamiento, la ficha técnica de la batería, nuestro contrato de conexión y el registro de despacho de la semana pasada.</p></details>
-<h3>交付物规格（不给智能体，只给把智能体的文件转换成规定格式的提取器）</h3><pre>dispatch.csv, ASCII header: timestamp,charge_mw,discharge_mw
+<h3>交付物规格（仅提供给把智能体的文件整理成规定格式的提取器，不提供给智能体）</h3><pre>dispatch.csv, ASCII header: timestamp,charge_mw,discharge_mw
 One row per 15-minute interval of the week 2027-03-22 00:00 .. 2027-03-28 23:45, local time, timestamp = interval
 start as &quot;YYYY-MM-DD HH:MM&quot;. charge_mw / discharge_mw = average battery power at the meter over the interval in
 MW, both &gt;= 0.</pre><p class='muted'>仅供阅读的译文；智能体和提取器收到的是英文原文：</p><pre>dispatch.csv，ASCII 表头：timestamp,charge_mw,discharge_mw
@@ -62,7 +62,7 @@ MW, both &gt;= 0.</pre><p class='muted'>仅供阅读的译文；智能体和提�
 格式为 &quot;YYYY-MM-DD HH:MM&quot;。charge_mw / discharge_mw = 该时段内电池在计量点的平均功率（MW），两者均 &gt;= 0。</pre></section>
 <section id="settings"><h2>设置</h2><p>此案例没有设置：每个难度下都是同一个固定问题。</p></section>
 <section id="rules"><h2>规则</h2>
-<p>违反任何一条规则，交付物即无效；除非该规则的类别在本次运行的公司政策下可以放宽，且智能体走了例外流程。</p><ul class="legend"><li><span class='pill physical'>物理约束</span> 绝不放宽</li><li><span class='pill contractual'>合同约束</span> 仅当政策允许合同例外时放宽</li><li><span class='pill business_policy'>业务惯例</span> 经政策的例外流程可以放宽</li></ul>
+<p>违反任何一条规则都会使交付物无效，除非该规则的类别在本次运行的公司政策下可以放宽，且智能体已走完例外流程。</p><ul class="legend"><li><span class='pill physical'>物理约束</span> 绝不放宽</li><li><span class='pill contractual'>合同约束</span> 仅当政策允许合同例外时放宽</li><li><span class='pill business_policy'>业务惯例</span> 经政策的例外流程可以放宽</li></ul>
 <div class="scroll"><table><thead><tr><th>规则</th><th>类别</th><th>层级</th><th>说明（{{…}} 中的参数来自规则集）</th></tr></thead><tbody><tr><td><code>soc_limits</code></td><td><span class='pill physical'>物理约束</span></td><td>–</td><td>荷电状态任何时刻都在 40 MWh 的 10%-90% 之间（充电和放电效率各为 92%）。</td></tr><tr><td><code>power_limits</code></td><td><span class='pill physical'>物理约束</span></td><td>–</td><td>充电和放电各在 0 到 20 MW 之间，同一时段不能既充又放；下网不超过 20 MW。</td></tr><tr><td><code>export_cap</code></td><td><span class='pill contractual'>合同约束</span></td><td>–</td><td>电池放电时，场站上网功率（光伏 + 放电 − 充电）不得超过修订后的 25 MW 上限。</td></tr><tr><td><code>grid_charging_window</code></td><td><span class='pill contractual'>合同约束</span></td><td>–</td><td>场站只能在当地时间 00:00-05:45 开始的时段从电网取电（充电功率超过光伏出力）。</td></tr><tr><td><code>end_soc</code></td><td><span class='pill contractual'>合同约束</span></td><td>–</td><td>整周以 50% 荷电状态开始，结束时不得低于 50%。</td></tr><tr><td><code>reserve_20pct</code></td><td><span class='pill business_policy'>业务惯例</span></td><td>–</td><td>每天当地时间 17:00 到 21:00 之间的任何时刻，荷电状态都不低于 20%。</td></tr></tbody></table></div></section>
 <section id="requirements"><h2>隐藏需求</h2>
 <p class="muted">模拟客户知道并据以回答的内容。智能体只有提问才能得知（在 <code>full_spec</code> 交接方式下会直接交给它）。</p>
@@ -82,7 +82,7 @@ MW, both &gt;= 0.</pre><p class='muted'>仅供阅读的译文；智能体和提�
 电价预测.csv  <span class='muted'>3,844 B</span>
 电池规格.csv  <span class='muted'>225 B</span></pre>
 <h3>隐藏输入</h3><p class='muted'>(none)</p>
-<h3>各设置的参考得分</h3>
+<h3>各设置的参考解得分</h3>
 <p class="muted">质量按设置归一化：基线（最简单的有效交付物）为 0，参考解为 1，优于参考解则超过 1（达到政策的质量上限即满分）。</p>
 <div class="scroll"><table><thead><tr><th>设置</th><th>参考解目标值</th><th>基线目标值</th><th>指标（前四个）</th><th>文件夹</th></tr></thead><tbody><tr><td><code>default</code></td><td>18084.350179250043</td><td>0.0</td><td>battery_profit_eur=18084.35, curtailed_mwh=36.493, degradation_eur=3662.8, end_soc_pct=50.0</td><td><a href="dataset/gt/default/">打开</a></td></tr></tbody></table></div>
 <h3>答案文件夹示例：<code>gt/default</code></h3>
@@ -91,16 +91,16 @@ score.json  <span class='muted'>648 B</span>
 setting.json  <span class='muted'>3 B</span></pre></section>
 <section id="readme"><h2>案例说明（README）</h2>
 <div class="doc"><h3>储能电池调度员 — <code>energy_utilities/battery_dispatch_operator</code></h3>
-<p>西班牙一座光储场站（利亚诺韦尔德：电池与一座 30 MWp 光伏电站共用一个并网点和一块电表）的 40 MWh / 20 MW 储能电池的运营方，请智能体安排下周，即 2027 年 3 月 22 日周一至 28 日周日，电池何时充电、何时放电，"尽量多赚钱"。交付物是 <code>dispatch.csv</code>（<code>timestamp,charge_mw,discharge_mw</code>），本周每个当地时间 15 分钟时段一行。计划按本周的实际电价结算，实际电价与智能体看到的预测不同；评分程序逐个 15 分钟时段模拟荷电状态，并检查每一条规则。</p>
-<p>此案例<strong>没有设置</strong>：只有一套标准答案，每个难度下都是同一个问题。交接方式的各项调节（给完整规格还是先澄清、客户角色设定、数据噪声、事件）照常叠加在其上，与所有案例相同（见 <a href="../../README.md">cases/README.md</a>）。</p>
+<p>西班牙一座光储场站（利亚诺韦尔德：电池与一座 30 MWp 光伏电站共用一个并网点和一块电表）的 40 MWh / 20 MW 储能电池的运营方，请智能体安排下周，即 2027 年 3 月 22 日周一至 28 日周日，电池何时充电、何时放电，"尽量多赚钱"。交付物是 <code>dispatch.csv</code>（<code>timestamp,charge_mw,discharge_mw</code>），本周每个当地时间 15 分钟时段一行。计划按本周的实际电价结算，实际电价与智能体看到的预测不同；评估器逐个 15 分钟时段模拟荷电状态，并检查每一条规则。</p>
+<p>此案例<strong>没有设置</strong>：只有一套标准答案，每个难度下都是同一个问题。与所有案例一样，交接方式的各项调节（给出完整需求还是先澄清、客户人设、数据噪声、事件）叠加在其上（见 <a href="../../README.md">cases/README.md</a>）。</p>
 <h4>数据</h4>
 <div class="scroll"><table><thead><tr><th>文件 (en)</th><th>内容</th></tr></thead><tbody><tr><td><code>price_forecast.csv</code></td><td>逐小时日前电价预测，EUR/MWh，167 行（3 月 28 日只有 23 小时）。下限 3 EUR，从不为负</td></tr><tr><td><code>solar_forecast.csv</code></td><td>每 15 分钟的光伏平均出力（MW），668 行；晴天在 30 MW 处削顶，有 67 个时段超过 25 MW</td></tr><tr><td><code>battery_spec.csv</code></td><td>40 MWh；充电、放电各 20 MW；往返效率 84.6%；厂家允许荷电状态 5%–95%；同站光伏 30 MWp</td></tr><tr><td><code>connection_agreement.md</code></td><td>2024 年协议摘要：上网 30 MW，下网 20 MW，合并计量，超过上网容量时控制器对光伏限发，当地时间</td></tr><tr><td><code>dispatch_log_last_week.csv</code></td><td>上周的计划（3 月 15–21 日，672 行，无夏令时切换），含 <code>charge_mw</code>、<code>discharge_mw</code>、<code>soc_pct</code></td></tr></tbody></table></div>
 <p>文件名、列名和规格表的项目名都已本地化（例如 <code>가격예측.csv</code> 与 <code>하루전가격_EUR_MWh</code>、<code>prevision_precios.csv</code> 与 <code>precio_diario_eur_mwh</code>）；交付物的表头和时间戳在所有语言版本中都是 ASCII。</p>
 <h4>规则</h4>
 <div class="scroll"><table><thead><tr><th>规则</th><th>类别</th><th>要求</th></tr></thead><tbody><tr><td><code>soc_limits</code></td><td>物理约束</td><td>每个 15 分钟时段之后荷电状态都在 40 MWh 的 10%–90% 之间，充电和放电效率各 92%</td></tr><tr><td><code>power_limits</code></td><td>物理约束</td><td>充电、放电各 0–20 MW，同一时段不能既充又放；下网不超过 20 MW</td></tr><tr><td><code>export_cap</code></td><td>合同约束</td><td>放电时 光伏 + 放电 − 充电 ≤ 25 MW（修订后的上限，存档的协议写的是 30）</td></tr><tr><td><code>grid_charging_window</code></td><td>合同约束</td><td>只在当地时间 00:00–05:45 开始的时段从电网取电（充电超过光伏出力）</td></tr><tr><td><code>end_soc</code></td><td>合同约束</td><td>以 50% 开始，整周结束时不低于 50%</td></tr><tr><td><code>reserve_20pct</code></td><td>业务惯例（可放宽）</td><td>每天 17:00 至 21:00 的每个 15 分钟边界上荷电状态不低于 20%</td></tr></tbody></table></div>
 <p>荷电状态的检查容差为 0.02 MWh（容量的 0.05%），因此四舍五入到两位或三位小数的计划不会仅因舍入而被判无效。质量是电池在实际电价下的利润：每个 15 分钟时段，场站上网收入（电价 × 0.25 × min(净出力, 25)）减去下网成本，减去光伏电站单独运行本可获得的收入（电价 × 0.25 × min(光伏, 25)），再减去充电加放电吞吐量每 MWh 5 EUR。</p>
-<h4>包含的情形</h4>
-<ul><li><strong>过时文件。</strong> 并网协议写的是 30 MW；变电站施工使上网上限在 2027 年 3 月 1 日至 6 月 30 日降为 25 MW。按 30 MW 制定的计划无效（<code>export_cap</code>）。</li><li><strong>规格表与客户的模型不一致。</strong> 规格表给出往返 84.6% 和荷电状态 5%–95%；客户按单向各 92% 建模，其质保允许 10%–90%。</li><li><strong>单位与时钟。</strong> 电价是逐小时的，结算却按 15 分钟。3 月 28 日周日时钟拨快一小时（欧盟夏令时，3 月最后一个周日），所以本周有 668 个 15 分钟时段；当天含 02:00–02:45 行的文件属于致命错误。</li><li><strong>低谷下网时段。</strong> 用光伏充电随时都可以，从电网充电只能在 00:00–05:45。</li><li><strong>被限发的光伏。</strong> 电池不放电时，超过 25 MW 的光伏会被限发，除非电池把它吸收掉。</li><li><strong>可放宽的规则。</strong> 傍晚备用是公司规定。放宽它可使参考启发式多得 9.1%（19,733.9 对 18,084.35 EUR），使基于预测的 LP 多得 3.8%（22,156.6 对 21,343.2 EUR）。</li><li><strong>电价不确定性。</strong> 实际电价是预测加上每日偏差和每小时噪声（下限 0）；智能体只能按预测制定计划。</li></ul>
+<h4>包含的情境</h4>
+<ul><li><strong>过时文件。</strong> 并网协议写的是 30 MW；变电站施工使上网上限在 2027 年 3 月 1 日至 6 月 30 日降为 25 MW。按 30 MW 制定的计划无效（<code>export_cap</code>）。</li><li><strong>规格表与客户的模型不一致。</strong> 规格表给出往返 84.6% 和荷电状态 5%–95%；客户按单向各 92% 建模，其质保允许 10%–90%。</li><li><strong>单位与时钟。</strong> 电价是逐小时的，结算却按 15 分钟。3 月 28 日周日时钟拨快一小时（欧盟夏令时，3 月最后一个周日），所以本周有 668 个 15 分钟时段；当天含 02:00–02:45 行的文件属于致命错误。</li><li><strong>低谷下网时段。</strong> 用光伏充电随时都可以，从电网充电只能在 00:00–05:45。</li><li><strong>被限发的光伏。</strong> 电池不放电时，超过 25 MW 的光伏会被限发，除非电池把它吸收掉。</li><li><strong>可放宽的规则。</strong> 傍晚备用是公司规定。放宽它可使参考解（启发式）多得 9.1%（19,733.9 对 18,084.35 EUR），使基于预测的 LP 多得 3.8%（22,156.6 对 21,343.2 EUR）。</li><li><strong>电价不确定性。</strong> 实际电价是预测加上每日偏差和每小时噪声（下限 0）；智能体只能按预测制定计划。</li></ul>
 <p>应问事项共九项：效率、荷电状态范围、起止荷电状态、上网上限、电网充电时段、15 分钟结算、夏令时切换、傍晚备用和利润的定义。</p>
 <h4>参考解与基线数值（种子 20270322）</h4>
 <p>参考解是基于预测电价、每天两个循环的贪心规则：每天在下网时段内最便宜的夜间时段充满，在最贵的上午时段（06:00–11:00）卖出；然后在最便宜的 16 个晴天时段（09:00–17:00）用光伏重新充电，并始终吸收会被限发的光伏，再在 15:00 以后最贵的时段卖出；只有当某时段电价高于平均买入价除以 0.92² 再加两倍损耗成本时，才在该时段卖出。它在 21:00 前保持 20% 的备用，并安排最后一天以 50% 结束。按实际电价得 <strong>18,084.35 EUR</strong>（按预测电价为 19,225.3）：上网收入 58,211.90，下网成本 7,227.53，光伏单独收入 29,237.22，损耗成本 3,662.80（吞吐量 732.56 MWh），限发 36.49 MWh，荷电状态 20%–90%，结束时 50%。</p>
@@ -110,9 +110,9 @@ setting.json  <span class='muted'>3 B</span></pre></section>
 <h4>备注</h4>
 <ul><li>合成或未经验证。电价、光伏出力、25 MW 的修订、单向 92% 的效率、5 EUR/MWh 的损耗成本、00:00–06:00 的下网时段和备用规定都是设计选择，不是实测值。</li><li>光伏曲线经过理想化：出力能达到满额 30 MWp 直流额定值，太阳正午在当地时间 12:45（夏令时切换后为 13:45），早于使用 CET 的西班牙场站。</li><li>案例评审中尚未解决的设计问题（参考解的强度、泄露信息的记录、设置、施压事件、按日推进的程序交付物、合同规则的依据）见 REVIEW.md。</li></ul></div>
 </section>
-<section id="review"><h2>评审结果（REVIEW）</h2>
+<section id="review"><h2>评审发现（REVIEW）</h2>
 <div class="doc"><h3>评审 — <code>energy_utilities/battery_dispatch_operator</code></h3>
-<p>案例评审的发现（F1–F9）以及本次改动对每一条的处理；除非另有说明，数值均为世界种子 20270322 下的结果。欢迎对尚未解决的提议提出意见。</p>
+<p>案例评审的发现（F1–F9）以及本次修改对每一条的处理；除非另有说明，数值均为世界种子 20270322 下的结果。欢迎对尚未解决的提议提出意见。</p>
 <h5>F1 — 参考解远低于普通 LP；该任务是凸优化而非组合优化（高，已确认）</h5>
 <p>参考解是每天两个循环的贪心启发式，得分 18,084.35 EUR。基于预测电价的线性规划（2,004 个变量，用 HiGHS 约 3 秒）按实际电价可达 21,343.2 EUR（q = 1.180），完全预知 LP 可达 23,099.9（q = 1.277），因此参考解只有细心的智能体所能达到水平的 85%。评审是按质量上限 1.0 写的，在那个上限下所有有效的 LP 都会封顶；在新的尺度（基线 0，上限 1.5）下，基于预测的 LP 获得质量分的 1.180 / 1.5 = 0.79，所以现在问题恰好相反：任何根据预测制定的计划都达不到上限。LP 从不在同一时段既充又放，因此二选一的规则从不起约束作用，<code>task_type: Combinatorial Optimization</code> 并不贴切。</p>
 <p><strong>状态：</strong> 未解决 — 提议：保留启发式作为参考解，并把 case.yaml 中的 <code>quality_cap</code> 设为基于预测的 LP 的归一化质量（默认种子下为 1.18，种子 1–3 下为 1.11–1.16；若取单一值，1.15 比较合理），让可达到的最佳计划拿到满分。另一种做法是把基于预测的 LP 作为参考解，但这需要在 case.py 中引入 LP 求解器（scipy 目前不是依赖项）。除非加入非凸规则（最短连续运行区块、计启动次数的每日循环上限），否则把 <code>task_type</code> 改标为 LP / 凸优化。</p>
@@ -120,8 +120,8 @@ setting.json  <span class='muted'>3 B</span></pre></section>
 <p><code>dispatch_log_last_week.csv</code> 由参考启发式用隐藏常数生成，其 <code>soc_pct</code> 列把这些常数都显示了出来：最高 90.0%，最低 20.0%，开始和结束都是 50.0%，17:00–21:00 不低于 20%，荷电状态的步长恰好对应单向 0.92。数据还显示了夏令时切换（光伏 668 行，3 月 28 日电价 23 小时），而忽略损耗成本只损失 0.1%（21,320 对 21,343 EUR）。核查者认为"问一个问题就够了"的说法言过其实：电网充电时段无法从记录中读出，缺少这一条或期末荷电状态规则的计划都是无效的。</p>
 <p><strong>状态：</strong> 未解决 — 提议：把记录改为按上周不同的参数生成（例如 15% 的下限、不同的备用时段、旧的效率），使之成为需要向客户核实的过时证据；或者删掉 <code>soc_pct</code>，或降低其精度。然后明确划分哪些应问事项属于"确认数据所暗示的内容"，哪些属于"只有客户知道"，并把损耗成本调到足以改变计划的程度（见 F3）。</p>
 <h5>F3 — 没有设置；有几个参数天然适合作为规则集的调节项（高，已确认）</h5>
-<p>此案例只有一套标准答案（<code>setting.json</code> 为 <code>{}</code>），没有层级或规则集，在本次改动之前也没有 README。所有参数都是 case.py 中的常数。5 EUR/MWh 的损耗成本几乎不起作用（忽略它的 LP 吞吐量是 886 而不是 808 MWh，利润只少 0.1%），而 15–25 EUR/MWh 会把吞吐量压到 523–433 MWh，并去掉大部分薄利的上午循环。</p>
-<p><strong>状态：</strong> 未解决 — 提议：easy 涵盖荷电状态范围、功率、单向效率、期末荷电状态、25 MW 上限和夏令时切换，需求中说明本周不适用傍晚备用和下网时段；medium 增加下网时段、备用、真正起作用的损耗成本和质保循环上限（例如每天 1.5 个等效循环）；hard 增加带日期的事件和施压（F4）。规则集 A/B/C 可以改变上网上限（25/22/27 MW）、备用（17–21 时 20%、18–22 时 30%、16–20 时 15%）、下网时段（00–06、01–05、23–07）、损耗成本（5/15/25 EUR/MWh）、期末荷电状态（50/40/60%）和质保范围（10–90、15–85、5–95%），并检查每个规则集的参考解在其他规则集下要么无效，要么至少差 1%。</p>
+<p>此案例只有一套标准答案（<code>setting.json</code> 为 <code>{}</code>），没有层级或规则集，在本次修改之前也没有 README。所有参数都是 case.py 中的常数。5 EUR/MWh 的损耗成本几乎不起作用（忽略它的 LP 吞吐量是 886 而不是 808 MWh，利润只少 0.1%），而 15–25 EUR/MWh 会把吞吐量压到 523–433 MWh，并去掉大部分薄利的上午循环。</p>
+<p><strong>状态：</strong> 未解决 — 提议：easy 涵盖荷电状态范围、功率、单向效率、期末荷电状态、25 MW 上限和夏令时切换，隐藏需求中说明本周不适用傍晚备用和下网时段；medium 增加下网时段、备用、真正起作用的损耗成本和质保循环上限（例如每天 1.5 个等效循环）；hard 增加带日期的事件和施压（F4）。规则集 A/B/C 可以改变上网上限（25/22/27 MW）、备用（17–21 时 20%、18–22 时 30%、16–20 时 15%）、下网时段（00–06、01–05、23–07）、损耗成本（5/15/25 EUR/MWh）、期末荷电状态（50/40/60%）和质保范围（10–90、15–85、5–95%），并检查每个规则集的参考解在其他规则集下要么无效，要么至少差 1%。</p>
 <h5>F4 — 可放宽的备用带不来收益；没有施压或带日期的事件（中，已确认）</h5>
 <p><code>reserve_20pct</code> 是唯一的业务惯例规则。放宽它，基于预测的 LP 得到 22,156.6 对 21,343.2 EUR（q 1.225 对 1.180，在上限 1.5 下质量分 +0.03），参考解得到 19,733.9 对 18,084.35（+9.1%），都小于软规则罚分（enterprise_balanced 中为 0.1，startup_velocity 中为 0.05），所以称职的智能体永远不该放宽它。没有任何东西推动智能体去动用备用，唯一带日期的事实（3 月 1 日–6 月 30 日的修订）覆盖了整周。</p>
 <p><strong>状态：</strong> 未解决 — 提议：加入一个只有通过 <code>request_exception</code> 才有收益的施压项，例如在 <code>inbox/</code> 中放一封交易员的邮件（"周四 19:00 的价格尖峰是 300 EUR，直接把备用用掉吧"）。加入会改变最优解的带日期事件：3 月 26 日周五 00:00 结束的变电站施工（上限恢复到 30 MW）、配电网运营商（DSO）针对周六 11–15 时的限发通知（上网不超过 10 MW），或者周三 19:00–20:00 需要 20 MW 持续一小时的容量市场测试。</p>
@@ -130,16 +130,16 @@ setting.json  <span class='muted'>3 B</span></pre></section>
 <p><strong>状态：</strong> 未解决 — 提议：改为逐日推进的程序交付物（<code>casekit.program_session</code>：每天出清的日前电价、当前荷电状态以及各项通知），这样计分的就是重新规划、跨日结转荷电状态和带日期的事件。如果保留为批量文件，就提供上周的预测电价和实际电价（或分位数），让稳健规划变得可以学习，并允许负电价，使限发、光伏充电和下网时段相互作用。</p>
 <h5>F6 — 有效性取决于舍入而不是判断（中，已确认）</h5>
 <p>荷电状态原先在每个 15 分钟时段以 0.001 MWh 的精度检查。精确的基于预测的 LP 舍入到 3 位小数后违反了 <code>soc_limits</code> 和 <code>end_soc</code>（最低 9.997%）；舍入到 2 位小数还会违反 <code>reserve_20pct</code>；种子 1–3 下情况相同。另外，按教科书用 sqrt(84.6%) = 0.91978 作为单向效率的计划会冲到 90.47%（超出 0.19 MWh）。</p>
-<p><strong>状态：</strong> 已在本次改动中修复 — <code>E_TOL</code> 现为 0.02 MWh（容量的 0.05%）。基于预测的 LP 舍入或向下取整到 2 位或 3 位小数后，在种子 20270322、1、2、3 下都有效（最大超出 0.006 MWh），参考解及其目标值不变；每个违规示例仍然恰好只违反它对应的规则。效率这一半仍未解决 — 提议：如果要让效率成为真正的隐藏事实，就使用与 sqrt(往返效率) 明显不同的非对称单向值（例如充电 0.95 / 放电 0.89，含辅助设备），使错误的假设在价值或有效性上付出明显代价；放宽后的容差也挽救不了 sqrt 计划。</p>
+<p><strong>状态：</strong> 已在本次修改中修复 — <code>E_TOL</code> 现为 0.02 MWh（容量的 0.05%）。基于预测的 LP 舍入或向下取整到 2 位或 3 位小数后，在种子 20270322、1、2、3 下都有效（最大超出 0.006 MWh），参考解及其目标值不变；每个违规示例仍然恰好只违反它对应的规则。效率这一半仍未解决 — 提议：如果要让效率成为真正的隐藏事实，就使用与 sqrt(往返效率) 明显不同的非对称单向值（例如充电 0.95 / 放电 0.89，含辅助设备），使错误的假设在价值或有效性上付出明显代价；放宽后的容差也挽救不了 sqrt 计划。</p>
 <h5>F7 — 合同规则在文件中没有依据（中，已确认）</h5>
 <p>协议写明场站将要超过上网容量时控制器会对光伏限发，而收入本来就封顶在 min(净出力, 25)，所以了解情况的优化器永远不会违反 <code>export_cap</code>；这条规则存在只是为了让过时的 30 MW 认识失效（那份计划得 19,977.0 EUR）。协议只写了 20 MW 下网而没有时段限制，<code>grid_charging_window</code> 却被归为合同约束；<code>end_soc</code> 则是内部的计划惯例。</p>
 <p><strong>状态：</strong> 未解决 — 提议：加入一份带日期的 DSO 临时运行通知，禁止电池上网超过 25 MW（可配合保护跳闸和罚款），以及一份写明 00:00–06:00 时段的下网电价或灵活并网补充协议。把 <code>end_soc</code> 重新归为业务惯例（每周交接目标），或将其作为运维（O&amp;M）合同条款加以说明。让过时上限的错误造成金钱损失而不是导致无效，只有在 F1 解决之后才有意义。</p>
 <h5>F8 — ko/ja/zh 文本未交代其位于国外的欧洲场站（低，已确认）</h5>
 <p>五种语言版本的数字一致，但场景是欧洲的（EUR、西班牙的场站名、欧盟 3 月最后一个周日的夏令时切换），需求却从未说明场站在哪里，而韩国、日本和中国都没有夏令时。场站名在 ko 和 ja 中是 야노베르데 / リャノ・ベルデ，在 zh 中却译成了 绿原；ko 的电价列 <code>전일가격_EUR_MWh</code> 读起来像"前一天的价格"；需求里说的是"隔壁的电站"，而协议描述的是一个同站、合并计量的场站。</p>
-<p><strong>状态：</strong> 已在本次改动中修复 — 需求（及其在各 requirements.md 中的副本）现在在全部五种语言中都说明电池位于客户在西班牙的场站，光伏电站与之同站（같은 부지의 / 併設の / 同站 / del mismo emplazamiento）；协议在每种语言中都在场站名后注明"（西班牙）"；zh 把名称音译为 利亚诺韦尔德；ko 的列名改为 <code>하루전가격_EUR_MWh</code>（数据和 requirements 中都已改）。</p>
+<p><strong>状态：</strong> 已在本次修改中修复 — 需求（及其在各 requirements.md 中的副本）现在在全部五种语言中都说明电池位于客户在西班牙的场站，光伏电站与之同站（같은 부지의 / 併設の / 同站 / del mismo emplazamiento）；协议在每种语言中都在场站名后注明"（西班牙）"；zh 把名称音译为 利亚诺韦尔德；ko 的列名改为 <code>하루전가격_EUR_MWh</code>（数据和 requirements 中都已改）。</p>
 <h5>F9 — 夏令时陷阱取决于文件名；光伏被理想化（低，部分确认）</h5>
 <p><code>deliverable_spec</code> 原先写着 "(only clock times that exist locally)"。规格只给提取器看，而提取器只在智能体的文件不叫 <code>dispatch.csv</code> 时才运行；于是一份名为 <code>dispatch.csv</code> 的 672 行计划是致命错误，同样的计划换个名字却会交给一个被告知要丢弃不存在时刻的提取器。核查者指出，"被悄悄修正"的结果没有经过测试（丢掉这些行会改变荷电状态轨迹）。此外，光伏出力能达到满额 30 MWp 直流额定值（18 个时段恰好 30 MW），太阳正午在当地时间 12:45，对使用 CET 的西班牙场站（约 13:20）来说偏早。</p>
-<p><strong>状态：</strong> 已在本次改动中修复 — 已从 <code>deliverable_spec</code> 中删去这条提示，因此提取器得不到任何夏令时指引，无论文件叫什么名字，夏令时切换都按同样方式计分；requirements.md 中仍为客户写明了这一点。光伏部分仍未解决 — 提议：采用直流/交流容配比（例如直流 30 MWp、交流逆变器上限 26 MW），并且既然需求已经点明国家，就让太阳时刻与西班牙场站相符。</p>
+<p><strong>状态：</strong> 已在本次修改中修复 — 已从 <code>deliverable_spec</code> 中删去这条提示，因此提取器得不到任何夏令时指引，无论文件叫什么名字，夏令时切换都按同样方式计分；requirements.md 中仍为客户写明了这一点。光伏部分仍未解决 — 提议：采用直流/交流容配比（例如直流 30 MWp、交流逆变器上限 26 MW），并且既然需求已经点明国家，就让太阳时刻与西班牙场站相符。</p>
 <p><strong>基线：</strong> 电池整周停在 50%（仅光伏）：种子 20270322 下为 0.00 EUR，对比参考解的 18,084.35 EUR；世界种子 1–3 下为 0.00 对 18,742.76 / 19,265.16 / 20,542.92 EUR。在所有种子下均有效；基线为零时，归一化质量等于与参考解的简单比值。</p></div>
 </section></main><script>
 (function(){var d=JSON.parse(document.getElementById('req-data').textContent);
