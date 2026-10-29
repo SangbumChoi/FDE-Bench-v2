@@ -1,0 +1,32 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Analista de datos de BI
+task_type: Análisis de datos
+deliverable_spec: |
+  answers.json = {"Q01": <número o null>, "Q02": <número o null>, ..., "Q12": <número o null>}
+  Cada identificador de pregunta del archivo de preguntas (Q01..Q12) es una clave. Su valor es un único número JSON,
+  o null cuando el ingeniero no dio ninguna cifra para esa pregunta («no sé», «aún no disponible»). Importes en KRW,
+  porcentajes en tanto por ciento (p. ej., 4.25 para un 4,25 %) y clientes como el customer_id numérico.
+tiers:
+  easy: >-
+    Cinco preguntas (Q01, Q03, Q04, Q10, Q12) sobre las convenciones básicas: qué pedidos cuentan, cuentas de prueba
+    fuera y cuentas de empleado dentro, el año fiscal, la ventana de cliente activo y el redondeo de los importes; Q01 y
+    Q04 dependen además de las definiciones de ingreso neto y de tipo de cambio. Las otras siete preguntas no se
+    necesitan en esta ronda.
+  medium: >-
+    Las de easy más seis preguntas que dependen del ingreso neto, del tipo de cambio de la fecha del pedido y de los
+    días en hora de Corea (Q02, Q05, Q07, Q08, Q09, Q11), incluidos los reembolsos de octubre de pedidos de septiembre
+    (Q11 y, con el conjunto de reglas B, también Q02). La pregunta de «despensa» (Q06) no se necesita en esta ronda.
+  hard: >-
+    Las doce preguntas: las de medium más el ingreso neto de «despensa» (Q06), que exige conocer el cambio de nombre de
+    la categoría snacks a despensa.
+rules:
+  answer_format: >-
+    Cada identificador de pregunta Q01..Q12 figura en answers.json, con un único número JSON finito o null (null
+    significa «no sé»).
+  exclude_test_accounts: >-
+    Las cuentas de prueba (account_type = prueba en accounts_meta) se excluyen de todas las cifras; una respuesta de
+    recuento o de identificador de cliente que se use en esta ronda (Q03, Q04, Q05, Q10) y que coincida con la cifra
+    que incluye las cuentas de prueba, cuando esta difiere de la cifra sin ellas, incumple la política de finanzas.
+  report_rounding: >-
+    Toda cifra monetaria que se use en esta ronda (Q01, Q02, Q06, Q07, Q09) se informa redondeada al múltiplo de
+    {{rounding_unit}} KRW más cercano.
