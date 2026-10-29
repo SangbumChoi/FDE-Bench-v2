@@ -1,0 +1,34 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Curador de corpus multilingüe
+task_type: Ingeniería de datos
+deliverable_spec: |
+  Un directorio program/ con organize.py, que define organize(task); task = {"corpus_dir": <una carpeta organizada
+  como data/corpus>, "out_dir": <una carpeta vacía>}. Lee corpus_dir (nunca lo modifica) y solo escribe dentro de out_dir:
+    out_dir/library/...    un archivo .txt en UTF-8 por libro con la sinopsis del libro (la estructura de
+                           carpetas y los nombres de archivo los decide el cliente: hay que preguntar)
+    out_dir/_review/...    el material de los libros que no se pueden colocar
+    out_dir/manifest.csv   cabecera source,status,path,reason; una fila por libro (source = las rutas de sus
+                           archivos relativas al corpus, separadas por ";") y una por cada archivo omitido;
+                           status placed | review | skipped
+  Se ejecuta una vez, sin conexión, sobre la unidad completa del cliente (misma estructura y misma mezcla que la
+  muestra, unos 100 libros). Solo la biblioteca estándar de Python; 5 minutos como máximo.
+tiers:
+  easy: >-
+    Solo puntúan los libros bien formados (unos 30 de 100): un archivo cada uno, metadatos completos, UTF-8, años
+    normales de cuatro cifras. La ruta en la biblioteca, el nombre del archivo y la sinopsis deben ser correctos.
+  medium: >-
+    Lo de easy más todos los libros legibles (unos 66): codificaciones antiguas (GB18030, CP949, Shift_JIS, CP1252),
+    eras y otras notaciones de año, títulos en ancho completo o con acentos descompuestos, caracteres prohibidos en las
+    rutas, grafías romanizadas distintas de un mismo autor, copias de un libro en varios formatos que hay que fundir y
+    la precedencia de las fuentes. Los archivos sobrantes en la biblioteca restan crédito.
+  hard: >-
+    Lo de medium más las excepciones (los 100 libros): autores, títulos, años o sinopsis que faltan y que aporta otra
+    fuente o que envían el libro a revisión con un código de motivo, fuentes contradictorias, escaneos ilegibles,
+    archivos basura, libros dentro de archivos zip y CSV de catálogo con varios libros; no se inventan sinopsis.
+rules:
+  utf8_output: 'Todos los archivos de library/ y manifest.csv son UTF-8 válido.'
+  safe_names: 'Ningún nombre de archivo o carpeta de salida contiene \ / : * ? " < > | ni un carácter de control, es . o .., termina en espacio o punto, ni supera los 255 bytes.'
+  one_file_per_book: 'Un libro tiene como máximo un archivo en library/; las copias del mismo libro en otros formatos o carpetas se funden en él.'
+  review_reason: 'Toda fila del manifiesto con status review lleva uno de los códigos de motivo UNREADABLE, NO_TITLE, NO_AUTHOR, NO_YEAR, NO_DESCRIPTION, CONFLICT.'
+  no_fabrication: 'Un libro cuyas fuentes no tienen sinopsis no se coloca en library/, y cada archivo de la biblioteca contiene una sinopsis tomada de las fuentes (ninguno está vacío, es inventado ni es de relleno).'
+  missing_author_review: 'Un libro sin autor en ninguna fuente va a _review/ con NO_AUTHOR, en lugar de colocarse con el nombre de autor "{{fallback_author}}".'
