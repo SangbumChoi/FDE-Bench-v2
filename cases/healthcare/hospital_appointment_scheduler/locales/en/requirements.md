@@ -54,29 +54,29 @@ A folder `program/` with a file `scheduler.py` that defines **`on_day(day)`**. A
 
 **Changing a patient's appointment**
 
-- When we change the **date or time** of a patient's appointment (a move, or a release and a new booking the same day), the new appointment must be at least **{{move_notice_days}} working days after today**: patients need that much notice. Giving the same date and time with another doctor needs no notice.
+- When we change the **date or time** of a patient's appointment (a move, or releasing it and booking the request again, the same day or later), the new appointment must be at least **{{move_notice_days}} working days after the day of the change** (for a release, the day we released it): patients need that much notice. Giving the same date and time with another doctor needs no notice.
 - Every change we make to a patient's appointment (move or release) is a burden for the patient and costs in the score; do not shuffle appointments without a reason.
 
 **The waitlist**
 
 - Waiting requests are booked in our **priority order**: {{waitlist_order}}.
-- A request may not be booked while a request of **higher priority** of the same department, the same visit type and (follow-ups) the same previous doctor is still waiting at the end of the day and could have taken that slot. We do not hold it against you when the waiting one could not have taken it: its earliest date is later than that slot<!-- tier: medium hard -->, its referral expires before it, it needs a blood test (tests are planned separately)<!-- /tier -->, it is a new patient who would need an interpreter with that doctor while the booked one does not, or you released its appointment today and the slot is inside the notice period.
+- A request may not be booked while a request of **higher priority** of the same department, the same visit type and (follow-ups) the same previous doctor is still waiting at the end of the day and could have taken that slot. We do not hold it against you when the waiting one could not have taken it: its earliest date is later than that slot<!-- tier: medium hard -->, its referral expires before it, it needs a blood test and the lab has no room for it on any working day before that slot (from tomorrow and not before its earliest date; the booked request's own test place counts as room)<!-- /tier -->, it is a new patient who would need an interpreter with that doctor while the booked one does not and that day's in-person interpreters are all taken, or you released its appointment and the slot is inside the notice period counted from the day of the release.
 - In practice: fill free and freed slots from the waitlist, best first. Cancellations and the urgent reserve released for tomorrow are where we lose most doctor time today.
 <!-- tier: easy -->
 
 **This round's scope**
 
 - `doctor_absence` and `interpreter_absence` notices: out of scope this round (a locum and an agency interpreter cover them); book as if nothing happened.
-- `referral_valid_until` and `pre_visit_test`: out of scope this round; `test_date` stays null.
-- No-shows: out of scope; count every booked patient as coming. `attendance` is for information.
-- Each request is its own visit, even when the same patient asks twice.
+- Referral letters and blood tests: this round the referral desk checks the letters and the lab books the fasting tests with the patients itself, so ignore `referral_valid_until` and `pre_visit_test` and leave `test_date` null.
+- No-shows: we do not plan for them this round; count every booked patient as coming. `attendance` is for information.
+- A second request from the same patient: we cannot tell from a request whether it is the same complaint, so this round every request gets its own appointment; the clinic checks with the patient whether it is a duplicate.
 <!-- /tier -->
 <!-- tier: medium -->
 
 **This round's scope**
 
-- No-shows: out of scope; count every booked patient as coming. `attendance` is for information. No overbooking: one appointment per slot.
-- Each request is its own visit, even when the same patient asks twice.
+- No-shows: we do not plan for them this round; count every booked patient as coming, so no overbooking: one appointment per slot. `attendance` is for information.
+- A second request from the same patient: we cannot tell from a request whether it is the same complaint, so this round every request gets its own appointment; the clinic checks with the patient whether it is a duplicate.
 <!-- /tier -->
 <!-- tier: medium hard -->
 
@@ -95,7 +95,7 @@ A folder `program/` with a file `scheduler.py` that defines **`on_day(day)`**. A
 **No-shows and overbooking**
 
 - Some patients do not come. Each patient has an own no-show rate; `past_appointments` and `missed_appointments` give their record (about 22% of the appointments in the export's `attendance` table were missed; new patients often have no record). The longer between booking and visit, the more often people stay away: about **one percentage point more per working day of lead time** (from the day the appointment was booked or last changed). The patients' records were collected at about 5 working days of lead time.
-- Because of no-shows we allow **overbooking of follow-ups**: a slot may hold **two follow-ups** (never a new-patient visit, which keeps its two slots to itself). Each doctor may have at most **{{overbooked_per_session}} overbooked slots per session** (morning or afternoon). The urgent reserve applies to overbooking too.
+- Because of no-shows we allow **overbooking of follow-ups**: a slot may hold **two follow-ups** (never a new-patient visit, which keeps its two slots to itself). Each doctor may have at most **{{overbooked_per_session}} overbooked slots per session** (morning or afternoon). The urgent reserve applies to overbooking too. When both patients of an overbooked slot do come, the doctor runs late, and that costs us a little more than an empty slot does.
 
 **Duplicates, several departments, notes**
 

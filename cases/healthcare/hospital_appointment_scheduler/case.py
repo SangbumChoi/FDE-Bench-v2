@@ -624,6 +624,7 @@ class Engine:
         self.moves = 0
         self.freed: list = []            # slots freed by patients' cancellations (for the README's numbers)
         self.held: dict = {}             # (patient, department) -> appointments that took place in the period
+        self.released_on: dict = {}      # request id -> (call day, day, start) of the hospital's latest release
         self.found: dict = {}
         self.acc: list = []
         self.m = {"booked": 0, "moved": 0, "released": 0, "cancellations": 0, "calls_failed": 0,
@@ -715,6 +716,7 @@ class Engine:
             a = self.appt.pop(rid)
             self._vacate(rid, a)
             self.open.add(rid)
+            self.released_on[rid] = (d, a.day, a.start)
             return
         doc, t, s = act.get("doctor_id"), parse_day(act.get("date")), parse_start(act.get("start"))
         if doc not in w.doc or t is None or s is None:
@@ -792,6 +794,13 @@ class Engine:
                 if was is not None and a.day < d + v.notice:
                     self.flag("move_notice", f"{day}: {rid} moved to {iso(a.day)} with less than {v.notice} "
                                              f"working days' notice")
+                elif was is None and rid in self.released_on:
+                    # A request the hospital released and books again later: notice from the day of the release
+                    # (the same date and time as the released appointment needs none).
+                    rd, t0, s0 = self.released_on[rid]
+                    if a.day < rd + v.notice and (a.day, a.start) != (t0, s0):
+                        self.flag("move_notice", f"{day}: {rid} released on {iso(rd)} and booked again for "
+                                                 f"{iso(a.day)}, less than {v.notice} working days after the release")
                 if r.prev and a.doctor != r.prev:
                     self.flag("follow_up_same_doctor", f"{day}: follow-up {rid} with {a.doctor}, not {r.prev}")
             if v.medium and r.new and a.day > r.referral:
@@ -854,10 +863,17 @@ class Engine:
             r = w.req[rid]
             if r.urgency == "U":
                 self.flag("urgent_window", f"{day}: urgent {rid} is not booked")
-        self._check_priority(d)
+        self._check_priority(d, interp, lab)
 
-    def _check_priority(self, d: int) -> None:
+    def _check_priority(self, d: int, interp: dict, lab: dict) -> None:
+        """A booking breaks the priority order when a higher-priority request of its group still waits at the
+        end of the day and could have taken that slot instead (`interp` / `lab`: the day's end-state loads)."""
         w, v = self.w, self.v
+
+        def lab_room(y: Req, x: Req, a: Appt) -> bool:
+            """A working day for y's blood test before the slot, had x's own test not taken it."""
+            own = a.test if x.test and a.test is not None and a.test >= d + 1 else None
+            return any(lab.get(t, 0) - (t == own) < v.lab_cap for t in range(max(d + 1, y.earliest), a.day))
         groups: dict = {}
         for rid in self.open:
             r = w.req[rid]
@@ -874,11 +890,12 @@ class Engine:
             for y in groups.get((x.dept, x.prev), ()):
                 if v.prio(y) >= px or y.earliest > a.day:
                     continue
-                if v.medium and (y.test or (y.new and y.referral < a.day)):
+                if v.medium and ((y.new and y.referral < a.day) or (y.test and not lab_room(y, x, a))):
                     continue
-                if y.new and y.lang not in langs and not (x.new and x.lang not in langs):
+                if y.new and y.lang not in langs and not (x.new and x.lang not in langs) and \
+                        interp.get(a.day, 0) >= v.interp_cap(a.day, d):
                     continue
-                if y.id in self.start and a.day < d + v.notice:
+                if y.id in self.released_on and a.day < self.released_on[y.id][0] + v.notice:
                     continue
                 self.flag("waitlist_priority", f"{iso(d)}: {rid} booked on {iso(a.day)} while {y.id} (higher "
                                                f"priority) still waits")
@@ -1100,6 +1117,14 @@ def reference_solution(world: World, out_dir: Path, setting) -> None:
     write_program(out_dir, ref_config(_View(world, setting)))
 
 
+def baseline_solution(world: World, out_dir: Path, setting) -> None:
+    """The booking office's practice without an engineer: the same program (earliest feasible slot in the
+    priority order, every rule kept, the same status table), but the urgent reserve stays with urgent patients
+    and is never released for tomorrow's clinics, and no slot is ever double-booked. The client names the
+    released reserve as one of the two places it loses most doctor time today."""
+    write_program(out_dir, ref_config(_View(world, setting), hold_reserve=True, no_overbook=True))
+
+
 # ── programs that break one rule (for the validator) ─────────────────────────
 
 def _snapshots(view: _View) -> dict:
@@ -1199,6 +1224,15 @@ def _cands(view: _View, rule: str):
         yield N_DAYS - 1, [{"type": "book", "request_id": "Q99999", "doctor_id": "D01",
                             "date": iso(N_DAYS), "start": "09:40"}]
         return
+    if rule == "move_notice" and v.notice >= 3:
+        # First choice: the hospital releases a follow-up today and the reference books it again tomorrow for the
+        # day after, inside the notice period counted from the release (a move at short notice is the fallback).
+        for d in range(1, 6):
+            st = _State(v, d)
+            rel = [rid for rid, r, a in st.appts(new=False) if a.day >= d + 3
+                   and any(h == "AM" for h, _ in w.sessions(a.doctor, d + 2))]
+            for rid in rel[:2]:
+                yield d, [{"type": "release", "request_id": rid}]
     for d in days:
         if rule == "holiday_closure" and not d + 1 <= HOLIDAY <= d + HORIZON:
             continue
@@ -1668,9 +1702,9 @@ SENDERS = {   # (display name, address); {name}/{dept} filled in
                       "es": "Servicio de intérpretes"}, "interpreters@hospital.example"),
     "director": ({"zh": "院长办公室", "en": "Director's office", "ko": "원장실", "ja": "院長室", "es": "Dirección"},
                  "director-office@hospital.example"),
-    "secretariat": ({"zh": "{dept}科室秘书", "en": "{dept} secretariat", "ko": "{dept} 의국", "ja": "{dept} 医局",
+    "secretariat": ({"zh": "{dept}科室秘书", "en": "{dept} secretariat", "ko": "{dept} 사무실", "ja": "{dept} 医局",
                      "es": "Secretaría de {dept}"}, "{code}-secretariat@hospital.example"),
-    "doctor": ({"zh": "{name}", "en": "Dr {name}", "ko": "{name} 교수", "ja": "{name} 医師", "es": "Dr. {name}"},
+    "doctor": ({"zh": "{name}", "en": "Dr {name}", "ko": "{name} 과장", "ja": "{name} 医師", "es": "Dr. {name}"},
                "{docl}@hospital.example"),
 }
 MAIL = {   # kind -> lang -> (subject, body); body greetings and sign-offs included
@@ -1690,8 +1724,8 @@ MAIL = {   # kind -> lang -> (subject, body); body greetings and sign-offs inclu
                "不出诊。\n\n{dept}科室秘书"),
         "en": ("Dr {name} ({doc}) off sick {frm_s} - {to_s}", "Dear booking office,\n\nDr {name} ({doc}, {dept}) is off "
                "sick from {frm} to {to} and holds no clinics then.\n\nKind regards,\n{dept} secretariat"),
-        "ko": ("{name} 교수({doc}) 병가 {frm_s}~{to_s}", "예약실 담당자님께\n\n{dept} {name} 교수({doc})가 병가로 {frm}부터 "
-               "{to}까지 진료하지 않습니다.\n\n{dept} 의국"),
+        "ko": ("{name} 과장({doc}) 병가 {frm_s}~{to_s}", "예약실 담당자님께\n\n{dept} {name} 과장({doc})이 병가로 {frm}부터 "
+               "{to}까지 진료하지 않습니다.\n\n{dept} 사무실"),
         "ja": ("{name}医師（{doc}）病欠 {frm_s}〜{to_s}", "予約係 御中\n\n{dept}の{name}医師（{doc}）が病気のため、{frm}から"
                "{to}まで外来を休みます。\n\n{dept} 医局"),
         "es": ("Dr. {name} ({doc}) de baja del {frm_s} al {to_s}", "Estimada oficina de citas:\n\nEl Dr. {name} ({doc}, "

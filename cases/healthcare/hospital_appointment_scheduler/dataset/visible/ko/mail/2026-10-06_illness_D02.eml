@@ -1,7 +1,7 @@
-From: 내과 의국 <im-secretariat@hospital.example>
+From: 내과 사무실 <im-secretariat@hospital.example>
 To: 외래 예약실 <booking-office@hospital.example>
 Date: Tue, 06 Oct 2026 12:11:00 +0900
-Subject: 이서연 교수(D02) 병가 10/7~10/9
+Subject: 이서연 과장(D02) 병가 10/7~10/9
 Message-ID: <2026-10-06_illness_D02.ko@hospital.example>
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -9,6 +9,6 @@ MIME-Version: 1.0
 
 예약실 담당자님께
 
-내과 이서연 교수(D02)가 병가로 10월 7일(수)부터 10월 9일(금)까지 진료하지 않습니다.
+내과 이서연 과장(D02)이 병가로 10월 7일(수)부터 10월 9일(금)까지 진료하지 않습니다.
 
-내과 의국
+내과 사무실

@@ -3,8 +3,9 @@ config.json).
 
 Standard library only. The engine loads this file once and calls on_day(day) once per working day, in order,
 in the same process. The book and the waitlist come with every call, so the program rebuilds its view of the
-calendar each day; it only remembers the notices (absences, interpreter changes) and which patients have had
-an appointment in which department.
+calendar each day; it only remembers the notices (absences, interpreter changes), which patients have had
+an appointment in which department, and the day it released each request it released (a released request
+is booked again no sooner than the notice period after that day).
 
 Each day:
   * (medium+) apply the day's absence and interpreter notices; move every appointment of an absent doctor on
@@ -23,8 +24,8 @@ Each day:
   * report the status table.
 
 config.json holds the client's rule parameters for the setting and the no-show prior from the history; a few
-switches exist only so the case can build variants (bending the follow-up habit, following notes) and
-programs that break one rule each (`inject`).
+switches exist only so the case can build variants (bending the follow-up habit, following notes), the
+baseline (`hold_reserve`, `no_overbook`) and programs that break one rule each (`inject`).
 """
 
 import datetime as dt
@@ -74,6 +75,7 @@ class Scheduler:
         self.absent = {}        # doctor -> set of absent days
         self.interp_cut = {}    # day -> change in in-person interpreters
         self.ever = set()       # (patient, department) with an appointment that took place in the period
+        self.rel_day = {}       # request -> the day this program released its appointment (notice counts from it)
         self.head_blocked = set()
         self.head_doc = None
 
@@ -295,6 +297,7 @@ class Scheduler:
             self.unplace(rid)
             waiting[rid] = self.req[rid]
             released.add(rid)
+            self.rel_day[rid] = d
 
         notice = cfg["move_notice_days"]
         if self.medium:
@@ -365,7 +368,8 @@ class Scheduler:
             rid = r["request_id"]
             if rid in skipped:
                 continue
-            lo = d + notice if rid in released else d + 1
+            # a request this program released (today or earlier): the notice counts from the release
+            lo = max(d + 1, self.rel_day.get(rid, -10 ** 6) + notice)
             docs = self.doctors_for(r)
             if cfg.get("follow_notes") and r.get("notes"):
                 f = None
@@ -427,7 +431,7 @@ class Scheduler:
                 rid = r["request_id"]
                 if rid not in waiting or rid in skipped or r["visit_type"] != "follow_up":
                     continue
-                lo = max(d + notice if rid in released else d + 1, wd(r["earliest_date"]))
+                lo = max(d + 1, self.rel_day.get(rid, -10 ** 6) + notice, wd(r["earliest_date"]))
                 doc = r["previous_doctor"]
                 hit = None
                 for D in range(lo, d + cfg["horizon"] + 1):

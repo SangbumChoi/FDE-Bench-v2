@@ -52,7 +52,7 @@ param_labels:                # how a code parameter reads in each locale's text
     urgency_earliest:
       zh: 先按紧急程度（U、S、R），同一紧急程度内按最早可约日期先后（能最早来的人优先）
       en: by urgency first (U, then S, then R), and within the same urgency by earliest_date, the patient who can come first goes first
-      ko: 먼저 긴급도 순(U, S, R), 같은 긴급도 안에서는 희망시작일(earliest_date)이 이른 순, 즉 가장 먼저 올 수 있는 환자 먼저
+      ko: 먼저 긴급도 순(U, S, R), 같은 긴급도 안에서는 진료 가능 시작일(earliest_date)이 이른 순, 즉 가장 먼저 올 수 있는 환자 먼저
       ja: まず緊急度順（U、S、R）、同じ緊急度の中では受診可能日（earliest_date）の早い順、つまり早く来られる患者から
       es: primero por urgencia (U, luego S, luego R) y, dentro de la misma urgencia, por earliest_date (primero quien puede venir antes)
 deliverable_spec: |
@@ -112,7 +112,7 @@ rules:
     description: The first two slots of every morning session (09:00 and 09:20) are held for urgent requests until the working day before; no S or R request is booked or moved into them two or more working days ahead.
   - id: move_notice
     class: contractual
-    description: When the hospital changes the day or time of a patient's appointment, the new appointment is at least {{move_notice_days}} working days after the day of the change (another doctor at the same day and time needs no notice).
+    description: When the hospital changes the day or time of a patient's appointment, the new appointment is at least {{move_notice_days}} working days after the day of the change; for a request the hospital released and books again later, after the day of the release (another doctor at the same day and time needs no notice).
   - id: waitlist_priority
     class: contractual
     description: Waiting requests are booked in the priority order ({{waitlist_order}}); a request is not booked while a request of higher priority of the same department, visit type and previous doctor still waits and could have taken that slot.

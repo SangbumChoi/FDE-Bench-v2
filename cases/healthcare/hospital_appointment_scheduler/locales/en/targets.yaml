@@ -33,7 +33,7 @@
 - id: move_notice
   kind: missing
   domain: business rule
-  text: When the hospital changes the date or time of a patient's appointment, the new one must be at least {{move_notice_days}} working days after today (same date and time with another doctor needs no notice); every change costs.
+  text: When the hospital changes the date or time of a patient's appointment, the new one must be at least {{move_notice_days}} working days after the day of the change (for a request released and booked again later, after the day of the release; same date and time with another doctor needs no notice); every change costs.
 - id: waitlist_priority
   kind: missing
   domain: business rule
@@ -41,21 +41,21 @@
 - id: status_table
   kind: missing
   domain: scoring
-  text: Every day the program returns per department, over the next 10 working days after its actions, free_slots (empty bookable slots, not held back, closed clinics excluded), held_back (empty urgent-reserve slots two or more days ahead) and waitlist (waiting requests); each entry must be exact, and the table is 20% of quality.
+  text: Every day the program returns per department, over the next 10 working days after its actions, free_slots (empty bookable slots, not held back, closed clinics excluded), held_back (empty urgent-reserve slots two or more days ahead) and waitlist (waiting requests); each entry must be exact.
 - id: scoring
   kind: missing
   domain: scoring
-  text: Quality is 0.8 x operations value relative to the client's benchmark program plus 0.2 x table accuracy; the operations value is +10 per patient-slot seen on the clinic days 10 November - 7 December, minus 0.4 x urgency weight (U 3, S 2, R 1) per working day of waiting, minus 10 per request never booked, minus 4 per change to a patient's appointment.
+  text: Empty doctor time is the biggest loss - what counts most is every patient-slot seen on the clinic days from 10 November to 7 December (a new patient's two slots, a follow-up's one); patients kept waiting (the more urgent, the worse), requests that never get an appointment and every change the hospital makes to a patient's appointment are costs too.
 - id: easy_scope
   kind: missing
   domain: business rule
   tiers: [easy]
-  text: This round absence and interpreter notices, referral dates, blood tests and no-shows are out of scope (test_date stays null, everyone booked counts as coming), and each request is its own visit.
+  text: This round a locum and an agency interpreter cover absence and interpreter notices, the referral desk and the lab handle referral letters and blood tests themselves (test_date stays null), no-shows are not planned for (everyone booked counts as coming), and a patient's second request gets its own appointment because a request does not show whether it is the same complaint.
 - id: medium_scope
   kind: missing
   domain: business rule
   tiers: [medium]
-  text: This round no-shows are out of scope (everyone booked counts as coming, no overbooking) and each request is its own visit, even when a patient asks twice.
+  text: This round no-shows are not planned for (everyone booked counts as coming, so no overbooking), and a patient's second request gets its own appointment because a request does not show whether it is the same complaint.
 - id: referral_expiry
   kind: missing
   domain: business rule
@@ -95,7 +95,7 @@
   kind: missing
   domain: scoring
   tiers: [hard]
-  text: A patient booked in several departments should come on one day when possible; every extra hospital day of such a patient costs 3.
+  text: A patient booked in several departments should come on one day when possible; every extra hospital day for such a patient is a cost.
 - id: staff_notes
   kind: missing
   domain: business rule
@@ -105,4 +105,4 @@
   kind: missing
   domain: scoring
   tiers: [hard]
-  text: In the hard round seen slots are expected values over each patient's no-show probability, and every overbooked slot costs 12 x the probability that both patients come.
+  text: With no-shows, what counts is the patients who actually come (each patient's own chance of coming); when both patients of an overbooked slot come, the doctor runs late, which costs a little more than an empty slot does.

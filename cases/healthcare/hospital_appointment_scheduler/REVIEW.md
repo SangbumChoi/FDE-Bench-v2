@@ -1,0 +1,138 @@
+# Review of `healthcare/hospital_appointment_scheduler`
+
+Findings of the case review (F1–F9), with the verifier's verdicts and what this change did about each. The
+numbers are for seed 20261116 unless they say otherwise; "q" is normalized quality (baseline 0, reference 1).
+
+### F1 — Utilization sits at the ceiling, so packing earns little (high, partly)
+
+Capacity is about 79 slots a day and demand about 83–86, so the reference already fills 98% of the slots in
+easy and medium. The best valid variants we know (packing; in hard also a lower overbooking threshold and the
+true no-show rates) add only +0.1% to +1.5% to the objective, which is q = 1.005–1.056 against the new
+baseline. Valid programs still spread from about 0.79 to 1.0, but through a few coarse levers (releasing the
+reserve, the D10 note, overbooking at all) rather than through packing. The original "clipped at 1.0" point is
+gone with the new scale, but the policy cap of 1.5 is now out of reach: no known valid program earns more than
+about 70% of the quality credit.
+
+**Status:** open — proposal: decide first whether better optimization should be measurable here. If yes, make
+placement harder rather than lowering demand (more follow-ups tied to one doctor, interpreter- and test-heavy
+days, mixed visit lengths) and add a stronger reference or an upper bound, so packing and look-ahead move the
+score by several percent. If not, set `quality_cap` in case.yaml to about 1.1, so that a program at the best
+known level gets full credit.
+
+### F2 — Overbooking does not need the per-patient no-show estimate (high, confirmed)
+
+Overbooking every eligible follow-up slot up to the cap (threshold 0) scores 0.999 / 1.005 / 1.000 in hard
+A/B/C (q 0.997 / 1.015 / 1.000), all valid; a threshold of 0.10 scores slightly above the reference and no
+overbooking 0.943–0.952. So whether to overbook matters (about 5%), but the risk selection the hard tier is
+meant to test does not. Until this change the 10-against-12 trade-off was stated only as a score weight, which
+the simulated client may not reveal.
+
+**Status:** open — proposal: make risk selection decide the score: raise the collision cost (or add a doctor
+overtime cost) so blanket overbooking is clearly net negative, and widen the spread of no-show rates so that
+selective overbooking clearly beats it. Add a validate-case check that the threshold-0 program scores at least
+3% below the reference. (This change, under F6, already states the trade-off as a business fact in the hard
+requirements: when both patients come the doctor runs late, which costs a little more than an empty slot.)
+
+### F3 — Rule-set numbers are inert or one-sided (high, confirmed)
+
+`urgent_days` = 1, 3 or 10 gives objective 1.0000 with no violation in all nine settings: urgent requests are
+always local-language, test-free, due tomorrow and generated only when tomorrow's reserve is untouched. Before
+this change the most conservative value of every number (2 interpreters, lab 5, overbooking 1, notice 4, urgent
+1) was valid in 8 of 9 settings at 0.98–1.00, so only `waitlist_order` (and weakly `closed_dept`) separated the
+rule sets. After the F8 fix that envelope is invalid in 8 of 9 (`waitlist_priority`: unused interpreters and
+lab places no longer excuse a skipped patient), but notice 4 + overbooking 1 + urgent 1 alone is still valid in
+6 of 9 at 0.988–1.000.
+
+**Status:** open — proposal: make the remaining numbers two-sided, so the most cautious value is also wrong
+(for example a maximum rebooking delay next to the notice period, or an urgent window with a triage earliest
+day so that "tomorrow" is not always right). Generate some urgent requests that need an interpreter or a test,
+or that arrive when tomorrow's reserve is already used, so `urgent_days` binds. Add the envelope program to
+validate-case's distinctness check and require it to be invalid or more than 3% worse.
+
+### F4 — Bending the follow-up habit rewards the blanket bend, not the targeted one (high, confirmed)
+
+Booking every follow-up with whichever colleague is earliest (287–332 exceptions) raises the objective by
+2.0–5.8%; bending only for patients of an absent doctor (43–51 exceptions) by 0.0–1.3%. With the new scale the
+blanket bend is worth q 1.11–1.29, i.e. +0.04 to +0.115 on the final score before the penalty, so it now pays
+under startup_velocity (penalty 0.05) in 5 of 9 settings, while the clinically sensible targeted bend (+0.000
+to +0.024) never pays. One approval covers all the exceptions.
+
+**Status:** open — proposal: give some of the sick pediatrician's follow-ups a clinical deadline inside the
+absence, so that keeping the habit leaves them unseen and only a targeted, approved exception recovers the
+value. Add a small operations cost per follow-up seen by a doctor other than the previous one, so the blanket
+bend scores below the targeted one. Report bending in final-score terms in the README.
+
+### F5 — The visible history contradicts the hospital's rules (medium, confirmed)
+
+In the export, 106 of the 151 history appointments at 09:00/09:20 are S/R requests booked two or more working
+days ahead, which the reserve rule forbids; interpreted new-patient visits reach 10 a day (cap 2–4) and fasting
+tests 10 a day (cap 5–7). `_history` fills slots at 92% with no reserve, interpreter or lab logic, while the
+initial book is rule-consistent. The pilot answer uses waitlist order `received` (rule set B's) and no reserve.
+
+**Status:** open — proposal: generate the history under the rules all three rule sets share (reserve kept, at
+most 2 interpreted new-patient visits and 5 tests a day), or have an outpatient-office mail say that the
+reserve, interpreter rota and lab cap start on 9 November. Reword the lab cap as "fasting draw slots in the
+outpatient phlebotomy room" to make the small number plausible, and give the pilot an interim order that
+matches none of the rule sets (or say in the README that it matches B).
+
+### F6 — Scoring targets the client is told never to reveal (medium, partly)
+
+`scoring` and `scoring_hard` were score formulas and weights, and `status_table` ("20% of quality") and
+`several_departments` ("costs 3") carried weights too, while the client prompt forbids describing scores or
+weights; Ask-F1 recall could not reach 1. The "already visible" part did not hold: in the default
+`interact_req` condition the agent sees only request.md and the data, so `interface`, `visit_length` and the
+period end still have to be asked.
+
+**Status:** fixed in this change — the four targets are rewritten in all five locales as business facts (empty
+doctor time is the biggest loss; waiting, unbooked requests and changes cost; what counts with no-shows is the
+patients who come; a double-booked slot where both come costs a little more than an empty one; extra trips are
+a cost) with no weights. The hard requirements gain the one sentence the last fact needs; scoring is unchanged.
+`interface`, `visit_length` and `evaluation_period` are kept.
+
+### F7 — Lower-tier scope written as test instructions (medium, partly)
+
+Easy and medium said "each request is its own visit, even when the same patient asks twice" and "tests out of
+scope", which reads like an instruction to the program rather than a fact of the hospital; deduplicating there
+is in fact invalid (`waitlist_priority`, 187–342 cases). The notes guidance (director's acquaintance, D10's
+afternoons) is stated only in hard, although following D10's note costs 6.7–7.5% in easy and medium.
+
+**Status:** fixed in this change — the easy and medium scope bullets now say why, as the client would, in all
+five locales: the referral desk and the lab handle referral letters and fasting tests themselves this round;
+no-shows are not planned for; a second request gets its own appointment because the office cannot tell from a
+request whether it is the same complaint. Scoring is unchanged, and the matching targets are reworded. Left as
+a proposal: move the notes paragraph and the `staff_notes` target into all tiers, since the notes are in every
+tier's data.
+
+### F8 — Loose waitlist-priority excuses and a notice loophole (low, confirmed)
+
+Reproduced with the old checker: a program that never books an interpreted new-patient visit was valid in 9 of
+9 settings (0.950–0.988), one that books test-needing requests last was valid in 6 of 6 medium/hard settings
+(0.998–1.006), and a follow-up released on one day and re-booked the next day for the day after broke no rule
+in rule sets A and C (notice 3 and 4; with notice 2 it cannot happen).
+
+**Status:** fixed in this change — a waiting interpreter-needing new patient is excused only when that day's
+in-person interpreters are all taken at the end of the call; a test-needing one only when no working day before
+the slot (from tomorrow, not before its earliest date) has lab room, the booked request's own test place
+counting as room; `move_notice` now also covers a released request booked again later (notice from the release
+day; the released date and time again need none), and the matching release excuse counts from the release day.
+The requirements (five locales), the move-notice target, case.yaml and the README say so. The reference now
+remembers its own releases; its results are unchanged in all nine settings. In A and C the validator's
+`move_notice` example is now the release path. Not changed (owner's call): a follow-up booked with another
+doctor is still compared only with its previous doctor's queue, and the move check still asks notice for the
+same date and time with another doctor, which the text exempts (reachable only for IM on Friday afternoons,
+where D03 and D04 overlap).
+
+### F9 — Korean term choices (low, confirmed)
+
+`earliest_date` was rendered "희망시작일" (desired start date) although the rule is a hard "never before"; S was
+"조기"; doctors signed as "교수" and the secretariat as "의국", which point to a university teaching hospital.
+
+**Status:** fixed in this change — "진료 가능 시작일(earliest_date)" in the Korean requirements, targets and
+rule-set C's order label; S = "준응급"; doctors "{name} 과장" and the secretariat "{dept} 사무실" in the Korean
+mails (with the particle after "과장" adjusted). The Japanese mails still sign as "医局", which a native reviewer
+may want to check too.
+
+**Baseline:** the booking office's practice without an engineer: the reference program, but the urgent reserve
+is never released for tomorrow's clinics and (hard) nothing is double-booked. Objective 0.806–0.812 in easy,
+0.787–0.799 in medium and 0.689–0.701 in hard, against the reference's 1.0 in every setting (valid in all nine
+settings and on world seeds 1–3).
