@@ -36,6 +36,18 @@ def _inline(text: str) -> str:
     return out
 
 
+# Chinese and Japanese text has no spaces between words: a line wrapped between two such characters joins
+# without one. Korean, which spaces its words, joins like English.
+_NO_SPACE = re.compile(r"[\u3000-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef]")
+
+
+def _join(lines: list[str]) -> str:
+    out = lines[0]
+    for line in lines[1:]:
+        out += ("" if _NO_SPACE.match(out[-1:]) and _NO_SPACE.match(line[:1]) else " ") + line
+    return out
+
+
 def markdown(text: str) -> str:
     lines, out, i = text.splitlines(), [], 0
     while i < len(lines):
@@ -70,7 +82,7 @@ def markdown(text: str) -> str:
                 if re.match(r"\s*([-*]|\d+\.)\s+", lines[j]):
                     items.append(re.sub(r"\s*([-*]|\d+\.)\s+", "", lines[j], count=1))
                 else:
-                    items[-1] += " " + lines[j].strip()
+                    items[-1] = _join([items[-1], lines[j].strip()])
                 j += 1
             tag = "ol" if ordered else "ul"
             out.append(f"<{tag}>" + "".join(f"<li>{_inline(x)}</li>" for x in items) + f"</{tag}>")
@@ -83,7 +95,7 @@ def markdown(text: str) -> str:
         while j < len(lines) and lines[j].strip() and not re.match(r"(#{1,6}\s|```|\||\s*([-*]|\d+\.)\s)", lines[j]):
             para.append(lines[j].strip())
             j += 1
-        out.append("<p>" + _inline(" ".join(para)) + "</p>")
+        out.append("<p>" + _inline(_join(para)) + "</p>")
         i = j
     return "\n".join(out)
 
