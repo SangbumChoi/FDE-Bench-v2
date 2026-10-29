@@ -1,0 +1,15 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Operador de despacho de baterías
+task_type: Optimización combinatoria
+deliverable_spec: |
+  dispatch.csv, cabecera ASCII: timestamp,charge_mw,discharge_mw
+  Una fila por cada intervalo de 15 minutos de la semana 2027-03-22 00:00 .. 2027-03-28 23:45, en hora local;
+  timestamp = inicio del intervalo como "YYYY-MM-DD HH:MM". charge_mw / discharge_mw = potencia media de la batería
+  en el contador durante el intervalo, en MW; ambas >= 0.
+rules:
+  soc_limits: El estado de carga se mantiene en todo momento entre el 10 % y el 90 % de 40 MWh (con un 92 % de eficiencia en la carga y en la descarga).
+  power_limits: La carga y la descarga están cada una entre 0 y 20 MW, nunca ambas en el mismo intervalo; el consumo de red es como máximo de 20 MW.
+  export_cap: Mientras la batería descarga, el vertido del emplazamiento (solar + descarga − carga) no debe superar el límite modificado de 25 MW.
+  grid_charging_window: El emplazamiento solo puede tomar energía de la red (cargar más que la producción solar) en los intervalos que empiezan entre las 00:00 y las 05:45 hora local.
+  end_soc: La semana empieza con un 50 % de estado de carga y debe terminar con no menos del 50 %.
+  reserve_20pct: El estado de carga es de al menos el 20 % en todo momento entre las 17:00 y las 21:00 hora local, todos los días.

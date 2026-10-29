@@ -1,0 +1,14 @@
+# The explainer's case texts in Simplified Chinese (English comes from case.yaml).
+role: 储能电池调度员
+task_type: 组合优化
+deliverable_spec: |
+  dispatch.csv，ASCII 表头：timestamp,charge_mw,discharge_mw
+  2027-03-22 00:00 .. 2027-03-28 23:45 这一周每个 15 分钟时段一行，使用当地时间；timestamp = 时段开始时间，
+  格式为 "YYYY-MM-DD HH:MM"。charge_mw / discharge_mw = 该时段内电池在计量点的平均功率（MW），两者均 >= 0。
+rules:
+  soc_limits: 荷电状态任何时刻都在 40 MWh 的 10%-90% 之间（充电和放电效率各为 92%）。
+  power_limits: 充电和放电各在 0 到 20 MW 之间，同一时段不能既充又放；下网不超过 20 MW。
+  export_cap: 电池放电时，场站上网功率（光伏 + 放电 − 充电）不得超过修订后的 25 MW 上限。
+  grid_charging_window: 场站只能在当地时间 00:00-05:45 开始的时段从电网取电（充电功率超过光伏出力）。
+  end_soc: 整周以 50% 荷电状态开始，结束时不得低于 50%。
+  reserve_20pct: 每天当地时间 17:00 到 21:00 之间的任何时刻，荷电状态都不低于 20%。

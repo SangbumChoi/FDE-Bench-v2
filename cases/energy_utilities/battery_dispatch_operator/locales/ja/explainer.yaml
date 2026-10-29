@@ -1,0 +1,15 @@
+# The explainer's case texts in Japanese (English comes from case.yaml).
+role: 蓄電池運転オペレーター
+task_type: 組合せ最適化
+deliverable_spec: |
+  dispatch.csv、ASCII ヘッダー: timestamp,charge_mw,discharge_mw
+  2027-03-22 00:00 .. 2027-03-28 23:45 の週の15分区間ごとに1行で、時刻は現地時刻です。
+  timestamp = 区間の開始時刻（形式 "YYYY-MM-DD HH:MM"）。charge_mw / discharge_mw = その区間における計量点での
+  蓄電池の平均出力（MW）で、どちらも >= 0 です。
+rules:
+  soc_limits: 充電率は常に 40 MWh の 10%〜90% の範囲内にあります（充電・放電とも効率 92%）。
+  power_limits: 充電と放電はそれぞれ 0〜20 MW で、同じ区間で両方を行うことはありません。系統からの受電は最大 20 MW です。
+  export_cap: 蓄電池の放電中、サイトの送電（太陽光 + 放電 − 充電）は変更後の上限 25 MW を超えてはなりません。
+  grid_charging_window: サイトが系統から受電（太陽光出力を超える充電）できるのは、現地時刻 00:00〜05:45 に始まる区間のみです。
+  end_soc: 週は充電率 50% で始まり、50% 以上で終えなければなりません。
+  reserve_20pct: 毎日、現地時刻 17:00〜21:00 の間は常に充電率が 20% 以上です。
