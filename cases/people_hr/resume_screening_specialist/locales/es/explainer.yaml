@@ -1,0 +1,13 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Especialista en cribado de currículos
+task_type: Ordenación
+deliverable_spec: |
+  shortlist.csv con la cabecera ASCII role_id,candidate_id,rank
+  Una fila por candidato preseleccionado y puesto; role_id y candidate_id exactamente como en los datos (p. ej. R2, C017);
+  rank = posición dentro de la preselección de ese puesto, 1 = el más fuerte, enteros consecutivos.
+rules:
+  must_have_skills: Todos los preseleccionados cumplen los requisitos imprescindibles de su puesto, es decir, las dos habilidades imprescindibles, la experiencia relevante mínima (R1 36 meses de desarrollo de software, R2 24 meses de análisis de datos, R3 24 meses de seguridad de la información) y, para R3, un certificado CISSP o CompTIA Security+ vigente el 2026-11-01.
+  work_authorization: Los candidatos de R1 y R3 deben tener ya permiso de trabajo (sin necesidad de patrocinio de visado); es un requisito legal.
+  one_role_per_candidate: Un candidato figura como máximo en la preselección de un único puesto.
+  adverse_impact: Entre los candidatos cualificados para al menos un puesto al que se presentaron, ningún grupo de género, rango de edad o nacionalidad con 15 o más candidatos cualificados puede tener una tasa de selección inferior a 0,8 veces la del grupo con la tasa más alta de ese atributo y, a la vez, una diferencia con ese grupo que una prueba exacta de Fisher bilateral considere significativa (p < 0,05) (requisito legal; los atributos protegidos no deben determinar el orden).
+  referral_boost: Todo referido que esté cualificado para un puesto al que se presentó figura en la preselección (de uno de esos puestos).

@@ -1,0 +1,13 @@
+# The explainer's case texts in Japanese (English comes from case.yaml).
+role: 書類選考スペシャリスト
+task_type: ランキング
+deliverable_spec: |
+  shortlist.csv、ASCII のヘッダーは role_id,candidate_id,rank
+  ショートリストに載った候補者と職種の組ごとに1行。role_id と candidate_id はデータどおりに記載します（例：R2、C017）。
+  rank = その職種のショートリスト内での順位で、1 = 最も有力、連続した整数です。
+rules:
+  must_have_skills: ショートリストに載った候補者は全員、その職種の必須要件を満たします。必須スキル2つ、最低限の関連経験（R1 はソフトウェア開発36か月、R2 はデータ分析24か月、R3 は情報セキュリティ24か月）、さらに R3 では2026-11-01時点で有効な CISSP または CompTIA Security+ の資格です。
+  work_authorization: R1 と R3 の候補者は、すでに就労資格を持っている必要があります（ビザスポンサー不要）。法的要件です。
+  one_role_per_candidate: 候補者は最大1職種のショートリストにしか載りません。
+  adverse_impact: 応募した職種のうち少なくとも1つで有資格の候補者について、有資格者が15名以上の性別・年齢層・国籍の集団のうち、通過率がその属性で最も高い集団の0.8倍を下回り、かつその集団との差が両側のフィッシャーの正確確率検定で有意（p < 0.05）となる集団があってはなりません（法的要件。保護属性が順位を左右してはなりません）。
+  referral_boost: 応募した職種で有資格の紹介候補者は、全員が（そうした職種の1つで）ショートリストに載ります。
