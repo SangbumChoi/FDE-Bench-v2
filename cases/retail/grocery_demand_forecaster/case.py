@@ -195,9 +195,9 @@ VALUES = {
 STORE_INFO = {
     "S1": ("supermarket", {"zh": "中央广场店", "en": "Central Plaza", "ko": "중앙광장점", "ja": "中央広場店", "es": "Plaza Central"}),
     "S2": ("supermarket", {"zh": "河东店", "en": "Eastbank", "ko": "강동점", "ja": "川東店", "es": "Ribera Este"}),
-    "S3": ("supermarket", {"zh": "北站店", "en": "North Station", "ko": "북역점", "ja": "北駅前店", "es": "Estación Norte"}),
+    "S3": ("supermarket", {"zh": "北站店", "en": "North Station", "ko": "북부역점", "ja": "北駅前店", "es": "Estación Norte"}),
     "S4": ("express", {"zh": "老城店", "en": "Old Town", "ko": "구도심점", "ja": "旧市街店", "es": "Casco Antiguo"}),
-    "S5": ("supermarket", {"zh": "湖滨店", "en": "Lakeside", "ko": "호숫가점", "ja": "湖畔店", "es": "Lago"}),
+    "S5": ("supermarket", {"zh": "湖滨店", "en": "Lakeside", "ko": "호수공원점", "ja": "湖畔店", "es": "Lago"}),
 }
 ITEM_INFO = {  # item id: (name, sales unit)
     "I01": ({"zh": "香蕉", "en": "Bananas", "ko": "바나나", "ja": "バナナ", "es": "Plátanos"},
@@ -403,6 +403,30 @@ def _write(out_dir: Path, fc: dict[tuple[str, str, str], float]) -> None:
 
 def reference_solution(world: World, out_dir: Path) -> None:
     _write(out_dir, _forecast(world))
+
+
+def _baseline(world: World) -> dict[tuple[str, str, str], float]:
+    """Seasonal naive, the store's habit without an engineer: order what the till recorded on the same weekday of
+    the last history week (2026-10-26 .. 2026-11-01), with S4's Sundays at 0 and the display floor on core items.
+
+    No stockout, promotion or holiday adjustment; return rows (negative units) are not sales and are skipped.
+    """
+    last = {d.isoformat() for d in (HORIZON_START - dt.timedelta(days=k) for k in range(1, 8))}
+    sold = {(s, i, d): float(u) for d, s, i, u, _, _ in world.history if d in last and u >= 0}
+    result: dict[tuple[str, str, str], float] = {}
+    for day in world.horizon:
+        seen = (HORIZON_START - dt.timedelta(days=7 - day.weekday())).isoformat()  # same weekday, last week
+        for s in STORES:
+            for i in ITEMS:
+                f = 0.0 if is_closed(s, day) else sold.get((s, i, seen), 0.0)
+                if ITEMS[i][0] in CORE_CATEGORIES and not is_closed(s, day):
+                    f = max(MIN_DISPLAY, f)
+                result[(s, i, day.isoformat())] = f
+    return result
+
+
+def baseline_solution(world: World, out_dir: Path) -> None:
+    _write(out_dir, _baseline(world))
 
 
 def violating_examples(world: World) -> dict:
