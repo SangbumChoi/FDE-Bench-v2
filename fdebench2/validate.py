@@ -423,6 +423,12 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
         (problems if BASELINE_REQUIRED else warnings).append(
             "case.py has no baseline_solution (the simplest sensible valid deliverable)")
     ratios, unstated, close = [], {}, []
+    # Numbers the agent meets in the data or at run time (a dated notice in the hidden inputs) count as stated,
+    # from 10 up: small numbers are everywhere in data and would hide a rule that says 2 where the text says 6.
+    # Each row is read whole (1,200 in a text) and as cells (a CSV's ,120,).
+    in_data = {x for d in (root / "dataset" / "visible" / "en", root / "dataset" / "hidden") if d.is_dir()
+               for row in _data_rows(d) for text in (row, re.sub(r"[,;\t|]", " ", row))
+               for x in (float(n.replace(",", "")) for n in NUMBER.findall(text)) if x >= 10}
     broken_baseline = False
     try:
         case.quality_cap
@@ -436,7 +442,7 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
             problems.append(f"{at}texts: {e}")
             continue
         # A number in a rule (dates and clock times aside) should be one the client can actually tell the agent.
-        stated = {float(n.replace(",", "")) for n in NUMBER.findall(c.requirements("en"))}
+        stated = {float(n.replace(",", "")) for n in NUMBER.findall(c.requirements("en"))} | in_data
         for rule in c.rules().rules:
             missing = [n for n in NUMBER.findall(DATE_OR_TIME.sub(" ", rule.description))
                        if float(n.replace(",", "")) not in stated]
@@ -509,7 +515,7 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
     for (rule_id, numbers), where in unstated.items():
         at = f"[{where[0].setting.label}{f' and {len(where) - 1} more' if len(where) > 1 else ''}] " if tiers else ""
         warnings.append(f"{at}rule {rule_id}: its description says {', '.join(numbers)}, "
-                        f"which en/requirements.md never says")
+                        f"which neither en/requirements.md nor the data ever says")
 
     if broken_baseline:  # every further evaluation would fail on the baseline
         keep.cleanup()

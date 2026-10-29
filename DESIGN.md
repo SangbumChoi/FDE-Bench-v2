@@ -91,7 +91,7 @@ Design rules that keep scoring language-independent:
 - the case still works on world seeds 1, 2 and 3 (`--world-seeds` chooses others, `--no-world-seeds` skips).
 
 Warnings, which do not fail validation: two tiers whose references are byte-identical or score as each
-other's reference; a number in a rule description that the requirements never state; a `name (ID)` in a
+other's reference; a number in a rule description that neither the requirements nor the data state; a `name (ID)` in a
 locale's texts whose ID's data rows never mention that name; a baseline within 2% of the reference.
 
 ### Settings: one world, nine ground truths

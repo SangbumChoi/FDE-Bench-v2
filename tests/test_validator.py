@@ -177,3 +177,12 @@ def test_new_case_fails_until_filled(tmp_path):
     assert {"case.yaml", "case.py", "README.md", "locales/en/request.md"} <= {p.split(":")[0] for p in problems
                                                                             if "TODO left" in p}
     assert "locales/en/targets.yaml: TODO left on line 1, 4" in problems     # the id TODO_target, then its text
+
+
+def test_rule_number_the_texts_never_state(tmp_path):
+    root = _copy(tmp_path, FAST)
+    path = root / "case.yaml"
+    path.write_text(path.read_text(encoding="utf-8").replace("at most 120 trays", "at most 93 trays"), encoding="utf-8")
+    warnings = check_case(root).warnings
+    assert any("van_capacity" in w and "says 93" in w for w in warnings)
+    assert not any("says 120" in w for w in check_case(_copy(tmp_path / "b", FAST)).warnings)   # 120 is in vans.csv
