@@ -1,4 +1,10 @@
 {
+  "baseline_objective": 0.28557922,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.28557922,
+    "quality_score": 0.0
+  },
   "metrics": {
     "added_stock_held_at_notice": 15200,
     "added_stock_sold_by": 4,
@@ -32,5 +38,10 @@
     "withdrawal": 2578029.72
   },
   "objective": 1.0,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
   "violations": []
 }

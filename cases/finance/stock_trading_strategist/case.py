@@ -13,7 +13,8 @@ component is the book's excess over holding the index (final net equity plus the
 client, minus the index held from the first session) relative to the reference program's excess in the same
 setting. In a world where the reference beats the index by less than 5% of the capital, or trails it, both
 excesses are measured from a yardstick 5% of the capital below the reference's final value instead. The
-reference scores exactly 1.0. All prices are synthetic.
+reference scores exactly 1.0; the baseline (reference/baseline.py) keeps the book in cash and reports a correct
+table. All prices are synthetic.
 
 The world can be generated from any seed (the stored dataset/ uses case.yaml's): the stock compliance adds is
 the strongest eligible name at the notice, and the validator's examples (reference/examples.py) keep to every
@@ -54,6 +55,7 @@ from fdebench2.casekit import LOCALES, Fatal, labels, pick, program_session, wri
 ENTRYPOINT = "strategy.py:on_day"
 REFERENCE = Path(__file__).resolve().parent / "reference" / "strategy.py"
 EXAMPLES = Path(__file__).resolve().parent / "reference" / "examples.py"   # the validator's examples only
+BASELINE = Path(__file__).resolve().parent / "reference" / "baseline.py"   # the do-nothing baseline
 
 # ── market and mandate facts ─────────────────────────────────────────────────
 
@@ -880,6 +882,17 @@ def write_program(out_dir: Path, cfg: dict) -> None:
 
 def reference_solution(world: World, out_dir: Path, setting) -> None:
     write_program(out_dir, ref_config(_View(world, setting)))
+
+
+def baseline_solution(world: World, out_dir: Path, setting) -> None:
+    """What the desk has without an engineer: the book stays in cash (no orders) and reports a correct status table
+    (reference/baseline.py). Valid in every setting; it earns the cash's excess over the index and the table."""
+    view = _View(world, setting)
+    prog = Path(out_dir) / "program"
+    prog.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(BASELINE, prog / "strategy.py")
+    (prog / "config.json").write_text(json.dumps({"medium": view.medium, "withdrawal_basis": view.withdrawal_basis},
+                                                 indent=1, sort_keys=True), encoding="utf-8")
 
 
 def _weakest(view: _View, horizon: int) -> list:
