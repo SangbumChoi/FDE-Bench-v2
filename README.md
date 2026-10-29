@@ -1,5 +1,7 @@
 # FDE-Bench v2
 
+[English](README.md) · [中文](README.zh.md) · [한국어](README.ko.md) · [日本語](README.ja.md) · [Español](README.es.md)
+
 A benchmark for forward-deployed-engineering agents across **customer languages** (zh/en/ko/ja/es),
 **company policies** and **realistic difficulty**. Open and closed models are compared through one
 OpenAI-compatible protocol, and vendor harnesses (Claude Code, Codex, Gemini CLI, OpenCode) through a
