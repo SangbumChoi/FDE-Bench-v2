@@ -1,0 +1,23 @@
+# The explainer's case texts in Japanese (English comes from case.yaml).
+role: 購買スペシャリスト
+task_type: 組合せ最適化
+deliverable_spec: |
+  orders.csv、ヘッダーは order_week,component_id,supplier_id,quantity
+  発注明細1件につき1行：order_week = 発注を出す週で、1..8 の数字（W1 = 2026-11-23 の週）。
+  component_id と supplier_id はデータのとおり。quantity = 整数の個数（リールではなくピース単位）。
+  order_week、component_id、supplier_id が同じ行は合算して1つの発注明細になります。
+tiers:
+  # one line each: a folded line break would put a space into the Japanese text
+  easy: >-
+    MRP の中核です。基板の生産計画と BOM から展開した部品所要量、週単位のリードタイム、定価（ドル建て見積は計画レートで換算）、発注明細ごとの最小発注数量、承認仕入先リスト、超えられない月次予算、リール単位で数えた抵抗の在庫、重要部品の安全在庫、品質保留中の仕入先1社、2社購買の慣行が含まれます。設計変更、数量割引、祝日カレンダー、納入実績、供給割当は今回の範囲外です。
+  medium: >-
+    easy に加えて、発注明細ごとの全数量割引と、祝日で短くなる週が2回ある営業日単位のリードタイムです。
+  hard: >-
+    medium に加えて供給の不確実性があります。仕入先は隠れた確率で1週または2週遅れて納入し（データに6か月分の納入実績があります）、供給が逼迫している3部品には月ごとの割当上限があり、W6 からフラッシュ C04 を C25 に置き換える設計変更があります（W5 より後に残った C04 は廃棄）。品質は厳密な期待コストになります。
+rules:
+  approved_vendor: 部品は、承認仕入先リストでその部品の承認状況が承認済の仕入先にのみ発注します。
+  moq: すべての発注明細（週・部品・仕入先の1件）は、仕入先の最小発注数量以上です。
+  budget_cap: 各月の購買額（発注週の月曜日が属する月で判定）は、その月の予算内に収めます。
+  quality_hold: "{{hold_supplier}} は品質保留中で、W1〜W{{hold_until}} に入荷予定の同社の品物は返品されます。"
+  allocation_cap: 割当対象の部品について、1か月に1社の仕入先へ出す発注は、その仕入先の月間割当上限の範囲内に収めます。
+  dual_source_critical: 使用中の重要部品はすべて2社以上の仕入先に発注し、どの仕入先もその部品の発注数量の {{max_share}}% を超えません。

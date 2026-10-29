@@ -1,0 +1,23 @@
+# The explainer's case texts in Simplified Chinese (English comes from case.yaml).
+role: 采购专员
+task_type: 组合优化
+deliverable_spec: |
+  orders.csv，表头为 order_week,component_id,supplier_id,quantity
+  每条采购订单行占一行：order_week = 下单的周次，填 1..8 的数字（W1 = 2026-11-23 所在的那一周）；
+  component_id 和 supplier_id 与数据中完全一致；quantity = 整数件数（按件计，不按卷盘计）。
+  order_week、component_id 和 supplier_id 都相同的行会相加，合并为一条订单行。
+tiers:
+  # one line each: a folded line break would put a space into the Chinese text
+  easy: >-
+    MRP 的核心：由板子生产计划和 BOM 展开得到的物料需求、按整周计的交期、标价（美元报价按计划汇率换算）、每条订单行的最小起订量、合格供应商名录、不可突破的月度预算、按卷盘盘点的电阻库存、关键物料的安全库存、一家处于质量冻结的供应商，以及向两家供应商下单的惯例。工程变更、阶梯价、节假日日历、交货记录和配额不在本轮范围内。
+  medium: >-
+    在 easy 的基础上，加上按订单行计算的全量阶梯价，以及按工作日计、含两个节假日短周的交期。
+  hard: >-
+    在 medium 的基础上，加上供货的不确定性：供应商按隐藏的概率晚一周或两周交货（数据中有六个月的交货记录），三种供应紧张的物料有月度配额上限，还有从 W6 起用 C25 替换闪存 C04 的工程变更（W5 之后剩下的 C04 报废）；质量变为精确的期望成本。
+rules:
+  approved_vendor: 某种物料只向合格供应商名录中该物料认证状态为已认证的供应商下单。
+  moq: 每条订单行（同一周、同一物料、同一供应商）的数量都不低于该供应商的最小起订量。
+  budget_cap: 每月的采购金额（按下单周的周一归入月份）不超过当月预算。
+  quality_hold: "{{hold_supplier}} 处于质量冻结状态；其计划在 W1 到 W{{hold_until}} 到货的货物会被退回。"
+  allocation_cap: 对实行配额的物料，一个月内向某家供应商下的订单不超过该供应商的月度配额。
+  dual_source_critical: 每种在用的关键物料都至少向两家供应商下单，且任何一家供应商都不超过该物料下单数量的 {{max_share}}%。
