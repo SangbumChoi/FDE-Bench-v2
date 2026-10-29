@@ -1,0 +1,15 @@
+# The explainer's case texts in Simplified Chinese (English comes from case.yaml).
+role: 福利资格审核员
+task_type: 基于规则的决策
+deliverable_spec: |
+  determinations.csv，表头为 ASCII 的 household_id,eligible,monthly_amount,reason_code
+  每个申请一行（household_id 与数据中完全一致，如 H001）；
+  eligible = yes | no；monthly_amount = 今年的每月补助金额（数字，不符合条件时为 0）；
+  reason_code = APPROVED、RENEWAL、DENY_RESIDENCY、DENY_ASSETS、DENY_INCOME 之一
+  （APPROVED / RENEWAL 只能配 eligible = yes，DENY_* 只能配 eligible = no）。
+rules:
+  residency_requirement: 只有在申请日期当天已在本市居住满6个月的家庭才能获批（法定条件）。
+  asset_limit: 可计资产（不含自住房和一辆车）超过6,000加每多一名家庭成员3,000的家庭不得获批。
+  amount_cap: 每月金额不得超过今年按家庭人数规定的预算法上限（1 / 2 / 3 / 4 / 5 / 6人及以上分别为1050 / 1450 / 1800 / 2100 / 2350 / 2550）。
+  reason_code_required: 每项决定都带有固定列表中与决定相符的原因代码（批准时，续期申请为 RENEWAL，新申请为 APPROVED）。
+  auto_approve_renewals: 续期申请不重新审核，按上年度的月发放额批准。

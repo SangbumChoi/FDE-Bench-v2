@@ -1,0 +1,15 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Técnico de elegibilidad de prestaciones
+task_type: Decisión basada en reglas
+deliverable_spec: |
+  determinations.csv con la cabecera ASCII household_id,eligible,monthly_amount,reason_code
+  Una fila por solicitud (household_id exactamente como en los datos, p. ej. H001);
+  eligible = yes | no; monthly_amount = el importe mensual de este año (un número, 0 si no tiene derecho);
+  reason_code = uno de APPROVED, RENEWAL, DENY_RESIDENCY, DENY_ASSETS, DENY_INCOME
+  (APPROVED / RENEWAL solo con eligible = yes, DENY_* solo con eligible = no).
+rules:
+  residency_requirement: Solo pueden aprobarse los hogares que, en la fecha de la solicitud, lleven al menos 6 meses residiendo en la ciudad (requisito legal).
+  asset_limit: No pueden aprobarse los hogares cuyo patrimonio computable (sin contar la vivienda habitual y un coche) supere 6,000 más 3,000 por cada miembro adicional del hogar.
+  amount_cap: Ningún importe mensual supera el tope legal presupuestario de este año para el tamaño del hogar (1050 / 1450 / 1800 / 2100 / 2350 / 2550 para 1 / 2 / 3 / 4 / 5 / 6 o más personas).
+  reason_code_required: Cada resolución lleva un código de motivo de la lista fija que concuerda con la decisión (una aprobación es RENEWAL si se trata de una renovación y APPROVED si es una solicitud nueva).
+  auto_approve_renewals: Las solicitudes de renovación se aprueban con el importe mensual del año pasado, sin volver a evaluarlas.
