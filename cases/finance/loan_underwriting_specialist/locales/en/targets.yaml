@@ -21,12 +21,12 @@
 - id: dsr_rule
   kind: missing
   domain: calculation
-  text: DSR = (annual service of existing debts, installment loans at 12 x monthly_payment, + 12 x 33.17 per 1,000 of all our PL36 lending to the customer) / annual income, at most {{max_dsr_pct}}% (a regulatory limit).
+  text: DSR = (annual service of existing debts, installment loans at 12 x monthly_payment, + 12 x 33.17 per 1,000 of all our PL36 lending to the customer) / annual income, at most {{max_dsr_pct}}%.
 - id: easy_scope
   kind: missing
   domain: business rule
   tiers: [easy]
-  text: This round credit lines are left out of the DSR, income is the declared salary, debts are those on the customer's latest application, and none of the notices applies (no regulatory, budget, repayment or document change).
+  text: This round the DSR cap is the client's own affordability limit (the regulator's ratio is a separate compliance check), credit lines are left out of it, income is the declared salary, debts are those on the customer's latest application, and none of the notices applies (no regulatory, budget, repayment or document change).
 - id: daily_cap
   kind: missing
   domain: business rule
@@ -34,7 +34,7 @@
 - id: limit_table
   kind: missing
   domain: scoring
-  text: Every day the program returns the closing limit table after the day's approvals and notices - each customer seen so far with what they may still borrow (0 if delinquent or below the cutoff), the daily capacity left and (from medium) the period budget left - judged within 1 + 0.1%, half customers and half bank figures, and worth 30% of quality.
+  text: Every day the program returns the closing limit table after the day's approvals and notices - each customer seen so far with what they may still borrow (0 if delinquent or below the cutoff), the daily capacity left and, when a period budget applies, the budget left.
 - id: reason_codes
   kind: missing
   domain: business rule
@@ -55,8 +55,8 @@
   text: Applicants with fewer than {{min_tenure}} months in their job are referred to a human underwriter unless delinquent; it is a habit, and the head of credit can grant an exception.
 - id: profit_metric
   kind: missing
-  domain: scoring
-  text: Quality is 0.7 x expected profit relative to the client's benchmark program plus 0.3 x table accuracy; profit per approval is amount x 10% minus true PD x 0.60 x amount, PD rising with the customer's debt burden, and each referral costs 60.
+  domain: business rule
+  text: The goal is the most expected profit after losses and referral costs - an approval earns 10% of its amount over the loan's life and loses 60% of it if the customer defaults, the default risk rising with the customer's debt burden (so with everything lent to them), and each referral costs 60 of underwriter time.
 - id: credit_line_amortization
   kind: missing
   domain: calculation

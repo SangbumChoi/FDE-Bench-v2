@@ -102,9 +102,12 @@ call scores 0 that day.
 **Objective** (maximize) = 0.7 × expected profit / the reference program's expected profit in the same
 setting + 0.3 × table accuracy. Expected profit: per approval amount × 10% − true PD × 0.60 × amount (PD at
 the customer's total exposure to us after the day, with their true debts and salary), −60 per referral. The
-reference profit is recomputed deterministically in-process (cached), so the reference scores exactly
-0.7 × 1 + 0.3 × 1.000 = 1.0 and quality = objective. A program that approves nothing but reports a perfect
-table scores 0.30 in easy (and is invalid from medium, by the quota).
+requirements state the margin, the loss on a default and the referral cost as business facts in the credit
+policy, so the client can give them when asked. The reference profit is recomputed deterministically
+in-process (cached), so the reference scores exactly 0.7 × 1 + 0.3 × 1.000 = 1.0. Quality is normalized
+between the baseline (0) and the reference (1); see [Reference numbers](#reference-numbers-seed-20261026). A
+program that approves nothing but reports a perfect table scores 0.30 in easy (and is invalid from medium, by
+the quota).
 
 ## Rules and their classes
 
@@ -118,9 +121,9 @@ approves; `startup_velocity`: they bend with a recorded justification) and the *
 | `decision_complete` | contractual | all | a missing, duplicate, unknown or malformed decision; an amount outside [1,000, requested]; a failed call |
 | `delinquency_decline` | contractual | all | a delinquent applicant not declined |
 | `score_cutoff` | contractual | all | an approval with the policy bureau's score below the cutoff |
-| `customer_limit` | **physical** (regulatory DSR and income cap, product max) | all | a customer's approvals of a day above their morning limit |
+| `customer_limit` | **physical** (regulatory income cap, product max, the regulator's DSR from medium; in easy the DSR cap is the client's own affordability limit, with no exception) | all | a customer's approvals of a day above their morning limit |
 | `daily_cap` | contractual (funding line) | all | more than the daily cap approved on a day |
-| `period_budget` | contractual (treasury budget) | medium, hard | approvals in the period above the budget in force |
+| `period_budget` | contractual (treasury budget) | medium, hard | a day's approvals taking the period's total above the budget in force that day (a cut below what is already approved stops further approvals and breaks nothing by itself) |
 | `reason_code_required` | contractual | all | a decline without the code of its main driver (DELINQUENCY → LOW_SCORE → SPLIT_APPLICATION (hard) → LIMIT_EXCEEDED → CREDIT_RISK, after the day's approvals) |
 | `no_protected_attributes` | **physical** | all | planted same-day twins (differ only in age band, gender, nationality) treated differently |
 | `near_prime_quota` | contractual (regulator commitment) | medium, hard | near-prime share of the period's approved amount below the quota at the end |
@@ -138,7 +141,7 @@ approves; `startup_velocity`: they bend with a recorded justification) and the *
 | ① | Near-prime quota is **cumulative** over the period | — | Ask; steer the running share, it is checked once at the end |
 | ① | Policy bureau and cutoff, tenure habit, reason-code order, closing (not morning) table | — | Ask |
 | ② dated event | Regulator lowers the DSR cap by 5 points for decisions from 16 Nov (notice on 10 Nov) | 1 `regulation_change` | medium+: new cap for decisions and the table from the effective date (≈ 170–185 customers' limits change that day) |
-| ② | Treasury cuts the period budget by 400,000 from 19 Nov | 1 `budget_change` | medium+: the budget and its table entry drop the same day; pacing adapts |
+| ② | Treasury cuts the period budget by 400,000 from 19 Nov | 1 `budget_change` | medium+: the budget and its table entry drop the same day; pacing adapts. Approvals made before the cut stand; if the total is already above the new budget, nothing more is approved |
 | ② | A creditor confirms a debt repaid (7 on the day the customer applies, 8 later) | 15 `repayment` | hard: drop the debt from that day (the morning bureau list still shows it) — more headroom, different table |
 | ② | An employer re-issues an understated document | 8 `document_correction` (all for applications with a 27–45% gap, referred in every hard rule set) | hard: decide the referred application again the same day (all 8 are re-decided by the reference) |
 | ③ pressure | Branch manager: "VIP, approve the full amount" | 10 notes: 6 on requests above every setting's limit, 4 on delinquent or below-every-cutoff applicants | Ignore; following any of them breaks `customer_limit`, `delinquency_decline` or `score_cutoff` in every setting |
@@ -151,7 +154,7 @@ approves; `startup_velocity`: they bend with a recorded justification) and the *
 | | easy | medium | hard |
 |---|---|---|---|
 | **Rules in force** | Income = 12 × declared salary + documented bonus; policy bureau cutoff; delinquency; customer limit with the DSR on **installment loans only**; daily cap; reason codes; twins; tenure habit; closing table (customers + daily capacity) | + credit lines in the DSR, stress rate above 60,000, period budget, cumulative near-prime quota, the `regulation_change` and `budget_change` notices | + verified income and the discrepancy referral, document corrections (re-decide), repayments, one approval per customer per day; branch notes stated explicitly |
-| **Out of scope (said in the requirements)** | Credit lines; every notice; documents; budget (`period_budget_remaining` may be null) | Documents (declared salary), repayment and correction notices | — |
+| **Out of scope (said in the requirements)** | Credit lines; every notice; documents; budget (`period_budget_remaining` may be null). The DSR cap is the client's own affordability limit this round; the regulator's ratio, and so its notice, is a compliance check outside the program | Documents (declared salary), repayment and correction notices | — |
 | **Rules** | 8 (`customer_limit`, `no_protected_attributes` physical; 5 contractual; `tenure_review` business policy) | 10 (+ `period_budget`, `near_prime_quota`) | 13 (+ `income_discrepancy_refer`, `redecide_on_documents`, `split_applications`) |
 | **Clarification targets** | 13: interface, evaluation period, gross income, policy bureau, customer limit, DSR, easy scope, daily cap, limit table, reason codes, protected attributes, tenure review, profit metric | 18: easy without its scope target, + medium scope, credit-line amortization, stress rate, period budget, near-prime quota, regulatory notice | 23: medium without its scope target and with the hard reason codes, + verified income, income discrepancy, document corrections, repayments, split applications, branch notes |
 | **What it tests** | A stateful daily program; limit arithmetic across days and same-day applications; ranking under a binding capacity; a fair tie-break for twins; when to bend a habit | Hidden DSR terms, budget pacing, a cumulative portfolio constraint, dated rule changes from notices | Reconciling two income sources, acting on corrections and repayments the same day, resisting split applications and pressure |
@@ -210,8 +213,32 @@ the least headroom because its 200,000 cap binds on 19 of 20 easy days and its l
 | Per-tier mean (A, B, C) | easy | medium | hard |
 |---|---|---|---|
 | Reference expected profit | 340,547 | 231,117 | 229,040 |
+| Baseline objective | 0.470 | 0.611 | 0.670 |
 | Bending `tenure_review` (objective) | +5.3% | +4.5% | +5.6% |
 | Oracle headroom (objective) | +9.8% | +11.3% | +10.7% |
+
+**Baseline** (`baseline_solution`: what the desk does without an engineer): the reference program with two
+switches, `first_come` (no scorecard: every application that passes the rules is offered the most its customer
+limit allows, in order of arrival, until the day's funding line runs out) and `pace: null` (from medium the
+period budget is spent as it comes, unpaced). It keeps every rule, the reason codes, the near-prime top-up (in
+order of arrival, in place of the smallest prime approvals) and the exact closing table, so it is valid in every
+setting; it loses on profit only, by approving loans whose expected loss exceeds the margin. In medium/C and
+hard/C it has approved 3,400,000 before the treasury's cut to 3,000,000 and approves nothing after it.
+Normalized quality is (objective − baseline) / (1 − baseline).
+
+| Setting | Baseline objective | Baseline expected profit (share of the reference's) | Approve / decline / refer | Approved amount |
+|---|---|---|---|---|
+| easy/A | 0.460 | 80,447 (23%) | 243 / 240 / 79 | 4,999,394 |
+| easy/B | 0.571 | 124,532 (39%) | 202 / 321 / 39 | 3,999,248 |
+| easy/C | 0.380 | 39,443 (11%) | 275 / 155 / 132 | 5,909,000 |
+| medium/A | 0.596 | 95,369 (42%) | 196 / 287 / 79 | 4,000,000 |
+| medium/B | 0.725 | 158,240 (61%) | 181 / 342 / 39 | 3,400,000 |
+| medium/C | 0.511 | 62,687 (30%) | 161 / 269 / 132 | 3,400,000 |
+| hard/A | 0.641 | 110,588 (49%) | 204 / 241 / 125 | 3,999,609 |
+| hard/B | 0.749 | 166,683 (64%) | 187 / 278 / 105 | 3,400,000 |
+| hard/C | 0.620 | 91,376 (46%) | 164 / 255 / 151 | 3,400,000 |
+
+On world seeds 1–3 the baseline stays valid everywhere, at 0.43–0.89 of the reference's objective.
 
 How the rules and situations bind (same seed):
 
@@ -239,8 +266,11 @@ reference run under another rule set also gets its table wrong (different cutoff
   approve a below-cutoff or short-tenure applicant at 1,000, approve one unit over a customer's limit, the
   wrong code on one decline, decline one twin, decline a discrepant application), or one switch (ignore the
   daily cap on one day, believe a larger budget, skip the quota top-up, ignore corrections, allow two
-  approvals per customer and day), chosen by replaying candidates until exactly one rule breaks.
-  `validate-case` (9 settings, ~200 replays) takes about **40 seconds**.
+  approvals per customer and day), chosen by replaying candidates until exactly one rule breaks. From medium
+  `violating_examples` also asserts that the reference without budget pacing (it never approves past what is
+  left) does not break `period_budget`: in the public seed's C settings it has 3.1M approved before the cut to
+  3.0M, which the rule must not count against it.
+  `validate-case` (9 settings, ~200 replays) takes about **40 seconds** per world.
 - **Other world seeds** (`validate-case --world-seeds`, private-seed campaigns): the examples do not rely on
   the room a period happens to leave. An override that approves more on a day already at the daily cap (or the
   budget) cuts another approval of that day by as much; when the reference approves no second split

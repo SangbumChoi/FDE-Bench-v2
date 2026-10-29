@@ -19,7 +19,8 @@ Each day:
   * give each decline its reason code and report the closing limit table.
 
 config.json holds the client's rule parameters for the setting and the scorecard; a few switches exist only
-so the case can build programs that break one rule each.
+so the case can build programs that break one rule each, and the baseline (`first_come`: no scorecard, every
+eligible application offered the most its limit allows in order of arrival; `pace` null: no budget pacing).
 """
 
 import json
@@ -212,18 +213,23 @@ class Underwriter:
                 amt = max(range(amt, MIN_AMOUNT - 1, -250), key=lambda x: (value(unit, x), x))
             return amt
 
+        first_come = cfg.get("first_come")    # the baseline: no scorecard, in order of arrival
+
         def value(unit, amt):
             a = unit[0]
             c = self.cust[a["customer_id"]]
             total = self.lent.get(a["customer_id"], 0) + today.get(a["customer_id"], 0) + amt
-            return len(unit) * amt * (MARGIN - LGD * self.pd(c, total))
+            return len(unit) * amt * (MARGIN - (0.0 if first_come else LGD * self.pd(c, total)))
 
         est = {id(u): value(u, max(offer(u), 0)) for u in units}
+
+        def rank(u):
+            return (u[0]["application_id"],) if first_come else (-est[id(u)], u[0]["application_id"])
         room = cfg["daily_cap"]
         if self.medium:
             left = max(0.0, self.budget() - self.spent)
             days_left = day["days_in_period"] - d
-            room = min(room, left if days_left <= 1 else left / days_left * cfg["pace"])
+            room = min(room, left if days_left <= 1 or cfg["pace"] is None else left / days_left * cfg["pace"])
         flood = str(d) in cfg.get("flood_days", [])     # validator example only: ignore the daily cap
         room = int(room) if not flood else 10 ** 9
         approved = {}            # id(unit) -> (unit, amount each)
@@ -240,7 +246,7 @@ class Underwriter:
                 today[a["customer_id"]] -= amt
             return amt * len(unit)
 
-        for u in sorted(units, key=lambda u: (-est[id(u)], u[0]["application_id"])):
+        for u in sorted(units, key=rank):
             amt = offer(u)
             if amt < MIN_AMOUNT or (value(u, amt) <= 0 and not flood):
                 continue
@@ -258,7 +264,7 @@ class Underwriter:
                 near = self.near + sum(amt * len(u) for u, amt in approved.values()
                                        if self.near_prime(self.cust[u[0]["customer_id"]]))
                 return near / tot if tot else 1.0
-            pool = [u for u in sorted(units, key=lambda u: (-est[id(u)], u[0]["application_id"]))
+            pool = [u for u in sorted(units, key=rank)
                     if id(u) not in approved and self.near_prime(self.cust[u[0]["customer_id"]])]
             while share() < target and pool:
                 u = pool[0]

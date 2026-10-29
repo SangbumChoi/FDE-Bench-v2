@@ -9,13 +9,13 @@
 - id: customer_limit
   text: Un cliente puede pedir como máximo mín(50.000, el {{income_cap_pct}} % del ingreso anual redondeado hacia abajo, el margen de ratio de endeudamiento) menos todo lo que ya le aprobamos en el período; todas sus aprobaciones de un día juntas deben caber, así que las solicitudes del mismo día comparten un límite y a quien vuelve le queda menos.
 - id: dsr_rule
-  text: Ratio de endeudamiento = (servicio anual de las deudas existentes, los préstamos a plazos a 12 x monthly_payment, + 12 x 33,17 por cada 1.000 de todos nuestros préstamos PL36 al cliente) / ingreso anual, como máximo el {{max_dsr_pct}} % (límite regulatorio).
+  text: Ratio de endeudamiento = (servicio anual de las deudas existentes, los préstamos a plazos a 12 x monthly_payment, + 12 x 33,17 por cada 1.000 de todos nuestros préstamos PL36 al cliente) / ingreso anual, como máximo el {{max_dsr_pct}} %.
 - id: easy_scope
-  text: En esta ronda las líneas de crédito quedan fuera del ratio, el ingreso es el salario declarado, las deudas son las de la última solicitud del cliente y ningún aviso se aplica (ni regulatorio, ni de presupuesto, ni amortizaciones, ni documentos).
+  text: En esta ronda el ratio máximo es el propio límite de solvencia del cliente (el ratio del regulador es un control aparte de cumplimiento normativo), las líneas de crédito quedan fuera de él, el ingreso es el salario declarado, las deudas son las de la última solicitud del cliente y ningún aviso se aplica (ni regulatorio, ni de presupuesto, ni amortizaciones, ni documentos).
 - id: daily_cap
   text: Como máximo se pueden aprobar {{daily_cap}} en total por día hábil (nuestra línea de financiación).
 - id: limit_table
-  text: Cada día el programa devuelve la tabla de límites al cierre, tras las aprobaciones y avisos del día - cada cliente visto hasta entonces con lo que aún puede pedir (0 si está en mora o bajo el corte), la capacidad diaria restante y (desde medium) el presupuesto restante -, juzgada con margen de 1 + 0,1 %, mitad clientes y mitad cifras del banco, y vale el 30 % de la calidad.
+  text: Cada día el programa devuelve la tabla de límites al cierre, tras las aprobaciones y avisos del día - cada cliente visto hasta entonces con lo que aún puede pedir (0 si está en mora o bajo el corte), la capacidad diaria restante y, cuando hay presupuesto del período, el presupuesto restante.
 - id: reason_codes
   text: Cada rechazo lleva el primero que aplique de DELINQUENCY, LOW_SCORE, LIMIT_EXCEEDED (menos de 1.000 de límite restante tras las aprobaciones del día), CREDIT_RISK (todo lo demás, incluida la capacidad agotada).
 - id: reason_codes_hard
@@ -25,7 +25,7 @@
 - id: tenure_review
   text: Los solicitantes con menos de {{min_tenure}} meses en su empleo se derivan a un analista humano salvo que estén en mora; es una costumbre y el director de riesgos puede autorizar una excepción.
 - id: profit_metric
-  text: La calidad es 0,7 x el beneficio esperado frente al programa de referencia del cliente más 0,3 x la precisión de la tabla; el beneficio por aprobación es importe x 10 % menos PD real x 0,60 x importe, con la PD creciendo con la carga de deuda del cliente, y cada derivación cuesta 60.
+  text: El objetivo es el mayor beneficio esperado tras pérdidas y costes de derivación - una aprobación gana el 10 % de su importe en la vida del préstamo y pierde el 60 % si el cliente entra en impago, con el riesgo de impago creciendo con la carga de deuda del cliente (es decir, con todo lo que se le presta), y cada derivación cuesta 60 de tiempo de un analista.
 - id: credit_line_amortization
   text: Las líneas de crédito cuentan en el ratio como su saldo devuelto en 5 años más intereses (saldo / 5 + saldo x tipo al año), aunque no haya nada que pagar.
 - id: stress_rate

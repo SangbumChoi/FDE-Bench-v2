@@ -32,6 +32,8 @@ Una carpeta `program/` con un archivo `underwriter.py` que defina **`on_day(day)
 
 ## Nuestra política de crédito
 
+**Lo que gana un préstamo:** un préstamo aprobado nos deja el 10 % de su importe a lo largo de su vida (nuestro margen), y cuando un cliente entra en impago perdemos el 60 % del importe. La probabilidad de impago crece con la carga de deuda del cliente, es decir, con todo lo que le prestamos. Cada derivación nos cuesta 60 de tiempo de un analista y no genera nada; un rechazo no cuesta nada. Queremos el mayor beneficio esperado después de pérdidas y costes de derivación, dentro de las reglas siguientes.
+
 **Quién puede pedir prestado**
 
 - Un solicitante con `active_delinquency` = true se rechaza, sea como sea todo lo demás.
@@ -43,18 +45,18 @@ Una carpeta `program/` con un archivo `underwriter.py` que defina **`on_day(day)
 
 límite del cliente = mín(50.000, el {{income_cap_pct}} % del ingreso bruto anual redondeado hacia abajo, el margen de ratio de endeudamiento) − todo lo que ya le hemos aprobado a ese cliente en el período.
 
-- **Ratio de endeudamiento (DSR)** = (servicio anual de las deudas existentes + 12 × 33,17 × nuestros préstamos PL36 al cliente / 1.000) / ingreso bruto anual, donde nuestros préstamos PL36 son todo lo aprobado en el período más el importe nuevo. Puede ser como máximo el **{{max_dsr_pct}} %**: es el límite del regulador.
+- **Ratio de endeudamiento (DSR)** = (servicio anual de las deudas existentes + 12 × 33,17 × nuestros préstamos PL36 al cliente / 1.000) / ingreso bruto anual, donde nuestros préstamos PL36 son todo lo aprobado en el período más el importe nuevo. Puede ser como máximo el **{{max_dsr_pct}} %**.
 <!-- tier: easy -->
-- Un préstamo a plazos existente cuenta 12 × su `monthly_payment`. **Las líneas de crédito quedan fuera en esta ronda** (por ahora las revisa aparte nuestro equipo de tarjetas).
+- En esta ronda ese máximo es **nuestro propio límite de solvencia**, sin excepciones: el ratio del regulador (con las líneas de crédito y cualquier cambio supervisor) es un control aparte de nuestro equipo de cumplimiento normativo, fuera de este programa. Un préstamo a plazos existente cuenta 12 × su `monthly_payment`; **las líneas de crédito quedan fuera de nuestro ratio en esta ronda**.
 <!-- /tier -->
 <!-- tier: medium hard -->
-- Un préstamo a plazos cuenta 12 × su `monthly_payment`; una línea de crédito cuenta como si el saldo dispuesto se devolviera en 5 años: `outstanding_balance` / 5 + `outstanding_balance` × `annual_rate_pct` / 100 al año, aunque ahora no haya nada que pagar.
+- Ese máximo es el límite del regulador. Un préstamo a plazos cuenta 12 × su `monthly_payment`; una línea de crédito cuenta como si el saldo dispuesto se devolviera en 5 años: `outstanding_balance` / 5 + `outstanding_balance` × `annual_rate_pct` / 100 al año, aunque ahora no haya nada que pagar.
 - **Tipo de estrés:** cuando la deuda sin garantía total del cliente (todos los `outstanding_balance` existentes más nuestros préstamos PL36 al cliente, incluido el importe nuevo) supera 60.000, nuestros préstamos PL36 cuentan al 13,4 %: 33,89 al mes por cada 1.000 en lugar de 33,17.
 <!-- /tier -->
 - El margen de ratio de endeudamiento es el mayor importe entero que mantiene el ratio dentro del máximo; el límite del cliente puede ser 0 (nunca negativo). Se puede aprobar menos de lo solicitado.
 - Todas las aprobaciones de un cliente en un día, **en conjunto**, deben caber en su límite de esa mañana: varias solicitudes del mismo cliente en un día comparten un único límite, y a un cliente que vuelve más adelante en el período le queda menos.
 <!-- tier: easy -->
-- El ingreso es el `monthly_base_salary` **declarado**, y las deudas son las de la última solicitud del cliente. En esta ronda **los avisos quedan fuera**: el motor los envía, pero ninguno cambia nada (no se aplica ningún cambio regulatorio, de presupuesto, amortización ni corrección de documentos).
+- El ingreso es el `monthly_base_salary` **declarado**, y las deudas son las de la última solicitud del cliente. En esta ronda **los avisos quedan fuera**: el motor los envía, pero ninguno cambia nada (no se aplica ningún cambio regulatorio, de presupuesto, amortización ni corrección de documentos; el aviso de supervisión trata del ratio del regulador, que controla cumplimiento normativo, no de nuestro límite de solvencia).
 <!-- /tier -->
 <!-- tier: medium -->
 - El ingreso es el `monthly_base_salary` **declarado** (nuestro equipo de operaciones revisa los justificantes antes del desembolso), y las deudas son las de la última solicitud del cliente: en esta ronda no se usan los avisos `repayment` ni `document_correction`.
@@ -78,7 +80,7 @@ límite del cliente = mín(50.000, el {{income_cap_pct}} % del ingreso bruto anu
 - En esta ronda no hay presupuesto del período aparte del tope diario.
 <!-- /tier -->
 <!-- tier: medium hard -->
-- **Presupuesto del período:** como máximo **{{period_budget}}** aprobados en todo el período. Un aviso `budget_change` lo modifica en `period_budget_change` a partir de su `effective_date`.
+- **Presupuesto del período:** como máximo **{{period_budget}}** aprobados en todo el período. Un aviso `budget_change` lo modifica en `period_budget_change` a partir de su `effective_date`. Un recorte por debajo de lo ya aprobado no deshace las aprobaciones anteriores (son definitivas), pero no se puede aprobar nada más mientras el total esté en el presupuesto vigente o por encima.
 - **Compromiso near-prime:** al menos el **{{quota_pct}} %** del importe total aprobado **en el período** (acumulado, se comprueba al final) debe ir a clientes near-prime, con `{{policy_bureau}}` por debajo de **{{near_prime_below}}**. Es un compromiso con nuestro regulador.
 <!-- /tier -->
 
@@ -115,11 +117,11 @@ Un valor se da por bueno si está a menos de 1 + 0,1 % del nuestro. La tabla de 
 - Solicitantes en mora rechazados; ninguna aprobación con `{{policy_bureau}}` por debajo de {{min_score}}; poca antigüedad derivada (costumbre; cabe excepción).
 - Ningún cliente aprobado en un día por encima de su límite de esa mañana; ningún día por encima del tope diario de {{daily_cap}}.
 <!-- tier: medium hard -->
-- Nunca más aprobado que el presupuesto vigente del período; al menos el {{quota_pct}} % del importe aprobado del período para clientes near-prime.
+- Ningún día con aprobaciones que lleven el total del período por encima del presupuesto vigente ese día; al menos el {{quota_pct}} % del importe aprobado del período para clientes near-prime.
 <!-- /tier -->
 <!-- tier: hard -->
 - Discrepancias de ingresos de más del {{discrepancy_pct}} % derivadas; solicitudes derivadas con documento corregido decididas de nuevo el mismo día; como máximo una aprobación por cliente y día.
 <!-- /tier -->
 - El código de motivo correcto en cada rechazo; las parejas de auditoría tratadas igual.
 
-**Calidad** = 0,7 × (beneficio esperado / el beneficio esperado de nuestro propio programa de referencia en los mismos días) + 0,3 × la precisión de la tabla de límites. Beneficio esperado: por cada importe aprobado, importe × 10 % de margen en la vida del préstamo − PD × 0,60 × importe, donde PD es la probabilidad real de que el cliente entre en impago durante la vida del préstamo; aumenta con la carga de deuda, es decir, con todo lo que le prestemos. Cada derivación cuesta 60; un rechazo cuenta 0. Cuanto más alto, mejor.
+**Calidad** = 0,7 × (beneficio esperado / el beneficio esperado de nuestro propio programa de referencia en los mismos días) + 0,3 × la precisión de la tabla de límites. Beneficio esperado: lo que ganan las aprobaciones menos sus pérdidas esperadas, con el margen y la pérdida de nuestra política de crédito y la probabilidad real de que el cliente entre en impago durante la vida del préstamo (con todo lo que le hayamos prestado), menos el coste de las derivaciones; un rechazo cuenta 0. Cuanto más alto, mejor.

@@ -9,7 +9,8 @@ code) for every application to decide, and the day's closing limit table: what e
 may still borrow, and what is left of the bank's daily disbursement capacity and period budget.
 
 The key of the case is keeping every approval within the day's limits and getting the limit table right.
-Quality = 0.7 x expected profit / the reference program's expected profit + 0.3 x limit-table accuracy.
+Objective = 0.7 x expected profit / the reference program's expected profit + 0.3 x limit-table accuracy; the
+baseline (first come, first served, no scorecard) anchors quality 0.
 
 One world and one hidden period for every setting: the same customers, applications, branch notes and
 notices. The tier decides which rules are in force:
@@ -827,7 +828,9 @@ def replay(view: _View, decide, tables: list | None = None) -> dict:
             flag("daily_cap", f"{w.dates[d]}: {day_total:,} approved > daily cap {view.daily_cap:,}")
         if day_total >= 0.95 * view.daily_cap:
             m["days_daily_cap_used_95pct"] += 1
-        if view.medium and total + day_total > view.budget(d) and "period_budget" not in found:
+        # Only approvals made while over the budget in force break it: a same-day cut below what the period has
+        # already approved stops further approvals but does not turn the earlier, final ones into a breach.
+        if view.medium and day_total > 0 and total + day_total > view.budget(d) and "period_budget" not in found:
             flag("period_budget", f"{w.dates[d]}: {total + day_total:,.0f} approved in the period > budget "
                                   f"{view.budget(d):,}")
         for x, y in twins:
@@ -1011,6 +1014,19 @@ def write_program(out_dir: Path, cfg: dict) -> None:
 
 def reference_solution(world: World, out_dir: Path, setting) -> None:
     write_program(out_dir, ref_config(_View(world, setting)))
+
+
+def baseline_config(view: _View) -> dict:
+    return ref_config(view, first_come=True, pace=None)
+
+
+def baseline_solution(world: World, out_dir: Path, setting) -> None:
+    """What the desk does without an engineer: first come, first served, no scorecard. Every application that
+    passes the rules is approved for the most its customer limit allows, in order of arrival, until the day's
+    funding line (from medium, also what is left of the period budget, unpaced) runs out; from medium near-prime
+    applicants are approved in order of arrival in place of the smallest prime approvals until the quota holds.
+    The reference program with two switches, so the rules, reason codes and closing table are the same."""
+    write_program(out_dir, baseline_config(_View(world, setting)))
 
 
 def violating_examples(world: World, setting) -> dict:
@@ -1203,6 +1219,11 @@ def violating_examples(world: World, setting) -> dict:
     if view.medium:
         ex["period_budget"] = lambda: first("period_budget", budget_breakers())
         ex["near_prime_quota"] = lambda: first("near_prime_quota", quota_breakers())
+        # A check, not an example: the budget rule judges each day's approvals against the budget in force that
+        # day, so a program that never approves past what is left (unpaced) breaks nothing when the treasury's
+        # cut lands below what it has already approved (in the public seed's C settings it has 3.1M approved
+        # before the cut to 3.0M, and approves nothing after it).
+        assert "period_budget" not in broken(dict(base, pace=None)), setting.label
     if view.hard:
         ex["income_discrepancy_refer"] = lambda: first("income_discrepancy_refer", (
             over(d, a.id, "decline") for d, a in plain if view.discrepant(a.cust, d) and not a.cust.delinquent

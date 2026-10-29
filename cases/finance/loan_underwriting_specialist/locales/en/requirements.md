@@ -32,6 +32,8 @@ A folder `program/` with a file `underwriter.py` that defines **`on_day(day)`**.
 
 ## Our credit policy
 
+**What a loan earns:** an approved loan earns us 10% of its amount over its life (our lifetime margin), and when a customer defaults we lose 60% of the amount. How likely a customer is to default grows with their debt burden, so with everything we lend them. A referral costs us 60 of an underwriter's time and earns nothing; a decline costs nothing. We want the most expected profit after losses and referral costs, within the rules below.
+
 **Who may borrow**
 
 - An applicant with `active_delinquency` = true is declined, whatever else is true.
@@ -43,18 +45,18 @@ A folder `program/` with a file `underwriter.py` that defines **`on_day(day)`**.
 
 customer limit = min(50,000, {{income_cap_pct}}% of annual gross income rounded down, the DSR headroom) − everything we have approved to that customer earlier in the period.
 
-- **Debt-service ratio (DSR)** = (annual service of the existing debts + 12 × 33.17 × our PL36 lending to the customer / 1,000) / annual gross income, where our PL36 lending is everything approved to them in the period plus the new amount. It may be at most **{{max_dsr_pct}}%**: this is the regulator's limit.
+- **Debt-service ratio (DSR)** = (annual service of the existing debts + 12 × 33.17 × our PL36 lending to the customer / 1,000) / annual gross income, where our PL36 lending is everything approved to them in the period plus the new amount. It may be at most **{{max_dsr_pct}}%**.
 <!-- tier: easy -->
-- An existing installment loan counts 12 × its `monthly_payment`. **Credit lines are left out this round** (our cards team reviews them separately for now).
+- This round that cap is **our own affordability limit**, with no exception to it: the regulator's ratio (credit lines included, with any supervisory change) is a separate check by our compliance team, outside this program. An existing installment loan counts 12 × its `monthly_payment`; **credit lines are left out of our ratio this round**.
 <!-- /tier -->
 <!-- tier: medium hard -->
-- An installment loan counts 12 × its `monthly_payment`; a credit line counts as if its drawn balance were repaid over 5 years: `outstanding_balance` / 5 + `outstanding_balance` × `annual_rate_pct` / 100 a year, even when nothing is due now.
+- That cap is the regulator's limit. An installment loan counts 12 × its `monthly_payment`; a credit line counts as if its drawn balance were repaid over 5 years: `outstanding_balance` / 5 + `outstanding_balance` × `annual_rate_pct` / 100 a year, even when nothing is due now.
 - **Stress rate:** when the customer's total unsecured debt (all existing `outstanding_balance` plus our PL36 lending to them, the new amount included) exceeds 60,000, our PL36 lending counts at 13.4% instead: 33.89 per 1,000 a month instead of 33.17.
 <!-- /tier -->
 - The DSR headroom is the largest whole amount that keeps the DSR within the cap; the customer limit can be 0 (never negative). An approved amount may be below the requested one.
 - All of a customer's approvals on a day **together** must fit within their customer limit that morning: several applications from the same customer on one day share one limit, and a customer who comes back later in the period has less left.
 <!-- tier: easy -->
-- Income is the **declared** `monthly_base_salary`, and the debts are those on the customer's latest application. This round the **notices are out of scope**: the engine sends them, but none of them changes anything (no regulatory change, budget change, repayment or document correction is applied this round).
+- Income is the **declared** `monthly_base_salary`, and the debts are those on the customer's latest application. This round the **notices are out of scope**: the engine sends them, but none of them changes anything (no regulatory change, budget change, repayment or document correction is applied this round; the supervisory notice is about the regulator's ratio, which is compliance's check, not about our affordability limit).
 <!-- /tier -->
 <!-- tier: medium -->
 - Income is the **declared** `monthly_base_salary` (our operations team checks the documents before payout), and the debts are those on the customer's latest application: `repayment` and `document_correction` notices are not used this round.
@@ -78,7 +80,7 @@ customer limit = min(50,000, {{income_cap_pct}}% of annual gross income rounded 
 - This round there is no period budget beyond the daily cap.
 <!-- /tier -->
 <!-- tier: medium hard -->
-- **Period budget:** at most **{{period_budget}}** may be approved over the whole period. A `budget_change` notice changes it by `period_budget_change` from its `effective_date` on.
+- **Period budget:** at most **{{period_budget}}** may be approved over the whole period. A `budget_change` notice changes it by `period_budget_change` from its `effective_date` on. A cut below what is already approved does not undo earlier approvals (they are final), but nothing more may be approved while the total is at or above the budget in force.
 - **Near-prime commitment:** at least **{{quota_pct}}%** of the total amount approved **over the period** (cumulative, checked at the end) must go to near-prime customers, `{{policy_bureau}}` below **{{near_prime_below}}**. It is a commitment to our regulator.
 <!-- /tier -->
 
@@ -115,11 +117,11 @@ An entry counts as right when it is within 1 + 0.1% of ours. A day's table score
 - Delinquent applicants declined; no approval with `{{policy_bureau}}` below {{min_score}}; short-tenure applicants referred (our habit; an exception is possible).
 - No customer approved more on a day than their customer limit that morning; no day above the daily cap of {{daily_cap}}.
 <!-- tier: medium hard -->
-- Never more than the period budget in force approved; at least {{quota_pct}}% of the period's approved amount to near-prime customers.
+- No day's approvals taking the period's total above the budget in force that day; at least {{quota_pct}}% of the period's approved amount to near-prime customers.
 <!-- /tier -->
 <!-- tier: hard -->
 - Income discrepancies above {{discrepancy_pct}}% referred; corrected referred applications decided again the same day; at most one approval per customer per day.
 <!-- /tier -->
 - The right reason code on every decline; planted twins treated alike.
 
-**Quality** = 0.7 × (expected profit / the expected profit of our own benchmark program on the same days) + 0.3 × the limit table's accuracy. Expected profit: for each approved amount, amount × 10% lifetime margin − PD × 0.60 × amount, where PD is the true probability that the customer defaults over the loan's life; it grows with the debt burden, so with everything we lend them. Each referral costs 60; a decline counts 0. Higher is better.
+**Quality** = 0.7 × (expected profit / the expected profit of our own benchmark program on the same days) + 0.3 × the limit table's accuracy. Expected profit: what the approvals earn less their expected losses, with the margin and the loss of our credit policy and the true probability that the customer defaults over the loan's life (with everything we have lent them), less the cost of the referrals; a decline counts 0. Higher is better.
