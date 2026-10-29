@@ -20,19 +20,19 @@ model, W1–W10), `bom` (with `valid_from_week` / `valid_to_week`: C04 in W1–W
 (resistors in reels of 5,000), `open_orders`, `supplier_quotes.xlsx` (`currency`, `unit_price`, `moq`, two
 all-units price breaks, `lead_time_days` in business days; a `suppliers` sheet), `approved_vendors`, `budget`
 (monthly caps), `delivery_history` (188 past deliveries, promised vs. received date) and `allocations` (monthly
-caps for S03/C01, S03/C03, S08/C06). The request mentions the history, the allocation notice and the planned
-flash change, so every tier sees them.
+caps for S03/C01, S03/C03, S08/C06) and `supplier_price_email.txt` (the price notice below). The request mentions
+the history, the allocation notice, the planned flash change and the price email, so every tier sees them.
 
 ## Supplier price email
 
-A synthetic supplier notice approves a 20% increase to all C01/S03 quote tiers for orders placed in W4 or later. Earlier orders keep the quoted price. A further 5% increase is pending and is excluded. The order week determines the price for both purchase cost and monthly budget; open orders are unaffected. This adapts the distinction between approved and pending price changes from the ReflectionAI procurement scenarios.
+A synthetic supplier notice (`supplier_price_email.txt`, dated 2026-11-20) approves a 20% increase to all C01/S03 quote tiers for orders placed in W4 or later. Earlier orders keep the quoted price. A further 5% increase is pending and is excluded. The order week determines the price for both purchase cost and monthly budget; open orders are unaffected. This adapts the distinction between approved and pending price changes from the ReflectionAI procurement scenarios.
 
 ## Tiers: which rules apply
 
 | | easy | medium | hard |
 |---|---|---|---|
 | **What is in force** | The MRP core | + commercial and calendar terms | + supply uncertainty and the engineering change |
-| **Domain facts** | Demand = boards × `qty_per_board` (gross-to-net per week); lead time = `lead_time_days` / 5 rounded up, in whole weeks; list prices (`unit_price`), S04 in USD at the planning rate; MOQ per order line; only `approved` suppliers; a hard monthly budget by the month of the order week (November binds); resistor stock in reels; safety stock for critical parts; one supplier on quality hold; dual sourcing of critical parts (company habit) | All-units price breaks per order line; lead times in business days, W5 and W6 have 4 (Christmas, New Year's Day) | Each supplier is one or two weeks late with hidden probabilities (estimate them from the history; 1–7 days after the promised Monday = one week, 8–14 = two); deliveries late independently; open orders on time. Allocation caps per month. Engineering change C04 → C25 from W6: C04 left at the end of W5 is scrapped at standard cost, C25 has no stock, is critical and must be dual-sourced; C04 needs neither |
+| **Domain facts** | Demand = boards × `qty_per_board` (gross-to-net per week); lead time = `lead_time_days` / 5 rounded up, in whole weeks; list prices (`unit_price`, with the approved C01/S03 increase from the price email), S04 in USD at the planning rate; MOQ per order line; only `approved` suppliers; a hard monthly budget by the month of the order week (November binds); resistor stock in reels; safety stock for critical parts; one supplier on quality hold; dual sourcing of critical parts (company habit) | All-units price breaks per order line; lead times in business days, W5 and W6 have 4 (Christmas, New Year's Day) | Each supplier is one or two weeks late with hidden probabilities (estimate them from the history; 1–7 days after the promised Monday = one week, 8–14 = two); deliveries late independently; open orders on time. Allocation caps per month. Engineering change C04 → C25 from W6: C04 left at the end of W5 is scrapped at standard cost, C25 has no stock, is critical and must be dual-sourced; C04 needs neither |
 | **What the requirements put out of scope** | "Plan at list prices", "treat lead times as whole weeks and ignore holidays", "the flash change is not released this round: C04 in all ten weeks, no C25", "do not use the delivery history or the allocations: suppliers deliver on time and confirm everything" | The flash change and the history/allocations, as in easy | Nothing |
 | **Rules** | `moq`, `quality_hold` (physical); `approved_vendor`, `budget_cap` (contractual); `dual_source_critical` (business policy, bendable) | Same | + `allocation_cap` (physical) |
 | **Quality (lower is better)** | Purchases + 0.5% of standard cost per piece held per week + 5× standard cost per piece-week of backlog + 1.5× standard cost per piece-week below safety stock (critical parts, weeks in use) | Same formula; purchases at the break each line reaches | Holding, backlog, shortfall and C04 scrap become exact expectations over the true lateness distribution; purchases are paid either way |
@@ -55,47 +55,63 @@ reference is **invalid** under both other rule sets (18 of 18 pairs: mostly `qua
 when the planning rate is higher and `dual_source_critical` under B's 70% cap), so the three ground truths are
 distinct.
 
-## Historical reference numbers (before the price email; seed 20261123)
+## Reference and baseline numbers (seed 20261123)
 
 The reference is a time-phased MRP per part: it nets stock and open orders against the exploded demand and orders
 from the cheapest supplier that still arrives in time, as late as possible, covering two weeks and rounding up to a
 price break when the break costs less in total (medium/hard). Critical parts then move whole lines to a second
 source until the share cap holds. If November is over budget, whole lines move to W3 with a supplier that still
-arrives in time, starting with the cheapest extra cost per KRW deferred. In hard it plans one week of safety lead
-time for every supplier whose smoothed late rate in the history is above 5%, respects the allocation, and keeps the
-cheaper valid plan of the planner with and without the second-source step. It uses only what the agent can see:
-lateness estimates from the history, never the true rates.
+arrives in time, starting with the cheapest extra cost per KRW deferred; a moved line is re-sized to what the part
+still needs from its new arrival week (so the phased-out C04 deferred to Express Parts Korea (S09) in hard is 1,400,
+not the 4,100 of the S03 MOQ it replaced). In hard it plans one week of safety lead time for every supplier whose
+smoothed late rate in the history is above 5%, respects the allocation, and keeps the cheaper valid plan of the
+planner with and without the second-source step. It uses only what the agent can see: lateness estimates from the
+history, never the true rates.
 
-Budget in the data: November 125 M, December 525 M, January 85 M KRW, calibrated against all nine settings
+The baseline (`baseline_solution`, quality 0 on the normalized scale) is what the client does today without an
+engineer: the ERP's plain MRP run and the buyer's fixes. Every part is ordered lot for lot (each order covers the
+first week short of stock or safety stock, at least the MOQ) from the cheapest approved supplier that still delivers
+in time, as late as its lead time allows, at list prices and on the promised dates (no price breaks, no use of the
+delivery history). Critical parts follow a quota arrangement: every order is split with the cheapest other supplier
+so that neither gets more than the share cap. A month over budget moves whole lines to the next month as the
+reference does, and January's lines are pulled into W6. It is valid in all nine settings (and on world seeds 1–8).
+
+Budget in the data: November 125 M, December 490 M, January 85 M KRW, calibrated against all nine settings
 (November lies between the most any setting can defer out of November and the least any setting would spend there
-unconstrained, so it binds in all nine; December and January have 5% headroom). Allocation: C01 6,500, C03 9,000,
-C06 3,500 per month (60% of the unconstrained hard/A reference's peak month).
+unconstrained, so it binds in all nine; December and January have 5% headroom over the references). Allocation: C01
+6,500, C03 9,000, C06 3,500 per month (60% of the unconstrained hard/A reference's peak month).
 
-| Setting | Reference objective (M KRW) | Purchases / holding / backlog / shortfall / scrap (M KRW) | November spend vs. unconstrained (M KRW) | Bending `dual_source_critical` (planner without the second-source step) | Headroom: local search, quality of a better plan | Bending on top of the local-search plan |
-|---|---|---|---|---|---|---|
-| easy/A | 515.25 | 508.1 / 7.2 / 0 / 0 / 0 | 123.2 vs. 139.4 | −3.8% | 495.73, 1.039 | 0.0% |
-| easy/B | 600.14 | 590.9 / 9.3 / 0 / 0 / 0 | 115.7 vs. 226.1 | −4.9% | 566.83, 1.059 | −0.3% |
-| easy/C | 489.30 | 483.1 / 6.2 / 0 / 0 / 0 | 124.2 vs. 125.1 | −4.3% | 464.02, 1.054 | −0.3% |
-| **easy mean** | **534.90** | | | **−4.3%** | **1.051** | **−0.2%** |
-| medium/A | 521.22 | 513.5 / 7.7 / 0 / 0 / 0 | 123.2 vs. 184.5 | −3.8% | 490.18, 1.063 | 0.0% |
-| medium/B | 600.16 | 590.9 / 9.3 / 0 / 0 / 0 | 115.7 vs. 231.1 | −3.9% | 548.92, 1.093 | −0.6% |
-| medium/C | 490.10 | 483.6 / 6.5 / 0 / 0 / 0 | 124.2 vs. 128.1 | −4.3% | 458.13, 1.070 | −0.5% |
-| **medium mean** | **537.16** | | | **−4.0%** | **1.075** | **−0.3%** |
-| hard/A | 588.61 | 553.7 / 9.5 / 11.1 / 10.5 / 3.8 | 119.7 vs. 330.9 | 0% (reference already skips the step) | 531.21, 1.108 | 0.0% |
-| hard/B | 635.41 | 602.0 / 10.6 / 8.4 / 10.6 / 3.8 | 124.3 vs. 365.9 | 0% (reference already skips the step) | 579.46, 1.097 | −0.1% |
-| hard/C | 548.21 | 515.7 / 8.7 / 14.8 / 5.3 / 3.8 | 122.4 vs. 290.5 | 0% (the planner without the step is 0.7% dearer) | 495.70, 1.106 | 0.0% |
-| **hard mean** | **590.74** | | | **0%** | **1.104** | **−0.0%** |
+| Setting | Reference objective (M KRW) | Purchases / holding / backlog / shortfall / scrap (M KRW) | November spend vs. unconstrained (M KRW) | Baseline objective (M KRW, ratio to the reference) | Bending `dual_source_critical` (planner without the second-source step) | Headroom: local search (objective, quality ratio, normalized quality) | Bending on top of the local-search plan |
+|---|---|---|---|---|---|---|---|
+| easy/A | 519.50 | 512.3 / 7.2 / 0 / 0 / 0 | 113.8 vs. 139.4 | 534.17 (1.028) | −4.4% | 495.39, 1.049, q 2.64 | −2.0% |
+| easy/B | 579.32 | 570.6 / 8.7 / 0 / 0 / 0 | 118.6 vs. 226.1 | 644.90 (1.113) | −3.1% | 562.69, 1.030, q 1.25 | −0.6% |
+| easy/C | 491.90 | 485.6 / 6.3 / 0 / 0 / 0 | 119.3 vs. 125.1 | 503.44 (1.023) | −4.8% | 458.59, 1.073, q 3.89 | −1.1% |
+| **easy mean** | **530.24** | | | **560.83** | **−4.1%** | **1.050, q 2.59** | **−1.2%** |
+| medium/A | 521.76 | 514.0 / 7.7 / 0 / 0 / 0 | 123.2 vs. 184.5 | 532.54 (1.021) | −4.5% | 488.94, 1.067, q 4.05 | −2.0% |
+| medium/B | 582.57 | 573.9 / 8.7 / 0 / 0 / 0 | 98.7 vs. 231.1 | 615.89 (1.057) | −2.5% | 538.68, 1.081, q 2.32 | −0.9% |
+| medium/C | 492.37 | 485.8 / 6.5 / 0 / 0 / 0 | 122.3 vs. 128.1 | 502.76 (1.021) | −4.7% | 451.89, 1.090, q 4.90 | −1.5% |
+| **medium mean** | **532.23** | | | **550.40** | **−3.9%** | **1.079, q 3.75** | **−1.5%** |
+| hard/A | 579.75 | 548.6 / 9.4 / 11.1 / 10.5 / 0.0 | 119.7 vs. 330.9 | 670.53 (1.157) | 0% (the reference is that plan) | 521.65, 1.111, q 1.64 | 0.0% |
+| hard/B | 612.78 | 591.5 / 11.0 / 8.1 / 2.1 / 0.0 | 124.3 vs. 365.9 | 745.39 (1.216) | +2.0% (valid but dearer; the reference keeps the step) | 579.68, 1.057, q 1.25 | −0.3% |
+| hard/C | 537.11 | 504.9 / 8.5 / 17.6 / 6.1 / 0.0 | 124.0 vs. 290.5 | 647.75 (1.206) | +0.7% (valid but dearer; the reference keeps the step) | 486.29, 1.104, q 1.46 | 0.0% |
+| **hard mean** | **576.54** | | | **687.89** | **+0.9%** | **1.091, q 1.45** | **−0.1%** |
 
 Bending the dual-sourcing habit pays about 4% in easy and medium for the reference planner. In hard the habit is
 almost free: the November deferrals and the allocation caps already push volume to second suppliers, so the
-planner without the second-source step is valid (A, B) and the reference keeps it; second sources also hedge
-lateness. The headroom column is a first-improvement local search from the reference (quantity ±, a price break,
-week ±1/±2, supplier switch, drop line) under all rules of the setting, run until no move improves; it shows
-where a careful agent can beat the reference: consolidating lines onto price breaks (medium) and, in hard,
-buying C04 exactly to use-up and trading safety lead time against the November cap. All numbers come from
-`case.py` (`_reference`, `simulate`); the local search is an analysis script, not part of the case. Seeds 1–8
-build valid worlds, references, violating examples and distinct rule sets in all nine settings (the November cap
-binds in 6–9 of the 9 settings depending on the seed).
+planner without the second-source step is valid in all three rule sets and the reference keeps whichever is cheaper;
+second sources also hedge lateness. The headroom column is a first-improvement local search from the reference
+(quantity ±, to the MOQ or a price break, week ±1/±2, supplier switch, shifting quantity between lines, drop or add a
+line) under all rules of the setting, scored with the true lateness rates, run until no move improves; it shows where
+a careful agent can beat the reference: consolidating lines onto price breaks (medium) and, in hard, trading safety
+lead time against the November cap. Normalized quality is (baseline − objective) / (baseline − reference): the
+baseline is only 2–3% above the reference in easy and medium under rule sets A and C, so a plan a few percent better
+than the reference scores far above the policies' quality cap of 1.5 there (see REVIEW.md, F2). On other world
+seeds the gap can be narrower: over seeds 1–40, 15 of the 234 easy and medium settings have the baseline within 2%
+of the reference (as close as 0.6%). All numbers come from `case.py` (`_reference`, `_baseline`, `simulate`); the
+local search is an analysis script, not part of the case. Seeds 1–8 build valid worlds, references, baselines,
+violating examples and distinct rule sets in all nine settings (the November cap binds in 6–9 of the 9 settings
+depending on the seed). Of seeds 1–60, 30 and 49 do not build: the reference cannot second-source C06 in hard/A
+(this predates the baseline and the `_defer` fix).
 
 ### How the expectation is computed (hard)
 
@@ -128,8 +144,8 @@ backlog, shortfall and scrap. The result is exact and deterministic; nothing is 
   time against a true 15%. True late rates at this seed run from 2% (S09, the express broker) to 37% (S04, overseas)
   and 35% (S03, the allocated semiconductor maker).
 - `validate-case` checks every setting: deterministic data in five locales, the same agent view in all nine, the
-  reference at quality 1.0, one deliverable per rule of the setting that breaks only that rule, and distinct
-  references across rule sets.
+  reference at quality 1.0, a valid baseline worse than the reference, one deliverable per rule of the setting that
+  breaks only that rule, and distinct references across rule sets.
 
 ## Relationship to the source assignment
 
