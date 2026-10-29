@@ -104,7 +104,7 @@ ko:
   case_eyebrow: "{field} · FDE-Bench v2 케이스"
   task_type: 과제 유형
   deliverable: 산출물
-  objective: 목표
+  objective: 목표값
   settings: 설정
   maximize: 최대화
   minimize: 최소화
@@ -118,14 +118,14 @@ ko:
   nav_requirements: 숨은 요구사항
   nav_targets: 질문 목표
   nav_data: 데이터와 정답
-  nav_readme: 케이스 설명
-  nav_review: 리뷰 결과
+  nav_readme: 케이스 노트
+  nav_review: 리뷰 발견 사항
   request_title: 에이전트가 받는 요청
   request_intro: 고객의 요청입니다. 에이전트가 처음에 받는 유일한 글이며, 모든 설정에서 같습니다.
   spec_title: "산출물 명세 ({label})"
   spec_program: 프로그램 인터페이스
   spec_batch: 에이전트가 아니라, 에이전트의 파일을 정해진 형식으로 옮기는 추출기에게만 주어짐
-  spec_translation: "읽기용 번역입니다. 에이전트와 추출기는 영어 원문을 받습니다:"
+  spec_translation: "읽기용 번역입니다. 에이전트와 추출기는 영어 원문을 받습니다."
   settings_title: "설정: 데이터 하나, 정답 {n}개"
   settings_intro: >-
     에이전트는 모든 설정에서 같은 요청과 데이터를 봅니다. <strong>티어</strong>(= 난이도)는 어떤 규칙이 적용되는지를,
@@ -138,8 +138,8 @@ ko:
   no_settings: "이 케이스에는 설정이 없습니다. 모든 난이도에서 같은 문제 하나를 풉니다."
   rules_title: 규칙
   rules_intro: >-
-    규칙을 하나라도 어기면 산출물은 무효입니다. 다만 그 규칙의 등급이 실행의 회사 정책상 완화될 수 있고, 에이전트가
-    예외 절차를 거쳤다면 예외입니다.
+    규칙을 하나라도 어기면 산출물은 무효입니다. 다만 실행에 적용된 회사 정책에서 그 규칙의 등급이 완화될 수 있고
+    에이전트가 예외 절차를 거쳤다면 무효가 되지 않습니다.
   rule: 규칙
   class: 등급
   description: "설명 ({{…}} 안의 파라미터는 규칙 세트에서 정해짐)"
@@ -157,7 +157,7 @@ ko:
   not_available: (없음)
   targets_title: 질문 목표
   targets_intro: >-
-    좋은 엔지니어라면 고객에게 물어봐야 하는 사실들이며, Ask-F1은 이를 기준으로 채점합니다.
+    좋은 엔지니어라면 고객에게 물어봐야 할 사실이며, Ask-F1은 이를 기준으로 채점합니다.
     <code>{{param}}</code>은 규칙 세트에서 채워집니다.
   target: 목표
   kind: 종류
@@ -167,9 +167,9 @@ ko:
     모든 것이 케이스 옆에 파일로 저장되어 있습니다. <code>visible/</code>은 에이전트가 받는 데이터,
     <code>hidden/</code>은 에이전트가 보지 못하는 입력(프로그램의 숨은 기간이나 코퍼스), <code>gt/</code>는 설정마다 하나씩
     있는 정답 폴더입니다. <code>validate-case</code>가 파일이 생성기와 여전히 일치하는지 확인합니다.
-  visible_data: "에이전트가 보는 데이터 ({language})"
+  visible_data: "에이전트가 보는 데이터 ({language} 로캘)"
   hidden_inputs: 숨은 입력
-  scores_title: 설정별 참조 점수
+  scores_title: 설정별 참조 해답 점수
   scores_intro: >-
     품질은 설정마다 정규화됩니다. 기준선(가장 단순하지만 유효한 산출물)이 0, 참조 해답이 1이며, 참조 해답보다 나으면
     1을 넘습니다(정책의 품질 상한에서 만점).
@@ -180,15 +180,15 @@ ko:
   open: 열기
   no_dataset: (아직 데이터셋 없음)
   answer_folder: "정답 폴더 예시: {folder}"
-  readme_title: 케이스 설명 (README)
+  readme_title: 케이스 노트 (README)
   no_readme: (README 없음)
   untranslated: "아직 이 언어로 번역되지 않아 영어판을 보여 줍니다."
-  review_title: 리뷰 결과 (REVIEW)
+  review_title: 리뷰 발견 사항 (REVIEW)
   index_eyebrow: FDE-Bench v2
   index_title: 구축된 케이스
   index_intro: >-
-    케이스 {n}개. 각 링크는 케이스 설명 페이지로 이어집니다: 요청, 설정, 규칙, 숨은 요구사항, 질문 목표, 저장된
-    데이터와 정답, 리뷰 결과.
+    케이스는 {n}개입니다. 각 링크는 케이스 설명 페이지로 이어지며, 요청, 설정, 규칙, 숨은 요구사항, 질문 목표,
+    저장된 데이터와 정답, 리뷰 발견 사항을 보여 줍니다.
   field: 분야
   role: 역할
   case_id: 케이스 ID
@@ -197,7 +197,7 @@ ko:
   site_design: 설계
   site_catalog: 카탈로그
   site_source: GitHub 소스
-  site_english_only: (영어)
+  site_english_only: (영문)
 ja:
   language: 言語
   case_eyebrow: "{field} · FDE-Bench v2 ケース"
