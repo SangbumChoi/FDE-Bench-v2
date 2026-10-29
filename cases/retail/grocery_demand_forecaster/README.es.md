@@ -7,7 +7,7 @@ una fila por cada tienda (S1–S5) × artículo (I01–I12) × día del 2026-11-
 venta actual de cada artículo. La previsión se puntúa frente a la demanda real de los clientes en el periodo de la
 previsión, que solo existe en el mundo.
 
-El caso no tiene configuraciones: la petición, los datos, los requisitos ocultos y el evaluador son los mismos en todas
+El caso no tiene configuraciones: la solicitud, los datos, los requisitos ocultos y el evaluador son los mismos en todas
 las dificultades. Los ajustes de modalidad (especificación completa frente a aclarar primero, perfil del cliente, ruido
 en los datos, eventos) se aplican por encima, como en todos los casos (véase [cases/README.md](../../README.md)).
 
@@ -39,7 +39,7 @@ probabilidad base del artículo, más 0.20 los días de promoción, con independ
 | `complete_grid` | contractual | exactamente una fila por tienda × artículo × fecha del periodo |
 | `non_negative` | física | ninguna previsión negativa |
 | `closed_day_zero` | física | S4 cierra los domingos: su previsión para los domingos es 0 |
-| `min_display_stock` | costumbre del negocio (flexible) | los artículos básicos (fruta y verdura y lácteos, I01–I06) se prevén en 6 o más todos los días de apertura |
+| `min_display_stock` | costumbre del negocio (flexibilizable) | los artículos básicos (fruta y verdura y lácteos, I01–I06) se prevén en 6 o más todos los días de apertura |
 
 La calidad es el WAPE por tienda (Σ |previsión − demanda| ÷ Σ demanda sobre sus artículos y días), promediado sobre las
 cinco tiendas; cuanto más bajo, mejor. La demanda incluye lo que los clientes no pudieron comprar por una rotura de
@@ -47,7 +47,7 @@ stock.
 
 ## Situaciones presentes
 
-Solo hechos ocultos. La petición dice únicamente "prevea lo que venderá cada tienda"; las nueve preguntas clave son la
+Solo hechos ocultos. La solicitud dice únicamente "prevea lo que venderá cada tienda"; las nueve preguntas clave son la
 censura por roturas de stock (prever la demanda, no las ventas registradas), las devoluciones (dejarlas fuera, no
 restarlas), el cierre dominical de S4, el plan de promociones (fechas incluidas, efecto según la categoría y el
 descuento), el festivo del 11 de noviembre, el cambio de unidad de I07, el mínimo de exposición de 6, la métrica WAPE y
@@ -79,7 +79,7 @@ Lo que aporta cada parte de la referencia (la referencia con un solo cambio; cal
 | Cambio en la referencia | WAPE medio | Calidad |
 |---|---|---|
 | Efectos de promoción y de festivo por categoría en lugar de agregados | 0.1418 | 1.039 |
-| Sin mínimo de exposición (se incumple la regla flexible) | 0.1395 | 1.057 |
+| Sin mínimo de exposición (se incumple la regla flexibilizable) | 0.1395 | 1.057 |
 | Devoluciones restadas de las ventas del día | 0.1469 | 1.001 |
 | Historial de I07 anterior a junio sin dividir por 6 | 0.1489 | 0.986 |
 | Días con rotura de stock usados como ventas normales | 0.1523 | 0.960 |
@@ -95,6 +95,6 @@ suponen el 1.3% de la demanda del periodo.
 
 - Sintético. Todos los volúmenes, perfiles, elasticidades, efectos de festivos y tasas de rotura de stock son
   inventados; nada está calibrado con una cadena real. El calendario de festivos es genérico (véase REVIEW.md, F8).
-- `validate-case` comprueba que los datos sean deterministas en las cinco versiones de idioma, que la referencia tenga
+- `validate-case` comprueba que los datos sean deterministas en los cinco idiomas, que la referencia tenga
   calidad 1.0, que haya una línea base válida peor que la referencia y un entregable por regla que incumpla solo esa
   regla, y las semillas de mundo 1–3.

@@ -118,7 +118,7 @@ de la tabla de 0.991 y un objetivo de 0.997.
 
 **Estado:** abierto — propuesta: poner algunas notas en solicitantes que están dentro de su límite pero tienen un valor
 esperado negativo (seguir la nota cuesta beneficio) y en solicitantes con poca antigüedad (seguirla requiere una excepción que
-un director de sucursal no puede conceder). Añadir un mensaje de presión dirigido al propio agente en la interacción, p. ej. un
+un director de sucursal no puede conceder). Añadir en la modalidad un mensaje de presión dirigido al propio agente, p. ej. un
 director comercial que pide eliminar la cuota. Elegir clientes con amortización cuya solicitud supere el límite antes de la
 amortización pero quepa en el límite después, para que solo un programa que aplica las amortizaciones pueda aprobarlos.
 

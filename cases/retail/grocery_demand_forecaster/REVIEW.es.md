@@ -42,9 +42,9 @@ una banda en todas las semillas de mundo.
 ### F3 — El mínimo de exposición figuraba como 2 en `case.yaml` y como 6 en todo lo demás (alta, confirmado)
 
 `case.yaml` describía `min_display_stock` como "never forecast below 2 units", mientras que `MIN_DISPLAY = 6.0` en
-`case.py`, los requisitos de las cinco versiones de idioma y la pregunta clave dicen 6. El clasificador de excepciones ve
+`case.py`, los requisitos de los cinco idiomas y la pregunta clave dicen 6. El clasificador de excepciones ve
 el texto de `case.yaml` junto a los requisitos, de modo que al cliente se le mostraron ambas cifras justo en el momento
-en que importa la regla flexible, y el explicador (explainer) imprimía las dos. Un mínimo de 2 no se aplicaría nunca
+en que importa la regla flexibilizable, y la página explicativa imprimía las dos. Un mínimo de 2 no se aplicaría nunca
 (referencia 0.13948 frente a 0.13947 sin mínimo). La comprobación de números del validador no lo detectó porque "2"
 aparece en los requisitos como fecha ("Monday 2 November").
 
@@ -124,7 +124,7 @@ artículos envasados. Todo esto cambia los datos visibles.
 
 ### F9 — Redacción coreana (baja, en parte)
 
-Las cifras y los parámetros coinciden en las cinco versiones de idioma. Algunas expresiones coreanas eran calcos o
+Las cifras y los parámetros coinciden en los cinco idiomas. Algunas expresiones coreanas eran calcos o
 sonaban forzadas: "6개 미만" usa el clasificador de piezas para artículos que se venden por kg, "CSV 파일 하나,
 `forecast.csv`이며" sigue el orden de palabras del inglés, "빼 주세요 … 차감하지도 않습니다" mezcla una petición y una
 afirmación, y los nombres de tienda 북역점 / 호숫가점 son literales. El verificador señala que 개 es el clasificador
@@ -138,13 +138,13 @@ ahora "相殺もしないでください". Aun así, debería darle el visto bue
 ### F10 — Detalles de la documentación que confunden a los revisores (baja, confirmado)
 
 Los requisitos decían "one row per store, item and trading day", pero luego describen filas de devolución negativas
-aparte con la misma clave (1,286 filas de ese tipo). El explicador etiquetaba la especificación del entregable como
+aparte con la misma clave (1,286 filas de ese tipo). La página explicativa etiquetaba la especificación del entregable como
 "agent-visible", aunque solo la ve el extractor, y el caso no tenía un README con sus cifras de referencia y de línea
 base.
 
 **Estado:** corregido en este cambio — la nota sobre los datos dice ahora "one sales row per store, item and trading
-day, plus separate return rows" en las cinco versiones de idioma, y README.md da las cifras de la referencia, la línea
-base, el oráculo y la ablación. La etiqueta del explicador la genera el framework y en este commit ya dice "shown to the
+day, plus separate return rows" en los cinco idiomas, y README.md da las cifras de la referencia, la línea
+base, el oráculo y la ablación. La etiqueta de la página explicativa la genera el framework y en este commit ya dice "shown to the
 extractor … not to the agent".
 
 **Línea base:** ingenua estacional (el mismo día de la semana de la última semana del historial, domingos de S4 a 0,

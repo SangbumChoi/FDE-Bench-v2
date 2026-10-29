@@ -108,7 +108,7 @@ todos los niveles.
 
 Reproducido con el comprobador antiguo: un programa que nunca cita una primera visita con intérprete era válido en 9 de 9
 configuraciones (0.950–0.988), uno que cita al final las solicitudes que necesitan análisis era válido en 6 de 6 configuraciones
-medium/hard (0.998–1.006), y una revisión anulada un día y vuelta a citar al día siguiente para el día después no rompía ninguna
+medium/hard (0.998–1.006), y una revisión anulada un día y vuelta a citar al día siguiente para el día después no incumplía ninguna
 regla en los conjuntos de reglas A y C (preaviso 3 y 4; con preaviso 2 no puede ocurrir).
 
 **Estado:** corregido en este cambio — una primera visita en espera que necesita intérprete solo queda excusada cuando los
@@ -131,7 +131,7 @@ los médicos firmaban como «교수» y la secretaría como «의국», lo que a
 **Estado:** corregido en este cambio — «진료 가능 시작일(earliest_date)» en los requisitos coreanos, las preguntas clave y la
 etiqueta del orden del conjunto de reglas C; S = «준응급»; los médicos «{name} 과장» y la secretaría «{dept} 사무실» en los correos
 coreanos (con la partícula tras «과장» ajustada). Los correos japoneses siguen firmando como «医局», algo que quizá convenga que
-revise también un revisor nativo.
+revise también un hablante nativo.
 
 **Línea base:** la práctica de la oficina de citas sin un ingeniero: el programa de referencia, pero la reserva de urgencias nunca
 se libera para las consultas de mañana y (hard) nunca se sobrecita nada. Objetivo 0.806–0.812 en easy, 0.787–0.799 en medium y

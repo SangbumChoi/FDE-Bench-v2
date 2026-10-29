@@ -2,7 +2,7 @@
 
 Lo que encontró una revisión del caso (F1–F10) y lo que este cambio hizo con cada hallazgo. Las cifras son para la semilla 20261123 después de este cambio, salvo que un hallazgo indique otra cosa. El correo de precios del proveedor y su regla son del responsable del caso y no se modificaron.
 
-### F1 — Flexibilizar la costumbre de la doble fuente no compensa para un plan fuerte (alta, confirmado en parte)
+### F1 — Flexibilizar la costumbre de la doble fuente no compensa para un plan fuerte (alta, en parte)
 
 Los requisitos permiten una excepción a `dual_source_critical` "si ahorra dinero de verdad". Con la escala anterior, flexibilizar nunca compensaba: en un plan de búsqueda local ahorraba un 0.2–2.1% (0% en hard), la calidad se recortaba en 1.0 y una regla flexibilizada cuesta 0.05 o 0.1. La nueva escala solo premia flexibilizar a los planes débiles. Al nivel de la referencia, quitar el paso de segunda fuente reduce el objetivo un 2.5–4.8% en easy y medium. Eso sube la calidad normalizada de 1.0 a 1.27–3.25, que equivale a entre +0.11 y +0.20 de la puntuación final, más que la penalización. En un plan de búsqueda local, el mismo paso ahorra solo un 0.6–2.0% (0–0.3% en hard). Allí la calidad ya está por encima del tope de 1.5, salvo en easy/B (+0.02) y hard/B (+0.005). Así que la ganancia viene de la estrecha diferencia con la línea base (F2), no de lo que cuesta la costumbre.
 
@@ -34,7 +34,7 @@ La documentación también se había desviado. La tabla del README llevaba la et
 
 Abierto — propuesta (decisión del responsable): hacer que el correo importe subiendo el precio de un componente o proveedor del que dependa el plan, como las pantallas de S08, las PCB de S05 o C01 en S04. Dar la fecha de entrada en vigor como una fecha de calendario a mitad de semana y dejar que el agente deduzca aprobado frente a pendiente a partir de un hilo. Entregarlo como `.eml` localizado desde un dominio de proveedor, con una pregunta clave. Resolver las declaraciones de procedencia: citar o eliminar la filiación de ReflectionAI y Apex tras una comprobación de licencias y de contaminación.
 
-### F4 — La espera se valora por pieza del componente, no por placa (alta, confirmado en parte)
+### F4 — La espera se valora por pieza del componente, no por placa (alta, en parte)
 
 La espera cuesta 5× el costo estándar del componente por pieza y semana, por separado para cada componente, así que la falta de un componente barato apenas cuenta. La referencia de hard/A deja esperando 11,366 piezas-semana del MLCC C10 de 6 KRW, unas 384–392 placas-semana, por 0.34 M KRW. El material de una placa cuesta 18,210 KRW (B100) o 37,534 KRW (B200). Por placa-semana, la falta de C10 cuesta unos 890 KRW frente a 74,000 de la pantalla, unas 83×; las 2,500× de la revisión son el cociente por pieza.
 
@@ -65,7 +65,7 @@ El README dice que el caso no está ligado a ningún país salvo por un dato. Si
 
 ### F8 — No hay ningún evento fechado ni ninguna presión que funcione (media, confirmado)
 
-El correo está fechado el 2026-11-20, antes de W1, y es un archivo estático. El cliente no recibe correos posteriores, y la única regla flexible es la de F1, así que las únicas situaciones que el caso tiene de verdad son hechos ocultos. Modelar los retrasos sí importa en hard. La búsqueda local del verificador que ignora los retrasos obtuvo 0.922 en hard/A y 0.956 en hard/B; la misma búsqueda sobre las estimaciones del historial obtuvo 1.120 y 1.097.
+El correo está fechado el 2026-11-20, antes de W1, y es un archivo estático. El cliente no recibe correos posteriores, y la única regla flexibilizable es la de F1, así que las únicas situaciones que el caso tiene de verdad son hechos ocultos. Modelar los retrasos sí importa en hard. La búsqueda local del verificador que ignora los retrasos obtuvo 0.922 en hard/A y 0.956 en hard/B; la misma búsqueda sobre las estimaciones del historial obtuvo 1.120 y 1.097.
 
 **Estado:** abierto — propuesta: construir una variante semanal de programa de hard sobre `casekit.program_session`. Cada semana el programa recibiría las llegadas realizadas, y llegarían eventos fechados durante la ejecución: la revisión de precios en W3, un recorte de asignación en enero, el levantamiento anticipado de la retención de S05. Añadir una situación de presión puntuada mediante el procedimiento de excepción existente, por ejemplo un jefe de planta que pide aceptar los lotes retenidos de S05 "solo esta vez", o comprarlo todo a S09.
 
@@ -79,7 +79,7 @@ El correo está fechado el 2026-11-20, antes de W1, y es un archivo estático. E
 
 - ko:59 "…입고 예정이지 않습니다" era agramatical.
 - ko:80 aplicaba el cambio del correo "a la semana del pedido".
-- ko:42 (y zh:42 必须, ja:42 必ず) convertía la costumbre flexible en una obligación.
+- ko:42 (y zh:42 必须, ja:42 必ず) convertía la costumbre flexibilizable en una obligación.
 - El párrafo del correo estaba en las notas sobre los datos en en, pero al final de la sección de evaluación en los demás idiomas.
 - zh:80 aplicaba el cambio solo a los precios de los tramos.
 - S09 aparece en los textos como "익스프레스파츠" y "Express Parts", pero en los datos como "익스프레스파츠코리아" y "Express Parts Korea".

@@ -10,7 +10,7 @@ referidos) está en los requisitos ocultos y hay que preguntarlo. El entregable 
 (`role_id,candidate_id,rank`, 8 filas por puesto).
 
 El caso no tiene configuraciones: el mismo problema se puntúa en todas las dificultades. Los ajustes de la modalidad
-(especificación completa o preguntar primero, perfil del cliente, ruido en los datos, eventos) se aplican encima, como en
+(especificación completa o aclarar primero, perfil del cliente, ruido en los datos, eventos) se aplican encima, como en
 todos los casos (véase [cases/README.md](../../README.md)).
 
 ## Datos
@@ -135,4 +135,4 @@ aprendiz del oráculo (revisión F1).
 - Todos los números de esta página salen de `case.py` (`_solve`, `check`, `_fit_value`); los paneles y las regresiones son
   un script de análisis, no forman parte del caso.
 - `validate-case` comprueba el determinismo en los cinco idiomas, la referencia con calidad 1, una línea base válida y peor,
-  un ejemplo que incumple cada regla y las semillas de mundo 1–3.
+  un ejemplo de incumplimiento por regla y las semillas de mundo 1–3.

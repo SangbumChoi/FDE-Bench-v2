@@ -402,18 +402,18 @@ es:
   nav_targets: Preguntas clave
   nav_data: Datos y respuestas
   nav_readme: Notas del caso
-  nav_review: Resultados de la revisión
+  nav_review: Hallazgos de la revisión
   request_title: Lo que se le pide al agente
   request_intro: La solicitud del cliente, el único texto que el agente recibe de entrada. Es la misma en todas las configuraciones.
   spec_title: "Especificación del entregable ({label})"
   spec_program: la interfaz del programa
   spec_batch: la recibe el extractor que convierte los archivos del agente al formato fijado, no el agente
-  spec_translation: "Traducción de lectura; el agente y el extractor reciben el original en inglés:"
+  spec_translation: "Traducción orientativa; el agente y el extractor reciben el original en inglés:"
   settings_title: "Configuraciones: un conjunto de datos, {n} soluciones correctas"
   settings_intro: >-
     El agente ve la misma solicitud y los mismos datos en todas las configuraciones. El <strong>nivel</strong>
     (= dificultad) decide qué reglas se aplican; el <strong>conjunto de reglas</strong> fija sus parámetros. Cada
-    dificultad se informa como la media de los conjuntos A, B y C.
+    dificultad se presenta como la media de los conjuntos de reglas A, B y C.
   tiers: Niveles
   tier: Nivel
   in_force: Qué se aplica
@@ -422,8 +422,8 @@ es:
   no_settings: "Este caso no tiene configuraciones: es el mismo problema fijo en todas las dificultades."
   rules_title: Reglas
   rules_intro: >-
-    Romper cualquier regla invalida el entregable, salvo que la política de la empresa en esa ejecución permita
-    flexibilizar su tipo de regla y el agente haya seguido el procedimiento de excepción.
+    Incumplir cualquier regla invalida el entregable, salvo que la política de la empresa en esa ejecución permita
+    flexibilizar ese tipo de regla y el agente haya seguido el procedimiento de excepción.
   rule: Regla
   class: Tipo
   description: "Descripción (los parámetros entre {{…}} vienen del conjunto de reglas)"
@@ -441,7 +441,7 @@ es:
   not_available: (no disponible)
   targets_title: Preguntas clave
   targets_intro: >-
-    Los hechos que un buen ingeniero debería preguntar al cliente; el Ask-F1 se calcula con ellos.
+    Los hechos por los que un buen ingeniero debería preguntar al cliente; el Ask-F1 se calcula sobre ellos.
     <code>{{param}}</code> se completa con el conjunto de reglas.
   target: Pregunta
   kind: Clase
@@ -456,8 +456,8 @@ es:
   hidden_inputs: Entradas ocultas
   scores_title: Puntuación de referencia por configuración
   scores_intro: >-
-    La calidad se normaliza por configuración: la línea base (el entregable válido más simple) vale 0, la solución
-    de referencia 1, y lo que la supera pasa de 1 (puntuación completa en el tope de calidad de la política).
+    La calidad se normaliza por configuración: la línea base (el entregable válido más simple) vale 0, la referencia
+    1, y lo que la supera pasa de 1 (la puntuación completa se alcanza en el tope de calidad de la política).
   reference_objective: Objetivo de la referencia
   baseline_objective: Objetivo de la línea base
   metrics: Métricas (las cuatro primeras)
@@ -468,17 +468,17 @@ es:
   readme_title: Notas del caso (README)
   no_readme: (sin README)
   untranslated: "Aún no está traducido a este idioma; se muestra la versión en inglés."
-  review_title: Resultados de la revisión (REVIEW)
+  review_title: Hallazgos de la revisión (REVIEW)
   index_eyebrow: FDE-Bench v2
-  index_title: Casos construidos
+  index_title: Casos implementados
   index_intro: >-
     {n} casos. Cada enlace abre la página explicativa del caso: solicitud, configuraciones, reglas, requisitos
-    ocultos, preguntas clave, datos y respuestas guardados, y resultados de la revisión.
+    ocultos, preguntas clave, datos y respuestas guardados, y hallazgos de la revisión.
   field: Área
   role: Rol
-  case_id: Id del caso
+  case_id: ID del caso
   site_cases: Todos los casos
-  site_direction: Dirección
+  site_direction: Orientación
   site_design: Diseño
   site_catalog: Catálogo
   site_source: Código en GitHub

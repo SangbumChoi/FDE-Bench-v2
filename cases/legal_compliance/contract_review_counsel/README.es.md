@@ -8,7 +8,7 @@ contratación de la empresa (siete puntos con sus umbrales), los códigos de inc
 rápida para contratos pequeños están en los requisitos ocultos, y el agente tiene que preguntárselos al cliente.
 
 El caso no tiene configuraciones: un mundo, una solución correcta, el mismo problema en todas las dificultades. Los
-parámetros de la interacción (especificación completa frente a aclarar primero, perfil del cliente, ruido en los datos,
+ajustes de la modalidad (especificación completa frente a aclarar primero, perfil del cliente, ruido en los datos,
 eventos) se aplican por encima, como en todos los casos (véase [cases/README.md](../../README.md)).
 
 ## Datos
@@ -22,7 +22,7 @@ eventos) se aplican por encima, como en todos los casos (véase [cases/README.md
   cláusulas (objeto y duración, precio y forma de pago, confidencialidad, protección de datos cuando la hay,
   indemnidad, limitación de responsabilidad, resolución, ley aplicable y jurisdicción). Los contratos están redactados
   en el idioma del cliente. Seis de ellos (C012, C021, C024, C028, C032, C036) son contratos propios del proveedor en
-  otro idioma: español para un cliente de habla inglesa e inglés para las otras cuatro configuraciones regionales.
+  otro idioma: español para un cliente de habla inglesa e inglés para los otros cuatro idiomas.
 - Importes con la semilla 20261026: 8 contratos por debajo de USD 20,000 (de 7,500 a 19,000), 14 entre 26,000 y
   131,500 y 18 entre 268,000 y 1,176,500.
 
@@ -74,7 +74,7 @@ Por encima de la vía rápida (32 contratos) hay 58 códigos; las decisiones all
 ## Referencia y línea base
 
 La **referencia** es una lista de comprobación literal por palabras clave que lee la versión en inglés de cada
-contrato (sea cual sea la configuración regional) y respeta la vía rápida. Maneja las cifras, los números escritos en
+contrato (sea cual sea el idioma) y respeta la vía rápida. Maneja las cifras, los números escritos en
 palabras para los días de pago y "one half of", y pasa por alto las paráfrasis. **Línea base**: firma todos los
 contratos tal como están, sin incidencias y con la decisión `sign` (lo que hace el cliente sin un revisor). Ambas son
 válidas. La calidad normalizada es (objetivo − línea base) / (referencia − línea base).
@@ -133,6 +133,6 @@ componente de calidad con esta semilla (REVIEW.md F1).
 - El importe del registro equivale por definición a «el importe anual del contrato». El objeto del contrato siempre
   coincide con la categoría del registro, así que el punto de protección de datos consiste en consultar la categoría y
   comprobar la cláusula.
-- `validate-case` comprueba datos deterministas en cinco configuraciones regionales, una referencia válida con
+- `validate-case` comprueba datos deterministas en los cinco idiomas, una referencia válida con
   calidad 1.0, una línea base válida por debajo de ella, un entregable por regla que incumple solo esa regla y las
   semillas de mundo 1–3.

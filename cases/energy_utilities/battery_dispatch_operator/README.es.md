@@ -47,7 +47,7 @@ La referencia es una regla voraz de dos ciclos al día sobre los precios previst
 
 La línea base es el emplazamiento sin plan de despacho: la batería se queda al 50% toda la semana y la planta vende solo la energía solar; beneficio de la batería **0.00 EUR** (válido; no se mueve nada, así que ninguna regla puede incumplirse). Con una línea base de cero, la calidad normalizada equivale al simple cociente respecto a la referencia.
 
-| Semilla del mundo | Referencia (EUR) | Línea base (EUR) | LP sobre la previsión (EUR, q) | LP con previsión perfecta (EUR, q) | Referencia sin la reserva (EUR) |
+| Semilla de mundo | Referencia (EUR) | Línea base (EUR) | LP sobre la previsión (EUR, q) | LP con previsión perfecta (EUR, q) | Referencia sin la reserva (EUR) |
 |---|---|---|---|---|---|
 | 20270322 | 18,084.35 | 0.00 | 21,343.2, 1.180 | 23,099.9, 1.277 | 19,733.9 |
 | 1 | 18,742.76 | 0.00 | 21,733.8, 1.160 | 23,388.3, 1.248 | 20,269.6 |

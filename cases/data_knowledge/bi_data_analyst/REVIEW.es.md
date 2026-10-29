@@ -20,26 +20,26 @@ con cifras exactas.
 500 KRW de la cifra exacta, lo que sea más amplio, de modo que la cifra exacta redondeada al millar más cercano
 siempre cuenta. La sección «Cómo se evalúan las respuestas» y la pregunta clave `report_rounding` lo dicen en los cinco
 idiomas. `violating_examples` comprueba ahora que las respuestas exactas, redondeadas como exige finanzas, obtienen
-12/12 sin ninguna infracción en todos los mundos que construye el validador; así ocurre en las semillas 1–20. La
+12/12 sin ningún incumplimiento en todos los mundos que construye el validador; así ocurre en las semillas 1–20. La
 referencia sube de 9 a 11 (Q07 y Q09 ahora cuentan), y seguir la regla ya no cuesta ninguna pregunta: la hoja con días
 en UTC obtiene 9/12 redondeando o con cifras exactas. La objeción del verificador se mantiene: no se añadió ninguna
 comprobación general de que «flexibilizar nunca ayuda», porque en otros casos las reglas flexibilizables están
 pensadas para costar objetivo. Segundo cambio: la unidad de redondeo es ahora un parámetro del conjunto de reglas
 (1,000 / 10,000 / 100 KRW), la tolerancia monetaria es del 0.5 % o media unidad, y la misma comprobación (objetivo
-1.0, ninguna infracción) se ejecuta en las nueve configuraciones.
+1.0, ningún incumplimiento) se ejecuta en las nueve configuraciones.
 
 ### F2 — Sin margen entre la referencia y el techo (alta, confirmado)
 
 La referencia es `compute()` sin el cambio de nombre de la categoría. Con la antigua escala recortada obtenía 9, y
 cualquier hoja con 9 o más aciertos recibía la calidad completa. Con la corrección de F1 y la nueva escala, el
 problema se invierte. La referencia obtiene 11 y la línea base 0, así que una hoja perfecta tiene una calidad
-normalizada de 12/11 = 1.09. Con el tope de la política de 1.5, una hoja perfecta solo obtiene el 73 % del crédito de
-calidad, y el cambio de nombre (Q06) es el único hecho que la separa de la referencia.
+normalizada de 12/11 = 1.09. Con el tope de la política de 1.5, una hoja perfecta solo obtiene el 73 % de la puntuación
+de calidad, y el cambio de nombre (Q06) es el único hecho que la separa de la referencia.
 
 **Estado:** abierto, y modificado por el segundo cambio (F10). La referencia sigue fallando solo el cambio de nombre,
 y Q06 solo se puntúa en hard. Por eso, en easy y medium la referencia acierta todas las preguntas puntuadas y *es* el
 techo: una hoja perfecta tiene calidad normalizada 1.000 en esas seis configuraciones. Con el tope de la política de
-1.5, la mejor hoja posible obtiene allí el 67 % del crédito de calidad. En hard, la hoja perfecta obtiene 1.091 (A),
+1.5, la mejor hoja posible obtiene allí el 67 % de la puntuación de calidad. En hard, la hoja perfecta obtiene 1.091 (A),
 1.125 (B) y 1.091 (C) con la semilla pública: la referencia deja Q06 como «no sé» con A y C, y la falla con B. Su
 objetivo es 0.958 / 0.917 / 0.979 en todas las semillas comprobadas (1–20), y las líneas base apenas mueven la cifra
 normalizada. La propuesta anterior (`quality_cap: 1.09`) ya no encaja. Un único tope para todo el caso no puede dar la
@@ -162,8 +162,8 @@ y no estaba en la lista de correcciones.
 ### F9 — El control de cuentas de prueba es más estrecho que el texto de su regla (baja, en parte)
 
 El control solo comprueba que Q03, Q04, Q05 y Q10 no sean exactamente iguales a la cifra en hora de Corea que incluye
-las cuentas de prueba. Las respuestas monetarias que incluyen las cuentas de prueba pasan la validez (8/12, ninguna
-infracción), y también una hoja que excluye solo la cuenta 10027 (4/12). Los requisitos ya describían bien el control;
+las cuentas de prueba. Las respuestas monetarias que incluyen las cuentas de prueba pasan la validez (8/12, ningún
+incumplimiento), y también una hoja que excluye solo la cuenta 10027 (4/12). Los requisitos ya describían bien el control;
 case.yaml no.
 
 **Estado:** corregido en el primer cambio. La regla de case.yaml dice ahora «una respuesta de recuento o de

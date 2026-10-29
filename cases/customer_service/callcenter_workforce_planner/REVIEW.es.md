@@ -9,7 +9,7 @@ corresponden a la semilla pública 20261109 salvo que se indique otra cosa; la c
 Un MILP exacto del mismo modelo (HiGHS de scipy, unas 2,000 variables binarias, optimalidad demostrada en unos 8 s) llega a
 23,464 frente a los 25,584 de la referencia (ratio 1.090; 75 frente a 183 agentes-franja sin cubrir). En el momento de la
 revisión la calidad se recortaba en 1.0, así que este margen no daba ningún punto, e ignorar el festivo, el recargo por horas
-extra o el peso no costaba nada. Con el nuevo marco (sin recorte por arriba, puntuación completa en el tope de la política de
+extra o el peso no costaba nada. Con el nuevo framework (sin recorte por arriba, puntuación completa en el tope de la política de
 1.5) y esta línea base, el óptimo obtiene 1.180, un óptimo que ignora el festivo 1.145 y uno que ignora las horas extra o el
 peso 1.172. Estas diferencias ahora cuentan, pero son pequeñas.
 
@@ -43,7 +43,7 @@ que el óptimo usa 126 de los 130 turnos posibles. El peso no tenía un signific
 **Estado:** corregido en este cambio — los requisitos en los cinco idiomas indican ahora qué significa el 40: está en las mismas
 unidades que las tarifas por hora y es la estimación del cliente de lo que cuesta que falte un agente durante media hora en
 llamadas abandonadas, rellamadas y niveles de servicio incumplidos (el número no cambia). El suelo alto desaparece con la
-normalización por la línea base: el cuadrante de un solo turno obtiene −2.57, que se trunca a 0. Sigue abierto — propuesta:
+normalización por la línea base: el cuadrante de un solo turno obtiene −2.57, que se acota en 0. Sigue abierto — propuesta:
 bajar el peso al rango 15–30 o variarlo por conjunto de reglas (F2), donde las horas extra y la elección entre jornada completa
 y media jornada sí pesan. La restricción obligatoria de cobertura mínima que se sugirió no tiene solución en este mundo (el
 verificador: solo hay 4 agentes zh veteranos).
@@ -75,7 +75,7 @@ dice `12/11/2026–12/11/2026`), de modo que los datos públicos no tienen ning�
 afecta a la puntuación, así que no cambia el óptimo de ningún mundo. Leídas como mes/día, las fechas siguen cayendo entre
 septiembre y diciembre, por lo que un agente atento todavía puede deducir el formato. En las semillas de mundo 1 y 3, las
 ausencias aprobadas de viernes a domingo siguen mostrando los días 13–15. No reproducido: la parte del descanso. Un optimizador
-que no conoce la regla produce 13 infracciones de `min_rest`, así que el descanso es una trampa obligatoria que sí tiene efecto. Sigue
+que no conoce la regla produce 13 incumplimientos de `min_rest`, así que el descanso es una trampa de validez que sí tiene efecto. Sigue
 abierto — propuesta: expresar la demanda en unidades más grandes (p. ej. 2–12 por franja) o redondear al más cercano, de modo
 que ignorar el festivo cueste al menos un 3%. Asignar la solicitud rechazada a un agente escaso en un día de pico. Marcar las
 preguntas clave que se pueden deducir de los datos, o eliminarlas, para que el Ask-F1 no premie preguntarlas.
@@ -117,12 +117,12 @@ Al agente se le dice que no se especificó ningún formato de archivo. La forma 
 ocultos, así que un cuadrante de unas 120 filas puede pasar por el extractor, y una sola fila mal transcrita lo invalida. El
 verificador señala que basta una pregunta al cliente para obtener el formato, que un `roster.json` escrito por el agente se
 copia directamente y que el extractor puede convertir un CSV con un script. La etiqueta "agent-visible" de la página
-explicativa se corrigió después en el marco.
+explicativa se corrigió después en el framework.
 
 **Estado:** abierto — propuesta: añadir, antes del extractor LLM, un analizador previo determinista para las formas habituales
-de cuadrante (CSV/xlsx con columnas de agente, día, turno e idioma, nombres de idioma localizados) y registrar las infracciones
+de cuadrante (CSV/xlsx con columnas de agente, día, turno e idioma, nombres de idioma localizados) y registrar los incumplimientos
 que introdujo el extractor por separado de las del agente. Otra opción es dejar una plantilla de cuadrante en el espacio de
-trabajo. Cualquiera de las dos es una decisión del marco o del diseño, no una corrección del caso.
+trabajo. Cualquiera de las dos es una decisión del framework o del diseño, no una corrección del caso.
 
 **Línea base:** rotación fija (el mismo turno toda la semana en el idioma principal, 4 días normales para jornada completa y 3
 para media jornada, las personas de nuevo ingreso acompañando a un veterano), objetivo 37,376 frente a los 25,584 de la

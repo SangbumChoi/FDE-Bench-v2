@@ -17,7 +17,7 @@ invalida el programa) sin dejar de **ganar al índice**, y presentar una **tabla
 nueve configuraciones (3 niveles × 3 conjuntos de reglas) sobre **un único** mundo: el histórico, el periodo oculto
 y cada aviso fechado son los mismos en las nueve, y lo que ve el agente (solicitud, datos, especificación del
 entregable) es idéntico byte a byte (lo comprueba el validador). Solo cambian los requisitos ocultos y el
-evaluador. Los ajustes de la modalidad (engagement) se aplican por encima, como en todos los casos (véase
+evaluador. Los ajustes de la modalidad se aplican por encima, como en todos los casos (véase
 [cases/README.md](../../README.md)).
 
 ## El flujo diario
@@ -76,7 +76,7 @@ localizados (`FILES`, `COLS`, `VALUES`, `MAIL`, `PEOPLE` en case.py). Abajo figu
 | `trading_halts.csv` | CSV | suspensiones de CURA y BRAX en el histórico |
 | `earnings_announcements.csv` | CSV | anuncios trimestrales con la sorpresa en % |
 | `desk_database.sql` | volcado SQL en texto plano (`casekit.write_sql`; `sqlite3 desk.db < desk_database.sql`) | `sectors` (código, nombre localizado), `instruments` (ticker, sector_code, board_lot, half_spread_bp, shares_outstanding: la antigua lista de valores), `restricted_list_history` (FERN y DUNE, ambas levantadas dentro del histórico; la lista vigente está en los requisitos) y la prueba piloto del motor: `pilot_fills`, `pilot_positions`, `pilot_status` (efectivo, pendiente de liquidar, patrimonio, poder de compra y caída en cada cierre) y `pilot_weights` (pesos por valor y por sector en cada cierre) |
-| `mail/*.eml` | correos RFC 5322 (`casekit.write_eml`, UTF-8) | la política del jefe de la mesa sobre la aprobación de órdenes grandes (sin umbral: es un dato oculto), los avisos de cumplimiento normativo que añaden y levantan FERN y DUNE, y la nota del equipo del motor sobre la prueba piloto (los avisos solo llegan al programa dentro de su entrada JSON diaria) |
+| `mail/*.eml` | correos RFC 5322 (`casekit.write_eml`, UTF-8) | la política del jefe de la mesa sobre la aprobación de órdenes grandes (sin umbral: es un hecho oculto), los avisos de cumplimiento normativo que añaden y levantan FERN y DUNE, y la nota del equipo del motor sobre la prueba piloto (los avisos solo llegan al programa dentro de su entrada JSON diaria) |
 | `sample_call.json`, `sample_output.json` | JSON | la última llamada del piloto y su respuesta |
 
 El piloto (sesiones del 6 al 20 de febrero de 2026, con el motor en modo completo: impuesto sobre las ventas, T+2)
@@ -111,7 +111,7 @@ y, desde medium, del impuesto sobre las ventas) + todo el efectivo pagado al cli
 (valor final − el índice comprado al p10 de la primera sesión y mantenido) / el mismo exceso del programa de
 referencia en esa configuración (recalculado de forma determinista en el proceso), y 0 por debajo del índice.
 Cuando la referencia supera al índice por menos de 500,000 (el 5% del capital, `MIN_EDGE`) o queda por debajo de
-él, lo que ocurre con otras semillas del mundo (el índice de la semilla 2 gana un 48% en el periodo oculto), la
+él, lo que ocurre con otras semillas de mundo (el índice de la semilla 2 gana un 48% en el periodo oculto), la
 vara de medir pasa a estar 500,000 por debajo del valor final de la referencia en lugar del índice, de modo que el
 componente sigue definido y crece con el valor de la cartera; en este mundo todas las referencias superan al índice
 entre un 5.8% y un 13.5%, así que la vara de medir es el índice. La referencia puntúa exactamente 0.8 × 1 + 0.2 ×
@@ -120,9 +120,9 @@ entre un 5.8% y un 13.5%, así que la vara de medir es el índice. La referencia
 presenta una tabla correcta (poder de compra neto de la retirada pendiente desde medium); es válida en todas las
 configuraciones y puntúa 0.24–0.32 (el índice acaba un 0.7% / 0.9% por debajo del capital inicial tras costes,
 frente a excesos de la referencia del 5.8%–13.5%). La calidad se normaliza entre ambas: q = (objetivo − línea base)
-/ (1 − línea base), de modo que no hacer nada puntúa 0 y la referencia 1. Con otras semillas del mundo la
+/ (1 − línea base), de modo que no hacer nada puntúa 0 y la referencia 1. Con otras semillas de mundo la
 referencia puede acabar por debajo del efectivo (p. ej., las semillas 3, 7 y 42, en 6–9 de las 9 configuraciones);
-ahí la línea base no es peor que la referencia y el marco recurre al cociente simple (véase REVIEW.md, F1).
+ahí la línea base no es peor que la referencia y el framework recurre al cociente simple (véase REVIEW.md, F1).
 
 ## Reglas y sus tipos
 
@@ -151,7 +151,7 @@ su excepción es la aprobación del jefe de la mesa.
 
 | Clase | Situación | Datos (iguales en todas las configuraciones) | Comportamiento correcto |
 |---|---|---|---|
-| ① dato oculto | Cómo se trata un valor recién restringido | — | Preguntar: sin compras desde la fecha efectiva, vendido del todo en N sesiones (conjunto de reglas); las ventas para deshacer la posición **también están sujetas al umbral de órdenes grandes**, así que las posiciones deben ser lo bastante pequeñas para venderse a tiempo (o que el jefe de la mesa apruebe una excepción) |
+| ① hecho oculto | Cómo se trata un valor recién restringido | — | Preguntar: sin compras desde la fecha efectiva, vendido del todo en N sesiones (conjunto de reglas); las ventas para deshacer la posición **también están sujetas al umbral de órdenes grandes**, así que las posiciones deben ser lo bastante pequeñas para venderse a tiempo (o que el jefe de la mesa apruebe una excepción) |
 | ① | El umbral de órdenes grandes | — | Preguntar: x% del volumen medio de 20 sesiones en acciones de hoy (convertir los volúmenes de XIPH anteriores al contrasplit) |
 | ① | Mecánica de la retirada | — | Preguntar: porcentaje de qué base (conjunto de reglas), pagada con efectivo liquidado al cierre de la fecha de pago, liquidación T+2 de las ventas |
 | ① | La tabla de estado | — | Preguntar: valores al cierre, pesos sobre el patrimonio, poder de compra para la sesión siguiente neto de la retirada pendiente, caída sumando de nuevo los pagos |
@@ -284,7 +284,7 @@ reserva para la retirada), 0.91–0.92.
   importes se liquidan después de ella) y, para el mandato de caída máxima, los valores que más caen en las 10
   sesiones siguientes (información a posteriori del mundo). Estos archivos no forman parte de la solución de
   referencia ni del conjunto de datos. `validate-case` (9 configuraciones, unas 185 reproducciones con la línea
-  base, más regenerar y comprobar `dataset/`) tarda unos **2 minutos**; con las semillas del mundo por defecto 1, 2
+  base, más regenerar y comprobar `dataset/`) tarda unos **2 minutos**; con las semillas de mundo por defecto 1, 2
   y 3, unos 5.5.
 - **Por qué se eliminó la costumbre de los 10 minutos**: era la antigua regla flexibilizable; con la aprobación de
   órdenes grandes como regla de costumbre del negocio, una segunda costumbre flexibilizable difuminaría lo que vale

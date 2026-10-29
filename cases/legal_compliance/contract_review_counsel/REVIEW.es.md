@@ -14,7 +14,7 @@ el foro leído como ley aplicable, límites iguales al importe marcados, contrat
 seguía recibiendo la puntuación completa. En la escala actual (línea base 0, tope de la política 1.5) y después de F2,
 la referencia obtiene 0.8825 y la revisión con información completa 1.0 (calidad 1.153). Los errores de una sola
 trampa puntúan ahora 1.045–1.094 (1.018 cuando se omiten a la vez la renovación y el desistimiento), así que se
-distinguen, pero la mejor revisión posible solo alcanza 1.153 / 1.5 ≈ 0.77 del crédito de calidad. Con las semillas
+distinguen, pero la mejor revisión posible solo alcanza 1.153 / 1.5 ≈ 0.77 de la puntuación de calidad. Con las semillas
 de mundo 1–3 el techo es 1.196, 1.239 y 1.320.
 
 **Estado:** abierto — propuesta: reforzar la referencia para que resuelva los tipos de paráfrasis que hoy se le
@@ -38,7 +38,7 @@ incidencias» cuando la revisión mantiene la vía rápida. Solo usa las inciden
 revisión incumple la regla, y esa revisión solo cuenta una vez que la regla se flexibiliza mediante una excepción
 aprobada. La referencia sube de 0.7677 a 0.8825 (fn 20 → 9, exactitud de decisiones 0.70 → 0.90). La referencia con
 la vía rápida flexibilizada obtiene 0.8595 (calidad 0.970) antes de la penalización, de modo que flexibilizar nunca
-compensa. La frase sobre la calidad de requirements.md lo dice en las cinco configuraciones regionales. Sigue abierto:
+compensa. La frase sobre la calidad de requirements.md lo dice en los cinco idiomas. Sigue abierto:
 un motivo puntuado para flexibilizar (p. ej., un contrato pequeño de TI que trata datos personales sin cláusula de
 protección de datos, donde una excepción aprobada más marcar la incidencia supera a respetar la regla). También
 abierta: la fila del catálogo en cases/README.md ("Accept vendor paper under a value threshold"), que queda fuera del
@@ -82,7 +82,7 @@ Los datos están limpios y son coherentes entre sí. `write_data` solo escribe l
 bandeja de entrada, modificaciones, hojas de pedido ni fechas. La frase del objeto es fija por categoría, así que el
 punto de protección de datos se resuelve consultando el registro. El importe del registro es por definición «el
 importe anual del contrato». La única presión es la costumbre de la vía rápida, y empuja hacia trabajar menos, no
-hacia una infracción tentadora.
+hacia un incumplimiento tentador.
 
 **Estado:** abierto — propuesta: añadir situaciones puntuadas. Hechos ocultos: un contrato de marketing o de
 servicios profesionales cuyo objeto indica que trata la lista de clientes de la empresa, de modo que necesita una
@@ -109,21 +109,21 @@ hacia el 40–50%.
 ### F7 — Dificultad desigual entre idiomas y algunas cadenas poco naturales (media, confirmado)
 
 Los contratos propios del proveedor están en inglés en zh, ko, ja y es, y solo en español en en, así que cuatro
-configuraciones regionales reciben el segundo idioma más fácil. Los límites fijos parafraseados se dividían por
+de las cinco versiones reciben el segundo idioma más fácil. Los límites fijos parafraseados se dividían por
 10,000 incluso por debajo de 10,000: C023 (límite de USD 5,000) decía "미화 0.5만 달러", "0.5万米ドル" y "0.5万美元". La
 variante coreana del pago en cifras dice "세금계산서" (una factura fiscal coreana del IVA), mientras que las demás
 variantes y los criterios dicen 청구서. requirements.md y targets.yaml en ko contienen el duplicado "검토 없이 이슈
-없이". Las cifras y los umbrales coinciden en las cinco configuraciones regionales.
+없이". Las cifras y los umbrales coinciden en los cinco idiomas.
 
 **Estado:** corregido en este cambio (solo los importes) — los límites parafraseados por debajo de 10,000 se escriben
 ahora como lo haría un hablante nativo: "五千美元", "미화 5천 달러", "5,000米ドル" (aquí, C023). A partir de 10,000, ko y
 ja separan un importe que no es un número exacto de miles ("99만 5,500달러", "99万5,500米ドル", visto con la semilla de
 mundo 5); los importes redondos conservan la forma 万/만 ("2.5만 달러"). Solo cambian los textos de los contratos en
 zh/ko/ja; la solución correcta y la referencia no. Sigue abierto — propuesta: usar para los contratos propios del
-proveedor un tercer idioma que nunca sea el inglés ni el del cliente (alemán o francés) en todas las configuraciones
-regionales. Usar 청구서 en toda la redacción coreana sobre el pago. Reformular la frase coreana de la vía rápida como
-"법무 검토를 거치지 않고 이슈 없음(빈 목록), `sign`으로 처리합니다". Pedir una revisión por hablantes nativos de las cinco
-configuraciones regionales.
+proveedor un tercer idioma que nunca sea el inglés ni el del cliente (alemán o francés) en todos los
+idiomas. Usar 청구서 en toda la redacción coreana sobre el pago. Reformular la frase coreana de la vía rápida como
+"법무 검토를 거치지 않고 이슈 없음(빈 목록), `sign`으로 처리합니다". Pedir una revisión por hablantes nativos de los cinco
+idiomas.
 
 ### F8 — Una pregunta clave agrupaba tres hechos (media, en parte)
 
@@ -133,8 +133,8 @@ verificador corrigió dos afirmaciones secundarias. Primero, `deliverable_spec` 
 agente. Segundo, el extractor solo se ejecuta cuando no existe `review.json`, así que los códigos inventados en el
 propio `review.json` de un agente siguen siendo fatales.
 
-**Estado:** corregido en este cambio — la pregunta clave se divide en `issue_codes` y `decision_rule` en las cinco
-configuraciones regionales (en el mismo orden), y se elimina la cláusula de puntuación. La página explicativa ya
+**Estado:** corregido en este cambio — la pregunta clave se divide en `issue_codes` y `decision_rule` en los cinco
+idiomas (en el mismo orden), y se elimina la cláusula de puntuación. La página explicativa ya
 indica que la especificación del entregable se muestra al extractor, no al agente. Sigue abierto — propuesta: añadir
 preguntas clave separadas para las reglas límite reales («un límite igual al importe es correcto», «un contrato sin
 límite es correcto», «el foro no importa»), que hoy están dentro de las preguntas `liability_cap` y `governing_law`.

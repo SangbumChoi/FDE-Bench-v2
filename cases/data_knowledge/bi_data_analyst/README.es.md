@@ -4,8 +4,8 @@ Una tienda de suscripciones de café y té que vende cajas y artículos sueltos 
 Unidos (sede en Seúl, todos los informes en KRW) envía al agente una exportación CSV de su base de datos de pedidos, un
 pequeño diccionario de datos y doce preguntas de sus directivos: «¿Podría responderlas a partir de la exportación de la
 base de datos? … con un número por pregunta nos basta». El entregable es `answers.json` con todos los identificadores
-de pregunta (`{"Q01": ..., ..., "Q12": ...}`), cada uno con un número o `null`. `null` significa «no sé»: el dosier
-del consejo del consejero delegado muestra esa cifra como «aún no disponible». La solicitud no menciona ninguna de las
+de pregunta (`{"Q01": ..., ..., "Q12": ...}`), cada uno con un número o `null`. `null` significa «no sé»: en el dosier
+que el consejero delegado presenta al consejo, esa cifra figura como «aún no disponible». La solicitud no menciona ninguna de las
 definiciones que deciden las cifras ni dice cuánto cuesta una cifra errónea. Ambas cosas están en los requisitos
 ocultos, y el cliente simulado solo las da cuando se le pregunta.
 
@@ -97,7 +97,7 @@ coincidir exactamente. Los importes deben quedar dentro del 0.5 % o de media uni
 (500, 5,000 o 50 KRW), de modo que la cifra exacta redondeada como exige el conjunto de reglas siempre cuenta. Q11
 debe quedar dentro de 0.05 puntos porcentuales, y Q08 y Q12 dentro del 0.5 %. Se acepta un porcentaje expresado como
 fracción. `violating_examples` comprueba que las respuestas exactas, redondeadas a la unidad de la configuración,
-obtienen 1.0 sin ninguna infracción en todas las configuraciones y en todos los mundos que construye el validador.
+obtienen 1.0 sin ningún incumplimiento en todas las configuraciones y en todos los mundos que construye el validador.
 
 ## Niveles: qué preguntas necesita el dosier en esta ronda
 
@@ -228,8 +228,8 @@ de mundo 1–20, los objetivos de la referencia son los mismos en todas las conf
 que falla). La hoja a valor nominal obtiene 0.00–0.40 (easy/A), 0.00–0.20 (easy/B), 0.20–0.60 (easy/C), 0.00–0.18
 (medium/A, medium/B), 0.09–0.36 (medium/C), 0.00–0.17 (hard/A, hard/B) y 0.08–0.33 (hard/C), siempre por debajo de la
 línea base de todo `null`. Es más alta con C porque el año fiscal y la ventana de actividad de C son el año natural y
-los 30 días que ella supone. Las semillas 1–20 construyen mundos, referencias, líneas base, ejemplos de infracción y
-conjuntos de reglas distintos válidos en las nueve configuraciones.
+los 30 días que ella supone. Con las semillas 1–20 se construyen, en las nueve configuraciones, mundos, referencias, líneas
+base y ejemplos de incumplimiento válidos, y conjuntos de reglas distintos.
 
 Las respuestas del nivel hard (cifra exacta, referencia, hoja a valor nominal; ✓/✗ = la respuesta a valor nominal es
 correcta o errónea):

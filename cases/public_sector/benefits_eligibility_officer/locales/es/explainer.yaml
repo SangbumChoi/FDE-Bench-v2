@@ -9,7 +9,7 @@ deliverable_spec: |
   (APPROVED / RENEWAL solo con eligible = yes, DENY_* solo con eligible = no).
 rules:
   residency_requirement: Solo pueden aprobarse los hogares que, en la fecha de la solicitud, lleven al menos 6 meses residiendo en la ciudad (requisito legal).
-  asset_limit: No pueden aprobarse los hogares cuyo patrimonio computable (sin contar la vivienda habitual y un coche) supere 6,000 más 3,000 por cada miembro adicional del hogar.
-  amount_cap: Ningún importe mensual supera el tope legal presupuestario de este año para el tamaño del hogar (1050 / 1450 / 1800 / 2100 / 2350 / 2550 para 1 / 2 / 3 / 4 / 5 / 6 o más personas).
+  asset_limit: No pueden aprobarse los hogares cuyo patrimonio computable (sin contar la vivienda habitual y un coche) supere 6.000 más 3.000 por cada miembro adicional del hogar.
+  amount_cap: Ningún importe mensual supera el tope legal presupuestario de este año para el tamaño del hogar (1.050 / 1.450 / 1.800 / 2.100 / 2.350 / 2.550 para 1 / 2 / 3 / 4 / 5 / 6 o más personas).
   reason_code_required: Cada resolución lleva un código de motivo de la lista fija que concuerda con la decisión (una aprobación es RENEWAL si se trata de una renovación y APPROVED si es una solicitud nueva).
   auto_approve_renewals: Las solicitudes de renovación se aprueban con el importe mensual del año pasado, sin volver a evaluarlas.

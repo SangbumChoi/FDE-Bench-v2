@@ -8,7 +8,7 @@ por turno trabajado. El escenario no está ligado a ningún país: no se aplica 
 las reglas que indica el cliente, y las tarifas por hora no llevan moneda.
 
 El caso **no tiene configuraciones**: el mismo problema, las mismas reglas y la misma solución correcta en todas las
-dificultades. Los ajustes de la modalidad (especificación completa o preguntar primero, perfil del cliente, ruido en los
+dificultades. Los ajustes de la modalidad (especificación completa o aclarar primero, perfil del cliente, ruido en los
 datos, eventos) se aplican encima, como en todos los casos (véase [cases/README.md](../../README.md)).
 
 ## Datos
@@ -51,7 +51,7 @@ normales, el 5.º a 1.5×), `buddy_rule`, `understaffing_penalty` (el 40 y el mo
 
 ## Situaciones presentes
 
-- **Hechos ocultos que deciden la validez:** la regla de descanso (un optimizador que no la conoce produce 13 infracciones de
+- **Hechos ocultos que deciden la validez:** la regla de descanso (un optimizador que no la conoce produce 13 incumplimientos de
   `min_rest` con esta semilla), los tipos de turno y los topes según el contrato, un solo idioma por turno y el archivo de
   ausencias (si se lee como mes/día, el día libre de A20 el lunes 9 de noviembre pasa a ser el 11 de septiembre, y los demás
   intervalos se extienden a lo largo de varios meses).
@@ -81,7 +81,7 @@ días de ausencia se dejan vacíos, y cada persona de nuevo ingreso acompaña a 
 | Óptimo que ignora el festivo | 23,872 | | | | 1.072 | 1.145 |
 | Óptimo que ignora las horas extra, o sin conocer el peso | 23,560 | | | | 1.086 | 1.172 |
 | Óptimo sin la regla de acompañamiento (válido solo si se flexibiliza) | 23,328 | | | | 1.097 | 1.191 |
-| Un solo turno (A01, lunes, S0800, en) | 67,656 | | | 1 | 0.378 | 0 (truncado) |
+| Un solo turno (A01, lunes, S0800, en) | 67,656 | | | 1 | 0.378 | 0 (acotado en el mínimo) |
 
 El óptimo es el techo conocido: un MILP exacto del mismo modelo (unas 2,000 variables binarias) resuelto con HiGHS de scipy
 en unos 8 segundos, con optimalidad demostrada, y comprobado con el propio evaluador de `case.py`. Es un script de análisis,

@@ -68,7 +68,7 @@ Por libro puntuado: **1** por la ruta exacta en la biblioteca con la sinopsis co
 
 Dos sondas cuya respuesta da la puntuación (hard, corpus oculto): `expected_output` con sus filas de revisión sustituidas por una fila por cada combinación de archivo del corpus y código de motivo puntúa 71.6 (antes obtenía el máximo posible, 99.4), y el mismo árbol esperado con todas las sinopsis sustituidas por `x` incumple `no_fabrication` (antes puntuaba 64.2 y era válido).
 
-La salida del programa sobre el corpus oculto se guarda en caché según el resumen (digest) del programa, de modo que las nueve configuraciones, los ejemplos de infracción y las comprobaciones cruzadas entre conjuntos de reglas ejecutan cada programa distinto una sola vez (`validate-case` tarda ~40 s con las semillas de mundo por defecto 1–3).
+La salida del programa sobre el corpus oculto se guarda en caché según el resumen (digest) del programa, de modo que las nueve configuraciones, los ejemplos de incumplimiento y las comprobaciones cruzadas entre conjuntos de reglas ejecutan cada programa distinto una sola vez (`validate-case` tarda ~40 s con las semillas de mundo por defecto 1–3).
 
 ## Referencia y cifras verificadas (semilla 20261027, corpus oculto)
 

@@ -1,6 +1,6 @@
 # Revisión — `energy_utilities/battery_dispatch_operator`
 
-Hallazgos de la revisión del caso (F1–F9) y lo que este cambio hizo con cada uno; las cifras corresponden a la semilla del mundo 20270322 salvo que se indique otra cosa. Se agradecen comentarios sobre las propuestas abiertas.
+Hallazgos de la revisión del caso (F1–F9) y lo que este cambio hizo con cada uno; las cifras corresponden a la semilla de mundo 20270322 salvo que se indique otra cosa. Se agradecen comentarios sobre las propuestas abiertas.
 
 ### F1 — La referencia queda muy por debajo de un LP sencillo; la tarea es convexa, no combinatoria (alta, confirmado)
 
@@ -22,7 +22,7 @@ El caso tiene una sola solución correcta (`setting.json` es `{}`), no tiene niv
 
 ### F4 — La reserva flexibilizable no aporta nada; no hay presión ni eventos con fecha (media, confirmado)
 
-`reserve_20pct` es la única regla de costumbre del negocio. Relajarla da al LP sobre la previsión 22,156.6 frente a 21,343.2 EUR (q 1.225 frente a 1.180, +0.03 de puntuación de calidad con tope 1.5) y a la referencia 19,733.9 frente a 18,084.35 (+9.1%), menos que la penalización por regla blanda (0.1 en enterprise_balanced, 0.05 en startup_velocity), así que un agente competente nunca debería flexibilizarla. Nada empuja al agente hacia la reserva, y el único hecho con fecha (la modificación del 1 de marzo al 30 de junio) cubre toda la semana.
+`reserve_20pct` es la única regla de costumbre del negocio. Relajarla da al LP sobre la previsión 22,156.6 frente a 21,343.2 EUR (q 1.225 frente a 1.180, +0.03 de puntuación de calidad con tope 1.5) y a la referencia 19,733.9 frente a 18,084.35 (+9.1%), menos que la penalización por regla flexible (0.1 en enterprise_balanced, 0.05 en startup_velocity), así que un agente competente nunca debería flexibilizarla. Nada empuja al agente hacia la reserva, y el único hecho con fecha (la modificación del 1 de marzo al 30 de junio) cubre toda la semana.
 
 **Estado:** abierto — propuesta: añadir un elemento de presión que solo compense a través de `request_exception`, p. ej. un correo de un trader en `inbox/` ("el pico del jueves a las 19:00 es de 300 EUR, usa la reserva y listo"). Añadir eventos con fecha que cambien el óptimo: obras en la subestación que terminan el viernes 26 de marzo a las 00:00 (el límite vuelve a 30 MW), un aviso de recorte de la distribuidora (DSO) para el sábado de 11–15 h (vertido como máximo de 10 MW), o una prueba del mercado de capacidad el miércoles de 19:00–20:00 que exige 20 MW durante una hora.
 
@@ -56,4 +56,4 @@ Las cifras coinciden en los cinco idiomas, pero el escenario es europeo (EUR, un
 
 **Estado:** corregido en este cambio — se ha quitado la pista de `deliverable_spec`, de modo que el extractor no recibe ninguna indicación sobre el cambio de hora y este se puntúa igual se llame como se llame el archivo; requirements.md sigue indicándolo para el cliente. La parte solar sigue abierta — propuesta: una relación CC/CA (p. ej. 30 MWp en CC, 26 MW de límite del inversor en CA) y una hora solar que corresponda a un emplazamiento en España, ahora que la solicitud nombra el país.
 
-**Línea base:** la batería se queda al 50% toda la semana (solo solar): 0.00 EUR frente a los 18,084.35 EUR de la referencia en la semilla 20270322; en las semillas del mundo 1–3, 0.00 frente a 18,742.76 / 19,265.16 / 20,542.92 EUR. Válida en todos los casos; con una línea base de cero, la calidad normalizada equivale al simple cociente respecto a la referencia.
+**Línea base:** la batería se queda al 50% toda la semana (solo solar): 0.00 EUR frente a los 18,084.35 EUR de la referencia en la semilla 20270322; en las semillas de mundo 1–3, 0.00 frente a 18,742.76 / 19,265.16 / 20,542.92 EUR. Válida en todos los casos; con una línea base de cero, la calidad normalizada equivale al simple cociente respecto a la referencia.

@@ -8,23 +8,23 @@ la revisión.
 
 ### F1 — La cafetería cerrada se llamaba con el nombre de otra cafetería (alta, confirmado)
 
-Las cinco versiones de idioma decían que "Clock Tower café (C11)" (en la versión española, "Cafetería Torre del Reloj
+Los textos de los cinco idiomas decían que "Clock Tower café (C11)" (en la versión española, "Cafetería Torre del Reloj
 (C11)") estaba cerrada. En los datos, Torre del Reloj es C10, una cafetería asociada premium, y C11 es Colina Sur
 (남산점, 南山店, South Hill café). Un agente que se guiaba por el nombre, atendía C11 y se saltaba C10 entregaba un
 plan inválido: la referencia modificada de esa forma incumple `closed_cafe`, `serve_each_once` (C10 sin atender) y
 `shift_window` (V4 vuelve a las 10:08). La validez dependía de fiarse más de los códigos que de los nombres, no de
 hacer la pregunta correcta.
 
-**Estado:** corregido en este cambio — requirements.md y targets.yaml de las cinco versiones de idioma nombran ahora
+**Estado:** corregido en este cambio — requirements.md y targets.yaml de los cinco idiomas nombran ahora
 la cafetería como lo hacen los datos: South Hill café (C11), 남산점(C11), 南山店（C11） (ja, zh), Cafetería Colina Sur
-(C11). C10 sigue abierta. La comprobación `name (ID)` del validador, que señalaba la discrepancia en las cinco
-versiones, ya no informa de nada.
+(C11). C10 sigue abierta. La comprobación `name (ID)` del validador, que señalaba la discrepancia en los cinco
+idiomas, ya no da ningún aviso.
 
 ### F2 — Poco margen de mejora sobre la referencia (alta, confirmado)
 
 La búsqueda llega a 601.51 cumpliendo todas las reglas, un 3.8% por debajo de los 625.55 de la referencia. La calidad
-ya no se recorta en 1.0: frente a la nueva línea base (963.09), ese plan obtiene q = 1.07 y 0.71 del crédito de
-calidad con el tope de la política en 1.5, frente a 0.67 de la referencia. El plan ingenuo de barrido angular de la
+ya no se recorta en 1.0: frente a la nueva línea base (963.09), ese plan obtiene q = 1.07 y 0.71 de la puntuación
+de calidad con el tope de la política en 1.5, frente a 0.67 de la referencia. El plan ingenuo de barrido angular de la
 revisión con salidas ajustadas (686.39) obtiene q = 0.82. Así, los planes ingenuos y los expertos ya se distinguen
 (0, 0.82, 1.0, 1.07), pero ningún plan conocido que cumpla las reglas se acerca al tope.
 
@@ -71,11 +71,11 @@ describir pesos, y las notas sobre los datos solo decían que `deliver_by` es "l
 cafetería acepta". Que el agente conociera el compromiso, y que la pregunta `lateness` pudiera cubrirse, dependía de
 que el cliente simulado se saltara sus propias instrucciones.
 
-**Estado:** corregido en este cambio — las notas sobre los datos de las cinco versiones de idioma presentan ahora el
+**Estado:** corregido en este cambio — las notas sobre los datos de los cinco idiomas presentan ahora el
 coste como un hecho del negocio, justo después de la línea de `deliver_by` (versión española): "Una entrega tardía se
 acepta, pero nos cuesta: cada minuto que una cafetería recibe el pedido después de su `entregar_antes` nos cuesta lo
 mismo que tres minutos de furgoneta (quejas y abonos a la cafetería)." La sección "Cómo se evalúa el plan" no cambia;
-reducirla a la voz del responsable queda en manos del autor del caso.
+reducirla a la voz del gerente queda en manos del responsable del caso.
 
 ### F6 — Algunas semillas de mundo hacían fallar el generador (media, confirmado)
 
@@ -125,8 +125,8 @@ estante refrigerado de V4 está averiado esta semana").
 
 `07:00 이전` / `07:00 이후` incluyen ambas las 07:00 en el uso estándar del coreano, así que un tramo que empezaba
 exactamente a las 07:00 caía en las dos franjas de velocidad; con salidas al minuto, ese caso es alcanzable. La
-etiqueta de columna `최종도착` se lee como "llegada final" y no como un plazo. Las cifras coinciden en las cinco
-versiones de idioma.
+etiqueta de columna `최종도착` se lee como "llegada final" y no como un plazo. Las cifras coinciden en los cinco
+idiomas.
 
 **Estado:** corregido en este cambio — ko/requirements.md y ko/targets.yaml dicen ahora "07:00 전에 출발하는 구간은
 시속 30km, 07:00부터 출발하는 구간은 시속 20km". La columna coreana pasa a llamarse `납품마감` en los datos (case.py)

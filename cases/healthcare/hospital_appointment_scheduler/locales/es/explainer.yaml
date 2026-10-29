@@ -40,7 +40,7 @@ rules:
   not_before_earliest: Ninguna cita antes de la fecha más temprana (earliest_date) de la solicitud.
   interpreter_capacity: Como mucho {{interpreters_per_day}} primeras visitas al día en todo el hospital con un médico que no habla el idioma del paciente (cada una necesita uno de los intérpretes presenciales; en medium y hard, uno menos el día en que falta un intérprete).
   lab_capacity: El laboratorio admite como mucho {{lab_cap}} análisis de sangre en ayunas por día laborable.
-  test_before_visit: Una solicitud que necesita el análisis de sangre en ayunas lo tiene fijado entre su fecha más temprana y el día laborable anterior a la visita (un día de análisis que se fija de nuevo, en el futuro).
+  test_before_visit: Una solicitud que necesita el análisis de sangre en ayunas lo tiene fijado entre su fecha más temprana y el día laborable anterior a la visita (un día de análisis que se fija de nuevo ha de estar en el futuro).
   doctor_available: Una vez llegado un aviso de ausencia, no queda ni se da ninguna cita con ese médico en un día de su ausencia.
   urgent_window: Toda solicitud urgente (U) se cita el día en que llega, dentro de los {{urgent_days}} días laborables siguientes a su primer día posible (la fecha más temprana o el día laborable siguiente), y sigue dentro de ese plazo.
   urgent_reserve: Los dos primeros huecos de cada sesión de mañana (09:00 y 09:20) se guardan para las urgentes hasta el día laborable anterior; ninguna solicitud S o R se cita ni se mueve a ellos con dos o más días laborables de antelación.

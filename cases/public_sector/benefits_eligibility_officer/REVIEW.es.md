@@ -38,7 +38,7 @@ en lo que realmente corresponde, pero calcular la calidad solo sobre las solicit
 renovaciones (49 pagadas de más, 46 de menos, 13 que ya no tienen derecho) como una métrica aparte y acotada. En
 cualquier caso, hay que indicar en los requisitos qué quiere realmente la oficina de las renovaciones.
 
-### F3 — Sin configuraciones (alta, parcialmente)
+### F3 — Sin configuraciones (alta, en parte)
 
 `dataset/gt/default/setting.json` es `{}`, y case.yaml no tiene niveles ni conjuntos de reglas, de modo que easy, medium
 y hard son el mismo problema. El verificador señala que las configuraciones son opcionales ("may"; 5 de 13 casos las
@@ -80,13 +80,13 @@ requisitos nunca se puntuaban.
 **Estado:** corregido en este cambio — `reason_code_required` (restricción obligatoria) exige ahora que una aprobación se
 codifique `RENEWAL` si es una renovación y `APPROVED` si es una solicitud nueva. El objetivo suma 100 por cada hogar
 rechazado con razón pero con un código distinto de la primera prueba que no supera (métrica `wrong_denial_reasons`). La
-entrega con los códigos intercambiados, construida a partir de la referencia, es ahora el ejemplo de infracción de
+entrega con los códigos intercambiados, construida a partir de la referencia, es ahora el ejemplo de incumplimiento de
 `reason_code_required`: es inválida y, con la regla relajada, obtiene 23,328 (54 motivos de rechazo equivocados). La
 mejor respuesta que cumple las reglas con todos los rechazos codificados `DENY_INCOME` baja de 1.028 a 0.896. Los
 requisitos enuncian ambas reglas en los cinco idiomas. La referencia no tiene motivos de rechazo equivocados, así que su
 objetivo no cambia.
 
-### F6 — Varios hechos ocultos apenas influyen (media, parcialmente)
+### F6 — Varios hechos ocultos apenas influyen (media, en parte)
 
 165 de las 300 fechas de solicitud tienen un día mayor que 12, lo que delata el formato de fecha de en/es. Leerlas por
 error como mes/día/año cambia 1 decisión (H022). El tope solo se aplica a 3 de los 121 hogares nuevos con derecho. Las
@@ -98,7 +98,7 @@ hogares en la franja de 180-184 días. Dar a los hogares de en/es cercanos al um
 menos, y repartir las fechas de solicitud de modo que una lectura errónea cambie varias decisiones. Generar más hogares
 de alquiler sin ingresos y con miembros con discapacidad, para que el tope se aplique a 10 o más hogares nuevos.
 
-### F7 — Algunas preguntas clave de Ask-F1 no tienen respuesta (baja, parcialmente)
+### F7 — Algunas preguntas clave de Ask-F1 no tienen respuesta (baja, en parte)
 
 La pregunta clave `scoring` pedía la fórmula de 400 por decisión equivocada, que el cliente simulado puede no describir.
 La pregunta clave `residency` incluye "las fechas están en día/mes/año", algo que no tiene sentido en zh/ja/ko (年月日 y
@@ -112,7 +112,7 @@ mismos ids de pregunta clave en todos los idiomas y toma kind y domain de en, as
 solo en en/es. Propuesta: quitar la cláusula de la fecha de la pregunta clave `residency`, o añadir al framework
 preguntas clave por idioma y mantener una sobre el formato de fecha en en y es.
 
-### F8 — Los tipos de regla no coinciden con lo que dice el cliente (baja, parcialmente)
+### F8 — Los tipos de regla no coinciden con lo que dice el cliente (baja, en parte)
 
 Los requisitos llaman a `residency_requirement` requisito legal, pero está clasificada como contractual, así que una
 política que flexibilizara las reglas contractuales podría flexibilizar una ley. Hoy ninguna de las políticas incluidas
@@ -120,10 +120,10 @@ lo hace. Clasificar el tope presupuestario como física coincide con la convenci
 legales.
 
 **Estado:** abierto — propuesta: pasar `residency_requirement` a `physical` (o a una clase legal que nunca se pueda
-relajar), y mantener `amount_cap` como física. Su ejemplo de infracción se queda como está, ya que las reglas físicas no
+relajar), y mantener `amount_cap` como física. Su ejemplo de incumplimiento se queda como está, ya que las reglas físicas no
 se vuelven a comprobar cuando se relajan.
 
-### F9 — Redacción en coreano e importes sin unidad (baja, parcialmente)
+### F9 — Redacción en coreano e importes sin unidad (baja, en parte)
 
 Todas las cifras coinciden en los cinco idiomas. En ko, '예산법 상한' nombra una ley que no existe, '3.2%를 올린 뒤'
 suena forzado y '2026. 3. 14. 이전부터' se señaló como poco claro (el verificador considera débil este punto). en dice

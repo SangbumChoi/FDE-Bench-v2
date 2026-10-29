@@ -110,7 +110,7 @@ nunca se usa) y cuesta entre 1.37 y 4.16 veces lo que la referencia (mediana 2.1
 **Margen de mejora** (semilla 20261025; "q" es la calidad normalizada, con la línea base en 0 y la referencia en 1).
 Una búsqueda de recocido simulado desde la referencia (movimientos de reubicación, intercambio y 2-opt, salidas al
 minuto; un script de análisis, no forma parte del caso) llega a 601.51 cumpliendo todas las reglas, q = 1.07, con lo
-que obtiene 0.71 del crédito de calidad con el tope de la política en 1.5 (la referencia obtiene 0.67). Sus cargas
+que obtiene 0.71 de la puntuación de calidad con el tope de la política en 1.5 (la referencia obtiene 0.67). Sus cargas
 son de 89/85/115/67 bandejas y su vuelta más tardía es a las 09:21, así que ahí no limitan ni la capacidad ni el turno.
 Con `premium_first` flexibilizada, la misma búsqueda llega a 521.98 sin minutos de retraso (q = 1.31) y se salta la
 costumbre en tres de las cuatro rutas.
@@ -124,5 +124,4 @@ costumbre en tres de las cuatro rutas.
   plan que cumple todas las reglas y cada regla tiene un plan que solo la incumple a ella, de modo que cualquier semilla
   de mundo da un mundo utilizable.
 - `validate-case` comprueba que la referencia tiene calidad 1.0, que la línea base es válida y peor, que hay un
-  entregable por regla que incumple solo esa regla y que los datos son deterministas en las cinco versiones de
-  idioma; además comprueba las semillas de mundo 1, 2 y 3.
+  entregable por regla que incumple solo esa regla y que los datos son deterministas en los cinco idiomas; además comprueba las semillas de mundo 1, 2 y 3.
