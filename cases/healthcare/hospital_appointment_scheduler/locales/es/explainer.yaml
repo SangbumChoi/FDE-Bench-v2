@@ -1,0 +1,51 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Gestor de citas hospitalarias
+task_type: Programa de decisión
+deliverable_spec: |
+  Una carpeta program/ con scheduler.py, que define on_day(day). El motor lo carga una sola vez y lo llama una vez
+  por día laborable del periodo oculto, en orden y en el mismo proceso (el estado a nivel de módulo se conserva
+  entre llamadas); 10 s por llamada, solo la biblioteca estándar de Python, sin red ni acceso a los archivos de
+  datos durante la ejecución.
+  day = {"date", "day_index", "days_in_period", "period_end", "booking_window": {"first", "last"}, "doctors",
+  "sessions", "new_requests", "notices", "attendance", "book", "waitlist"}, exactamente como en el archivo de
+  entrada del día piloto. Devuelve {"actions": [{"type": "book" | "move", "request_id", "doctor_id",
+  "date": "YYYY-MM-DD", "start": "HH:MM", "test_date": "YYYY-MM-DD" o null} | {"type": "release", "request_id"}],
+  "status_table": {department_code: {"free_slots": int, "held_back": int, "waitlist": int}}}, como en el archivo
+  de salida del día piloto. Las acciones se aplican en orden; una solicitud sin cita sigue en la lista de espera.
+tiers:
+  easy: >-
+    El núcleo de la citación diaria: primera visita = dos huecos consecutivos, revisión = uno; la especialidad; nunca
+    antes de la fecha más temprana; el plazo de las urgentes; la reserva de urgencias (los dos primeros huecos de una
+    sesión de mañana se guardan para las urgentes hasta el día anterior); una consulta que cierra en el festivo del Día
+    de la Ciudad aunque el calendario la siga mostrando; los intérpretes presenciales por día para primeras visitas; el
+    preaviso para cambiar una cita; el orden de prioridad de la lista de espera; las revisiones con su médico anterior
+    (flexibilizable); la tabla de situación diaria. Quedan fuera del alcance los avisos de ausencias y de intérpretes,
+    las fechas de los volantes, los análisis de sangre, las ausencias de pacientes y las solicitudes duplicadas.
+  medium: >-
+    Easy más los volantes que caducan, un análisis de sangre en ayunas al menos un día laborable antes de la visita
+    dentro de un tope diario del laboratorio, las ausencias de médicos (las citas del médico ausente deben cambiarse,
+    respetando el preaviso) y la ausencia de un intérprete (un intérprete menos ese día).
+  hard: >-
+    Medium más las ausencias de pacientes (la tasa oculta de cada paciente sube con la antelación; el valor cuenta los
+    pacientes atendidos esperados), la sobrecitación de revisiones (dos por hueco, un tope por sesión de médico, coste
+    esperado de coincidencia), las solicitudes duplicadas (una cita por paciente y especialidad; una sola necesidad en
+    la lista de espera) y los viajes de más de los pacientes citados en varias especialidades.
+rules:
+  well_formed: Cada llamada devuelve acciones bien formadas sobre solicitudes que existen (citar solo una solicitud en espera, cambiar o anular solo una cita pendiente), con una fecha dentro del intervalo de citación (los 10 días laborables siguientes); una llamada que falla o se pasa de tiempo también la incumple.
+  no_double_booking: Un hueco de 20 minutos de un médico tiene como mucho una cita.
+  slot_capacity: Un hueco de 20 minutos de un médico tiene como mucho dos citas, ambas revisiones; una primera visita nunca comparte sus huecos.
+  slot_length: Una cita usa los huecos de sesión del calendario de su médico y su día; una primera visita ocupa dos huecos consecutivos de la misma sesión y una revisión, uno.
+  department_match: Una solicitud se cita con un médico de su especialidad.
+  holiday_closure: La consulta de {{closed_dept}} cierra el Día de la Ciudad, lunes 23 de noviembre de 2026, aunque el calendario sigue mostrando sus sesiones; ninguna cita de {{closed_dept}} ese día.
+  not_before_earliest: Ninguna cita antes de la fecha más temprana (earliest_date) de la solicitud.
+  interpreter_capacity: Como mucho {{interpreters_per_day}} primeras visitas al día en todo el hospital con un médico que no habla el idioma del paciente (cada una necesita uno de los intérpretes presenciales; en medium y hard, uno menos el día en que falta un intérprete).
+  lab_capacity: El laboratorio admite como mucho {{lab_cap}} análisis de sangre en ayunas por día laborable.
+  test_before_visit: Una solicitud que necesita el análisis de sangre en ayunas lo tiene fijado entre su fecha más temprana y el día laborable anterior a la visita (un día de análisis que se fija de nuevo, en el futuro).
+  doctor_available: Una vez llegado un aviso de ausencia, no queda ni se da ninguna cita con ese médico en un día de su ausencia.
+  urgent_window: Toda solicitud urgente (U) se cita el día en que llega, dentro de los {{urgent_days}} días laborables siguientes a su primer día posible (la fecha más temprana o el día laborable siguiente), y sigue dentro de ese plazo.
+  urgent_reserve: Los dos primeros huecos de cada sesión de mañana (09:00 y 09:20) se guardan para las urgentes hasta el día laborable anterior; ninguna solicitud S o R se cita ni se mueve a ellos con dos o más días laborables de antelación.
+  move_notice: Cuando el hospital cambia la fecha o la hora de la cita de un paciente, la nueva cita es al menos {{move_notice_days}} días laborables después del día del cambio; para una solicitud que el hospital anuló y vuelve a citar más tarde, después del día de la anulación (otro médico a la misma fecha y hora no necesita preaviso).
+  waitlist_priority: Las solicitudes en espera se citan en el orden de prioridad ({{waitlist_order}}); no se cita una solicitud mientras otra de mayor prioridad de la misma especialidad, el mismo tipo de visita y el mismo médico anterior sigue esperando y podría haber ocupado ese hueco.
+  overbooking_limit: Como mucho {{overbooked_per_session}} huecos sobrecitados (huecos con dos revisiones) por médico y sesión (mañana o tarde).
+  one_per_department: Un paciente tiene como mucho una cita por especialidad en el periodo (ya celebrada o pendiente); una solicitud duplicada (mismo paciente y especialidad) nunca se cita como segunda cita.
+  follow_up_same_doctor: Una revisión se cita con el médico anterior del paciente; es una costumbre a la que la jefa de la oficina de consultas externas puede conceder excepciones.

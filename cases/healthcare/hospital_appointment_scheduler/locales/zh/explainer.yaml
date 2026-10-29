@@ -1,0 +1,45 @@
+# The explainer's case texts in Simplified Chinese (English comes from case.yaml).
+role: 医院预约专员
+task_type: 决策程序
+deliverable_spec: |
+  一个 program/ 目录，其中的 scheduler.py 定义 on_day(day)。引擎只加载一次，在隐藏时段的每个工作日按顺序、
+  在同一进程中各调用一次（模块级状态在调用之间保留）；每次调用 10 秒，只用 Python 标准库，运行时没有网络，
+  也不能访问数据文件。
+  day = {"date", "day_index", "days_in_period", "period_end", "booking_window": {"first", "last"}, "doctors",
+  "sessions", "new_requests", "notices", "attendance", "book", "waitlist"}，与试点日输入文件完全一致。
+  返回 {"actions": [{"type": "book" | "move", "request_id", "doctor_id", "date": "YYYY-MM-DD",
+  "start": "HH:MM", "test_date": "YYYY-MM-DD" 或 null} | {"type": "release", "request_id"}],
+  "status_table": {department_code: {"free_slots": int, "held_back": int, "waitlist": int}}}，格式同试点日
+  输出文件。动作按顺序执行；没有约上的申请留在候诊名单上。
+tiers:
+  easy: >-
+    每日预约的核心：初诊 = 连续两个号源，复诊 = 一个；科室对应；不早于最早可约日期；紧急预约时限；紧急预留号
+    （上午时段的前两个号源到前一天为止留给紧急申请）；市民日假日有一个科室停诊，而出诊表里仍列着它；初诊每天的
+    现场翻译人数；调整预约的提前通知期；候诊名单的优先顺序；复诊约给上次接诊医生（可放宽）；每日现况表。缺勤和
+    翻译通知、转诊单有效期、抽血、爽约和重复申请不在范围内。
+  medium: >-
+    在 easy 基础上，加上会过期的转诊单、在检验科每日上限内于就诊至少一个工作日前进行的空腹抽血、医生缺勤（缺勤
+    医生的预约须在提前通知期内调整）以及翻译请假（当天少一名翻译）。
+  hard: >-
+    在 medium 基础上，加上爽约（每位患者隐藏的爽约率随提前期上升；运营价值按看诊患者的期望值计）、复诊超额预约
+    （每个号源两个、每位医生每个时段有上限、两人都来时的期望冲突成本）、重复申请（每位患者每个科室一个预约；在
+    候诊名单上算一个就诊需求），以及在多个科室有预约的患者多跑的趟数。
+rules:
+  well_formed: 每次调用都对存在的申请返回格式正确的动作（只预约候诊中的申请，只调整或取消将来的预约），日期在预约范围（接下来10个工作日）内；调用失败或超时也算违反。
+  no_double_booking: 医生的一个20分钟号源最多一个预约。
+  slot_capacity: 医生的一个20分钟号源最多两个预约，且都必须是复诊；初诊绝不与其他预约共用号源。
+  slot_length: 预约使用该医生当天出诊表里的时段号源；初诊占同一时段连续两个号源，复诊占一个。
+  department_match: 申请约给其所属科室的医生。
+  holiday_closure: '2026年11月23日（周一）市民日{{closed_dept}}停诊，出诊表里仍列着当天的时段；当天不得有{{closed_dept}}的预约。'
+  not_before_earliest: 预约不得早于申请的最早可约日期（earliest_date）。
+  interpreter_capacity: 全院每天最多{{interpreters_per_day}}个初诊约给不会说患者语言的医生（每个都需要一名现场翻译；medium 及以上，翻译请假那天少一名）。
+  lab_capacity: 检验科每个工作日最多做{{lab_cap}}例空腹抽血。
+  test_before_visit: 需要空腹抽血的申请，抽血日须在其最早可约日期到就诊前一个工作日之间（新定的抽血日须在将来）。
+  doctor_available: 收到缺勤通知后，该医生缺勤的日子里不得保留或新约任何预约。
+  urgent_window: 每条紧急（U）申请在受理当天预约，日期在其最早可就诊日（最早可约日期或下一个工作日）起{{urgent_days}}个工作日以内，之后也不超出这个范围。
+  urgent_reserve: 每个上午时段的前两个号源（09:00 和 09:20）到前一个工作日为止留给紧急申请；两个及以上工作日之后的这些号源，不得约入或调入 S 或 R 申请。
+  move_notice: 医院更改患者预约的日期或时间时，新预约须在更改那天之后至少{{move_notice_days}}个工作日；医院取消后再重新预约的申请，从取消那天算起（同一日期同一时间换成另一位医生不需要提前通知）。
+  waitlist_priority: 候诊申请按优先顺序（{{waitlist_order}}）预约；同一科室、同一就诊类型、同一上次接诊医生下，若有优先级更高的申请仍在候诊且本可以用那个号源，就不能约优先级更低的申请。
+  overbooking_limit: 每位医生每个时段（上午或下午）最多{{overbooked_per_session}}个超额号源（放了两个复诊的号源）。
+  one_per_department: 每位患者在本期间每个科室最多一个预约（已就诊的或将来的）；重复申请（同一患者同一科室）绝不另约第二个预约。
+  follow_up_same_doctor: 复诊约给患者的上次接诊医生；这是门诊办公室主任可以批准例外的惯例。
