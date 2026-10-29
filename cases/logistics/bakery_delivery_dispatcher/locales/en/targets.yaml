@@ -17,7 +17,7 @@
 - id: closed_c11
   kind: missing
   domain: business rule
-  text: The Clock Tower café (C11) is closed this week for renovation and must not be served.
+  text: The South Hill café (C11) is closed this week for renovation and must not be served.
 - id: cold_chain
   kind: ambiguous
   domain: data semantics

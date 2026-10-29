@@ -7,7 +7,7 @@
 - id: shift
   text: 车辆最早 05:00 出发，必须在 09:30 前回到厨房。
 - id: closed_c11
-  text: 钟楼店（C11）本周装修停业，不能送货。
+  text: 南山店（C11）本周装修停业，不能送货。
 - id: cold_chain
   text: 合作品牌门店销售冷藏商品，只能由冷藏车 V4 配送。
 - id: one_visit

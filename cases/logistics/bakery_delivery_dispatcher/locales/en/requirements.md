@@ -14,8 +14,9 @@ One JSON file, `routes.json`: `{"routes": [{"van": "V1", "depart": "05:40", "sto
 - Driving speed depends on when a leg starts: 30 km/h for legs starting before 07:00, 20 km/h for legs starting at 07:00 or later (morning rush hour).
 - Unloading at a café takes 4 minutes plus 0.2 minutes per tray.
 - A van that arrives before `opens` waits until the café opens. `deliver_by` is the latest arrival the café is happy with.
+- A late delivery is accepted but not free: every minute a café is reached after its `deliver_by` costs us as much as three minutes of van time (complaints and credit notes to the café).
 - Vans may leave from 05:00 and must be back at the kitchen by 09:30 (end of the drivers' shift). Each van carries at most `max_trays` trays.
-- The Clock Tower café (C11) is closed this week for renovation. Do not deliver there.
+- The South Hill café (C11) is closed this week for renovation. Do not deliver there.
 - `partner_brand = yes` cafés sell our partner's chilled products. Only the refrigerated van (V4) may serve them.
 - Each café gets all of its trays in a single visit from one van.
 - Our habit: on every route, premium cafés are served before standard cafés, so the premium stores are ready first.

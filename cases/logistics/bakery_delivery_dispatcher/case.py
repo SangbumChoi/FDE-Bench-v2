@@ -108,7 +108,7 @@ COLS = {
     "trays": {"zh": "托盘数", "en": "trays", "ko": "트레이수", "ja": "トレー数", "es": "bandejas"},
     "tier": {"zh": "门店等级", "en": "tier", "ko": "매장등급", "ja": "店舗ランク", "es": "categoria"},
     "open": {"zh": "开门时间", "en": "opens", "ko": "오픈시간", "ja": "開店時刻", "es": "apertura"},
-    "latest": {"zh": "最晚到货", "en": "deliver_by", "ko": "최종도착", "ja": "納品期限", "es": "entregar_antes"},
+    "latest": {"zh": "最晚到货", "en": "deliver_by", "ko": "납품마감", "ja": "納品期限", "es": "entregar_antes"},
     "partner": {"zh": "合作品牌", "en": "partner_brand", "ko": "제휴브랜드", "ja": "提携ブランド", "es": "marca_asociada"},
     "van": {"zh": "车辆编号", "en": "van_id", "ko": "차량번호", "ja": "車両番号", "es": "id_furgoneta"},
     "capacity": {"zh": "最大托盘数", "en": "max_trays", "ko": "최대트레이", "ja": "最大トレー数", "es": "max_bandejas"},
@@ -365,6 +365,70 @@ def _solve(world: World) -> list[dict] | None:
 
 def reference_solution(world: World, out_dir: Path) -> None:
     (out_dir / "routes.json").write_text(json.dumps({"routes": world.plan}, indent=2), encoding="utf-8")
+
+
+# ── baseline: the dispatcher's own plan ──────────────────────────────────────
+
+def _fits(world: World, van_id: str, stops: list[str]) -> bool:
+    """The route leaving at 05:00 breaks no rule (cafés on other routes aside)."""
+    v = simulate(world, [{"van": van_id, "depart": _hhmm(DAY_START), "stops": stops}])[0]
+    return all(rule == "serve_each_once" for rule, _ in v)
+
+
+def _sweep(world: World, start: float) -> dict[str, list[str]] | None:
+    """The dispatcher's split of the map, cafés taken by bearing from `start` (None if a café fits on no van)."""
+    vans = [vn["id"] for vn in world.vans]
+    fridge = next(vn["id"] for vn in world.vans if vn["refrigerated"])
+    orders = [list(p) for p in itertools.permutations(c.id for c in world.open_cafes if c.partner)
+              if _fits(world, fridge, list(p))]
+    if not orders:
+        return None
+    fixed = {vid: [] for vid in vans}
+    fixed[fridge] = min(orders, key=lambda p: simulate(world, [{"van": fridge, "stops": p}])[2]["route_minutes"])
+    extra: dict[str, list[str]] = {vid: [] for vid in vans}
+
+    def route(vid: str, more: tuple[str, ...] = ()) -> list[str]:
+        cafes = sorted((world.cafe(s) for s in extra[vid] + list(more)), key=lambda c: (c.tier, c.open_min, c.id))
+        return fixed[vid] + [c.id for c in cafes]
+
+    order = [vid for vid in vans if vid != fridge] + [fridge]
+    rest = sorted((c for c in world.open_cafes if not c.partner),
+                  key=lambda c: ((math.atan2(c.y, c.x) - start) % (2 * math.pi), c.id))
+    i, left = 0, []
+    for c in rest:
+        while i < len(order) and not _fits(world, order[i], route(order[i], (c.id,))):
+            i += 1
+        (extra[order[i]] if i < len(order) else left).append(c.id)
+    for cid in left:
+        vid = next((v for v in order if _fits(world, v, route(v, (cid,)))), None)
+        if vid is None:
+            return None
+        extra[vid].append(cid)
+    return {vid: route(vid) for vid in vans}
+
+
+def baseline_solution(world: World, out_dir: Path) -> None:
+    """What the dispatcher does without an engineer: split the map by bearing and send every van at 05:00.
+
+    V4 takes the partner cafés, premium first, in the order that brings it back soonest. The other cafés are
+    taken in bearing order round the kitchen, starting due west (negative x), and loaded onto V1, V2, V3 and then
+    V4 until the next one no longer fits (tray capacity, back by 09:30); each van serves its premium cafés first,
+    then the rest in order of opening. A café that fits nowhere at its turn goes on the first van that can still
+    take it; if one is still left over, the sweep starts again from the next café round. Every van leaves at 05:00,
+    when the drivers' shift starts, so the vans wait at cafés that are not open yet, and deliver_by is ignored.
+    If no start places every café (no world built so far needs it), the reference routes are driven, every van
+    leaving at 05:00: valid, since an earlier start never brings a van back later.
+    """
+    first = sorted((c for c in world.open_cafes if not c.partner),
+                   key=lambda c: ((math.atan2(c.y, c.x) - math.pi) % (2 * math.pi), c.id))
+    for start in [math.pi] + [math.atan2(c.y, c.x) for c in first[1:]]:
+        routes = _sweep(world, start)
+        if routes is not None:
+            plan = [{"van": vid, "depart": _hhmm(DAY_START), "stops": stops} for vid, stops in routes.items() if stops]
+            break
+    else:
+        plan = [{**r, "depart": _hhmm(DAY_START)} for r in world.plan]
+    (out_dir / "routes.json").write_text(json.dumps({"routes": plan}, indent=2), encoding="utf-8")
 
 
 # ── violating examples ───────────────────────────────────────────────────────
