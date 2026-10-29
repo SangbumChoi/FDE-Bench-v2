@@ -101,8 +101,9 @@ def build_site(repo: Path, out: Path, github: str | None = None, ref: str | None
     cases = {cid: c for cid, c in discover(cases_root).items() if (c.root / PAGE).is_file()}
     langs = [l for l in LANGS if l == "en" or (cases_root / index_name(l)).is_file()]
     local = {f"cases/{cid}": f"{cid}/index.html" for cid in cases}
-    for lang in langs:
-        local |= {f"cases/{cid}/{page_name(lang)}": _site_path(f"{cid}/index.html", lang) for cid in cases}
+    for lang in langs:     # a case not yet translated links to its English page
+        local |= {f"cases/{cid}/{page_name(lang)}": _site_path(f"{cid}/index.html", lang)
+                  if (c.root / page_name(lang)).is_file() else f"{cid}/index.html" for cid, c in cases.items()}
         local[f"cases/{index_name(lang)}"] = _site_path("index.html", lang)
     local |= {src: page for page, (_, src) in DOCS.items() if (repo / src).is_file()}
 
