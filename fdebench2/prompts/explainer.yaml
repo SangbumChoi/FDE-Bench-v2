@@ -25,7 +25,6 @@ en:
   spec_title: "Deliverable spec ({label})"
   spec_program: the program interface
   spec_batch: shown to the extractor that reshapes the agent's files, not to the agent
-  spec_translation: "Translation for reading; the agent and the extractor get the English original:"
   settings_title: "Settings: one dataset, {n} ground truths"
   settings_intro: >-
     The agent sees the same request and data in every setting. The <strong>tier</strong> (= difficulty) decides
@@ -61,6 +60,7 @@ en:
     The facts a good engineer should ask the client for; Ask-F1 is scored against them.
     <code>{{param}}</code> is filled from the rule set.
   target: Target
+  fact: Fact
   kind: Kind
   all_tiers: all
   data_title: Data & answers
@@ -125,7 +125,6 @@ ko:
   spec_title: "산출물 명세 ({label})"
   spec_program: 프로그램 인터페이스
   spec_batch: 에이전트가 아니라, 에이전트의 파일을 정해진 형식으로 옮기는 추출기에게만 주어짐
-  spec_translation: "읽기용 번역입니다. 에이전트와 추출기는 영어 원문을 받습니다."
   settings_title: "설정: 데이터 하나, 정답 {n}개"
   settings_intro: >-
     에이전트는 모든 설정에서 같은 요청과 데이터를 봅니다. <strong>티어</strong>(= 난이도)는 어떤 규칙이 적용되는지를,
@@ -160,6 +159,7 @@ ko:
     좋은 엔지니어라면 고객에게 물어봐야 할 사실이며, Ask-F1은 이를 기준으로 채점합니다.
     <code>{{param}}</code>은 규칙 세트에서 채워집니다.
   target: 목표
+  fact: 내용
   kind: 종류
   all_tiers: 전체
   data_title: 데이터와 정답
@@ -224,7 +224,6 @@ ja:
   spec_title: "成果物の仕様（{label}）"
   spec_program: プログラムのインターフェース
   spec_batch: エージェントではなく、エージェントのファイルを所定の形式に変換する抽出器にだけ渡される
-  spec_translation: "参考訳です。エージェントと抽出器には英語の原文が渡されます："
   settings_title: "設定：データは一つ、正解は {n} 通り"
   settings_intro: >-
     エージェントはどの設定でも同じ依頼とデータを見ます。<strong>ティア</strong>（= 難易度）はどのルールが適用されるかを、<strong>ルールセット</strong>はそのパラメータを決めます。難易度ごとのスコアはルールセット A・B・C の平均です。
@@ -255,6 +254,7 @@ ja:
   targets_intro: >-
     優れたエンジニアなら顧客に確認すべき事実で、Ask-F1 はこれを基準に採点されます。<code>{{param}}</code> にはルールセットの値が入ります。
   target: 事項
+  fact: 内容
   kind: 種類
   all_tiers: すべて
   data_title: データと正解
@@ -315,7 +315,6 @@ zh:
   spec_title: "交付物规格（{label}）"
   spec_program: 程序接口
   spec_batch: 仅提供给把智能体的文件整理成规定格式的提取器，不提供给智能体
-  spec_translation: "仅供阅读的译文；智能体和提取器收到的是英文原文："
   settings_title: "设置：一份数据，{n} 套标准答案"
   settings_intro: >-
     智能体在所有设置下看到的需求和数据都相同。<strong>层级</strong>（= 难度）决定适用哪些规则，
@@ -347,6 +346,7 @@ zh:
   targets_intro: >-
     优秀的工程师应当向客户问清的事实，Ask-F1 据此评分。<code>{{param}}</code> 由规则集填入。
   target: 事项
+  fact: 内容
   kind: 类型
   all_tiers: 全部
   data_title: 数据与答案
@@ -408,7 +408,6 @@ es:
   spec_title: "Especificación del entregable ({label})"
   spec_program: la interfaz del programa
   spec_batch: la recibe el extractor que convierte los archivos del agente al formato fijado, no el agente
-  spec_translation: "Traducción orientativa; el agente y el extractor reciben el original en inglés:"
   settings_title: "Configuraciones: un conjunto de datos, {n} soluciones correctas"
   settings_intro: >-
     El agente ve la misma solicitud y los mismos datos en todas las configuraciones. El <strong>nivel</strong>
@@ -444,6 +443,7 @@ es:
     Los hechos por los que un buen ingeniero debería preguntar al cliente; el Ask-F1 se calcula sobre ellos.
     <code>{{param}}</code> se completa con el conjunto de reglas.
   target: Pregunta
+  fact: Hecho
   kind: Clase
   all_tiers: todos
   data_title: Datos y respuestas

@@ -221,15 +221,11 @@ def build_page(case_root: Path, lang: str = "en") -> str:
   </nav>
 </header>""")
 
-    # request: the page's language first and open, the others folded
-    order = [lang] + [l for l in case.locales() if l != lang]
-    req = "".join(f"<details{' open' if l == lang else ''}><summary>{LANG_NAMES[l]}</summary>"
-                  f"{markdown(case.request(l))}</details>" for l in order if l in case.locales())
+    # request, in the page's language only (the switcher at the top picks the language)
+    req = f'<div class="doc">{markdown(case.request(lang))}</div>'
     # A batch spec only reaches scoring/extract.py; the agent's prompt never contains it.
     spec_label = t("spec_program") if kind == "program" else t("spec_batch")
-    spec = f"<pre>{_esc(case.deliverable_spec().strip())}</pre>"
-    if lang != "en" and own.get("deliverable_spec"):
-        spec += f"<p class='muted'>{t('spec_translation')}</p><pre>{_esc(own['deliverable_spec'].strip())}</pre>"
+    spec = f"<pre>{_esc((own.get('deliverable_spec') or case.deliverable_spec()).strip())}</pre>"   # page's language
     parts.append(f"""<section id="request"><h2>{t("request_title")}</h2>
 <p class="muted">{t("request_intro")}</p>
 {req}
@@ -268,32 +264,29 @@ def build_page(case_root: Path, lang: str = "en") -> str:
 <p>{t("rules_intro")}</p><ul class="legend">{classes}</ul>
 {_table([t("rule"), t("class"), t("tiers"), t("description")], rrows)}</section>""")
 
-    # hidden requirements per setting and locale (JS switcher, starting in the page's language)
+    # hidden requirements per setting, in the page's language (JS switcher over the settings)
     texts = {}
     for c in settings:
         key = f"{c.tier}_{c.ruleset}" if has_settings else "default"
-        texts[key] = {l: markdown(c.requirements(l)) for l in case.locales()}
+        texts[key] = markdown(c.requirements(lang))
     keys = list(texts)
     opts_s = "".join(f'<option value="{_esc(k)}"{" selected" if k == keys[len(keys) // 2] else ""}>'
                      f'{_esc(k.replace("_", " / "))}</option>' for k in keys)
-    opts_l = "".join(f'<option value="{l}"{" selected" if l == lang else ""}>{LANG_NAMES[l]}</option>'
-                     for l in case.locales())
     parts.append(f"""<section id="requirements"><h2>{t("requirements_title")}</h2>
 <p class="muted">{t("requirements_intro")}</p>
-<div class="controls"><label>{t("setting")} <select id="req-setting">{opts_s}</select></label>
-<label>{t("language")} <select id="req-lang">{opts_l}</select></label></div>
+<div class="controls"><label>{t("setting")} <select id="req-setting">{opts_s}</select></label></div>
 <div id="req-body" class="doc" data-empty="{t("not_available")}"></div>
 <script id="req-data" type="application/json">{json.dumps(texts, ensure_ascii=False).replace("</", "<\\/")}</script>
 </section>""")
 
-    # targets: in the page's language, with the English annotation next to it
+    # targets, in the page's language
     src = yaml.safe_load((root / "locales" / "en" / "targets.yaml").read_text(encoding="utf-8")) or []
     mine = {x["id"]: x["text"] for x in yaml.safe_load((root / "locales" / lang / "targets.yaml")
                                                        .read_text(encoding="utf-8")) or []}
-    cols = [t("target"), t("kind"), t("tiers"), LANG_NAMES[lang]] + (["English"] if lang != "en" else [])
+    cols = [t("target"), t("kind"), t("tiers"), t("fact")]
     trows = [[f"<code>{_esc(x['id'])}</code>", _esc(x.get("kind", "")),
               _esc(", ".join(x["tiers"]) if x.get("tiers") else t("all_tiers")), _esc(mine.get(x["id"], ""))]
-             + ([_esc(x.get("text", ""))] if lang != "en" else []) for x in src]
+             for x in src]
     parts.append(f"""<section id="targets"><h2>{t("targets_title")}</h2>
 <p class="muted">{t("targets_intro")}</p>
 {_table(cols, trows)}</section>""")
@@ -374,9 +367,9 @@ select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);borde
 
 JS = """
 (function(){var d=JSON.parse(document.getElementById('req-data').textContent);
-var s=document.getElementById('req-setting'),l=document.getElementById('req-lang'),b=document.getElementById('req-body');
-function show(){var t=d[s.value]||{};b.innerHTML=t[l.value]||'<p>'+b.dataset.empty+'</p>';}
-s.onchange=show;l.onchange=show;show();})();
+var s=document.getElementById('req-setting'),b=document.getElementById('req-body');
+function show(){b.innerHTML=d[s.value]||'<p>'+b.dataset.empty+'</p>';}
+s.onchange=show;show();})();
 """
 
 # The chosen language is remembered (a click on the switcher) and followed on every other page.
