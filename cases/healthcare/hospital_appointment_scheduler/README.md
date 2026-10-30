@@ -285,7 +285,7 @@ are in the history, its `book` / `waitlist` / `attendance` what the export's tab
 Written by `python -m fdebench2.cli export-dataset cases/healthcare/hospital_appointment_scheduler` (checked by
 `validate-case`; about 11 MB, 193 files):
 
-- `visible/<lang>/`: the agent's data above, per locale.
+- `agent_view/<lang>/`: the agent's data above, per locale.
 - `hidden/days/<date>.json`: the 20 calls of the hidden period. 9 November is the complete input; for the other
   days the fields that depend on the program's earlier decisions (`attendance`, `book`, `waitlist`, patients'
   `cancellation` notices) are left out — the rest (calendar, new requests, the absence / interpreter / staff

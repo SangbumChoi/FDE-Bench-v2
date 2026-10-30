@@ -107,7 +107,7 @@ Lo escribe `python -m fdebench2.cli export-dataset cases/data_knowledge/multilin
 
 ```
 dataset/
-  visible/<lang>/corpus/...          la unidad de muestra del agente (idéntica byte a byte en todos los idiomas) + las notas del archivo
+  agent_view/<lang>/corpus/...       la unidad de muestra del agente (idéntica byte a byte en todos los idiomas) + las notas del archivo
   hidden/corpus/...                  la unidad oculta tal como la recibe organize() (igual en las nueve configuraciones)
   gt/<tier>_<A|B|C>/
     setting.json, score.json         la configuración y la puntuación de la referencia sobre el corpus oculto (con el

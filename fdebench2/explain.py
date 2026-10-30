@@ -302,7 +302,7 @@ def build_page(case_root: Path, lang: str = "en") -> str:
                            _esc(sc.get("baseline_objective", "–")), _esc(top),
                            f'<a href="{DATASET_DIR}/gt/{_esc(gt.name)}/">{t("open")}</a>'])
     gt_example = next(iter(sorted((ds / "gt").glob("*"))), None) if (ds / "gt").is_dir() else None
-    visible = ds / "visible" / lang if (ds / "visible" / lang).is_dir() else ds / "visible" / "en"
+    visible = ds / "agent_view" / lang if (ds / "agent_view" / lang).is_dir() else ds / "agent_view" / "en"
     score_head = [t("setting"), t("reference_objective"), t("baseline_objective"), t("metrics"), t("folder")]
     parts.append(f"""<section id="data"><h2>{t("data_title")} (<code>dataset/</code>)</h2>
 <p>{t("data_intro")}</p>

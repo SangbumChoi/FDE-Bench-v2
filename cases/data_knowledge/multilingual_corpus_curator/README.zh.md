@@ -107,7 +107,7 @@ out_dir/manifest.csv                     source,status,path,reason（placed | re
 
 ```
 dataset/
-  visible/<lang>/corpus/...          智能体的样本盘（各语言版本逐字节相同）+ 整理说明
+  agent_view/<lang>/corpus/...       智能体的样本盘（各语言版本逐字节相同）+ 整理说明
   hidden/corpus/...                  organize() 收到的隐藏盘原样（九个设置都相同）
   gt/<tier>_<A|B|C>/
     setting.json, score.json         设置，以及参考解在隐藏语料上的得分（含基线的

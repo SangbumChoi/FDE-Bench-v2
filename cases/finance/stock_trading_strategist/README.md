@@ -287,7 +287,7 @@ cash only (ignoring proceeds that settle next session and the withdrawal reserve
 Written by `python -m fdebench2.cli export-dataset cases/finance/stock_trading_strategist` and checked by
 `validate-case` against the generator (MANIFEST.json holds every file's sha256); about 8 MB, 264 files.
 
-- `visible/<lang>/`: the data above in each of the 5 locales (identical in every setting).
+- `agent_view/<lang>/`: the data above in each of the 5 locales (identical in every setting).
 - `hidden/` (`write_hidden`): `days/<date>.json`, one per call (80, named by the session just closed), with the
   call number, the exact `market` the engine sends and that day's `notices` (the `portfolio` is left out: it
   depends on the program's own orders, see the ground truth); `daily_prices.csv` and `index_levels.csv` for the

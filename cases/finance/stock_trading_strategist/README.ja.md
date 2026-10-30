@@ -181,6 +181,6 @@
 
 `python -m fdebench2.cli export-dataset cases/finance/stock_trading_strategist` で書き出し、`validate-case` が生成器と照合して確認します（MANIFEST.json にすべてのファイルの sha256 があります）。約 8 MB、264 ファイルです。
 
-- `visible/<lang>/`：上記のデータを5つのロケールそれぞれで収めたもの（すべての設定で同じ）。
+- `agent_view/<lang>/`：上記のデータを5つのロケールそれぞれで収めたもの（すべての設定で同じ）。
 - `hidden/`（`write_hidden`）：`days/<date>.json` は呼び出しごとに1つ（80個で、引けたばかりの営業日の名前）あり、呼び出し番号、エンジンが送る正確な `market`、その日の `notices` が入っています（`portfolio` はプログラム自身の注文によって変わるので含めていません。正解を参照）。隠れた80営業日の `daily_prices.csv` と `index_levels.csv`（最後の営業日の株価データはどの呼び出しにも入りません）。`mail/<lang>/*.eml` は6つの通知の元になったメールで、すべてのロケール分があります。
 - `gt/<tier>_<ruleset>/` は設定ごとに1つ：`setting.json`、`reference/program/`（strategy.py + config.json）、`score.json`（目的値1.0と指標）、そして `write_ground_truth` による参照解の実行結果：`orders.csv`（執行される営業日ごとの正しい形式の注文）、`fills.csv`（約定と拒否、その理由）、`positions.csv`（大引けごとの株数）、`equity_curve.csv`（当初の大引けを含むすべての大引け時点の現金、未受渡代金、保有分の評価額、資産、支払額、資産 + 支払額の最高値、ドローダウン、指数）、`status_tables.json`（80回の呼び出しそれぞれが報告すべき正確な表）。

@@ -306,7 +306,7 @@ reserva para la retirada), 0.91–0.92.
 Lo escribe `python -m fdebench2.cli export-dataset cases/finance/stock_trading_strategist` y lo comprueba
 `validate-case` frente al generador (MANIFEST.json guarda el sha256 de cada archivo); unos 8 MB, 264 archivos.
 
-- `visible/<lang>/`: los datos de arriba en cada uno de los 5 idiomas (idénticos en todas las configuraciones).
+- `agent_view/<lang>/`: los datos de arriba en cada uno de los 5 idiomas (idénticos en todas las configuraciones).
 - `hidden/` (`write_hidden`): `days/<date>.json`, uno por llamada (80, con el nombre de la sesión que acaba de
   cerrar), con el número de llamada, el `market` exacto que envía el motor y los `notices` de ese día (se omite el
   `portfolio`: depende de las propias órdenes del programa, véase la solución correcta); `daily_prices.csv` e

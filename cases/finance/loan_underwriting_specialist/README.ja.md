@@ -33,7 +33,7 @@
 
 `python -m fdebench2.cli export-dataset cases/finance/loan_underwriting_specialist` で書き出します（466ファイル、約18 MB。`validate-case` が生成器と一致するかを確認します）：
 
-- `visible/<lang>/`：上記のファイル、ロケールごと（どの設定でも同一）。
+- `agent_view/<lang>/`：上記のファイル、ロケールごと（どの設定でも同一）。
 - `hidden/days/<date>.json`：隠れた20日分の `on_day` 入力（その日の朝の信用情報のスナップショット付きの申込、通知）。`book` は含まず、エンジンがプログラム自身のそれまでの判断から埋めます。
 - `hidden/mail/<lang>/<date>_<ref>.eml`：隠れた期間の通知25件（規制変更1件、予算削減1件、返済15件、書類の訂正8件）と支店のメモ10件をメールにしたもの、ロケールごと。
 - `gt/<tier>_<ruleset>/`（9設定）：`setting.json`、`reference/program/`（設定ファイル付きの参照解）、`score.json`（目的値1.0、指標）、`decisions.csv`（参照解の日ごとの判断：date, day_index, application_id, customer_id, decision, amount, reason_code、hard の再判断は redecision = 1）、`limit_tables/<date>.json`（参照解の承認後に評価器が計算する、各日の期待される締め時点の枠一覧表：`customers`、`daily_capacity_remaining`、`period_budget_remaining`、easy では null）。

@@ -278,7 +278,7 @@ hard에서는 추가로 8% 손실이 나도 한도보다 2포인트 안쪽에 �
 cases/finance/stock_trading_strategist`로 쓰고, `validate-case`가 생성기와 대조해
 확인합니다(MANIFEST.json에 모든 파일의 sha256이 있습니다). 약 8 MB, 264개 파일입니다.
 
-- `visible/<lang>/`: 위의 데이터를 5개 로캘 각각으로 담은 것(모든 설정에서 동일).
+- `agent_view/<lang>/`: 위의 데이터를 5개 로캘 각각으로 담은 것(모든 설정에서 동일).
 - `hidden/`(`write_hidden`): `days/<date>.json`은 호출마다 하나씩(80개, 방금 마감한
   거래일의 이름) 있으며, 호출 번호, 엔진이 보내는 정확한 `market`, 그날의 `notices`가 들어
   있습니다(`portfolio`는 프로그램 자신의 주문에 따라 달라지므로 빠져 있습니다. 정답 참고). 숨은 80거래일의

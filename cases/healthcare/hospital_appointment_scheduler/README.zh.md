@@ -252,7 +252,7 @@ C：翻译最少、检验科最松），以及提前通知期与超额预约上�
 由 `python -m fdebench2.cli export-dataset cases/healthcare/hospital_appointment_scheduler` 生成（由 `validate-case` 检查；
 约 11 MB，193个文件）：
 
-- `visible/<lang>/`：上述智能体数据，按语言区分。
+- `agent_view/<lang>/`：上述智能体数据，按语言区分。
 - `hidden/days/<date>.json`：隐藏时段的20次调用。11月9日是完整输入；其他日子去掉了取决于程序此前决定的字段（`attendance`、
   `book`、`waitlist`、患者的 `cancellation` 通知）—— 其余部分（出诊表、新申请、缺勤 / 翻译 / 工作人员通知、备注）与引擎发送的
   完全一致。

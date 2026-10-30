@@ -53,7 +53,7 @@ branch notes in the JSON are in English in every locale.
 Written by `python -m fdebench2.cli export-dataset cases/finance/loan_underwriting_specialist` (466 files,
 ~18 MB; `validate-case` checks it matches the generator):
 
-- `visible/<lang>/`: the files above, per locale (identical in every setting).
+- `agent_view/<lang>/`: the files above, per locale (identical in every setting).
 - `hidden/days/<date>.json`: the 20 hidden days' `on_day` inputs (applications with that morning's bureau
   snapshot, notices) without `book`, which the engine fills from the program's own earlier decisions.
 - `hidden/mail/<lang>/<date>_<ref>.eml`: the hidden period's 25 notices (1 regulation change, 1 budget cut, 15

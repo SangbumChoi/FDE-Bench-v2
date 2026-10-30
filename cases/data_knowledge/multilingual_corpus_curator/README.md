@@ -160,7 +160,7 @@ Written by `python -m fdebench2.cli export-dataset cases/data_knowledge/multilin
 
 ```
 dataset/
-  visible/<lang>/corpus/...          the agent's sample drive (byte-identical in every locale) + the archivist's note
+  agent_view/<lang>/corpus/...       the agent's sample drive (byte-identical in every locale) + the archivist's note
   hidden/corpus/...                  the hidden drive exactly as organize() receives it (same in all nine settings)
   gt/<tier>_<A|B|C>/
     setting.json, score.json         the setting and the reference's score on the hidden corpus (with the

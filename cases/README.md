@@ -13,7 +13,7 @@ evaluator runs on hidden inputs (e.g. `decide(application)`, `answer(question)`)
 (see [DESIGN.md §3](../DESIGN.md#program-deliverables)).
 
 **Data and answers on disk:** every case keeps its generated data and ground truth in `dataset/`
-(`visible/<lang>/` as the agent receives it, `hidden/` for inputs it never sees, `gt/<tier>_<ruleset>/`
+(`agent_view/<lang>/` as the agent receives it, `hidden/` for inputs it never sees, `gt/<tier>_<ruleset>/`
 per setting with the reference deliverable and its score). Regenerate with `fdebench2 export-dataset`;
 `validate-case` fails if the stored files drift from the generator.
 

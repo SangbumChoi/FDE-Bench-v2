@@ -49,7 +49,7 @@
 `python -m fdebench2.cli export-dataset cases/finance/loan_underwriting_specialist`로 기록합니다(파일 466개, 약 18 MB.
 `validate-case`가 생성기와 일치하는지 확인합니다):
 
-- `visible/<lang>/`: 위의 파일들, 로캘별(모든 설정에서 동일).
+- `agent_view/<lang>/`: 위의 파일들, 로캘별(모든 설정에서 동일).
 - `hidden/days/<date>.json`: 숨은 20일의 `on_day` 입력(그날 아침의 신용평가 스냅숏이 붙은 신청, 통지). `book`은 빠져
   있으며, 엔진이 프로그램 자신의 이전 결정으로 채웁니다.
 - `hidden/mail/<lang>/<date>_<ref>.eml`: 숨은 기간의 통지 25건(규제 변경 1건, 예산 삭감 1건, 상환 15건, 서류 정정 8건)과

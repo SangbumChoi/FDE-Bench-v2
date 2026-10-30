@@ -453,7 +453,7 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
     # Numbers the agent meets in the data or at run time (a dated notice in the hidden inputs) count as stated,
     # from 10 up: small numbers are everywhere in data and would hide a rule that says 2 where the text says 6.
     # Each row is read whole (1,200 in a text) and as cells (a CSV's ,120,).
-    in_data = {x for d in (root / "dataset" / "visible" / "en", root / "dataset" / "hidden") if d.is_dir()
+    in_data = {x for d in (root / "dataset" / "agent_view" / "en", root / "dataset" / "hidden") if d.is_dir()
                for row in _data_rows(d) for text in (row, re.sub(r"[,;\t|]", " ", row))
                for x in (float(n.replace(",", "")) for n in NUMBER.findall(text)) if x >= 10}
     broken_baseline = False

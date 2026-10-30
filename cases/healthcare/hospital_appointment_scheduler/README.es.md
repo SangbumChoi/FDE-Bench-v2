@@ -285,7 +285,7 @@ el historial son los correos, y su `book` / `waitlist` / `attendance`, lo que so
 Lo escribe `python -m fdebench2.cli export-dataset cases/healthcare/hospital_appointment_scheduler` (lo comprueba
 `validate-case`; unos 11 MB, 193 archivos):
 
-- `visible/<lang>/`: los datos del agente descritos arriba, por idioma.
+- `agent_view/<lang>/`: los datos del agente descritos arriba, por idioma.
 - `hidden/days/<date>.json`: las 20 llamadas del periodo oculto. El 9 de noviembre es la entrada completa; en los demás días se
   omiten los campos que dependen de las decisiones anteriores del programa (`attendance`, `book`, `waitlist`, los avisos de
   `cancellation` de los pacientes); el resto (calendario, solicitudes nuevas, avisos de ausencia / intérprete / personal, notas)

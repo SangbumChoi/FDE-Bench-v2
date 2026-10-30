@@ -272,7 +272,7 @@
 `python -m fdebench2.cli export-dataset cases/healthcare/hospital_appointment_scheduler` が書き出します（`validate-case` が
 確認。約11 MB、193ファイル）：
 
-- `visible/<lang>/`: 上記のエージェントのデータ、ロケールごと。
+- `agent_view/<lang>/`: 上記のエージェントのデータ、ロケールごと。
 - `hidden/days/<date>.json`: 隠れた期間の20回の呼び出し。11月9日は完全な入力で、ほかの日はプログラムのそれまでの判断に
   左右される項目（`attendance`、`book`、`waitlist`、患者さんの `cancellation` の連絡）を除いてあります。残り（外来枠表、
   新規依頼、不在 / 通訳者 / 職員の連絡、メモ）はエンジンが送るものとまったく同じです。

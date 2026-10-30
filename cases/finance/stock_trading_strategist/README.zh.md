@@ -181,6 +181,6 @@
 
 由 `python -m fdebench2.cli export-dataset cases/finance/stock_trading_strategist` 写出，并由 `validate-case` 对照生成器检查（MANIFEST.json 记录每个文件的 sha256）；约 8 MB，264 个文件。
 
-- `visible/<lang>/`：上面的数据，5 种语言各一份（所有设置相同）。
+- `agent_view/<lang>/`：上面的数据，5 种语言各一份（所有设置相同）。
 - `hidden/`（`write_hidden`）：`days/<date>.json`，每次调用一个（80 个，以刚收盘的交易日命名），含调用序号、引擎发送的精确 `market` 和当天的 `notices`（不含 `portfolio`：它取决于程序自己的订单，见标准答案）；隐藏的 80 个交易日的 `daily_prices.csv` 和 `index_levels.csv`（最后一个交易日的行情不在任何一次调用里）；`mail/<lang>/*.eml`，六条通知背后的邮件，每种语言都有。
 - `gt/<tier>_<ruleset>/`，每个设置一个：`setting.json`、`reference/program/`（strategy.py + config.json）、`score.json`（目标值 1.0 和各项指标），以及由 `write_ground_truth` 写出的参考解运行结果：`orders.csv`（按执行交易日列出的格式正确的订单）、`fills.csv`（成交和拒单及其原因）、`positions.csv`（每次收盘的股数）、`equity_curve.csv`（每次收盘时的现金、未交收款、持仓市值、净值、已付出金、净值加已付出金的最高值、回撤和指数，含起始那次收盘）和 `status_tables.json`（80 次调用各自必须报告的精确状态表）。

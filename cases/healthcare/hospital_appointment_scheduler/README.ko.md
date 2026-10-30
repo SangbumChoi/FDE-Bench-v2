@@ -269,7 +269,7 @@
 `python -m fdebench2.cli export-dataset cases/healthcare/hospital_appointment_scheduler`가 작성합니다(`validate-case`가
 확인. 약 11 MB, 파일 193개):
 
-- `visible/<lang>/`: 위의 에이전트 데이터, 로캘별.
+- `agent_view/<lang>/`: 위의 에이전트 데이터, 로캘별.
 - `hidden/days/<date>.json`: 숨은 기간의 호출 20번. 11월 9일은 완전한 입력이고, 다른 날은 프로그램의 앞선 결정에 따라
   달라지는 필드(`attendance`, `book`, `waitlist`, 환자의 `cancellation` 통지)가 빠져 있습니다. 나머지(진료 일정표, 신규 요청,
   부재 / 통역사 / 직원 통지, 메모)는 엔진이 보내는 것과 정확히 같습니다.

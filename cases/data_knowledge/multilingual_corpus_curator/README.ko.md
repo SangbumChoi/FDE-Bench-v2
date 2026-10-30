@@ -107,7 +107,7 @@ out_dir/manifest.csv                          source,status,path,reason (placed 
 
 ```
 dataset/
-  visible/<lang>/corpus/...          에이전트의 샘플 드라이브(모든 로캘에서 바이트 단위로 같음) + 정리 메모
+  agent_view/<lang>/corpus/...       에이전트의 샘플 드라이브(모든 로캘에서 바이트 단위로 같음) + 정리 메모
   hidden/corpus/...                  organize()가 받는 그대로의 숨은 드라이브(아홉 설정 모두 같음)
   gt/<tier>_<A|B|C>/
     setting.json, score.json         설정과 숨은 코퍼스에서의 참조 해답 점수(기준선의 목표값과

@@ -5,7 +5,7 @@ data and the answers without running anything. `fdebench2 export-dataset`
 writes, next to case.yaml:
 
     dataset/
-      visible/<lang>/...      what the agent receives, per customer locale (identical in every setting)
+      agent_view/<lang>/...   what the agent receives, per customer locale (identical in every setting)
       hidden/...              inputs the agent never sees: a program case's hidden period or corpus
                               (case.py `write_hidden(world, dir)`, optional)
       gt/<tier>_<ruleset>/    one folder per setting (gt/default/ for a case without settings):
@@ -38,7 +38,7 @@ DATASET_DIR = "dataset"
 
 def _write(case: NativeCase, out: Path) -> None:
     for lang in LOCALES:
-        case.materialize_data(lang, out / "visible" / lang)
+        case.materialize_data(lang, out / "agent_view" / lang)
     hidden = getattr(case.module, "write_hidden", None)
     if hidden is not None:
         (out / "hidden").mkdir(parents=True, exist_ok=True)

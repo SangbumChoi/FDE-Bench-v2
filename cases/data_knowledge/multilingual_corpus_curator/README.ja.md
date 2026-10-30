@@ -107,7 +107,7 @@ out_dir/manifest.csv                           source,status,path,reason（place
 
 ```
 dataset/
-  visible/<lang>/corpus/...          エージェントのサンプルドライブ（どのロケールでもバイト単位で同一）+ 整理メモ
+  agent_view/<lang>/corpus/...       エージェントのサンプルドライブ（どのロケールでもバイト単位で同一）+ 整理メモ
   hidden/corpus/...                  organize() が受け取るそのままの隠れたドライブ（9つの設定すべてで同じ）
   gt/<tier>_<A|B|C>/
     setting.json, score.json         設定と、隠れたコーパスでの参照解のスコア（ベースラインの

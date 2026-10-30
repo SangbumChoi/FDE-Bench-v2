@@ -55,7 +55,7 @@ notas de sucursal del JSON están en inglés en todos los idiomas.
 Lo escribe `python -m fdebench2.cli export-dataset cases/finance/loan_underwriting_specialist` (466 archivos, ~18 MB;
 `validate-case` comprueba que coincide con el generador):
 
-- `visible/<lang>/`: los archivos anteriores, por idioma (idénticos en todas las configuraciones).
+- `agent_view/<lang>/`: los archivos anteriores, por idioma (idénticos en todas las configuraciones).
 - `hidden/days/<date>.json`: las entradas de `on_day` de los 20 días ocultos (solicitudes con la instantánea del buró de esa
   mañana, avisos) sin `book`, que el motor rellena a partir de las decisiones anteriores del propio programa.
 - `hidden/mail/<lang>/<date>_<ref>.eml`: los 25 avisos del período oculto (1 cambio regulatorio, 1 recorte de presupuesto,

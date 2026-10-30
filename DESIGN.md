@@ -44,7 +44,7 @@ cases/<field>/<role>/
   README.md                 the client, data, rules and situations; reference and baseline numbers
   REVIEW.md                 findings of a case review and their status (rendered in explainer.html)
   dataset/                  the generated data and ground truth as files (fdebench2 export-dataset):
-    visible/<lang>/         what the agent receives, per customer locale
+    agent_view/<lang>/      what the agent receives, per customer locale
     hidden/                 inputs the agent never sees (a program case's hidden period or corpus)
     gt/<tier>_<ruleset>/    per setting: setting.json, reference/, score.json (with the baseline's
                             objective) and case extras

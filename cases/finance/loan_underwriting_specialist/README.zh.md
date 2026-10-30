@@ -33,7 +33,7 @@
 
 由 `python -m fdebench2.cli export-dataset cases/finance/loan_underwriting_specialist` 写出（466个文件，约18 MB；`validate-case` 检查它与生成器一致）：
 
-- `visible/<lang>/`：上述文件，按语言版本提供（各设置完全相同）。
+- `agent_view/<lang>/`：上述文件，按语言版本提供（各设置完全相同）。
 - `hidden/days/<date>.json`：隐藏的20天的 `on_day` 输入（带当天早上征信快照的申请、通知），不含 `book`，由引擎根据程序自己之前的决定填入。
 - `hidden/mail/<lang>/<date>_<ref>.eml`：隐藏期间的25条通知（1条监管变更、1条预算削减、15条还款、8条材料更正）和10条网点备注，以邮件形式按语言版本提供。
 - `gt/<tier>_<ruleset>/`（9个设置）：`setting.json`、`reference/program/`（参考解及其配置）、`score.json`（目标值

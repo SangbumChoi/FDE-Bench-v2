@@ -65,7 +65,7 @@ en:
   all_tiers: all
   data_title: Data & answers
   data_intro: >-
-    Everything is stored as files next to the case. <code>visible/</code> is what the agent receives;
+    Everything is stored as files next to the case. <code>agent_view/</code> is what the agent receives;
     <code>hidden/</code> is what it never sees (a program's hidden period or corpus); <code>gt/</code> holds one
     answer folder per setting. <code>validate-case</code> checks the files still match the generator.
   visible_data: "Agent-visible data ({language} locale)"
@@ -164,7 +164,7 @@ ko:
   all_tiers: 전체
   data_title: 데이터와 정답
   data_intro: >-
-    모든 것이 케이스 옆에 파일로 저장되어 있습니다. <code>visible/</code>은 에이전트가 받는 데이터,
+    모든 것이 케이스 옆에 파일로 저장되어 있습니다. <code>agent_view/</code>은 에이전트가 받는 데이터,
     <code>hidden/</code>은 에이전트가 보지 못하는 입력(프로그램의 숨은 기간이나 코퍼스), <code>gt/</code>는 설정마다 하나씩
     있는 정답 폴더입니다. <code>validate-case</code>가 파일이 생성기와 여전히 일치하는지 확인합니다.
   visible_data: "에이전트가 보는 데이터 ({language} 로캘)"
@@ -259,7 +259,7 @@ ja:
   all_tiers: すべて
   data_title: データと正解
   data_intro: >-
-    すべてケースの隣にファイルとして保存されています。<code>visible/</code> はエージェントが受け取るデータ、<code>hidden/</code> はエージェントが決して見ない入力（プログラムの隠れた期間やコーパス）、<code>gt/</code> は設定ごとの正解フォルダです。<code>validate-case</code> がファイルと生成器の一致を確認します。
+    すべてケースの隣にファイルとして保存されています。<code>agent_view/</code> はエージェントが受け取るデータ、<code>hidden/</code> はエージェントが決して見ない入力（プログラムの隠れた期間やコーパス）、<code>gt/</code> は設定ごとの正解フォルダです。<code>validate-case</code> がファイルと生成器の一致を確認します。
   visible_data: "エージェントが見るデータ（{language}）"
   hidden_inputs: 隠れた入力
   scores_title: 設定ごとの参照解のスコア
@@ -351,7 +351,7 @@ zh:
   all_tiers: 全部
   data_title: 数据与答案
   data_intro: >-
-    所有内容都以文件形式保存在案例旁边。<code>visible/</code> 是智能体收到的数据，<code>hidden/</code> 是它看不到的输入
+    所有内容都以文件形式保存在案例旁边。<code>agent_view/</code> 是智能体收到的数据，<code>hidden/</code> 是它看不到的输入
     （程序的隐藏时段或语料），<code>gt/</code> 是每个设置一份的答案文件夹。<code>validate-case</code> 会检查这些文件是否仍与生成器一致。
   visible_data: "智能体看到的数据（{language}）"
   hidden_inputs: 隐藏输入
@@ -448,7 +448,7 @@ es:
   all_tiers: todos
   data_title: Datos y respuestas
   data_intro: >-
-    Todo se guarda como archivos junto al caso. <code>visible/</code> es lo que recibe el agente;
+    Todo se guarda como archivos junto al caso. <code>agent_view/</code> es lo que recibe el agente;
     <code>hidden/</code>, lo que nunca ve (el periodo oculto o el corpus de un programa); <code>gt/</code> tiene una
     carpeta de respuestas por configuración. <code>validate-case</code> comprueba que los archivos siguen
     coincidiendo con el generador.
