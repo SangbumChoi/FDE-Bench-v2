@@ -225,6 +225,11 @@ def expected_draw(name: str, pool: list, seed: int, salt: int = 0):
     return pool[random.Random(key).randrange(len(pool))]
 
 
+# The toy with the deprecated fixed rule sets A / B / C instead of params: and rule_seeds:.
+LEGACY_YAML = (CASE_YAML[:CASE_YAML.index("params:")]
+               + "rulesets: {A: {cap: 10, price: 3}, B: {cap: 12, price: 4}, C: {cap: 14, price: 5}}\n"
+               + CASE_YAML[CASE_YAML.index("rules:"):])
+
 POOLS = {"cap": {"easy": [10, 12], "medium": [14, 16], "hard": [18, 20, 22]},
          "price": {t: [3, 4, 5] for t in ("easy", "medium", "hard")}}
 
@@ -428,7 +433,7 @@ experiments:
     assert len(toy) == 2 * 3 + 2 and {k.split("__r-")[1].split("__")[0] for k in toy} == {"1", "2", "3", "101", "102"}
     assert [k for k in keys if k.startswith(plain)] == [k for k in keys if k.startswith(plain) and "__r-" not in k]
     assert len([k for k in keys if k.startswith(plain)]) == 2 + 1                   # once per difficulty
-    legacy = NativeCase(REPO / "cases" / "manufacturing" / "procurement_specialist")
+    legacy = NativeCase(make_toy(tmp_path / "legacy", LEGACY_YAML, dataset=False))
     assert case_rule_seeds(legacy, None) == [1, 2, 3]
     with pytest.raises(ValueError, match="rule seed 7"):
         case_rule_seeds(legacy, 7)                       # deprecated rulesets: has no private seeds
@@ -460,10 +465,7 @@ def test_report_averages_over_rule_seeds_then_cases():
 
 
 def test_deprecated_rulesets_are_rule_seeds_1_2_3(tmp_path):
-    src = REPO / "cases" / "manufacturing" / "procurement_specialist"
-    root = tmp_path / "cases" / "manufacturing" / "procurement_specialist"
-    shutil.copytree(src, root, ignore=shutil.ignore_patterns("__pycache__", "dataset", "explainer*.html"))
-    shutil.copy2(REPO / "cases" / "fields.yaml", tmp_path / "cases" / "fields.yaml")
+    root = make_toy(tmp_path, LEGACY_YAML, dataset=False)
     case = NativeCase(root)
     assert case.rule_seeds == (1, 2, 3) and case.rule_seed == 1
     b = case.at("hard", 2)
@@ -472,10 +474,10 @@ def test_deprecated_rulesets_are_rule_seeds_1_2_3(tmp_path):
     with pytest.raises(KeyError, match="private rule seeds need params"):
         case.at("hard", 4)
     with pytest.raises(ValueError):
-        b.with_params(usd_krw=1)
+        b.with_params(cap=1)
     assert check_binding(case, {}) == ([], [])
     path = root / "locales" / "en" / "request.md"              # a slip, so validation stops after the texts
-    path.write_text(path.read_text(encoding="utf-8") + "\n{{usd_krw}}\n", encoding="utf-8")
+    path.write_text(path.read_text(encoding="utf-8") + "\n{{cap}}\n", encoding="utf-8")
     report = check_case(root)
     assert "en/request.md: must be the same in every setting (no markers or parameters)" in report.problems
     assert any(w.startswith("case.yaml: rulesets: is deprecated") for w in report.warnings)

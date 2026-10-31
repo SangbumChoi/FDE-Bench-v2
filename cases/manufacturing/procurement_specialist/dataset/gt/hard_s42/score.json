@@ -1,0 +1,51 @@
+{
+  "baseline_objective": 644582952.228738,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.86542097,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "backlog_krw": 7891892,
+    "backlog_unit_weeks": {
+      "C01": 29.2,
+      "C02": 19.6,
+      "C03": 76.4,
+      "C07": 6487.5,
+      "C08": 1767.2,
+      "C09": 2364.7,
+      "C10": 16635.0,
+      "C11": 1730.2,
+      "C12": 1042.8,
+      "C13": 338.3,
+      "C14": 963.9,
+      "C15": 20.5,
+      "C16": 3.6,
+      "C17": 107.5,
+      "C18": 490.4,
+      "C20": 101.9,
+      "C21": 197.7,
+      "C22": 348.0,
+      "C23": 351.2,
+      "C24": 1382.2,
+      "C25": 43.3
+    },
+    "holding_krw": 8887288,
+    "order_lines": 91,
+    "purchase_krw": 529987342,
+    "safety_shortfall_krw": 11049482,
+    "scrap_krw": 19600,
+    "spend_by_month": {
+      "2026-11": 110783830,
+      "2026-12": 416971042,
+      "2027-01": 2232470
+    }
+  },
+  "objective": 557835602.7919166,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

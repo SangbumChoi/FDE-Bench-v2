@@ -1,0 +1,20 @@
+{
+  "derived": {
+    "hold_supplier": {
+      "en": "Seoul PCB Tech (S05)",
+      "es": "Seoul PCB Tech (S05)",
+      "ja": "Seoul PCB Tech（S05）",
+      "ko": "서울PCB테크(S05)",
+      "zh": "Seoul PCB Tech（S05）"
+    },
+    "hold_until": 5
+  },
+  "params": {
+    "max_share": 80,
+    "quality_hold": "S05-W5",
+    "safety_weeks": 0.5,
+    "usd_krw": 1380
+  },
+  "rule_seed": 78,
+  "tier": "hard"
+}

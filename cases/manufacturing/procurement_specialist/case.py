@@ -30,17 +30,24 @@ rules and cost terms apply and with which parameters:
             change (C04 left at the end of W5 is scrapped). Quality is the exact
             expected cost over the true lateness distribution, computed by
             enumeration (no sampling)
-  rule sets (case.yaml `rulesets`)
-    usd_krw        planning rate for the USD quotes of Pacific Parts (S04)
-    safety_weeks   safety stock of critical parts, in average weeks of demand
-    max_share      dual sourcing: most any one supplier may get of a critical part
-    hold_supplier  which supplier is on quality hold, and until which week
-    hold_until     (its lots due to arrive in W1..W<hold_until> are rejected)
+  rule parameters (case.yaml `params`, each drawn by the rule seed from its pool)
+    usd_krw         planning rate for the USD quotes of Pacific Parts (S04); fixed at 1,380 in hard
+    safety_weeks    safety stock of critical parts, in average weeks of demand
+    max_share       dual sourcing: most any one supplier may get of a critical part; fixed at 80% in hard
+    quality_hold    which supplier is on quality hold and up to which week its lots are rejected, "S07-W3"
+                    (hard: longer holds, and the main semiconductor maker S03 instead of S07)
+  derived: hold_supplier (its name in each locale) and hold_until (the week), for the texts
+
+The budget in the data is calibrated over the candidate pools (`_calibrate`). Whatever a rule seed draws, the
+reference and the baseline stay valid: a month they cannot bring under its cap by moving orders in time is
+brought under it by moving orders late, pulling them forward or cutting order lines (accepting shortfall or
+backlog), see `_defer`.
 """
 
 from __future__ import annotations
 
 import datetime as dt
+import itertools
 import math
 import random
 from dataclasses import dataclass, field
@@ -48,7 +55,7 @@ from pathlib import Path
 
 import yaml
 
-from fdebench2.cases import TIERS, Setting
+from fdebench2.cases import TIERS, Setting, param_pools
 from fdebench2.casekit import Fatal, labels, number, read_csv, write_csv, write_xlsx
 
 # ── world ────────────────────────────────────────────────────────────────────
@@ -71,11 +78,11 @@ MAX_LATE = 2                                     # deliveries are at most two we
 SLT_THRESHOLD = 0.05                             # reference: plan one week of safety lead time above this
 
 _META = yaml.safe_load((Path(__file__).with_name("case.yaml")).read_text(encoding="utf-8"))
-RULESETS = {r: dict(p) for r, p in _META["rulesets"].items()}
-
-
-def all_settings() -> list[Setting]:
-    return [Setting(t, r, RULESETS[r]) for t in TIERS for r in sorted(RULESETS)]
+PARAM_POOLS = param_pools(_META, TIERS)          # {parameter: {tier: candidates}}: what the budget is calibrated on
+# The allocation is calibrated on one plan: the first version's rule set A.
+CALIBRATION = {"usd_krw": 1380, "safety_weeks": 1, "max_share": 80, "quality_hold": "S07-W3"}
+NOV_SHARE = 0.95                                 # November's cap: this share of the least unconstrained spend there
+HEADROOM = 1.05                                  # December and January: headroom over the most any combination spends
 
 
 def month_of_week(w: int) -> str:
@@ -142,7 +149,7 @@ class World:
 
 
 class _View:
-    """The world as one setting sees it: which tier's rules apply and the rule set's parameters."""
+    """The world as one setting sees it: which tier's rules apply and the rule seed's parameters."""
 
     def __init__(self, world: World, setting: Setting):
         self._w, self.setting = world, setting
@@ -151,8 +158,7 @@ class _View:
         self.fx = float(setting["usd_krw"])
         self.safety_weeks = float(setting["safety_weeks"])
         self.max_share = float(setting["max_share"]) / 100.0
-        self.hold_supplier = str(setting["hold_supplier"])
-        self.hold_until = int(setting["hold_until"])
+        self.hold_supplier, self.hold_until = _hold(setting["quality_hold"])
         self.alloc = world.alloc if self.hard else {}
         self.late = world.late if self.hard else None
         self.est_late = world.est_late if self.hard else None
@@ -186,6 +192,10 @@ class _View:
                 k.safety = math.ceil(self.safety_weeks * sum(demand) / (last - first + 1) - 1e-9)
             out.append(k)
         return out
+
+    def cap(self, month: str) -> float:
+        """What the plan may spend in a month (budget.csv)."""
+        return self._w.budget[month]
 
     def comp(self, cid: str) -> Component | None:
         return self._by_id.get(cid)
@@ -355,7 +365,7 @@ def _make_quote(core: tuple, avg: float, rb: random.Random) -> Quote:
 
 
 def build_world(seed: int) -> World:
-    """One world for every setting; the budget and the allocation are calibrated against all nine settings."""
+    """One world for every setting; the budget is calibrated over the candidate pools of every tier (`_calibrate`)."""
     rng = random.Random(seed)
     b200 = [int(round(b * rng.uniform(0.55, 0.65))) for b in BOARDS]
     boards = {"B100": [b - x for b, x in zip(BOARDS, b200)], "B200": b200}
@@ -434,16 +444,73 @@ def build_world(seed: int) -> World:
     return world
 
 
+# How the supplier on quality hold reads in each locale's text (the derived `hold_supplier`).
+HOLD_NAMES = {
+    "S01": {"zh": "Hanbit Electronics（S01）", "en": "Hanbit Electronics (S01)", "ko": "한빛전자(S01)",
+            "ja": "Hanbit Electronics（S01）", "es": "Hanbit Electronics (S01)"},
+    "S03": {"zh": "Mirae Semicon（S03）", "en": "Mirae Semicon (S03)", "ko": "미래반도체(S03)",
+            "ja": "Mirae Semicon（S03）", "es": "Mirae Semicon (S03)"},
+    "S05": {"zh": "Seoul PCB Tech（S05）", "en": "Seoul PCB Tech (S05)", "ko": "서울PCB테크(S05)",
+            "ja": "Seoul PCB Tech（S05）", "es": "Seoul PCB Tech (S05)"},
+    "S07": {"zh": "Kowon Passive（S07）", "en": "Kowon Passive (S07)", "ko": "고원패시브(S07)",
+            "ja": "Kowon Passive（S07）", "es": "Kowon Passive (S07)"},
+}
+
+
+def _hold(value: str) -> tuple[str, int]:
+    """A quality_hold candidate, "S07-W3": the supplier and the last week whose arrivals are rejected."""
+    sid, week = str(value).split("-W")
+    return sid, int(week)
+
+
+def derive_params(params: dict, tier: str) -> dict:
+    """The supplier on hold (worded per locale) and the hold's last week, for the texts."""
+    sid, until = _hold(params["quality_hold"])
+    return {"hold_supplier": dict(HOLD_NAMES[sid]), "hold_until": until}
+
+
+def _earliest_arrival(sid: str) -> int:
+    """The first week goods of `sid` can arrive in any world and tier: an order in W1 with its shortest lead time
+    (the templates' lead less the one day of noise), in whole weeks or in business days alike."""
+    rows = [r for rows in TEMPLATES.values() for r in rows] + ECO_TEMPLATE
+    return 1 + math.ceil(max(2, min(lead for s, _, lead, *_ in rows if s == sid) - 1) / 5)
+
+
+def admissible(params: dict, tier: str) -> bool:
+    """A quality hold reaches a week in which the supplier's goods could arrive at all: Seoul PCB Tech (S05) and
+    Mirae Semicon (S03) quote 11-13 business days, so nothing of theirs arrives before W4, and a hold up to W3
+    would change nothing. (The pools hold only such holds; this guards edits to them.)"""
+    sid, until = _hold(params["quality_hold"])
+    return until >= _earliest_arrival(sid)
+
+
+def _combinations(tier: str) -> list[dict]:
+    """Every admissible parameter combination a rule seed can draw in `tier`, with the derived values."""
+    pools = {n: list(dict.fromkeys(by_tier[tier])) for n, by_tier in PARAM_POOLS.items()}
+    out = []
+    for combo in itertools.product(*pools.values()):
+        drawn = dict(zip(pools, combo))
+        full = {**drawn, **derive_params(drawn, tier)}
+        if admissible(full, tier):
+            out.append(full)
+    return out
+
+
 def _calibrate(world: World) -> None:
     """Allocation and budget, written into the data, so that they bind in the settings that use them.
 
-    Allocation (hard only): 60% of the peak month the unconstrained hard reference of rule set A would order from
-    that supplier. November cap: between the most any setting's reference can defer out of November and the
-    least any setting spends there unconstrained, so it is feasible everywhere and binds wherever the two ranges
-    allow. December and January get 5% headroom over every setting's spend, so they never bind."""
-    nov = MONTHS[0]
+    Allocation (hard only): 60% of the peak month the unconstrained hard plan of the calibration parameters would
+    order from that supplier. The budget is calibrated over every combination of the candidate pools in every
+    tier (a private rule seed may draw any of them), on the unconstrained plans: November's cap is NOV_SHARE of
+    the least any combination spends there, so that it binds whatever is drawn; December's has HEADROOM over the
+    most any combination spends there plus what it spends in November above that cap, and January's HEADROOM
+    over the most any combination spends there, so that those two bind only where deferrals pile up. Whatever
+    the reference cannot defer in time it defers late, pulls forward or cuts (`_defer`), so every combination
+    stays feasible."""
+    nov, dec, jan = MONTHS
     world.budget = {m: math.inf for m in MONTHS}
-    loose = _solve(_View(world, Setting("hard", "A", RULESETS["A"])), budget=False)
+    calibration = {**CALIBRATION, **derive_params(CALIBRATION, "hard")}
+    loose = _solve(_View(world, Setting("hard", 0, calibration)), budget=False, trim=False)
     for cid, sid in ALLOC_PAIRS:
         per = {m: 0 for m in MONTHS}
         for ln in loose:
@@ -452,24 +519,14 @@ def _calibrate(world: World) -> None:
         moq = world.quotes[(cid, sid)].moq
         world.alloc[(cid, sid)] = max(int(ALLOC_SHARE * max(per.values()) // 500 * 500),
                                       int(math.ceil(1.5 * moq / 500) * 500))
-    highs, lows, plans = [], [], {}
-    for s in all_settings():
-        v = _View(world, s)
-        plans[s.label] = plan = _solve(v, budget=False)
-        highs.append(_spend(v, plan)[nov])
-        lows.append(_spend(v, _defer(v, plan, nov, 0.0, strict=False))[nov])
-    least, loose_min = max(lows), min(highs)
-    cap = _ceil_cap(least + 0.5 * (loose_min - least)) if least < loose_min else _ceil_cap(least)
-    if least < loose_min and cap >= loose_min:
-        cap = _ceil_cap(least)
-    world.budget[nov] = cap
-    top = {m: 5e7 for m in MONTHS[1:]}
-    for s in all_settings():
-        v = _View(world, s)
-        spend, free = _spend(v, _solve(v)), _spend(v, plans[s.label])
-        for m in MONTHS[1:]:
-            top[m] = max(top[m], _ceil_cap(max(spend[m], free[m]) * 1.05))
-    world.budget.update(top)
+    spends = []
+    for tier in TIERS:
+        for params in _combinations(tier):
+            v = _View(world, Setting(tier, 0, params))
+            spends.append(_spend(v, _solve(v, budget=False, trim=False)))
+    world.budget[nov] = float(math.floor(NOV_SHARE * min(s[nov] for s in spends) / 5e6) * 5e6)
+    world.budget[dec] = _ceil_cap(HEADROOM * max(s[dec] + max(0.0, s[nov] - world.budget[nov]) for s in spends))
+    world.budget[jan] = _ceil_cap(HEADROOM * max(s[jan] for s in spends))
 
 
 # ── data rendering ───────────────────────────────────────────────────────────
@@ -797,8 +854,8 @@ def simulate(world: _View, lines: list[dict]) -> tuple[list[tuple[str, str]], fl
             violations.append(("quality_hold", f"{tag}: arrives in W{arr}, while {world.hold_supplier} is on "
                                                f"quality hold up to W{world.hold_until}"))
     for m in MONTHS:
-        if spend[m] > world.budget[m] + 1e-6:
-            violations.append(("budget_cap", f"{m}: purchases {spend[m]:,.0f} KRW exceed the cap {world.budget[m]:,.0f}"))
+        if spend[m] > world.cap(m) + 1e-6:
+            violations.append(("budget_cap", f"{m}: purchases {spend[m]:,.0f} KRW exceed the cap {world.cap(m):,.0f}"))
     for (cid, sid), cap in sorted(world.alloc.items()):
         per = {m: 0 for m in MONTHS}
         for ln in lines:
@@ -851,13 +908,17 @@ def score(world: World, submission_dir: Path, setting: Setting) -> dict:
 
 # ── reference solution ───────────────────────────────────────────────────────
 # Time-phased MRP per part: net the stock and open orders against the exploded demand, and order from the
-# cheapest supplier that still arrives in time, as late as possible, covering two weeks and rounding up to a price
-# break when that costs less in total. Critical parts then move whole lines to a second source until the share
-# rule holds. A month over budget defers whole lines to the first week of the next month with a supplier that
-# still arrives in time (usually a faster, dearer one), cheapest extra cost per KRW deferred first, each re-sized
-# to what the part still needs from its new arrival. The reference
-# keeps the cheaper valid plan of the planner with and without the second-source step. Hard tier: one week of
-# safety lead time for suppliers whose smoothed late rate in the history is above 5%, allocation respected.
+# cheapest supplier that still arrives in time, as late as possible, covering two weeks (or one) and rounding up to a
+# price break when that costs less in total. Critical parts then move whole lines to a second source until the share
+# rule holds, and leftover stock is trimmed (`_trim`). A month over budget defers whole lines to the first week of
+# the next month with a supplier that still arrives in time (usually a faster, dearer one), cheapest extra cost per
+# KRW deferred first, each re-sized to what the part still needs from its new arrival; failing that it moves a line
+# late, pulls January's excess into December or cuts a line (`_defer`). The reference keeps the cheapest valid plan
+# of fifteen variants: with and without the second-source step, two- or one-week lots, and the client's lot-for-lot
+# planner with its quota split (`_mrp_component`), each with the trim before and after the budget step, only after
+# it, or not at all (`_reference`).
+# Hard tier: one week of safety lead time for suppliers whose smoothed late rate in the history is above 5%,
+# allocation respected.
 
 def _parr(world: _View, cid: str, sid: str, week: int) -> int:
     """Planned arrival: promised, plus one week of safety lead time for unreliable suppliers (hard)."""
@@ -879,7 +940,7 @@ def _ok(world: _View, k: Component, sid: str, week: int, lines: list[dict], qty:
     return cap is None or cap - _alloc_used(lines, sid, month_of_week(week)) >= max(q.moq, qty)
 
 
-def _plan_component(world: _View, k: Component) -> list[dict]:
+def _plan_component(world: _View, k: Component, cover: int = 2) -> list[dict]:
     rec = [0] * (N_WEEKS + 4)
     for o in world.open_orders:
         if o["component"] == k.id:
@@ -909,7 +970,7 @@ def _plan_component(world: _View, k: Component) -> list[dict]:
             if w < N_ORDER_WEEKS and _ok(world, k, best, w + 1, lines) and _parr(world, k.id, best, w + 1) <= deficit:
                 break  # the same supplier can still be ordered next week: wait
             q = world.quotes[(k.id, best)]
-            end = min(deficit + 1, k.last)
+            end = min(deficit + cover - 1, k.last)
             need = max(k.target(j) - net[j] for j in range(deficit, end + 1))
             qty = max(q.moq, int(math.ceil(max(need, 1) / 100.0)) * 100)
             for bq, _ in world.breaks(q):   # all-units discount: round up when the break costs less in total
@@ -964,8 +1025,8 @@ def _second_source(world: _View, k: Component, lines: list[dict]) -> list[dict]:
     return lines
 
 
-def _plan_full(world: _View, k: Component, dual: bool = True) -> list[dict]:
-    lines = _plan_component(world, k)
+def _plan_full(world: _View, k: Component, dual: bool = True, cover: int = 2) -> list[dict]:
+    lines = _plan_component(world, k, cover)
     if dual and k in world.dual_parts():
         lines = _second_source(world, k, lines)
     return lines
@@ -986,15 +1047,14 @@ def _part_cost(world: _View, k: Component, lines: list[dict]) -> float:
         sum(_expected_costs(world, k, lots, world.est_late).values())
 
 
-def _resize(world: _View, k: Component, rest: list[dict], sid: str, week: int, qty: int) -> int:
-    """The quantity of a line of `qty` moved to `sid` in `week`: what the rest of the part's plan still lacks from
-    the line's planned arrival on, rounded as the planner rounds (hundreds, the MOQ, a cheaper price break), and
-    never more than the line it replaces."""
+def _net(world: _View, k: Component, lines: list[dict]) -> list[float]:
+    """The part's planned net position at the end of weeks 0..k.last: stock, open orders and `lines` at their
+    planned arrival, less the demand so far."""
     rec = [0] * (N_WEEKS + 4)
     for o in world.open_orders:
         if o["component"] == k.id:
             rec[o["arrival"]] += o["qty"]
-    for x in rest:
+    for x in lines:
         a = _parr(world, k.id, x["supplier"], x["week"])
         if a <= k.last:
             rec[a] += x["qty"]
@@ -1003,6 +1063,57 @@ def _resize(world: _View, k: Component, rest: list[dict], sid: str, week: int, q
         acc += rec[j]
         cd += k.demand[j - 1]
         net.append(acc - cd)
+    return net
+
+
+def _trim(world: _View, k: Component, lines: list[dict]) -> list[dict]:
+    """Leftover stock trimmed, latest arrival first. Each line may be cut by what the part holds above its target
+    from the line's planned arrival to the part's last week (rounded down to hundreds, never below the MOQ; dropped
+    when all of it is spare), or be replaced, in the same week, by a line from another supplier that arrives no
+    later, sized to what the part still lacks (a small-MOQ supplier instead of a full MOQ). Whichever lowers the
+    part's cost most by the reference's own view is kept, if it keeps dual sourcing."""
+    lines = [dict(x) for x in lines if x["component"] == k.id]
+    order = sorted(range(len(lines)), key=lambda i: (-_parr(world, k.id, lines[i]["supplier"], lines[i]["week"]),
+                                                      -lines[i]["week"]))
+    dual = k in world.dual_parts()
+    for i in order:
+        ln = lines[i]
+        a = _parr(world, k.id, ln["supplier"], ln["week"])
+        if not ln["qty"] or a > k.last:
+            continue
+        now = [x for x in lines if x["qty"]]
+        rest = [x for j, x in enumerate(lines) if j != i and x["qty"]]
+        net = _net(world, k, lines)
+        slack = min(net[j] - k.target(j) for j in range(a, k.last + 1))
+        moq = world.quotes[(k.id, ln["supplier"])].moq
+        options = [{**ln, "qty": 0 if slack >= ln["qty"] else max(moq, ln["qty"] - int(max(slack, 0) // 100) * 100)}]
+        for sid in world.suppliers_of(k.id):
+            if sid != ln["supplier"] and _ok(world, k, sid, ln["week"], rest) \
+                    and _parr(world, k.id, sid, ln["week"]) <= a:
+                qty = _resize(world, k, rest, sid, ln["week"], ln["qty"])
+                if _ok(world, k, sid, ln["week"], rest, qty):
+                    options.append({**ln, "supplier": sid, "qty": qty})
+        keep_dual = dual and _dual_ok(world, now)
+        best, cost = None, _part_cost(world, k, now) - 1e-6
+        for opt in options:
+            if opt["supplier"] == ln["supplier"] and opt["qty"] >= ln["qty"]:
+                continue
+            cand = _merge(rest + ([opt] if opt["qty"] else []))
+            if keep_dual and not _dual_ok(world, cand):
+                continue
+            c = _part_cost(world, k, cand)
+            if c < cost:
+                best, cost = opt, c
+        if best is not None:
+            lines[i] = best
+    return _merge([x for x in lines if x["qty"]])
+
+
+def _resize(world: _View, k: Component, rest: list[dict], sid: str, week: int, qty: int) -> int:
+    """The quantity of a line of `qty` moved to `sid` in `week`: what the rest of the part's plan still lacks from
+    the line's planned arrival on, rounded as the planner rounds (hundreds, the MOQ, a cheaper price break), and
+    never more than the line it replaces."""
+    net = _net(world, k, rest)
     q = world.quotes[(k.id, sid)]
     need = max(k.target(j) - net[j] for j in range(_parr(world, k.id, sid, week), k.last + 1))
     new = max(q.moq, int(math.ceil(max(need, 1) / 100.0)) * 100)
@@ -1012,61 +1123,130 @@ def _resize(world: _View, k: Component, rest: list[dict], sid: str, week: int, q
     return min(new, max(q.moq, qty))
 
 
-def _defer(world: _View, lines: list[dict], month: str, cap: float, strict: bool = True) -> list[dict]:
-    """Move whole lines of `month` to the first week of the next month until its spend fits under `cap`; a moved
-    line is re-sized to what the part still needs from its new arrival week (`_resize`)."""
-    if month == MONTHS[-1]:
-        return lines
-    target = min(w for w in range(1, N_ORDER_WEEKS + 1) if month_of_week(w) == MONTHS[MONTHS.index(month) + 1])
+def _cut(world: _View, lines: list[dict], month: str, over: float, dual: set) -> tuple | None:
+    """The cheapest way to spend less in `month` by ordering less: one line of the month dropped, cut to its MOQ,
+    or trimmed (in hundreds) by about `over`, whichever adds the least to its part's cost per KRW saved (the
+    shortfall or backlog it causes), keeping a critical part's dual sourcing. (ratio, part, part's new lines)."""
+    best = None
+    for ln in lines:
+        if month_of_week(ln["week"]) != month:
+            continue
+        k = world.comp(ln["component"])
+        part = [x for x in lines if x["component"] == k.id]
+        rest = [x for x in part if x is not ln]
+        q = world.quotes[(k.id, ln["supplier"])]
+        old = world.line_cost(k.id, ln["supplier"], ln["qty"], ln["week"])
+        trim = ln["qty"] - int(math.ceil(over / world.unit_krw(q, ln["qty"], ln["week"]) / 100.0)) * 100
+        base = None
+        for qty in sorted({0, q.moq, trim}):
+            if qty != 0 and not q.moq <= qty < ln["qty"]:
+                continue
+            saved = old - (world.line_cost(k.id, ln["supplier"], qty, ln["week"]) if qty else 0.0)
+            new = _merge(rest + ([{**ln, "qty": qty}] if qty else []))
+            if saved <= 0 or (k.id in dual and not _dual_ok(world, new)):
+                continue
+            base = _part_cost(world, k, part) if base is None else base
+            ratio = (_part_cost(world, k, new) - base) / saved
+            if best is None or ratio < best[0]:
+                best = (ratio, k.id, new)
+    return best
+
+
+def _moves(world: _View, lines: list[dict], month: str, target: int, late: bool, dual: set) -> tuple | None:
+    """The cheapest line of `month` to move to week `target` (extra cost of its part per KRW moved), with any
+    supplier that still arrives in time, or (late=True) with any supplier at all, accepting the gap until it
+    arrives. A line moved into an earlier month must fit under that month's cap. (ratio, part, part's new lines)."""
+    best = None
+    earlier = month_of_week(target) if MONTHS.index(month_of_week(target)) < MONTHS.index(month) else None
+    for ln in lines:
+        if month_of_week(ln["week"]) != month:
+            continue
+        k = world.comp(ln["component"])
+        part = [x for x in lines if x["component"] == k.id]
+        rest = [x for x in part if x is not ln]
+        a0 = _parr(world, k.id, ln["supplier"], ln["week"])
+        base = _part_cost(world, k, part)
+        saved = world.line_cost(k.id, ln["supplier"], ln["qty"], ln["week"])
+        for sid in world.suppliers_of(k.id):
+            if not _ok(world, k, sid, target, rest) or (not late and _parr(world, k.id, sid, target) > a0):
+                continue
+            qty = _resize(world, k, rest, sid, target, ln["qty"])
+            if not _ok(world, k, sid, target, rest, qty):
+                continue
+            new = _merge(rest + [{"week": target, "component": k.id, "supplier": sid, "qty": qty}])
+            if k.id in dual and not _dual_ok(world, new):
+                continue
+            if earlier and _spend(world, [x for x in lines if x["component"] != k.id] + new)[earlier] \
+                    > world.cap(earlier) + 1e-6:
+                continue
+            ratio = (_part_cost(world, k, new) - base) / saved
+            if best is None or ratio < best[0]:
+                best = (ratio, k.id, new)
+    return best
+
+
+def _defer(world: _View, lines: list[dict], month: str, cap: float) -> list[dict]:
+    """Bring `month`'s spend under `cap`, one line at a time: move a line to the first week of the next month with
+    a supplier that still arrives in time; if none can, with any supplier (the part waits until it arrives). In
+    the last month, move a line to the last week of the month before, where it still fits that month's cap and
+    arrives in time. If no line can move, cut one (`_cut`). A moved line is re-sized to what the part still needs
+    from its new arrival week (`_resize`)."""
+    i = MONTHS.index(month)
+    last = i == len(MONTHS) - 1
+    weeks = [w for w in range(1, N_ORDER_WEEKS + 1) if month_of_week(w) == MONTHS[i - 1 if last else i + 1]]
+    target = weeks[-1] if last else weeks[0]
     lines = _merge(lines)
     dual = {k.id for k in world.dual_parts()}
     while _spend(world, lines)[month] > cap + 1e-6:
-        best = None
-        for ln in lines:
-            if month_of_week(ln["week"]) != month:
-                continue
-            k = world.comp(ln["component"])
-            part = [x for x in lines if x["component"] == k.id]
-            rest = [x for x in part if x is not ln]
-            a0 = _parr(world, k.id, ln["supplier"], ln["week"])
-            base = _part_cost(world, k, part)
-            saved = world.line_cost(k.id, ln["supplier"], ln["qty"], ln["week"])
-            for sid in world.suppliers_of(k.id):
-                if not _ok(world, k, sid, target, rest) or _parr(world, k.id, sid, target) > a0:
-                    continue
-                qty = _resize(world, k, rest, sid, target, ln["qty"])
-                if not _ok(world, k, sid, target, rest, qty):
-                    continue
-                new = _merge(rest + [{"week": target, "component": k.id, "supplier": sid, "qty": qty}])
-                if k.id in dual and not _dual_ok(world, new):
-                    continue
-                ratio = (_part_cost(world, k, new) - base) / saved
-                if best is None or ratio < best[0]:
-                    best = (ratio, k.id, new)
+        best = (_moves(world, lines, month, target, False, dual)
+                or (None if last else _moves(world, lines, month, target, True, dual)))
         if best is None:
-            if strict:
-                raise AssertionError(f"reference cannot meet the {month} budget ({world.setting.label})")
-            return lines
+            best = _cut(world, lines, month, _spend(world, lines)[month] - cap, dual)
+            if best is None:
+                raise AssertionError(f"cannot meet the {month} budget ({world.setting.label})")
         lines = sorted([x for x in lines if x["component"] != best[1]] + best[2],
                        key=lambda ln: (ln["week"], ln["component"], ln["supplier"]))
     return lines
 
 
-def _solve(world: _View, dual: bool = True, budget: bool = True) -> list[dict]:
-    lines = _merge([ln for k in world.components for ln in _plan_full(world, k, dual)])
+def _solve(world: _View, dual: bool = True, budget: bool = True, cover: int = 2, trim: bool | str = True,
+           quota: bool = False) -> list[dict]:
+    """One planner variant. quota: lot for lot, each order of a critical part split with a second source at the
+    share cap (`_mrp_component`), instead of the netting planner with whole-line second sourcing. trim: True trims
+    leftover stock before and after the budget step, "after" only after it, False never."""
+    if quota:
+        lines = _merge([ln for k in world.components for ln in _mrp_component(world, k)])
+    else:
+        lines = _merge([ln for k in world.components for ln in _plan_full(world, k, dual, cover)])
+    if trim is True:
+        lines = _merge([ln for k in world.components for ln in _trim(world, k, lines)])
     if budget:
         for m in MONTHS:
-            if math.isfinite(world.budget[m]):
-                lines = _defer(world, lines, m, world.budget[m])
+            if math.isfinite(world.cap(m)):
+                lines = _defer(world, lines, m, world.cap(m))
+    if trim == "after" or (trim and budget):
+        lines = _merge([ln for k in world.components for ln in _trim(world, k, lines)])
     return sorted(lines, key=lambda ln: (ln["week"], ln["component"], ln["supplier"]))
 
 
 def _reference(world: _View) -> list[dict]:
-    """The planner with and without the second-source step; the cheaper valid plan by the reference's own cost
-    view (without the step, budget deferrals to faster suppliers sometimes second-source the parts anyway)."""
+    """The cheapest valid plan by the reference's own cost view over fifteen planner variants: the netting planner
+    with and without the second-source step (without it, budget deferrals to faster suppliers sometimes
+    second-source the parts anyway), with lots covering two weeks or one (one-week lots leave less stock behind at
+    the end of the horizon), and the lot-for-lot planner that splits every order of a critical part at the share
+    cap (cheaper than whole-line second sourcing when the second source is dear); each with the leftover trim
+    before and after the budget step, only after it (trimming first can leave the budget step only dearer
+    deferrals), or not at all."""
     best = None
-    for dual in (True, False):
-        lines = _solve(world, dual=dual)
+    trims = (True, "after", False)
+    variants = [dict(dual=dual, cover=cover, trim=trim)
+                for dual, cover, trim in itertools.product((True, False), (2, 1), trims)]
+    variants += [dict(quota=True, trim=trim) for trim in trims]
+    for kw in variants:
+        try:
+            lines = _solve(world, **kw)
+        except AssertionError:          # a critical part it cannot second-source, or a budget it cannot meet
+            continue
         if simulate(world, lines)[0]:
             continue
         cost = sum(_part_cost(world, k, [ln for ln in lines if ln["component"] == k.id]) for k in world.components)
@@ -1093,7 +1273,8 @@ def reference_solution(world: World, out_dir: Path, setting: Setting) -> None:
 # the promised dates (no price breaks, no use of the delivery history). Critical parts follow a quota arrangement:
 # every order is split with the cheapest other supplier so that neither gets more than the share cap (when the
 # second supplier cannot deliver in time, the main one covers the whole need). A month over budget moves whole
-# lines to the next month as the reference does; January's lines are pulled into the last week of December.
+# lines to the next month as the reference does; January's lines are pulled into the last week of December (and cut
+# as the reference cuts when December has no room).
 
 def _mrp_component(world: _View, k: Component) -> list[dict]:
     rec = [0] * (N_WEEKS + 4)
@@ -1146,7 +1327,8 @@ def _mrp_component(world: _View, k: Component) -> list[dict]:
 
 
 def _pull(world: _View, lines: list[dict], month: str, cap: float) -> list[dict]:
-    """Move whole lines of `month`, largest first, to the last week of the month before until its spend fits."""
+    """Move whole lines of `month`, largest first, to the last week of the month before until its spend fits;
+    when none fits there, cut lines as the reference does (`_defer` in the last month)."""
     target = max(w for w in range(1, N_ORDER_WEEKS + 1) if month_of_week(w) == MONTHS[MONTHS.index(month) - 1])
     lines = _merge(lines)
     while _spend(world, lines)[month] > cap + 1e-6:
@@ -1156,19 +1338,19 @@ def _pull(world: _View, lines: list[dict], month: str, cap: float) -> list[dict]
             rest = [x for x in lines if x is not ln]
             new = _merge(rest + [{**ln, "week": target}])
             if _ok(world, k, ln["supplier"], target, [x for x in rest if x["component"] == k.id], ln["qty"]) \
-                    and _spend(world, new)[month_of_week(target)] <= world.budget[month_of_week(target)] + 1e-6:
+                    and _spend(world, new)[month_of_week(target)] <= world.cap(month_of_week(target)) + 1e-6:
                 lines = new
                 break
         else:
-            raise AssertionError(f"baseline cannot meet the {month} budget ({world.setting.label})")
+            return _defer(world, lines, month, cap)
     return lines
 
 
 def _baseline(world: _View) -> list[dict]:
     lines = _merge([ln for k in world.components for ln in _mrp_component(world, k)])
     for m in MONTHS[:-1]:
-        lines = _defer(world, lines, m, world.budget[m])
-    lines = _pull(world, lines, MONTHS[-1], world.budget[MONTHS[-1]])
+        lines = _defer(world, lines, m, world.cap(m))
+    lines = _pull(world, lines, MONTHS[-1], world.cap(MONTHS[-1]))
     if simulate(world, lines)[0]:
         raise AssertionError(f"baseline plan is not valid ({world.setting.label})")
     return lines
@@ -1215,11 +1397,25 @@ def violating_examples(world: World, setting: Setting) -> dict:
             weeks = [w for w in range(1, N_ORDER_WEEKS + 1) if month_of_week(w) == m]
             for (cid, sid), q in sorted(world.quotes.items()):
                 if world.approved(cid, sid) and sid != world.hold_supplier and (cid, sid) not in world.alloc:
-                    qty = int(math.ceil(world.budget[m] / world.unit_krw(q, 1e12) / 1000.0)) * 1000
+                    qty = int(math.ceil(world.cap(m) / world.unit_krw(q, 1e12) / 1000.0)) * 1000
                     yield add({"week": weeks[-1], "component": cid, "supplier": sid, "qty": qty})
 
     def gen_qh():   # an order from the supplier on hold that would arrive while the hold is on
         sid = world.hold_supplier
+        order = lambda x: (x["week"], x["component"], x["supplier"])  # noqa: E731
+        for i, ln in enumerate(ref):    # one of its own lines placed earlier (same quantity: the shares stay)
+            q = world.quotes[(ln["component"], ln["supplier"])]
+            if ln["supplier"] != sid:
+                continue
+            for w in range(1, ln["week"]):
+                if not world.on_hold(sid, world.arrival(w, q)):
+                    continue
+                moved = ref[:i] + ref[i + 1:] + [{**ln, "week": w}]
+                yield sorted(moved, key=order)
+                for j, x in enumerate(moved[:-1]):  # the month it moves into is tight: swap a line into its week
+                    if month_of_week(x["week"]) == month_of_week(w) and x["supplier"] != sid \
+                            and (x["component"], x["supplier"]) not in world.alloc:
+                        yield sorted(moved[:j] + moved[j + 1:-1] + [{**x, "week": ln["week"]}, moved[-1]], key=order)
         for i, ln in enumerate(ref):    # a reference line moved to that supplier (same month: same budget)
             q = world.quotes.get((ln["component"], sid))
             if q is None or not world.approved(ln["component"], sid) or (ln["component"], sid) in world.alloc:

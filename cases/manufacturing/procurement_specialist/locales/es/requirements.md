@@ -38,6 +38,9 @@ Un archivo CSV, `orders.csv`, con la cabecera `order_week,component_id,supplier_
 <!-- /tier -->
 - `proveedores_homologados.csv`: un componente solo puede comprarse a un proveedor cuyo `estado` para ese componente sea `homologado`. `en evaluación` (aún en calificación) y `suspendido` no valen, aunque el proveedor haya enviado cotización.
 - {{hold_supplier}} está en retención de calidad: sus lotes con llegada prevista de W1 a W{{hold_until}} se rechazan en la inspección de entrada y no llegan a la línea. Su mercancía solo puede llegar después de W{{hold_until}}.
+<!-- when: quality_hold=S03-W5 -->
+  La retención cubre todo lo que envía Mirae Semicon, incluidos el microcontrolador (C01) y la DRAM (C03) en asignación y la nueva flash C25; los pedidos que se le hagan siguen contando en su asignación mensual.
+<!-- /when -->
 - `presupuesto.csv` es un tope mensual fijado por nuestra casa matriz, no un objetivo. Cada pedido cuenta en el mes del lunes de su semana de pedido: W1-W2 son noviembre de 2026, W3-W6 diciembre de 2026, W7-W8 enero de 2027. Los pedidos en USD cuentan a {{usd_krw}} KRW por USD.
 - Los componentes críticos son los que tienen `critico = sí` en `componentes.csv`. Para ellos queremos un stock de seguridad de **{{safety_weeks}} veces su necesidad semanal media**: su necesidad total en las semanas en que se usa, dividida entre el número de esas semanas, multiplicada por {{safety_weeks}} y redondeada hacia arriba. Debe haber esa cantidad al final de cada semana en que se usa el componente.
 - Nuestra política: cada componente crítico en uso se pide a al menos dos proveedores distintos durante las ocho semanas, y ningún proveedor recibe más del **{{max_share}} %** de la cantidad total pedida de ese componente (contando solo los pedidos de este plan, en piezas), para mantener calificada una segunda fuente.

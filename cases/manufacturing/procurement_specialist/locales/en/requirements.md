@@ -38,6 +38,9 @@ One CSV file, `orders.csv`, with the header `order_week,component_id,supplier_id
 <!-- /tier -->
 - `approved_vendors.csv`: a component may only be bought from a supplier whose `status` for that component is `approved`. `pending` (still in qualification) and `suspended` do not count, even if the supplier sent a quote.
 - {{hold_supplier}} is on quality hold: their lots due to arrive in W1 to W{{hold_until}} are rejected at incoming inspection and never reach the line. Goods from them may arrive only after W{{hold_until}}.
+<!-- when: quality_hold=S03-W5 -->
+  The hold covers everything Mirae Semicon ships, the allocated MCU (C01) and DRAM (C03) and the new flash C25 included; orders placed with them still count against their monthly allocation.
+<!-- /when -->
 - `budget.csv` is a hard monthly cap from our parent company, not a target. An order counts against the month of the Monday of its order week: W1-W2 are November 2026, W3-W6 December 2026, W7-W8 January 2027. USD orders count at {{usd_krw}} KRW per USD.
 - Critical components are those with `critical = yes` in `components.csv`. For each of them we want a safety stock of **{{safety_weeks}} times its average weekly demand**: its total demand over the weeks it is used divided by the number of those weeks, times {{safety_weeks}}, rounded up. It should be on hand at the end of every week in which the part is used.
 - Our policy: every critical component in use is ordered from at least two different suppliers over the eight weeks, and no single supplier gets more than **{{max_share}}%** of that component's total ordered quantity (counting only the orders in this plan, in pieces), so that we stay qualified with a second source.

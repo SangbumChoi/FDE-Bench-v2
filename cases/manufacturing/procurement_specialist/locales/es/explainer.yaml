@@ -24,6 +24,8 @@ tiers:
     probabilidades ocultas (los datos traen seis meses de historial de entregas), topes mensuales de asignación en
     tres componentes escasos y el cambio de ingeniería que sustituye la flash C04 por C25 desde W6 (la C04 que
     quede después de W5 se desecha); la calidad pasa a ser un coste esperado exacto.
+    La retención de calidad dura hasta W5 y puede recaer en el principal fabricante de semiconductores; el tipo de
+    planificación y el tope por proveedor son los habituales, 1.380 y 80 %.
 rules:
   approved_vendor: Un componente solo se pide a proveedores cuyo estado para ese componente en la lista de proveedores homologados sea homologado.
   moq: Cada línea de pedido (una semana, un componente y un proveedor) alcanza al menos el pedido mínimo del proveedor.

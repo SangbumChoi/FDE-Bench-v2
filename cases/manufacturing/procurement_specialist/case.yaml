@@ -18,24 +18,34 @@ tiers:
     Medium plus supply uncertainty: suppliers deliver one or two weeks late with hidden probabilities (six months
     of delivery history in the data), monthly allocation caps on three constrained parts, and the engineering
     change that replaces the flash C04 by C25 from W6 (C04 left after W5 is scrapped); quality becomes an exact
-    expected cost.
-rulesets:                    # the client's rule parameters; same data, three ground truths
-  A: {usd_krw: 1380, safety_weeks: 1, max_share: 80, hold_supplier: S07, hold_until: 3}
-  B: {usd_krw: 1450, safety_weeks: 1.5, max_share: 70, hold_supplier: S05, hold_until: 4}
-  C: {usd_krw: 1320, safety_weeks: 0.5, max_share: 90, hold_supplier: S01, hold_until: 4}
-param_labels:                # how a parameter reads in each locale's text
-  usd_krw:
-    1380: {zh: "1,380", en: "1,380", ko: "1,380", ja: "1,380", es: "1.380"}
-    1450: {zh: "1,450", en: "1,450", ko: "1,450", ja: "1,450", es: "1.450"}
-    1320: {zh: "1,320", en: "1,320", ko: "1,320", ja: "1,320", es: "1.320"}
-  safety_weeks:
-    1: {zh: "1", en: "1", ko: "1", ja: "1", es: "1"}
-    1.5: {zh: "1.5", en: "1.5", ko: "1.5", ja: "1.5", es: "1,5"}
-    0.5: {zh: "0.5", en: "0.5", ko: "0.5", ja: "0.5", es: "0,5"}
-  hold_supplier:
-    S07: {zh: Kowon Passive（S07）, en: Kowon Passive (S07), ko: 고원패시브(S07), ja: Kowon Passive（S07）, es: Kowon Passive (S07)}
-    S05: {zh: Seoul PCB Tech（S05）, en: Seoul PCB Tech (S05), ko: 서울PCB테크(S05), ja: Seoul PCB Tech（S05）, es: Seoul PCB Tech (S05)}
-    S01: {zh: Hanbit Electronics（S01）, en: Hanbit Electronics (S01), ko: 한빛전자(S01), ja: Hanbit Electronics（S01）, es: Hanbit Electronics (S01)}
+    expected cost. The quality hold runs to W5 and may fall on the main semiconductor maker; the planning rate and
+    the share cap are the usual 1,380 and 80%.
+params:                      # the client's rule parameters; a rule seed draws each one from its pool
+  usd_krw:                   # planning rate for the USD quotes of Pacific Parts (S04), KRW per USD (hard: fixed)
+    values: {easy: [1380, 1450, 1320, 1500], medium: [1380, 1450, 1320, 1500], hard: [1380]}
+    labels:
+      1380: {zh: "1,380", en: "1,380", ko: "1,380", ja: "1,380", es: "1.380"}
+      1450: {zh: "1,450", en: "1,450", ko: "1,450", ja: "1,450", es: "1.450"}
+      1320: {zh: "1,320", en: "1,320", ko: "1,320", ja: "1,320", es: "1.320"}
+      1500: {zh: "1,500", en: "1,500", ko: "1,500", ja: "1,500", es: "1.500"}
+  safety_weeks:              # safety stock of critical parts, in average weeks of demand
+    values: [1, 1.5, 0.5]
+    labels:
+      1: {zh: "1", en: "1", ko: "1", ja: "1", es: "1"}
+      1.5: {zh: "1.5", en: "1.5", ko: "1.5", ja: "1.5", es: "1,5"}
+      0.5: {zh: "0.5", en: "0.5", ko: "0.5", ja: "0.5", es: "0,5"}
+  max_share:                 # dual sourcing: the most one supplier may get of a critical part, in % (hard: fixed)
+    values: {easy: [80, 70, 90], medium: [80, 70, 90], hard: [80]}
+  quality_hold:              # the supplier on hold and the last week whose arrivals from it are rejected
+    values: {easy: [S07-W3, S05-W4, S01-W4], medium: [S07-W3, S05-W4, S01-W4], hard: [S03-W5, S05-W5, S01-W5]}
+    labels:
+      S07-W3: {zh: Kowon Passive（S07），至 W3, en: "Kowon Passive (S07), up to W3", ko: 고원패시브(S07) W3까지, ja: Kowon Passive（S07）、W3 まで, es: "Kowon Passive (S07), hasta W3"}
+      S05-W4: {zh: Seoul PCB Tech（S05），至 W4, en: "Seoul PCB Tech (S05), up to W4", ko: 서울PCB테크(S05) W4까지, ja: Seoul PCB Tech（S05）、W4 まで, es: "Seoul PCB Tech (S05), hasta W4"}
+      S01-W4: {zh: Hanbit Electronics（S01），至 W4, en: "Hanbit Electronics (S01), up to W4", ko: 한빛전자(S01) W4까지, ja: Hanbit Electronics（S01）、W4 まで, es: "Hanbit Electronics (S01), hasta W4"}
+      S03-W5: {zh: Mirae Semicon（S03），至 W5, en: "Mirae Semicon (S03), up to W5", ko: 미래반도체(S03) W5까지, ja: Mirae Semicon（S03）、W5 まで, es: "Mirae Semicon (S03), hasta W5"}
+      S05-W5: {zh: Seoul PCB Tech（S05），至 W5, en: "Seoul PCB Tech (S05), up to W5", ko: 서울PCB테크(S05) W5까지, ja: Seoul PCB Tech（S05）、W5 まで, es: "Seoul PCB Tech (S05), hasta W5"}
+      S01-W5: {zh: Hanbit Electronics（S01），至 W5, en: "Hanbit Electronics (S01), up to W5", ko: 한빛전자(S01) W5까지, ja: Hanbit Electronics（S01）、W5 まで, es: "Hanbit Electronics (S01), hasta W5"}
+rule_seeds: [42, 3, 78]
 deliverables: [orders.csv]
 deliverable_spec: |
   orders.csv with the header order_week,component_id,supplier_id,quantity
