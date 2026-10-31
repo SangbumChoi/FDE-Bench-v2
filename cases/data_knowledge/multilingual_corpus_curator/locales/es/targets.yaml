@@ -27,6 +27,6 @@
 - id: containers
   text: Los archivos zip y los CSV de catálogo (un libro por fila, cabeceras en inglés o japonés) también contienen libros; los escaneos de solo imagen se ignoran si hay una copia legible y si no son UNREADABLE; la basura no genera nada.
 - id: missing_author
-  text: Un libro sin autor va a revisión como NO_AUTHOR; es una política y, con una excepción aprobada, se coloca como "{{fallback_author}}".
+  text: '<!-- when: no_author=review -->Un libro sin autor va a revisión como NO_AUTHOR; es una política y, con una excepción aprobada, se coloca como "{{fallback_author}}".<!-- /when --><!-- when: no_author=Unknown,Anonymous -->Un libro sin autor se coloca con el nombre de autor "{{fallback_author}}" como cualquier otro libro y no va a revisión (no se usa NO_AUTHOR).<!-- /when -->'
 - id: scoring
   text: Por libro, 1 por la ruta exacta con la sinopsis (si no, 0,4 por la sinopsis más 0,2 por cada acierto de año, título y autor; 0,2 por la ruta correcta con otra sinopsis), 1 por el código de revisión correcto cuando todas las filas que nombran sus archivos coinciden (0,4 si coinciden en otro código, 0 si se contradicen); una fila del manifiesto que falta o está mal cuesta una quinta parte del crédito del libro; en medium y hard se resta 0,5 por cada archivo de la biblioteca que no es un libro.

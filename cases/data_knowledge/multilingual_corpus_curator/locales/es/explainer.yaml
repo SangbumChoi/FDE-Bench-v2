@@ -5,7 +5,7 @@ deliverable_spec: |
   Un directorio program/ con organize.py, que define organize(task); task = {"corpus_dir": <una carpeta organizada
   como data/corpus>, "out_dir": <una carpeta vacía>}. Lee corpus_dir (nunca lo modifica) y solo escribe dentro de out_dir:
     out_dir/library/...    un archivo .txt en UTF-8 por libro con la sinopsis del libro (la estructura de
-                           carpetas y los nombres de archivo los decide el cliente: hay que preguntar)
+                           carpetas y los nombres de archivo siguen las reglas de catálogo del cliente)
     out_dir/_review/...    el material de los libros que no se pueden colocar
     out_dir/manifest.csv   cabecera source,status,path,reason; una fila por libro (source = las rutas de sus
                            archivos relativas al corpus, separadas por ";") y una por cada archivo omitido;
@@ -15,16 +15,20 @@ deliverable_spec: |
 tiers:
   easy: >-
     Solo puntúan los libros bien formados (unos 30 de 100): un archivo cada uno, metadatos completos, UTF-8, años
-    normales de cuatro cifras. La ruta en la biblioteca, el nombre del archivo y la sinopsis deben ser correctos.
+    normales de cuatro cifras. La ruta en la biblioteca, el nombre del archivo y la sinopsis deben ser correctos; los
+    nombres se cortan a 40-60 caracteres.
   medium: >-
     Lo de easy más todos los libros legibles (unos 66): codificaciones antiguas (GB18030, CP949, Shift_JIS, CP1252),
     eras y otras notaciones de año, títulos en ancho completo o con acentos descompuestos, caracteres prohibidos en las
     rutas, grafías romanizadas distintas de un mismo autor, copias de un libro en varios formatos que hay que fundir y
-    la precedencia de las fuentes. Los archivos sobrantes en la biblioteca restan crédito.
+    la precedencia de las fuentes; los nombres se cortan a 32-50 caracteres. Los archivos sobrantes en la biblioteca
+    restan crédito.
   hard: >-
     Lo de medium más las excepciones (los 100 libros): autores, títulos, años o sinopsis que faltan y que aporta otra
     fuente o que envían el libro a revisión con un código de motivo, fuentes contradictorias, escaneos ilegibles,
-    archivos basura, libros dentro de archivos zip y CSV de catálogo con varios libros; no se inventan sinopsis.
+    archivos basura, libros dentro de archivos zip y CSV de catálogo con varios libros; no se inventan sinopsis. Los
+    libros sin autor siguen la política del cliente para esta ronda (a revisión, o colocados con un nombre de autor
+    de reserva), y los nombres se cortan a 24-40 caracteres.
 rules:
   utf8_output: 'Todos los archivos de library/ y manifest.csv son UTF-8 válido.'
   safe_names: 'Ningún nombre de archivo o carpeta de salida contiene \ / : * ? " < > | ni un carácter de control, es . o .., termina en espacio o punto, ni supera los 255 bytes.'

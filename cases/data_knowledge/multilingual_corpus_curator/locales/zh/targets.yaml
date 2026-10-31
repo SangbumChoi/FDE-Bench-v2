@@ -27,6 +27,6 @@
 - id: containers
   text: 压缩包和目录 CSV（每行一本书，表头为英文或日文）里也有书；只有图像的扫描件在有可读副本时忽略，否则为 UNREADABLE；垃圾文件不产生任何输出。
 - id: missing_author
-  text: 没有作者的书以 NO_AUTHOR 送去复核；这是规定，批准例外后改以“{{fallback_author}}”上架。
+  text: '<!-- when: no_author=review -->没有作者的书以 NO_AUTHOR 送去复核；这是规定，批准例外后改以“{{fallback_author}}”上架。<!-- /when --><!-- when: no_author=Unknown,Anonymous -->没有作者的书以作者名“{{fallback_author}}”和其他书一样上架，不送去复核（不用 NO_AUTHOR）。<!-- /when -->'
 - id: scoring
   text: 每本书：路径完全正确且是它的简介得 1 分（否则简介正确得 0.4，年份、书名、作者每对一项加 0.2；路径对但简介错得 0.2），复核的书：列出它文件的各行都是同一个正确原因代码得 1 分（同一个错误代码 0.4，互相矛盾 0）；清单行缺失或有错，扣掉这本书得分的五分之一；medium 和 hard 中每个不属于任何书的书库文件扣 0.5。
