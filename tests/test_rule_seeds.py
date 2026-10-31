@@ -209,6 +209,16 @@ def make_toy(tmp_path: Path, case_yaml: str = CASE_YAML, extra_py: str = "", dat
     return root
 
 
+def make_plain(tmp_path: Path) -> str:
+    """A case without settings (the toy's case.yaml without tiers, params and rule seeds): one problem at every
+    difficulty. Only its case.yaml is needed to expand campaigns and resolve specs."""
+    root = tmp_path / "cases" / "logistics" / "plain_planner"
+    root.mkdir(parents=True)
+    (root / "case.yaml").write_text(CASE_YAML.split("tiers:")[0].replace("toy_planner", "plain_planner")
+                                    + "rules: []\n", encoding="utf-8")
+    return "logistics/plain_planner"
+
+
 def expected_draw(name: str, pool: list, seed: int, salt: int = 0):
     """The contract, spelled out: pool[Random(f"{case id}|{name}|{seed}[|{salt}]").randrange(len(pool))]."""
     key = f"{TOY}|{name}|{seed}" + (f"|{salt}" if salt else "")
@@ -402,11 +412,10 @@ def test_variant_carries_rule_seed_and_params(tmp_path):
 
 def test_campaign_runs_the_public_panel_or_private_seeds(tmp_path):
     make_toy(tmp_path, dataset=False)
-    bakery = "logistics/bakery_delivery_dispatcher"
-    shutil.copytree(REPO / "cases" / bakery, tmp_path / "cases" / bakery, ignore=shutil.ignore_patterns("__pycache__"))
+    plain = make_plain(tmp_path)
     cfg = tmp_path / "c.yaml"
     cfg.write_text(f"""
-defaults: {{models: m.yaml, cases: [{TOY}, {bakery}]}}
+defaults: {{models: m.yaml, cases: [{TOY}, {plain}]}}
 agents: [{{harness: reference, model: a}}]
 experiments:
   public: {{difficulty: [easy, hard]}}
@@ -417,8 +426,8 @@ experiments:
     keys = sorted(spec.key() for _, spec in expand(bench, agents, jobs))
     toy = [k for k in keys if k.startswith(TOY)]
     assert len(toy) == 2 * 3 + 2 and {k.split("__r-")[1].split("__")[0] for k in toy} == {"1", "2", "3", "101", "102"}
-    assert [k for k in keys if k.startswith(bakery)] == [k for k in keys if k.startswith(bakery) and "__r-" not in k]
-    assert len([k for k in keys if k.startswith(bakery)]) == 2 + 1                  # once per difficulty
+    assert [k for k in keys if k.startswith(plain)] == [k for k in keys if k.startswith(plain) and "__r-" not in k]
+    assert len([k for k in keys if k.startswith(plain)]) == 2 + 1                   # once per difficulty
     legacy = NativeCase(REPO / "cases" / "manufacturing" / "procurement_specialist")
     assert case_rule_seeds(legacy, None) == [1, 2, 3]
     with pytest.raises(ValueError, match="rule seed 7"):
@@ -547,15 +556,14 @@ def test_a_case_whose_parameters_have_one_candidate_is_warned(tmp_path):
 def test_a_run_names_its_rule_seed_and_rescoring_checks_the_draw(tmp_path):
     from fdebench2.runner import AgentSpec
     root = make_toy(tmp_path, dataset=False)
-    bakery = "logistics/bakery_delivery_dispatcher"
-    shutil.copytree(REPO / "cases" / bakery, tmp_path / "cases" / bakery, ignore=shutil.ignore_patterns("__pycache__"))
+    plain = make_plain(tmp_path)
 
     def bench():
         return Bench(Settings(cases_root=tmp_path / "cases", models=tmp_path / "none.yaml", out=tmp_path / "runs"))
 
     spec = bench().resolve(VariantSpec(TOY, difficulty="hard"))
     assert spec.rule_seed == 1 and "__r-1__" in spec.key()
-    assert bench().resolve(VariantSpec(bakery, rule_seed=7)).rule_seed is None
+    assert bench().resolve(VariantSpec(plain, rule_seed=7)).rule_seed is None
     assert bench().resolve(VariantSpec(TOY, rule_seed=4242)).rule_seed == 4242
     run_dir = tmp_path / "run"
     variant = bench().prepare(VariantSpec(TOY, difficulty="hard"), run_dir)

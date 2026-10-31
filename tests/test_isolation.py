@@ -239,7 +239,7 @@ def _bench(cases_root, tmp_path, steps=None) -> Bench:
     case = NativeCase(cases_root / NATIVE)
     out = tmp_path / "ref"
     out.mkdir(exist_ok=True)
-    case.module.reference_solution(case.world, out)
+    case.write_reference(out)
     reg._cache["agent"] = ScriptedModel(steps or [
         call("write_file", path="routes.json", content=(out / "routes.json").read_text(encoding="utf-8")),
         call("write_file", path="NOTES.md", content="Routes follow the van capacity and premium-first rules."),
@@ -271,7 +271,7 @@ def test_results_are_reused_only_while_the_case_and_config_are_unchanged(cases_r
     fixed = _bench(cases_root, tmp_path)
     assert fixed.run(spec, agent)["status"] == "ok"
 
-    with claim(fixed.run_dir(spec, agent)):
+    with claim(fixed.run_dir(fixed.resolve(spec), agent)):
         with pytest.raises(RunLocked):
             fixed.run(spec, agent, force=True)
 
@@ -377,7 +377,7 @@ def test_a_run_that_fails_before_the_agent_starts_still_puts_the_staged_copy_bac
     spec, agent = VariantSpec(NATIVE, condition="full"), AgentSpec("reference", "agent")
     result = bench.run(spec, agent)                 # docker itself may be missing too: stop() is then a no-op
     assert result["status"] == "infra_error" and "no prompt" in result["agent_run"]["detail"]["error"]
-    assert not staged[0].exists() and (bench.run_dir(spec, agent) / "workspace" / "data").is_dir()
+    assert not staged[0].exists() and (bench.run_dir(bench.resolve(spec), agent) / "workspace" / "data").is_dir()
 
 
 def test_cli_harness_gets_only_its_own_variables_and_the_bridge_token(tmp_path, monkeypatch):
@@ -470,7 +470,7 @@ def test_isolated_cli_run_end_to_end_without_docker(cases_root, tmp_path, monkey
 
     case = NativeCase(cases_root / NATIVE)
     (tmp_path / "ref").mkdir()
-    case.module.reference_solution(case.world, tmp_path / "ref")
+    case.write_reference(tmp_path / "ref")
     _, secret = _ws(tmp_path)
     (tmp_path / "fake_cli.py").write_text(FAKE_CLI, encoding="utf-8")
 
@@ -491,7 +491,7 @@ def test_isolated_cli_run_end_to_end_without_docker(cases_root, tmp_path, monkey
     spec, agent = VariantSpec(NATIVE, condition="full"), AgentSpec("claude_code", "m")
     result = bench.run(spec, agent)
 
-    run_dir = bench.run_dir(spec, agent)
+    run_dir = bench.run_dir(bench.resolve(spec), agent)
     log = (run_dir / "agent_stdout.log").read_text(encoding="utf-8")
     staged = log.split("WORKSPACE: ", 1)[1].splitlines()[0]
     assert "NO TOKEN: 401" in log and "TOOL: (no new messages)" in log

@@ -19,19 +19,20 @@ SETTINGS = "manufacturing/procurement_specialist"     # rule-set parameters, set
 # The reference with every van leaving 30 minutes earlier: still valid, but the drivers wait at the cafés.
 WORSE_BASELINE = '''
 
-def baseline_solution(world, out_dir):
-    routes = [{**r, "depart": _hhmm(max(DAY_START, int(r["depart"][:2]) * 60 + int(r["depart"][3:]) - 30))}
-              for r in world.plan]
+def baseline_solution(world, out_dir, setting):
+    rules = rules_of(setting)
+    routes = [{**r, "depart": _hhmm(max(rules.earliest(r["van"]), _minutes(r["depart"]) - 30))}
+              for r in _plan(world, rules)]
     (out_dir / "routes.json").write_text(json.dumps({"routes": routes}), encoding="utf-8")
 '''
 SAME_BASELINE = '''
 
-def baseline_solution(world, out_dir):
-    reference_solution(world, out_dir)
+def baseline_solution(world, out_dir, setting):
+    reference_solution(world, out_dir, setting)
 '''
 EMPTY_BASELINE = '''
 
-def baseline_solution(world, out_dir):
+def baseline_solution(world, out_dir, setting):
     pass
 '''
 
@@ -73,10 +74,10 @@ def test_example_that_does_not_violate(tmp_path):
 _examples = violating_examples
 
 
-def violating_examples(world):
-    return {**_examples(world), "van_capacity": lambda out: reference_solution(world, out)}
+def violating_examples(world, setting):
+    return {**_examples(world, setting), "van_capacity": lambda out: reference_solution(world, out, setting)}
 ''')
-    assert "rule van_capacity: its example does not violate it (got [])" in validate_case(root)
+    assert any(p.endswith("rule van_capacity: its example does not violate it (got [])") for p in validate_case(root))
 
 
 def test_parameter_missing_from_one_locale(tmp_path):
@@ -123,7 +124,7 @@ def test_baseline_must_be_valid_and_worse(tmp_path, baseline, problem):
         write_page(root)
     report = check_case(root)
     if problem is None:
-        assert report.problems == [] and report.notes == ["baseline/reference objective: 1.188"]
+        assert report.problems == [] and report.notes[0].startswith("baseline/reference objective: easy/s5 ")
     else:
         assert any(problem in p for p in report.problems)
 
@@ -187,7 +188,7 @@ def test_new_case_fails_until_filled(tmp_path):
 def test_rule_number_the_texts_never_state(tmp_path):
     root = _copy(tmp_path, FAST)
     path = root / "case.yaml"
-    path.write_text(path.read_text(encoding="utf-8").replace("at most 120 trays", "at most 93 trays"), encoding="utf-8")
+    path.write_text(path.read_text(encoding="utf-8").replace("racks hold 120", "racks hold 93"), encoding="utf-8")
     warnings = check_case(root).warnings
     assert any("van_capacity" in w and "says 93" in w for w in warnings)
     assert not any("says 120" in w for w in check_case(_copy(tmp_path / "b", FAST)).warnings)   # 120 is in vans.csv

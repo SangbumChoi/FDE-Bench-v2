@@ -1,0 +1,12 @@
+{
+  "params": {
+    "closed_cafe": "C14",
+    "late_cost": 5,
+    "premium_first": false,
+    "rush_start": "none",
+    "shift_end": "09:00",
+    "van_capacity": 100
+  },
+  "rule_seed": 13,
+  "tier": "medium"
+}
