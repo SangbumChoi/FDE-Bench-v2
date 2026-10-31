@@ -22,13 +22,36 @@ objetivo de la línea base supera el 1.0 de la referencia en 8 de 9 configuracio
 la semilla 7, en 6 de 9 con la semilla 42, en 6 de 9 con la semilla 0 y en 9 de 9 con las semillas 102 y 105
 (1.01–3.10). Se mantiene por debajo con las semillas 1, 2, 103 y 104. Cuando esto ocurre, el framework descarta la
 línea base y puntúa el cociente simple, de modo que con una semilla privada así un programa que no hace nada
-obtiene la puntuación de calidad completa. `check_world_seed` comprueba la referencia, no la línea base, así que validate-case no
+obtiene la puntuación de calidad completa. `check_world_seed` comprueba la referencia, no la línea base, así que
+validate-case no
 lo detecta. Propuesta: aceptar solo mundos en los que el valor final de la referencia supere tanto al efectivo como
 al índice por al menos `MIN_EDGE` en las nueve configuraciones. Esto puede hacerse en `build_world`, volviendo a
 muestrear los flujos de mercado del periodo oculto, o en el selector de semillas privadas. La semilla 101 ya cumple
 la condición, así que el mundo público, el conjunto de datos y las respuestas siguen idénticos byte a byte. Además,
 hacer que `check_world_seed` del framework exija línea base < referencia en cada semilla adicional. Los varios caminos
 ocultos de F2 harían esto mucho menos frecuente.
+
+Semillas de reglas: sigue abierto; no apareció ninguna corrección sencilla. La conversión deja el generador del mundo
+como estaba. Con las nuevas semillas de reglas públicas (44, 20 y 134), la línea base todo en efectivo supera a la
+referencia en 8 de las 9 configuraciones con la semilla de mundo 3, y en ninguna con las semillas de mundo 1 y 2. La
+propuesta se mantiene, y las semillas de reglas la amplían: la condición tendría que cumplirse para todo sorteo
+admisible de los conjuntos de candidatos, no para tres conjuntos de reglas, así que corresponde a `build_world`
+(volviendo a muestrear los flujos del periodo oculto) o al selector de semillas privadas, y elegir entre ambos es
+decisión del responsable del caso.
+
+Medición del comprobador (semillas de reglas 4–10 añadidas a las públicas, semillas de mundo 101, 1, 2 y 3): la
+referencia es válida con objetivo 1.0 y la línea base es válida en las 120 configuraciones, y la línea base se mantiene
+por debajo de la referencia en los mundos 101, 1 y 2 (como mucho 0.80, mundo 1 easy/s4). Con la semilla de mundo 3
+supera a la referencia en 26 de 30 configuraciones (7 de 10 en easy, todas las de medium y hard, con un objetivo de
+hasta 2.19 en hard/s20): ahí la referencia acaba por debajo del capital inicial (9.65–9.76 M en easy/s44, medium/s20 y
+hard/s134) mientras el índice oculto gana un 1.4%. La causa es la de arriba: el valor final de la línea base es el
+capital, así que supera a la referencia exactamente donde la referencia pierde dinero, sea cual sea la vara de medir. En
+esas mismas tres configuraciones, la referencia también acaba por debajo del capital con las semillas de mundo 4
+(medium, hard), 5 (hard), 6 (hard) y 7 (las tres). Una ejecución de la referencia tarda unos 0.4 s dentro del proceso,
+así que la prueba de aceptación de la propuesta en `build_world` (la referencia por encima del capital, por ejemplo, en
+las semillas de reglas públicas; los flujos del periodo oculto con una nueva semilla cuando falla; el mundo 101 sin
+cambios, ya que la pasa) costaría unos pocos segundos por mundo. Sigue abierto: si se pueden seleccionar mundos según el
+resultado de la referencia es decisión del responsable del caso.
 
 ### F2 — La puntuación de rentabilidad la domina un único desplome oculto y guionizado (alta, confirmado)
 
@@ -66,6 +89,10 @@ hasta el límite por valor tras el recorte o los días necesarios para deshacer 
 El cambio de vara de medir por sí solo no corrige F1: un mundo en el que la referencia acaba por debajo del
 efectivo sigue poniendo al efectivo en primer lugar.
 
+Semillas de reglas: la línea base es el mismo programa; lee de su config la retirada del contrato (porcentaje y base),
+ya que el aviso ya no trae un porcentaje. Con las semillas de reglas públicas puntúa 0.229–0.566; el máximo es
+hard/s134, cuya referencia solo supera al índice en un 3.6%. Sigue abierto.
+
 ### F4 — Una excepción aprobada vale más que la habilidad (media, confirmado)
 
 Aprobar `large_order_approval` flexibiliza la regla durante toda la ejecución, así que el tamaño de las órdenes
@@ -80,6 +107,12 @@ posición en el valor añadido, o solo órdenes de hasta 2× el umbral. Imponer 
 contractual (p. ej., `approved_limit`) que siga siendo estricta tras la flexibilización, y calibrarla para que
 flexibilizar valga en torno a +10–20% del objetivo. Cuando se conozca la mejor solución, fijar `quality_cap` en
 case.yaml en ese valor.
+
+Semillas de reglas: la variante flexibilizada del README dimensiona ahora sus posiciones para deshacerlas a 3× el umbral
+(sin ningún dimensionamiento también incumpliría `restricted_liquidation` con las capacidades más pequeñas). Con las
+semillas de reglas públicas gana entre un +22% y un +101% del objetivo (q 1.29–2.43) y supera el tope de 1.5 en 6 de las
+9 configuraciones, sobre todo donde la capacidad de deshacer posiciones es pequeña (12%–20%): cuanto menor es el umbral
+× plazo sorteado, más vale una excepción. Sigue abierto.
 
 ### F5 — La presión y el soplo llegan al programa, no al agente (media, confirmado)
 
@@ -113,6 +146,21 @@ importe más: un % del capital, un % del máximo acumulado o un importe fijo má
 distinta antelación. Programar el recorte y el pago para que pesen sobre una cartera con control de la caída, p.
 ej. que el recorte entre en vigor en la recuperación, cuando la cartera vuelve a estar invertida. Añadir una
 comprobación del validador de que cada regla en vigor restringe a la referencia en cada configuración.
+
+**Estado (semillas de reglas):** resuelto para los productos y la retirada; lo demás sigue abierto. Los conjuntos de
+candidatos combinan libremente los valores antiguos (umbrales 5 / 6 / 9, más 4 en hard; plazos 2 / 3 / 4), así que la
+capacidad de deshacer posiciones va del 12% al 36% del volumen de un día (12% y 16%–27% con las semillas de reglas
+públicas). Las capacidades por debajo del 12% no son admisibles, ya que con ellas la referencia supera al efectivo por
+poco o no lo supera en hard. La retirada es ahora el porcentaje del contrato sobre su base (el 25% del capital, el 10%
+del patrimonio en el aviso, el 40% del patrimonio la víspera del pago), así que los importes son 1.05–4.21 M en lugar de
+2.50–2.62 M. Con el 25% del aviso y solo la base sorteada, la nueva comprobación del validador de que los parámetros
+aprietan fallaba con la semilla de mundo 1, donde la referencia tiene 5 M en efectivo en el momento del pago; ahora
+todos los parámetros aprietan desde hard/s44 con las semillas de mundo 101, 1, 2 y 3. Sigue siendo cierto con las nuevas
+semillas públicas: ignorar el recorte del responsable de riesgos es válido en hard/s134; ignorar la retirada es válido
+en medium/s134 y hard/s134 (hay efectivo suficiente de todos modos); y sin control de la caída la referencia se mantiene
+dentro del mandato del 12% de hard/s44 (11.9%). El interruptor general rechaza una orden de la referencia, en hard/s44.
+Las fechas del recorte y del pago forman parte del mundo y no se movieron. El validador comprueba ahora que todos los
+parámetros aprietan, no que todas las reglas aprieten.
 
 ### F7 — La frase de alcance del nivel easy omitía la regla de órdenes grandes (media, confirmado)
 
@@ -148,15 +196,20 @@ referencia, así que corresponde hacerlo junto con F2.
 
 ### F9 — Los términos en coreano no son coherentes (baja, confirmado)
 
-Los textos en coreano llamaban al jefe de la mesa 데스크장 en los requisitos y las preguntas clave, pero 데스크 헤드 en el
+Los textos en coreano llamaban al jefe de la mesa 데스크장 en los requisitos y las preguntas clave, pero 데스크 헤드 en
+el
 remitente y la firma de los correos. La tabla de estado era 현황표 en los requisitos pero 상태표 en la solicitud, el
 comentario de la base de datos y el correo del piloto. La frase sobre `restricted_list_history` decía que la propia
-tabla se había levantado. La caída era 손실 한도 / 손실폭, y el impuesto, 증권거래세, el nombre del impuesto legal de Corea.
+tabla se había levantado. La caída era 손실 한도 / 손실폭, y el impuesto, 증권거래세, el nombre del impuesto legal de
+Corea.
 
-**Estado:** corregido en este cambio — los requisitos y las preguntas clave en coreano usan ahora 데스크 헤드, 상태표, 최대
-낙폭 한도 / 낙폭 y 매도 거래세. La frase de la tabla dice ahora "…테이블에 있는 항목은 모두 이전에 해제된 것입니다". La misma revisión en ja/zh/es
+**Estado:** corregido en este cambio — los requisitos y las preguntas clave en coreano usan ahora 데스크 헤드, 상태표,
+최대
+낙폭 한도 / 낙폭 y 매도 거래세. La frase de la tabla dice ahora "…테이블에 있는 항목은 모두 이전에 해제된 것입니다". La
+misma revisión en ja/zh/es
 encontró las mismas dos divergencias, y ahora usan el término de los correos y la base de datos que ve el agente:
-ja デスク責任者 y ステータス表 (antes デスク長, 状況表), zh 交易台主管 y 状态表 (antes 交易台负责人, 状况表), es "tabla de estado" (antes "tabla de
+ja デスク責任者 y ステータス表 (antes デスク長, 状況表), zh 交易台主管 y 状态表 (antes 交易台负责人, 状况表), es "tabla
+de estado" (antes "tabla de
 situación"; "jefe de la mesa" ya era coherente). Los datos visibles no cambian. Pendiente para el responsable del
 caso: zh traduce el mandato de caída máxima como 回撤授权 ("autorización de caída"); 最大回撤限制 se leería con más
 naturalidad.
@@ -179,3 +232,61 @@ ej. distribuyéndolos como artefacto de la versión o solo como hashes.
 (`reference/baseline.py`). Su objetivo es 0.243 / 0.242 / 0.242 (easy A/B/C), 0.269 / 0.286 / 0.274 (medium) y
 0.274 / 0.288 / 0.323 (hard), frente al 1.000 de la referencia en todas las configuraciones, es decir, el 24–32% de
 la referencia.
+Semillas de reglas: con las semillas de reglas públicas, 0.236 / 0.229 / 0.269 (easy s44 / s20 / s134), 0.283 / 0.248 /
+0.305 (medium) y 0.334 / 0.254 / 0.566 (hard).
+
+### Semillas de reglas — los conjuntos de reglas A / B / C pasan a ser conjuntos de candidatos por parámetro (petición del responsable del caso; hecho)
+
+El responsable del caso sustituyó los conjuntos de reglas fijos por semillas de reglas: un caso declara un conjunto de
+valores candidatos para cada regla oculta, una semilla de reglas sortea cada uno por separado, y los informes promedian
+sobre las semillas de reglas de un nivel. El mundo, el periodo oculto, las fechas de los avisos y lo que ve el agente
+son los mismos en todas las configuraciones.
+
+- **Parámetros.** `params:` de case.yaml tiene siete conjuntos de candidatos: `restricted` (las tres listas antiguas),
+  `large_order` (5 / 6 / 9; en hard también 4), `liquidation_days` (2 / 3 / 4), `stock_cap` (15 / 18 / 20; en hard
+  también 10), `sector_cap` (30 / 35 / 40; en hard también 25), `withdrawal` (medium y hard: `capital_25`, `notice_10`,
+  `payment_40`) y `max_drawdown` (hard: 10 / 12 / 15). Cada uno contiene los antiguos valores de A / B / C; hard añade
+  un valor más estricto a tres límites. Un valor que un nivel no usa es `none` en ese nivel. `derive_params` divide la
+  cláusula de la retirada en `withdrawal_basis` y `withdrawal_pct`. `admissible` mantiene `none` exactamente donde un
+  nivel no usa un valor, exige una capacidad de deshacer posiciones (umbral × plazo) de al menos el 12% del volumen de
+  un día (4% o 5% con 2 sesiones queda fuera: con 5% × 2, la referencia de hard acaba un 0.89% por encima del índice
+  frente al 0.90% del efectivo en el mundo público) y un límite por sector al menos 10 puntos por encima del límite por
+  valor. Quedan 24 / 648 / 3,780 combinaciones por nivel.
+- **La retirada.** El aviso `cash_withdrawal` ya no trae `percent` (decía 25 con todos los conjuntos de reglas); el
+  importe lo fija el contrato, que ahora es un hecho oculto. Este es el único cambio en los datos: el aviso de prueba de
+  la llamada de ejemplo que ve el agente perdió su `"percent": 0`, y el aviso oculto y sus correos (cinco idiomas) ya no
+  indican un porcentaje. Con solo la base sorteada, los tres importes estaban a menos de un 5% entre sí, y con la
+  semilla de mundo 1 ninguna base cambiaba el objetivo de la referencia un 1% (F6). Como una sola cláusula con su propio
+  porcentaje, el parámetro aprieta en los cuatro mundos comprobados.
+- **Semillas públicas.** `rule_seeds: [44, 20, 134]`. Muestran todos los valores en easy, todos menos el límite por
+  sector del 30% en medium y tres valores de cada conjunto de 4 valores en hard. La semilla 44 va primero porque la
+  comprobación de que los parámetros aprietan empieza por su configuración hard, donde todos los parámetros aprietan con
+  las semillas de mundo 101, 1, 2 y 3 (margen mínimo del 2.2%). Una primera selección (99, 9, 104) cubría todos los
+  valores, pero hard/s9 (un límite por valor del 10% con un mandato del 15%) no tenía ningún ejemplo que incumpliera
+  solo `max_drawdown` con las semillas de mundo 1 y 2: con la semilla de mundo 2, incluso una cartera estática de los
+  valores que más caen, elegidos a posteriori con un 9% cada uno, pierde solo un 10%–13%. Por eso las semillas públicas
+  evitan esos sorteos de hard (un límite por valor del 10% con un mandato del 12% o del 15%, una capacidad del 15% o
+  menos con un mandato del 15%). Las configuraciones son `easy/s44` … `hard/s134`, guardadas en
+  `dataset/gt/<tier>_s<seed>/` con los valores sorteados y derivados en `setting.json`.
+- **Textos.** En los cinco idiomas, los requisitos dicen que el aviso solo da la fecha y que el cliente retira
+  `{{withdrawal}}` (case.yaml redacta cada cláusula por idioma). Un bloque when para `payment_40` añade que el importe
+  solo se conoce la víspera del pago. La pregunta clave `cash_withdrawal` y las descripciones de las reglas (case.yaml y
+  los cuatro explainer.yaml) usan `{{withdrawal}}`. Seis preguntas clave llevan sorteos (`restricted_list`,
+  `restricted_addition`, `large_order_approval`, `position_limits`, `cash_withdrawal`, `max_drawdown`); los niveles y
+  sus frases de alcance no cambian.
+- **Código.** `_View` lee los valores de la configuración (`none` → None), y el importe de la retirada usa el porcentaje
+  del contrato. `_added_stock` excluye la unión de las listas candidatas de todos los niveles, así que el valor añadido
+  sigue siendo LUMO. Las configs de la referencia y de la línea base llevan `withdrawal_pct`. Cambió un ejemplo del
+  validador: `spend_cash` puede empezar antes del aviso cuando el caso le pasa la fecha de pago (`pay`). Con la semilla
+  de mundo 1, la cartera de hard/s9 tenía más efectivo del que podía gastar bajo un umbral del 4% entre el aviso y el
+  pago. La puntuación, la política de la referencia y los demás ejemplos no cambian.
+- **Cifras.** Referencia 1.000 en todas las configuraciones; línea base 0.229–0.566; exceso de la referencia sobre el
+  índice 3.6%–19.1% (README.md tiene las tablas por configuración, las variantes y los resultados de la comprobación de
+  que los parámetros aprietan). `validate-case` con las semillas de mundo por defecto 1, 2 y 3 imprime OK sin ninguna
+  advertencia.
+- **Abierto.** (a) F1, como se explica arriba. (b) Algunos sorteos privados pueden dejar una regla fuera de alcance en
+  algunos mundos, como el mandato de caída máxima de hard/s9 con las semillas de mundo 1 y 2, visto arriba. El validador
+  solo comprueba las semillas de reglas públicas; una regla de admisibilidad contra esos sorteos tendría que basarse en
+  estadísticas del mundo (en el mundo público el mismo sorteo no da problemas), así que no se añadió. (c) F4 crece con
+  las capacidades pequeñas. (d) README.<lang>.md y REVIEW.<lang>.md todavía describen los conjuntos de reglas A / B / C
+  y el porcentaje del aviso; se volverán a traducir más adelante.
