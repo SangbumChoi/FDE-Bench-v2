@@ -15,7 +15,8 @@ tiers:
   medium: >-
     Las de easy más seis preguntas que dependen del ingreso neto, del tipo de cambio de la fecha del pedido y de los
     días en hora de Corea (Q02, Q05, Q07, Q08, Q09, Q11), incluidos los reembolsos de octubre de pedidos de septiembre
-    (Q11 y, con el conjunto de reglas B, también Q02). La pregunta de «despensa» (Q06) no se necesita en esta ronda.
+    (Q11 y, cuando el año fiscal empieza en julio, también Q02). La pregunta de «despensa» (Q06) no se necesita en
+    esta ronda.
   hard: >-
     Las doce preguntas: las de medium más el ingreso neto de «despensa» (Q06), que exige conocer el cambio de nombre de
     la categoría snacks a despensa.

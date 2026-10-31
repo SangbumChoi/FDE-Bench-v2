@@ -10,12 +10,12 @@ is what a wrong figure costs against a figure left as "not available yet".
 Every answer is a number or null ("don't know"). A scored question earns
 right_reward (2) when correct, dont_know_reward when null and wrong_reward (0)
 when wrong; the objective is the total over 2 x the number of scored questions.
-So the case measures calibrated abstention: a sheet that knows the rule set's
+So the case measures calibrated abstention: a sheet that knows the setting's
 scheme answers a question only when its chance of being right is above
 dont_know_reward / right_reward.
 
-The data is the same in every setting. A setting decides which questions are
-scored and the client's conventions:
+The data is the same in every setting. A setting (tier, rule seed) decides which
+questions are scored and the client's conventions:
 
   tiers (which questions the board pack needs this round; others have no effect)
     easy    Q01, Q03, Q04, Q10, Q12: counted orders, test and staff accounts,
@@ -23,13 +23,16 @@ scored and the client's conventions:
     medium  + Q02, Q05, Q07, Q08, Q09, Q11: net revenue, FX and Korea-time days
             (and the October refunds of September orders)
     hard    all twelve: + Q06, which needs the snacks -> pantry rename
-  rule sets (case.yaml `rulesets`)
-    fy_start          first month of the fiscal year (A April, B July, C January)
-    active_days       active-customer window (A 90, B 60, C 30 days)
-    rounding_unit     money is reported to the nearest unit (A 1,000, B 10,000, C 100 KRW)
-    *_reward          wrong / don't know / right: A (0, 1, 2), B (0, 0.5, 2), C (0, 1.5, 2)
+  parameters a rule seed draws, each on its own (case.yaml `params`, one pool for every tier)
+    fy_start          first month of the fiscal year: January, April or July
+    active_days       active-customer window: 30, 60 or 90 days
+    rounding_unit     money is reported to the nearest 100, 1,000 or 10,000 KRW
+    dont_know_reward  what a null earns: 0.5, 1 or 1.5 (wrong 0, right 2)
+  derived (derive_params)
     fy2025, fy2026_q1, fy2026_h1, active_from
-                      the periods these give, as the requirements state them (checked against the code)
+                      the periods these give, worded per locale as the requirements state them
+    right_reward, wrong_reward
+                      the fixed ends of the reward scheme (2 and 0)
 
 Table and column identifiers stay ASCII (they are SQL identifiers); categorical
 labels, product names, the questions file and the data dictionary are localized.
@@ -44,8 +47,6 @@ import tempfile
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from pathlib import Path
-
-import yaml
 
 from fdebench2.cases import Setting
 from fdebench2.casekit import Fatal, read_json, write_csv
@@ -77,9 +78,7 @@ SCORED = {                       # the questions the board pack needs this round
 }
 UNRESOLVED = ("Q06",)            # what the reference cannot settle: it misses the snacks -> pantry rename
 GUESS_BELIEF = 0.5               # the reference's chance that its unsettled answer is right
-
-_META = yaml.safe_load((Path(__file__).with_name("case.yaml")).read_text(encoding="utf-8"))
-RULESETS = {r: dict(p) for r, p in _META["rulesets"].items()}
+RIGHT_REWARD, WRONG_REWARD = 2, 0      # the fixed ends of the scheme; the rule seed draws dont_know_reward
 
 
 def _first(year: int, month: int) -> date:
@@ -112,7 +111,8 @@ class Rules:
     @property
     def answers_unsettled(self) -> bool:
         """The reference's abstention policy: answer an unsettled question only when its expected reward beats
-        "don't know" (a tie abstains). With even odds: answer iff dont_know < right / 2, i.e. under B."""
+        "don't know" (a tie abstains). With even odds: answer iff dont_know < right / 2, i.e. when a null earns
+        0.5 (not at 1, a tie, nor at 1.5)."""
         return GUESS_BELIEF * self.right + (1 - GUESS_BELIEF) * self.wrong > self.dont_know
 
 
@@ -122,22 +122,37 @@ def rules_of(setting: Setting) -> Rules:
                  float(p["dont_know_reward"]), float(p["wrong_reward"]), SCORED[setting.tier])
 
 
-def _check_rulesets() -> None:
-    """The periods case.yaml states for the texts are the ones the code scores."""
-    for name, p in RULESETS.items():
-        fy_start, days = int(p["fy_start"]), int(p["active_days"])
-        per = periods(fy_start)
-        want = {"fy2025": per["fy2025"], "fy2026_q1": per["q1"],
-                "fy2026_h1": (per["h1"][0], _first(2026, fy_start + 6) - DAY),     # the whole half, as stated
-                "active_from": (AS_OF - timedelta(days=days - 1),)}
-        for key, dates in want.items():
-            if str(p[key]) != "/".join(d.isoformat() for d in dates):
-                raise ValueError(f"case.yaml rule set {name}: {key} is {p[key]!r}, the code gives {dates}")
-        if not float(p["wrong_reward"]) < float(p["dont_know_reward"]) < float(p["right_reward"]):
-            raise ValueError(f"case.yaml rule set {name}: rewards must rise from wrong to don't know to right")
+# ── rule seeds: what the drawn parameters give ───────────────────────────────
+
+SPAN = {"zh": "{} 至 {}", "en": "{} to {}", "ko": "{} ~ {}", "ja": "{}〜{}", "es": "del {} al {}"}
 
 
-_check_rulesets()
+def _span(a: date, b: date) -> dict:
+    """A date range as each locale's requirements write it."""
+    return {lang: fmt.format(a.isoformat(), b.isoformat()) for lang, fmt in SPAN.items()}
+
+
+def derive_params(params: dict, tier: str) -> dict:
+    """The periods the texts state, from the drawn fiscal-year start and active window, and the fixed ends of
+    the reward scheme. The first half of FY2026 is stated whole (a July year's runs to December); the code
+    counts a period still running on the reference date up to it (periods())."""
+    fy_start = int(params["fy_start"])
+    per = periods(fy_start)
+    return {"fy2025": _span(*per["fy2025"]),
+            "fy2026_q1": _span(per["q1"][0], _first(2026, fy_start + 3) - DAY),
+            "fy2026_h1": _span(per["h1"][0], _first(2026, fy_start + 6) - DAY),
+            "active_from": (AS_OF - timedelta(days=int(params["active_days"]) - 1)).isoformat(),
+            "right_reward": RIGHT_REWARD, "wrong_reward": WRONG_REWARD}
+
+
+def admissible(params: dict, tier: str) -> bool:
+    """Rewards rise from wrong to don't know to right, FY2026 has started by the reference date, and the active
+    window starts after the data does. Every combination of the current pools passes; this guards new ones."""
+    rewards_rise = float(params["wrong_reward"]) < float(params["dont_know_reward"]) < float(params["right_reward"])
+    fy_started = _first(2026, int(params["fy_start"])) <= AS_OF
+    window_in_data = 1 <= int(params["active_days"]) <= (AS_OF - DATA_START).days + 1
+    return rewards_rise and fy_started and window_in_data
+
 
 # product id -> (category key, KRW list price, launch date)
 PRODUCTS = {
@@ -398,7 +413,8 @@ def _reference_answers(world: World, rules: Rules, rounded=True) -> dict:
     """A careful analyst with the setting's conventions who misses that the old "snacks" label is the same
     category as "pantry". It leaves the questions this round does not need as null. Its pantry figure, from the
     new label alone, covers only products launched since 2025-10, so it gives that answer even odds
-    (GUESS_BELIEF) and keeps it only when that beats "don't know" (rule set B); under A and C it says null."""
+    (GUESS_BELIEF) and keeps it only when that beats "don't know" (a null earning 0.5); when a null earns 1 (a
+    tie) or 1.5 it says null."""
     ans = truth(world, rules, both_labels=False)
     if rounded:
         ans = _round_money(ans, rules.unit)

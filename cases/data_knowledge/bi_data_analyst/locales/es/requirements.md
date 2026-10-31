@@ -11,6 +11,12 @@ Vendemos cajas de suscripción de café y té, además de artículos sueltos, a 
 Un archivo JSON, `answers.json`: `{"Q01": 123456000, "Q02": null, ..., "Q12": 1.5}`. Cada identificador de pregunta del archivo de preguntas (Q01 a Q12) figura en el archivo, con un número o con `null` cuando no pueda respaldar una cifra; en el dosier del consejo aparecerá entonces como «aún no disponible». Los importes en KRW, los porcentajes en tanto por ciento (4.25 significa 4,25 %) y, en la pregunta sobre un cliente, el `customer_id` numérico.
 
 - **No disponible frente a erróneo**: una cifra errónea que llega al consejo hay que corregirla en la reunión siguiente y nos cuesta credibilidad, mientras que «aún no disponible» solo deja un hueco. Nuestro equipo de finanzas valora así cada cifra del dosier: una cifra correcta, {{right_reward}}; una cifra marcada «aún no disponible» (`null`), {{dont_know_reward}}; una cifra errónea, {{wrong_reward}}.
+<!-- when: dont_know_reward=0.5 -->
+  Esta vez el consejo prefiere ver una cifra antes que un hueco.
+<!-- /when -->
+<!-- when: dont_know_reward=1.5 -->
+  Tras las correcciones de los dos últimos dosieres, esta vez el consejo prefiere, con diferencia, un hueco a una cifra errónea.
+<!-- /when -->
 <!-- tier: easy -->
 - **En esta ronda**: esta vez el dosier solo necesita Q01, Q03, Q04, Q10 y Q12. Las otras siete preguntas no las necesitamos en esta ronda; puede dejarlas en `null` y, si las responde, no usaremos esas cifras.
 <!-- /tier -->
@@ -22,6 +28,9 @@ Un archivo JSON, `answers.json`: `{"Q01": 123456000, "Q02": null, ..., "Q12": 1.
 
 - La exportación es un conjunto de tablas CSV (`customers.csv`, `accounts_meta.csv`, `products.csv`, `orders.csv`, `order_items.csv`, `payments.csv`, `refunds.csv`, `fx_rates.csv`). Los nombres de tablas y columnas están en inglés para poder cargarlos tal cual en SQL; las etiquetas de estado, categoría, etc. están en nuestro idioma de trabajo.
 - **Año fiscal**: nuestro año fiscal empieza el 1 de {{fy_start}} y lleva el nombre del año natural en que empieza: el FY2025 va {{fy2025}}. El primer trimestre del FY2026 es {{fy2026_q1}} y su primer semestre, {{fy2026_h1}}. Un periodo que sigue en curso en la fecha de referencia se cuenta hasta la fecha de referencia.
+<!-- when: fy_start=7 -->
+  Con nuestro año fiscal de julio, el primer semestre del FY2026 solo ha transcurrido del 2026-07-01 a la fecha de referencia, los mismos tres meses que su primer trimestre.
+<!-- /when -->
 - **Los días son en hora de Corea**: todas las marcas de tiempo (`ordered_at_utc`, `signup_at_utc`, ...) se guardan en UTC, pero para nosotros un «día» es un día natural en hora de Corea (UTC+9). Sume 9 horas antes de tomar la fecha; días, meses, trimestres y años fiscales se deciden así. Por ejemplo, un pedido del 2026-06-30 a las 16:30 UTC se hizo el 2026-07-01. La fecha de referencia de las preguntas es el 2026-09-30 (hora de Corea).
 - **Qué pedidos cuentan**: solo los pedidos con status `completado`. Los pedidos `cancelado` y `pago_fallido` no cuentan nunca, aunque `payments.csv` tenga una fila de pago para ellos. Un pedido pertenece al periodo de su fecha de pedido.
 - **Cuentas de prueba**: los clientes cuyo `account_type` en `accounts_meta.csv` es `prueba` son cuentas de QA. Por política de finanzas se excluyen de todas las cifras (pedidos, ingresos, recuentos de clientes, altas). Las cuentas `empleado` son clientes reales y se mantienen.

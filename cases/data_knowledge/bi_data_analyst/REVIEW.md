@@ -3,8 +3,9 @@
 Findings from the case review, checked again against the code at the public seed (20261026) and on world seeds 1–20.
 F1, F3, F8 and F9 were fixed when the review was first addressed (the "first change" below). F10 is the case
 owner's request: three tiers × three rule sets, and answers that can be right, "don't know" or wrong, with rewards
-that differ by rule set. It is done in the second change, which also moves F2, F4 and F5. The rest are open
-proposals for the case owner.
+that differ by rule set. It is done in the second change, which also moves F2, F4 and F5. The third change
+replaces the three fixed rule sets with rule seeds that draw each rule from a pool (section "Rule seeds" at the end);
+it moves F1, F2, F4, F5, F9 and F10 again. The rest are open proposals for the case owner.
 
 ### F1 — The rounding rule made Q07 and Q09 unanswerable (high, partly)
 
@@ -22,7 +23,9 @@ they do on seeds 1–20. The reference rises from 9 to 11 (Q07 and Q09 now count
 costs a question: the UTC-day sheet scores 9/12 rounded or exact. The verifier's objection stands: no general
 "bending never helps" check was added, since bendable rules elsewhere are meant to cost objective. Second change:
 the rounding unit is now a rule-set parameter (1,000 / 10,000 / 100 KRW), the money tolerance is 0.5% or half the
-unit, and the same assertion (objective 1.0, no violation) runs in all nine settings.
+unit, and the same assertion (objective 1.0, no violation) runs in all nine settings. Rule seeds: the unit is a
+drawn parameter (pool 100 / 1,000 / 10,000 KRW), and the assertion runs in every public setting on every world the
+validator builds (seeds 1–20 checked).
 
 ### F2 — No headroom between the reference and the ceiling (high, confirmed)
 
@@ -44,7 +47,10 @@ a cap above 1.0 leaves easy and medium short. So the second change sets no `qual
 (a) a per-tier `quality_cap` in the framework (1.0 for easy and medium, 1.10 for hard); (b) give the reference one
 deliberate gap in every tier, e.g. a question it cannot settle in easy and in medium, so that it abstains there too;
 (c) weight each question by the number of binding targets it exercises, so that every hidden fact costs about the
-same.
+same. Rule seeds: unchanged in substance. The reference's objective depends only on the tier and on the drawn
+`null` reward: 1.000 in easy and medium, and 0.917 / 0.958 / 0.979 in hard for a `null` worth 0.5 / 1 / 1.5, in all
+81 combinations on world seeds 1–10. So the perfect sheet's normalized quality in hard is 1.125 when a `null` is
+worth 0.5 and 1.091 otherwise (hard/s12 and hard/s4, hard/s23 on the panel). Still no `quality_cap`.
 
 ### F3 — Refunds dated after the reference date, and a hair-trigger Q11 tolerance (high, partly)
 
@@ -85,6 +91,10 @@ moved into `category_rename` (hard). It is still small there (Q06 moves 0.28%), 
 where a category figure is scored. Still open: the refund-date FX clause, and `fx_order_date` costing nothing on some
 worlds (seed 2 under A and B, seed 1 under B). The 89-day point is now a one-day-short window under each rule set:
 it costs Q03 in every setting at the public seed and on seeds 1–3, except A at the public seed and B at seed 1.
+Rule seeds: the same picture on the new panel. `fx_order_date` costs nothing at world seed 2 under the April and the
+July year (s23, s12) and at world seed 1 under the July year, in every tier. The one-day-short window costs
+Q03 everywhere except the 90-day window (s23) at the public world and the 60-day window (s4) at world seed 1.
+Another value of the window's pool always costs Q03. Still open.
 
 ### F5 — No settings and no README (medium, confirmed)
 
@@ -108,6 +118,12 @@ what was built:
 - Check that each rule set's sheet loses at least one question under the other two. *Built:* validate-case checks
   that each reference is invalid or at least 1% worse under the other rule sets of its tier. All 18 pairs pass:
   9 are invalid (rounding), and the 9 valid ones score 0.00–0.40 of the other reference.
+
+Rule seeds (third change): the settings are now tiers × rule seeds. The four rule-set parameters are pools a rule
+seed draws from independently (81 combinations per tier), and validate-case's distinctness check is replaced by
+the binding check: changing any one parameter of `hard/s4` invalidates its reference or moves its score (all four
+bind). The 18 cross pairs on the new panel (seeds 4, 12, 23) still pass: 9 invalid, the 9 valid ones at
+0.00–0.38. Fixed as far as settings go.
 
 ### F6 — No dated event and no pressure (medium, confirmed)
 
@@ -156,6 +172,7 @@ days can match by coincidence: at world seed 1, its Q10 = 639 equals the test-in
 Proposal: do not flag an answer that equals the test-free figure under either day convention. Second change: the
 gate checks only the questions the tier scores, under the setting's periods, and a `null` never trips it. The seed-1
 coincidence now shows in easy/A, medium/A and hard/A, because Q10 is scored in every tier. It is still open.
+Rule seeds: it shows wherever the fiscal year starts in April (s23 on the panel), in all three tiers. Still open.
 
 **Baseline:** "not available yet" (`null`) for every question, what finance reports without an analyst. It earns the
 don't-know reward everywhere (0.5 / 0.25 / 0.75 under A / B / C), so saying "don't know" to everything scores 0 on
@@ -163,6 +180,11 @@ the normalized scale. The face-value sheet (the export summed at face value: cal
 every order status, tax-inclusive totals less refunds dated in the period, the 2026-09-30 FX rate, a 30-day active
 window, the `pantry` label only; test accounts out, money rounded) scores below it in every setting and on seeds
 1–20 (at most 0.60, in easy/C, against 0.75). The exact answers rounded to the setting's unit score 1.0 everywhere.
+Rule seeds: the all-`null` baseline is kept. The face-value sheet is no longer below it under every draw, because a
+January year (the calendar year it assumes) can now come with a `null` worth 0.5 or 1. On the panel it stays below
+at the public world, but easy/s4 (January, `null` worth 1) reaches 0.60 against 0.50 on world seeds 4 and 7; over
+all 81 combinations on world seeds 1–10 it reaches the baseline in 117 of 2,430 (tier, combination, world) cases,
+at most 0.60 against 0.25 (normalized quality 0.47). See "Rule seeds" below.
 
 ### F10 — Answers could not say "don't know", and the case had one ground truth (owner request; done)
 
@@ -171,7 +193,9 @@ benchmark should then measure whether an agent says "don't know" when it should 
 it gets the answer right when it does answer. The case also had no settings (F5).
 
 **Status:** done in the second change. The data, the request and the questions file are unchanged and byte-identical
-in all nine settings. The public seed's figures under rule set A are those of the case without settings.
+in all nine settings. The public seed's figures under rule set A are those of the case without settings. Third
+change: the three fixed rule sets are now pools drawn by rule seed (section "Rule seeds"); the reward scheme, the
+tier question sets, the all-`null` baseline and the reference's abstention policy are unchanged.
 
 - **Answers.** `answers.json` maps every id Q01..Q12 to a number or `null` ("don't know"). A missing key, or a value
   that is neither a finite number nor `null`, breaks `answer_format` for any question, scored or not. The
@@ -218,3 +242,45 @@ in all nine settings. The public seed's figures under rule set A are those of th
   The check "under B, abstaining scores lower than answering wrongly" cannot hold as worded: under every scheme a
   `null` earns more than a wrong answer. What holds is the expectation at the reference's even odds: answering
   beats abstaining under B (1 against 0.5 per question), ties under A and loses under C.
+
+### Rule seeds — the rule sets A / B / C become parameter pools (owner request; done)
+
+The case owner replaced fixed rule sets with rule seeds: a case declares a pool of candidate values for each hidden
+rule, a rule seed draws each one on its own, and reports average over the rule seeds of a tier. The data, the
+request, the questions file and the agent's view are unchanged and byte-identical in every setting.
+
+- **Parameters.** case.yaml `params:` has four pools, the same in every tier: `fy_start` January / April / July,
+  `active_days` 30 / 60 / 90, `rounding_unit` 100 / 1,000 / 10,000 KRW (the owner wants the reported unit to be a
+  seeded hidden rule) and `dont_know_reward` 0.5 / 1 / 1.5. These are the old A / B / C values, now combined freely:
+  81 combinations per tier instead of three. `right_reward` 2 and `wrong_reward` 0 are fixed and come from
+  `derive_params`, with the period strings the texts quote (`fy2025`, `fy2026_q1`, `fy2026_h1`, worded per locale)
+  and `active_from`. case.yaml no longer lists the periods, so the import-time check that they match the code is
+  gone: the code now writes them. `admissible` keeps the old guards (rewards rise from wrong to don't know to right,
+  FY2026 has started by the reference date) plus a window inside the data; every current combination passes.
+- **Panel.** `rule_seeds: [4, 12, 23]`, the first triple of seeds in which every value of every pool appears once:
+  s4 = January, 60 days, 100 KRW, 1; s12 = July, 30 days, 10,000 KRW, 0.5; s23 = April, 90 days, 1,000 KRW, 1.5.
+  Settings are `easy/s4` … `hard/s23`, stored in `dataset/gt/<tier>_s<seed>/` with the drawn and derived values in
+  `setting.json`. s23 is rule set A with a `null` worth 1.5 instead of 1; the old sets B and C are no longer on the
+  panel as such (B is seed 21, C is no seed below 400).
+- **Texts.** Placeholders as before; the old per-rule-set labels of the periods are now derived values. Three
+  `<!-- when: -->` passages in all five locales: under a July year the fiscal-year note adds that FY2026's first
+  half has only run from 2026-07-01 to the reference date, the same months as its first quarter; with a `null`
+  worth 0.5 the client adds that the board would rather see a figure than a gap, and with 1.5 that after
+  corrections in the last two packs it would much rather see a gap than a wrong figure. The medium tier text (and
+  its four translations in the explainer) says "Q02 when the fiscal year starts in July" instead of "under rule set
+  B". The four parameter targets (`fiscal_year`, `active_customer`, `report_rounding`, `answer_rewards`) carry the
+  draw; the other seven targets are the same under every draw.
+- **Code.** `RULESETS` and `_check_rulesets` are gone; `derive_params` and `admissible` replace them. Scoring, the
+  reference (the rename missed; Q06 answered only when ½ × 2 > the `null` reward, i.e. at 0.5), the all-`null`
+  baseline, the face-value sheet and the violating examples are unchanged and read the setting's parameters.
+- **Numbers.** Reference 1.000 in easy and medium, 0.958 (s4) / 0.917 (s12) / 0.979 (s23) in hard; baseline 0.500
+  / 0.250 / 0.750. The validator's binding check passes for all four parameters from `hard/s4`; it warns that the
+  medium and hard references are byte-identical under s4 and s23 (Q06 `null` in both). The one-fact-wrong table,
+  the hard-tier answers and the world-seed ranges in README.md are recomputed for the new panel.
+- **Open.** (a) The face-value sheet beats the all-`null` baseline under some private draws (January year, `null`
+  worth 0.5 or 1; see the Baseline note above). That is realistic, since the naive calendar-year reading is then
+  right, but it gives a no-effort sheet positive quality up to 0.47 on those draws. If the owner wants quality 0
+  for it everywhere, the baseline could be the better of the two sheets per setting. (b) Harder pools for hard were
+  not added: the pools are the old values in every tier. A September or October year (FY2026 Q1 running past the
+  reference date) would be a natural hard-only candidate. (c) README.<lang>.md and REVIEW.<lang>.md still describe
+  rule sets A / B / C; they are retranslated later.
