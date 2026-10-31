@@ -10,7 +10,7 @@ tiers:
   easy: >-
     El problema central: el margen de estado de carga de la garantía, los límites de potencia, la eficiencia por sentido, el
     estado de carga al final de la semana, el límite de vertido modificado (más bajo que el del contrato archivado) y el cambio
-    de hora. En esta ronda el emplazamiento puede tomar energía de la red a cualquier hora, no hay reserva de tarde y no se
+    de hora. Esta vez el emplazamiento puede tomar energía de la red a cualquier hora, no hay reserva de la tarde y no se
     cobra degradación.
   medium: >-
     Easy más las reglas de operación del cliente: consumo de red solo en la franja valle, la reserva de emergencia de la tarde
