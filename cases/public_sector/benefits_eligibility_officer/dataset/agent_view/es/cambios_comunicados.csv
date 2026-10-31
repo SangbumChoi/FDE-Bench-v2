@@ -1,0 +1,17 @@
+﻿id_hogar,num_miembro,fecha_comunicacion,fecha_efecto,concepto,nuevo_valor
+H067,1,09/09/2026,14/08/2026,ingresos_trabajo,590
+H097,1,18/09/2026,20/08/2026,ingresos_trabajo,1340
+H029,2,24/09/2026,26/08/2026,ingresos_trabajo,2160
+H232,1,24/09/2026,13/10/2026,ingresos_trabajo,940
+H149,1,25/09/2026,10/09/2026,ingresos_trabajo,870
+H287,1,25/09/2026,13/09/2026,ingresos_trabajo,730
+H288,1,10/10/2026,08/10/2026,ingresos_trabajo,1370
+H178,2,11/10/2026,22/10/2026,ingresos_trabajo,770
+H240,1,18/10/2026,29/10/2026,ingresos_trabajo,2140
+H256,1,19/10/2026,12/09/2026,ingresos_trabajo,920
+H193,,21/10/2026,04/09/2026,alquiler_mensual,230
+H172,1,27/10/2026,06/11/2026,ingresos_trabajo,650
+H022,,28/10/2026,16/11/2026,alquiler_mensual,420
+H060,,28/10/2026,14/11/2026,alquiler_mensual,280
+H105,,28/10/2026,07/09/2026,alquiler_mensual,460
+H290,1,28/10/2026,14/10/2026,ingresos_trabajo,670

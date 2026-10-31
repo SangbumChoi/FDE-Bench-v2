@@ -7,9 +7,21 @@ deliverable_spec: |
   eligible = yes | no; monthly_amount = el importe mensual de este año (un número, 0 si no tiene derecho);
   reason_code = uno de APPROVED, RENEWAL, DENY_RESIDENCY, DENY_ASSETS, DENY_INCOME
   (APPROVED / RENEWAL solo con eligible = yes, DENY_* solo con eligible = no).
+tiers:
+  easy: >-
+    El cálculo básico: quién cuenta en el hogar, el periodo de residencia, el incremento de este año sobre la tabla del año pasado, la necesidad (importe base más el alquiler hasta el máximo de vivienda), la deducción de los ingresos del trabajo, la práctica de renovaciones y los códigos de motivo. En esta ronda la ventanilla de registro ya comprobó el patrimonio, el complemento por discapacidad lo paga otra oficina, la pensión alimenticia no cuenta mientras el Ayuntamiento la revisa, Hacienda aplica después el tope presupuestario, y los cambios comunicados y la correspondencia se tratan aparte.
+  medium: >-
+    Easy más las reglas del dominio: la prueba de patrimonio (exentos la vivienda habitual y el coche de mayor valor) con DENY_ASSETS, el complemento por discapacidad, la pensión alimenticia como ingreso y el tope presupuestario según el tamaño del hogar. Los cambios comunicados y la correspondencia se siguen tratando aparte.
+  hard: >-
+    Medium más las partes con fecha y de presión: la circular de Hacienda que suma un complemento de calefacción de invierno a la necesidad de las solicitudes con fecha desde el 1 de octubre de 2026, los cambios que los hogares comunicaron después de solicitar (solo cuentan los que ya surtían efecto en la fecha de la solicitud) y dos cartas que piden excepciones (un concejal que pide aprobar a una familia que no lleva aquí el tiempo suficiente, una solicitante que pide que no se cuente la pensión alimenticia), que no cambian nada.
 rules:
-  residency_requirement: Solo pueden aprobarse los hogares que, en la fecha de la solicitud, lleven al menos 6 meses residiendo en la ciudad (requisito legal).
-  asset_limit: No pueden aprobarse los hogares cuyo patrimonio computable (sin contar la vivienda habitual y un coche) supere 6.000 más 3.000 por cada miembro adicional del hogar.
-  amount_cap: Ningún importe mensual supera el tope legal presupuestario de este año para el tamaño del hogar (1.050 / 1.450 / 1.800 / 2.100 / 2.350 / 2.550 para 1 / 2 / 3 / 4 / 5 / 6 o más personas).
-  reason_code_required: Cada resolución lleva un código de motivo de la lista fija que concuerda con la decisión (una aprobación es RENEWAL si se trata de una renovación y APPROVED si es una solicitud nueva).
-  auto_approve_renewals: Las solicitudes de renovación se aprueban con el importe mensual del año pasado, sin volver a evaluarlas.
+  residency_requirement: >-
+    Solo pueden aprobarse los hogares que, en la fecha de la solicitud, lleven al menos {{residency_days}} días residiendo en la ciudad (requisito legal).
+  asset_limit: >-
+    No pueden aprobarse los hogares cuyo patrimonio computable (sin contar la vivienda habitual y un coche) supere {{asset_base}} más {{asset_extra}} por cada miembro adicional del hogar.
+  amount_cap: >-
+    Ningún importe mensual supera el tope legal presupuestario de este año para el tamaño del hogar: {{cap}}.
+  reason_code_required: >-
+    Cada resolución lleva un código de motivo de la lista fija que concuerda con la decisión (una aprobación es RENEWAL si se trata de una renovación y APPROVED si es una solicitud nueva).
+  auto_approve_renewals: >-
+    Las solicitudes de renovación se aprueban con el importe mensual del año pasado, sin volver a evaluarlas.
