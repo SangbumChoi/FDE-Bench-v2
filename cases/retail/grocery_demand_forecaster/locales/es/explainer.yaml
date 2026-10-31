@@ -8,11 +8,11 @@ deliverable_spec: |
   forecast = las unidades previstas en la unidad de venta actual del artículo (un número, se admiten decimales).
 tiers:
   easy: >-
-    La previsión base: lo que vende cada tienda en un día normal. El plan de promociones y el festivo regional único los añade el equipo de categorías, así que quedan fuera, y la previsión se evalúa con las ventas base de caja (devoluciones restadas, días de rotura tal como se registraron) sin esos efectos. Se aplican el cierre de S4 los domingos, el mínimo de exposición y el peso del error; los panecillos (I07) no se evalúan en esta ronda.
+    La previsión base: lo que vende cada tienda en un día normal. El plan de promociones y el festivo regional único los añade el equipo de categorías, así que quedan fuera, y la previsión se evalúa con las ventas base de caja (devoluciones restadas, días con rotura de stock tal como se registraron) sin esos efectos. Se aplican el cierre de S4 los domingos, el mínimo de exposición y el peso del error; los panecillos (I07) no se evalúan en esta ronda.
   medium: >-
-    Easy más el plan de promociones (fechas de inicio y fin incluidas, el aumento estimado de las promociones pasadas y, si la semilla de reglas saca un folleto, multiplicado por el factor del folleto) y el festivo regional único en la fecha sorteada. Se sigue evaluando con las ventas de caja con las devoluciones restadas; I07 no se evalúa en esta ronda.
+    Easy más el plan de promociones (fechas de inicio y fin incluidas, el aumento estimado de las promociones pasadas y, si la semilla de reglas sortea un folleto, multiplicado por el factor del folleto) y el festivo regional único en la fecha sorteada. Se sigue evaluando con las ventas de caja con las devoluciones restadas; I07 no se evalúa en esta ronda.
   hard: >-
-    Medium evaluado con la demanda de los clientes: las ventas de los días de rotura están truncadas y las devoluciones no son demanda. I07 se evalúa, así que cuenta su cambio de unidad (por unidad hasta el 31 de mayo de 2026, en paquetes de 6 desde entonces), y hay una revisión fechada: el viernes 30 de octubre, después de exportar plan_promociones.csv, se cancelaron las promociones de la categoría sorteada.
+    Medium, pero evaluado con la demanda de los clientes: las ventas de los días con rotura de stock están censuradas y las devoluciones no son demanda. I07 se evalúa, así que cuenta su cambio de unidad (por unidad hasta el 31 de mayo de 2026, en paquetes de 6 desde entonces), y hay una revisión fechada: el viernes 30 de octubre, después de exportar plan_promociones.csv, se cancelaron las promociones de la categoría sorteada.
 rules:
   complete_grid: forecast.csv tiene exactamente una fila por cada tienda × artículo × fecha del periodo de la previsión.
   non_negative: Ninguna previsión es negativa.
