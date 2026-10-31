@@ -24,7 +24,7 @@ from .agents.base import AgentResult, RunContext
 from .agents.cli import CLIAgent
 from .agents.reference import ReferenceAgent
 from . import program
-from .cases import DEFAULT_RULESET, Case, discover
+from .cases import Case, discover
 from .llm import ModelRegistry, Usage
 from .mcp_bridge import CLIENT_USAGE
 from .prompts import render_task_prompt
@@ -70,7 +70,7 @@ class Settings:
     sandbox: dict[str, Any] = field(default_factory=lambda: {"kind": "local"})
     cache: Path = REPO / ".cache"
     # "strict": every run in a docker sandbox, so the agent can see only /workspace (its request and data,
-    # the same in every difficulty and rule set) and never the cases, other settings or the run directory.
+    # the same in every difficulty and rule seed) and never the cases, other settings or the run directory.
     # "off": local sandbox allowed (development and tests).
     isolation: str = "off"
 
@@ -162,7 +162,17 @@ class Bench:
     def run_dir(self, spec: VariantSpec, agent: AgentSpec) -> Path:
         return self.s.out / agent.label / spec.key()
 
+    def resolve(self, spec: VariantSpec) -> VariantSpec:
+        """The spec with the rule seed it runs on: the case's first public rule seed when it names none, and none
+        for a case without settings, so that a run key always says which ground truth was scored."""
+        case = self.cases.get(spec.case_id)
+        if case is None:
+            return spec
+        seed = (case.rule_seeds[0] if spec.rule_seed is None else spec.rule_seed) if case.tiers else None
+        return spec if seed == spec.rule_seed else VariantSpec(**{**asdict(spec), "rule_seed": seed})
+
     def prepare(self, spec: VariantSpec, run_dir: Path) -> Variant:
+        spec = self.resolve(spec)
         case = self.cases[spec.case_id]
         workspace = run_dir / "workspace"
         variant = build_variant(spec, case, workspace, self.translator())
@@ -218,6 +228,7 @@ class Bench:
     def run(self, spec: VariantSpec, agent: AgentSpec, force: bool = False) -> dict[str, Any]:
         """Run and score, or return the stored result if it is current. Raises RunLocked if another worker
         is running the same key."""
+        spec = self.resolve(spec)
         run_dir = self.run_dir(spec, agent)
         fp = self.fingerprint(spec, agent)
         if not force and (done := self._cached(run_dir, fp)) is not None:
@@ -293,17 +304,33 @@ class Bench:
                   detail: dict[str, Any], rec: dict[str, Any] | None = None) -> dict[str, Any]:
         """result.json of a run that could not be scored (a harness or infrastructure failure)."""
         result = {"spec": asdict(spec), "agent": asdict(agent), "key": spec.key(), "status": status,
-                  "error": str(detail.get("error", ""))[:2000], "detail": detail, "agent_run": rec, "score": None,
-                  "fingerprint": fp}
+                  **self._setting_fields(spec), "error": str(detail.get("error", ""))[:2000], "detail": detail,
+                  "agent_run": rec, "score": None, "fingerprint": fp}
         (run_dir / "result.json").write_text(json.dumps(result, ensure_ascii=False, indent=2, default=str),
                                              encoding="utf-8")
         return result
+
+    def _setting_fields(self, spec: VariantSpec) -> dict[str, Any]:
+        """{tier, rule_seed, params} of the setting a spec runs in (params: the drawn values); {} when the case
+        has no settings or cannot be set up (the run's error says why)."""
+        try:
+            case = self.cases[spec.case_id].at(spec.difficulty, spec.rule_seed)
+        except Exception:
+            return {}
+        if case.setting is None:
+            return {}
+        return {"tier": case.tier, "rule_seed": case.rule_seed, "params": case.drawn_params}
 
     # ── scoring (re-runnable, and re-scorable under other policies) ─────────
     def score(self, run_dir: Path, agent: AgentSpec, extra_policies: list[str] = ()) -> dict[str, Any]:
         variant = Variant.load(run_dir / "variant")
         case = (self.cases[variant.spec.case_id].with_world_seed(getattr(variant, "world_seed", None))
-                .at(variant.case_tier, variant.ruleset))
+                .at(variant.case_tier, variant.rule_seed))
+        if variant.params and variant.params != case.drawn_params:
+            # The case's candidates changed since the run: the client answered from other parameters than the
+            # ones the evaluator would use now.
+            raise ValueError(f"{case.id}: rule seed {variant.rule_seed} now draws {case.drawn_params}, but the run "
+                             f"was set up with {variant.params}; run it again instead of re-scoring it")
         workspace = run_dir / "workspace"
         rec = json.loads((run_dir / "agent_result.json").read_text(encoding="utf-8"))
         meta = json.loads((run_dir / "session.json").read_text(encoding="utf-8"))
@@ -350,6 +377,9 @@ class Bench:
             "agent": asdict(agent),
             "key": variant.spec.key(),
             "status": run_status(rec["status"], extraction, score["gates"]["validity"]),
+            # the setting scored: its tier, rule seed and the parameters that seed drew (absent without settings)
+            **({"tier": case.tier, "rule_seed": case.rule_seed, "params": case.drawn_params}
+               if case.setting is not None else {}),
             "condition": variant.condition,
             "agent_run": rec,
             "extraction": extraction,
@@ -394,9 +424,26 @@ class Bench:
 
 # ── experiment grids ─────────────────────────────────────────────────────────
 
-AXES = ("customer_locale", "agent_locale", "policy", "difficulty", "ruleset", "engagement", "condition", "world_seed")
+AXES = ("customer_locale", "agent_locale", "policy", "difficulty", "engagement", "condition", "world_seed")
 BASELINE = {"customer_locale": "en", "agent_locale": "en", "policy": "baseline", "difficulty": "medium",
-            "ruleset": "all", "engagement": "standard", "condition": None, "world_seed": None}
+            "engagement": "standard", "condition": None, "world_seed": None}
+PUBLIC = "public"       # rule_seeds: public = each case's public panel (case.yaml rule_seeds)
+
+
+def rule_seed_list(value: Any, where: str) -> list[int | None]:
+    """A campaign's `rule_seeds:` as grid values: "public" -> [None] (expand() runs each case's public panel),
+    a list of ints (or one int) -> those rule seeds (private seeds: any int not in a case's panel)."""
+    from .cases import as_rule_seed
+    if value is None or value == PUBLIC:
+        return [None]
+    values = value if isinstance(value, list) else [value]
+    try:
+        seeds = [as_rule_seed(v) for v in values]
+    except TypeError as e:
+        raise ValueError(f"{where}: rule_seeds must be 'public' or a list of ints ({e})") from None
+    if not seeds:
+        raise ValueError(f"{where}: rule_seeds is empty")
+    return list(dict.fromkeys(seeds))
 
 
 def load_campaign(path: Path) -> tuple[Settings, list[AgentSpec], list[tuple[str, VariantSpec]], dict[str, Any]]:
@@ -417,11 +464,20 @@ def load_campaign(path: Path) -> tuple[Settings, list[AgentSpec], list[tuple[str
     # variant unchanged, for pass^k.
     noise_seeds = d.get("noise_seeds", d.get("seeds", [0]))
     trials = int(d.get("trials", 1))
+    if "ruleset" in d or any("ruleset" in (exp or {}) for exp in (doc.get("experiments") or {}).values()):
+        raise ValueError("ruleset is no longer an axis: rule seeds replaced the rule sets A / B / C; use "
+                         "rule_seeds: 'public' (each case's public panel, the default) or a list of ints (private "
+                         "rule seeds)")
+    # rule_seeds: "public" (default) runs every rule seed of each case's public panel, so a (case, difficulty)
+    # cell is the mean over its ground truths; a list of ints runs those seeds instead (private draws).
+    default_rule_seeds = rule_seed_list(d.get("rule_seeds", PUBLIC), "defaults")
     jobs: list[tuple[str, VariantSpec]] = []
     seen: set[str] = set()
     for exp_name, exp in (doc.get("experiments") or {}).items():
-        exp = dict(exp)
+        exp = dict(exp or {})
         cases = exp.pop("cases", d.get("cases", "all"))
+        rule_seeds = (rule_seed_list(exp.pop("rule_seeds"), f"experiment {exp_name}") if "rule_seeds" in exp
+                      else default_rule_seeds)
         unknown = set(exp) - set(AXES)
         if unknown:
             raise ValueError(f"experiment {exp_name}: unknown axes {unknown}")
@@ -429,8 +485,9 @@ def load_campaign(path: Path) -> tuple[Settings, list[AgentSpec], list[tuple[str
         # independent of the public dataset/); None = the case's own seed.
         grid = {ax: exp.get(ax, d.get("world_seeds", [None]) if ax == "world_seed" else [BASELINE[ax]])
                 for ax in AXES}
+        grid["rule_seed"] = rule_seeds
         for combo in itertools.product(*grid.values()):
-            values = dict(zip(AXES, combo))
+            values = dict(zip(grid, combo))
             for case_id in _case_list(cases, subsets):
                 for noise_seed in noise_seeds:
                     for trial in range(trials):
@@ -466,14 +523,20 @@ def expand(bench: Bench, agents: list[AgentSpec],
             else:
                 ids = [spec.case_id]
             for cid in ids:
-                # ruleset "all": every rule set the case declares, so each (case, difficulty) cell is the mean
-                # over its ground truths; cases without settings run once.
-                rulesets = ([spec.ruleset] if spec.ruleset != "all"
-                            else list(bench.cases[cid].rulesets) or [DEFAULT_RULESET])
-                for rs in rulesets:
-                    run = VariantSpec(**{**asdict(spec), "case_id": cid, "ruleset": rs})
+                for seed in case_rule_seeds(bench.cases[cid], spec.rule_seed):
+                    run = VariantSpec(**{**asdict(spec), "case_id": cid, "rule_seed": seed})
                     runs.setdefault((agent.label, run.key()), (agent, run))
     return list(runs.values())
+
+
+def case_rule_seeds(case: Case, rule_seed: int | None) -> list[int | None]:
+    """The rule seeds a job runs on one case: its public panel for None ("public"), else that seed; [None] for a
+    case without settings (it runs once)."""
+    if not case.tiers:
+        return [None]
+    if rule_seed is None:
+        return list(case.rule_seeds)
+    return [rule_seed]
 
 
 def run_campaign(path: Path, dry_run: bool = False, concurrency: int = 4) -> list[dict[str, Any]]:

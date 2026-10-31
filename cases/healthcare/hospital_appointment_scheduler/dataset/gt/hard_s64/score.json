@@ -1,0 +1,36 @@
+{
+  "baseline_objective": 0.55534753,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.55534753,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "actions_rejected": 0,
+    "booked": 1210,
+    "calls_failed": 0,
+    "cancellations": 79,
+    "capacity_slots": 1476,
+    "collision_cost": 369.473,
+    "extra_trips": 8,
+    "moved": 14,
+    "moves": 41,
+    "ops_component": 1.0,
+    "ops_value": 7371.718,
+    "overbooked_slots": 53,
+    "reference_ops_value": 7371.718,
+    "released": 27,
+    "seen_slots": 1168.159,
+    "table_accuracy": 1.0,
+    "unbooked": 33,
+    "utilization": 0.791436,
+    "waiting_cost": 3422.4
+  },
+  "objective": 1.0,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

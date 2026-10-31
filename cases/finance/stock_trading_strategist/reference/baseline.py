@@ -4,7 +4,8 @@ What the desk has without an engineer: the book stays in cash and places no orde
 is filled in from the engine's input (no holdings, buying power = settled cash plus proceeds usable by next_date,
 less, from medium, the client withdrawal announced and not yet paid; drawdown from the peak of equity plus
 payouts). It keeps to every rule in every setting and scores what doing nothing earns: the cash's excess over
-the index plus a perfect table. config.json says whether the withdrawal is in force (medium) and its basis.
+the index plus a perfect table. config.json says whether the withdrawal is in force (medium) and what the
+client's agreement sets: its percentage and basis (the notice gives only the payment date).
 """
 
 import json
@@ -23,7 +24,8 @@ def on_day(day):
     equity, nxt = portfolio["equity"], market["next_date"]
     for n in day.get("notices", []):
         if n.get("type") == "cash_withdrawal" and CFG["medium"]:
-            _state["withdrawal"] = {"pct": n["percent"] / 100, "pay": n["payment_date"], "notice_equity": equity}
+            _state["withdrawal"] = {"pct": CFG["withdrawal_pct"] / 100, "pay": n["payment_date"],
+                                    "notice_equity": equity}
     reserve = 0.0
     w = _state["withdrawal"]
     if w and nxt <= w["pay"]:

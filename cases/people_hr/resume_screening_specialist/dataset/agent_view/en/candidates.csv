@@ -1,0 +1,251 @@
+﻿candidate_id,applied_roles,application_date,location,work_authorization,highest_education,graduation_year,total_years_experience,skills,languages,referral,gender,age_band,nationality
+C001,R1;R3,2026-10-04,West,permanent resident,bachelor,2020,3.8,Go;Docker;network security;cloud security;Linux;Scrum,English;Tamil,no,male,30-39,Singapore
+C002,R1,2026-10-25,East,valid work pass,bachelor,2006,6.5,Python;SQL;Excel,English;Hindi,no,male,40-49,India
+C003,R1,2026-10-20,Central,valid work pass,bachelor,2022,1.8,Python;SQL;Excel;Linux,Mandarin;English,yes,female,under 30,China
+C004,R3,2026-10-11,North,permanent resident,PhD,1995,15.6,,Mandarin,no,male,50 and over,China
+C005,R2,2026-10-19,North,valid work pass,diploma,2009,6.6,SQL;Kubernetes;statistics,English;Tamil,no,female,30-39,India
+C006,R1;R3,2026-10-22,West,citizen,bachelor,2001,5.7,Python;Go;SQL;Kubernetes;Excel;Scrum,English;Tamil,no,female,40-49,Singapore
+C007,R1,2026-10-17,Overseas,needs visa sponsorship,master,2021,3.1,SQL;Power BI;network security,English;Hindi,no,male,30-39,India
+C008,R2,2026-10-05,Central,permanent resident,master,2009,12.2,Python;SQL;Docker;Tableau;Power BI;Scrum,Mandarin;English,no,female,40-49,China
+C009,R2;R3,2026-10-25,West,valid work pass,bachelor,2019,2.3,Docker;AWS;network security,Vietnamese;English,no,female,under 30,Vietnam
+C010,R3,2026-10-16,Central,valid work pass,master,2014,7.7,Python;SQL;network security;SIEM;incident response;Linux,Mandarin;English,no,male,30-39,China
+C011,R2;R3,2026-10-03,West,citizen,master,1997,14.3,Python;Go;SQL;statistics;Excel;Tableau;Power BI;A/B testing;network security;SIEM;cloud security;Linux,English;Tamil,no,female,50 and over,Singapore
+C012,R3,2026-10-10,Overseas,needs visa sponsorship,bachelor,2011,12.2,SIEM,Malay;English,no,female,30-39,Malaysia
+C013,R3,2026-10-10,East,permanent resident,master,2008,11.9,,English;Mandarin,no,female,40-49,Singapore
+C014,R1;R2,2026-10-02,Central,citizen,master,2011,11.8,Java;SQL;statistics,English;Mandarin,no,female,30-39,Singapore
+C015,R1,2026-10-17,Central,valid work pass,bachelor,2016,1.8,Python;Go;SQL;Docker,Mandarin,no,female,30-39,China
+C016,R2,2026-10-04,Central,citizen,master,2013,5.2,Python;SQL;statistics;Excel;A/B testing;Scrum,English;Malay,no,female,30-39,Singapore
+C017,R2,2026-10-01,West,permanent resident,master,2013,1.5,statistics,English;Mandarin,no,female,30-39,Singapore
+C018,R1,2026-10-04,Central,citizen,bachelor,2005,3.9,Python;SQL;Kubernetes;Docker;Excel;Tableau,English;Mandarin,yes,male,40-49,Singapore
+C019,R1;R2,2026-10-15,West,permanent resident,bachelor,2014,7.1,Python;Go;SQL;Kubernetes;Docker;AWS,English;Mandarin,no,female,30-39,Singapore
+C020,R2,2026-10-13,Central,valid work pass,bachelor,2023,1.8,Python;SQL;statistics;Excel;Tableau;Power BI;A/B testing,Malay;English,no,male,30-39,Malaysia
+C021,R2,2026-10-17,East,needs visa sponsorship,bachelor,2007,2.3,SQL,English;Tamil,no,female,40-49,India
+C022,R2;R3,2026-10-03,North,valid work pass,diploma,2008,14.3,Python;statistics;Excel;Tableau;Power BI;network security;SIEM;cloud security,Mandarin,no,male,30-39,China
+C023,R1;R2,2026-10-08,Central,citizen,master,2023,1.8,Go;Excel;incident response;Scrum,English;Malay,no,female,under 30,Singapore
+C024,R2,2026-10-22,West,permanent resident,bachelor,2017,5.3,Python;Go;SQL;statistics;Excel,Mandarin;English;Spanish,yes,female,30-39,China
+C025,R2;R3,2026-10-07,North,citizen,bachelor,2007,1.8,,English;Mandarin,no,male,40-49,Singapore
+C026,R2,2026-10-19,East,valid work pass,diploma,2015,7.8,Python;SQL;AWS;statistics;Excel;Tableau;Power BI;A/B testing;cloud security,Malay;English,no,female,30-39,Malaysia
+C027,R3,2026-10-01,Central,citizen,diploma,2014,3.1,Excel;A/B testing;network security;incident response;Linux,English;Mandarin;Korean,no,female,30-39,Singapore
+C028,R3,2026-10-25,Central,permanent resident,master,2006,4.3,Excel;incident response;Scrum,English;Malay,no,male,40-49,Singapore
+C029,R3,2026-10-01,North,citizen,master,2001,6.6,A/B testing;network security;SIEM;incident response;Linux,English;Tamil,no,female,50 and over,Singapore
+C030,R3,2026-10-14,Central,valid work pass,master,2017,3.7,Python;network security;SIEM;incident response,Vietnamese;English,no,female,30-39,Vietnam
+C031,R2,2026-10-22,West,needs visa sponsorship,bachelor,2009,10.1,AWS,English;Hindi,no,male,30-39,India
+C032,R3,2026-10-18,West,valid work pass,bachelor,2016,2.8,SQL;Excel;network security;SIEM;Linux;Scrum,Tagalog;English;Korean,yes,male,30-39,Philippines
+C033,R2,2026-10-05,North,permanent resident,PhD,2008,1.2,Go;Power BI;Linux,Tagalog;English,no,female,40-49,Philippines
+C034,R3,2026-10-04,Central,permanent resident,bachelor,2020,3.4,Power BI;R;cloud security;Scrum,English;Mandarin,no,male,30-39,Singapore
+C035,R1,2026-10-09,North,citizen,master,2004,6.7,,English;Mandarin,no,male,40-49,Singapore
+C036,R2;R3,2026-10-03,Central,citizen,master,2006,11.2,Python;Tableau;Power BI;network security;SIEM;incident response,English;Mandarin;Japanese,yes,female,40-49,Singapore
+C037,R1;R2,2026-10-13,Overseas,needs visa sponsorship,diploma,2007,8.3,Python;SQL;Kubernetes;statistics,Mandarin;English,no,male,40-49,China
+C038,R3,2026-10-21,East,citizen,bachelor,2015,8.2,Excel;network security;SIEM;cloud security,English;Mandarin,no,male,30-39,Singapore
+C039,R2,2026-10-06,West,permanent resident,bachelor,2017,1.9,SQL;statistics;Excel;Tableau;A/B testing;incident response,Malay;Mandarin,no,male,30-39,Malaysia
+C040,R2,2026-10-19,West,citizen,PhD,2017,4.5,Python;SQL;statistics;Power BI;incident response;Scrum,English;Mandarin,no,male,30-39,Singapore
+C041,R2;R3,2026-10-22,Central,citizen,bachelor,2009,15.1,SQL;Excel;A/B testing;cloud security;Linux;Scrum,English;Tamil,no,other / undisclosed,30-39,Singapore
+C042,R2,2026-10-21,East,citizen,master,2002,15.8,Python;statistics;Excel,English;Mandarin,no,male,40-49,Singapore
+C043,R1;R3,2026-10-11,Central,citizen,PhD,2023,1.1,Python;Go;SQL;AWS,English;Mandarin;Korean,no,female,30-39,Singapore
+C044,R1,2026-10-08,North,citizen,bachelor,2006,3.9,Python,English;Malay,no,male,40-49,Singapore
+C045,R2,2026-10-22,North,valid work pass,diploma,2012,11.8,SQL;statistics;A/B testing,Mandarin;English,no,male,30-39,China
+C046,R3,2026-10-12,West,permanent resident,bachelor,2020,4.7,Power BI;network security;SIEM;Linux,English;Hindi,yes,male,30-39,India
+C047,R2;R3,2026-10-14,Central,permanent resident,PhD,1999,15.3,Python;network security;SIEM,English;Malay,yes,male,50 and over,Singapore
+C048,R1,2026-10-05,Central,citizen,bachelor,2004,16.1,Python;Go;SQL;Docker;Excel;Tableau;A/B testing,English;Mandarin,no,female,50 and over,Singapore
+C049,R1;R2,2026-10-24,North,citizen,bachelor,2019,6.2,statistics;Power BI;A/B testing;Linux,English;Mandarin,no,male,30-39,Singapore
+C050,R1,2026-10-18,Central,valid work pass,master,2021,4.1,Docker;R;Scrum,Mandarin;English,no,male,under 30,China
+C051,R2;R3,2026-10-13,Central,permanent resident,diploma,1995,14.5,Go;SQL;statistics;Excel;Tableau;A/B testing;R;network security;SIEM;incident response;Linux,English;Mandarin,no,other / undisclosed,50 and over,Singapore
+C052,R1,2026-10-23,Overseas,needs visa sponsorship,bachelor,2001,9.3,R;SIEM,Tagalog;English,no,female,50 and over,Philippines
+C053,R3,2026-10-12,Central,permanent resident,bachelor,2003,16.2,statistics;Excel;network security;SIEM;Linux;Scrum,Malay;English,no,female,50 and over,Malaysia
+C054,R3,2026-10-13,Central,citizen,PhD,2017,6.2,Kubernetes;Excel;network security;incident response,English;Tamil;Spanish,no,male,30-39,Singapore
+C055,R1;R3,2026-10-14,North,citizen,bachelor,2010,15.0,Python;Go;SQL;Kubernetes;Docker;AWS;network security;SIEM;Linux,English;Mandarin,no,male,30-39,Singapore
+C056,R3,2026-10-07,Central,valid work pass,bachelor,2015,9.3,Python;Power BI;network security;SIEM;cloud security;Linux,Mandarin;English,no,female,30-39,China
+C057,R1,2026-10-09,East,valid work pass,bachelor,2006,3.4,Java;Go;Excel;R;Linux,Malay;English,no,female,40-49,Malaysia
+C058,R2;R3,2026-10-19,Central,citizen,bachelor,2006,13.3,SQL;statistics;Excel;Tableau;A/B testing;network security;SIEM;cloud security;Scrum,English;Mandarin,no,female,40-49,Singapore
+C059,R1,2026-10-21,East,valid work pass,diploma,2024,1.1,Python;SQL;AWS;Excel,Indonesian;English,no,male,under 30,Indonesia
+C060,R1,2026-10-04,Central,permanent resident,PhD,2019,2.3,Python;Java;SQL;Docker;Scrum,English;Mandarin,no,male,30-39,Singapore
+C061,R2,2026-10-12,Overseas,needs visa sponsorship,bachelor,2015,2.4,Excel;R;incident response,Tagalog;English;Korean,no,male,30-39,Philippines
+C062,R1;R3,2026-10-16,West,valid work pass,bachelor,2010,12.8,Python;SQL;AWS;network security;SIEM;Linux,Malay;English,no,male,30-39,Malaysia
+C063,R1;R3,2026-10-16,Central,citizen,master,2013,10.4,Python;Go;SQL;Kubernetes;Docker;network security;SIEM;incident response;Linux;Scrum,English;Mandarin,no,female,30-39,Singapore
+C064,R1,2026-10-22,East,citizen,PhD,2011,10.9,Python;SQL;Kubernetes;AWS;Tableau;A/B testing;SIEM,English;Mandarin,no,male,40-49,Singapore
+C065,R2;R3,2026-10-11,North,citizen,PhD,2014,9.9,Tableau;network security;SIEM;Scrum,English;Mandarin,no,other / undisclosed,30-39,Singapore
+C066,R2,2026-10-10,East,valid work pass,master,2018,7.2,Tableau;Linux;Scrum,Indonesian;English,no,male,30-39,Indonesia
+C067,R1,2026-10-02,Central,citizen,bachelor,2006,4.2,Python;Docker;AWS,English;Malay;Korean,no,male,40-49,Singapore
+C068,R1;R2,2026-10-20,Central,citizen,master,1992,15.0,SQL;statistics;Tableau;A/B testing,English;Mandarin,no,female,50 and over,Singapore
+C069,R2,2026-10-03,North,citizen,bachelor,2016,8.8,SQL;statistics,English;Mandarin,no,female,30-39,Singapore
+C070,R1,2026-10-14,Central,permanent resident,master,1993,5.1,Python;Go;SQL,English;Hindi,no,female,50 and over,India
+C071,R2,2026-10-08,East,permanent resident,bachelor,2022,1.6,SQL;AWS;statistics;Excel;Power BI;Scrum,English;Hindi,no,male,30-39,India
+C072,R2;R3,2026-10-20,Central,citizen,master,2004,12.5,Go;SQL;statistics;Excel;Tableau;A/B testing;network security;SIEM;Linux,English;Malay,no,female,40-49,Singapore
+C073,R1;R2,2026-10-10,Central,valid work pass,bachelor,2012,9.5,Python;SQL;statistics;Excel,Mandarin;Japanese,no,male,30-39,China
+C074,R1,2026-10-11,Overseas,needs visa sponsorship,bachelor,2023,2.8,Python;SQL;Kubernetes;Docker;Power BI,Tagalog;English,no,female,under 30,Philippines
+C075,R3,2026-10-20,East,citizen,bachelor,2013,9.1,Kubernetes;network security;SIEM,English;Mandarin,no,female,30-39,Singapore
+C076,R1,2026-10-15,North,citizen,master,2012,1.9,Go;SQL;Docker,English;Tamil,no,other / undisclosed,30-39,Singapore
+C077,R1;R3,2026-10-18,Central,valid work pass,bachelor,1998,5.0,Python;statistics;network security;SIEM;cloud security;Linux,Tagalog;English,no,female,40-49,Philippines
+C078,R3,2026-10-21,Overseas,needs visa sponsorship,PhD,2020,3.8,Python;Java;network security;SIEM;incident response;cloud security;Linux,Tagalog;English,no,female,40-49,Philippines
+C079,R1;R3,2026-10-22,Central,permanent resident,bachelor,2010,13.8,SQL;Kubernetes;network security;SIEM;cloud security;Linux,English;Mandarin;Korean,no,male,30-39,Singapore
+C080,R1;R2,2026-10-03,East,permanent resident,bachelor,2009,11.2,Python;Java;SQL;Excel;A/B testing;SIEM,English;Mandarin;Spanish,no,female,30-39,Singapore
+C081,R1,2026-10-01,Overseas,needs visa sponsorship,diploma,2022,2.8,Kubernetes,Malay;Mandarin,yes,female,under 30,Malaysia
+C082,R3,2026-10-04,East,needs visa sponsorship,master,2020,1.3,Excel;network security;SIEM;incident response;Linux,English;Hindi;Japanese,yes,male,30-39,India
+C083,R1;R3,2026-10-15,North,citizen,bachelor,2006,8.3,SQL;Kubernetes;Docker;AWS;Tableau;R;network security;SIEM;cloud security;Linux;Scrum,English;Mandarin,no,male,40-49,Singapore
+C084,R3,2026-10-16,Overseas,needs visa sponsorship,master,2007,5.4,Python;network security;SIEM;cloud security;Linux,Malay;English;Japanese,no,female,40-49,Malaysia
+C085,R2,2026-10-18,West,permanent resident,master,2016,6.8,SQL;statistics;Tableau;A/B testing;Scrum,English;Tamil,no,male,30-39,India
+C086,R3,2026-10-18,Central,citizen,bachelor,2016,9.6,Python;Excel;A/B testing;network security;incident response;cloud security,English;Mandarin,no,female,30-39,Singapore
+C087,R1;R3,2026-10-20,Overseas,needs visa sponsorship,bachelor,2012,3.8,Python;SQL;Kubernetes;Tableau,Vietnamese;English,no,female,40-49,Vietnam
+C088,R3,2026-10-12,Central,needs visa sponsorship,master,2019,3.2,AWS;network security;SIEM;Linux;Scrum,Mandarin;English,no,female,30-39,China
+C089,R3,2026-10-08,West,needs visa sponsorship,master,2008,7.0,Python;Excel;network security;SIEM,Malay;Mandarin,no,female,40-49,Malaysia
+C090,R2;R3,2026-10-04,West,citizen,bachelor,1997,10.3,SQL;statistics;Excel;Tableau;Power BI;Scrum,English;Malay;Japanese,no,female,50 and over,Singapore
+C091,R1,2026-10-20,Central,permanent resident,bachelor,2019,2.7,Python;Go;SQL;Kubernetes;Docker;Excel;Linux,English;Mandarin,no,male,30-39,Singapore
+C092,R1;R2,2026-10-07,North,needs visa sponsorship,bachelor,2003,15.6,Go;statistics;Power BI,Tagalog;English,no,female,40-49,Philippines
+C093,R3,2026-10-11,Central,citizen,master,2017,2.2,Java;Docker;Excel;network security;SIEM,English;Tamil,no,male,30-39,Singapore
+C094,R1,2026-10-17,Central,citizen,bachelor,1998,4.2,Python;SQL;Kubernetes;Docker;AWS;cloud security,English;Mandarin,no,male,40-49,Singapore
+C095,R2,2026-10-06,West,valid work pass,master,2016,6.1,Docker;Excel;A/B testing,Malay;English,no,male,30-39,Malaysia
+C096,R3,2026-10-17,Central,citizen,bachelor,2019,1.2,Python;Go;network security;SIEM;incident response;Linux;Scrum,English;Tamil,no,male,30-39,Singapore
+C097,R2,2026-10-07,Central,citizen,bachelor,2000,4.7,Python;SQL;statistics;Tableau;A/B testing,English;Malay;Japanese,no,male,40-49,Singapore
+C098,R2,2026-10-13,East,citizen,bachelor,1987,10.2,Python;SQL;Kubernetes;statistics;Power BI;network security,English;Mandarin,no,female,50 and over,Singapore
+C099,R2;R3,2026-10-11,East,valid work pass,master,2003,9.0,Python;SQL;statistics;network security;SIEM;incident response;Scrum,Mandarin;English,no,male,40-49,China
+C100,R2;R3,2026-10-19,Overseas,needs visa sponsorship,PhD,2017,1.5,Python;SIEM;cloud security;Linux,Mandarin;English,no,female,30-39,China
+C101,R3,2026-10-02,Overseas,needs visa sponsorship,bachelor,2019,5.8,Python;network security;cloud security;Linux,Vietnamese;English,no,male,30-39,Vietnam
+C102,R2,2026-10-04,North,permanent resident,bachelor,2015,9.2,Excel,Mandarin,no,female,30-39,China
+C103,R3,2026-10-23,Central,valid work pass,master,2007,7.1,Excel;network security;SIEM;incident response;cloud security,Mandarin;English,no,female,40-49,China
+C104,R1,2026-10-07,Central,citizen,bachelor,2012,8.8,Python;SQL;Kubernetes;incident response;Scrum,English;Mandarin,no,female,30-39,Singapore
+C105,R2,2026-10-07,West,valid work pass,master,1998,14.7,AWS,English;Tamil,no,male,50 and over,India
+C106,R3,2026-10-06,Overseas,needs visa sponsorship,bachelor,1998,16.7,network security;SIEM;Linux,English;Hindi,no,male,50 and over,India
+C107,R2;R3,2026-10-01,Central,valid work pass,bachelor,2019,5.9,Python;R;network security,Malay;English,yes,female,under 30,Malaysia
+C108,R2,2026-10-11,Overseas,needs visa sponsorship,master,1998,3.2,Python;SQL;AWS;statistics;Power BI;A/B testing;network security;Scrum,Tagalog;English,no,male,50 and over,Philippines
+C109,R2,2026-10-25,North,permanent resident,bachelor,1999,8.1,Python;SQL;AWS;statistics;Excel;Tableau;A/B testing,Tagalog;English,no,female,40-49,Philippines
+C110,R1;R2,2026-10-05,Central,valid work pass,master,2024,1.1,Python;SQL;Kubernetes;Docker;AWS;Linux;Scrum,Indonesian;English,no,female,under 30,Indonesia
+C111,R1,2026-10-21,East,valid work pass,diploma,2020,5.1,Python;Go;SQL;Excel,Mandarin;English;Spanish,no,male,30-39,China
+C112,R1;R2,2026-10-25,Central,permanent resident,master,2009,10.2,Python;SQL;Kubernetes;statistics;Tableau;Power BI;A/B testing;network security;Scrum,Mandarin;English;Japanese,no,male,40-49,China
+C113,R1;R3,2026-10-10,East,permanent resident,master,2008,7.0,Python;network security,Indonesian;English,no,female,40-49,Indonesia
+C114,R1;R3,2026-10-16,East,citizen,bachelor,1996,9.6,Python;SQL;Kubernetes;Docker;network security;incident response,English;Mandarin,no,male,50 and over,Singapore
+C115,R2,2026-10-04,East,citizen,diploma,2011,2.5,SQL;Kubernetes;statistics;Excel,English;Mandarin,yes,female,40-49,Singapore
+C116,R3,2026-10-02,Overseas,needs visa sponsorship,PhD,2000,10.2,Docker;Power BI,Tagalog;English,no,female,50 and over,Philippines
+C117,R2,2026-10-22,Central,citizen,master,2018,6.3,incident response;Linux,English;Mandarin,no,male,30-39,Singapore
+C118,R2;R3,2026-10-15,Central,citizen,master,2014,10.2,SQL;AWS;statistics;Excel;SIEM;Linux,English;Mandarin,no,male,30-39,Singapore
+C119,R1;R2,2026-10-10,West,valid work pass,master,2011,13.4,Python;Java;Docker;statistics;Tableau;A/B testing;R;Scrum,English;Tamil,no,female,40-49,India
+C120,R3,2026-10-12,North,needs visa sponsorship,bachelor,2021,3.1,Python;Tableau;network security;SIEM,English;Tamil,no,female,30-39,India
+C121,R2,2026-10-05,Central,citizen,bachelor,1993,3.1,SQL;AWS;statistics;Excel;Tableau,English;Mandarin,no,male,50 and over,Singapore
+C122,R1;R2,2026-10-15,Central,permanent resident,master,2012,10.5,Python;Go;Docker,Tagalog;English,no,male,30-39,Philippines
+C123,R3,2026-10-04,Central,valid work pass,bachelor,1998,4.2,Excel;network security;SIEM;incident response;Linux,Mandarin,no,male,50 and over,China
+C124,R2,2026-10-20,Central,valid work pass,diploma,2008,2.4,SQL;Excel;A/B testing;Scrum,Vietnamese;English,no,female,40-49,Vietnam
+C125,R2;R3,2026-10-04,Central,citizen,master,1994,9.2,SQL;Kubernetes;statistics;Excel;Power BI;network security;SIEM;cloud security;Linux;Scrum,English;Mandarin,no,female,50 and over,Singapore
+C126,R2;R3,2026-10-17,Central,permanent resident,bachelor,2013,11.5,statistics;incident response,Mandarin;English,no,male,30-39,China
+C127,R1;R2,2026-10-25,Central,citizen,master,1998,9.8,SQL;statistics;Power BI,English;Mandarin,no,male,50 and over,Singapore
+C128,R3,2026-10-08,Overseas,needs visa sponsorship,master,2023,2.4,Python;Excel;network security;SIEM;Scrum,Tagalog;English,no,female,under 30,Philippines
+C129,R1,2026-10-04,Overseas,needs visa sponsorship,bachelor,2010,5.1,Python;Go;SQL;AWS;network security,English;Tamil;Korean,no,male,40-49,India
+C130,R2;R3,2026-10-09,West,valid work pass,bachelor,2016,1.7,Python;SIEM;incident response;cloud security;Linux;Scrum,English;Hindi,yes,female,30-39,India
+C131,R1;R2,2026-10-13,Central,permanent resident,bachelor,2011,13.5,statistics;Tableau;Power BI;cloud security;Scrum,English;Mandarin,no,other / undisclosed,40-49,Singapore
+C132,R2,2026-10-16,North,valid work pass,bachelor,1996,14.6,SQL;statistics;Excel,Malay;English,no,male,50 and over,Malaysia
+C133,R2,2026-10-11,East,valid work pass,diploma,2013,10.5,Java,Tagalog;English,no,male,30-39,Philippines
+C134,R3,2026-10-02,Overseas,needs visa sponsorship,bachelor,2001,8.5,Python;Excel;network security;SIEM;incident response,English;Hindi,no,male,50 and over,India
+C135,R1,2026-10-10,West,citizen,PhD,2009,16.0,Python;Kubernetes;Docker;statistics;Excel,English;Mandarin,no,female,40-49,Singapore
+C136,R2,2026-10-10,North,valid work pass,master,1988,3.2,Python;SQL;statistics;incident response,English;Hindi,no,male,50 and over,India
+C137,R2;R3,2026-10-06,North,valid work pass,master,2010,5.2,Power BI;A/B testing;SIEM,Indonesian;English,no,male,40-49,Indonesia
+C138,R3,2026-10-23,East,permanent resident,bachelor,2017,1.1,Power BI;SIEM,English;Mandarin,no,female,30-39,Singapore
+C139,R2,2026-10-24,West,citizen,bachelor,1993,15.8,SQL;statistics;Power BI,English;Tamil,no,male,50 and over,Singapore
+C140,R2,2026-10-24,Central,permanent resident,master,1996,14.2,Kubernetes;statistics;Excel;Scrum,English;Hindi,no,male,50 and over,India
+C141,R2,2026-10-10,Central,needs visa sponsorship,bachelor,2002,14.2,statistics;Excel;Scrum,Mandarin;English,no,male,40-49,China
+C142,R3,2026-10-03,West,citizen,bachelor,2019,3.6,network security;Linux,English;Malay,no,male,under 30,Singapore
+C143,R1;R2,2026-10-03,North,citizen,PhD,2015,5.6,Python;Java;SQL;Kubernetes;Excel;SIEM,English;Mandarin,no,male,40-49,Singapore
+C144,R1,2026-10-05,West,citizen,diploma,2001,8.3,SQL;Docker;Excel;Tableau,English;Mandarin,no,other / undisclosed,40-49,Singapore
+C145,R2,2026-10-21,West,valid work pass,master,2007,12.2,Java;SQL;Kubernetes;statistics;Excel;Tableau;Power BI;A/B testing;Scrum,Mandarin;English,no,male,40-49,China
+C146,R3,2026-10-01,East,permanent resident,bachelor,2011,5.8,Python;A/B testing;network security;SIEM,Malay;Mandarin,no,female,30-39,Malaysia
+C147,R1;R3,2026-10-11,Central,citizen,bachelor,2019,4.6,SQL;Tableau;Power BI;network security;SIEM,English;Mandarin,no,male,30-39,Singapore
+C148,R3,2026-10-01,Central,citizen,bachelor,2022,3.4,Python;SIEM;Linux,English;Malay,no,male,under 30,Singapore
+C149,R1;R3,2026-10-20,West,valid work pass,bachelor,2011,9.5,Python;SQL;Kubernetes;AWS;Linux,Indonesian;English,no,male,30-39,Indonesia
+C150,R2;R3,2026-10-25,Overseas,needs visa sponsorship,bachelor,2014,10.6,statistics;Tableau;Power BI;cloud security,Malay;English,no,male,30-39,Malaysia
+C151,R2,2026-10-06,Central,citizen,master,2003,9.8,Go;SQL;Excel,English;Mandarin,no,male,40-49,Singapore
+C152,R2,2026-10-07,West,valid work pass,master,2014,2.2,SQL;Kubernetes;statistics;Power BI;A/B testing;Scrum,Vietnamese,no,male,30-39,Vietnam
+C153,R1,2026-10-04,West,valid work pass,diploma,2007,6.8,Python;Tableau;Linux,Vietnamese,no,male,30-39,Vietnam
+C154,R1,2026-10-22,North,permanent resident,bachelor,2013,6.5,Python;SQL;Docker;R;Scrum,English;Malay,no,male,30-39,Singapore
+C155,R1,2026-10-03,Central,valid work pass,bachelor,2012,9.6,Python;SQL;Docker;AWS;Excel;A/B testing;incident response,English;Hindi,no,male,30-39,India
+C156,R3,2026-10-02,North,valid work pass,master,1989,10.9,statistics;Tableau;A/B testing;network security;SIEM;Scrum,English;Hindi,no,male,50 and over,India
+C157,R2;R3,2026-10-12,Overseas,needs visa sponsorship,bachelor,2012,10.3,Python;SQL;statistics;Power BI;A/B testing;network security;SIEM;incident response;cloud security,Malay;Mandarin,no,female,30-39,Malaysia
+C158,R1;R3,2026-10-01,Overseas,needs visa sponsorship,bachelor,2016,8.7,SQL;Excel;network security;SIEM,Vietnamese;Spanish,no,female,30-39,Vietnam
+C159,R1;R2,2026-10-13,East,citizen,bachelor,2007,11.8,Excel;Scrum,English;Mandarin,no,female,40-49,Singapore
+C160,R2,2026-10-21,Overseas,needs visa sponsorship,bachelor,2021,4.0,Go;AWS;statistics;Excel;Power BI;SIEM,Mandarin,no,male,under 30,China
+C161,R1,2026-10-17,Central,permanent resident,diploma,2020,3.6,Python;Go;SQL;Docker;AWS,Malay;Mandarin,no,male,under 30,Malaysia
+C162,R2;R3,2026-10-05,Central,citizen,bachelor,2010,10.8,SQL;statistics;network security;SIEM,English;Mandarin,no,female,40-49,Singapore
+C163,R1;R2,2026-10-23,East,permanent resident,diploma,2003,8.6,SQL;Kubernetes;Excel;A/B testing;cloud security,English;Tamil,no,female,40-49,Singapore
+C164,R2,2026-10-09,Central,permanent resident,bachelor,2019,2.3,SQL;statistics;Excel;Tableau,Tagalog;English,yes,male,30-39,Philippines
+C165,R2,2026-10-04,Central,valid work pass,master,2016,2.6,statistics;Power BI;Scrum,Vietnamese,no,male,30-39,Vietnam
+C166,R1,2026-10-01,West,citizen,bachelor,2009,15.0,Python;SQL,English;Mandarin,no,female,30-39,Singapore
+C167,R1;R3,2026-10-14,West,permanent resident,diploma,1994,10.9,Python;SQL;AWS;Excel;network security;SIEM;incident response;Linux;Scrum,Tagalog;English,no,female,50 and over,Philippines
+C168,R2,2026-10-20,North,valid work pass,bachelor,2012,8.0,SQL;Kubernetes;statistics;Excel;Power BI;A/B testing;SIEM,Mandarin;English,no,female,30-39,China
+C169,R2,2026-10-18,Central,citizen,master,2007,7.3,Excel;Power BI,English;Mandarin,no,female,40-49,Singapore
+C170,R1,2026-10-24,East,valid work pass,diploma,1999,13.4,Python;Go;SQL;AWS,Mandarin;English,no,male,50 and over,China
+C171,R3,2026-10-16,North,citizen,master,2013,10.2,AWS;network security;SIEM;incident response;cloud security,English;Tamil,no,female,30-39,Singapore
+C172,R1,2026-10-04,East,valid work pass,master,2011,3.4,Python;SQL;Kubernetes;Docker;AWS,Tagalog;English,no,female,30-39,Philippines
+C173,R2,2026-10-03,Central,permanent resident,bachelor,1995,8.8,SQL;statistics;A/B testing,Mandarin;English,no,male,50 and over,China
+C174,R1;R3,2026-10-20,Central,valid work pass,bachelor,2010,9.8,Python;SQL;Kubernetes;network security;SIEM;Scrum,Malay;English,no,female,30-39,Malaysia
+C175,R1,2026-10-10,East,valid work pass,bachelor,2003,14.5,Python;SQL;Kubernetes;Docker;AWS;incident response,Vietnamese;English,no,other / undisclosed,50 and over,Vietnam
+C176,R2;R3,2026-10-02,Central,permanent resident,bachelor,2014,3.4,Python;SQL;statistics;Excel;A/B testing,English;Hindi,no,male,30-39,India
+C177,R1;R2,2026-10-08,Central,permanent resident,bachelor,2005,4.3,Go;SQL;Kubernetes,Tagalog;English,no,female,40-49,Philippines
+C178,R2,2026-10-25,Central,citizen,bachelor,2013,10.1,Python;SQL;statistics;Tableau;Power BI;SIEM;incident response;Scrum,English;Mandarin,no,female,30-39,Singapore
+C179,R1,2026-10-04,East,valid work pass,bachelor,1990,3.2,Python;Go;SQL;Kubernetes;Docker;Excel,Mandarin,no,female,50 and over,China
+C180,R3,2026-10-14,North,citizen,bachelor,2015,3.3,Excel,English;Mandarin,yes,female,30-39,Singapore
+C181,R1;R2,2026-10-14,Central,valid work pass,bachelor,2017,4.7,Python;Go;SQL;AWS;Excel,Tagalog;English;Spanish,no,female,30-39,Philippines
+C182,R1,2026-10-06,Central,valid work pass,diploma,2008,16.2,SQL;Kubernetes;Excel,Malay;English,no,female,40-49,Malaysia
+C183,R2;R3,2026-10-22,Overseas,needs visa sponsorship,master,2010,9.2,SQL;Docker;statistics;Tableau;Power BI;A/B testing;network security;SIEM;Scrum,Malay;Mandarin,no,female,40-49,Malaysia
+C184,R2,2026-10-16,Central,citizen,bachelor,1997,3.7,Python;SQL;statistics;Excel;Tableau;A/B testing,English;Malay,no,male,50 and over,Singapore
+C185,R1;R3,2026-10-20,East,valid work pass,diploma,2016,5.9,Kubernetes;Tableau;A/B testing;SIEM;cloud security;Scrum,Mandarin;English,no,male,under 30,China
+C186,R1,2026-10-03,East,permanent resident,diploma,2004,3.3,Python;SQL;Kubernetes;Docker;AWS;Scrum,Mandarin;English,no,male,40-49,China
+C187,R3,2026-10-25,West,valid work pass,bachelor,2023,1.2,Python;Kubernetes;Excel;network security;SIEM;incident response;cloud security,Tagalog;English,no,female,under 30,Philippines
+C188,R1;R2,2026-10-24,Overseas,needs visa sponsorship,bachelor,2020,5.3,Go;Kubernetes;AWS;Excel;R,Mandarin;English,no,male,30-39,China
+C189,R2,2026-10-14,West,valid work pass,diploma,2012,7.0,SQL;AWS;statistics;Excel,Malay;Mandarin;Korean,no,female,30-39,Malaysia
+C190,R2,2026-10-20,Central,citizen,bachelor,2021,1.0,SQL;statistics;Excel;Power BI;Scrum,English;Mandarin,no,male,under 30,Singapore
+C191,R1;R3,2026-10-14,West,citizen,master,2015,8.9,Python;Go;SQL;Kubernetes;Excel;SIEM,English;Mandarin,no,female,30-39,Singapore
+C192,R2,2026-10-06,North,citizen,bachelor,2024,1.4,SQL;Kubernetes;statistics,English;Malay;Korean,no,female,under 30,Singapore
+C193,R3,2026-10-18,Central,valid work pass,bachelor,2021,4.8,Python;AWS;Excel;network security;SIEM;incident response;Linux,English;Hindi,no,male,30-39,India
+C194,R3,2026-10-24,East,permanent resident,master,2021,3.7,Python;Tableau;network security;SIEM,Tagalog;English,no,male,under 30,Philippines
+C195,R2,2026-10-22,North,permanent resident,bachelor,2018,7.2,Tableau;Power BI;cloud security;Scrum,Indonesian,no,female,30-39,Indonesia
+C196,R1;R2,2026-10-01,Overseas,needs visa sponsorship,bachelor,2015,9.9,Python;SQL;statistics;Excel;Tableau;cloud security,Malay;English,no,female,30-39,Malaysia
+C197,R1;R3,2026-10-09,Central,valid work pass,master,2013,12.5,Python;SQL;network security;SIEM;incident response;Linux,Tagalog;English,no,female,30-39,Philippines
+C198,R2,2026-10-05,West,valid work pass,diploma,1995,4.5,SQL;statistics;Excel,Malay;English,no,female,50 and over,Malaysia
+C199,R3,2026-10-21,Overseas,needs visa sponsorship,bachelor,2023,1.9,Scrum,English;Tamil,no,female,under 30,India
+C200,R2,2026-10-24,Overseas,needs visa sponsorship,bachelor,2008,11.2,Java;SQL;statistics;Tableau;A/B testing;R;network security;Linux;Scrum,Tagalog;English,no,female,30-39,Philippines
+C201,R2,2026-10-23,West,citizen,master,2002,11.0,Kubernetes;statistics;Power BI;Scrum,English;Mandarin,no,male,40-49,Singapore
+C202,R1,2026-10-24,West,permanent resident,bachelor,2008,2.0,Python;SQL;AWS;Excel,English;Mandarin,no,female,40-49,Singapore
+C203,R1,2026-10-19,West,permanent resident,bachelor,2021,4.2,Power BI,Mandarin;English,no,female,under 30,China
+C204,R2,2026-10-02,Central,valid work pass,master,2010,5.6,Python;statistics;Excel;Tableau,Malay;English,no,male,40-49,Malaysia
+C205,R2;R3,2026-10-10,Overseas,needs visa sponsorship,bachelor,2012,12.6,SIEM,Tagalog;English,no,male,30-39,Philippines
+C206,R1;R2,2026-10-01,North,permanent resident,bachelor,2017,5.9,Excel,Tagalog;English,no,male,30-39,Philippines
+C207,R2,2026-10-16,East,valid work pass,bachelor,2020,2.2,Excel;Scrum,Vietnamese;English;Korean,no,male,under 30,Vietnam
+C208,R1,2026-10-03,East,permanent resident,bachelor,2010,13.2,Python;SQL;Kubernetes;Docker;Excel;Scrum,Mandarin;English,no,female,30-39,China
+C209,R2,2026-10-12,Central,citizen,master,2014,2.5,Python;SQL;statistics;Tableau;Power BI;A/B testing;network security,English;Tamil,no,female,30-39,Singapore
+C210,R1;R2,2026-10-25,Central,citizen,bachelor,2013,5.4,Python;Go;SQL;Kubernetes;AWS;incident response;Linux;Scrum,English;Tamil,no,female,30-39,Singapore
+C211,R3,2026-10-20,Central,valid work pass,bachelor,2021,2.3,Python;SQL;statistics;Power BI;network security;SIEM;Linux;Scrum,Malay;English,no,female,under 30,Malaysia
+C212,R3,2026-10-25,North,needs visa sponsorship,bachelor,2018,7.9,Go;Kubernetes;network security;SIEM;incident response;cloud security,Mandarin;English,no,male,under 30,China
+C213,R1,2026-10-05,East,needs visa sponsorship,diploma,2004,5.5,Python;Go;SQL;Docker;AWS,Mandarin;English,no,male,40-49,China
+C214,R2,2026-10-24,East,citizen,diploma,2019,2.8,statistics;Power BI,English;Malay,no,male,under 30,Singapore
+C215,R1;R2,2026-10-21,East,citizen,diploma,2008,10.8,Python;Go;SQL;Kubernetes;Docker;AWS;statistics;Excel;A/B testing;Scrum,English;Mandarin,no,female,30-39,Singapore
+C216,R2,2026-10-02,Central,citizen,bachelor,2015,5.5,Tableau;A/B testing;network security;Linux,English;Tamil,no,female,30-39,Singapore
+C217,R1;R2,2026-10-13,Overseas,needs visa sponsorship,bachelor,2014,10.1,Python;Java;SQL;Docker;AWS;Power BI;network security;Scrum,Mandarin;English;Japanese,no,female,40-49,China
+C218,R3,2026-10-21,Central,citizen,bachelor,2004,13.7,,English;Mandarin,no,other / undisclosed,40-49,Singapore
+C219,R1,2026-10-03,Central,citizen,bachelor,2013,9.8,Python;SQL;Kubernetes;AWS;incident response,English;Mandarin,no,other / undisclosed,30-39,Singapore
+C220,R2,2026-10-02,North,citizen,PhD,2019,4.7,SQL;Excel;SIEM;Linux,English;Mandarin,no,other / undisclosed,30-39,Singapore
+C221,R1;R2,2026-10-15,East,valid work pass,bachelor,2021,4.1,Python;statistics;Excel;Tableau,English;Tamil,no,female,under 30,India
+C222,R2,2026-10-01,North,citizen,diploma,2010,13.8,Python;SQL;statistics;Excel;R,English;Malay,no,male,30-39,Singapore
+C223,R1,2026-10-17,Central,valid work pass,master,2008,1.7,Python;SQL;AWS;Excel,Mandarin;English,no,female,40-49,China
+C224,R2;R3,2026-10-25,East,citizen,bachelor,2009,12.4,SQL;statistics;A/B testing;network security;SIEM,English;Mandarin,no,male,30-39,Singapore
+C225,R2;R3,2026-10-20,Central,citizen,bachelor,2007,12.9,SQL;statistics;Power BI;A/B testing;network security;SIEM;Linux,English;Mandarin,no,male,40-49,Singapore
+C226,R2;R3,2026-10-02,Overseas,needs visa sponsorship,bachelor,2014,7.2,Python;statistics;Excel;network security;SIEM;incident response;cloud security;Linux,Indonesian;English,no,female,30-39,Indonesia
+C227,R3,2026-10-12,East,valid work pass,bachelor,2011,14.0,Go;A/B testing;SIEM;Scrum,Tagalog;English,no,male,30-39,Philippines
+C228,R1,2026-10-04,East,citizen,master,2018,6.0,Python;Go;Docker;AWS;Excel;network security;Scrum,English;Mandarin,no,male,30-39,Singapore
+C229,R3,2026-10-04,North,citizen,master,2019,5.4,Java;statistics;network security;SIEM;Linux;Scrum,English;Mandarin,no,male,30-39,Singapore
+C230,R2,2026-10-23,Central,permanent resident,master,1996,4.0,SQL;Kubernetes;statistics;Power BI;R;network security;SIEM,English;Hindi;Korean,no,female,50 and over,India
+C231,R1,2026-10-15,West,valid work pass,master,2004,8.4,Python;SQL;Kubernetes;Docker;AWS;Scrum,Malay;English,no,male,40-49,Malaysia
+C232,R1,2026-10-13,Central,citizen,bachelor,2018,4.6,Python;Go;SQL;Kubernetes;Docker,English;Mandarin,no,female,30-39,Singapore
+C233,R1,2026-10-19,Overseas,needs visa sponsorship,bachelor,2001,8.9,Go,Mandarin;English,no,male,40-49,China
+C234,R3,2026-10-15,Central,citizen,master,2005,6.2,AWS;network security;SIEM;Scrum,English;Mandarin,no,male,40-49,Singapore
+C235,R1;R3,2026-10-11,West,valid work pass,bachelor,1995,15.9,Go;SQL;Kubernetes;statistics;Tableau;network security;SIEM;cloud security;Linux,Mandarin;English,no,female,50 and over,China
+C236,R1;R2,2026-10-09,Central,valid work pass,bachelor,2006,14.2,Python;SQL;Excel;Linux,Tagalog;English,no,male,40-49,Philippines
+C237,R1,2026-10-12,Central,valid work pass,master,2010,7.5,Python;SQL,Mandarin;English,yes,female,30-39,China
+C238,R1;R3,2026-10-09,North,permanent resident,bachelor,2016,7.7,Python;Go;SQL;Kubernetes;Docker,Malay;English,no,female,30-39,Malaysia
+C239,R1,2026-10-19,Central,citizen,bachelor,2004,6.8,Python;Go;SQL,English;Tamil,no,female,40-49,Singapore
+C240,R1,2026-10-06,Overseas,needs visa sponsorship,bachelor,2004,6.2,Python;Excel;R,Malay;English,no,female,40-49,Malaysia
+C241,R1;R2,2026-10-10,Central,citizen,diploma,2011,4.9,SQL;statistics,English;Mandarin,no,female,30-39,Singapore
+C242,R1,2026-10-22,West,needs visa sponsorship,bachelor,2013,4.2,Python;Go;SQL;Excel;R,Mandarin;English,no,male,30-39,China
+C243,R3,2026-10-16,Central,citizen,bachelor,2011,4.0,Java;SIEM;incident response,English;Mandarin,no,female,40-49,Singapore
+C244,R2,2026-10-22,North,valid work pass,bachelor,1993,6.4,SQL;statistics;Tableau;Power BI,Tagalog;English,no,female,50 and over,Philippines
+C245,R2;R3,2026-10-08,East,citizen,bachelor,2008,12.5,Python;SQL;statistics;Excel;network security;SIEM;incident response;cloud security;Scrum,English;Mandarin,no,male,30-39,Singapore
+C246,R2,2026-10-19,West,citizen,diploma,2000,15.8,SQL;statistics;Excel;Tableau;R;cloud security,English;Mandarin,no,male,50 and over,Singapore
+C247,R2;R3,2026-10-20,Overseas,needs visa sponsorship,bachelor,2010,13.8,Python;SQL;statistics;Power BI;network security;SIEM;incident response;Linux,Malay;English;Korean,no,female,30-39,Malaysia
+C248,R2,2026-10-10,Central,valid work pass,bachelor,1996,8.9,SQL;statistics;Excel;R,Mandarin;English,no,male,50 and over,China
+C249,R1;R2,2026-10-16,West,permanent resident,bachelor,2016,5.5,Go;SQL;Docker;network security,English;Mandarin,no,female,30-39,Singapore
+C250,R1,2026-10-23,Central,valid work pass,bachelor,1989,9.5,Python;Go;SQL;Kubernetes;Excel;Tableau,Mandarin,no,male,50 and over,China

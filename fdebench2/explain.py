@@ -1,8 +1,9 @@
 """One self-contained explainer page per case: cases/<field>/<role>/explainer.html.
 
 The page gathers everything a reviewer needs to understand a case without
-running it: the request, the hidden requirements in every setting and locale,
-the rules and their classes, the rule sets, the clarification targets, the
+running it: the request, the hidden requirements in every public setting and
+locale, the rules and their classes, the rule parameters (candidates per tier
+and the values the public rule seeds drew), the clarification targets, the
 case README, the stored dataset, the reference scores and the findings of a
 review (REVIEW.md, when the case has one). It is generated from the case files
 (`fdebench2 explain-case`, also run by `export-dataset`), works offline, and
@@ -18,13 +19,12 @@ from pathlib import Path
 
 import yaml
 
-from .cases import LOCALES, NativeCase
+from .cases import LOCALES, NativeCase, load_fields, value_label, value_text
 from .dataset import DATASET_DIR
 
 PAGE = "explainer.html"
 LANG_NAMES = {"en": "English", "ko": "한국어", "zh": "中文", "ja": "日本語", "es": "Español"}
-CLASS_NOTE = {"physical": "never bends", "contractual": "bends only if the policy allows contractual exceptions",
-              "business_policy": "may bend through the policy's exception process"}
+LANGS = tuple(LANG_NAMES)                        # the order of the language switcher
 
 # ── a small Markdown renderer (headings, lists, tables, code, emphasis) ─────────
 
@@ -34,6 +34,18 @@ def _inline(text: str) -> str:
     out = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", out)
     out = re.sub(r"(?<![\w*])\*([^*\n]+)\*(?![\w*])", r"<em>\1</em>", out)
     out = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", r'<a href="\2">\1</a>', out)
+    return out
+
+
+# Chinese and Japanese text has no spaces between words: a line wrapped between two such characters joins
+# without one. Korean, which spaces its words, joins like English.
+_NO_SPACE = re.compile(r"[\u3000-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef]")
+
+
+def _join(lines: list[str]) -> str:
+    out = lines[0]
+    for line in lines[1:]:
+        out += ("" if _NO_SPACE.match(out[-1:]) and _NO_SPACE.match(line[:1]) else " ") + line
     return out
 
 
@@ -71,7 +83,7 @@ def markdown(text: str) -> str:
                 if re.match(r"\s*([-*]|\d+\.)\s+", lines[j]):
                     items.append(re.sub(r"\s*([-*]|\d+\.)\s+", "", lines[j], count=1))
                 else:
-                    items[-1] += " " + lines[j].strip()
+                    items[-1] = _join([items[-1], lines[j].strip()])
                 j += 1
             tag = "ol" if ordered else "ul"
             out.append(f"<{tag}>" + "".join(f"<li>{_inline(x)}</li>" for x in items) + f"</{tag}>")
@@ -84,7 +96,7 @@ def markdown(text: str) -> str:
         while j < len(lines) and lines[j].strip() and not re.match(r"(#{1,6}\s|```|\||\s*([-*]|\d+\.)\s)", lines[j]):
             para.append(lines[j].strip())
             j += 1
-        out.append("<p>" + _inline(" ".join(para)) + "</p>")
+        out.append("<p>" + _inline(_join(para)) + "</p>")
         i = j
     return "\n".join(out)
 
@@ -119,117 +131,188 @@ def _tree(root: Path, limit: int = 60) -> str:
             f"<pre class='tree'>{chr(10).join(lines)}</pre>")
 
 
-def build_page(case_root: Path) -> str:
+# ── languages: one page per locale ──────────────────────────────────────────
+
+UI = yaml.safe_load((Path(__file__).parent / "prompts" / "explainer.yaml").read_text(encoding="utf-8"))
+TRANSLATED_DOCS = ("README.md", "REVIEW.md")      # README.<lang>.md / REVIEW.<lang>.md next to them
+
+
+def page_name(lang: str) -> str:
+    return PAGE if lang == "en" else f"explainer.{lang}.html"
+
+
+def index_name(lang: str) -> str:
+    return "index.html" if lang == "en" else f"index.{lang}.html"
+
+
+def _t(lang: str, key: str, **values) -> str:
+    """Interface text (prompts/explainer.yaml) as HTML; values are HTML already."""
+    text = UI[lang][key]
+    out = text if "<" in text else _esc(text)
+    for name, value in values.items():
+        out = out.replace("{" + name + "}", str(value))
+    return out
+
+
+def case_texts(case_root: Path, lang: str) -> dict:
+    """locales/<lang>/explainer.yaml: the case's own words for the explainer (role, task type, tiers, rules,
+    deliverable spec) in that language. English comes from case.yaml."""
+    path = Path(case_root) / "locales" / lang / "explainer.yaml"
+    return (yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if lang != "en" and path.is_file() else {}
+
+
+def localized_doc(case_root: Path, name: str, lang: str) -> tuple[str | None, bool]:
+    """(text, translated): README.<lang>.md for README.md and so on; the English file when it is missing."""
+    base = Path(case_root) / name
+    if lang != "en":
+        own = base.with_name(f"{base.stem}.{lang}{base.suffix}")
+        if own.is_file():
+            return own.read_text(encoding="utf-8"), True
+    return (base.read_text(encoding="utf-8"), lang == "en") if base.is_file() else (None, False)
+
+
+def _switcher(lang: str, name) -> str:
+    """Links to the same page in every language; the choice is remembered for the next page."""
+    links = "".join(f'<a href="{name(l)}" data-lang="{l}" hreflang="{l}"{" aria-current=\"page\"" if l == lang else ""}>'
+                    f"{LANG_NAMES[l]}</a>" for l in LANGS)
+    return f'<nav class="langs" aria-label="{_t(lang, "language")}">{links}</nav>'
+
+
+def build_page(case_root: Path, lang: str = "en") -> str:
+    """The explainer in one language: interface, case texts, README and REVIEW all in `lang`."""
     case = NativeCase(Path(case_root))
     meta = case.meta
     root = case.root
-    review = root / "REVIEW.md"
     settings = case.settings()
     has_settings = bool(case.tiers)
-    labels = meta.get("param_labels") or {}
+    labels = case.param_labels()
+    own = case_texts(root, lang)
+    t = lambda key, **kw: _t(lang, key, **kw)  # noqa: E731
 
-    def param_text(name, value, lang="en"):
-        return labels[name][value][lang] if name in labels else value
+    def candidate(name, value) -> str:
+        """A candidate value as code, with its wording in the page's language when the case gives one."""
+        code = f"<code>{_esc(value_text(value))}</code>"
+        if name not in labels:
+            return code
+        try:
+            word = str(value_label(labels[name], value)[lang])
+        except KeyError:
+            return code
+        return code if word == value_text(value) else f"{code} {_esc(word)}"
 
+    def condition(item) -> str:
+        """" · only when name = v1, v2" for a rule or target with when: (empty without one)."""
+        when = item.get("when") or {}
+        if not when:
+            return ""
+        cond = "; ".join(f"{k} = {', '.join(value_text(v) for v in (vs if isinstance(vs, list) else [vs]))}"
+                         for k, vs in when.items())
+        return " · " + t("only_when", cond=_esc(cond))
+
+    review_md, _ = localized_doc(root, "REVIEW.md", lang)
     parts: list[str] = []
 
     # header
     kind = meta.get("deliverable_type", "batch")
-    deliverable = (f"Program <code>{_esc(meta.get('entrypoint', ''))}</code>" if kind == "program"
-                   else "Batch files: " + ", ".join(f"<code>{_esc(d)}</code>" for d in meta.get("deliverables", [])))
+    deliverable = (t("program", entry=f"<code>{_esc(meta.get('entrypoint', ''))}</code>") if kind == "program"
+                   else t("batch_files", files=", ".join(f"<code>{_esc(d)}</code>" for d in meta.get("deliverables", []))))
+    field_name = load_fields(root.parent.parent).get(case.field, {}).get(lang, case.field)
+    settings_value = (t("settings_value", tiers=len(case.tiers), seeds=len(case.rule_seeds), n=len(settings))
+                      if has_settings else t("one_problem"))
+    objective = meta.get("objective", "")
     parts.append(f"""
 <header>
-  <p class="eyebrow">{_esc(case.field)} · FDE-Bench v2 case</p>
-  <h1>{_esc(case.role)}</h1>
+  {_switcher(lang, page_name)}
+  <p class="eyebrow">{t("case_eyebrow", field=_esc(field_name))}</p>
+  <h1>{_esc(own.get("role") or case.role)}</h1>
   <p class="muted"><code>{_esc(case.id)}</code></p>
   <dl class="facts">
-    <div><dt>Task type</dt><dd>{_esc(meta.get('task_type', ''))}</dd></div>
-    <div><dt>Deliverable</dt><dd>{deliverable}</dd></div>
-    <div><dt>Objective</dt><dd>{_esc(meta.get('objective', ''))}</dd></div>
-    <div><dt>Settings</dt><dd>{f"{len(case.tiers)} tiers × {len(case.rulesets)} rule sets = {len(settings)} ground truths" if has_settings else "one fixed problem"}</dd></div>
+    <div><dt>{t("task_type")}</dt><dd>{_esc(own.get("task_type") or meta.get("task_type", ""))}</dd></div>
+    <div><dt>{t("deliverable")}</dt><dd>{deliverable}</dd></div>
+    <div><dt>{t("objective")}</dt><dd>{t(objective) if objective in ("maximize", "minimize") else _esc(objective)}</dd></div>
+    <div><dt>{t("settings")}</dt><dd>{settings_value}</dd></div>
   </dl>
   <nav>
-    <a href="#request">Request</a><a href="#settings">Settings</a><a href="#rules">Rules</a>
-    <a href="#requirements">Hidden requirements</a><a href="#targets">Targets</a><a href="#data">Data &amp; answers</a>
-    <a href="#readme">Case notes</a>{'<a href="#review">Review findings</a>' if review.is_file() else ""}
+    <a href="#request">{t("nav_request")}</a><a href="#settings">{t("nav_settings")}</a><a href="#rules">{t("nav_rules")}</a>
+    <a href="#requirements">{t("nav_requirements")}</a><a href="#targets">{t("nav_targets")}</a><a href="#data">{t("nav_data")}</a>
+    <a href="#readme">{t("nav_readme")}</a>{f'<a href="#review">{t("nav_review")}</a>' if review_md else ""}
   </nav>
 </header>""")
 
-    # request
-    req = "".join(f"<details{' open' if lang in ('en', 'ko') else ''}><summary>{LANG_NAMES[lang]}</summary>"
-                  f"{markdown(case.request(lang))}</details>" for lang in case.locales())
+    # request, in the page's language only (the switcher at the top picks the language)
+    req = f'<div class="doc">{markdown(case.request(lang))}</div>'
     # A batch spec only reaches scoring/extract.py; the agent's prompt never contains it.
-    spec_label = ("the program interface" if kind == "program"
-                  else "shown to the extractor that reshapes the agent's files, not to the agent")
-    parts.append(f"""<section id="request"><h2>What the agent is asked</h2>
-<p class="muted">The client's request, the only text the agent gets up front. It is the same in every setting.</p>
+    spec_label = t("spec_program") if kind == "program" else t("spec_batch")
+    spec = f"<pre>{_esc((own.get('deliverable_spec') or case.deliverable_spec()).strip())}</pre>"   # page's language
+    parts.append(f"""<section id="request"><h2>{t("request_title")}</h2>
+<p class="muted">{t("request_intro")}</p>
 {req}
-<h3>Deliverable spec ({spec_label})</h3><pre>{_esc(case.deliverable_spec().strip())}</pre></section>""")
+<h3>{t("spec_title", label=spec_label)}</h3>{spec}</section>""")
 
     # settings
     if has_settings:
-        tiers = meta.get("tiers") or {}
-        trows = [[f"<strong>{_esc(t)}</strong>", _esc(tiers.get(t, ""))] for t in case.tiers]
-        rs = meta.get("rulesets") or {}
-        params = []
-        for r in case.rulesets:
-            for k in (rs[r] or {}):
-                if k not in params:
-                    params.append(k)
-        prow = [[f"<code>{_esc(k)}</code>"] + [_esc(param_text(k, (rs[r] or {}).get(k, "–"))) for r in case.rulesets]
-                for k in params]
-        parts.append(f"""<section id="settings"><h2>Settings: one dataset, {len(settings)} ground truths</h2>
-<p>The agent sees the same request and data in every setting. The <strong>tier</strong> (= difficulty) decides which
-rules apply; the <strong>rule set</strong> gives their parameters. Each difficulty is reported as the mean over rule
-sets A, B and C.</p>
-<h3>Tiers</h3>{_table(["Tier", "What is in force"], trows)}
-<h3>Rule sets</h3>{_table(["Parameter"] + list(case.rulesets), prow)}</section>""")
+        tiers = {**(meta.get("tiers") or {}), **(own.get("tiers") or {})}
+        trows = [[f"<strong>{_esc(x)}</strong>", _esc(tiers.get(x, ""))] for x in case.tiers]
+        pools = case.param_candidates
+        prow = [[f"<code>{_esc(k)}</code>"] + [", ".join(candidate(k, v) for v in pools[k][x]) for x in case.tiers]
+                for k in pools]
+        panel = [[_esc(c.tier), _esc(c.rule_seed),
+                  f"<code>{_esc(json.dumps(c.drawn_params, ensure_ascii=False, default=str))}</code>"]
+                 for c in settings]
+        derived = sorted({k for c in settings for k in c.setting.params} - set(pools))
+        note = (f"<p class='muted'>{t('derived_note', names=', '.join(f'<code>{_esc(k)}</code>' for k in derived))}</p>"
+                if derived else "")
+        parts.append(f"""<section id="settings"><h2>{t("settings_title", n=len(settings))}</h2>
+<p>{t("settings_intro")}</p>
+<h3>{t("tiers")}</h3>{_table([t("tier"), t("in_force")], trows)}
+<h3>{t("param_candidates")}</h3>{_table([t("parameter")] + list(case.tiers), prow)}{note}
+<h3>{t("public_panel")}</h3><p class="muted">{t("public_panel_intro")}</p>
+{_table([t("tier"), t("rule_seed"), t("drawn_values")], panel)}</section>""")
     else:
-        parts.append('<section id="settings"><h2>Settings</h2><p>This case has no settings: one fixed problem at '
-                     'every difficulty.</p></section>')
+        parts.append(f'<section id="settings"><h2>{t("settings")}</h2><p>{t("no_settings")}</p></section>')
 
     # rules
+    descriptions = own.get("rules") or {}
     rrows = []
     for r in meta.get("rules", []):
         tiers_txt = ", ".join(r.get("tiers", case.tiers)) if has_settings else "–"
         rrows.append([f"<code>{_esc(r['id'])}</code>",
-                      f"<span class='pill {_esc(r['class'])}'>{_esc(r['class'])}</span>",
-                      _esc(tiers_txt), _esc(r.get("description", ""))])
-    classes = "".join(f"<li><span class='pill {k}'>{k}</span> {v}</li>" for k, v in CLASS_NOTE.items())
-    parts.append(f"""<section id="rules"><h2>Rules</h2>
-<p>Breaking any rule makes the deliverable invalid, unless the rule's class may bend under the run's company policy
-and the agent went through the exception process.</p><ul class="legend">{classes}</ul>
-{_table(["Rule", "Class", "Tiers", "Description (parameters in {{…}} come from the rule set)"], rrows)}</section>""")
+                      f"<span class='pill {_esc(r['class'])}'>{t('class_' + r['class'])}</span>",
+                      _esc(tiers_txt) + condition(r), _esc(descriptions.get(r["id"]) or r.get("description", ""))])
+    classes = "".join(f"<li><span class='pill {k}'>{t('class_' + k)}</span> {t('note_' + k)}</li>"
+                      for k in ("physical", "contractual", "business_policy"))
+    described = t("description_params") if has_settings else t("description")
+    parts.append(f"""<section id="rules"><h2>{t("rules_title")}</h2>
+<p>{t("rules_intro")}</p><ul class="legend">{classes}</ul>
+{_table([t("rule"), t("class"), t("tiers"), described], rrows)}</section>""")
 
-    # hidden requirements per setting and locale (JS switcher)
-    texts = {}
+    # hidden requirements per setting (tier x public rule seed), in the page's language (JS switcher)
+    texts, names = {}, {}
     for c in settings:
-        key = f"{c.tier}_{c.ruleset}" if has_settings else "default"
-        texts[key] = {lang: markdown(c.requirements(lang)) for lang in case.locales()}
+        key = c.setting.folder if has_settings else "default"
+        texts[key] = markdown(c.requirements(lang))
+        names[key] = f"{c.tier} / {UI[lang]['rule_seed']} {c.rule_seed}" if has_settings else key
     keys = list(texts)
     opts_s = "".join(f'<option value="{_esc(k)}"{" selected" if k == keys[len(keys) // 2] else ""}>'
-                     f'{_esc(k.replace("_", " / "))}</option>' for k in keys)
-    opts_l = "".join(f'<option value="{l}"{" selected" if l == "en" else ""}>{LANG_NAMES[l]}</option>'
-                     for l in case.locales())
-    parts.append(f"""<section id="requirements"><h2>Hidden requirements</h2>
-<p class="muted">What the simulated client knows and answers from. The agent only learns it by asking (in the
-<code>full_spec</code> engagement it is handed over).</p>
-<div class="controls"><label>Setting <select id="req-setting">{opts_s}</select></label>
-<label>Language <select id="req-lang">{opts_l}</select></label></div>
-<div id="req-body" class="doc"></div>
+                     f'{_esc(names[k])}</option>' for k in keys)
+    parts.append(f"""<section id="requirements"><h2>{t("requirements_title")}</h2>
+<p class="muted">{t("requirements_intro")}</p>
+<div class="controls"><label>{t("setting")} <select id="req-setting">{opts_s}</select></label></div>
+<div id="req-body" class="doc" data-empty="{t("not_available")}"></div>
 <script id="req-data" type="application/json">{json.dumps(texts, ensure_ascii=False).replace("</", "<\\/")}</script>
 </section>""")
 
-    # targets
+    # targets, in the page's language
     src = yaml.safe_load((root / "locales" / "en" / "targets.yaml").read_text(encoding="utf-8")) or []
-    ko = {t["id"]: t["text"] for t in yaml.safe_load((root / "locales" / "ko" / "targets.yaml")
-                                                     .read_text(encoding="utf-8")) or []}
-    trows = [[f"<code>{_esc(t['id'])}</code>", _esc(t.get("kind", "")), _esc(", ".join(t.get("tiers", ["all"]))),
-              _esc(t.get("text", "")), _esc(ko.get(t["id"], ""))] for t in src]
-    parts.append(f"""<section id="targets"><h2>Clarification targets</h2>
-<p class="muted">The facts a good engineer should ask the client for; Ask-F1 is scored against them.
-<code>{{{{param}}}}</code> is filled from the rule set.</p>
-{_table(["Target", "Kind", "Tiers", "English", "한국어"], trows)}</section>""")
+    mine = {x["id"]: x["text"] for x in yaml.safe_load((root / "locales" / lang / "targets.yaml")
+                                                       .read_text(encoding="utf-8")) or []}
+    cols = [t("target"), t("kind"), t("tiers"), t("fact")]
+    trows = [[f"<code>{_esc(x['id'])}</code>", _esc(x.get("kind", "")),
+              _esc(", ".join(x["tiers"]) if x.get("tiers") else t("all_tiers")) + condition(x), _esc(mine.get(x["id"], ""))]
+             for x in src]
+    parts.append(f"""<section id="targets"><h2>{t("targets_title")}</h2>
+<p class="muted">{t("targets_intro_params" if has_settings else "targets_intro")}</p>
+{_table(cols, trows)}</section>""")
 
     # data & answers
     ds = root / DATASET_DIR
@@ -240,34 +323,33 @@ and the agent went through the exception process.</p><ul class="legend">{classes
         top = ", ".join(f"{k}={v}" for k, v in list(metrics.items())[:4])
         score_rows.append([f"<code>{_esc(gt.name)}</code>", _esc(sc.get("objective")),
                            _esc(sc.get("baseline_objective", "–")), _esc(top),
-                           f'<a href="{DATASET_DIR}/gt/{_esc(gt.name)}/">open</a>'])
+                           f'<a href="{DATASET_DIR}/gt/{_esc(gt.name)}/">{t("open")}</a>'])
     gt_example = next(iter(sorted((ds / "gt").glob("*"))), None) if (ds / "gt").is_dir() else None
-    parts.append(f"""<section id="data"><h2>Data &amp; answers (<code>dataset/</code>)</h2>
-<p>Everything is stored as files next to the case. <code>visible/</code> is what the agent receives;
-<code>hidden/</code> is what it never sees (a program's hidden period or corpus); <code>gt/</code> holds one answer
-folder per setting. <code>validate-case</code> checks the files still match the generator.</p>
-<h3>Agent-visible data (English locale)</h3>{_tree(ds / "visible" / "en")}
-<h3>Hidden inputs</h3>{_tree(ds / "hidden", limit=30)}
-<h3>Reference score per setting</h3>
-<p class="muted">Quality is normalized per setting: the baseline (the simplest valid deliverable) is 0, the reference
-is 1, and better than the reference goes above 1 (full credit at the policy's quality cap).</p>
-{_table(["Setting", "Reference objective", "Baseline objective", "Metrics (first four)", "Folder"], score_rows) if score_rows else "<p class='muted'>(no dataset yet)</p>"}
-<h3>One answer folder: <code>gt/{_esc(gt_example.name if gt_example else '')}</code></h3>
+    visible = ds / "agent_view" / lang if (ds / "agent_view" / lang).is_dir() else ds / "agent_view" / "en"
+    score_head = [t("setting"), t("reference_objective"), t("baseline_objective"), t("metrics"), t("folder")]
+    parts.append(f"""<section id="data"><h2>{t("data_title")} (<code>dataset/</code>)</h2>
+<p>{t("data_intro")}</p>
+<h3>{t("visible_data", language=LANG_NAMES[lang])}</h3>{_tree(visible)}
+<h3>{t("hidden_inputs")}</h3>{_tree(ds / "hidden", limit=30)}
+<h3>{t("scores_title")}</h3>
+<p class="muted">{t("scores_intro")}</p>
+{_table(score_head, score_rows) if score_rows else f"<p class='muted'>{t('no_dataset')}</p>"}
+<h3>{t("answer_folder", folder=f"<code>gt/{_esc(gt_example.name if gt_example else '')}</code>")}</h3>
 {_tree(gt_example, limit=40) if gt_example else ""}</section>""")
 
-    # README
-    readme = root / "README.md"
-    parts.append(f"""<section id="readme"><h2>Case notes (README.md)</h2>
-<div class="doc">{markdown(readme.read_text(encoding="utf-8")) if readme.is_file() else "<p class='muted'>(no README)</p>"}</div>
+    # README and REVIEW.md, in the page's language when translated
+    for doc, anchor, title, empty in (("README.md", "readme", "readme_title", "no_readme"),
+                                      ("REVIEW.md", "review", "review_title", None)):
+        text, translated = localized_doc(root, doc, lang)
+        if text is None and empty is None:
+            continue
+        note = "" if translated or text is None else f"<p class='muted'>{t('untranslated')}</p>"
+        body = markdown(text) if text is not None else f"<p class='muted'>{t(empty)}</p>"
+        parts.append(f"""<section id="{anchor}"><h2>{t(title)}</h2>{note}
+<div class="doc">{body}</div>
 </section>""")
 
-    # REVIEW.md: findings of a review of the case, when there is one
-    if review.is_file():
-        parts.append(f"""<section id="review"><h2>Review findings (REVIEW.md)</h2>
-<div class="doc">{markdown(review.read_text(encoding="utf-8"))}</div>
-</section>""")
-
-    return _shell(case.role, "\n".join(parts))
+    return _shell(own.get("role") or case.role, "\n".join(parts), lang=lang)
 
 
 CSS = """
@@ -301,64 +383,78 @@ summary{cursor:pointer;font-weight:600}
 .controls{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}
 select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px}
 .doc{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 16px}
+.langs{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;margin:0 0 8px}
+.langs a{padding:2px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;font-size:13px}
+.langs a[aria-current]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
 """
 
 JS = """
 (function(){var d=JSON.parse(document.getElementById('req-data').textContent);
-var s=document.getElementById('req-setting'),l=document.getElementById('req-lang'),b=document.getElementById('req-body');
-function show(){var t=d[s.value]||{};b.innerHTML=t[l.value]||'<p>(not available)</p>';}
-s.onchange=show;l.onchange=show;show();})();
+var s=document.getElementById('req-setting'),b=document.getElementById('req-body');
+function show(){b.innerHTML=d[s.value]||'<p>'+b.dataset.empty+'</p>';}
+s.onchange=show;show();})();
+"""
+
+# The chosen language is remembered (a click on the switcher) and followed on every other page.
+LANG_JS = """
+(function(){var here=document.documentElement.lang,links=document.querySelectorAll('.langs a[data-lang]');
+links.forEach(function(a){a.addEventListener('click',function(){try{localStorage.setItem('fde-lang',a.dataset.lang)}catch(e){}})});
+var want=null;try{want=localStorage.getItem('fde-lang')}catch(e){}
+if(want&&want!==here){links.forEach(function(a){if(a.dataset.lang===want)location.replace(a.href+location.hash)})}})();
 """
 
 
-def _shell(title: str, body: str, script: bool = True) -> str:
-    js = f"<script>{JS}</script>" if script else ""
-    return (f'<!doctype html>\n<html lang="en"><head><meta charset="utf-8">'
+def _shell(title: str, body: str, script: bool = True, lang: str = "en") -> str:
+    js = (f"<script>{JS}</script>" if script else "") + (f"<script>{LANG_JS}</script>" if 'class="langs"' in body
+                                                          else "")
+    return (f'<!doctype html>\n<html lang="{lang}"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width, initial-scale=1">'
             f"<title>{_esc(title)}</title><style>{CSS}</style></head>"
             f"<body><main>{body}</main>{js}</body></html>\n")
 
 
 def write_page(case_root: Path) -> Path:
-    path = Path(case_root) / PAGE
-    path.write_text(build_page(case_root), encoding="utf-8")
-    return path
+    """Write the explainer in every language; returns the English page."""
+    for lang in LANGS:
+        (Path(case_root) / page_name(lang)).write_text(build_page(case_root, lang), encoding="utf-8")
+    return Path(case_root) / PAGE
 
 
-def build_index(cases_root: Path) -> str:
-    """cases/index.html: every built case with its settings and a link to its explainer."""
-    from .cases import discover, load_fields
+def build_index(cases_root: Path, lang: str = "en") -> str:
+    """cases/index.html (and index.<lang>.html): every built case with its settings and a link to its explainer."""
+    from .cases import discover
     fields = load_fields(cases_root)
+    t = lambda key, **kw: _t(lang, key, **kw)  # noqa: E731
     rows = []
     for cid, case in discover(cases_root).items():
-        meta = case.meta
+        meta, own = case.meta, case_texts(case.root, lang)
         kind = meta.get("deliverable_type", "batch")
-        settings = f"{len(case.tiers)}×{len(case.rulesets)}" if case.tiers else "–"
-        rel = f"{cid}/{PAGE}"
-        rows.append([_esc(fields.get(case.field, {}).get("en", case.field)),
-                     f'<a href="{_esc(rel)}">{_esc(case.role)}</a>', f"<code>{_esc(cid)}</code>",
-                     _esc("program" if kind == "program" else "batch"), _esc(settings),
-                     _esc(meta.get("task_type", ""))])
-    body = f"""<header><p class="eyebrow">FDE-Bench v2</p><h1>Built cases</h1>
-<p class="muted">{len(rows)} cases. Each link opens the case's explainer: request, settings, rules, hidden requirements,
-targets, stored data and answers. The full catalog of planned roles is in README.md next to this page.</p></header>
-<section>{_table(["Field", "Role", "Case id", "Deliverable", "Settings", "Task type"], rows)}</section>"""
-    return _shell("FDE-Bench v2 cases", body, script=False)
+        settings = f"{len(case.tiers)}×{len(case.rule_seeds)}" if case.tiers else "–"
+        rel = f"{cid}/{page_name(lang)}"
+        rows.append([_esc(fields.get(case.field, {}).get(lang, case.field)),
+                     f'<a href="{_esc(rel)}">{_esc(own.get("role") or case.role)}</a>', f"<code>{_esc(cid)}</code>",
+                     _esc(kind), _esc(settings), _esc(own.get("task_type") or meta.get("task_type", ""))])
+    body = f"""<header>{_switcher(lang, index_name)}<p class="eyebrow">{t("index_eyebrow")}</p><h1>{t("index_title")}</h1>
+<p class="muted">{t("index_intro", n=len(rows))}</p></header>
+<section>{_table([t("field"), t("role"), t("case_id"), t("deliverable"), t("settings"), t("task_type")], rows)}</section>"""
+    return _shell(f"FDE-Bench v2 — {UI[lang]['index_title']}", body, script=False, lang=lang)
 
 
 def write_index(cases_root: Path) -> Path:
-    path = Path(cases_root) / "index.html"
-    path.write_text(build_index(cases_root), encoding="utf-8")
-    return path
+    for lang in LANGS:
+        (Path(cases_root) / index_name(lang)).write_text(build_index(cases_root, lang), encoding="utf-8")
+    return Path(cases_root) / "index.html"
 
 
 def check_page(case_root: Path) -> list[str]:
-    path = Path(case_root) / PAGE
-    if not path.is_file():
-        return [f"{PAGE} is missing: run `fdebench2 explain-case` (or export-dataset)"]
-    if path.read_text(encoding="utf-8") != build_page(case_root):
-        return [f"{PAGE} is out of date: run `fdebench2 explain-case` (or export-dataset)"]
-    return []
+    problems = []
+    for lang in LANGS:
+        path = Path(case_root) / page_name(lang)
+        if not path.is_file():
+            problems.append(f"{path.name} is missing: run `fdebench2 explain-case` (or export-dataset)")
+        elif path.read_text(encoding="utf-8") != build_page(case_root, lang):
+            problems.append(f"{path.name} is out of date: run `fdebench2 explain-case` (or export-dataset)")
+    return problems
 
 
 __all__ = ["build_page", "write_page", "check_page", "LOCALES"]

@@ -1,0 +1,28 @@
+# The explainer's case texts in Korean (English comes from case.yaml).
+role: 계약 검토 변호사
+task_type: 정보 추출
+deliverable_spec: |
+  review.json = {"C001": {"issues": ["LIABILITY_CAP", ...], "decision": "sign" | "negotiate" | "reject"}, ...}
+  계약대장의 계약마다 항목 하나를 두며, 키는 데이터에 있는 계약번호 그대로입니다.
+  이슈 코드(ASCII, 정확히 다음 코드만): LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS,
+  DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY. 빈 리스트는 발견한 이슈가 없다는 뜻입니다.
+tiers:
+  easy: >-
+    조항만 읽으면 판단할 수 있는 플레이북 항목 네 가지: 책임 한도(배수와 고정 금액. N개월 대금 기준 한도는 이번에 이슈로 보지 않음),
+    준거법(분쟁 해결지가 아니라 준거법만), 지급 기한, 상호 배상. 갱신, 데이터 보호, 해지는 구매팀이 확인하며, 공급업체 자체 양식
+    계약, 수정 기록이 있는 계약, 메일이 언급한 계약은 채점하지 않습니다. 패스트트랙은 없고, 나머지 계약은 소액 계약을 포함해 모두
+    검토합니다.
+  medium: >-
+    일곱 가지 항목 전부: easy에 갱신 통지 기간(1개월은 30일로 환산), N개월 대금 기준 한도(연간금액의 N/12), 분류별 데이터 보호, 일정 금액을
+    넘는 계약의 임의 해지권, 분쟁 해결지(법원이나 중재지가 인정되는 법역에 있어야 함)를 더합니다. 공급업체 자체 양식 계약, 수정
+    기록이 있는 계약, 메일이 언급한 계약은 여전히 채점하지 않으며 패스트트랙은 없습니다.
+  hard: >-
+    medium에 불확실하거나 적대적인 요소를 더합니다: 공급업체 자체 양식 계약 6건, 수정 기록(양 당사자가 합의했고 초안 일자보다 뒤인
+    변경만 인정), 지정된 분류 밖에서 저희 고객의 개인정보를 다루는 계약, 플레이북상 거절해야 할 계약을 그냥 서명하라는 사업부 담당자의
+    메일, 소액 계약 패스트트랙(완화 가능한 정책).
+rules:
+  all_contracts_reviewed: 계약대장의 모든 계약에 review.json 항목이 있습니다.
+  decision_consistency: >-
+    결정은 플레이북에 따라 기록한 이슈로부터 나옵니다. 중대 이슈가 {{reject_at}}이면 reject, 이슈가 하나라도 있으면 negotiate,
+    그렇지 않으면 sign입니다.
+  small_contract_fast_track: 연간금액이 {{fast_track_below}}달러 미만인 계약은 법무 검토를 거치지 않고 이슈 없음(빈 리스트), "sign"으로 처리합니다.

@@ -1,0 +1,21 @@
+{
+  "derived": {
+    "reserve_times": {
+      "en": "09:00, 09:20 and 09:40",
+      "es": "09:00, 09:20 y 09:40",
+      "ja": "09:00、09:20と09:40",
+      "ko": "09:00, 09:20, 09:40",
+      "zh": "09:00、09:20 和 09:40"
+    }
+  },
+  "params": {
+    "closed_dept": "DERM",
+    "interpreters_per_day": 4,
+    "lab_cap": 7,
+    "overbooked_per_session": 1,
+    "reserve_slots": 3,
+    "waitlist_order": "received"
+  },
+  "rule_seed": 64,
+  "tier": "medium"
+}

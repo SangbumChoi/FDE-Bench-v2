@@ -1,0 +1,35 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Especialista en compras
+task_type: Optimización combinatoria
+deliverable_spec: |
+  orders.csv con la cabecera order_week,component_id,supplier_id,quantity
+  Una fila por línea de pedido de compra: order_week = la semana en que se emite el pedido, como número 1..8
+  (W1 = semana del 2026-11-23); component_id y supplier_id exactamente como en los datos; quantity = unidades
+  enteras (piezas, no bobinas).
+  Las filas con el mismo order_week, component_id y supplier_id se suman en una sola línea de pedido.
+tiers:
+  easy: >-
+    El núcleo del MRP: la necesidad de componentes explosionada a partir del plan de placas y la lista de
+    materiales, plazos en semanas completas, precios de lista con las cotizaciones en USD a un tipo de cambio de
+    planificación, pedido mínimo por línea de pedido, la lista de proveedores homologados, un tope mensual de
+    presupuesto que no se puede superar, el stock de resistencias contado en bobinas, stock de seguridad para los
+    componentes críticos, un proveedor en retención de calidad y la costumbre de pedir a dos proveedores. El cambio
+    de ingeniería, los tramos de precio, el calendario de festivos, el historial de entregas y la asignación quedan
+    fuera del alcance en esta ronda.
+  medium: >-
+    Lo de easy más tramos de precio sobre todas las unidades por línea de pedido y plazos en días hábiles con dos
+    semanas cortas por festivos.
+  hard: >-
+    Lo de medium más incertidumbre de suministro: los proveedores entregan una o dos semanas tarde con
+    probabilidades ocultas (los datos traen seis meses de historial de entregas), topes mensuales de asignación en
+    tres componentes escasos y el cambio de ingeniería que sustituye la flash C04 por C25 desde W6 (la C04 que
+    quede después de W5 se desecha); la calidad pasa a ser un coste esperado exacto. La retención de calidad dura
+    hasta W5 y puede recaer en el principal fabricante de semiconductores; el tipo de cambio de planificación
+    (1.380 KRW por USD) y el tope por proveedor (80 %) son los habituales.
+rules:
+  approved_vendor: Un componente solo se pide a proveedores cuyo estado para ese componente en la lista de proveedores homologados sea homologado.
+  moq: Cada línea de pedido (una semana, un componente y un proveedor) alcanza al menos el pedido mínimo del proveedor.
+  budget_cap: Las compras de cada mes (según el lunes de la semana de pedido) no superan el presupuesto de ese mes.
+  quality_hold: "{{hold_supplier}} está en retención de calidad; su mercancía con llegada prevista de W1 a W{{hold_until}} se rechaza."
+  allocation_cap: Los pedidos emitidos en un mes a un proveedor por un componente en asignación no superan la asignación mensual de ese proveedor.
+  dual_source_critical: Cada componente crítico en uso se pide a al menos dos proveedores, y ningún proveedor recibe más del {{max_share}} % de la cantidad pedida de ese componente.

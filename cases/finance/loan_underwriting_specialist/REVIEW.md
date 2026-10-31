@@ -1,7 +1,9 @@
 # Review — finance/loan_underwriting_specialist
 
 Findings of a case review, the verifier's verdicts, and what this change did about each. This change fixes F5,
-F6 and F7 and adds a baseline. The other findings are proposals for the case owner to decide on.
+F6 and F7 and adds a baseline. The other findings are proposals for the case owner to decide on. The later
+conversion to rule seeds (see [Rule seeds](#rule-seeds) at the end) resolves F3, takes up part of F1 and changes
+the numbers of F4, F6 and F9; the findings below keep their original text, with an update under each.
 
 ### F1 — The top of the scale is flat, and profit can buy back a missing table (high, confirmed)
 The reference always lends the most the limit allows, because its own sizing switch is off. Switching it on
@@ -18,6 +20,13 @@ and the score/DSR nonlinearity, so that 1.0 means near-oracle. Cap the profit ra
 Score the table on the entries that change on a day (approved customers, customers a notice affects, the
 regulation day) rather than on ~500 mostly static entries. Once the reference is re-tuned, set `quality_cap` in
 case.yaml from the oracle.
+
+**Update (rule seeds):** partly addressed. The reference now sizes each loan (the most profitable amount in
+250 steps) and its scorecard has the job-tenure term and hinges above a 30% DSR and below a score of 800;
+near-prime top-ups still lend the maximum. The earlier reference (lending the maximum) scores 0.940–1.012 of it
+in the public settings, above it only in medium/s30 and hard/s30, where the sized reference leaves part of the
+cut budget unspent. Capping the profit ratio, scoring the table on the entries that change and `quality_cap` are
+still open, and the oracle headroom has not been measured on the rule seeds.
 
 ### F2 — "refer" is a cheap way out of the reason codes (high, confirmed)
 Any application may be referred at a cost of 60, and only declines are checked for a code. A program that
@@ -45,6 +54,14 @@ customers under one bureau's cutoff are profitable. Set C's income cap below its
 90–100%) or add bonus-heavy incomes, so that each rule set binds in its own way. All of this changes the world
 and every reference number, so it needs a full re-tune.
 
+**Update (rule seeds): resolved** by retuning the candidates rather than the world. The cutoff is drawn in
+Bureau A points, 745 / 760 / 775 (800 / 815 / 830 with Bureau B, by `derive_params`), and puts 8–19% of the 482
+non-delinquent applicants under it (39–89 customers), around the score where a loan stops paying, so it both
+saves bad loans and costs good ones. The income cap is drawn from 50 / 65 / 80%, below what even a 35% DSR cap
+allows a debt-free customer (about 88% of income), so it is the binding term of 38–148 eligible first
+applications per public setting (C's idle 120% is gone). The bureau still binds: the validator's binding check
+finds the reference of hard/s30 invalid under the other bureau. The true PD still follows Bureau A only.
+
 ### F4 — Bending the tenure habit rarely pays (high, partly)
 Bending `tenure_review` gains +0.5% to +12.4% of objective: easy/C +12.4%, hard/A +9.2%, medium/A +7.6%,
 hard/C +7.1%. It costs a `soft_rule_penalty` of 0.1 (escalate) or 0.05 (justify). The verifier noted that
@@ -58,6 +75,12 @@ in B (refer below 3 months) should clearly lose money, with very short tenure ca
 (below 12 months) should clearly gain more than the penalty. State the head of credit's exception criteria in
 requirements.md, so that an escalated request has something to argue. Re-measure the gains on the new scale
 before tuning.
+
+**Update (rule seeds):** still open; the numbers changed. Bending `tenure_review` now moves the objective by
++1.1% / +4.1% / +9.3% in easy (s30 / s525 / s1043), +1.0% / −9.5% / −1.0% in medium and +0.3% / +1.1% / −2.3% in
+hard (the reference's scorecard now prices short tenure, and the quota and budget bind from medium). It pays
+clearly only in easy/s1043 and loses heavily in medium/s525 (a 12-month habit), so the answer already depends on
+the draw.
 
 ### F5 — The unit economics sat only in the scoring paragraph, and the targets carried weights (medium, confirmed)
 The 10% lifetime margin, the 0.60 loss on a default and the referral cost of 60 appeared only under "How the
@@ -90,6 +113,10 @@ In the public seed's C settings that program has 3.10M (medium) / 3.15M (hard) a
 nothing after it. Hard/A at pace 3.0 is still flagged, correctly: it approves on 26 Nov and reaches 4,007,426
 against a budget of 4,000,000. The new baseline depends on this fix, because it has 3,400,000 approved before
 the cut in medium/C and hard/C.
+
+**Update (rule seeds):** the check stays in every medium and hard setting and world. In the public panel the
+case it guards is medium/s30: the unpaced reference has 3,052,716 approved before the cut to 3,000,000 (the
+baseline 3,198,136), nothing after it, and both are valid.
 
 ### F7 — Easy told the agent to ignore a regulator's cut to a "regulatory" cap (medium, confirmed)
 Easy called the DSR cap "the regulator's limit". At the same time it left credit lines out and told the program
@@ -132,6 +159,11 @@ of a regulator quota, another credit-line convention, and thresholds away from t
 name for the employer letter. A side effect of the F7 fix: the easy credit-line sentence no longer mentions a
 cards team in any locale, so the "card team manages 마이너스통장" oddity is gone.
 
+**Update (rule seeds):** partly changed. No draw reproduces the Korean bundle any more: the income cap is 50–80%
+(not 100%), the cutoffs are 745–775 in Bureau A points, and the near-prime threshold is 825–855 (A) with a
+25–35% quota; the 40% DSR, the 5-year credit-line convention, the stress rate and the two 0–1000 bureaus remain.
+The ko document name is unchanged.
+
 ### F10 — Data details that surprise a reviewer (low, partly)
 These hold:
 - (a) The pilot's NT-P4 points to an application T0099 and a customer BF0000000 that do not exist, and employers
@@ -155,3 +187,70 @@ PD. List the reason codes per tier in the hidden requirements rather than in the
 an unpaced budget; it keeps every rule, code and the exact table. Its objective is 0.460 / 0.571 / 0.380 in easy
 A/B/C, 0.596 / 0.725 / 0.511 in medium and 0.641 / 0.749 / 0.620 in hard, against the reference's 1.0 in every
 setting. It is valid everywhere, and on world seeds 1–3 it stays at 0.43–0.89.
+
+## Rule seeds
+
+The case's three fixed rule sets (A / B / C) became **rule seeds**: case.yaml declares a candidate pool for each
+of the client's ten rule parameters, a rule seed draws each one on its own, and the public panel is rule seeds
+30, 525 and 1043 (nine public settings; any other int is a private seed). The tiers, the rules, the data and
+request.md are unchanged, and the agent's view is byte-identical to before (the export changed only `gt/` and the
+manifest).
+
+- **Pools** (one per parameter, shared by every tier): `policy_bureau` A / B; `min_score_a` 745 / 760 / 775 and
+  `near_prime_a` 825 / 840 / 855 in Bureau A points, moved onto the policy bureau's scale by `derive_params`
+  (+55 for Bureau B: `min_score`, `near_prime_below`; `other_bureau` is derived too, worded per locale);
+  `max_dsr_pct` 35 / 40 / 45; `income_cap_pct` 50 / 65 / 80; `daily_cap` 200,000 / 250,000 / 300,000;
+  `period_budget` 3,400,000 / 3,800,000 / 4,400,000; `quota_pct` 25 / 30 / 35; `discrepancy_pct` 15 / 20 / 25;
+  `min_tenure` 3 / 6 / 12. The old A / B / C values are candidates except the cutoffs (650 / 740 / 680) and the
+  income caps (100 / 80 / 120%), retuned for F3, and the near-prime thresholds, moved to fit the higher cutoffs.
+  The daily cap and the budget are worded with thousands separators per locale (labels).
+- **`admissible`** keeps a combination when the period budget binds after the treasury's cut (it rejects
+  4,400,000 with a 200,000 daily cap) and when the near-prime band, from the cutoff to the threshold, is at least
+  2.5 Bureau A points wide per point of the quota. With the higher cutoffs a narrow band left too little
+  near-prime demand: on 775–825 with a 35% quota the reference held back up to a quarter of the period's lending
+  and the baseline scored 0.93–1.07 of it. 17 of the 27 cutoff × threshold × quota combinations pass. A third
+  condition was added by the conversion check (below): the budget outlasts the treasury's cut at the daily cap.
+- **The panel** shows every candidate except `quota_pct` = 35, with the quota binding in all six medium and hard
+  settings (the near-prime share without top-ups is 18–29% against quotas of 25–30%) and the baseline at most
+  0.920 of the reference. Three seeds cannot show every candidate here: the band constraint ties the cutoff, the
+  threshold and the quota, and the first seed, where the binding check runs, needs an admissible alternative for
+  each of them, a discrepancy threshold above the lowest, and a quota that binds on every world it is checked on
+  (seed 30: near-prime share 21–26% without top-ups against 30% on the public world and world seeds 1–3; earlier
+  candidates failed on world seed 2, where the share ran up to 29–35%). Its draws, objectives and how each rule
+  binds are in the README.
+- **The reference** had to change for the retuned pools: with most bad risks cut off by the rules, its 4-feature
+  scorecard (no tenure term, linear in score and DSR) lost to first come, first served on some draws (up to 1.07
+  on narrow near-prime bands). It now has the tenure term and the two hinges, sizes loans (F1), tops up
+  near-prime approvals at the most their limit allows, and holds back the least profitable prime approvals when
+  a day's near-prime demand cannot keep the running share at the quota. On 276 random admissible draws (92 per
+  tier) the reference and the baseline are valid and the baseline is below the reference (0.46–0.996 of its
+  objective; median 0.81 easy, 0.85 medium, 0.90 hard); a few draws come close (one panel search found 1.03 for
+  hard on rule seed 742), where `quality_fields` falls back to the plain ratio. The pilot output in the data uses
+  the pilot program's older scorecard and is unchanged.
+- **Validator examples:** the near-prime example that declines near-prime approvals now widens its margin until
+  the replay ends under the quota (the program spends what a decline frees on later days); the budget example
+  that tops up without end turns the new hold off, and a last one believes a ten times larger budget and lends
+  first come, first served (world seed 3's hard/s1043 needs it). `_below_cutoff` gives every cutoff a rule seed
+  can draw at least one otherwise approvable applicant under it (it changes nothing in the public world).
+- **Binding:** every parameter binds on hard/s30, on the public world and world seeds 1–3 (the reference is
+  invalid, or its objective moves, under an admissible other candidate). The baseline is closer to the reference
+  than under the rule sets (0.64–0.92 in the panel against 0.38–0.75), since the rules themselves now keep many
+  bad loans out; `quality_fields` keeps quality's zero point at least 5% below the reference.
+
+**Baseline (rule seeds):** 0.759 / 0.644 / 0.904 in easy s30 / s525 / s1043, 0.879 / 0.756 / 0.908 in medium
+and 0.920 / 0.846 / 0.913 in hard, valid everywhere. On world seeds 1–3 (public panel) the reference and the
+baseline stay valid everywhere, the baseline at 0.69–0.96 of the reference's objective.
+
+**Conversion check (rule seeds).** An adversarial pass over the conversion confirmed the agent's view is
+byte-identical in all 3 tiers × rule seeds 4–10 and the public panel in every locale, the reference valid at 1.0
+and the baseline valid and below it there on the public world and world seeds 1–3, every parameter target
+covered and the README numbers equal to the stored dataset. One problem, fixed: on private draws where the daily
+cap could spend the whole period budget before the treasury's cut lands (3,400,000 or 3,800,000 with a 300,000
+cap), first come, first served, unpaced, booked the original budget in full before the cut while the paced
+reference lost the 400,000, and the baseline reached or passed the reference (hard on rule seed 742: 1.03 on
+three of four worlds; medium on seed 52: 0.999; seeds 4 and 9 up to 0.995). `admissible` now also requires
+budget ≥ 13 × daily cap (the cut's effective day). The public panel draws the same values, so its settings and
+numbers are unchanged; about a quarter of the private seeds draw again. Afterwards the baseline scores at most
+0.95 of the reference in medium and 0.99 in hard on seeds 11–130 (public world), and at most 0.95 on seeds 4–10
+over world seeds 1–3. Still open: the panel cannot show `quota_pct` = 35 with three seeds (checked: no covering
+triple has a seed where every parameter has an admissible alternative); a fourth public seed would show it.

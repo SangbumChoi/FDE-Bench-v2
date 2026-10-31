@@ -1,0 +1,11 @@
+{
+ "break": null,
+ "fallback_author": "Unknown",
+ "layout": "author/year_title",
+ "max_len": 24,
+ "multi_author": "all",
+ "no_author": "Unknown",
+ "script": "latin",
+ "sep": " ",
+ "year_basis": "first"
+}

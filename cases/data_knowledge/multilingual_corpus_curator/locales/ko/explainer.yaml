@@ -1,0 +1,35 @@
+# The explainer's case texts in Korean (English comes from case.yaml).
+role: 다국어 코퍼스 큐레이터
+task_type: 데이터 엔지니어링
+deliverable_spec: |
+  program/ 디렉터리와 그 안에서 organize(task)를 정의하는 organize.py. task = {"corpus_dir": <data/corpus와 같은
+  구조의 폴더>, "out_dir": <빈 폴더>}. corpus_dir를 읽기만 하고(절대 바꾸지 않음) out_dir 안에만 씁니다.
+    out_dir/library/...    책마다 그 책의 소개글을 담은 UTF-8 .txt 파일 하나(폴더 구조와 파일 이름 규칙은
+                           고객의 도서 목록 규칙을 따름)
+    out_dir/_review/...    서고에 올릴 수 없는 책의 자료
+    out_dir/manifest.csv   머리글 source,status,path,reason. 책마다 한 줄(source = 그 책의 corpus 기준 상대
+                           파일 경로, ";"로 구분), 건너뛴 파일마다 한 줄. status는 placed | review | skipped
+  고객의 전체 드라이브(샘플과 구조와 파일 구성이 같고 약 100권)에서 오프라인으로 한 번 실행합니다.
+  Python 표준 라이브러리만 쓰며 최대 5분입니다.
+tiers:
+  easy: >-
+    형식이 잘 갖춰진 책만 채점합니다(100권 중 약 30권). 책마다 파일이 하나이고, 메타데이터가 다 있으며, UTF-8이고,
+    연도가 평범한 네 자리 숫자인 책입니다. 서고 경로, 파일 이름, 소개글이 맞아야 합니다. 제목과 저자 이름은
+    40~60자로 자릅니다.
+  medium: >-
+    easy에 더해 읽을 수 있는 모든 책(약 66권)을 채점합니다. 옛 인코딩(GB18030, CP949, Shift_JIS, CP1252), 연호를
+    비롯한 여러 연도 표기, 전각이거나 악센트가 분리된 제목, 경로에 쓸 수 없는 문자, 저자 이름의 여러 로마자 표기,
+    여러 형식으로 된 같은 책의 사본 합치기, 출처 우선순위가 추가되고, 제목과 저자 이름은 32~50자로 자릅니다. 서고에
+    들어간 불필요한 파일은 감점됩니다.
+  hard: >-
+    medium에 더해 예외 상황(100권 전부)을 채점합니다. 저자, 제목, 연도, 소개글이 빠져 있어 다른 출처에서 채우거나
+    사유 코드와 함께 검토로 보내야 하는 책, 서로 어긋나는 출처, 읽을 수 없는 스캔본, 쓰레기 파일, zip 압축 파일 안의
+    책, 여러 권이 든 카탈로그 CSV가 추가됩니다. 소개글을 지어내면 안 됩니다. 저자가 없는 책은 이번 정리에 적용되는
+    고객 방침(검토로 보내거나 대체 저자 이름으로 서고에 올림)을 따르고, 제목과 저자 이름은 24~40자로 자릅니다.
+rules:
+  utf8_output: 'library/의 모든 파일과 manifest.csv는 올바른 UTF-8입니다.'
+  safe_names: '출력 파일이나 폴더 이름에 \ / : * ? " < > | 또는 제어 문자가 없고, . 이나 ..이 아니며, 공백이나 마침표로 끝나지 않고, 255바이트를 넘지 않습니다.'
+  one_file_per_book: '책 한 권의 파일은 library/에 최대 하나입니다. 다른 형식이나 폴더에 있는 같은 책의 사본은 그 파일 하나로 합칩니다.'
+  review_reason: 'status가 review인 매니페스트 줄에는 모두 사유 코드 UNREADABLE, NO_TITLE, NO_AUTHOR, NO_YEAR, NO_DESCRIPTION, CONFLICT 중 하나가 있습니다.'
+  no_fabrication: '출처에 소개글이 없는 책은 library/에 올리지 않으며, 모든 서고 파일에는 출처에서 가져온 소개글이 들어 있습니다(빈 파일, 지어낸 글, 자리 표시 문구는 안 됨).'
+  missing_author_review: '어느 출처에도 저자가 없는 책은 저자 이름을 "{{fallback_author}}"라고 적어 서고에 올리지 않고, NO_AUTHOR와 함께 _review/로 보냅니다.'

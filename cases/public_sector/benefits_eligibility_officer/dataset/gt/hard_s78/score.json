@@ -1,0 +1,21 @@
+{
+  "baseline_objective": 48782.0,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.58980772,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "abs_amount_error": 19572.0,
+    "households": 300,
+    "wrong_decisions": 23,
+    "wrong_denial_reasons": 0
+  },
+  "objective": 28772.0,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

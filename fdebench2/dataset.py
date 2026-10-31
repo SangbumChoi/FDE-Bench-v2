@@ -5,11 +5,13 @@ data and the answers without running anything. `fdebench2 export-dataset`
 writes, next to case.yaml:
 
     dataset/
-      visible/<lang>/...      what the agent receives, per customer locale (identical in every setting)
+      agent_view/<lang>/...   what the agent receives, per customer locale (identical in every setting)
       hidden/...              inputs the agent never sees: a program case's hidden period or corpus
                               (case.py `write_hidden(world, dir)`, optional)
-      gt/<tier>_<ruleset>/    one folder per setting (gt/default/ for a case without settings):
-        setting.json          tier, rule set and its parameters
+      gt/<tier>_s<seed>/      one folder per public setting, tier x public rule seed (gt/default/ for a case
+                              without settings):
+        setting.json          {tier, rule_seed, params: the drawn values}, plus derived: the derive_params
+                              values when the case has that hook
         reference/            the reference deliverable (files, or program/)
         score.json            the reference's objective and metrics under this setting; with a case.py
                               `baseline_solution`, also the baseline's objective and both solutions'
@@ -36,23 +38,33 @@ from .cases import LOCALES, NativeCase, quality_fields
 DATASET_DIR = "dataset"
 
 
+def setting_record(case: NativeCase) -> dict:
+    """setting.json: {tier, rule_seed, params} with params the drawn values, and derived (the derive_params
+    keys) when there are any; {} without settings."""
+    s = case.setting
+    if s is None:
+        return {}
+    drawn = case.drawn_params
+    derived = {k: v for k, v in s.params.items() if k not in drawn}
+    return {"tier": s.tier, "rule_seed": s.rule_seed, "params": drawn, **({"derived": derived} if derived else {})}
+
+
 def _write(case: NativeCase, out: Path) -> None:
     for lang in LOCALES:
-        case.materialize_data(lang, out / "visible" / lang)
+        case.materialize_data(lang, out / "agent_view" / lang)
     hidden = getattr(case.module, "write_hidden", None)
     if hidden is not None:
         (out / "hidden").mkdir(parents=True, exist_ok=True)
         hidden(case.world, out / "hidden")
     extra = getattr(case.module, "write_ground_truth", None)
     for c in case.settings():
-        label = f"{c.tier}_{c.ruleset}" if c.tiers else "default"
-        gt = out / "gt" / label
+        gt = out / "gt" / (c.setting.folder if c.tiers else "default")
         (gt / "reference").mkdir(parents=True)
         c.write_reference(gt / "reference")
         res = c.raw_score(gt / "reference")
-        setting = ({"tier": c.tier, "ruleset": c.ruleset, "params": c.setting.params} if c.tiers else {})
-        (gt / "setting.json").write_text(json.dumps(setting, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-                                         encoding="utf-8")
+        setting = setting_record(c)
+        (gt / "setting.json").write_text(json.dumps(setting, ensure_ascii=False, indent=2, sort_keys=True,
+                                                    default=str) + "\n", encoding="utf-8")
         score = {"objective": res.get("objective"), "violations": res.get("violations"),
                  "metrics": res.get("metrics", {})}
         if c.baseline_objective is not None:

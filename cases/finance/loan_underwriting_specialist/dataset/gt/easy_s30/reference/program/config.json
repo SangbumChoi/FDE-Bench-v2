@@ -1,0 +1,37 @@
+{
+ "beta": [
+  -2.959745,
+  -1.279487,
+  2.083947,
+  0.213192,
+  -0.236855,
+  0.50889,
+  11.461505,
+  1.363303
+ ],
+ "daily_cap": 250000,
+ "discrepancy_pct": 25,
+ "features": [
+  "score",
+  "dsr",
+  "inquiries",
+  "history",
+  "short_tenure",
+  "dsr_over_30",
+  "score_under_800"
+ ],
+ "income_cap_pct": 65,
+ "max_dsr_pct": 35,
+ "min_score": 745,
+ "min_tenure": 3,
+ "near_prime_below": 840,
+ "pace": 1.25,
+ "period_budget": 3400000,
+ "policy_bureau": "A",
+ "quota": true,
+ "quota_margin": 0.015,
+ "quota_pct": 30,
+ "sizing": true,
+ "tenure_review": true,
+ "tier": "easy"
+}

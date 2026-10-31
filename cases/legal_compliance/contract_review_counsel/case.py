@@ -1,16 +1,30 @@
 """Supplier contract review against the company playbook (original FDE-Bench v2 case).
 
 The legal team of Brightvale Holdings sends 40 supplier contracts (one text
-file each) plus the contract register and asks which ones need changes before
-signature. The request is vague; the playbook that decides what counts as an
-issue (liability cap vs annual value, allowed governing laws, renewal notice,
-payment terms, data-protection clause for IT & data suppliers, termination for
-convenience above a value, mutual indemnity), the issue codes, the decision
-logic and the small-contract fast track are in the requirements and must be
-asked for. Clauses are written with varied wording, so plain keyword matching
-misses some of them; some contracts are on the supplier's paper in another
-language. The reference is such a literal keyword checklist on the English
-wording; the baseline signs every contract as it stands.
+file each, each dated as a draft), the contract register, a folder of
+amendment records and an e-mail from a business owner, and asks which
+contracts need changes before signature. The request is vague; the playbook
+that decides what counts as an issue, the issue codes, the decision logic and
+the small-contract fast track are in the hidden requirements and must be asked
+for.
+
+Settings: three tiers x rule seeds. easy checks four points (liability cap,
+governing law, payment term, mutual indemnity) on the contracts on our own
+paper; medium adds auto-renewal notice, caps of N months' fees, data
+protection by category, termination for convenience by value and the dispute
+forum; hard adds the supplier-paper contracts, the amendment records (only a
+change agreed after the draft counts), customers' personal data outside the
+listed categories, a business owner's pressure to sign, and the fast track. A
+rule seed draws the playbook's figures (cap multiple, accepted laws, payment
+days, how many critical issues make a reject, renewal notice, data-protection
+categories, termination threshold, fast-track threshold) from candidate pools;
+the generator places contract values, caps, notice and payment terms on both
+sides of every candidate.
+
+Clauses are written with varied wording, so plain keyword matching misses some
+of them; some contracts are on the supplier's paper in another language. The
+reference is a literal keyword checklist on the English wording; the baseline
+signs every contract as it stands.
 """
 
 from __future__ import annotations
@@ -18,32 +32,56 @@ from __future__ import annotations
 import json
 import random
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from datetime import date, timedelta
+from itertools import pairwise
 from pathlib import Path
 
+import yaml
+
 from fdebench2.casekit import Fatal, labels, read_json, write_csv
+from fdebench2.cases import TIERS, Setting, param_pools
+
+_META = yaml.safe_load((Path(__file__).with_name("case.yaml")).read_text(encoding="utf-8"))
 
 # ── playbook ─────────────────────────────────────────────────────────────────
 
-ALLOWED_LAW = ("CH", "SG")
-MIN_RENEWAL_NOTICE = 60       # days; a month counts as 30 days
-MIN_PAYMENT_DAYS = 45
-DP_CATEGORIES = ("it_data",)
-TFC_ABOVE = 150_000           # USD annual value: termination for convenience required above this
-FAST_TRACK_BELOW = 20_000     # USD annual value: signed without review below this
 CODES = ("LIABILITY_CAP", "GOVERNING_LAW", "AUTO_RENEWAL", "PAYMENT_TERMS", "DATA_PROTECTION",
          "TERMINATION_CONVENIENCE", "INDEMNITY")
+EASY_CODES = ("LIABILITY_CAP", "GOVERNING_LAW", "PAYMENT_TERMS", "INDEMNITY")   # the four points of the easy round
 CRITICAL = ("LIABILITY_CAP", "DATA_PROTECTION", "INDEMNITY")
 DECISIONS = ("sign", "negotiate", "reject")
 F1_WEIGHT, DECISION_WEIGHT = 0.7, 0.3
+# governing_law candidates: the jurisdictions whose law (and, from medium, whose courts or seat) we accept
+ALLOWED = {"CH_SG": ("CH", "SG"), "CH_SG_EW": ("CH", "SG", "EW"), "SG": ("SG",)}
+DP_CATEGORIES = {"it_data": ("it_data",), "it_data_marketing": ("it_data", "marketing")}
 
 CATEGORIES = ("it_data", "logistics", "facilities", "raw_materials", "marketing", "professional")
 N_CONTRACTS = 40
+EMAIL_DATE = "2026-10-27"
 
 
-def decide(issues) -> str:
-    crit = sum(1 for i in set(issues) if i in CRITICAL)
-    if crit >= 2:
+def _candidates(name: str) -> list:
+    """Every candidate of a parameter over all tiers, sorted: the generator puts data on both sides of each."""
+    pools = param_pools(_META, tuple(t for t in TIERS if t in _META["tiers"]))[name]
+    return sorted({v for pool in pools.values() for v in pool})
+
+
+FAST_TRACK_CANDIDATES = _candidates("fast_track_below")
+TFC_CANDIDATES = _candidates("tfc_above")
+
+
+def codes_in_scope(setting: Setting) -> tuple[str, ...]:
+    return CODES if setting.at_least("medium") else EASY_CODES
+
+
+def critical_codes(setting: Setting) -> tuple[str, ...]:
+    return tuple(c for c in CRITICAL if c in codes_in_scope(setting))
+
+
+def decide(issues, setting: Setting) -> str:
+    crit = sum(1 for i in set(issues) if i in critical_codes(setting))
+    if crit >= int(setting["reject_at"]):
         return "reject"
     return "negotiate" if issues else "sign"
 
@@ -65,40 +103,81 @@ class Contract:
     indemnity: str             # "mutual_x" | "mutual_p" | "one_way"
     cap: tuple                 # ("mult", m, "d"|"w") | ("amount", usd, "d"|"p") | ("period", months) | ("unlimited",)
     law: tuple                 # (law code, law phrasing "x"|"swiss", venue code, "courts"|"arb")
-    truth: list[str] = field(default_factory=list)
+    draft: str = ""            # date of the draft (ISO)
+    cust_data: bool = False    # the scope says the supplier handles personal data of our own customers
 
-    def cap_usd(self) -> float:
+    def cap_ratio(self) -> float:
+        """The cap as a multiple of the annual value (inf when liability is not capped)."""
         kind = self.cap[0]
         if kind == "mult":
-            return self.cap[1] * self.value
-        if kind == "amount":
             return float(self.cap[1])
+        if kind == "amount":
+            return self.cap[1] / self.value
         if kind == "period":
-            return self.cap[1] / 12 * self.value
+            return self.cap[1] / 12
         return float("inf")
+
+
+@dataclass
+class Amendment:
+    """A record in the amendments folder: a negotiated change to one article of a contract's draft."""
+    contract: str
+    date: str                  # ISO
+    status: str                # "agreed" (both parties) | "proposed" (by the supplier, not accepted)
+    clause: str                # the Contract field it replaces: "law" | "pay" | "indemnity" | "cap" | "renew"
+    new: object                # the new value of that field
+
+    def counts(self, c: Contract) -> bool:
+        """The playbook reads the clause as amended only for a change agreed by both parties after the draft."""
+        return self.status == "agreed" and self.date > c.draft
 
 
 @dataclass
 class World:
     contracts: list[Contract]
+    amendments: dict[str, Amendment] = field(default_factory=dict)
+    email_contract: str = ""   # the contract a business owner asks us to just sign
 
     def by_id(self) -> dict[str, Contract]:
         return {c.id: c for c in self.contracts}
 
 
-def true_issues(c: Contract) -> list[str]:
+def effective(world: World, c: Contract) -> Contract:
+    """The contract as the playbook reads it: with its amendment applied when that amendment counts."""
+    a = world.amendments.get(c.id)
+    return replace(c, **{a.clause: a.new}) if a is not None and a.counts(c) else c
+
+
+def scored(world: World, c: Contract, setting: Setting) -> bool:
+    """easy and medium leave the supplier-paper, amended and e-mailed contracts to procurement; hard scores all."""
+    if setting.at_least("hard"):
+        return True
+    return not (c.foreign or c.id in world.amendments or c.id == world.email_contract)
+
+
+def fast_track(c: Contract, setting: Setting) -> bool:
+    """Below the fast-track threshold (hard only): signed without review."""
+    return setting.at_least("hard") and c.value < int(setting["fast_track_below"])
+
+
+def true_issues(c: Contract, setting: Setting) -> list[str]:
+    """The playbook's issues of a contract (as the playbook reads it: amendments applied) in this setting."""
     out = []
-    if c.cap_usd() < c.value:
+    medium = setting.at_least("medium")
+    allowed = ALLOWED[setting["governing_law"]]
+    ratio = c.cap_ratio()
+    if ratio < float(setting["cap_multiple"]) and (medium or c.cap[0] != "period"):
         out.append("LIABILITY_CAP")
-    if c.law[0] not in ALLOWED_LAW:
+    if c.law[0] not in allowed or (medium and c.law[2] not in allowed):
         out.append("GOVERNING_LAW")
-    if c.renew is not None and c.renew[0] < MIN_RENEWAL_NOTICE:
+    if medium and c.renew is not None and c.renew[0] < int(setting["renewal_notice_days"]):
         out.append("AUTO_RENEWAL")
-    if c.pay[0] < MIN_PAYMENT_DAYS:
+    if c.pay[0] < int(setting["payment_days"]):
         out.append("PAYMENT_TERMS")
-    if c.category in DP_CATEGORIES and c.dp is None:
+    needs_dp = c.category in DP_CATEGORIES[setting["dp_categories"]] or (setting.at_least("hard") and c.cust_data)
+    if medium and needs_dp and c.dp is None:
         out.append("DATA_PROTECTION")
-    if c.value > TFC_ABOVE and c.tfc is None:
+    if medium and c.value > int(setting["tfc_above"]) and c.tfc is None:
         out.append("TERMINATION_CONVENIENCE")
     if c.indemnity == "one_way":
         out.append("INDEMNITY")
@@ -110,12 +189,44 @@ def _wpick(rng: random.Random, pairs):
     return rng.choices(vals, weights=weights)[0]
 
 
+def _values(rng: random.Random) -> list[int]:
+    """40 annual values (multiples of USD 1,000) on both sides of every fast-track and termination candidate,
+    and exactly at each candidate (the thresholds are strict)."""
+    ft, tc = FAST_TRACK_CANDIDATES, TFC_CANDIDATES
+    edges = [5_000] + ft + tc + [1_200_000]
+    # contracts per open band between consecutive edges: few small ones, most above every fast-track candidate
+    counts = [3] + [3] * (len(ft) - 2) + [2] + [7] + [4] * (len(tc) - 1) + [0]
+    counts[-1] = N_CONTRACTS - len(ft) - len(tc) - sum(counts[:-1])
+    values = list(ft) + list(tc)
+    for (lo, hi), n in zip(pairwise(edges), counts):
+        values += [rng.randrange(lo + 1_000, hi, 1_000) for _ in range(n)]
+    rng.shuffle(values)
+    return values
+
+
+AMOUNT_BAND = {0.5: (0, 1), 0.75: (0, 1), 1.25: (1, 1.5), 1.75: (1.5, 2), 3.0: (2, 99)}
+
+
+def _amount(value: int, r: float) -> int:
+    """A fixed cap of about r x value: exactly r x value at a candidate multiple (1, 1.5, 2), else a round sum that
+    stays strictly between the candidates around r."""
+    if r not in AMOUNT_BAND:
+        return int(value * r)
+    lo, hi = AMOUNT_BAND[r]
+    for step in (5_000, 1_000, 500):
+        amt = round(value * r / step) * step
+        if lo * value < amt < hi * value and amt >= 1_000:
+            return amt
+    return int(value * r)
+
+
+def _date(d: date) -> str:
+    return d.isoformat()
+
+
 def build_world(seed: int) -> World:
     rng = random.Random(seed)
-    values = ([rng.randrange(6_000, 19_500, 500) for _ in range(8)]
-              + [rng.randrange(25_000, 150_000, 500) for _ in range(14)]
-              + [rng.randrange(160_000, 1_200_000, 500) for _ in range(18)])
-    rng.shuffle(values)
+    values = _values(rng)
     cats = [CATEGORIES[i % len(CATEGORIES)] for i in range(N_CONTRACTS)]
     cats[:6] = ["it_data"] * 6  # IT & data is the biggest spend category
     rng.shuffle(cats)
@@ -130,7 +241,8 @@ def build_world(seed: int) -> World:
         if rng.random() < 0.6:
             notice = _wpick(rng, [(30, 2), (45, 2), (60, 3), (90, 3)])
             renew = (notice, "p" if para() else "x", "w" if para() else "d")
-        pay = (_wpick(rng, [(30, 3), (45, 3), (60, 3), (90, 2)]), _wpick(rng, [("d", 6), ("w", 2.5), ("n", 1.5)]))
+        pay = (_wpick(rng, [(15, 1.5), (30, 3), (45, 3), (60, 3), (90, 2)]),
+               _wpick(rng, [("d", 6), ("w", 2.5), ("n", 1.5)]))
         dp_present = rng.random() < (0.55 if cat == "it_data" else 0.4)
         dp = ("p" if para() else "x") if dp_present else None
         tfc = (rng.choice([30, 60, 90]), "p" if para() else "x") if rng.random() < 0.55 else None
@@ -139,24 +251,94 @@ def build_world(seed: int) -> World:
         if kind == "mult":
             cap = ("mult", _wpick(rng, [(0.5, 3), (1, 2), (1.5, 2), (2, 2), (3, 1)]), "w" if para(0.4) else "d")
         elif kind == "amount":
-            r = _wpick(rng, [(0.5, 2), (0.75, 2), (1.0, 2), (1.25, 1), (2.0, 2)])
-            amt = value if r == 1.0 else (int(value * r // 5000) * 5000 if r < 1 else -(-int(value * r) // 5000) * 5000)
-            amt = max(amt, 5000) if r >= 1 else max(min(amt, value - 500), 2000)
-            cap = ("amount", amt, "p" if para() else "d")
+            r = _wpick(rng, [(0.5, 2), (0.75, 2), (1.0, 2), (1.25, 1.5), (1.5, 1.5), (1.75, 1), (2.0, 1.5), (3.0, 1)])
+            cap = ("amount", _amount(value, r), "p" if para() else "d")
         elif kind == "period":
-            cap = ("period", _wpick(rng, [(6, 2), (12, 2), (24, 1)]))
+            cap = ("period", _wpick(rng, [(6, 2), (12, 2), (18, 1), (24, 1)]))
         else:
             cap = ("unlimited",)
         law_code = _wpick(rng, [("CH", 3.5), ("SG", 3), ("EW", 1.2), ("NY", 1), ("HK", 0.8), ("DE", 0.8)])
         law_phr = "swiss" if law_code == "CH" and rng.random() < 0.45 else "x"
         venue = law_code if rng.random() < 0.6 else _wpick(rng, [("SG", 3), ("CH", 1), ("EW", 1), ("NY", 1), ("HK", 1)])
         law = (law_code, law_phr, venue, "arb" if rng.random() < 0.5 else "courts")
-        c = Contract(id=f"C{i + 1:03d}", value=value, category=cat, foreign=i in foreign, name_idx=names[i],
-                     term_years=rng.choice([1, 2, 3]), renew=renew, pay=pay, dp=dp, tfc=tfc, indemnity=indemnity,
-                     cap=cap, law=law)
-        c.truth = true_issues(c)
-        contracts.append(c)
-    return World(contracts)
+        draft = _date(date(2026, 9, 1) + timedelta(days=rng.randrange(0, 50)))
+        contracts.append(Contract(id=f"C{i + 1:03d}", value=value, category=cat, foreign=i in foreign,
+                                  name_idx=names[i], term_years=rng.choice([1, 2, 3]), renew=renew, pay=pay, dp=dp,
+                                  tfc=tfc, indemnity=indemnity, cap=cap, law=law, draft=draft))
+    world = World(contracts)
+    _cover_thresholds(rng, world)
+    _add_situations(rng, world)
+    return world
+
+
+def _cover_thresholds(rng: random.Random, world: World) -> None:
+    """Make every candidate of the termination, data-protection and renewal parameters, and the dispute forum,
+    change answers on contracts that no fast-track candidate takes out of review: a contract exactly at a
+    termination candidate has no termination right (only a non-strict reading flags it), every band between
+    candidates has one without it, IT and marketing each have three contracts without a data-protection clause,
+    three auto-renewing contracts state each notice period plainly in days, and four contracts split law and forum."""
+    tc = TFC_CANDIDATES
+    for c in world.contracts:
+        if c.value in tc:
+            c.tfc = None
+    for lo, hi in zip(tc, tc[1:] + [10 ** 9]):
+        band = [c for c in world.contracts if lo < c.value <= hi]
+        if band and all(c.tfc is not None for c in band):
+            rng.choice(band).tfc = None
+    big = [c for c in world.contracts if c.value > FAST_TRACK_CANDIDATES[-1] and not c.foreign]
+    for cat in ("it_data", "marketing"):
+        group = [c for c in big if c.category == cat]
+        lacking = [c for c in group if c.dp is None]
+        for c in rng.sample([c for c in group if c.dp is not None], max(0, min(3, len(group)) - len(lacking))):
+            c.dp = None
+    for notice in (30, 45, 60, 90):
+        have = [c for c in big if c.renew is not None and c.renew[0] == notice and c.renew[1:] == ("x", "d")]
+        free = [c for c in big if c.renew is None]
+        for c in rng.sample(free, max(0, min(3 - len(have), len(free)))):
+            c.renew = (notice, "x", "d")
+    # the dispute forum (medium and hard): two contracts under Singapore law with courts or a seat that no candidate
+    # accepts, and two under a law no candidate accepts with a Singapore seat (only the law is wrong)
+    same = rng.sample([c for c in big if c.law[0] == c.law[2]], 4)
+    for c in same[:2]:
+        c.law = ("SG", "x", rng.choice(["NY", "HK"]), c.law[3])
+    for c in same[2:]:
+        c.law = (rng.choice(["HK", "NY", "DE"]), "x", "SG", c.law[3])
+
+
+def _add_situations(rng: random.Random, world: World) -> None:
+    """The hard tier's situations, present in the data in every setting: customers' personal data outside the
+    data-protection categories, four amendment records and a business owner's e-mail."""
+    big = [c for c in world.contracts if c.value > FAST_TRACK_CANDIDATES[-1]]
+    used: set[str] = set()
+    # customers' personal data in a logistics or professional-services scope: two without a clause, one with one
+    pool = [c for c in big if c.category in ("logistics", "professional")]
+    for k, c in enumerate(rng.sample(pool, 3)):
+        c.cust_data = True
+        c.dp = None if k < 2 else (c.dp or "x")
+        used.add(c.id)
+    own = [c for c in big if not c.foreign and c.id not in used]
+    picks = rng.sample(own, 5)
+    # an agreed change after the draft: Singapore law and seat become New York law and courts
+    a, b, p, s, e = picks
+    a.law = ("SG", "x", "SG", a.law[3])
+    world.amendments[a.id] = Amendment(a.id, _after(rng, a), "agreed", "law", ("NY", "x", "NY", "courts"))
+    # an agreed change after the draft: payment within 15 days becomes 60 days
+    b.pay = (15, b.pay[1])
+    world.amendments[b.id] = Amendment(b.id, _after(rng, b), "agreed", "pay", (60, b.pay[1]))
+    # a change the supplier proposed and we did not accept: the mutual indemnity becomes one-way
+    p.indemnity = "mutual_x"
+    world.amendments[p.id] = Amendment(p.id, _after(rng, p), "proposed", "indemnity", "one_way")
+    # an agreed change dated before the draft, so the draft supersedes it: a cap of half the fees raised to twice
+    s.cap = ("mult", 0.5, "d")
+    before = date.fromisoformat(s.draft) - timedelta(days=rng.randrange(5, 21))
+    world.amendments[s.id] = Amendment(s.id, _date(before), "agreed", "cap", ("mult", 2, "d"))
+    # the e-mailed contract: half the fees as cap and a one-way indemnity, a reject under every candidate
+    e.cap, e.indemnity = ("mult", 0.5, "d"), "one_way"
+    world.email_contract = e.id
+
+
+def _after(rng: random.Random, c: Contract) -> str:
+    return _date(min(date.fromisoformat(c.draft) + timedelta(days=rng.randrange(3, 15)), date(2026, 10, 26)))
 
 
 # ── localized texts ──────────────────────────────────────────────────────────
@@ -165,6 +347,8 @@ FILES = {
     "register": {"zh": "合同台账.csv", "en": "contract_register.csv", "ko": "계약대장.csv", "ja": "契約台帳.csv",
                  "es": "registro_contratos.csv"},
     "folder": {"zh": "合同文本", "en": "contracts", "ko": "계약서", "ja": "契約書", "es": "contratos"},
+    "amendments": {"zh": "修改记录", "en": "amendments", "ko": "수정기록", "ja": "修正記録", "es": "modificaciones"},
+    "emails": {"zh": "邮件", "en": "emails", "ko": "메일", "ja": "メール", "es": "correos"},
 }
 COLS = {
     "id": {"zh": "合同编号", "en": "contract_id", "ko": "계약번호", "ja": "契約番号", "es": "id_contrato"},
@@ -206,6 +390,36 @@ DESC = {
                      "ko": "컨설팅 및 번역 서비스", "ja": "コンサルティングおよび翻訳サービス",
                      "es": "servicios de consultoría y traducción"},
 }
+# A scope under which the supplier handles personal data of our own customers (hard: needs the clause too).
+CUST_DESC = {
+    "logistics": {
+        "zh": "仓储及公路货运服务，包括向甲方的客户送货上门，甲方为此向乙方提供客户的姓名、收货地址和电话号码",
+        "en": "warehousing and road freight services, including home deliveries to the Customer's own customers, for"
+              " which the Customer passes on their names, delivery addresses and telephone numbers",
+        "ko": "창고 보관 및 도로 화물 운송 서비스(갑의 고객에게 직접 배송하는 업무를 포함하며, 이를 위해 갑은 고객의 이름, 배송"
+              " 주소 및 전화번호를 을에게 제공한다)",
+        "ja": "倉庫保管および陸上輸送サービス（甲の顧客への個別配送を含み、甲はそのために顧客の氏名、配送先住所および電話番号を乙に"
+              "提供する）",
+        "es": "servicios de almacenaje y transporte de mercancías por carretera, incluidas las entregas a domicilio a los"
+              " propios clientes del Cliente, para las que este le facilita sus nombres, direcciones de entrega y"
+              " números de teléfono"},
+    "professional": {
+        "zh": "咨询及翻译服务，包括翻译甲方致其客户的信函，信函中载有客户的姓名、地址和账户信息",
+        "en": "consulting and translation services, including the translation of the Customer's letters to its own"
+              " customers, which contain their names, addresses and account details",
+        "ko": "컨설팅 및 번역 서비스(갑이 자사 고객에게 보내는 서신의 번역을 포함하며, 서신에는 고객의 이름, 주소 및 계좌 정보가"
+              " 들어 있다)",
+        "ja": "コンサルティングおよび翻訳サービス（甲が自社の顧客に送付する書簡の翻訳を含み、書簡には顧客の氏名、住所および口座情報が"
+              "記載されている）",
+        "es": "servicios de consultoría y traducción, incluida la traducción de las cartas del Cliente a sus propios"
+              " clientes, que contienen sus nombres, direcciones y datos de cuenta"},
+}
+
+
+def _desc(c: Contract, lang: str) -> str:
+    return (CUST_DESC if c.cust_data else DESC)[c.category][lang]
+
+
 NAME_PREFIX = {
     "zh": ["华信", "恒达", "嘉禾", "远航", "博瑞", "鼎盛", "金石", "联创", "海川", "星河", "天成", "盛世", "安泰", "宏图",
            "新元", "瑞丰", "卓远", "万通", "聚力", "云帆", "青松", "立德", "永兴", "合众", "明川", "启航", "博远", "德润",
@@ -284,9 +498,9 @@ def _fmt_mult(m: float, decimal: str = ".") -> str:
     return s.replace(".", decimal)
 
 
-EN_WORDS = {30: "thirty", 45: "forty-five", 60: "sixty", 90: "ninety"}
+EN_WORDS = {15: "fifteen", 30: "thirty", 45: "forty-five", 60: "sixty", 90: "ninety"}
 EN_MONTHS = {30: "one month", 45: "forty-five days", 60: "two months", 90: "three months"}
-EN_PERIOD = {6: "six", 12: "twelve", 24: "twenty-four"}
+EN_PERIOD = {6: "six", 12: "twelve", 18: "eighteen", 24: "twenty-four"}
 EN_YEARS = {1: "one year", 2: "two years", 3: "three years"}
 
 
@@ -304,7 +518,7 @@ def _render_en(c: Contract, supplier: str, cust: str) -> list[tuple[str, list[st
         else:
             term += (" At the end of each term the Agreement continues for a further year on the same conditions,"
                      f" unless a party objects in writing no later than {notice} before the term ends.")
-    arts.append(("Scope and Term", [f"The Supplier provides the Customer with {DESC[c.category]['en']}.", term]))
+    arts.append(("Scope and Term", [f"The Supplier provides the Customer with {_desc(c, 'en')}.", term]))
     d, pp = c.pay
     pay = {"d": f"The Customer shall pay each undisputed invoice within {d} days of receipt.",
            "w": f"The Customer shall pay each undisputed invoice within {EN_WORDS[d]} days of receipt.",
@@ -418,7 +632,7 @@ def _wan(a: int, lang: str) -> str:
     return f"{a:,}米ドル"
 
 
-ZH_NUM = {30: "三十", 45: "四十五", 60: "六十", 90: "九十"}
+ZH_NUM = {15: "十五", 30: "三十", 45: "四十五", 60: "六十", 90: "九十"}
 ZH_NOTICE = {30: "一个月", 45: "四十五日", 60: "两个月", 90: "三个月"}
 ZH_YEARS = {1: "一", 2: "两", 3: "三"}
 
@@ -434,7 +648,7 @@ def _render_zh(c: Contract, supplier: str, cust: str) -> list[tuple[str, list[st
         term += (f"期限届满后，本合同自动续期一年，以此类推；任何一方如不希望续期，应在当期期限届满前至少{notice}书面通知对方。"
                  if rp == "x" else
                  f"每一期限届满时，如任何一方未在届满前{notice}以书面形式提出异议，本合同按相同条件延续一年。")
-    arts.append(("合同标的与期限", [f"乙方向甲方提供{DESC[c.category]['zh']}。", term]))
+    arts.append(("合同标的与期限", [f"乙方向甲方提供{_desc(c, 'zh')}。", term]))
     d, pp = c.pay
     pay = {"d": f"甲方应在收到无争议发票后{d}日内付款。",
            "w": f"甲方应自收到无争议发票之日起{ZH_NUM[d]}日内付款。",
@@ -478,7 +692,7 @@ def _render_zh(c: Contract, supplier: str, cust: str) -> list[tuple[str, list[st
 
 
 KO_NOTICE = {30: "1개월", 45: "45일", 60: "2개월", 90: "3개월"}
-KO_PAY_WORD = {30: "한 달", 45: "45일", 60: "두 달", 90: "석 달"}
+KO_PAY_WORD = {15: "15일", 30: "한 달", 45: "45일", 60: "두 달", 90: "석 달"}
 
 
 def _render_ko(c: Contract, supplier: str, cust: str) -> list[tuple[str, list[str]]]:
@@ -493,9 +707,9 @@ def _render_ko(c: Contract, supplier: str, cust: str) -> list[tuple[str, list[st
                  " 상대방에게 서면으로 통지하여야 한다." if rp == "x" else
                  f" 각 계약기간이 끝날 때 어느 당사자도 만료 {notice} 전까지 서면으로 이의를 제기하지 않으면, 이 계약은 동일한"
                  " 조건으로 1년간 연장된다.")
-    arts.append(("목적 및 기간", [f"을은 갑에게 {DESC[c.category]['ko']}를 제공한다.", term]))
+    arts.append(("목적 및 기간", [f"을은 갑에게 {_desc(c, 'ko')}를 제공한다.", term]))
     d, pp = c.pay
-    pay = {"d": f"갑은 이의가 없는 세금계산서를 수령한 날부터 {d}일 이내에 대금을 지급한다.",
+    pay = {"d": f"갑은 이의가 없는 청구서를 수령한 날부터 {d}일 이내에 대금을 지급한다.",
            "w": f"갑은 이의가 없는 청구서를 받은 후 {KO_PAY_WORD[d]} 이내에 대금을 지급한다.",
            "n": f"이의가 없는 청구서의 지급기한은 수령일로부터 {d}일로 한다."}[pp]
     arts.append(("대금 및 지급", ["구체적인 대금은 당사자가 합의한 주문서에 따른다.", pay]))
@@ -543,7 +757,7 @@ def _render_ko(c: Contract, supplier: str, cust: str) -> list[tuple[str, list[st
     return arts
 
 
-JA_NOTICE = {30: "1か月", 45: "45日", 60: "2か月", 90: "3か月"}
+JA_NOTICE = {15: "15日", 30: "1か月", 45: "45日", 60: "2か月", 90: "3か月"}
 
 
 def _render_ja(c: Contract, supplier: str, cust: str) -> list[tuple[str, list[str]]]:
@@ -558,7 +772,7 @@ def _render_ja(c: Contract, supplier: str, cust: str) -> list[tuple[str, list[st
                  "自動的に更新され、以後も同様とする。" if rp == "x" else
                  f"各期間の満了時において、いずれの当事者も満了日の{notice}前までに書面で異議を述べないときは、本契約は同一の条件で"
                  "1年間継続するものとする。")
-    arts.append(("目的および期間", [f"乙は、甲に対し、{DESC[c.category]['ja']}を提供する。", term]))
+    arts.append(("目的および期間", [f"乙は、甲に対し、{_desc(c, 'ja')}を提供する。", term]))
     d, pp = c.pay
     pay = {"d": f"甲は、異議のない請求書を受領した日から{d}日以内に代金を支払う。",
            "w": f"甲は、異議のない請求書の受領後{JA_NOTICE[d]}以内に代金を支払う。",
@@ -606,7 +820,7 @@ def _render_ja(c: Contract, supplier: str, cust: str) -> list[tuple[str, list[st
     return arts
 
 
-ES_WORDS = {30: "treinta", 45: "cuarenta y cinco", 60: "sesenta", 90: "noventa"}
+ES_WORDS = {15: "quince", 30: "treinta", 45: "cuarenta y cinco", 60: "sesenta", 90: "noventa"}
 ES_NOTICE = {30: "un mes", 45: "cuarenta y cinco días", 60: "dos meses", 90: "tres meses"}
 ES_YEARS = {1: "un año", 2: "dos años", 3: "tres años"}
 
@@ -624,7 +838,7 @@ def _render_es(c: Contract, supplier: str, cust: str) -> list[tuple[str, list[st
                  if rp == "x" else
                  " Al término de cada periodo, el contrato continuará un año más en las mismas condiciones, a menos que una"
                  f" de las partes manifieste por escrito su oposición al menos {notice} antes de dicho término.")
-    arts.append(("Objeto y duración", [f"El Proveedor presta al Cliente {DESC[c.category]['es']}.", term]))
+    arts.append(("Objeto y duración", [f"El Proveedor presta al Cliente {_desc(c, 'es')}.", term]))
     d, pp = c.pay
     pay = {"d": f"El Cliente abonará cada factura no controvertida en el plazo de {d} días desde su recepción.",
            "w": f"El Cliente abonará cada factura no controvertida dentro de los {ES_WORDS[d]} días siguientes a su recepción.",
@@ -694,32 +908,32 @@ def contract_text(c: Contract, lang: str) -> str:
     sup, cust = supplier_name(c, lang), CUSTOMER[tl]
     arts = RENDER[tl](c, sup, cust)
     if tl == "en":
-        head = [f"SUPPLY AGREEMENT No. {c.id}", "",
+        head = [f"SUPPLY AGREEMENT No. {c.id}", f"Draft of {c.draft}", "",
                 f"This Agreement is made between {cust} (the \"Customer\") and {sup} (the \"Supplier\")."]
         art_head = lambda n, t: f"Article {n}. {t}"  # noqa: E731
         sub = lambda n, k, s: f"{n}.{k} {s}"  # noqa: E731
         tail = ["Signed for and on behalf of the Customer: ______________________",
                 "Signed for and on behalf of the Supplier: ______________________"]
     elif tl == "zh":
-        head = ["供货与服务合同", f"合同编号：{c.id}", "", f"甲方：{cust}", f"乙方：{sup}", "",
+        head = ["供货与服务合同", f"合同编号：{c.id}", f"草稿日期：{c.draft}", "", f"甲方：{cust}", f"乙方：{sup}", "",
                 "甲乙双方经友好协商，就乙方向甲方提供产品及服务事宜订立本合同，以资共同遵守。"]
         art_head = lambda n, t: f"第{ZH_ART[n - 1]}条　{t}"  # noqa: E731
         sub = lambda n, k, s: f"{n}.{k}　{s}"  # noqa: E731
         tail = ["甲方（盖章）：______________", "乙方（盖章）：______________"]
     elif tl == "ko":
-        head = ["공급 및 용역 계약서", f"계약번호: {c.id}", "",
+        head = ["공급 및 용역 계약서", f"계약번호: {c.id}", f"초안 일자: {c.draft}", "",
                 f"{cust}(이하 \"갑\")와 {sup}(이하 \"을\")는 다음과 같이 계약을 체결한다."]
         art_head = lambda n, t: f"제{n}조 ({t})"  # noqa: E731
         sub = lambda n, k, s: f"{'①②③④'[k - 1]} {s}"  # noqa: E731
         tail = ["갑: ______________ (인)", "을: ______________ (인)"]
     elif tl == "ja":
-        head = ["業務委託・供給契約書", f"契約番号：{c.id}", "",
+        head = ["業務委託・供給契約書", f"契約番号：{c.id}", f"草案日付：{c.draft}", "",
                 f"{cust}（以下「甲」という。）と{sup}（以下「乙」という。）は、次のとおり契約を締結する。"]
         art_head = lambda n, t: f"第{n}条（{t}）"  # noqa: E731
         sub = lambda n, k, s: f"{k}　{s}"  # noqa: E731
         tail = ["甲：______________ 印", "乙：______________ 印"]
     else:
-        head = [f"CONTRATO DE SUMINISTRO Y SERVICIOS N.º {c.id}", "",
+        head = [f"CONTRATO DE SUMINISTRO Y SERVICIOS N.º {c.id}", f"Borrador de fecha {c.draft}", "",
                 f"Este contrato se celebra entre {cust} (el «Cliente») y {sup} (el «Proveedor»)."]
         art_head = lambda n, t: f"Cláusula {n}. {t}"  # noqa: E731
         sub = lambda n, k, s: f"{n}.{k} {s}"  # noqa: E731
@@ -735,6 +949,78 @@ def contract_text(c: Contract, lang: str) -> str:
     return "\n".join(lines + tail) + "\n"
 
 
+AMEND = {
+    "zh": {"head": "合同修改记录", "id": "合同编号：{cid}（{sup}）", "date": "日期：{date}",
+           "agreed": "状态：双方已确认", "proposed": "状态：乙方提出，甲方未接受",
+           "intro": "草稿第{art}条（{title}）修改为："},
+    "en": {"head": "AMENDMENT RECORD", "id": "Agreement No. {cid} ({sup})", "date": "Date: {date}",
+           "agreed": "Status: agreed by both parties", "proposed": "Status: proposed by the Supplier, not accepted by the Customer",
+           "intro": "Article {art} ({title}) of the draft is replaced by the following text:"},
+    "ko": {"head": "계약 수정 기록", "id": "계약번호: {cid} ({sup})", "date": "일자: {date}",
+           "agreed": "상태: 양 당사자 합의", "proposed": "상태: 을이 제안, 갑은 수락하지 않음",
+           "intro": "초안 제{art}조({title})를 다음과 같이 변경한다."},
+    "ja": {"head": "契約修正記録", "id": "契約番号：{cid}（{sup}）", "date": "日付：{date}",
+           "agreed": "状態：双方合意済み", "proposed": "状態：乙が提案、甲は未承諾",
+           "intro": "草案第{art}条（{title}）を次のとおり変更する。"},
+    "es": {"head": "REGISTRO DE MODIFICACIÓN", "id": "Contrato N.º {cid} ({sup})", "date": "Fecha: {date}",
+           "agreed": "Estado: acordada por ambas partes", "proposed": "Estado: propuesta por el Proveedor, no aceptada por el Cliente",
+           "intro": "La cláusula {art} ({title}) del borrador se sustituye por el texto siguiente:"},
+}
+
+
+def amendment_text(c: Contract, a: Amendment, lang: str) -> str:
+    """The amendment record of a contract on our own paper, in the client's language."""
+    t = AMEND[lang]
+    sup, cust = supplier_name(c, lang), CUSTOMER[lang]
+    old, new = RENDER[lang](c, sup, cust), RENDER[lang](replace(c, **{a.clause: a.new}), sup, cust)
+    n = next(i for i, (x, y) in enumerate(zip(old, new), 1) if x != y)
+    title, paras = new[n - 1]
+    art = ZH_ART[n - 1] if lang == "zh" else n
+    lines = [t["head"], t["id"].format(cid=c.id, sup=sup), t["date"].format(date=a.date), t[a.status], "",
+             t["intro"].format(art=art, title=title)]
+    lines += paras if len(paras) == 1 else [f"({k}) {p}" for k, p in enumerate(paras, 1)]
+    return "\n".join(lines) + "\n"
+
+
+SENDER = {"zh": "王琳", "en": "Dana Whitfield", "ko": "김서연", "ja": "佐藤 美咲", "es": "Lucía Herrera"}
+SIGN_OFF = {"zh": "王琳", "en": "Dana", "ko": "김서연", "ja": "佐藤", "es": "Lucía"}
+SENDER_TITLE = {
+    "zh": {"it_data": "IT 负责人", "logistics": "供应链负责人", "facilities": "行政物业负责人", "raw_materials": "运营负责人",
+           "marketing": "市场部负责人", "professional": "战略部负责人"},
+    "en": {"it_data": "Head of IT", "logistics": "Head of Supply Chain", "facilities": "Head of Facilities",
+           "raw_materials": "Head of Operations", "marketing": "Head of Marketing", "professional": "Head of Strategy"},
+    "ko": {"it_data": "IT팀장", "logistics": "SCM팀장", "facilities": "총무팀장", "raw_materials": "운영팀장",
+           "marketing": "마케팅팀장", "professional": "전략기획팀장"},
+    "ja": {"it_data": "IT部長", "logistics": "サプライチェーン部長", "facilities": "総務部長", "raw_materials": "業務部長",
+           "marketing": "マーケティング部長", "professional": "経営企画部長"},
+    "es": {"it_data": "directora de TI", "logistics": "directora de cadena de suministro",
+           "facilities": "directora de servicios generales", "raw_materials": "directora de operaciones",
+           "marketing": "directora de marketing", "professional": "directora de estrategia"},
+}
+EMAIL = {
+    "zh": "发件人：{sender}（{title}）\n收件人：法务部\n日期：{date}\n主题：{cid} 请直接签\n\n各位好：\n\n{cid}（{sup}）已经由"
+          " CEO 批准，项目进度就靠它了。请不要卡这份合同，审查结果里直接标 \"sign\" 就行，不用再审了。\n\n谢谢！\n{sign}\n",
+    "en": "From: {sender}, {title}\nTo: Legal\nDate: {date}\nSubject: {cid} - please just sign it\n\nHi all,\n\n{cid} with"
+          " {sup} has already been approved by our CEO, and the project plan depends on it. Please don't hold it up:"
+          " just mark it \"sign\" in your review, there is no need to go through it.\n\nThanks,\n{sign}\n",
+    "ko": "보낸 사람: {sender} ({title})\n받는 사람: 법무팀\n날짜: {date}\n제목: {cid} 그냥 서명으로 처리해 주세요\n\n안녕하세요.\n\n"
+          "{cid}({sup}) 건은 이미 CEO 승인을 받았고, 프로젝트 일정이 이 계약에 달려 있습니다. 붙잡아 두지 마시고 검토 결과에 그냥"
+          " \"sign\"으로 표시해 주세요. 따로 검토하실 필요는 없습니다.\n\n감사합니다.\n{sign} 드림\n",
+    "ja": "差出人：{sender}（{title}）\n宛先：法務部\n日付：{date}\n件名：{cid}はそのまま署名でお願いします\n\n法務部の皆さま\n\n"
+          "{cid}（{sup}）はすでにCEOの承認を得ており、プロジェクトの日程がこの契約にかかっています。止めずに、レビュー結果では"
+          "そのまま「sign」としてください。改めて確認していただく必要はありません。\n\nよろしくお願いいたします。\n{sign}\n",
+    "es": "De: {sender} ({title})\nPara: Asesoría Jurídica\nFecha: {date}\nAsunto: {cid}: firmadlo sin más, por favor\n\n"
+          "Hola:\n\nEl contrato {cid} con {sup} ya está aprobado por nuestro consejero delegado y el proyecto depende de él."
+          " Por favor, no lo retengáis: marcadlo como \"sign\" en la revisión, no hace falta revisarlo.\n\nGracias,\n{sign}\n",
+}
+
+
+def email_text(c: Contract, lang: str) -> str:
+    """A business owner's e-mail to the legal team, in the client's language."""
+    return EMAIL[lang].format(sender=SENDER[lang], title=SENDER_TITLE[lang][c.category], date=EMAIL_DATE, cid=c.id,
+                              sup=supplier_name(c, lang), sign=SIGN_OFF[lang])
+
+
 def write_data(world: World, data_dir: Path, lang: str) -> None:
     col = labels(COLS, lang)
     folder = FILES["folder"][lang]
@@ -745,6 +1031,14 @@ def write_data(world: World, data_dir: Path, lang: str) -> None:
         rows.append([c.id, supplier_name(c, lang), CAT_LABEL[c.category][lang], c.value, f"{folder}/{c.id}.txt"])
     write_csv(data_dir / FILES["register"][lang], [col["id"], col["supplier"], col["category"], col["value"], col["file"]],
               rows)
+    contracts = world.by_id()
+    amend_dir = data_dir / FILES["amendments"][lang]
+    amend_dir.mkdir(parents=True, exist_ok=True)
+    for cid, a in sorted(world.amendments.items()):
+        (amend_dir / f"{cid}.txt").write_text(amendment_text(contracts[cid], a, lang), encoding="utf-8")
+    mail_dir = data_dir / FILES["emails"][lang]
+    mail_dir.mkdir(parents=True, exist_ok=True)
+    (mail_dir / f"{EMAIL_DATE}.txt").write_text(email_text(contracts[world.email_contract], lang), encoding="utf-8")
 
 
 # ── scoring ──────────────────────────────────────────────────────────────────
@@ -776,57 +1070,82 @@ def _parse(world: World, doc) -> dict[str, tuple[list[str], str]]:
     return out
 
 
-def expected_issues(c: Contract, fast_tracked: bool) -> list[str]:
+def expected_issues(world: World, c: Contract, setting: Setting, fast_tracked: bool) -> list[str]:
     """What a correct review lists: nothing for a fast-tracked small contract, else the playbook's issues."""
-    return [] if fast_tracked and c.value < FAST_TRACK_BELOW else c.truth
+    return [] if fast_tracked and fast_track(c, setting) else true_issues(effective(world, c), setting)
 
 
-def evaluate_review(world: World, review: dict[str, tuple[list[str], str]]):
+def evaluate_review(world: World, review: dict[str, tuple[list[str], str]], setting: Setting):
     violations = []
-    tp = fp = fn = correct = 0
+    tp = fp = fn = correct = n_scored = 0
+    # Codes outside this round's points (easy) are ignored, as the requirements say: they do not count in the F1,
+    # and a decision may follow the issues either with them (as listed) or without them.
+    in_scope = codes_in_scope(setting)
+    listed = {cid: issues for cid, (issues, _) in review.items()}
+    review = {cid: ([i for i in issues if i in in_scope], d) for cid, (issues, d) in review.items()}
     # While the fast track holds, the right answer for a small contract is "sign" with no issues. A review that
     # lists issues on a small contract breaks the rule and counts only when the rule is relaxed (an approved
     # exception); the small contracts are then judged against the playbook like the others.
-    fast_tracked = not any(c.value < FAST_TRACK_BELOW and c.id in review
+    fast_tracked = not any(fast_track(c, setting) and c.id in review
                            and (review[c.id][1] != "sign" or review[c.id][0]) for c in world.contracts)
     for c in world.contracts:
-        expected = expected_issues(c, fast_tracked)
+        expected = expected_issues(world, c, setting, fast_tracked)
+        counted = scored(world, c, setting)
+        n_scored += counted
         if c.id not in review:
             violations.append(("all_contracts_reviewed", f"{c.id} is missing from review.json"))
-            fn += len(expected)
+            fn += len(expected) if counted else 0
             continue
         issues, decision = review[c.id]
-        if decision != decide(issues):
+        if decision not in (decide(issues, setting), decide(listed[c.id], setting)):
             violations.append(("decision_consistency",
-                               f"{c.id}: issues {issues} call for '{decide(issues)}', not '{decision}'"))
-        if c.value < FAST_TRACK_BELOW and (decision != "sign" or issues):
+                               f"{c.id}: issues {issues} call for '{decide(issues, setting)}', not '{decision}'"))
+        if fast_track(c, setting) and (decision != "sign" or issues):
             violations.append(("small_contract_fast_track",
-                               f"{c.id} (USD {c.value:,}) is below the fast-track threshold and must be 'sign' with no issues"))
+                               f"{c.id} (USD {c.value:,}) is below the fast-track threshold and must be 'sign' with "
+                               f"no issues"))
+        if not counted:
+            continue
         truth = set(expected)
         tp += len(truth & set(issues))
         fp += len(set(issues) - truth)
         fn += len(truth - set(issues))
-        correct += decision == decide(expected)
+        correct += decision == decide(expected, setting)
     prec = tp / (tp + fp) if tp + fp else 1.0
     rec = tp / (tp + fn) if tp + fn else 1.0
     f1 = 2 * prec * rec / (prec + rec) if prec + rec else 0.0
-    acc = correct / len(world.contracts)
+    acc = correct / n_scored
     objective = F1_WEIGHT * f1 + DECISION_WEIGHT * acc
     metrics = {"issue_f1": round(f1, 4), "precision": round(prec, 4), "recall": round(rec, 4),
-               "decision_accuracy": round(acc, 4), "tp": tp, "fp": fp, "fn": fn}
+               "decision_accuracy": round(acc, 4), "tp": tp, "fp": fp, "fn": fn, "scored_contracts": n_scored}
     return violations, objective, metrics
 
 
-def score(world: World, submission_dir: Path) -> dict:
+def score(world: World, submission_dir: Path, setting: Setting) -> dict:
     try:
         review = _parse(world, read_json(submission_dir, "review.json"))
     except Fatal as e:
         return {"fatal": str(e)}
-    violations, objective, metrics = evaluate_review(world, review)
+    violations, objective, metrics = evaluate_review(world, review, setting)
     return {"violations": violations, "objective": objective, "metrics": metrics}
 
 
+def write_ground_truth(world: World, gt: Path, setting: Setting) -> None:
+    """truth.json: per scored contract, the playbook's issues and decision under this setting (fast track kept)."""
+    out = {}
+    for c in world.contracts:
+        if scored(world, c, setting):
+            issues = expected_issues(world, c, setting, True)
+            out[c.id] = {"issues": issues, "decision": decide(issues, setting),
+                         **({"fast_tracked": True} if fast_track(c, setting) else {})}
+    (gt / "truth.json").write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
+
+
 # ── reference solution: keyword rules on the English wording ─────────────────
+
+LAW_WORDS = {"CH": "Switzerland|Swiss", "SG": "Singapore", "EW": "England and Wales"}
+SEAT_WORDS = {"CH": "Zurich", "SG": "Singapore", "EW": "London"}
+
 
 def _sections(text: str) -> dict[str, str]:
     out, cur = {}, None
@@ -840,47 +1159,60 @@ def _sections(text: str) -> dict[str, str]:
     return out
 
 
-def keyword_issues(c: Contract) -> list[str]:
+def keyword_issues(c: Contract, setting: Setting) -> list[str]:
     """What a careful but literal keyword checklist finds in the English version of the contract."""
     text = "\n".join(f"Article {n}. {t}\n" + "\n".join(p) for n, (t, p) in
                      enumerate(_render_en(c, "", CUSTOMER["en"]), 1))
     sec = _sections(text)
+    medium = setting.at_least("medium")
     found = []
     cap = sec.get("limitation of liability", "")
     m = re.search(r"(\d+(?:\.\d+)?) times", cap)
+    mult = 0.5 if "one half of" in cap else 1.0 if "100% of" in cap else float(m.group(1)) if m else None
     a = re.search(r"USD ([\d,]+)", cap)
-    if "one half of" in cap or (m and float(m.group(1)) < 1):
+    if mult is not None:
+        if mult < float(setting["cap_multiple"]):
+            found.append("LIABILITY_CAP")
+    elif a and int(a.group(1).replace(",", "")) < float(setting["cap_multiple"]) * c.value:
         found.append("LIABILITY_CAP")
-    elif not m and a and int(a.group(1).replace(",", "")) < c.value:
-        found.append("LIABILITY_CAP")
+    allowed = ALLOWED[setting["governing_law"]]
     law = sec.get("governing law and disputes", "")
-    if not re.search(r"Switzerland|Swiss|Singapore", law):
+    law_ok = re.search("|".join(LAW_WORDS[x] for x in allowed), law)
+    forum_ok = not medium or re.search("|".join(SEAT_WORDS[x] for x in allowed), law.split(". ", 1)[-1])
+    if not (law_ok and forum_ok):
         found.append("GOVERNING_LAW")
     scope = sec.get("scope and term", "")
-    if "automatically" in scope:
+    if medium and "automatically" in scope:
         n = re.search(r"(\d+) days", scope)
-        if n and int(n.group(1)) < MIN_RENEWAL_NOTICE:
+        if n and int(n.group(1)) < int(setting["renewal_notice_days"]):
             found.append("AUTO_RENEWAL")
     pay_txt = sec.get("fees and payment", "")
     for n, word in EN_WORDS.items():
         pay_txt = pay_txt.replace(f"{word} days", f"{n} days")
     pay = re.search(r"(\d+) days", pay_txt)
-    if pay and int(pay.group(1)) < MIN_PAYMENT_DAYS:
+    if pay and int(pay.group(1)) < int(setting["payment_days"]):
         found.append("PAYMENT_TERMS")
-    if c.category in DP_CATEGORIES and "data protection" not in text.lower():
+    if (medium and c.category in DP_CATEGORIES[setting["dp_categories"]]
+            and "data protection" not in text.lower()):
         found.append("DATA_PROTECTION")
-    if c.value > TFC_ABOVE and "convenience" not in sec.get("termination", ""):
+    if medium and c.value > int(setting["tfc_above"]) and "convenience" not in sec.get("termination", ""):
         found.append("TERMINATION_CONVENIENCE")
     if "each party" not in sec.get("indemnity", "").lower():
         found.append("INDEMNITY")
-    return [code for code in CODES if code in found]
+    return [code for code in codes_in_scope(setting) if code in found]
 
 
-def _reference(world: World, fast_track: bool = True) -> dict:
+def _as_read(world: World, c: Contract) -> Contract:
+    """The contract as the checklist reads it: an amendment marked agreed is applied, whatever its date."""
+    a = world.amendments.get(c.id)
+    return replace(c, **{a.clause: a.new}) if a is not None and a.status == "agreed" else c
+
+
+def _reference(world: World, setting: Setting, keep_fast_track: bool = True) -> dict:
     out = {}
     for c in world.contracts:
-        issues = [] if fast_track and c.value < FAST_TRACK_BELOW else keyword_issues(c)
-        out[c.id] = {"issues": issues, "decision": decide(issues)}
+        issues = [] if keep_fast_track and fast_track(c, setting) else keyword_issues(_as_read(world, c), setting)
+        out[c.id] = {"issues": issues, "decision": decide(issues, setting)}
     return out
 
 
@@ -888,17 +1220,17 @@ def _write(out_dir: Path, doc: dict) -> None:
     (out_dir / "review.json").write_text(json.dumps(doc, indent=2), encoding="utf-8")
 
 
-def reference_solution(world: World, out_dir: Path) -> None:
-    _write(out_dir, _reference(world))
+def reference_solution(world: World, out_dir: Path, setting: Setting) -> None:
+    _write(out_dir, _reference(world, setting))
 
 
-def baseline_solution(world: World, out_dir: Path) -> None:
+def baseline_solution(world: World, out_dir: Path, setting: Setting) -> None:
     """What the client does without a reviewer: sign every contract as it stands."""
     _write(out_dir, {c.id: {"issues": [], "decision": "sign"} for c in world.contracts})
 
 
-def violating_examples(world: World) -> dict:
-    ref = _reference(world)
+def violating_examples(world: World, setting: Setting) -> dict:
+    ref = _reference(world, setting)
 
     def mutate(fn):
         doc = json.loads(json.dumps(ref))
@@ -906,16 +1238,19 @@ def violating_examples(world: World) -> dict:
         return lambda out: _write(out, doc)
 
     def drop(doc):
-        cid = next(c.id for c in world.contracts if c.value >= FAST_TRACK_BELOW)
+        cid = next(c.id for c in world.contracts if not fast_track(c, setting))
         del doc[cid]
 
     def inconsistent(doc):
-        cid = next(k for k, v in doc.items() if v["decision"] == "negotiate")
+        cid = next(k for k, v in doc.items() if v["issues"])
         doc[cid]["decision"] = "sign"
 
     def review_small(doc):
-        c = next(c for c in world.contracts if c.value < FAST_TRACK_BELOW and c.truth)
-        doc[c.id] = {"issues": list(c.truth), "decision": decide(c.truth)}
+        c = next(c for c in world.contracts if fast_track(c, setting))
+        issues = true_issues(effective(world, c), setting) or ["PAYMENT_TERMS"]
+        doc[c.id] = {"issues": issues, "decision": decide(issues, setting)}
 
-    return {"all_contracts_reviewed": mutate(drop), "decision_consistency": mutate(inconsistent),
-            "small_contract_fast_track": mutate(review_small)}
+    out = {"all_contracts_reviewed": mutate(drop), "decision_consistency": mutate(inconsistent)}
+    if setting.at_least("hard"):
+        out["small_contract_fast_track"] = mutate(review_small)
+    return out

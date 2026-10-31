@@ -2,6 +2,9 @@
 
 Findings of the case review (F1–F9), with the verifier's verdicts and what this change did about each. The
 numbers are for seed 20261116 unless they say otherwise; "q" is normalized quality (baseline 0, reference 1).
+A later change replaced the three fixed rule sets A/B/C with rule seeds that draw each rule value from a pool
+(section "Rule seeds" at the end). It resolves F3 and moves the numbers of F1, F2, F4 and F5; the findings
+below keep the rule-set numbers they were written with.
 
 ### F1 — Utilization sits at the ceiling, so packing earns little (high, partly)
 
@@ -43,11 +46,16 @@ rule sets. After the F8 fix that envelope is invalid in 8 of 9 (`waitlist_priori
 lab places no longer excuse a skipped patient), but notice 4 + overbooking 1 + urgent 1 alone is still valid in
 6 of 9 at 0.988–1.000.
 
-**Status:** open — proposal: make the remaining numbers two-sided, so the most cautious value is also wrong
-(for example a maximum rebooking delay next to the notice period, or an urgent window with a triage earliest
-day so that "tomorrow" is not always right). Generate some urgent requests that need an interpreter or a test,
-or that arrive when tomorrow's reserve is already used, so `urgent_days` binds. Add the envelope program to
-validate-case's distinctness check and require it to be invalid or more than 3% worse.
+**Status:** fixed in the rule-seed change (section "Rule seeds"). Until then it was open with this proposal:
+make the remaining numbers two-sided, so the most cautious value is also wrong (for example a maximum
+rebooking delay next to the notice period, or an urgent window with a triage earliest day so that "tomorrow" is
+not always right). Generate some urgent requests that need an interpreter or a test, or that arrive when
+tomorrow's reserve is already used, so `urgent_days` binds. Add the envelope program to validate-case's
+distinctness check and require it to be invalid or more than 3% worse. What the change did instead: the two
+numbers that do not bind are no longer drawn (the urgent window is fixed at 2 working days, the notice period
+at 3), the reserve size becomes a two-sided drawn value, and the envelope is invalid in 8 of the 9 public
+settings and 14% worse in the ninth. validate-case's binding check (every drawn parameter must change the
+answer) replaces the distinctness check; the envelope itself is not a validator check.
 
 ### F4 — Bending the follow-up habit rewards the blanket bend, not the targeted one (high, confirmed)
 
@@ -60,7 +68,9 @@ to +0.024) never pays. One approval covers all the exceptions.
 **Status:** open — proposal: give some of the sick pediatrician's follow-ups a clinical deadline inside the
 absence, so that keeping the habit leaves them unseen and only a targeted, approved exception recovers the
 value. Add a small operations cost per follow-up seen by a doctor other than the previous one, so the blanket
-bend scores below the targeted one. Report bending in final-score terms in the README.
+bend scores below the targeted one. Report bending in final-score terms in the README. Rule seeds: unchanged
+in substance. On the public panel the blanket bend (302–330 exceptions) adds 2.0–5.7% and the targeted one
+(44–57) 0.0–1.4%.
 
 ### F5 — The visible history contradicts the hospital's rules (medium, confirmed)
 
@@ -73,7 +83,11 @@ initial book is rule-consistent. The pilot answer uses waitlist order `received`
 most 2 interpreted new-patient visits and 5 tests a day), or have an outpatient-office mail say that the
 reserve, interpreter rota and lab cap start on 9 November. Reword the lab cap as "fasting draw slots in the
 outpatient phlebotomy room" to make the small number plausible, and give the pilot an interim order that
-matches none of the rule sets (or say in the README that it matches B).
+matches none of the rule sets (or say in the README that it matches B). Rule seeds: still open. The pilot's
+order `received` is now one of the three candidates of `waitlist_order` (seed 64 draws it). The initial book
+holds 09:00 and 09:20 free, i.e. a two-slot reserve; when a seed draws three slots the requirements now say, in
+all five locales, that the office kept only two until 9 November and that the 09:40 appointments already
+booked stay where they are.
 
 ### F6 — Scoring targets the client is told never to reveal (medium, partly)
 
@@ -136,3 +150,77 @@ may want to check too.
 is never released for tomorrow's clinics and (hard) nothing is double-booked. Objective 0.806–0.812 in easy,
 0.787–0.799 in medium and 0.689–0.701 in hard, against the reference's 1.0 in every setting (valid in all nine
 settings and on world seeds 1–3).
+
+## Rule seeds
+
+The rule sets A/B/C (seven fixed values each) became six parameters a rule seed draws from pools, the same pool
+in every tier, so a seed is one hospital and the tier only adds rules:
+
+| Parameter | Pool | Was (A / B / C) |
+|---|---|---|
+| `closed_dept` | DERM, ORTH, PED | DERM / ORTH / PED |
+| `reserve_slots` (new) | 2, 3 | 2 (fixed: "the first two slots") |
+| `interpreters_per_day` | 2, 3, 4 | 3 / 4 / 2 |
+| `waitlist_order` | `urgency_received`, `received`, `urgency_earliest` | the same three |
+| `lab_cap` (medium+) | 5, 6, 7 | 6 / 5 / 7 |
+| `overbooked_per_session` (hard) | 1, 2, 3 | 2 / 1 / 2 |
+| `urgent_days` | dropped: fixed at 2 | 2 / 1 / 3 |
+| `move_notice_days` | dropped: fixed at 3 | 3 / 2 / 4 |
+
+The public panel is rule seeds 1, 10 and 64, which show every candidate of every pool at least once
+(README.md, "Parameters and rule seeds", has the drawn dicts and the numbers). `derive_params` words the reserve's
+slot times per locale (`reserve_times`); no `admissible` hook is needed, because the reference and the baseline
+are valid, and the reference's table is exact, in all 54 easy, 162 medium and 486 hard combinations on the
+public world. The data, the hidden period and `request.md` are unchanged; only the evaluator's view of the
+reserve and the texts changed.
+
+**Why two numbers are fixed.** `urgent_days` cannot bind: every urgent request is generated for a department
+with a free reserve slot tomorrow, so the reference books all 18 for tomorrow under any window (F3). Moving the
+window's lower end instead (a triage day) breaks the data: an urgent follow-up's doctor is chosen to have a
+morning session tomorrow, not later. `move_notice_days` binds only by accident. The reference changes
+appointments only for the two absences and the interpreter's absence and puts them in the next free slot,
+usually far past the notice. Across the combinations tried (the three old rule sets and twelve random ones,
+on world seeds 1–3 and the public one) a notice of 2 and one of 3 always gave the same answer; a reference
+built for 2 or 3 broke a notice of 4 on most of them, while one built for 4 was valid under 2 and 3 on about
+half; on world seed 2 no pair differed at all. Shifting the absence notices by a day (tried: D13's notice on
+Thursday, D05's on Thursday) made the pairs differ on some combinations and not on others. Both rules stay, with their number in the text and their clarification
+targets.
+
+**Why `reserve_slots` is new.** It is a value the client has to state ("the first two slots" was a hidden
+number in every rule set) and it binds both ways: a program that holds two slots when the rule is three books
+S/R requests into 09:40 two days ahead (`urgent_reserve`), one that holds three when the rule is two reports
+`held_back` and `free_slots` wrong every day (table accuracy 0.33, objective 0.85–0.86). With three slots the
+reference releases 160–190 reserve slots for tomorrow instead of about 100, and the baseline, which never
+releases them, drops to 0.73 / 0.68 / 0.56.
+
+**Binding and two-sidedness.** validate-case's binding check starts from `hard/s1`; every parameter binds with
+its first alternative, each time because the reference becomes invalid (README.md). Scoring each public
+setting's reference with one value changed (all tiers): `closed_dept` and `waitlist_order` are invalid in every
+pair; `interpreters_per_day` is invalid in every pair both ways (fewer: `interpreter_capacity`; more:
+`waitlist_priority`, since unused interpreters no longer excuse a skipped patient, the F8 fix); `lab_cap` is
+invalid when lowered and when raised from 5 in s1's and s64's combinations, but a lab of 5 under 6 or 7 in
+s10's combination and 6 under 7 stay valid at −0.1 to −0.2%; `overbooked_per_session` is invalid when lowered
+and valid but −0.6% (2 under 3) to −3.6% (1 under 3) when raised. So the overbooking cap and, partly, the lab cap
+remain one-sided: a cautious guess is valid and a little worse. Each public seed's reference is invalid under
+both other seeds of its tier.
+
+**F3's envelope.** 2 interpreters, lab 5, overbooking 1 and a reserve of three (the cautious end of every drawn
+number), with the setting's own clinic and order: invalid in 8 of 9 public settings (`waitlist_priority`) and
+0.857 in `easy/s1` (whose interpreters are 2; the extra reserve slot ruins the table).
+
+**Numbers that moved.** F1: the best valid variants (packing; in hard a 0.10 threshold) reach 1.001–1.012,
+q 1.003–1.058; the policy cap of 1.5 stays out of reach. F2 is sharper with a cap of one overbooked slot per
+session: in `hard/s64` overbooking every eligible follow-up (threshold 0) scores 1.009, above the reference
+(1.002 in `hard/s10`, 0.999 in `hard/s1`). F4: above. The baseline is valid in every combination and scores
+0.81 / 0.79 / 0.68–0.70 (easy / medium / hard) with a two-slot reserve and 0.73 / 0.68 / 0.56 with three.
+
+**Tests.** `tests/test_transforms.py` pinned the old panel (1, 2, 3) and rule set A's dermatology closure in
+easy; it now checks the panel (1, 10, 64) and uses `easy/s64` (Dermatology) next to `hard/s3`, a private seed
+that still draws Pediatrics and two overbooked slots.
+
+**Conversion check.** An adversarial pass found the agent's view byte-identical in every locale across the three
+tiers, the public panel and private rule seeds 4–10; the reference valid at 1.0 and the baseline valid and below
+it (at most 0.823 of it) there on the public world and world seeds 1–3; every drawn parameter covered by a
+clarification target; and the README's panel numbers equal to the stored dataset. One README figure was
+corrected: the hard reference with one overbooked slot per session scores 0.976 under a cap of 2 and 0.964
+under 3 (not 0.98 for both).

@@ -1,0 +1,11 @@
+{
+  "params": {
+    "holiday_date": "none",
+    "min_display": 6,
+    "promo_cancelled": "none",
+    "promo_uplift": 1,
+    "short_weight": 1
+  },
+  "rule_seed": 3,
+  "tier": "easy"
+}

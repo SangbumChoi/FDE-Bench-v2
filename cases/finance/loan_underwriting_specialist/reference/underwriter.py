@@ -9,18 +9,23 @@ Each day:
     document corrections in hard);
   * decide every new application, and in hard every referred application whose corrected document arrived:
     delinquency -> decline; policy score under the cutoff -> decline; (hard) income discrepancy -> refer;
-    short job tenure -> refer (the habit); otherwise a candidate for min(requested, customer limit);
+    short job tenure -> refer (the habit); otherwise a candidate for up to min(requested, customer limit);
   * (hard) one approval per customer per day: the largest of a customer's same-day applications;
-  * approve candidates whose predicted expected profit (a logistic scorecard fitted on the history) is
-    positive, most profitable first, within the day's allowance: the daily cap and, from medium, the period
-    budget paced over the days left; planted twins (same application apart from protected attributes, two
-    customers) are one unit, so they get the same answer;
-  * (medium+) top up near-prime approvals until the cumulative near-prime share is above the quota;
+  * offer each candidate the amount, in steps of 250 up to that maximum, with the highest predicted expected
+    profit (a logistic scorecard fitted on the history: score, DSR, inquiries, history length, less than a year
+    in the job, and the steeper risk above a 30% DSR and below a score of 800), and approve the positive ones,
+    most profitable first, within the day's allowance: the daily cap and, from medium, the period budget paced
+    over the days left; planted twins (same application apart from protected attributes, two customers) are
+    one unit, so they get the same answer;
+  * (medium+) top up near-prime approvals (at the most their limit allows) until the cumulative near-prime
+    share is above the quota; when the day's near-prime demand is not enough, hold back the least profitable
+    prime approvals instead;
   * give each decline its reason code and report the closing limit table.
 
 config.json holds the client's rule parameters for the setting and the scorecard; a few switches exist only
 so the case can build programs that break one rule each, and the baseline (`first_come`: no scorecard, every
-eligible application offered the most its limit allows in order of arrival; `pace` null: no budget pacing).
+eligible application offered the most its limit allows in order of arrival; `pace` null: no budget pacing;
+`sizing` off). Without `features` the scorecard is the pilot program's older one (score, DSR, inquiries, history).
 """
 
 import json
@@ -41,6 +46,19 @@ def _installment(amount, apr):
 
 PER_1000 = round(_installment(1000, APR), 2)               # 33.17, as on the product sheet
 PER_1000_STRESSED = round(_installment(1000, STRESS_APR), 2)
+
+
+PILOT_FEATURES = ("score", "dsr", "inquiries", "history")     # the pilot program's older scorecard
+
+
+def scorecard_x(names, score_a, dsr, inquiries, history_months, months_in_job):
+    """The scorecard's inputs: an intercept and the named features (the case fits the same ones on the history)."""
+    f = {"score": (score_a - 760) / 100, "dsr": dsr, "inquiries": float(inquiries),
+         "history": math.log(max(history_months, 3) / 60),
+         "short_tenure": 1.0 if months_in_job < 12 else 0.0,            # less than a year in the job
+         "dsr_over_30": max(0.0, dsr - 0.30),                             # the burden's risk steepens above 30%
+         "score_under_800": max(0.0, (800 - score_a) / 100)}             # and the score's below 800
+    return [1.0] + [f[n] for n in names]
 
 
 def _service(debt):
@@ -135,8 +153,8 @@ class Underwriter:
         debts = self.debts(c, policy=False)
         dsr = (sum(_service(x) for x in debts) + 12.0 * _installment(total, APR)) / self.income(c, policy=False)
         b = c["bureau"]
-        x = [1.0, (b["bureau_a_score"] - 760) / 100, dsr, float(b["inquiries_6m"]),
-             math.log(max(b["credit_history_months"], 3) / 60)]
+        x = scorecard_x(self.cfg.get("features", PILOT_FEATURES), b["bureau_a_score"], dsr, b["inquiries_6m"],
+                        b["credit_history_months"], c["months_in_job"])
         z = sum(w * v for w, v in zip(self.cfg["beta"], x))
         return 1 / (1 + math.exp(-z))
 
@@ -205,11 +223,11 @@ class Underwriter:
         units = list(groups.values())
         today = {}
 
-        def offer(unit):
+        def offer(unit, sized=True):
             amt = min(min(a["requested_amount"], self.limit(self.cust[a["customer_id"]],
                                                             self.lent.get(a["customer_id"], 0)
                                                             + today.get(a["customer_id"], 0))) for a in unit)
-            if cfg.get("sizing") and amt >= MIN_AMOUNT:    # off in the reference: the most profitable amount
+            if sized and cfg.get("sizing") and amt >= MIN_AMOUNT:    # the most profitable amount (250 steps)
                 amt = max(range(amt, MIN_AMOUNT - 1, -250), key=lambda x: (value(unit, x), x))
             return amt
 
@@ -268,7 +286,7 @@ class Underwriter:
                     if id(u) not in approved and self.near_prime(self.cust[u[0]["customer_id"]])]
             while share() < target and pool:
                 u = pool[0]
-                amt = offer(u)
+                amt = offer(u, sized=False)        # a top-up is for the volume: the most the limit allows
                 if amt < MIN_AMOUNT:
                     pool.pop(0)
                     continue
@@ -284,6 +302,14 @@ class Underwriter:
                         break
                 room -= take(u, amt)
                 pool.pop(0)
+            # Too little near-prime demand today: hold back prime approvals (the least profitable first) rather
+            # than end the day under the quota itself and count on later days' near-prime demand (or budget).
+            floor = cfg["quota_pct"] / 100 + cfg.get("hold_margin", 0.002)
+            while cfg.get("quota_hold", True) and share() < floor:
+                victims = [v for v, _ in approved.values() if not self.near_prime(self.cust[v[0]["customer_id"]])]
+                if not victims:
+                    break
+                room += drop(min(victims, key=lambda v: (value(v, approved[id(v)][1]), v[0]["application_id"])))
 
         amounts = {a["application_id"]: amt for u, amt in approved.values() for a in u}
         for a in todo:

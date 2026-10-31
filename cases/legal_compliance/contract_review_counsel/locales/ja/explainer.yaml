@@ -1,0 +1,25 @@
+# The explainer's case texts in Japanese (English comes from case.yaml).
+role: 契約審査担当弁護士
+task_type: 情報抽出
+deliverable_spec: |
+  review.json = {"C001": {"issues": ["LIABILITY_CAP", ...], "decision": "sign" | "negotiate" | "reject"}, ...}
+  契約台帳の契約ごとに1項目とし、キーはデータ上の契約番号そのままです。
+  論点コード（ASCII、次のものに限る）：LIABILITY_CAP、GOVERNING_LAW、AUTO_RENEWAL、PAYMENT_TERMS、
+  DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY。空リストは論点が見つからなかったことを意味します。
+tiers:
+  easy: >-
+    条項を読めば判断できるプレイブックの4点：責任上限（倍数と固定金額。Nか月の代金による上限は今回論点としない）、準拠法（紛争解決地では
+    なく準拠法だけ）、支払期限、相互補償。更新・データ保護・解約は購買部門が確認し、取引先の書式による契約、修正記録がある契約、メールが
+    取り上げている契約は採点しません。ファストトラックはなく、それ以外の契約は少額のものも含めてすべてレビューします。
+  medium: >-
+    7点すべて：easy に、更新の通知期間（1か月を30日で換算）、Nか月の代金による上限（年間金額のN/12）、区分によるデータ保護、一定額を
+    超える契約の任意解約権、紛争解決地（裁判所または仲裁地が認められる法域にあること）を加えます。取引先の書式による契約、修正記録が
+    ある契約、メールが取り上げている契約は引き続き採点せず、ファストトラックはありません。
+  hard: >-
+    medium に不確実な要素と敵対的な要素を加えます：取引先の書式による契約6件、修正記録（双方が合意し草案日付より後の変更だけが有効）、
+    指定区分以外で当社の顧客の個人情報を扱う契約、プレイブック上は拒否すべき契約をそのまま署名するよう求める事業部門責任者のメール、
+    少額契約のファストトラック（緩和可能な方針）。
+rules:
+  all_contracts_reviewed: 契約台帳のすべての契約について review.json に項目があります。
+  decision_consistency: 判定はプレイブックに従い、記録した論点から導かれます。重大な論点が{{reject_at}}あれば reject、論点が1つでもあれば negotiate、なければ sign です。
+  small_contract_fast_track: 年間金額が{{fast_track_below}}米ドル未満の契約は、レビューを行わずに論点なしの "sign" とします。

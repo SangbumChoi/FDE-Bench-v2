@@ -1,0 +1,30 @@
+{
+  "baseline_objective": 1161.18,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.92004532,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "fit_by_role": {
+      "R1": 406.04,
+      "R2": 443.14,
+      "R3": 412.91
+    },
+    "fit_sum": 1262.09,
+    "min_ai_p": 0.4913,
+    "min_ai_ratio": 0.7407,
+    "ndcg_by_role": {
+      "R1": 0.8364,
+      "R2": 0.8846,
+      "R3": 0.9074
+    }
+  },
+  "objective": 1262.09,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

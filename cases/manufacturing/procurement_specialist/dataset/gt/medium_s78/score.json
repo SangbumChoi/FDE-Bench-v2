@@ -1,0 +1,29 @@
+{
+  "baseline_objective": 504905823.23999995,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.94945814,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "backlog_krw": 0,
+    "backlog_unit_weeks": {},
+    "holding_krw": 6380480,
+    "order_lines": 111,
+    "purchase_krw": 473006464,
+    "safety_shortfall_krw": 0,
+    "scrap_krw": 0,
+    "spend_by_month": {
+      "2026-11": 106505834,
+      "2026-12": 327433220,
+      "2027-01": 39067410
+    }
+  },
+  "objective": 479386944.53999996,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FDE-Bench v2 — 已构建的案例</title><style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--muted:#6b6a65;--line:#e4e1d8;--card:#ffffff;--accent:#2f5d8a;--code:#f2efe8;
+--phys:#8a2f2f;--cont:#8a6a1f;--biz:#2f6d4a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#161615;--fg:#ecebe6;--muted:#a3a198;
+--line:#33322e;--card:#1e1e1c;--accent:#8ab4e0;--code:#262623;--phys:#e08a8a;--cont:#e0c27a;--biz:#86d0a4}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);
+font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans","Noto Sans CJK KR",sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 80px}
+header{border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:8px}
+.eyebrow{text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--muted);margin:0}
+h1{font-size:28px;margin:4px 0}h2{font-size:21px;margin:36px 0 8px;padding-top:8px;border-top:1px solid var(--line)}
+h3{font-size:16px;margin:20px 0 6px}h4,h5,h6{font-size:15px;margin:16px 0 4px}
+.muted{color:var(--muted)}a{color:var(--accent)}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.92em}
+pre{background:var(--code);padding:12px;border-radius:8px;overflow:auto;font-size:13px;line-height:1.45}
+pre.tree{max-height:420px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:12px 0}
+.facts div{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+dt{font-size:12px;color:var(--muted)}dd{margin:2px 0 0}
+nav{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px}nav a{text-decoration:none}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;margin:6px 0;font-size:14px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--card)}
+details{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:6px 0}
+summary{cursor:pointer;font-weight:600}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;border:1px solid currentColor}
+.pill.physical{color:var(--phys)}.pill.contractual{color:var(--cont)}.pill.business_policy{color:var(--biz)}
+.legend{list-style:none;padding:0}.legend li{margin:3px 0}
+.controls{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}
+select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px}
+.doc{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 16px}
+.langs{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;margin:0 0 8px}
+.langs a{padding:2px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;font-size:13px}
+.langs a[aria-current]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+</style></head><body><main><header><nav class="langs" aria-label="语言"><a href="index.html" data-lang="en" hreflang="en">English</a><a href="index.ko.html" data-lang="ko" hreflang="ko">한국어</a><a href="index.zh.html" data-lang="zh" hreflang="zh" aria-current="page">中文</a><a href="index.ja.html" data-lang="ja" hreflang="ja">日本語</a><a href="index.es.html" data-lang="es" hreflang="es">Español</a></nav><p class="eyebrow">FDE-Bench v2</p><h1>已构建的案例</h1>
+<p class="muted">共 13 个案例。每个链接打开案例说明页：需求、设置、规则、隐藏需求、应问事项、保存的数据与答案、评审发现。</p></header>
+<section><div class="scroll"><table><thead><tr><th>领域</th><th>角色</th><th>案例 ID</th><th>交付物</th><th>设置</th><th>任务类型</th></tr></thead><tbody><tr><td>客户服务与运营</td><td><a href="customer_service/callcenter_workforce_planner/explainer.zh.html">呼叫中心人力排班规划师</a></td><td><code>customer_service/callcenter_workforce_planner</code></td><td>batch</td><td>3×3</td><td>组合优化</td></tr><tr><td>数据与知识工作</td><td><a href="data_knowledge/bi_data_analyst/explainer.zh.html">BI 数据分析师</a></td><td><code>data_knowledge/bi_data_analyst</code></td><td>batch</td><td>3×3</td><td>数据分析</td></tr><tr><td>数据与知识工作</td><td><a href="data_knowledge/multilingual_corpus_curator/explainer.zh.html">多语种语料库管理员</a></td><td><code>data_knowledge/multilingual_corpus_curator</code></td><td>program</td><td>3×3</td><td>数据工程</td></tr><tr><td>能源与公用事业</td><td><a href="energy_utilities/battery_dispatch_operator/explainer.zh.html">储能电池调度员</a></td><td><code>energy_utilities/battery_dispatch_operator</code></td><td>batch</td><td>3×3</td><td>组合优化</td></tr><tr><td>金融与银行</td><td><a href="finance/loan_underwriting_specialist/explainer.zh.html">贷款审批专员</a></td><td><code>finance/loan_underwriting_specialist</code></td><td>program</td><td>3×3</td><td>决策程序</td></tr><tr><td>金融与银行</td><td><a href="finance/stock_trading_strategist/explainer.zh.html">股票交易策略师</a></td><td><code>finance/stock_trading_strategist</code></td><td>program</td><td>3×3</td><td>策略</td></tr><tr><td>医疗健康</td><td><a href="healthcare/hospital_appointment_scheduler/explainer.zh.html">医院预约专员</a></td><td><code>healthcare/hospital_appointment_scheduler</code></td><td>program</td><td>3×3</td><td>决策程序</td></tr><tr><td>法务与合规</td><td><a href="legal_compliance/contract_review_counsel/explainer.zh.html">合同审查法律顾问</a></td><td><code>legal_compliance/contract_review_counsel</code></td><td>batch</td><td>3×3</td><td>信息抽取</td></tr><tr><td>物流与交通</td><td><a href="logistics/bakery_delivery_dispatcher/explainer.zh.html">面包店配送调度员</a></td><td><code>logistics/bakery_delivery_dispatcher</code></td><td>batch</td><td>3×3</td><td>组合优化</td></tr><tr><td>制造与供应链</td><td><a href="manufacturing/procurement_specialist/explainer.zh.html">采购专员</a></td><td><code>manufacturing/procurement_specialist</code></td><td>batch</td><td>3×3</td><td>组合优化</td></tr><tr><td>人力资源</td><td><a href="people_hr/resume_screening_specialist/explainer.zh.html">简历筛选专员</a></td><td><code>people_hr/resume_screening_specialist</code></td><td>batch</td><td>3×3</td><td>排序</td></tr><tr><td>公共部门</td><td><a href="public_sector/benefits_eligibility_officer/explainer.zh.html">福利资格审核员</a></td><td><code>public_sector/benefits_eligibility_officer</code></td><td>batch</td><td>3×3</td><td>基于规则的决策</td></tr><tr><td>零售与电商</td><td><a href="retail/grocery_demand_forecaster/explainer.zh.html">生鲜超市需求预测员</a></td><td><code>retail/grocery_demand_forecaster</code></td><td>batch</td><td>3×3</td><td>机器学习</td></tr></tbody></table></div></section></main><script>
+(function(){var here=document.documentElement.lang,links=document.querySelectorAll('.langs a[data-lang]');
+links.forEach(function(a){a.addEventListener('click',function(){try{localStorage.setItem('fde-lang',a.dataset.lang)}catch(e){}})});
+var want=null;try{want=localStorage.getItem('fde-lang')}catch(e){}
+if(want&&want!==here){links.forEach(function(a){if(a.dataset.lang===want)location.replace(a.href+location.hash)})}})();
+</script></body></html>

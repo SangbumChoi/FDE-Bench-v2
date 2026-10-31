@@ -3,7 +3,62 @@ role: Battery Dispatch Operator
 task_type: Combinatorial Optimization
 field: energy_utilities
 seed: 20270322
-objective: maximize          # battery profit in EUR at true prices: extra site export revenue vs solar alone - grid import cost - 5 EUR/MWh throughput
+objective: maximize          # battery profit in EUR at true prices: extra site export revenue vs solar alone - grid import cost
+                             # - degradation per MWh throughput (medium and hard)
+tiers:
+  easy: >-
+    The core problem: the warranty SOC window, the power limits, the per-direction efficiency, the end-of-week state
+    of charge, the amended export cap (lower than the agreement on file) and the clock change. This round the site may
+    import from the grid at any hour, there is no evening reserve and degradation is not charged.
+  medium: >-
+    Easy plus the client's operating rules: grid import only in the off-peak window, the evening emergency reserve
+    (share and hours) and a degradation cost per MWh of throughput.
+  hard: >-
+    Medium plus three dated notices: the substation works end early, so the agreement's 30 MW applies again from a
+    given day; the DSO limits site export on one evening; and on one day the battery is offline from 08:00 to 20:00
+    for inverter maintenance. The trading desk also pushes to spend the reserve on the evening peaks, which only an
+    approved exception allows.
+params:                      # the client's operating values; a rule seed draws each one on its own
+  soc_window:                # warranty state-of-charge window, % of 40 MWh
+    values: ["10-90", "15-85", "5-95"]
+  efficiency:                # one-way efficiency on charge / on discharge, % (round trip about 84.6% in every case)
+    values: ["92/92", "95/89", "90/94"]
+  end_soc:                   # minimum state of charge after the last quarter, %; the week starts at 50%
+    values: [50, 40, 30]
+  export_cap:                # amended export limit while the substation works last, MW (the agreement says 30)
+    values: [18, 15, 12]
+  import_window:             # grid import only in quarters starting in this window, local hours
+    values: {easy: [any], medium: ["00-06", "01-05", "02-08"], hard: ["00-06", "01-05", "02-08"]}
+  reserve_pct:               # evening emergency reserve, % of 40 MWh
+    values: {easy: [0], medium: [20, 30, 15], hard: [20, 30, 15]}
+  reserve_window:            # the reserve's hours, local
+    values: {easy: ["none"], medium: ["17-21", "18-22", "16-20"], hard: ["17-21", "18-22", "16-20"]}
+  degradation:               # EUR per MWh of charge plus discharge at the meter
+    values: {easy: [0], medium: [5, 15, 25], hard: [5, 15, 25]}
+  works_end:                 # the substation works end: from this day 00:00 the agreement's 30 MW applies again
+    values: {easy: ["none"], medium: ["none"], hard: ["2027-03-26", "2027-03-24", "2027-03-27"]}
+    labels:
+      none: {zh: 无, en: none, ko: 없음, ja: なし, es: ninguno}
+      "2027-03-24": {zh: 3月24日（周三）, en: Wednesday 24 March, ko: 3월 24일(수), ja: 3月24日（水）, es: miércoles 24 de marzo}
+      "2027-03-26": {zh: 3月26日（周五）, en: Friday 26 March, ko: 3월 26일(금), ja: 3月26日（金）, es: viernes 26 de marzo}
+      "2027-03-27": {zh: 3月27日（周六）, en: Saturday 27 March, ko: 3월 27일(토), ja: 3月27日（土）, es: sábado 27 de marzo}
+  dso_day:                   # the DSO limits site export on this day, 18:00-21:00
+    values: {easy: ["none"], medium: ["none"], hard: ["2027-03-23", "2027-03-25", "2027-03-27"]}
+    labels:
+      none: {zh: 无, en: none, ko: 없음, ja: なし, es: ninguno}
+      "2027-03-23": {zh: 3月23日（周二）, en: Tuesday 23 March, ko: 3월 23일(화), ja: 3月23日（火）, es: martes 23 de marzo}
+      "2027-03-25": {zh: 3月25日（周四）, en: Thursday 25 March, ko: 3월 25일(목), ja: 3月25日（木）, es: jueves 25 de marzo}
+      "2027-03-27": {zh: 3月27日（周六）, en: Saturday 27 March, ko: 3월 27일(토), ja: 3月27日（土）, es: sábado 27 de marzo}
+  dso_mw:                    # the DSO's export limit that evening, MW
+    values: {easy: ["none"], medium: ["none"], hard: [10, 5, 8]}
+  outage_day:                # inverter maintenance: the battery is offline on this day, 08:00-20:00
+    values: {easy: ["none"], medium: ["none"], hard: ["2027-03-24", "2027-03-22", "2027-03-26"]}
+    labels:
+      none: {zh: 无, en: none, ko: 없음, ja: なし, es: ninguno}
+      "2027-03-22": {zh: 3月22日（周一）, en: Monday 22 March, ko: 3월 22일(월), ja: 3月22日（月）, es: lunes 22 de marzo}
+      "2027-03-24": {zh: 3月24日（周三）, en: Wednesday 24 March, ko: 3월 24일(수), ja: 3月24日（水）, es: miércoles 24 de marzo}
+      "2027-03-26": {zh: 3月26日（周五）, en: Friday 26 March, ko: 3월 26일(금), ja: 3月26日（金）, es: viernes 26 de marzo}
+rule_seeds: [141, 70, 334]
 deliverables: [dispatch.csv]
 deliverable_spec: |
   dispatch.csv, ASCII header: timestamp,charge_mw,discharge_mw
@@ -13,19 +68,29 @@ deliverable_spec: |
 rules:
   - id: soc_limits
     class: physical
-    description: State of charge stays between 10% and 90% of 40 MWh at all times (92% efficiency on charge and on discharge).
+    description: State of charge stays between {{soc_min}}% and {{soc_max}}% of 40 MWh at all times ({{eta_charge_pct}}% efficiency on charge, {{eta_discharge_pct}}% on discharge).
   - id: power_limits
     class: physical
     description: Charge and discharge are each between 0 and 20 MW, never both in the same interval; grid import at most 20 MW.
   - id: export_cap
     class: contractual
-    description: While the battery discharges, site export (solar + discharge - charge) must not exceed the amended 25 MW cap.
+    description: While the substation works last, site export (solar + discharge - charge) must not exceed the amended {{export_cap}} MW cap whenever the battery discharges.
   - id: grid_charging_window
     class: contractual
-    description: The site may import from the grid (charging beyond solar output) only in intervals starting 00:00-05:45 local time.
+    tiers: [medium, hard]
+    description: The site may import from the grid (charging beyond solar output) only in intervals starting {{import_from}}-{{import_last}} local time.
   - id: end_soc
     class: contractual
-    description: The week starts at 50% state of charge and must end at no less than 50%.
-  - id: reserve_20pct
+    description: The week starts at 50% state of charge and must end at no less than {{end_soc}}%.
+  - id: evening_reserve
     class: business_policy
-    description: State of charge is at least 20% at every moment between 17:00 and 21:00 local time each day.
+    tiers: [medium, hard]
+    description: State of charge is at least {{reserve_pct}}% at every moment between {{reserve_from}} and {{reserve_to}} local time each day.
+  - id: dso_limit
+    class: contractual
+    tiers: [hard]
+    description: On {{dso_day}} from 18:00 to 21:00, while the battery discharges, site export must not exceed the DSO's {{dso_mw}} MW limit.
+  - id: maintenance_outage
+    class: physical
+    tiers: [hard]
+    description: The battery neither charges nor discharges on {{outage_day}} from 08:00 to 20:00 (inverter maintenance).

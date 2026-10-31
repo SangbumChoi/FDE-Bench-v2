@@ -1,20 +1,38 @@
 - id: liability_cap
-  text: 責任上限は契約台帳の年間金額_USDの1倍以上が必要です。直近Nか月の代金による上限は年間金額のN/12と換算し、ちょうど同額なら問題なく、上限なしの契約も問題ありません。
+  text: 責任上限は契約台帳の年間金額_USDの{{cap_multiple}}倍以上が必要です（固定金額は年間金額の{{cap_multiple}}倍と比較し、年間代金の倍数は{{cap_multiple}}以上）。最低基準とちょうど同じなら問題なく、上限なしの契約も問題ありません。
+- id: period_caps_out_of_round
+  text: 直近Nか月の代金による上限は別の取り組みで差し替え中のため、今回は論点として記録しません。
+- id: period_caps
+  text: 直近Nか月の代金による上限は年間金額のN/12と換算します。
 - id: governing_law
-  text: 準拠法はスイス法またはシンガポール法である必要があり、裁判所や仲裁地ではなく準拠法だけで判断します。
+  text: 準拠法は{{governing_law}}である必要があります。
+- id: law_not_forum
+  text: 今回は準拠法だけで判断し、裁判所や仲裁地は見ません。
+- id: dispute_forum
+  text: 管轄裁判所または仲裁地も認められる法域にある必要があります。準拠法は認められても紛争解決地が別の場所なら論点で、紛争解決地は認められても準拠法が別の場合も論点です。
 - id: auto_renewal
-  text: 自動的に更新される契約は書き方にかかわらず更新拒絶の通知期間が60日以上必要で、1か月は30日として扱います。満了で終了する契約は問題ありません。
+  text: 自動的に更新される契約は書き方にかかわらず更新拒絶の通知期間が{{renewal_notice_days}}日以上必要で、1か月は30日として扱います。満了で終了する契約は問題ありません。
 - id: payment_terms
-  text: 支払期限は請求書の受領から45日以上必要です。
+  text: 支払期限は請求書の受領から{{payment_days}}日以上必要です。
 - id: data_protection
-  text: 調達区分が IT・データサービス の契約には、見出しを問わず個人情報の取扱いに関する条項が必要で、ほかの区分では不要です。
+  text: 調達区分が {{dp_categories}} の契約には、見出しを問わず個人情報の取扱いに関する条項が必要です。
+- id: customer_personal_data
+  text: ほかの区分の契約でも、取引先がその契約のもとで当社の顧客の個人情報を扱う場合（顧客宅への配送、顧客への書簡）にはデータ保護条項が必要で、そのことは契約の目的条項に書かれています。
 - id: termination_convenience
-  text: 年間金額が150,000米ドルを超える契約では、当社がいつでも理由なく解約できる必要があり、違反による解除だけでは足りません。
+  text: 年間金額が{{tfc_above}}米ドルを超える契約では、当社がいつでも理由なく解約できる必要があり、違反による解除だけでは足りません。
 - id: indemnity_mutual
   text: 補償は相互的である必要があり、当社だけが取引先を補償する条項は論点です。
 - id: issue_codes
   text: 満たしていない基準ごとに該当するコードで論点を1つ記録し、コードは LIABILITY_CAP、GOVERNING_LAW、AUTO_RENEWAL、PAYMENT_TERMS、DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY です。
+- id: round_points
+  text: 今回は LIABILITY_CAP、GOVERNING_LAW、PAYMENT_TERMS、INDEMNITY だけを確認します。更新・データ保護・解約は購買部門が確認し、ほかのコードは反映しません。
+- id: round_contracts
+  text: 取引先の書式による契約、修正記録がある契約、メールが取り上げている契約は今回購買部門が扱います。項目は必要ですが結果は反映しません。それ以外の契約は少額のものも含めてすべてレビューします。
 - id: decision_rule
-  text: LIABILITY_CAP、DATA_PROTECTION、INDEMNITY は重大な論点で、重大な論点が2つ以上あれば reject、論点が1つでもあれば negotiate、なければ sign です。
+  text: 重大な論点は LIABILITY_CAP と INDEMNITY で、データ保護を確認する場合は DATA_PROTECTION も含みます。重大な論点が{{reject_at}}あれば reject、論点が1つでもあれば negotiate、なければ sign です。
+- id: amendments
+  text: 双方が合意し、日付が契約の草案日付より後の変更だけが有効です。乙が提案して当社が承諾していない変更や、草案日付より前の変更は無効です。
+- id: requests_to_sign
+  text: 事業部門の責任者がそのまま署名するよう依頼しても（CEOの承認があっても）レビューは変わらず、論点と判定はプレイブックに従います。
 - id: small_contract_fast_track
-  text: 年間金額20,000米ドル未満の契約はレビューせず、論点なしの sign とします。
+  text: 年間金額{{fast_track_below}}米ドル未満の契約はレビューせず、論点なしの sign とします。

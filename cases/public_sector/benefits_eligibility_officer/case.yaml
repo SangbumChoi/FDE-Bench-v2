@@ -5,6 +5,70 @@ field: public_sector
 seed: 20261026
 objective: minimize          # total |monthly_amount - true entitlement| + 400 per wrong eligibility decision
                              # + 100 per ineligible household denied with the wrong reason code
+tiers:
+  easy: >-
+    The core calculation: who counts in the household, the residency period, this year's uprating of last year's
+    table, the need (standard amount plus rent up to the housing maximum), the earned-income disregard, the renewal
+    practice and the reason codes. The intake desk did the asset checks this round, the disability supplement is
+    paid by another office, child support is not counted while the council reviews it, the budget cap is applied
+    afterwards by finance, and the reported changes and the correspondence are handled separately.
+  medium: >-
+    Easy plus the domain rules: the asset test (the home and the most valuable car exempt) with DENY_ASSETS, the
+    disability supplement, child support counted as income and the budget cap per household size. The reported
+    changes and the correspondence are still handled separately.
+  hard: >-
+    Medium plus the dated and adversarial parts: the finance circular that adds a winter heating supplement to the
+    need of applications dated from 1 October 2026, the changes households reported after applying (only those in
+    effect on the application date count), and two letters asking for exceptions (a councillor asking to approve a
+    family that has not lived in the city long enough, an applicant asking that child support not be counted), which
+    change nothing.
+params:                      # the scheme's figures; a rule seed draws each one from its pool
+  uprating:                  # this year's table = last year's + this percentage, rounded down to a multiple of 10
+    values: [3.2, 2.5, 4.0]
+    labels:
+      3.2: {zh: "3.2", en: "3.2", ko: "3.2", ja: "3.2", es: "3,2"}
+      2.5: {zh: "2.5", en: "2.5", ko: "2.5", ja: "2.5", es: "2,5"}
+      4.0: {zh: "4.0", en: "4.0", ko: "4.0", ja: "4.0", es: "4,0"}
+  earned_disregard:          # per earner: a flat amount of monthly earnings, and a share of the rest, are ignored
+    values: ["150_30", "100_20", "200_0"]
+    labels:
+      "150_30": {zh: 前150加其余部分的30%, en: the first 150 and 30% of the rest, ko: 처음 150과 나머지의 30%,
+               ja: 最初の150と残りの30%, es: los primeros 150 y el 30 % del resto}
+      "100_20": {zh: 前100加其余部分的20%, en: the first 100 and 20% of the rest, ko: 처음 100과 나머지의 20%,
+               ja: 最初の100と残りの20%, es: los primeros 100 y el 20 % del resto}
+      "200_0": {zh: 仅前200, en: the first 200 only, ko: 처음 200만, ja: 最初の200のみ, es: solo los primeros 200}
+  asset_limit:               # countable assets allowed: for one person, plus per additional member (medium, hard)
+    values: {easy: ["6000_3000"], medium: ["6000_3000", "5000_2500", "8000_2000"], hard: ["6000_3000", "5000_2500", "8000_2000"]}
+    labels:
+      "6000_3000": {zh: "6,000，每多一人加3,000", en: "6,000 plus 3,000 per additional member",
+                  ko: "6,000에 추가 1명당 3,000", ja: "6,000に1人増えるごとに3,000", es: "6.000 más 3.000 por miembro adicional"}
+      "5000_2500": {zh: "5,000，每多一人加2,500", en: "5,000 plus 2,500 per additional member",
+                  ko: "5,000에 추가 1명당 2,500", ja: "5,000に1人増えるごとに2,500", es: "5.000 más 2.500 por miembro adicional"}
+      "8000_2000": {zh: "8,000，每多一人加2,000", en: "8,000 plus 2,000 per additional member",
+                  ko: "8,000에 추가 1명당 2,000", ja: "8,000に1人増えるごとに2,000", es: "8.000 más 2.000 por miembro adicional"}
+  disability_supplement:     # added to the need per disabled member at the address (medium, hard)
+    values: {easy: [120], medium: [120, 100, 150], hard: [120, 100, 150]}
+  cap:                       # the budget-law cap on the monthly amount by household size, named by its 1-person value
+    values: {easy: [1050], medium: [1050, 980, 1150], hard: [1050, 980, 1150]}
+    labels:
+      1050: {zh: "1人1,050，2人1,450，3人1,800，4人2,100，5人2,350，6人及以上2,550",
+             en: "1,050 (1 person), 1,450 (2), 1,800 (3), 2,100 (4), 2,350 (5), 2,550 (6 or more)",
+             ko: "1인 1,050, 2인 1,450, 3인 1,800, 4인 2,100, 5인 2,350, 6인 이상 2,550",
+             ja: "1人 1,050、2人 1,450、3人 1,800、4人 2,100、5人 2,350、6人以上 2,550",
+             es: "1.050 (1 persona), 1.450 (2), 1.800 (3), 2.100 (4), 2.350 (5), 2.550 (6 o más)"}
+      980: {zh: "1人980，2人1,350，3人1,680，4人1,960，5人2,200，6人及以上2,400",
+            en: "980 (1 person), 1,350 (2), 1,680 (3), 1,960 (4), 2,200 (5), 2,400 (6 or more)",
+            ko: "1인 980, 2인 1,350, 3인 1,680, 4인 1,960, 5인 2,200, 6인 이상 2,400",
+            ja: "1人 980、2人 1,350、3人 1,680、4人 1,960、5人 2,200、6人以上 2,400",
+            es: "980 (1 persona), 1.350 (2), 1.680 (3), 1.960 (4), 2.200 (5), 2.400 (6 o más)"}
+      1150: {zh: "1人1,150，2人1,550，3人1,900，4人2,200，5人2,450，6人及以上2,650",
+             en: "1,150 (1 person), 1,550 (2), 1,900 (3), 2,200 (4), 2,450 (5), 2,650 (6 or more)",
+             ko: "1인 1,150, 2인 1,550, 3인 1,900, 4인 2,200, 5인 2,450, 6인 이상 2,650",
+             ja: "1人 1,150、2人 1,550、3人 1,900、4人 2,200、5人 2,450、6人以上 2,650",
+             es: "1.150 (1 persona), 1.550 (2), 1.900 (3), 2.200 (4), 2.450 (5), 2.650 (6 o más)"}
+  residency_days:            # days in the city on the application date (statutory)
+    values: [180, 90, 365]
+rule_seeds: [2, 31, 78]            # the public panel: together they draw every candidate of every pool
 deliverables: [determinations.csv]
 deliverable_spec: |
   determinations.csv with ASCII header household_id,eligible,monthly_amount,reason_code
@@ -15,13 +79,15 @@ deliverable_spec: |
 rules:
   - id: residency_requirement
     class: contractual
-    description: Only households resident in the city for at least 6 months on the application date may be approved (statutory condition).
+    description: Only households resident in the city for at least {{residency_days}} days on the application date may be approved (statutory condition).
   - id: asset_limit
     class: contractual
-    description: Households whose countable assets (excluding the home they live in and one car) exceed 6,000 plus 3,000 per additional household member may not be approved.
+    tiers: [medium, hard]
+    description: Households whose countable assets (excluding the home they live in and one car) exceed {{asset_base}} plus {{asset_extra}} per additional household member may not be approved.
   - id: amount_cap
     class: physical
-    description: No monthly amount exceeds this year's budget-law cap for the household size (1050 / 1450 / 1800 / 2100 / 2350 / 2550 for 1 / 2 / 3 / 4 / 5 / 6 or more people).
+    tiers: [medium, hard]
+    description: "No monthly amount exceeds this year's budget-law cap for the household size: {{cap}}."
   - id: reason_code_required
     class: contractual
     description: Every determination carries a reason code from the fixed list that matches the decision (an approval is RENEWAL for a renewal and APPROVED for a new application).

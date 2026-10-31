@@ -2,9 +2,9 @@
 # the client behaves, how clean the agent's copy of the data is and what happens
 # while it works. It is an experiment axis of its own, separate from difficulty:
 # the difficulty picks a case's content tier (easy / medium / hard) and the rule
-# set (A / B / C) picks its rule parameters, and neither changes anything the
-# agent sees, so within one engagement every difficulty gets the same prompt and
-# the same files.
+# seed draws its rule parameters, and neither changes anything the agent sees,
+# so within one engagement every difficulty gets the same prompt and the same
+# files.
 #
 # condition: what the agent gets up front
 #   full          request + complete requirements, nobody to ask
@@ -13,7 +13,7 @@
 #   hidden        request only, nobody to ask
 # persona: how the simulated client answers (see fdebench2/customer.py)
 
-standard:            # the default for difficulty and rule-set comparisons
+standard:            # the default for difficulty and rule-seed comparisons
   condition: interact_req
   persona: default
   noise: []

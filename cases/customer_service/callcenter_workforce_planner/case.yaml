@@ -3,7 +3,51 @@ role: Call-Center Workforce Planner
 task_type: Combinatorial Optimization
 field: customer_service
 seed: 20261109
-objective: minimize          # 40 x under-covered agent-slots + labor cost (5th full-time shift at 1.5x)
+objective: minimize          # under_weight x under-covered agent-slots + labor cost (medium, hard: a full-timer's
+                             # shift beyond the contract week at 1.5x)
+tiers:                       # one world: the same staff, forecast, leave file and team lead's note in every setting
+  easy: >-
+    The core staffing problem: one language per agent per shift (one of their skills), full-timers on 8-hour and
+    part-timers on 4-hour shifts within their weekly caps, at most one shift a day, approved leave (dates written
+    day/month/year, rejected requests are not leave), and the under-staffing weight that prices a missing agent
+    against labor cost. The Wednesday holiday, overtime pay, rest times and the new-hire pairing are out of scope
+    this round, and the agent in the team lead's note is back on Monday as the note says.
+  medium: >-
+    Easy plus the rest time between two shifts of an agent, the regional holiday on Wednesday 11 November (a
+    share of the forecast, rounded up), overtime beyond the full-time contract week at 1.5 times the rate, and
+    the new-hire buddy habit (a new hire is never alone on a language). The agent in the team lead's note is
+    back on Monday.
+  hard: >-
+    Medium plus a dated sick call: the team lead's note of Thursday asks to roster the agent it names as usual,
+    but the doctor's certificate the client received on Friday morning keeps that agent off sick for the first
+    days of the week; rostering them on one of those days breaks a rule.
+params:                      # the client's rules a rule seed draws (DESIGN.md, Settings)
+  under_weight:              # per missing agent per half-hour slot and language, in the units of the hourly rates
+    values: [15, 25, 40]
+  ft_week_hours:             # the full-time contract week (32 h = 4 shifts, 40 h = 5); one more shift as overtime
+    values: [32, 40]         # is the weekly cap (derived: ft_regular_shifts, ft_max_shifts)
+  holiday_factor:            # Wednesday 11 November's share of the forecast (medium, hard; easy: no cut)
+    values: {easy: [1.0], medium: [0.5, 0.6, 0.75], hard: [0.5, 0.6, 0.75]}
+    labels:
+      1.0: {zh: "100%", en: "100%", ko: "100%", ja: "100%", es: "100 %"}
+      0.5: {zh: "50%", en: "50%", ko: "50%", ja: "50%", es: "50 %"}
+      0.6: {zh: "60%", en: "60%", ko: "60%", ja: "60%", es: "60 %"}
+      0.75: {zh: "75%", en: "75%", ko: "75%", ja: "75%", es: "75 %"}
+  min_rest:                  # hours of rest between two shifts of an agent (medium, hard; easy: one shift a day)
+    values: {easy: [0], medium: [11, 13], hard: [11, 13]}
+  sick_until:                # last day off sick of the agent in the team lead's note (hard; easy, medium: back Monday)
+    values: {easy: ["2026-11-08"], medium: ["2026-11-08"], hard: ["2026-11-10", "2026-11-11", "2026-11-12"]}
+    labels:
+      "2026-11-08": {zh: 11月8日（周日）, en: Sunday 8 November, ko: 11월 8일(일), ja: 11月8日（日）,
+                     es: domingo 8 de noviembre}
+      "2026-11-10": {zh: 11月10日（周二）, en: Tuesday 10 November, ko: 11월 10일(화), ja: 11月10日（火）,
+                     es: martes 10 de noviembre}
+      "2026-11-11": {zh: 11月11日（周三）, en: Wednesday 11 November, ko: 11월 11일(수), ja: 11月11日（水）,
+                     es: miércoles 11 de noviembre}
+      "2026-11-12": {zh: 11月12日（周四）, en: Thursday 12 November, ko: 11월 12일(목), ja: 11月12日（木）,
+                     es: jueves 12 de noviembre}
+rule_seeds: [10, 2, 3]       # the public panel: every candidate of every pool appears; seed 10 first (the binding
+                             # check's setting, where every parameter changes the reference's validity or objective)
 deliverables: [roster.json]
 deliverable_spec: |
   roster.json = {"assignments": [{"agent": "<agent id, e.g. A01>", "day": "YYYY-MM-DD (2026-11-09 .. 2026-11-15)",
@@ -15,18 +59,28 @@ rules:
   - id: skill_valid
     class: physical
     description: An agent only takes calls in a language listed among their skills.
+  - id: one_shift_a_day
+    class: contractual
+    tiers: [easy]
+    description: An agent works at most one shift a day.
   - id: min_rest
-    class: physical
-    description: At least 11 hours between the end of one shift and the start of the agent's next shift (so at most one shift a day).
+    class: contractual
+    tiers: [medium, hard]
+    description: At least {{min_rest}} hours between the end of one shift and the start of the agent's next shift (so at most one shift a day).
   - id: shift_type
     class: contractual
     description: Full-timers work only 8-hour shifts, part-timers only 4-hour shifts.
   - id: max_shifts
     class: contractual
-    description: A full-timer works at most 5 shifts a week, a part-timer at most 3.
+    description: A full-timer works at most {{ft_max_shifts}} shifts a week, a part-timer at most 3.
   - id: leave_respected
     class: contractual
     description: Nobody is scheduled on a day of approved leave.
+  - id: sick_leave
+    class: contractual
+    tiers: [hard]
+    description: The agent in the team lead's note is not scheduled on any day up to and including {{sick_until}}, the last day of their doctor's certificate.
   - id: buddy_rule
     class: business_policy
+    tiers: [medium, hard]
     description: Whenever a new hire is on the phones, at least one non-new agent is on the same language at the same time.

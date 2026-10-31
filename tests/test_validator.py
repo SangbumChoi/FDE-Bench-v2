@@ -1,5 +1,6 @@
 """validate-case itself: a copied case passes, and each authoring slip planted in a copy is reported."""
 
+import html
 import shutil
 from pathlib import Path
 
@@ -13,24 +14,25 @@ from fdebench2.validate import Report, check_case, check_hash_seed, validate_cas
 
 REPO = Path(__file__).resolve().parents[1]
 FAST = "logistics/bakery_delivery_dispatcher"         # the quickest full validation
-SETTINGS = "manufacturing/procurement_specialist"     # rule-set parameters, setting blocks and a README
+SETTINGS = "manufacturing/procurement_specialist"     # rule parameters, setting blocks and a README
 
 # The reference with every van leaving 30 minutes earlier: still valid, but the drivers wait at the cafés.
 WORSE_BASELINE = '''
 
-def baseline_solution(world, out_dir):
-    routes = [{**r, "depart": _hhmm(max(DAY_START, int(r["depart"][:2]) * 60 + int(r["depart"][3:]) - 30))}
-              for r in world.plan]
+def baseline_solution(world, out_dir, setting):
+    rules = rules_of(setting)
+    routes = [{**r, "depart": _hhmm(max(rules.earliest(r["van"]), _minutes(r["depart"]) - 30))}
+              for r in _plan(world, rules)]
     (out_dir / "routes.json").write_text(json.dumps({"routes": routes}), encoding="utf-8")
 '''
 SAME_BASELINE = '''
 
-def baseline_solution(world, out_dir):
-    reference_solution(world, out_dir)
+def baseline_solution(world, out_dir, setting):
+    reference_solution(world, out_dir, setting)
 '''
 EMPTY_BASELINE = '''
 
-def baseline_solution(world, out_dir):
+def baseline_solution(world, out_dir, setting):
     pass
 '''
 
@@ -61,7 +63,7 @@ def test_name_that_does_not_match_the_data(tmp_path):
 
 def test_setting_marker_in_request(tmp_path):
     root = _copy(tmp_path, SETTINGS)
-    _append(root / "locales/en/request.md", "\n<!-- ruleset: A -->\nOnly in rule set A.\n<!-- /ruleset -->\n")
+    _append(root / "locales/en/request.md", "\n<!-- tier: hard -->\nOnly in the hard tier.\n<!-- /tier -->\n")
     assert "en/request.md: must be the same in every setting (no markers or parameters)" in validate_case(root)
 
 
@@ -72,10 +74,10 @@ def test_example_that_does_not_violate(tmp_path):
 _examples = violating_examples
 
 
-def violating_examples(world):
-    return {**_examples(world), "van_capacity": lambda out: reference_solution(world, out)}
+def violating_examples(world, setting):
+    return {**_examples(world, setting), "van_capacity": lambda out: reference_solution(world, out, setting)}
 ''')
-    assert "rule van_capacity: its example does not violate it (got [])" in validate_case(root)
+    assert any(p.endswith("rule van_capacity: its example does not violate it (got [])") for p in validate_case(root))
 
 
 def test_parameter_missing_from_one_locale(tmp_path):
@@ -122,7 +124,7 @@ def test_baseline_must_be_valid_and_worse(tmp_path, baseline, problem):
         write_page(root)
     report = check_case(root)
     if problem is None:
-        assert report.problems == [] and report.notes == ["baseline/reference objective: 1.188"]
+        assert report.problems == [] and report.notes[0].startswith("baseline/reference objective: easy/s5 ")
     else:
         assert any(problem in p for p in report.problems)
 
@@ -156,8 +158,12 @@ def test_review_findings_in_explainer(tmp_path):
     assert check_page(root) == ["explainer.html is out of date: run `fdebench2 explain-case` (or export-dataset)"]
     page = write_page(root).read_text(encoding="utf-8")
     assert '<section id="review">' in page and "C11 is the Clock Tower café in the texts only." in page
-    assert "Deliverable spec (shown to the extractor that reshapes the agent's files, not to the agent)" in page
+    assert ("Deliverable spec (shown to the extractor that reshapes the agent's files, not to the agent)"
+            in html.unescape(page))
     assert check_page(root) == []
+    # every language has its own page, its interface and the case's words in that language
+    ko = (root / "explainer.ko.html").read_text(encoding="utf-8")
+    assert '<html lang="ko">' in ko and "에이전트가 받는 요청" in ko and "베이커리" in ko
 
 
 @pytest.mark.parametrize("args, seeds", [([], [1, 2, 3]), (["--world-seeds", "7"], [7]), (["--world-seeds", ""], []),
@@ -182,7 +188,7 @@ def test_new_case_fails_until_filled(tmp_path):
 def test_rule_number_the_texts_never_state(tmp_path):
     root = _copy(tmp_path, FAST)
     path = root / "case.yaml"
-    path.write_text(path.read_text(encoding="utf-8").replace("at most 120 trays", "at most 93 trays"), encoding="utf-8")
+    path.write_text(path.read_text(encoding="utf-8").replace("racks hold 120", "racks hold 93"), encoding="utf-8")
     warnings = check_case(root).warnings
     assert any("van_capacity" in w and "says 93" in w for w in warnings)
     assert not any("says 120" in w for w in check_case(_copy(tmp_path / "b", FAST)).warnings)   # 120 is in vans.csv

@@ -1,0 +1,24 @@
+# The explainer's case texts in Japanese (English comes from case.yaml).
+role: 多言語コーパスキュレーター
+task_type: データエンジニアリング
+deliverable_spec: |
+  program/ ディレクトリに、organize(task) を定義した organize.py を置きます。task = {"corpus_dir": <data/corpus と
+  同じ構成のフォルダ>, "out_dir": <空のフォルダ>}。corpus_dir は読むだけで（決して変更しない）、書き込むのは out_dir の中だけです：
+    out_dir/library/...    1冊につき、その本の紹介文を収めた UTF-8 の .txt ファイル1つ（フォルダ構成と
+                           ファイル名の付け方は顧客の目録ルールに従う）
+    out_dir/_review/...    ライブラリに並べられない本の資料
+    out_dir/manifest.csv   ヘッダー source,status,path,reason。1冊につき1行（source = その本の corpus からの
+                           相対ファイルパス、";" 区切り）、スキップしたファイルごとにも1行。status は placed | review | skipped
+  顧客のドライブ全体（サンプルと同じ構成・同じ種類のファイルで約100冊）に対して、オフラインで1回実行されます。
+  Python 標準ライブラリのみ、最長5分です。
+tiers:
+  easy: '形式の整った本だけを採点します（100冊中約30冊）。1冊1ファイル、メタデータがそろっていて、UTF-8、年がふつうの4桁の数字の本です。ライブラリのパス、ファイル名、紹介文が正しくなければなりません。名前は40〜60文字で切ります。'
+  medium: 'easy に加えて、読める本すべて（約66冊）を採点します。古いエンコーディング（GB18030、CP949、Shift_JIS、CP1252）、元号をはじめとするさまざまな年の表記、全角やアクセントが分解された書名、パスに使えない文字、ローマ字表記の揺れのある著者名、複数の形式にある同じ本のコピーの統合、情報源の優先順位が加わります。名前は32〜50文字で切ります。ライブラリに紛れ込んだ余計なファイルは減点されます。'
+  hard: 'medium に加えて、例外（全100冊）を採点します。著者・書名・年・紹介文が欠けていて、別の情報源で補うか、理由コードを付けて確認に回すべき本、食い違う情報源、読めないスキャン、不要ファイル、zip アーカイブの中の本、複数の本を収めた目録 CSV が加わります。紹介文を作ってはいけません。著者のない本は今回の顧客の方針（確認に回すか、代替の著者名で並べるか）に従い、名前は24〜40文字で切ります。'
+rules:
+  utf8_output: 'library/ のすべてのファイルと manifest.csv は正しい UTF-8 です。'
+  safe_names: '出力するファイル名・フォルダ名は \ / : * ? " < > | や制御文字を含まず、. や .. ではなく、空白やピリオドで終わらず、255バイトを超えません。'
+  one_file_per_book: '1冊の本が library/ に持つファイルは最大1つです。別の形式やフォルダにある同じ本のコピーは、そのファイルにまとめます。'
+  review_reason: '一覧（manifest.csv）で status が review の行には、すべて理由コード UNREADABLE、NO_TITLE、NO_AUTHOR、NO_YEAR、NO_DESCRIPTION、CONFLICT のいずれかを付けます。'
+  no_fabrication: '情報源に紹介文のない本は library/ に置かず、どのライブラリファイルにも情報源から取った紹介文が入っています（空のもの、作った文や仮の文は不可）。'
+  missing_author_review: 'どの情報源にも著者のない本は、著者名「{{fallback_author}}」でライブラリに並べるのではなく、NO_AUTHOR を付けて _review/ に回します。'

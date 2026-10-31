@@ -1,12 +1,29 @@
 """Grocery daily demand forecast (original FDE-Bench v2 case).
 
 A regional grocery chain wants a 14-day daily forecast per store x item for
-ordering. The request only says "forecast what each store will sell"; the
-rules that decide validity and quality (censored sales on stockout days,
-returns logged as negative rows, a store closed on Sundays, the promotion plan
-for the horizon, a one-off public holiday inside the horizon, a unit change of
-one item, the display-stock floor for core items, WAPE per store) are in the
-requirements and must be asked for.
+ordering. The request only says "forecast what each store will sell"; what
+the forecast is judged against and which effects belong in it are in the
+hidden requirements and must be asked for.
+
+The case has settings (DESIGN.md, Settings): one world and the same data in
+every setting, three tiers and five rule parameters a rule seed draws.
+  easy    the base forecast: promotions and the one-off holiday are added by the
+          category team, so the truth is base sales (no promotion, no holiday);
+          judged against till sales net of returns; bread rolls (I07) not judged
+  medium  easy plus the promotion plan (with the drawn flyer uplift) and the
+          one-off holiday on the drawn date; still till sales, I07 not judged
+  hard    medium plus customer demand instead of till sales (stockout days are
+          censored, returns are not demand), I07 judged (its unit change), and a
+          dated revision: on 30 October the drawn category's promotions were
+          cancelled after promo_plan.csv was exported
+Parameters (case.yaml params:): min_display (the display floor of core items),
+holiday_date, promo_uplift (the flyer's multiple of the historical promotion
+lift), promo_cancelled (hard) and short_weight (a unit forecast too low counts
+that many times a unit too high in the store's WAPE).
+
+The horizon's truth is drawn once per world with common random numbers (day
+noise, a Poisson quantile, the stockout and return draws per cell), so each
+setting's truth is the same realization under that setting's mean.
 """
 
 from __future__ import annotations
@@ -16,8 +33,12 @@ import math
 import random
 from dataclasses import dataclass, field
 from pathlib import Path
+from statistics import NormalDist
+
+import yaml
 
 from fdebench2.casekit import Fatal, labels, number, read_csv, write_csv
+from fdebench2.cases import TIERS, Setting, param_pools
 
 # ── world ────────────────────────────────────────────────────────────────────
 
@@ -26,10 +47,11 @@ HORIZON_START = dt.date(2026, 11, 2)     # Monday
 HORIZON_DAYS = 14
 UNIT_CHANGE = dt.date(2026, 6, 1)        # I07 recorded per piece before this date, per 6-pack from it
 PACK = 6
-HORIZON_HOLIDAY = dt.date(2026, 11, 11)  # one-off regional holiday, known only to the client
 CLOSED_STORE, CLOSED_WEEKDAY = "S4", 6   # S4 closes on Sundays
-MIN_DISPLAY = 6.0
 CORE_CATEGORIES = ("produce", "dairy")
+UNIT_CHANGE_ITEM = "I07"                 # judged only in hard (easy, medium: the bakery orders it itself)
+RETURN_RATE = 0.03                       # share of store x item x days with a customer return row
+PROMO_STOCKOUT = 0.20                    # extra stockout probability on promotion days
 
 STORES = {"S1": (1.30, 0.03), "S2": (1.00, 0.08), "S3": (0.85, 0.00), "S4": (0.60, 0.02), "S5": (1.10, -0.05)}
 # item id: (category, base units/day at store scale 1, base stockout probability)
@@ -54,6 +76,10 @@ HIST_HOLIDAYS = [  # (date, holiday key); none falls in the horizon
     ("2026-04-03", "spring"), ("2026-05-01", "labour"), ("2026-08-15", "summer"), ("2026-10-12", "autumn"),
 ]
 NOISE = 0.07
+_META = yaml.safe_load(Path(__file__).with_name("case.yaml").read_text(encoding="utf-8"))
+# the categories a hard setting can draw for the 30 October cancellation (case.yaml promo_cancelled)
+CANCELLABLE = tuple(sorted({str(v) for pool in param_pools(_META, TIERS)["promo_cancelled"].values() for v in pool}
+                           - {"none"}))
 
 
 @dataclass
@@ -61,7 +87,10 @@ class World:
     history: list[tuple] = field(default_factory=list)       # (date, store, item, units, promo_pct, stockout)
     holidays: list[tuple[str, str]] = field(default_factory=list)
     promo_plan: list[tuple] = field(default_factory=list)    # (store, item, start, end, pct) in the horizon
-    truth: dict[tuple[str, str, str], float] = field(default_factory=dict)  # (store, item, date) -> demand (packs)
+    # (store, item, date) -> the cell's draws: (day noise, demand quantile, stockout draw, share of demand sold
+    # on a stockout day, return draw, units returned); the truth of a setting is computed from them
+    draws: dict[tuple[str, str, str], tuple] = field(default_factory=dict)
+    cache: dict = field(default_factory=dict, repr=False, compare=False)   # truths and fitted models
 
     @property
     def horizon(self) -> list[dt.date]:
@@ -84,14 +113,33 @@ def _poisson(rng: random.Random, lam: float) -> int:
     return k
 
 
-def _mean(store: str, item: str, day: dt.date, promo: int, holiday: bool) -> float:
+_NORMAL = NormalDist()
+
+
+def _poisson_quantile(lam: float, u: float) -> int:
+    """The u-quantile of Poisson(lam) (a normal approximation from 30 on, as in _poisson)."""
+    if lam <= 0:
+        return 0
+    u = min(max(u, 1e-12), 1 - 1e-12)
+    if lam >= 30:
+        return max(0, round(lam + math.sqrt(lam) * _NORMAL.inv_cdf(u)))
+    k, p = 0, math.exp(-lam)
+    cdf = p
+    while cdf < u:
+        k += 1
+        p *= lam / k
+        cdf += p
+    return k
+
+
+def _mean(store: str, item: str, day: dt.date, promo: int, holiday: bool, uplift: float = 1.0) -> float:
     cat, base, _ = ITEMS[item]
     scale, trend = STORES[store]
     amp, peak = SEASON[cat]
     years = (day - HIST_START).days / 365.0
     m = base * scale * (1 + trend * years) * WEEKDAY[cat][day.weekday()]
     m *= 1 + amp * math.cos(2 * math.pi * (day.timetuple().tm_yday - peak) / 365.0)
-    m *= 1 + PROMO_ELASTICITY[cat] * promo / 100.0
+    m *= 1 + uplift * PROMO_ELASTICITY[cat] * promo / 100.0     # a flyer (uplift > 1) multiplies the extra sales
     if holiday:
         m *= HOLIDAY_EFFECT[cat]
     return m
@@ -119,6 +167,7 @@ def build_world(seed: int) -> World:
         w.promo_plan.append((s, i, HORIZON_START + dt.timedelta(days=start), HORIZON_START + dt.timedelta(days=end),
                              rng.choice([10, 20, 30])))
     w.promo_plan.sort(key=lambda p: (p[2], p[0], p[1]))
+    _cover_cancellable(w, seed)
 
     for t in range(n_hist):
         day = HIST_START + dt.timedelta(days=t)
@@ -131,20 +180,113 @@ def build_world(seed: int) -> World:
                 mean = _mean(s, i, day, pct, ds in hol) * math.exp(rng.gauss(0, NOISE))
                 pieces = i == "I07" and day < UNIT_CHANGE
                 demand = _poisson(rng, mean * (PACK if pieces else 1))
-                p_out = ITEMS[i][2] + (0.20 if pct else 0.0)
+                p_out = ITEMS[i][2] + (PROMO_STOCKOUT if pct else 0.0)
                 stockout = demand > 0 and rng.random() < p_out
                 units = int(demand * rng.uniform(0.3, 0.85)) if stockout else demand
                 w.history.append((ds, s, i, units, pct, stockout))
-                if rng.random() < 0.03:
+                if rng.random() < RETURN_RATE:
                     w.history.append((ds, s, i, -rng.randint(1, PACK if pieces else 2), pct, False))
 
+    # The horizon: one set of draws per cell, shared by every setting (common random numbers).
     for day in w.horizon:
         for s in STORES:
             for i in ITEMS:
-                pct = next((p[4] for p in w.promo_plan if p[0] == s and p[1] == i and p[2] <= day <= p[3]), 0)
-                mean = _mean(s, i, day, pct, day == HORIZON_HOLIDAY) * math.exp(rng.gauss(0, NOISE))
-                w.truth[(s, i, day.isoformat())] = 0.0 if is_closed(s, day) else float(_poisson(rng, mean))
+                w.draws[(s, i, day.isoformat())] = (rng.gauss(0, NOISE), rng.random(), rng.random(),
+                                                    rng.uniform(0.3, 0.85), rng.random(), rng.randint(1, 2))
     return w
+
+
+def _cover_cancellable(w: World, seed: int) -> None:
+    """Every category the 30 October revision can cancel has a promotion in the plan, so that the cancellation a
+    hard setting draws always removes something. A plan that lacks one gives up a promotion of its most promoted
+    category (same store, dates and discount) to an item of the missing category. A separate random stream: plans
+    that already cover every such category, the stored world's and world seeds 1-3 among them, stay as they are."""
+    rng = random.Random(f"plan|{seed}")
+    for cat in CANCELLABLE:
+        if any(ITEMS[i][0] == cat for _, i, _, _, _ in w.promo_plan):
+            continue
+        counts: dict[str, int] = {}
+        for _, i, _, _, _ in w.promo_plan:
+            counts[ITEMS[i][0]] = counts.get(ITEMS[i][0], 0) + 1
+        donor = max(sorted(counts), key=lambda c: counts[c])
+        k = rng.choice([n for n, p in enumerate(w.promo_plan) if ITEMS[p[1]][0] == donor])
+        s, _, start, end, pct = w.promo_plan[k]
+        item = rng.choice([i for i in ITEMS if ITEMS[i][0] == cat])
+        w.promo_plan[k] = (s, item, start, end, pct)
+    w.promo_plan.sort(key=lambda p: (p[2], p[0], p[1]))
+
+
+# ── the setting's rules and truth ────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class Rules:
+    """What one setting asks for, read from its Setting."""
+
+    tier: str
+    floor: float                       # min_display: core items' floor on open days
+    holiday: dt.date | None            # the one-off holiday (medium, hard)
+    promos: bool                       # the promotion plan is in the forecast (medium, hard)
+    uplift: float                      # the flyer's multiple of a past promotion's extra sales
+    cancelled: str | None              # the category whose promotions were cancelled on 30 October (hard)
+    short_weight: float                # a unit forecast too low counts this many times a unit too high
+    demand: bool                       # hard: customer demand; easy, medium: till sales net of returns
+
+    @property
+    def scored_items(self) -> tuple[str, ...]:
+        return tuple(i for i in ITEMS if self.demand or i != UNIT_CHANGE_ITEM)
+
+    @property
+    def quantile(self) -> float:
+        """The share of outcomes the best forecast should cover: a unit short costs short_weight units over."""
+        return self.short_weight / (1.0 + self.short_weight)
+
+
+def rules_of(setting: Setting) -> Rules:
+    p = setting.params
+    medium = setting.at_least("medium")
+    hard = setting.at_least("hard")
+    holiday = str(p["holiday_date"])
+    cancelled = str(p["promo_cancelled"])
+    return Rules(tier=setting.tier, floor=float(p["min_display"]),
+                 holiday=dt.date.fromisoformat(holiday) if medium and holiday != "none" else None,
+                 promos=medium, uplift=float(p["promo_uplift"]) if medium else 1.0,
+                 cancelled=cancelled if hard and cancelled != "none" else None,
+                 short_weight=float(p["short_weight"]), demand=hard)
+
+
+def promo_pct(world: World, rules: Rules, store: str, item: str, day: dt.date) -> int:
+    """The discount running for this cell under the setting (0: none, or not in this tier's forecast)."""
+    if not rules.promos or ITEMS[item][0] == rules.cancelled:
+        return 0
+    return next((p[4] for p in world.promo_plan if p[0] == store and p[1] == item and p[2] <= day <= p[3]), 0)
+
+
+def truth(world: World, rules: Rules) -> dict[tuple[str, str, str], float]:
+    """(store, item, date) -> the actual the setting judges against: customer demand (hard) or till sales net of
+    returns (easy, medium), with the promotions and holiday this tier forecasts. Cached per world."""
+    key = ("truth", rules.demand, rules.promos, rules.uplift, rules.cancelled, rules.holiday)
+    if key in world.cache:
+        return world.cache[key]
+    out: dict[tuple[str, str, str], float] = {}
+    for day in world.horizon:
+        ds = day.isoformat()
+        for s in STORES:
+            for i in ITEMS:
+                if is_closed(s, day):
+                    out[(s, i, ds)] = 0.0
+                    continue
+                noise, q, so, share, ret, back = world.draws[(s, i, ds)]
+                pct = promo_pct(world, rules, s, i, day)
+                lam = _mean(s, i, day, pct, day == rules.holiday, rules.uplift) * math.exp(noise)
+                demand = _poisson_quantile(lam, q)
+                if rules.demand:
+                    out[(s, i, ds)] = float(demand)
+                    continue
+                stockout = demand > 0 and so < ITEMS[i][2] + (PROMO_STOCKOUT if pct else 0.0)
+                sold = int(demand * share) if stockout else demand
+                out[(s, i, ds)] = float(sold - (back if ret < RETURN_RATE else 0))
+    world.cache[key] = out
+    return out
 
 
 # ── data rendering ───────────────────────────────────────────────────────────
@@ -247,7 +389,7 @@ def write_data(world: World, data_dir: Path, lang: str) -> None:
 COLUMNS = ("store_id", "item_id", "date", "forecast")
 
 
-def evaluate_forecast(world: World, fc: dict[tuple[str, str, str], float], missing: int, dupes: int):
+def evaluate_forecast(world: World, fc: dict[tuple[str, str, str], float], missing: int, dupes: int, rules: Rules):
     violations: list[tuple[str, str]] = []
     if missing:
         violations.append(("complete_grid", f"{missing} store x item x date rows are missing"))
@@ -260,25 +402,29 @@ def evaluate_forecast(world: World, fc: dict[tuple[str, str, str], float], missi
     if closed:
         violations.append(("closed_day_zero", f"{len(closed)} non-zero forecasts for {CLOSED_STORE} on Sundays, "
                                               f"e.g. {'/'.join(closed[0])}"))
-    low = [k for k, x in fc.items() if ITEMS[k[1]][0] in CORE_CATEGORIES and x < MIN_DISPLAY
+    low = [k for k, x in fc.items() if ITEMS[k[1]][0] in CORE_CATEGORIES and x < rules.floor
            and not is_closed(k[0], dt.date.fromisoformat(k[2]))]
     if low:
-        violations.append(("min_display_stock", f"{len(low)} core-item forecasts below {MIN_DISPLAY:g} on open days, "
+        violations.append(("min_display_stock", f"{len(low)} core-item forecasts below {rules.floor:g} on open days, "
                                                 f"e.g. {'/'.join(low[0])}"))
+    actual, scored = truth(world, rules), set(rules.scored_items)
     wape = {}
     for s in STORES:
         err = tot = 0.0
-        for (ks, ki, kd), actual in world.truth.items():
-            if ks == s:
-                err += abs(fc.get((ks, ki, kd), 0.0) - actual)
-                tot += actual
+        for (ks, ki, kd), a in actual.items():
+            if ks == s and ki in scored:
+                f = fc.get((ks, ki, kd), 0.0)
+                err += rules.short_weight * (a - f) if a > f else f - a
+                tot += a
         wape[s] = err / tot
     objective = sum(wape.values()) / len(wape)
     return violations, objective, {"wape_by_store": {s: round(x, 5) for s, x in wape.items()},
-                                   "mean_wape": round(objective, 5)}
+                                   "mean_wape": round(objective, 5), "short_weight": rules.short_weight,
+                                   "judged_against": "demand" if rules.demand else "till sales net of returns"}
 
 
-def score(world: World, submission_dir: Path) -> dict:
+def score(world: World, submission_dir: Path, setting: Setting) -> dict:
+    rules = rules_of(setting)
     try:
         rows = read_csv(submission_dir, "forecast.csv", COLUMNS)
         if not rows:
@@ -297,8 +443,8 @@ def score(world: World, submission_dir: Path) -> dict:
             if (s, i, d) in fc:
                 dupes += 1
             fc[(s, i, d)] = number(r.get("forecast"), f"forecast.csv line {n} forecast")
-        missing = len(world.truth) - len(fc)
-        violations, objective, metrics = evaluate_forecast(world, fc, missing, dupes)
+        missing = len(world.draws) - len(fc)
+        violations, objective, metrics = evaluate_forecast(world, fc, missing, dupes, rules)
     except Fatal as e:
         return {"fatal": str(e)}
     return {"violations": violations, "objective": objective, "metrics": metrics}
@@ -306,14 +452,34 @@ def score(world: World, submission_dir: Path) -> dict:
 
 # ── reference solution ───────────────────────────────────────────────────────
 
-POOL = "*"  # the reference pools promo and holiday effects over all categories
+RESIDUAL_DAYS = 182  # the window of the reference's residual ratios (the quantile it forecasts)
 
 
-def _forecast(world: World) -> dict[tuple[str, str, str], float]:
-    """Censoring-aware weekday-level model with promo, holiday and seasonal multipliers, from the history only.
+@dataclass
+class Fit:
+    """What the reference learns from the history, for one target (demand or till sales)."""
 
-    Deliberately plain (recent mean level, effects pooled over categories) so a careful agent can beat it.
+    level: dict[tuple[str, str], float]
+    wday: dict[tuple[str, str], list[float]]
+    season: dict[str, float]
+    promo_lift: dict[tuple[str, int], float]     # (category, discount) -> sales on promotion / normal level
+    holiday_lift: dict[str, float]               # category -> sales on a holiday / normal level
+    ratios: dict[tuple[str, str], list[float]]   # sorted actual / fitted on usable days of the last 26 weeks
+
+
+def _fit(world: World, demand: bool) -> Fit:
+    """A weekday-level model per store x item from the history only, cached per world and target.
+
+    demand=True (hard): stockout days are censored and left out, return rows are not demand. demand=False
+    (easy, medium: till sales net of returns): every trading day counts as recorded and returns are netted
+    against the day's sales. Both: I07's history before the unit change is divided by 6, promotion and holiday
+    days are left out of the level and the weekday profile, and their lifts are measured per category (per
+    discount for promotions) against the local level. Deliberately plain (a recent mean level, ratio lifts) so a
+    careful agent can beat it.
     """
+    key = ("fit", demand)
+    if key in world.cache:
+        return world.cache[key]
     n = (HORIZON_START - HIST_START).days
     days = [HIST_START + dt.timedelta(days=t) for t in range(n)]
     hol = {d for d, _ in world.holidays}
@@ -325,23 +491,24 @@ def _forecast(world: World) -> dict[tuple[str, str, str], float]:
         t = (dt.date.fromisoformat(d) - HIST_START).days
         k = (s, i)
         promo[k][t] = p
-        if u < 0:
-            continue  # returns are not demand
         x = u / PACK if i == "I07" and days[t] < UNIT_CHANGE else u
+        if u < 0:
+            if not demand:
+                sales[k][t] += x      # the till report nets a return against the day's sales
+            continue                  # returns are not demand
         sales[k][t] += x
         present[k][t] = True
         out[k][t] = out[k][t] or so
 
     holiday_day = [d.isoformat() in hol for d in days]
-    result: dict[tuple[str, str, str], float] = {}
     promo_num: dict[tuple[str, int], float] = {}
     promo_den: dict[tuple[str, int], float] = {}
     hol_num: dict[str, float] = {}
     hol_den: dict[str, float] = {}
-    level_now, level_ly, level_ly_h, wday = {}, {}, {}, {}
+    level_now, level_ly, level_ly_h, wday, ratios = {}, {}, {}, {}, {}
     for k in sales:
-        cat = ITEMS[k[1]][0]
-        x, ok = sales[k], [present[k][t] and not out[k][t] for t in range(n)]
+        x = sales[k]
+        ok = [present[k][t] and not (demand and out[k][t]) for t in range(n)]
         clean = [ok[t] and promo[k][t] == 0 and not holiday_day[t] for t in range(n)]
         by_wd = [[x[t] for t in range(n - 364, n) if clean[t] and days[t].weekday() == wd] for wd in range(7)]
         overall = sum(map(sum, by_wd)) / max(1, sum(map(len, by_wd)))
@@ -356,6 +523,13 @@ def _forecast(world: World) -> dict[tuple[str, str, str], float]:
         level_now[k] = level(n - 56, n) or 0.0
         level_ly[k] = level(n - 56 - 364, n - 364) or 0.0
         level_ly_h[k] = level(n - 364 - 14, n - 364 + HORIZON_DAYS + 14) or 0.0
+        r = []
+        for t in range(n - RESIDUAL_DAYS, n):
+            if clean[t]:
+                loc = level(t - 28, t + 29)
+                if loc:
+                    r.append(x[t] / (loc * w[days[t].weekday()]))
+        ratios[k] = sorted(r)
         for t in range(n):
             if not ok[t] or (promo[k][t] == 0 and not holiday_day[t]):
                 continue
@@ -366,17 +540,42 @@ def _forecast(world: World) -> dict[tuple[str, str, str], float]:
             if loc is None or wt == 0:
                 continue
             if promo[k][t]:
-                key = (POOL, promo[k][t])
-                promo_num[key] = promo_num.get(key, 0.0) + x[t]
-                promo_den[key] = promo_den.get(key, 0.0) + loc * wt
+                pk = (ITEMS[k[1]][0], promo[k][t])
+                promo_num[pk] = promo_num.get(pk, 0.0) + x[t]
+                promo_den[pk] = promo_den.get(pk, 0.0) + loc * wt
             else:
-                hol_num[POOL] = hol_num.get(POOL, 0.0) + x[t]
-                hol_den[POOL] = hol_den.get(POOL, 0.0) + loc * wt
+                cat = ITEMS[k[1]][0]
+                hol_num[cat] = hol_num.get(cat, 0.0) + x[t]
+                hol_den[cat] = hol_den.get(cat, 0.0) + loc * wt
 
-    seas = {}
+    season = {}
     for cat in WEEKDAY:
         keys = [k for k in sales if ITEMS[k[1]][0] == cat]
-        seas[cat] = sum(level_ly_h[k] for k in keys) / max(1e-9, sum(level_ly[k] for k in keys))
+        season[cat] = sum(level_ly_h[k] for k in keys) / max(1e-9, sum(level_ly[k] for k in keys))
+    fit = Fit(level=level_now, wday=wday, season=season,
+              promo_lift={pk: promo_num[pk] / promo_den[pk] for pk in promo_num},
+              holiday_lift={cat: hol_num[cat] / hol_den[cat] for cat in hol_num}, ratios=ratios)
+    world.cache[key] = fit
+    return fit
+
+
+def _quantile(sorted_values: list[float], q: float) -> float:
+    if not sorted_values:
+        return 1.0
+    pos = q * (len(sorted_values) - 1)
+    lo = int(pos)
+    hi = min(lo + 1, len(sorted_values) - 1)
+    return sorted_values[lo] + (sorted_values[hi] - sorted_values[lo]) * (pos - lo)
+
+
+def _forecast(world: World, rules: Rules) -> dict[tuple[str, str, str], float]:
+    """The reference: the fitted level x season x weekday, the promotions this tier forecasts (the category's lift
+    at the discount, the flyer's multiple of its extra sales, none for the cancelled category), the category's
+    holiday lift on the holiday, then the short_weight / (1 + short_weight) quantile of the store x item's ratio of
+    actual to fitted value (the median at weight 1: a unit short then costs as much as a unit over); S4's Sundays
+    at 0 and the floor on core items."""
+    fit = _fit(world, rules.demand)
+    result: dict[tuple[str, str, str], float] = {}
     for day in world.horizon:
         ds = day.isoformat()
         for s in STORES:
@@ -385,14 +584,15 @@ def _forecast(world: World) -> dict[tuple[str, str, str], float]:
                 if is_closed(s, day):
                     result[(s, i, ds)] = 0.0
                     continue
-                f = level_now[(s, i)] * seas[cat] * wday[(s, i)][day.weekday()]
-                pct = next((p[4] for p in world.promo_plan if p[0] == s and p[1] == i and p[2] <= day <= p[3]), 0)
+                f = fit.level[(s, i)] * fit.season[cat] * fit.wday[(s, i)][day.weekday()]
+                pct = promo_pct(world, rules, s, i, day)
                 if pct:
-                    f *= promo_num[(POOL, pct)] / promo_den[(POOL, pct)]
-                if day == HORIZON_HOLIDAY:
-                    f *= hol_num[POOL] / hol_den[POOL]
+                    f *= 1 + rules.uplift * (fit.promo_lift.get((cat, pct), 1.0) - 1)
+                if day == rules.holiday:
+                    f *= fit.holiday_lift.get(cat, 1.0)
+                f *= _quantile(fit.ratios[(s, i)], rules.quantile)
                 if cat in CORE_CATEGORIES:
-                    f = max(MIN_DISPLAY, f)
+                    f = max(rules.floor, f)
                 result[(s, i, ds)] = round(f, 2)
     return result
 
@@ -401,15 +601,16 @@ def _write(out_dir: Path, fc: dict[tuple[str, str, str], float]) -> None:
     write_csv(out_dir / "forecast.csv", list(COLUMNS), [[s, i, d, x] for (s, i, d), x in fc.items()])
 
 
-def reference_solution(world: World, out_dir: Path) -> None:
-    _write(out_dir, _forecast(world))
+def reference_solution(world: World, out_dir: Path, setting: Setting) -> None:
+    _write(out_dir, _forecast(world, rules_of(setting)))
 
 
-def _baseline(world: World) -> dict[tuple[str, str, str], float]:
+def _baseline(world: World, rules: Rules) -> dict[tuple[str, str, str], float]:
     """Seasonal naive, the store's habit without an engineer: order what the till recorded on the same weekday of
     the last history week (2026-10-26 .. 2026-11-01), with S4's Sundays at 0 and the display floor on core items.
 
-    No stockout, promotion or holiday adjustment; return rows (negative units) are not sales and are skipped.
+    No stockout, promotion or holiday adjustment and no thought for the error weight; return rows (negative
+    units) are not sales and are skipped. The same in every tier.
     """
     last = {d.isoformat() for d in (HORIZON_START - dt.timedelta(days=k) for k in range(1, 8))}
     sold = {(s, i, d): float(u) for d, s, i, u, _, _ in world.history if d in last and u >= 0}
@@ -420,18 +621,19 @@ def _baseline(world: World) -> dict[tuple[str, str, str], float]:
             for i in ITEMS:
                 f = 0.0 if is_closed(s, day) else sold.get((s, i, seen), 0.0)
                 if ITEMS[i][0] in CORE_CATEGORIES and not is_closed(s, day):
-                    f = max(MIN_DISPLAY, f)
+                    f = max(rules.floor, f)
                 result[(s, i, day.isoformat())] = f
     return result
 
 
-def baseline_solution(world: World, out_dir: Path) -> None:
-    _write(out_dir, _baseline(world))
+def baseline_solution(world: World, out_dir: Path, setting: Setting) -> None:
+    _write(out_dir, _baseline(world, rules_of(setting)))
 
 
-def violating_examples(world: World) -> dict:
+def violating_examples(world: World, setting: Setting) -> dict:
     """One deliverable per rule that breaks exactly that rule (for the validator)."""
-    ref = _forecast(world)
+    rules = rules_of(setting)
+    ref = _forecast(world, rules)
     keys = list(ref)
     open_key = next(k for k in keys if ITEMS[k[1]][0] == "beverages" and not is_closed(k[0], dt.date.fromisoformat(k[2])))
     core_key = next(k for k in keys if ITEMS[k[1]][0] in CORE_CATEGORIES
@@ -449,5 +651,5 @@ def violating_examples(world: World) -> dict:
         "complete_grid": variant(lambda fc: fc.pop(open_key)),
         "non_negative": variant(lambda fc: fc.update({open_key: -1.0})),
         "closed_day_zero": variant(lambda fc: fc.update({closed_key: 5.0})),
-        "min_display_stock": variant(lambda fc: fc.update({core_key: 1.0})),
+        "min_display_stock": variant(lambda fc: fc.update({core_key: rules.floor - 1.0})),
     }

@@ -1,0 +1,11 @@
+{
+  "params": {
+    "holiday_date": "2026-11-13",
+    "min_display": 4,
+    "promo_cancelled": "none",
+    "promo_uplift": 2,
+    "short_weight": 3
+  },
+  "rule_seed": 58,
+  "tier": "medium"
+}

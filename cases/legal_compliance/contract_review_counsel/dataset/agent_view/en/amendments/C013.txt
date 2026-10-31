@@ -1,0 +1,7 @@
+AMENDMENT RECORD
+Agreement No. C013 (Wexley Digital Ltd)
+Date: 2026-09-21
+Status: proposed by the Supplier, not accepted by the Customer
+
+Article 5 (Indemnity) of the draft is replaced by the following text:
+The Customer shall indemnify and hold harmless the Supplier against all third-party claims, losses and costs arising out of or in connection with this Agreement.

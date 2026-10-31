@@ -3,18 +3,28 @@
 A coffee and tea subscription shop that sells boxes and one-off items to customers in Korea, Japan and the US
 (head office in Seoul, all reporting in KRW) sends the agent a CSV export of its order database, a short data
 dictionary and twelve questions from its managers: "Can you answer them from the database export? ... please
-send back one number per question." The deliverable is `answers.json`, one JSON number per question id
-(`{"Q01": ..., ..., "Q12": ...}`). The request names none of the definitions that decide the numbers; they are
-in the hidden requirements, and the simulated client gives them only when asked.
+send back one number per question." The deliverable is `answers.json` with every question id
+(`{"Q01": ..., ..., "Q12": ...}`), each a number or `null`. `null` means "don't know": the CEO's board pack shows
+the figure as "not available yet". The request names none of the definitions that decide the numbers, and it does
+not say what a wrong figure costs. Both are in the hidden requirements, and the simulated client gives them only
+when asked.
 
-The case has no settings: it is the same problem at every difficulty. The engagement knobs (full spec vs.
-clarify first, client persona, data noise, events) apply on top, as for every case (see
-[cases/README.md](../../README.md)).
+A setting is a tier and a rule seed. The tier decides which questions the board pack needs this round. The rule
+seed draws four of the client's rules, each on its own, from a pool of three values: the first month of the
+fiscal year, the active-customer window, the unit money is rounded to, and what a "don't know" is worth against a
+right and a wrong answer. That makes 81 combinations per tier. The public panel is rule seeds 4, 12 and 23 (nine
+settings, stored in `dataset/gt/` and checked by the validator); any other seed is a private draw whose answers
+are published nowhere. **The agent sees the same request and the same data in every setting** (the validator
+checks that its prompt and workspace are byte-identical). The simulated client answers from the hidden
+requirements of the setting, and the evaluator scores under it. So the case measures two things: whether the agent
+finds the definitions and gets the answers right, and whether it says "don't know" when it should (calibrated
+abstention). The engagement knobs (full spec vs. clarify first, client persona, data noise, events) apply on top,
+as for every case (see [cases/README.md](../../README.md)).
 
-## Data
+## Data (the same in every setting)
 
 Rendered per locale (labels, product names and the two Markdown files are localized; table and column names stay
-English so they load into SQL). Row counts at the public seed (20261026):
+English so they load into SQL). Row counts at the public world seed (20261026):
 
 | File | Rows | Content |
 |---|---|---|
@@ -28,86 +38,279 @@ English so they load into SQL). Row counts at the public seed (20261026):
 | `fx_rates.csv` | 1,338 | KRW per USD and per JPY for every calendar day from 2024-12-01 to 2026-09-30 |
 | `questions.md`, `data_dictionary.md` | | the twelve questions (reference date 2026-09-30) and the column list |
 
+The data is unchanged by the settings: the files are byte-identical to the case without settings. Orders run from
+2025-01-01, so every fiscal year the pool allows is covered (FY2025 from January, April or July 2025). The one
+period that does not fit is the first half of FY2026 under a July year (July–December 2026). The requirements say,
+for every draw, that a period still running on the reference date is counted up to the reference date, and under
+a July year they add that this half has only run from 2026-07-01 to 2026-09-30, the same three months as its first
+quarter. Under an April year the half ends on the reference date, and under a January year it is over.
+
 ## The questions and the hidden facts
 
-Q01 net revenue FY2025 · Q02 net revenue FY2026 Q1 · Q03 active customers at the reference date · Q04 top
-customer by net revenue FY2025 · Q05 orders on the 2026-07-01 sale day · Q06 "pantry" net revenue FY2025 · Q07
-average order value FY2026 H1 · Q08 refund rate FY2025 · Q09 average refund per refunded order FY2025 · Q10 new
-customers FY2025 · Q11 September vs. August 2026 net revenue change · Q12 units per order FY2025.
+Q01 net revenue FY2025 · Q02 net revenue FY2026 Q1 · Q03 active customers at the reference date · Q04 top customer
+by net revenue FY2025 · Q05 orders on the 2026-07-01 sale day · Q06 "pantry" net revenue FY2025 · Q07 average order
+value FY2026 H1 · Q08 refund rate FY2025 · Q09 average refund per refunded order FY2025 · Q10 new customers FY2025 ·
+Q11 September vs. August 2026 net revenue change · Q12 units per order FY2025.
 
-Nine clarification targets (`targets.yaml`). The last column is how many questions a sheet loses when it gets
-only that fact wrong, answers rounded as finance requires, at the public seed (seeds 1–3 in brackets):
+Eleven clarification targets (`targets.yaml`; values in braces are the rule seed's draw, or derived from it):
 
-| Target | Kind | The fact | Questions lost |
+| Target | Kind | Tiers | The fact |
 |---|---|---|---|
-| `fiscal_year` | missing | FY starts on April 1 and is named after its start year; Q1 = Apr–Jun, H1 = Apr–Sep | 6 (7, 8, 6) with a calendar FY |
-| `local_day` | ambiguous | timestamps are UTC, days are Korea time (UTC+9) | 3 (4, 3, 5): Q02, Q05, Q11, sometimes Q03/Q10 |
-| `test_accounts` | missing | account_type test is excluded from every figure; staff stay in | 10 (10, 10, 11) and invalid if tests stay in; 8 (8, 9, 8) if staff are dropped too |
-| `counted_orders` | ambiguous | only completed orders count, even when a cancelled order has a payment row | 8 (7, 7, 8) |
-| `net_revenue` | ambiguous | subtotal (ex tax) minus refunds ex tax, booked in the order's period, refunds made after the reference date included; pro rata over lines for a category | 4 (5, 4, 4) tax-inclusive; 1 (1, 2, 1) if the October refunds are cut off |
-| `fx_order_date` | missing | convert at the order date's rate; refunds use the order's rate | 5 (3, 0, 3) at the latest rate |
-| `active_customer` | ambiguous | at least one counted order in the 90 days 2026-07-03 to 2026-09-30 | 1 (Q03) with a 30- or 91-day window |
-| `category_rename` | missing | `snacks` was renamed `pantry` on 2025-10-01; "pantry" covers both labels | 1 (Q06) |
-| `report_rounding` | missing | money answers rounded to the nearest thousand KRW (and how answers are checked) | 0 (invalid instead) |
+| `fiscal_year` | missing | all | the FY starts on the 1st of {fy_start} and is named after its start year; FY2025, FY2026 Q1 and H1 as dated; a period still running on the reference date counts up to it |
+| `local_day` | ambiguous | all | timestamps are UTC, days are Korea time (UTC+9) |
+| `test_accounts` | missing | all | account_type test is excluded from every figure; staff stay in |
+| `counted_orders` | ambiguous | all | only completed orders count, even when a cancelled order has a payment row |
+| `net_revenue` | ambiguous | all | subtotal (ex tax) minus refunds ex tax, booked in the order's period, not the refund's |
+| `late_refunds` | ambiguous | medium, hard | the export runs to 2026-10-31; refunds made after the reference date count, against their order's period |
+| `fx_order_date` | missing | all | convert at the order date's rate; refunds use the order's rate |
+| `active_customer` | ambiguous | all | at least one counted order in the {active_days} days ending on the reference date (from {active_from}) |
+| `category_rename` | missing | hard | `snacks` was renamed `pantry` on 2025-10-01; "pantry" covers both labels, an order's refunds pro rata over its lines |
+| `report_rounding` | missing | all | money answers rounded to the nearest {rounding_unit} KRW (and how answers are checked) |
+| `answer_rewards` | missing | all | `null` ("not available yet") is accepted; finance values a right figure at 2, a `null` at {dont_know_reward}, a wrong figure at 0 |
+
+## Answers and score
+
+Every key Q01..Q12 must be present, with a finite number or `null`. A missing key, or a value that is neither,
+breaks `answer_format` (physical). Each question the tier scores earns a reward: 2 if right, 0 if wrong, and
+`dont_know_reward` if `null`, which the rule seed draws:
+
+| `dont_know_reward` | wrong | don't know (`null`) | right | all-`null` sheet scores | answer only if P(right) is above |
+|---|---|---|---|---|---|
+| 0.5 | 0 | 0.5 | 2 | 0.25 | 25% |
+| 1 | 0 | 1 | 2 | 0.50 | 50% |
+| 1.5 | 0 | 1.5 | 2 | 0.75 | 75% |
+
+The objective (maximize) is the total reward divided by 2 × the number of scored questions, a number in [0, 1]. A
+sheet that is right everywhere scores 1. An answer or a `null` to a question the tier does not score has no
+effect. The metrics are `scored`, `answered`, `right`, `wrong`, `dont_know`, `accuracy_on_answered` (right /
+answered), `coverage` (answered / scored), the total `reward`, and the lists of wrong and "don't know" questions.
+
+**Abstention thresholds.** A sheet that knows the scheme should answer a question only when its chance p of being
+right beats "don't know": p × 2 > dont_know_reward. The client states the scheme as a business fact, and it is a
+clarification target (`answer_rewards`, kind missing): "a wrong figure that reaches the board has to be corrected
+at the next meeting and costs us credibility, while 'not available yet' only leaves a gap", followed by the three
+values. When a `null` is worth 0.5 the client adds that "this time the board would rather see a figure than a
+gap"; when it is worth 1.5, that after corrections in the last two packs "the board would much rather see a gap
+than a wrong figure this time".
+
+Correctness does not depend on the draw except for the money tolerance. Q03, Q04, Q05 and Q10 must match exactly.
+Money must be within 0.5% or half the rounding unit, whichever is wider (50, 500 or 5,000 KRW), so the exact
+figure rounded as the draw requires always counts. Q11 must be within 0.05 percentage points, and Q08 and Q12
+within 0.5%. A percentage given as a fraction is accepted. `violating_examples` asserts that the exact answers,
+rounded to the setting's unit, score 1.0 with no violation, in every setting and on every world the validator
+builds.
+
+## Tiers: which questions the board pack needs this round
+
+| | easy | medium | hard |
+|---|---|---|---|
+| **Scored questions** | Q01, Q03, Q04, Q10, Q12 (5) | + Q02, Q05, Q07, Q08, Q09, Q11 (11) | all 12 (+ Q06) |
+| **What they test** | Which orders count, test accounts out and staff in, the fiscal year, the active window, rounding (Q01 is the one money question) | Net revenue (tax, refund booking), FX at the order date, Korea-time days at month, quarter and sale-day edges, and the October refunds of September orders | The snacks → pantry rename (Q06) |
+| **What the requirements put out of scope** | "the board pack only needs Q01, Q03, Q04, Q10 and Q12 this time … if you answer them we will not use the figures" | "every question except Q06 (the pantry figure)" | Nothing |
+| **Clarification targets** | 9: fiscal year, local day, test accounts, counted orders, net revenue, FX, active customer, rounding, answer rewards | 10: + late refunds | 11: + category rename |
+
+Every tier draws from the same pools, so the rule seed gives the same parameters in all three tiers (s4 is a
+January year with a 60-day window in easy, medium and hard alike). What the tier changes is how many questions
+depend on them.
+
+The easy questions are not free of net revenue, FX and Korea time. Q01 is the only money question easy can use for
+the rounding rule, and it needs the net-revenue definition (a tax-inclusive Q01 is about 10% high) and, on 12 to
+15 of the 21 worlds checked per draw (the public one and 1–20), the order-date FX rate. Q04 (top customer by net
+revenue) also moves with FX on some worlds. Korea-time days decide Q01 under a July year, on every world checked:
+the sale opens at midnight on 2026-07-01, the first day of that year, and in UTC its first hours fall on
+2026-06-30, inside FY2025. They also decide Q03 or Q10 at the window and year edges on most worlds. The medium
+questions are the ones built around these definitions. The October refunds (`late_refunds`) already bind in
+medium: they move Q11 by about 3 points under every draw, and under a July year they also move Q02, whose quarter
+is July to September 2026. So hard adds only the rename. The round-scope notes are not targets: an answer to a
+question that is not scored has no effect either way, so knowing the scope changes no score.
+
+Questions a sheet loses when it gets only one fact wrong (exact answers otherwise, rounded to the setting's unit),
+at the public world seed; world seeds 1, 2, 3 in brackets where any differs (* = the sheet is also invalid):
+
+| Fact wrong | easy/s4 | easy/s12 | easy/s23 | medium/s4 | medium/s12 | medium/s23 | hard/s4 | hard/s12 | hard/s23 |
+|---|---|---|---|---|---|---|---|---|---|
+| `fiscal_year`: an April FY (s4) or the calendar FY (s12, s23) | 3 (3,4,3) | 4 | 3 (3,4,3) | 6 (7,8,7) | 6 (7,7,7) | 5 (6,7,5) | 7 (8,9,8) | 7 (8,8,8) | 6 (7,8,6) |
+| `local_day`: UTC days | 0 (1,3,0) | 2 | 0 (1*,0,2) | 2 (3,5,3) | 6 (5,5,5) | 3 (4*,3,5) | 2 (3,5,3) | 7 (6,6,6) | 3 (4*,3,5) |
+| `test_accounts`: tests kept in | 5* | 5* | 5* | 11* | 9* (10*,9*,10*) | 9* (9*,9*,10*) | 12* | 10* (11*,10*,11*) | 10* (10*,10*,11*) |
+| `test_accounts`: staff dropped too | 3 | 3 | 3 | 7 (7,6,6) | 7 (7,6,6) | 7 (7,8,7) | 8 (8,7,7) | 8 (8,7,7) | 8 (8,9,8) |
+| `counted_orders`: every status | 3 (2,3,3) | 3 (2,2,3) | 3 (2,2,3) | 8 (7,7,7) | 7 (6,6,7) | 7 (6,6,7) | 9 (8,8,8) | 8 (7,7,8) | 8 (7,7,8) |
+| `net_revenue`: tax included | 1 (1,1,2) | 1 | 1 | 4 (5,4,5) | 3 (4,3,4) | 4 (5,4,4) | 4 (5,4,5) | 3 (4,3,4) | 4 (5,4,4) |
+| `net_revenue`: refunds in the refund's period | 1 (0,0,0) | 0 | 0 | 4 (3,3,3) | 3 (1,3,2) | 3 (3,4,3) | 4 (3,3,3) | 3 (1,3,2) | 3 (3,4,3) |
+| `late_refunds`: October refunds cut off | 0 | 0 | 0 | 1 | 2 | 1 (1,2,1) | 1 | 2 | 1 (1,2,1) |
+| `fx_order_date`: latest rate | 2 (1,1,2) | 1 (0,0,1) | 2 (1,0,1) | 5 (2,1,5) | 3 (0,0,3) | 4 (2,0,2) | 6 (3,1,6) | 4 (0,0,3) | 5 (3,0,3) |
+| `active_customer`: another window of the pool | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+| `active_customer`: one day too long | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+| `active_customer`: one day too short | 1 (0,1,1) | 1 | 0 (1,1,1) | 1 (0,1,1) | 1 | 0 (1,1,1) | 1 (0,1,1) | 1 | 0 (1,1,1) |
+| `category_rename`: `pantry` label only | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 1 |
+| `report_rounding` | invalid instead | | | | | | | | |
+
+A UTC-day sheet is flagged under `exclude_test_accounts` at world seed 1 under the April year (s23): its Q10
+happens to equal the test-inclusive figure (REVIEW.md, F9). Under a January year (s4) the calendar year, the
+face-value guess, is the right fiscal year, so `fiscal_year` binds there only against a sheet that assumes some
+other year. A 10,000 KRW unit (s12) is coarse: a money answer within 5,000 KRW counts, so Q07 and Q09 are hard to
+miss there (a tax-inclusive Q09 still rounds to the right 40,000).
+
+## Parameters and rule seeds
+
+Each parameter has one pool, the same in every tier. A rule seed s draws position
+`Random("data_knowledge/bi_data_analyst|<name>|s").randrange(3)` of each pool, independently of the others and of
+the tier.
+
+| Parameter | Pool (easy, medium, hard) | What it changes | Target |
+|---|---|---|---|
+| `fy_start`: the fiscal year starts on the 1st of this month, named after the year it starts in | January, April, July (1, 4, 7) | the FY2025, FY2026 Q1 and H1 periods, so the exact Q01, Q02, Q06, Q07, Q08, Q09, Q10 and Q12, and Q04 under July (10247 against 10392); Q03, Q05 and Q11 stay | `fiscal_year` |
+| `active_days`: active = a counted order in the last N days | 30, 60, 90 | Q03 (623 / 801 / 881 at the public world) | `active_customer` |
+| `rounding_unit`: money reported to the nearest | 100, 1,000, 10,000 KRW | which money answers are valid (a sheet rounded to a finer unit breaks a coarser unit's rule) and the money tolerance (half a unit): a coarser sheet scored under a finer unit misses Q07 or Q09 | `report_rounding` |
+| `dont_know_reward`: what a `null` earns (wrong 0, right 2) | 0.5, 1, 1.5 | every `null`'s reward, so the abstention threshold (25%, 50%, 75%) and the all-`null` baseline (0.25, 0.50, 0.75); the reference answers its unsettled Q06 only at 0.5 | `answer_rewards` |
+
+`derive_params` adds what the texts quote: `fy2025`, `fy2026_q1` and `fy2026_h1` (date ranges worded per locale,
+e.g. "2025-07-01 to 2026-06-30" / "del 2025-07-01 al 2026-06-30"; the half is stated whole and counted to the
+reference date), `active_from` (the window's first day) and the fixed ends of the scheme, `right_reward` 2 and
+`wrong_reward` 0. `admissible` requires rewards that rise from wrong to don't know to right, a FY2026 that has
+started by the reference date and a window inside the data. Every one of the 81 combinations of the current pools
+passes; the hook guards pools added later. The requirements carry three `<!-- when: -->` passages: the July-year
+note on the first half, and the client's remark for a `null` worth 0.5 or 1.5 (above).
+
+**Public panel.** Seeds 4, 12 and 23 were chosen so that every value of every pool appears once:
+
+| Rule seed | `fy_start` | `active_days` | `rounding_unit` | `dont_know_reward` | Derived periods (FY2025 / FY2026 Q1 / FY2026 H1) and window |
+|---|---|---|---|---|---|
+| 4 | 1 (January) | 60 | 100 | 1 | 2025-01-01–12-31 / 2026-01-01–03-31 / 2026-01-01–06-30; active from 2026-08-02 |
+| 12 | 7 (July) | 30 | 10,000 | 0.5 | 2025-07-01–2026-06-30 / 2026-07-01–09-30 / 2026-07-01–12-31, counted to 09-30; active from 2026-09-01 |
+| 23 | 4 (April) | 90 | 1,000 | 1.5 | 2025-04-01–2026-03-31 / 2026-04-01–06-30 / 2026-04-01–09-30; active from 2026-07-03 |
+
+The draw is the same in every tier, so each row is the drawn dict of `easy/sN`, `medium/sN` and `hard/sN`
+(`dataset/gt/<tier>_s<N>/setting.json`). Seed 23 is the old rule set A apart from its `null` reward (1.5 instead
+of 1); seeds 4 and 12 mix values that no old rule set combined. Private seeds draw any of the 81 combinations
+(e.g. seed 101: April, 60 days, 1,000 KRW, 1; seed 102: July, 90 days, 100 KRW, 0.5).
+
+**Parameter binding** (validate-case, from `hard/s4`): every parameter changes the right answer or the score with
+the first other value it tries. `fy_start` 1 → 4: the reference of s4 drops from 0.958 to 0.542. `active_days`
+60 → 30: to 0.875 (Q03). `rounding_unit` 100 → 1,000: the reference is invalid. `dont_know_reward` 1 → 0.5: its
+objective moves from 0.958 to 0.938, and the reference drawn at 0.5 answers Q06 and scores 0.917. In easy and
+medium the reference answers every scored question, so `dont_know_reward` leaves its objective at 1.000 there; it
+still moves the all-`null` baseline (0.25 / 0.50 / 0.75) and the reward of every `null` an agent gives, so it
+changes the normalized quality of any sheet that abstains. Likewise in easy, where Q01 is the only money
+question, a 10,000 KRW sheet stays valid and right under 100 or 1,000 KRW; only the other direction (a finer
+sheet under a coarser unit) breaks the rule there. Scoring each
+public seed's reference under the other two seeds of its tier (18 pairs), 9 are invalid (rounding: a 100 KRW sheet
+under 1,000 or 10,000, a 1,000 KRW sheet under 10,000) and the 9 valid ones score 0.00–0.38, against 0.92–1.00
+for the setting's own reference. In every pair another fiscal year moves Q01, Q02, Q08 and Q10 (Q12 between the
+January year and the others, Q04 between the July year and the others), another window moves Q03, and a coarser
+unit scored under a finer one misses Q07 or Q09.
+
+## What an agent must ask
+
+All eleven targets in hard (nine in easy, ten in medium), but four of them carry the rule seed's draw and cannot be
+carried over from another run or guessed from the data: the fiscal year's first month (`fiscal_year`), the
+active window (`active_customer`), the rounding unit (`report_rounding`) and what a "not available yet" is worth
+(`answer_rewards`). The other seven are the same under every draw. Without `answer_rewards` an agent cannot know
+whether a 60% answer should be given (yes at 0.5 and 1, no at 1.5); without `report_rounding` it cannot know which
+money figures are valid.
 
 ## Rules
 
 | Rule | Class | What breaks it |
 |---|---|---|
-| `answer_format` | physical | a question missing or not a single JSON number |
-| `exclude_test_accounts` | contractual | a count or customer-id answer (Q03, Q04, Q05, Q10) equal to the figure with test accounts included (Korea-time days), where that differs from the figure without them |
-| `report_rounding` | business policy (bendable) | a money answer (Q01, Q02, Q06, Q07, Q09) that is not a whole multiple of 1,000 KRW |
-
-Quality is the number of questions answered correctly against the exact (unrounded) figures from the world:
-Q03, Q04, Q05 and Q10 exactly; money within 0.5% or 500 KRW, whichever is wider (so the exact figure rounded to the
-nearest thousand always counts); Q11 within 0.05 percentage points; Q08 and Q12 within 0.5%. A percentage given as
-a fraction (0.0610 for 6.10%) is accepted.
+| `answer_format` | physical | a question id missing, or a value that is neither a finite number nor `null` (checked for all twelve, scored or not) |
+| `exclude_test_accounts` | contractual | a scored count or customer-id answer (Q03, Q04, Q05, Q10) equal to the figure with test accounts included (Korea-time days, the setting's periods), where that differs from the figure without them |
+| `report_rounding` | business policy (bendable) | a scored money answer (Q01, Q02, Q06, Q07, Q09) that is not a whole multiple of the setting's unit (100 / 1,000 / 10,000 KRW) |
 
 ## Situations present
 
-- **Hidden facts:** the nine targets above. The data is built so that each one shows up: a QA load test on test
-  account 10027 (36 orders of ten hand grinders and five 1 kg blends in FY2025) makes it the top customer when test
-  accounts stay in; five test orders land in the first minutes of the 2026-07-01 sale (Korea time), which is still
-  2026-06-30 in UTC; paid cancellations have payment rows; four pantry products were launched under the new label
-  while the four older ones still say snacks; October refunds of September orders move Q11 by about 3 points (2–4 on seeds 1–3).
-- **Dated events, pressure:** none in the case itself (see REVIEW.md F6); the messy engagement adds the framework's
+- **Hidden facts:** the eleven targets above. The data is built so that each one shows up. A QA load test on test
+  account 10027 (36 orders of ten hand grinders and five 1 kg blends, April 2025 to March 2026) makes it the top
+  customer under every fiscal year when test accounts stay in. Five test orders land in the first minutes of the
+  2026-07-01 sale (Korea time), which is still 2026-06-30 in UTC. Paid cancellations have payment rows. Four pantry
+  products were launched under the new label, while the four older ones still say snacks. October refunds of
+  September orders move Q11 by about 3 points (2–4 on seeds 1–3).
+- **Calibrated abstention:** the reward scheme is a hidden fact too. An agent that has not found a definition, or
+  cannot settle a figure, should weigh its chance of being right against the draw's threshold. Saying "don't know"
+  everywhere earns 0.25–0.75, which is the baseline (quality 0); answering everything at face value earns 0–0.4
+  on the public panel at the public world, less than that.
+- **Dated events, pressure:** none in the case itself (see REVIEW.md F6). The messy engagement adds the framework's
   generic events.
 
-## Reference and baseline numbers (public seed 20261026)
+## Reference and baseline numbers (public world seed 20261026)
 
-The reference is a careful analyst who gets every definition right except the category rename: it answers the
-"pantry" question from the `pantry` label only. The baseline is the export summed at face value with none of the
-client's definitions (calendar-year periods on the stored UTC dates, every order whatever its status, revenue =
-order `total` less the refunds dated in the period, every currency at the 2026-09-30 rate, active = ordered in the
-last 30 days, "pantry" = the `pantry` label), keeping only the two finance policies the client applies anyway (test
-accounts out, money rounded to thousands), so the sheet is valid.
+The **reference** is a careful analyst who uses the setting's conventions and gets every definition right except
+the category rename: it answers the "pantry" question from the `pantry` label alone. It leaves the questions the
+tier does not score as `null`. Its abstention policy is principled and deterministic: its pantry figure covers only
+the products launched since 2025-10, so it gives that answer even odds of being right and keeps it only when
+½ × right_reward > dont_know_reward. That holds when a `null` is worth 0.5 (1 > 0.5), so it answers and is wrong.
+At 1 (1 = 1, a tie abstains) and 1.5 (1 < 1.5) it says "don't know". In easy and medium Q06 is not scored, so
+there the reference is right on every scored question.
 
-| Question | Exact figure | Reference | Baseline |
-|---|---|---|---|
-| Q01 | 223,734,559 | 223,735,000 | 231,049,000 ✗ |
-| Q02 | 75,372,876 | 75,373,000 | 82,939,000 ✗ |
-| Q03 | 881 | 881 | 668 ✗ |
-| Q04 | 10392 | 10392 | 11182 ✗ |
-| Q05 | 183 | 183 | 111 ✗ |
-| Q06 | 37,194,179 | 12,444,000 ✗ | 5,612,000 ✗ |
-| Q07 | 41,618 | 42,000 | 46,000 ✗ |
-| Q08 | 6.097 | 6.097 | 4.991 ✗ |
-| Q09 | 35,780 | 36,000 | 39,000 ✗ |
-| Q10 | 655 | 655 | 640 ✗ |
-| Q11 | −2.568 | −2.568 | −5.443 ✗ |
-| Q12 | 2.105 | 2.105 | 2.124 ✗ |
-| **Correct** | 12 (rounded as required) | **11** | **0** |
+The **baseline** is what finance reports without an analyst: "not available yet" (`null`) for every question. It
+earns the draw's don't-know reward on every scored question (0.25 / 0.50 / 0.75 of the maximum), so saying "don't
+know" to everything scores 0 on the normalized scale. The **face-value sheet** is the export summed with none of
+the client's definitions: calendar-year periods on the stored UTC dates, every order whatever its status, revenue
+= order `total` less the refunds dated in the period, every currency at the 2026-09-30 rate, active = ordered in
+the last 30 days, "pantry" = the `pantry` label. It answers every question and keeps the two finance policies the
+client applies anyway (test accounts out, money rounded to the setting's unit). On the public panel at the public
+world it scores below the baseline in every setting: its wrong figures earn nothing.
 
-Normalized quality is (correct − baseline) / (reference − baseline): 11/12 scores 1.0 and a perfect sheet
-12/11 = 1.09 at the public seed. On world seeds 1–3 the reference scores 11 and the baseline 1, 0 and 0; on seeds
-1–20 the baseline scores 0–2 (a naive figure sometimes lands within tolerance, e.g. Q12 or Q04) and the exact
-answers rounded to thousands score 12 on every seed. `violating_examples` checks the last point on every world
-the validator builds.
+| Setting | Drawn (fy_start, active_days, rounding_unit, dont_know_reward) | Reference objective | Baseline (all `null`) | Face-value sheet | Perfect sheet | Perfect, normalized quality |
+|---|---|---|---|---|---|---|
+| easy/s4 | 1, 60, 100, 1 | 1.000 (5 right) | 0.500 | 0.400 | 1.000 | 1.000 |
+| easy/s12 | 7, 30, 10000, 0.5 | 1.000 | 0.250 | 0.000 | 1.000 | 1.000 |
+| easy/s23 | 4, 90, 1000, 1.5 | 1.000 | 0.750 | 0.000 | 1.000 | 1.000 |
+| medium/s4 | 1, 60, 100, 1 | 1.000 (11 right) | 0.500 | 0.182 | 1.000 | 1.000 |
+| medium/s12 | 7, 30, 10000, 0.5 | 1.000 | 0.250 | 0.091 | 1.000 | 1.000 |
+| medium/s23 | 4, 90, 1000, 1.5 | 1.000 | 0.750 | 0.000 | 1.000 | 1.000 |
+| hard/s4 | 1, 60, 100, 1 | 0.958 (11 right, Q06 null) | 0.500 | 0.167 | 1.000 | 1.091 |
+| hard/s12 | 7, 30, 10000, 0.5 | 0.917 (11 right, Q06 wrong) | 0.250 | 0.083 | 1.000 | 1.125 |
+| hard/s23 | 4, 90, 1000, 1.5 | 0.979 (11 right, Q06 null) | 0.750 | 0.000 | 1.000 | 1.091 |
+
+Normalized quality is (objective − baseline) / (reference − baseline); the face-value sheet's is 0 in every row
+(below the baseline). The perfect sheet's normalized quality is 1.0 in easy and medium and 1.09–1.13 in hard, so
+the case sets no `quality_cap` (one number per case cannot give full credit to the perfect sheet in every setting;
+REVIEW.md, F2). The reference's objective depends only on the tier and the `null` reward: 1.000 in easy and
+medium, and 0.917 / 0.958 / 0.979 in hard for a `null` worth 0.5 / 1 / 1.5, in all 81 combinations on world seeds
+1–10 and the public world, and in the nine public settings on world seeds 1–20.
+
+The face-value sheet is not always below the baseline. On world seeds 1–20 it scores 0.20–0.60 in easy/s4, against
+a baseline of 0.50: above it on world seeds 4 and 7, where it gets three of the five questions right. Elsewhere on
+the panel it stays below (0.00–0.20 easy/s12, 0.00–0.40 easy/s23, 0.09–0.36 medium/s4, 0.00–0.18 medium/s12 and
+medium/s23, 0.08–0.33 hard/s4, 0.00–0.17 hard/s12 and hard/s23). Over all 81 combinations per tier on world seeds
+1–10, it reaches the baseline in 117 of 2,430 cases, all but six of them with a January year (the calendar year it
+assumes) and a `null` worth 0.5 or 1; its best is 0.60 in easy, 0.46 in medium and 0.42 in hard, against a
+baseline of 0.25. Such a draw gives the face-value approach a positive normalized quality (up to 0.47). Seeds 1–20
+build valid worlds, references, baselines and violating examples in all nine public settings.
+
+The hard-tier answers (exact figure, reference, face-value sheet; ✓/✗ = the face-value answer right or wrong; the
+reference's ✗ marks its one wrong answer):
+
+| Question | s4 exact | s4 reference | s4 face value | s12 exact | s12 reference | s12 face value | s23 exact | s23 reference | s23 face value |
+|---|---|---|---|---|---|---|---|---|---|
+| Q01 | 190,723,915 | 190,723,900 | 231,048,900 ✗ | 258,620,880 | 258,620,000 | 231,050,000 ✗ | 223,734,559 | 223,735,000 | 231,049,000 ✗ |
+| Q02 | 69,454,940 | 69,454,900 | 82,939,200 ✗ | 92,389,874 | 92,390,000 | 82,940,000 ✗ | 75,372,876 | 75,373,000 | 82,939,000 ✗ |
+| Q03 | 801 | 801 | 668 ✗ | 623 | 623 | 668 ✗ | 881 | 881 | 668 ✗ |
+| Q04 | 10392 | 10392 | 11182 ✗ | 10247 | 10247 | 11182 ✗ | 10392 | 10392 | 11182 ✗ |
+| Q05 | 183 | 183 | 111 ✗ | 183 | 183 | 111 ✗ | 183 | 183 | 111 ✗ |
+| Q06 | 28,990,095 | null | 5,611,900 ✗ | 45,050,055 | 20,050,000 ✗ | 5,610,000 ✗ | 37,194,179 | null | 5,612,000 ✗ |
+| Q07 | 41,846 | 41,800 | 46,200 ✗ | 41,881 | 40,000 | 50,000 ✗ | 41,618 | 42,000 | 46,000 ✗ |
+| Q08 | 5.903 | 5.903 | 4.991 ✗ | 6.178 | 6.178 | 4.991 ✗ | 6.097 | 6.097 | 4.991 ✗ |
+| Q09 | 35,820 | 35,800 | 38,800 ✗ | 35,330 | 40,000 | 40,000 ✓ | 35,780 | 36,000 | 39,000 ✗ |
+| Q10 | 640 | 640 | 640 ✓ | 690 | 690 | 640 ✗ | 655 | 655 | 640 ✗ |
+| Q11 | −2.568 | −2.568 | −5.443 ✗ | −2.568 | −2.568 | −5.443 ✗ | −2.568 | −2.568 | −5.443 ✗ |
+| Q12 | 2.128 | 2.128 | 2.124 ✓ | 2.100 | 2.100 | 2.124 ✗ | 2.105 | 2.105 | 2.124 ✗ |
+
+Under s23 (an April year and a 90-day window) the exact figures are those of the case without settings. Q05 and
+Q11 do not depend on the fiscal year; Q04 is the same customer under the April and the January year.
 
 ## Notes
 
 - Synthetic. Prices, tax rates, FX paths, order rhythms and refund rates are invented; the shop, its customers and
   its accounts are fictional. The fiscal-year, local-day, test-account, net-revenue and rename conventions are the
-  common traps of BI work on raw exports, not facts about a real company.
+  common traps of BI work on raw exports, not facts about a real company. The three `null` rewards are design
+  choices that set the abstention threshold at 25%, 50% and 75%, not measured costs.
 - Known simplifications (REVIEW.md F7): a flat 7% US tax on every order, FX rates on weekends, paid cancellations
-  without a reversal row, and sign-ups from 2024-07-01 while the order history starts on 2025-01-01.
+  without a reversal row, and sign-ups from 2024-07-01 while the order history starts on 2025-01-01. The QA test
+  account 10027 has load-test orders from April 2025 although it signed up in December 2025.
+- `validate-case` checks every public setting: deterministic data in five locales, the same agent view in all
+  nine, the reference at quality 1.0, a valid baseline worse than the reference, one deliverable per rule that
+  breaks only that rule, the parameter pools and the panel, `derive_params` on every combination, and that every
+  parameter binds. It warns that the medium and hard references are byte-identical under seeds 4 and 23: both
+  leave Q06 `null`, because it is not needed in medium and "don't know" in hard when a `null` is worth 1 or 1.5.
+  They score differently (1.0 against 0.958 and 0.979), so the tier still adds signal.

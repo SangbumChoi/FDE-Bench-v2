@@ -1,0 +1,24 @@
+# The explainer's case texts in Simplified Chinese (English comes from case.yaml).
+role: 多语种语料库管理员
+task_type: 数据工程
+deliverable_spec: |
+  一个 program/ 目录，其中 organize.py 定义 organize(task)；task = {"corpus_dir": <结构与 data/corpus 相同的文件夹>,
+  "out_dir": <一个空文件夹>}。程序读取 corpus_dir（绝不修改它），只在 out_dir 里写入：
+    out_dir/library/...    每本书一个 UTF-8 .txt 文件，内容是这本书的简介（文件夹结构和文件命名
+                           遵循客户的编目规则）
+    out_dir/_review/...    无法归档的书的资料
+    out_dir/manifest.csv   表头 source,status,path,reason；每本书一行（source = 它在 corpus 中的相对
+                           文件路径，多个用 ";" 分隔），每个跳过的文件也一行；status 为 placed | review | skipped
+  程序在客户完整的共享盘上离线运行一次（结构和文件构成与样本相同，约 100 本书）。
+  只能用 Python 标准库；最多 5 分钟。
+tiers:
+  easy: '只对格式规整的书计分（100 本中约 30 本）：每本一个文件，元数据完整，UTF-8，年份为普通的四位数字。书库路径、文件名和简介都必须正确；名称截取到 40 至 60 个字符。'
+  medium: 'easy 的内容加上所有能读的书（约 66 本）：旧编码（GB18030、CP949、Shift_JIS、CP1252）、年号等各种年份写法、全角或重音被拆开的书名、路径中不允许的字符、作者名的不同罗马字拼法、同一本书多种格式的副本需要合并，以及来源优先级；名称截取到 32 至 50 个字符。书库里多余的文件会扣分。'
+  hard: 'medium 的内容加上例外情况（全部 100 本）：缺作者、书名、年份或简介，需要由另一个来源补上，或者把书连同原因代码送去复核；来源互相矛盾、无法读取的扫描件、垃圾文件、zip 压缩包里的书，以及包含多本书的目录 CSV；不得编造简介。没有作者的书按客户这一轮的规定处理（送去复核，或以备用作者名上架），名称截取到 24 至 40 个字符。'
+rules:
+  utf8_output: 'library/ 中的每个文件和 manifest.csv 都是合法的 UTF-8。'
+  safe_names: '输出的文件名和文件夹名都不含 \ / : * ? " < > | 或控制字符，不是 . 或 ..，不以空格或句点结尾，长度不超过 255 字节。'
+  one_file_per_book: '每本书在 library/ 中至多一个文件；同一本书在其他格式或文件夹中的副本都合并到这个文件里。'
+  review_reason: '清单中每个 status 为 review 的行都给出原因代码 UNREADABLE、NO_TITLE、NO_AUTHOR、NO_YEAR、NO_DESCRIPTION、CONFLICT 之一。'
+  no_fabrication: '来源中没有简介的书不放进 library/，每个书库文件里都是取自来源的简介（不能为空、编造或是占位文字）。'
+  missing_author_review: '任何来源中都没有作者的书以 NO_AUTHOR 送入 _review/，而不是以“{{fallback_author}}”上架。'

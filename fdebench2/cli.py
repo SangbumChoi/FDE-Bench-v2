@@ -32,7 +32,9 @@ def _axes(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--agent-locale", default="en")
     ap.add_argument("--policy", default="baseline")
     ap.add_argument("--difficulty", default="medium", help="content tier: easy | medium | hard")
-    ap.add_argument("--ruleset", default="A", help="rule parameters of cases with settings: A | B | C")
+    ap.add_argument("--rule-seed", type=int, default=None,
+                    help="rule seed of a case with settings: draws its rule parameters (default: the case's first "
+                         "public rule seed; any other int is a private draw)")
     ap.add_argument("--engagement", default="standard", help="standard | full_spec | messy (configs/engagement.yaml)")
     ap.add_argument("--condition", default=None)
     ap.add_argument("--world-seed", type=int, default=None, help="generate the case world from this seed")
@@ -48,10 +50,12 @@ def _common(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--docker-image", help="run commands in this image (use {case} for per-case images)")
 
 
-def _spec(a) -> VariantSpec:
-    return VariantSpec(case_id=a.case, customer_locale=a.customer_locale, agent_locale=a.agent_locale,
-                       policy=a.policy, difficulty=a.difficulty, noise_seed=a.noise_seed, condition=a.condition,
-                       ruleset=a.ruleset, engagement=a.engagement, world_seed=a.world_seed, trial=a.trial)
+def _spec(a, bench: Bench) -> VariantSpec:
+    # resolve: the case's first public rule seed when none is given, none for a case without settings
+    return bench.resolve(VariantSpec(case_id=a.case, customer_locale=a.customer_locale, agent_locale=a.agent_locale,
+                                     policy=a.policy, difficulty=a.difficulty, noise_seed=a.noise_seed,
+                                     condition=a.condition, rule_seed=a.rule_seed, engagement=a.engagement,
+                                     world_seed=a.world_seed, trial=a.trial))
 
 
 def _bench(a) -> Bench:
@@ -123,8 +127,8 @@ def main(argv: list[str] | None = None) -> None:
     elif a.cmd == "explain-case":
         from .explain import write_index, write_page
         for path in a.paths:
-            print(write_page(path))
-        print(write_index(a.paths[0].resolve().parent.parent))
+            print(write_page(path), "(+ zh, ko, ja, es)")
+        print(write_index(a.paths[0].resolve().parent.parent), "(+ zh, ko, ja, es)")
     elif a.cmd == "build-site":
         from .site import build_site
         pages = build_site(Path("."), a.out, github=a.github, ref=a.ref)
@@ -134,11 +138,11 @@ def main(argv: list[str] | None = None) -> None:
     elif a.cmd == "cases":
         for cid, case in _bench(a).cases.items():
             print(f"{cid}\t{case.role}\t{case.task_type}\t{','.join(case.locales())}"
-                  f"\t{'settings=' + ','.join(case.tiers) + ' x ' + ','.join(case.rulesets) if case.tiers else ''}")
+                  f"\t{'settings=' + ','.join(case.tiers) + ' x rule seeds ' + ','.join(map(str, case.rule_seeds)) if case.tiers else ''}")
     elif a.cmd == "prepare":
         bench = _bench(a)
         run_dir = Path(tempfile.mkdtemp(prefix="fdeb2-prepare-"))
-        variant = bench.prepare(_spec(a), run_dir)
+        variant = bench.prepare(_spec(a, bench), run_dir)
         from .prompts import render_task_prompt
         files = sorted(p.relative_to(run_dir / "workspace").as_posix()
                        for p in (run_dir / "workspace" / "data").rglob("*") if p.is_file())
@@ -149,7 +153,7 @@ def main(argv: list[str] | None = None) -> None:
     elif a.cmd == "run":
         bench = _bench(a)
         agent = AgentSpec(harness=a.harness, model=a.model, max_steps=a.max_steps)
-        result = bench.run(_spec(a), agent, force=a.force)
+        result = bench.run(_spec(a, bench), agent, force=a.force)
         shown = result["score"] if result.get("score") else {"status": result["status"], "error": result.get("error")}
         print(json.dumps(shown, ensure_ascii=False, indent=2))
     elif a.cmd == "score":

@@ -4,7 +4,35 @@ A Seoul-based coffee & tea subscription shop exports its order database as CSV
 tables and asks for answers to twelve managers' questions. The request only
 says "answer them"; the definitions that decide every number (fiscal year,
 local day, test accounts, which orders count, net revenue, FX, "active",
-a renamed category, rounding of money figures) are in the requirements.
+a renamed category, rounding of money figures) are in the requirements, and so
+is what a wrong figure costs against a figure left as "not available yet".
+
+Every answer is a number or null ("don't know"). A scored question earns
+right_reward (2) when correct, dont_know_reward when null and wrong_reward (0)
+when wrong; the objective is the total over 2 x the number of scored questions.
+So the case measures calibrated abstention: a sheet that knows the setting's
+scheme answers a question only when its chance of being right is above
+dont_know_reward / right_reward.
+
+The data is the same in every setting. A setting (tier, rule seed) decides which
+questions are scored and the client's conventions:
+
+  tiers (which questions the board pack needs this round; others have no effect)
+    easy    Q01, Q03, Q04, Q10, Q12: counted orders, test and staff accounts,
+            the fiscal year, the active window, rounding
+    medium  + Q02, Q05, Q07, Q08, Q09, Q11: net revenue, FX and Korea-time days
+            (and the October refunds of September orders)
+    hard    all twelve: + Q06, which needs the snacks -> pantry rename
+  parameters a rule seed draws, each on its own (case.yaml `params`, one pool for every tier)
+    fy_start          first month of the fiscal year: January, April or July
+    active_days       active-customer window: 30, 60 or 90 days
+    rounding_unit     money is reported to the nearest 100, 1,000 or 10,000 KRW
+    dont_know_reward  what a null earns: 0.5, 1 or 1.5 (wrong 0, right 2)
+  derived (derive_params)
+    fy2025, fy2026_q1, fy2026_h1, active_from
+                      the periods these give, worded per locale as the requirements state them
+    right_reward, wrong_reward
+                      the fixed ends of the reward scheme (2 and 0)
 
 Table and column identifiers stay ASCII (they are SQL identifiers); categorical
 labels, product names, the questions file and the data dictionary are localized.
@@ -20,19 +48,18 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
+from fdebench2.cases import Setting
 from fdebench2.casekit import Fatal, read_json, write_csv
 
 # ── world ────────────────────────────────────────────────────────────────────
 
 KST = timedelta(hours=9)
+DAY = timedelta(days=1)
 DATA_START = date(2025, 1, 1)
 AS_OF = date(2026, 9, 30)
 SALE_DAY = date(2026, 7, 1)
 RENAME_DAY = date(2025, 10, 1)          # "snacks" renamed "pantry"; older products keep the old label
-FY2025 = (date(2025, 4, 1), date(2026, 3, 31))
-FY2026_Q1 = (date(2026, 4, 1), date(2026, 6, 30))
-FY2026_H1 = (date(2026, 4, 1), date(2026, 9, 30))
-ACTIVE_WINDOW = (AS_OF - timedelta(days=89), AS_OF)
+LOAD_TEST_START = date(2025, 4, 1)      # the QA load test on the first test account
 AUG_2026 = (date(2026, 8, 1), date(2026, 8, 31))
 SEP_2026 = (date(2026, 9, 1), date(2026, 9, 30))
 TAX = {"KR": 0.10, "JP": 0.10, "US": 0.07}
@@ -43,8 +70,89 @@ MONEY_Q = ("Q01", "Q02", "Q06", "Q07", "Q09")
 EXACT_Q = ("Q03", "Q04", "Q05", "Q10")       # counts and ids: exact match
 PERCENT_Q = ("Q08", "Q11")
 REL_TOL = 0.005
-MONEY_ABS_TOL = 500.0 + 1e-6     # half the thousand-KRW rounding unit: the rounded exact figure always counts
 PP_TOL = 0.05                    # Q11 (a change in percent): percentage points, so one decimal place counts
+SCORED = {                       # the questions the board pack needs this round, per tier
+    "easy": ("Q01", "Q03", "Q04", "Q10", "Q12"),
+    "medium": ("Q01", "Q02", "Q03", "Q04", "Q05", "Q07", "Q08", "Q09", "Q10", "Q11", "Q12"),
+    "hard": tuple(QIDS),
+}
+UNRESOLVED = ("Q06",)            # what the reference cannot settle: it misses the snacks -> pantry rename
+GUESS_BELIEF = 0.5               # the reference's chance that its unsettled answer is right
+RIGHT_REWARD, WRONG_REWARD = 2, 0      # the fixed ends of the scheme; the rule seed draws dont_know_reward
+
+
+def _first(year: int, month: int) -> date:
+    """The first day of `month` of `year`; months past 12 run into the next years."""
+    return date(year + (month - 1) // 12, (month - 1) % 12 + 1, 1)
+
+
+def periods(fy_start: int) -> dict[str, tuple[date, date]]:
+    """FY2025, the first quarter and the first half of FY2026 for a fiscal year that starts in month fy_start
+    and is named after the calendar year it starts in. A period still running on the reference date counts up
+    to the reference date."""
+    fy26 = _first(2026, fy_start)
+    return {"fy2025": (_first(2025, fy_start), fy26 - DAY),
+            "q1": (fy26, min(_first(2026, fy_start + 3) - DAY, AS_OF)),
+            "h1": (fy26, min(_first(2026, fy_start + 6) - DAY, AS_OF))}
+
+
+@dataclass(frozen=True)
+class Rules:
+    """One setting's conventions and reward scheme."""
+
+    fy_start: int
+    active_days: int
+    unit: int                    # money is reported to the nearest unit (KRW)
+    right: float
+    dont_know: float
+    wrong: float
+    scored: tuple
+
+    @property
+    def answers_unsettled(self) -> bool:
+        """The reference's abstention policy: answer an unsettled question only when its expected reward beats
+        "don't know" (a tie abstains). With even odds: answer iff dont_know < right / 2, i.e. when a null earns
+        0.5 (not at 1, a tie, nor at 1.5)."""
+        return GUESS_BELIEF * self.right + (1 - GUESS_BELIEF) * self.wrong > self.dont_know
+
+
+def rules_of(setting: Setting) -> Rules:
+    p = setting.params
+    return Rules(int(p["fy_start"]), int(p["active_days"]), int(p["rounding_unit"]), float(p["right_reward"]),
+                 float(p["dont_know_reward"]), float(p["wrong_reward"]), SCORED[setting.tier])
+
+
+# ── rule seeds: what the drawn parameters give ───────────────────────────────
+
+SPAN = {"zh": "{} 至 {}", "en": "{} to {}", "ko": "{} ~ {}", "ja": "{}〜{}", "es": "del {} al {}"}
+
+
+def _span(a: date, b: date) -> dict:
+    """A date range as each locale's requirements write it."""
+    return {lang: fmt.format(a.isoformat(), b.isoformat()) for lang, fmt in SPAN.items()}
+
+
+def derive_params(params: dict, tier: str) -> dict:
+    """The periods the texts state, from the drawn fiscal-year start and active window, and the fixed ends of
+    the reward scheme. The first half of FY2026 is stated whole (a July year's runs to December); the code
+    counts a period still running on the reference date up to it (periods())."""
+    fy_start = int(params["fy_start"])
+    per = periods(fy_start)
+    return {"fy2025": _span(*per["fy2025"]),
+            "fy2026_q1": _span(per["q1"][0], _first(2026, fy_start + 3) - DAY),
+            "fy2026_h1": _span(per["h1"][0], _first(2026, fy_start + 6) - DAY),
+            "active_from": (AS_OF - timedelta(days=int(params["active_days"]) - 1)).isoformat(),
+            "right_reward": RIGHT_REWARD, "wrong_reward": WRONG_REWARD}
+
+
+def admissible(params: dict, tier: str) -> bool:
+    """Rewards rise from wrong to don't know to right, FY2026 has started by the reference date, and the active
+    window starts after the data does. Every combination of the current pools passes; this guards new ones."""
+    rewards_rise = float(params["wrong_reward"]) < float(params["dont_know_reward"]) < float(params["right_reward"])
+    fy_started = _first(2026, int(params["fy_start"])) <= AS_OF
+    window_in_data = 1 <= int(params["active_days"]) <= (AS_OF - DATA_START).days + 1
+    return rewards_rise and fy_started and window_in_data
+
 
 # product id -> (category key, KRW list price, launch date)
 PRODUCTS = {
@@ -211,10 +319,10 @@ def build_world(seed: int) -> World:
     for c in rng.sample(eligible, 170):
         make_order(c, _local_ts(rng, SALE_DAY, SALE_HOURS))
 
-    # Test accounts: QA load test in FY2025 on the first one, scattered test orders on all (incl. sale night).
+    # Test accounts: QA load test (2025-04 to 2026-03) on the first one, scattered test orders on all (and sale night).
     tests = [c for c in customers if c.kind == "test"]
     for k in range(36):
-        d = FY2025[0] + timedelta(days=int(k * 10 + rng.randint(0, 6)))
+        d = LOAD_TEST_START + timedelta(days=int(k * 10 + rng.randint(0, 6)))
         make_order(tests[0], _local_ts(rng, d), [("P23", 10), ("P06", 5)], "completed")
     for c in tests:
         for _ in range(rng.randint(6, 12)):
@@ -238,13 +346,18 @@ def build_world(seed: int) -> World:
 
 # ── analysis (truth, reference and signature variants) ───────────────────────
 
-def compute(world: World, local_day=True, exclude_test=True, both_labels=True) -> dict:
+def compute(world: World, fy_start: int = 4, active_days: int = 90, local_day=True, exclude_test=True,
+            both_labels=True) -> dict:
+    """The twelve exact answers under one set of conventions (the truth with every flag left on)."""
     def day(ts: datetime) -> date:
         return (ts + KST).date() if local_day else ts.date()
 
     def within(d, rng_):
         return rng_[0] <= d <= rng_[1]
 
+    per = periods(fy_start)
+    fy_, q1, h1 = per["fy2025"], per["q1"], per["h1"]
+    window = (AS_OF - timedelta(days=active_days - 1), AS_OF)
     food = FOOD if both_labels else ("pantry",)
     rows = []   # per completed order: (customer, local date, gross KRW, refund ex-tax KRW, units, food net KRW)
     for o in world.orders:
@@ -263,23 +376,23 @@ def compute(world: World, local_day=True, exclude_test=True, both_labels=True) -
     def net(rng_):
         return sum(g - r for _, d, g, r, _, _ in rows if within(d, rng_))
 
-    fy = [x for x in rows if within(x[1], FY2025)]
-    h1 = [x for x in rows if within(x[1], FY2026_H1)]
+    fy = [x for x in rows if within(x[1], fy_)]
+    half = [x for x in rows if within(x[1], h1)]
     by_cust: dict[int, float] = {}
     for c, _, g, r, _, _ in fy:
         by_cust[c] = by_cust.get(c, 0.0) + g - r
-    active = {x[0] for x in rows if within(x[1], ACTIVE_WINDOW)}
+    active = {x[0] for x in rows if within(x[1], window)}
     refunded = [x for x in fy if x[3] > 0]
     signups = [c for c in world.customers if not (exclude_test and c.kind == "test")
-               and within(day(c.signup_utc), FY2025)]
+               and within(day(c.signup_utc), fy_)]
     return {
-        "Q01": net(FY2025),
-        "Q02": net(FY2026_Q1),
+        "Q01": net(fy_),
+        "Q02": net(q1),
         "Q03": len(active),
         "Q04": max(by_cust, key=lambda c: (by_cust[c], -c)),
         "Q05": sum(1 for x in rows if x[1] == SALE_DAY),
         "Q06": sum(x[5] for x in fy),
-        "Q07": sum(x[2] - x[3] for x in h1) / len(h1),
+        "Q07": sum(x[2] - x[3] for x in half) / len(half),
         "Q08": 100.0 * sum(x[3] for x in fy) / sum(x[2] for x in fy),
         "Q09": sum(x[3] for x in refunded) / len(refunded),
         "Q10": len(signups),
@@ -288,22 +401,35 @@ def compute(world: World, local_day=True, exclude_test=True, both_labels=True) -
     }
 
 
-def _round_money(ans: dict) -> dict:
-    return {q: (round(v / 1000.0) * 1000 if q in MONEY_Q else v) for q, v in ans.items()}
+def truth(world: World, rules: Rules, **variant) -> dict:
+    return compute(world, rules.fy_start, rules.active_days, **variant)
 
 
-def _reference_answers(world: World, rounded=True) -> dict:
-    # A careful analyst who misses that the old "snacks" label is the same category as "pantry".
-    ans = compute(world, both_labels=False)
-    return _round_money(ans) if rounded else ans
+def _round_money(ans: dict, unit: int) -> dict:
+    return {q: (round(v / unit) * unit if q in MONEY_Q and v is not None else v) for q, v in ans.items()}
 
 
-def _baseline_answers(world: World) -> dict:
+def _reference_answers(world: World, rules: Rules, rounded=True) -> dict:
+    """A careful analyst with the setting's conventions who misses that the old "snacks" label is the same
+    category as "pantry". It leaves the questions this round does not need as null. Its pantry figure, from the
+    new label alone, covers only products launched since 2025-10, so it gives that answer even odds
+    (GUESS_BELIEF) and keeps it only when that beats "don't know" (a null earning 0.5); when a null earns 1 (a
+    tie) or 1.5 it says null."""
+    ans = truth(world, rules, both_labels=False)
+    if rounded:
+        ans = _round_money(ans, rules.unit)
+    out = {q: (ans[q] if q in rules.scored else None) for q in QIDS}
+    if not rules.answers_unsettled:
+        out.update({q: None for q in UNRESOLVED})
+    return out
+
+
+def _baseline_answers(world: World, rules: Rules) -> dict:
     """The export summed at face value, with none of the client's definitions: calendar-year periods on the
     stored UTC dates, every order row whatever its status, revenue = order `total` (tax included) less the
     refunds dated in the period, every currency at the latest rate, active = ordered in the last 30 days, and
-    "pantry" = the products labelled pantry. It keeps the two finance policies the client applies anyway
-    (test accounts out, money rounded to thousands of KRW), so the sheet is valid."""
+    "pantry" = the products labelled pantry. It answers every question and keeps the two finance policies the
+    client applies anyway (test accounts out, money rounded to the setting's unit), so the sheet is valid."""
     fy, h1 = (date(2025, 1, 1), date(2025, 12, 31)), (date(2026, 1, 1), date(2026, 6, 30))
     last30 = (AS_OF - timedelta(days=29), AS_OF)
     rate = {cur: world.fx[(cur, AS_OF)] for cur in DECIMALS}
@@ -338,7 +464,7 @@ def _baseline_answers(world: World) -> dict:
         "Q11": 100.0 * (revenue(SEP_2026) / revenue(AUG_2026) - 1.0),
         "Q12": sum(q for o in in_fy for _, q, _ in o.lines) / len(in_fy),
     }
-    return _round_money(ans)
+    return _round_money(ans, rules.unit)
 
 
 # ── data rendering ───────────────────────────────────────────────────────────
@@ -596,49 +722,70 @@ def write_data(world: World, data_dir: Path, lang: str) -> None:
 
 # ── scoring ──────────────────────────────────────────────────────────────────
 
-def _correct(q: str, got: float, truth: float) -> bool:
+def _correct(q: str, got: float, exact: float, unit: int) -> bool:
     if q in EXACT_Q:
-        return abs(got - truth) < 1e-9
+        return abs(got - exact) < 1e-9
     if q == "Q11":
         tol = PP_TOL
-    elif q in MONEY_Q:
-        tol = max(REL_TOL * abs(truth), MONEY_ABS_TOL)
+    elif q in MONEY_Q:     # half the rounding unit: the exact figure rounded as finance requires always counts
+        tol = max(REL_TOL * abs(exact), unit / 2.0 + 1e-6)
     else:
-        tol = REL_TOL * abs(truth)
+        tol = REL_TOL * abs(exact)
     cands = [got, got * 100.0] if q in PERCENT_Q else [got]   # a percentage given as a fraction is accepted
-    return any(abs(c - truth) <= tol for c in cands)
+    return any(abs(c - exact) <= tol for c in cands)
 
 
 def _is_number(v) -> bool:
-    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        return False
+    try:
+        return math.isfinite(v)
+    except OverflowError:      # a JSON integer too large for a float is not a usable figure
+        return False
 
 
-def score(world: World, submission_dir: Path) -> dict:
+def score(world: World, submission_dir: Path, setting: Setting) -> dict:
+    rules = rules_of(setting)
     try:
         doc = read_json(submission_dir, "answers.json")
         if not isinstance(doc, dict):
-            raise Fatal("answers.json must be an object {\"Q01\": number, ...}")
+            raise Fatal("answers.json must be an object {\"Q01\": number or null, ...}")
     except Fatal as e:
         return {"fatal": str(e)}
-    truth = compute(world)
-    with_tests = compute(world, exclude_test=False)
-    violations, correct, per_q = [], 0, {}
-    for q in QIDS:
+    exact = truth(world, rules)
+    with_tests = truth(world, rules, exclude_test=False)
+    violations = []
+    for q in QIDS:     # the file's shape, for every question (used this round or not)
+        if q not in doc:
+            violations.append(("answer_format", f"{q} is missing"))
+        elif doc[q] is not None and not _is_number(doc[q]):
+            violations.append(("answer_format", f"{q} is neither a number nor null: {repr(doc[q])[:60]}"))
+    status = {}
+    for q in rules.scored:   # an answer to a question this round does not use has no effect
         v = doc.get(q)
+        if v is None and q in doc:
+            status[q] = "dont_know"
+            continue
         if not _is_number(v):
-            violations.append(("answer_format", f"{q} is missing or not a number: {v!r}"))
-            per_q[q] = False
+            status[q] = "wrong"      # missing or malformed: already an answer_format violation
             continue
         v = float(v)
-        if q in MONEY_Q and abs(v / 1000.0 - round(v / 1000.0)) > 1e-6:
-            violations.append(("report_rounding", f"{q} = {v} is a money figure not rounded to thousands of KRW"))
-        if q in EXACT_Q and with_tests[q] != truth[q] and abs(v - with_tests[q]) < 1e-9:
+        if q in MONEY_Q and abs(v / rules.unit - round(v / rules.unit)) > 1e-6:
+            violations.append(("report_rounding", f"{q} = {v} is a money figure not rounded to {rules.unit:,} KRW"))
+        if q in EXACT_Q and with_tests[q] != exact[q] and abs(v - with_tests[q]) < 1e-9:
             violations.append(("exclude_test_accounts", f"{q} = {v:g} matches the figure that includes test accounts"))
-        per_q[q] = _correct(q, v, truth[q])
-        correct += per_q[q]
-    return {"violations": violations, "objective": float(correct),
-            "metrics": {"correct": correct, "of": len(QIDS),
-                        "wrong": [q for q in QIDS if not per_q[q]]}}
+        status[q] = "right" if _correct(q, v, exact[q], rules.unit) else "wrong"
+    reward = {"right": rules.right, "dont_know": rules.dont_know, "wrong": rules.wrong}
+    count = {k: sum(1 for s in status.values() if s == k) for k in reward}
+    n, answered = len(rules.scored), count["right"] + count["wrong"]
+    total = sum(reward[s] for s in status.values())
+    return {"violations": violations, "objective": total / (rules.right * n),
+            "metrics": {"scored": n, "answered": answered, "right": count["right"], "wrong": count["wrong"],
+                        "dont_know": count["dont_know"],
+                        "accuracy_on_answered": round(count["right"] / answered, 6) if answered else None,
+                        "coverage": round(answered / n, 6), "reward": total,
+                        "wrong_questions": [q for q in rules.scored if status[q] == "wrong"],
+                        "dont_know_questions": [q for q in rules.scored if status[q] == "dont_know"]}}
 
 
 # ── reference solution ───────────────────────────────────────────────────────
@@ -647,37 +794,45 @@ def _write(out_dir: Path, ans: dict) -> None:
     (out_dir / "answers.json").write_text(json.dumps(ans, indent=2), encoding="utf-8")
 
 
-def reference_solution(world: World, out_dir: Path) -> None:
-    _write(out_dir, _reference_answers(world))
+def reference_solution(world: World, out_dir: Path, setting: Setting) -> None:
+    _write(out_dir, _reference_answers(world, rules_of(setting)))
 
 
-def baseline_solution(world: World, out_dir: Path) -> None:
-    _write(out_dir, _baseline_answers(world))
+def baseline_solution(world: World, out_dir: Path, setting: Setting) -> None:
+    """What finance reports without an analyst: "not available yet" (null) for every question. It earns the
+    don't-know reward everywhere, so saying "don't know" to everything scores 0 on the normalized scale, and it
+    beats the face-value sheet (_baseline_answers) in every setting, whose wrong figures earn nothing."""
+    _write(out_dir, {q: None for q in QIDS})
 
 
-def _score_answers(world: World, ans: dict) -> dict:
+def _score_answers(world: World, ans: dict, setting: Setting) -> dict:
     with tempfile.TemporaryDirectory() as tmp:
         _write(Path(tmp), ans)
-        return score(world, Path(tmp))
+        return score(world, Path(tmp), setting)
 
 
-def violating_examples(world: World) -> dict:
-    # Following the rounding rule must never cost a question: the exact answers rounded as finance requires
+def violating_examples(world: World, setting: Setting) -> dict:
+    rules = rules_of(setting)
+    # Following the rounding rule must never cost a question: the exact answers rounded to the setting's unit
     # score full marks.
-    full = _score_answers(world, _round_money(compute(world)))
-    if full["violations"] or full["objective"] != len(QIDS):
-        raise AssertionError(f"the exact answers rounded to thousands do not score full marks: {full}")
-    ref = _reference_answers(world)
-    with_tests = compute(world, exclude_test=False)
+    full = _score_answers(world, _round_money(truth(world, rules), rules.unit), setting)
+    if full["violations"] or full["objective"] != 1.0:
+        raise AssertionError(f"the exact answers rounded to {rules.unit:,} KRW do not score full marks "
+                             f"({setting.label}): {full}")
+    ref = _reference_answers(world, rules)
+    exact, with_tests = truth(world, rules), truth(world, rules, exclude_test=False)
+    missing = object()
 
     def variant(**changes):
-        ans = {**ref, **changes}
-        ans = {k: v for k, v in ans.items() if v is not None}
+        ans = {k: v for k, v in {**ref, **changes}.items() if v is not missing}
         return lambda out: _write(out, ans)
 
-    exact = _reference_answers(world, rounded=False)
+    test_q = next((q for q in ("Q04", "Q03", "Q10", "Q05") if q in rules.scored and with_tests[q] != exact[q]), None)
+    if test_q is None:
+        raise AssertionError(f"no scored count or id changes with the test accounts ({setting.label})")
+    unrounded = _reference_answers(world, rules, rounded=False)
     return {
-        "answer_format": variant(Q12=None),
-        "exclude_test_accounts": variant(Q04=with_tests["Q04"]),
-        "report_rounding": variant(**{q: exact[q] for q in MONEY_Q}),
+        "answer_format": variant(Q12=missing),
+        "exclude_test_accounts": variant(**{test_q: with_tests[test_q]}),
+        "report_rounding": variant(**{q: unrounded[q] for q in MONEY_Q if ref[q] is not None}),
     }

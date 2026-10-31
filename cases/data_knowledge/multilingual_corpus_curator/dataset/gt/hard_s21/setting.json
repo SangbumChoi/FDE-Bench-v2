@@ -1,0 +1,16 @@
+{
+  "derived": {
+    "fallback_author": "Anonymous"
+  },
+  "params": {
+    "layout": "year/author/title",
+    "max_len": 40,
+    "multi_author": "first",
+    "no_author": "Anonymous",
+    "script": "original",
+    "sep": "_",
+    "year_basis": "edition"
+  },
+  "rule_seed": 21,
+  "tier": "hard"
+}

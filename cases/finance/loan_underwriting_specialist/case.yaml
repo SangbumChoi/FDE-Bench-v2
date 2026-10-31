@@ -25,20 +25,39 @@ tiers:                       # one world, one hidden period and the same notices
     document corrections (a referred application is decided again the day its corrected document arrives),
     repayment notices (a repaid debt leaves the DSR the day the notice arrives), and split applications (at most
     one approval per customer per day; the others are declined with SPLIT_APPLICATION).
-rulesets:                    # the client's rule parameters; same data, three ground truths
-  A: {policy_bureau: A, other_bureau: B, min_score: 650, near_prime_below: 820, max_dsr_pct: 40, income_cap_pct: 100,
-      daily_cap: 250000, period_budget: 4400000, quota_pct: 30, discrepancy_pct: 20, min_tenure: 6}
-  B: {policy_bureau: B, other_bureau: A, min_score: 740, near_prime_below: 870, max_dsr_pct: 35, income_cap_pct: 80,
-      daily_cap: 200000, period_budget: 3800000, quota_pct: 25, discrepancy_pct: 15, min_tenure: 3}
-  C: {policy_bureau: A, other_bureau: B, min_score: 680, near_prime_below: 850, max_dsr_pct: 45, income_cap_pct: 120,
-      daily_cap: 300000, period_budget: 3400000, quota_pct: 35, discrepancy_pct: 25, min_tenure: 12}
-param_labels:                # a bureau reads as its score field in each locale's text
-  policy_bureau:
-    A: {zh: bureau_a_score（A评分机构分数）, en: bureau_a_score, ko: bureau_a_score(A평가사 점수), ja: bureau_a_score（A社スコア）, es: bureau_a_score (buró A)}
-    B: {zh: bureau_b_score（B评分机构分数）, en: bureau_b_score, ko: bureau_b_score(B평가사 점수), ja: bureau_b_score（B社スコア）, es: bureau_b_score (buró B)}
-  other_bureau:
-    A: {zh: bureau_a_score（A评分机构分数）, en: bureau_a_score, ko: bureau_a_score(A평가사 점수), ja: bureau_a_score（A社スコア）, es: bureau_a_score (buró A)}
-    B: {zh: bureau_b_score（B评分机构分数）, en: bureau_b_score, ko: bureau_b_score(B평가사 점수), ja: bureau_b_score（B社スコア）, es: bureau_b_score (buró B)}
+params:                      # the client's rule parameters; a rule seed draws each from its candidates (same data)
+  policy_bureau:             # the bureau whose score the policy uses; the other one is reference only (other_bureau)
+    values: [A, B]
+    labels:                  # a bureau reads as its score field in each locale's text
+      A: {zh: bureau_a_score（A评分机构分数）, en: bureau_a_score, ko: bureau_a_score(A평가사 점수), ja: bureau_a_score（A社スコア）, es: bureau_a_score (buró A)}
+      B: {zh: bureau_b_score（B评分机构分数）, en: bureau_b_score, ko: bureau_b_score(B평가사 점수), ja: bureau_b_score（B社スコア）, es: bureau_b_score (buró B)}
+  min_score_a:               # the score cutoff in Bureau A points (8-19% of non-delinquent applicants fall under it);
+    values: [745, 760, 775]  # the policy's cutoff min_score is 55 points higher with Bureau B (derive_params)
+  near_prime_a:              # near-prime: the policy score below this, in Bureau A points (near_prime_below, likewise);
+    values: [825, 840, 855]  # the band from the cutoff must be >= 2.5 points per point of the quota (admissible)
+  max_dsr_pct:               # the DSR cap (medium+: 5 points lower from the regulator's effective date)
+    values: [35, 40, 45]
+  income_cap_pct:            # the income cap in % of annual income, below what even a 35% DSR cap allows a
+    values: [50, 65, 80]     # debt-free customer (about 88% of income), so it binds in every draw
+  daily_cap:
+    values: [200000, 250000, 300000]
+    labels:
+      200000: {zh: "200,000", en: "200,000", ko: "200,000", ja: "200,000", es: "200.000"}
+      250000: {zh: "250,000", en: "250,000", ko: "250,000", ja: "250,000", es: "250.000"}
+      300000: {zh: "300,000", en: "300,000", ko: "300,000", ja: "300,000", es: "300.000"}
+  period_budget:             # medium+ (400,000 less from the treasury's cut); it binds after the cut (admissible)
+    values: [3400000, 3800000, 4400000]
+    labels:
+      3400000: {zh: "3,400,000", en: "3,400,000", ko: "3,400,000", ja: "3,400,000", es: "3.400.000"}
+      3800000: {zh: "3,800,000", en: "3,800,000", ko: "3,800,000", ja: "3,800,000", es: "3.800.000"}
+      4400000: {zh: "4,400,000", en: "4,400,000", ko: "4,400,000", ja: "4,400,000", es: "4.400.000"}
+  quota_pct:                 # medium+: the near-prime share of the period's approved amount
+    values: [25, 30, 35]
+  discrepancy_pct:           # hard: a document this much below the declared salary is referred
+    values: [15, 20, 25]
+  min_tenure:                # the tenure habit: refer below this many months in the job
+    values: [3, 6, 12]
+rule_seeds: [30, 525, 1043]        # public panel: every candidate but quota_pct 35; binding is checked on 30
 deliverable_spec: |
   A program/ directory with underwriter.py defining on_day(day). The engine loads it once and calls it once per
   business day of the hidden period, in order, in the same process (module-level state survives between calls);

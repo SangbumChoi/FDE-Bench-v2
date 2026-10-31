@@ -1,0 +1,17 @@
+{
+  "derived": {
+    "withdrawal_basis": "capital",
+    "withdrawal_pct": 25
+  },
+  "params": {
+    "large_order": 6,
+    "liquidation_days": 2,
+    "max_drawdown": "none",
+    "restricted": "MEDQ, GLAC",
+    "sector_cap": 40,
+    "stock_cap": 15,
+    "withdrawal": "capital_25"
+  },
+  "rule_seed": 134,
+  "tier": "medium"
+}

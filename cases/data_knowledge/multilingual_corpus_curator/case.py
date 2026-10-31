@@ -20,9 +20,12 @@ distribution (another seed, same size), the same in every setting.
           descriptions, conflicting sources, scans, junk files, zip archives,
           multi-book catalog CSVs; each with a defined handling
 
-Rule sets (A / B / C) change the library layout, the year basis (first
-publication or this edition), the script of names (original or Latin), how
-co-authors are written and the slug rules, so each gives a different library.
+A rule seed draws the client's library rules from candidate pools (case.yaml
+`params:`): the layout, the year basis (first publication or this edition), the
+script of names (original or Latin), how co-authors are written, the separator
+and the length limit of a name (tighter pools in harder tiers), and in hard the
+policy for books with no author (review, or shelved under a fallback name). Each
+draw gives a different library.
 """
 
 from __future__ import annotations
@@ -1126,7 +1129,7 @@ def content_of(b: Book) -> str:
 
 
 class _View:
-    """One setting: its tier (which books are scored, which rules apply) and its rule-set parameters."""
+    """One setting: its tier (which books are scored, which rules apply) and the parameters its rule seed drew."""
 
     def __init__(self, setting):
         self.setting = setting
@@ -1138,10 +1141,19 @@ class _View:
         self.multi_author = setting["multi_author"]
         self.sep = setting["sep"]
         self.max_len = int(setting["max_len"])
+        self.no_author = setting["no_author"]
         self.fallback = setting["fallback_author"]
 
     def in_scope(self, b: Book) -> bool:
         return TIER_ORDER.index(b.scope) <= TIER_ORDER.index(self.tier)
+
+    def review_of(self, b: Book) -> str | None:
+        """The reason code the book goes to review with in this setting, or None when it is placed. A book with
+        no author goes to review only in hard under the review policy; otherwise it is shelved under the
+        fallback name (out of scope in easy and medium, where books.csv still gives that path)."""
+        if b.review == "NO_AUTHOR" and not (self.hard and self.no_author == "review"):
+            return None
+        return b.review
 
     def parts(self, b: Book) -> tuple | None:
         """(year, title, author) path components of the book, or None when it has no placement."""
@@ -1265,7 +1277,8 @@ def evaluate(corpus: Corpus, files: dict, v: _View) -> tuple[list, float, dict]:
         mine = attributed.get(b.bid, [])
         if len(mine) > 1:
             violations.append(("one_file_per_book", f"{b.title[:40]}: {len(mine)} library files ({', '.join(mine[:3])})"))
-        shelved = b.review is None or (b.review == "NO_AUTHOR" and bool(mine))
+        review = v.review_of(b)          # None: the book belongs on the shelf in this setting
+        shelved = review is None or (review == "NO_AUTHOR" and bool(mine))
         c = 0.0
         if shelved:
             exp, (y, t, a) = v.path(b), v.parts(b)
@@ -1280,21 +1293,21 @@ def evaluate(corpus: Corpus, files: dict, v: _View) -> tuple[list, float, dict]:
                 else:
                     got_c = 0.0
                 c = max(c, got_c)
-            exact += c == 1.0 and b.review is None
+            exact += c == 1.0 and review is None
         elif not mine:
             # Review credit only when every row naming the book's files says review with one and the same code.
-            base = NO_AUTHOR_REVIEW_CREDIT if b.review == "NO_AUTHOR" else 1.0
+            base = NO_AUTHOR_REVIEW_CREDIT if review == "NO_AUTHOR" else 1.0
             refs = {_ref(f) for f in b.files}
             named = [k for k, rr in enumerate(row_refs) if rr & refs]
             codes = {rows[k].get("reason", "").upper() if status[k] == "review" else None for k in named}
             if named and len(codes) == 1 and None not in codes:
-                c = base if codes == {b.review} else 0.4 * base
+                c = base if codes == {review} else 0.4 * base
             review_ok += c == base
-        if b.review and mine:
-            if v.hard and b.review == "NO_AUTHOR":
+        if review and mine:
+            if v.hard and review == "NO_AUTHOR":
                 violations.append(("missing_author_review", f"{b.title[:40]} has no author but was placed in the "
                                                             f"library ({mine[0]})"))
-            if v.hard and b.review == "NO_DESCRIPTION":
+            if v.hard and review == "NO_DESCRIPTION":
                 violations.append(("no_fabrication", f"{b.title[:40]} has no description in any source but has a "
                                                      f"library file ({mine[0]})"))
         if c > 0 and not manifest_ok(b, mine if shelved else []):
@@ -1374,7 +1387,15 @@ def score(world: World, submission_dir: Path, setting) -> dict:
 
 # ── reference solution and rule-breaking examples ────────────────────────────
 
-PARAMS = ("layout", "year_basis", "script", "multi_author", "sep", "max_len", "fallback_author")
+PARAMS = ("layout", "year_basis", "script", "multi_author", "sep", "max_len", "no_author", "fallback_author")
+EXCEPTION_AUTHOR = "Unknown"           # the author name of an approved exception under the review policy
+
+
+def derive_params(params: dict, tier: str) -> dict:
+    """The author name a book with no author is shelved under: the drawn name when the policy shelves such
+    books, else the name an approved exception to the review policy would use."""
+    policy = params["no_author"]
+    return {"fallback_author": EXCEPTION_AUTHOR if policy == "review" else policy}
 
 
 def write_program(out_dir: Path, setting, brk: str | None = None, source: Path = REFERENCE) -> None:
@@ -1400,7 +1421,9 @@ def violating_examples(world: World, setting) -> dict:
     """One program per rule of the setting that breaks exactly that rule (for the validator)."""
     breaks = {"utf8_output": "utf8", "safe_names": "names", "one_file_per_book": "dup", "review_reason": "reason"}
     if setting.at_least("hard"):
-        breaks.update(no_fabrication="fabricate", missing_author_review="bend")
+        breaks.update(no_fabrication="fabricate")
+        if setting["no_author"] == "review":         # the rule applies only under the review policy
+            breaks.update(missing_author_review="bend")
     return {rule: (lambda d, b=b: write_program(d, setting, b)) for rule, b in breaks.items()}
 
 
@@ -1433,7 +1456,7 @@ def expected_output(corpus: Corpus, v: _View) -> tuple[dict, list]:
     files, manifest, key, taken = {}, [], [], {}
     for b in corpus.books:
         scored = v.in_scope(b)
-        review = b.review if b.review != "NO_AUTHOR" or v.hard else None
+        review = v.review_of(b)
         path = None if review else v.path(b)
         if scored:
             if review:

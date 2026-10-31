@@ -3,7 +3,8 @@
 organize({"corpus_dir": ..., "out_dir": ...}) reads every file of the corpus, groups the records that
 describe the same book, resolves each field by source precedence (embedded metadata > title-page text >
 file name) and writes out_dir/library/..., out_dir/_review/... and out_dir/manifest.csv. The client's
-rule-set parameters are in config.json next to this file.
+library rules of the setting (layout, year basis, script, co-authors, separator, length limit, the policy for
+books with no author and their fallback name) are in config.json next to this file.
 
 Deliberate gaps (the headroom an agent can win back): it does not open zip archives, does not read
 Roman-numeral or Chinese-numeral years, does not recover a year from a copyright line, does not detect two
@@ -517,7 +518,7 @@ def organize(task):
             reason = None
             if not book["title"]:
                 reason = "NO_TITLE"
-            elif not book["authors"] and cfg.get("break") != "bend":
+            elif not book["authors"] and cfg["no_author"] == "review" and cfg.get("break") != "bend":
                 reason = "NO_AUTHOR"
             elif not book["first"]:
                 reason = "NO_YEAR"

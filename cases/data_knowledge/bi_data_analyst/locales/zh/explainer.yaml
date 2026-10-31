@@ -1,0 +1,21 @@
+# The explainer's case texts in Simplified Chinese (English comes from case.yaml).
+role: BI 数据分析师
+task_type: 数据分析
+deliverable_spec: |
+  answers.json = {"Q01": <数字或 null>, "Q02": <数字或 null>, ..., "Q12": <数字或 null>}
+  问题清单中的每个问题编号（Q01..Q12）都是一个键。其值为一个 JSON 数字；工程师没有为该问题给出数字时（“不知道”“暂无数据”）为 null。
+  金额以韩元（KRW）计，百分比以百分数表示（例如 4.25% 写作 4.25），客户编号填数字形式的 customer_id。
+tiers:
+  easy: >-
+    考查核心口径的五道题（Q01、Q03、Q04、Q10、Q12）：哪些订单算数、排除测试账号并保留员工账号、财年、活跃客户的时间窗口以及金额取整；Q01 和 Q04 还取决于净收入和汇率的口径。其余七道题本轮不需要。
+  medium: >-
+    在 easy 的基础上，再加六道取决于净收入、下单日期汇率和韩国时间日期的题（Q02、Q05、Q07、Q08、Q09、Q11），其中包括 9 月订单在 10 月发生的退款（Q11；财年从 7 月开始时还有 Q02）。“食品储藏”那道题（Q06）本轮不需要。
+  hard: >-
+    全部十二道题：在 medium 的基础上加上“食品储藏”的净收入（Q06），这道题需要知道零食 → 食品储藏的品类更名。
+rules:
+  answer_format: >-
+    answers.json 中包含 Q01..Q12 的每个问题编号，各为一个有限的 JSON 数字或 null（null 表示“不知道”）。
+  exclude_test_accounts: >-
+    测试账号（accounts_meta 中 account_type = 测试）从所有数字中排除；本轮使用的计数或客户编号答案（Q03、Q04、Q05、Q10）若等于包含测试账号时的数字，且该数字与排除测试账号时的数字不同，即违反财务规定。
+  report_rounding: >-
+    本轮使用的每个金额（Q01、Q02、Q06、Q07、Q09）都四舍五入为 {{rounding_unit}} 韩元的整数倍后报出。

@@ -1,0 +1,14 @@
+{
+  "params": {
+    "cap_multiple": 1.5,
+    "dp_categories": "it_data",
+    "fast_track_below": 20000,
+    "governing_law": "CH_SG_EW",
+    "payment_days": 45,
+    "reject_at": 2,
+    "renewal_notice_days": 45,
+    "tfc_above": 250000
+  },
+  "rule_seed": 11,
+  "tier": "hard"
+}

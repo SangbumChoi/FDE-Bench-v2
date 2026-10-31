@@ -41,7 +41,7 @@ def registry(agent_model, answer="OK") -> ModelRegistry:
 def reference_files(case: NativeCase, tmp_path: Path) -> dict[str, str]:
     out = tmp_path / "ref"
     out.mkdir()
-    case.module.reference_solution(case.world, out)
+    case.write_reference(out)
     return {p.name: p.read_text(encoding="utf-8") for p in out.iterdir()}
 
 
@@ -61,7 +61,7 @@ def test_native_korean_run_scores_reference_as_one(cases_root, tmp_path):
     assert result["clarification"]["recall"] == 1.0
     assert abs(result["score"]["final"] - 1 / result["score"]["quality_cap"]) < 1e-6   # matching the reference
 
-    run_dir = bench.run_dir(spec, AgentSpec("reference", "agent"))
+    run_dir = bench.run_dir(bench.resolve(spec), AgentSpec("reference", "agent"))
     prompt = (run_dir / "prompt.md").read_text(encoding="utf-8")
     assert "현장 배치 엔지니어" in prompt            # agent instructions in Korean
     assert "리모델링" not in prompt                 # hidden requirements never shown
@@ -77,7 +77,7 @@ def test_native_korean_run_scores_reference_as_one(cases_root, tmp_path):
 
 def test_native_rule_bending_needs_the_exception_process(cases_root, tmp_path):
     case = NativeCase(cases_root / NATIVE)
-    examples = case.module.violating_examples(case.world)
+    examples = case.violating_examples()
     sub = tmp_path / "sub"
     sub.mkdir()
     examples["premium_first"](sub)

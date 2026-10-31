@@ -37,7 +37,7 @@
 - id: risk_limit_change
   text: risk_limit_change 通知自生效日起按给定百分点调整单只股票限额，生效日收盘时所有持仓不论当天是否买入都必须在新限额以内。
 - id: cash_withdrawal
-  text: cash_withdrawal 通知在付款日收盘时从已交收现金中取走 {{withdrawal_basis}} 的指定百分比（不足即违反客户指令）；由于 T+2，卖出必须足够早。
+  text: cash_withdrawal 通知只给出付款日；金额由协议规定：{{withdrawal}}，在付款日收盘时只从已交收现金中支付（不足即违反客户指令）；由于 T+2，卖出必须足够早。
 - id: medium_scope
   text: 这一轮回撤授权、熔断和留言都不在考核范围内。
 - id: market_impact

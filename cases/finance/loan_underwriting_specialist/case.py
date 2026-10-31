@@ -29,14 +29,17 @@ notices. The tier decides which rules are in force:
           day). Branch managers' "approve the maximum" notes on some applications must be ignored in every
           tier: following them breaks a limit.
 
-The rule set (A / B / C) sets the parameters: the policy bureau and its cutoff, the near-prime threshold,
-the DSR cap, the income cap, the daily cap, the period budget, the quota, the discrepancy threshold and the
-tenure habit.
+A rule seed draws the parameters from their candidates in case.yaml: the policy bureau, its cutoff and the
+near-prime threshold (both stated in Bureau A points and moved onto Bureau B's scale by derive_params), the DSR
+cap, the income cap, the daily cap, the period budget, the near-prime quota, the discrepancy threshold and the
+tenure habit; admissible() keeps the combinations where the budget binds and the near-prime band can carry the
+quota.
 """
 
 from __future__ import annotations
 
 import datetime as dt
+import functools
 import importlib.util
 import json
 import math
@@ -74,13 +77,57 @@ N_RETURNING = 45
 N_CORRECTIONS = 8
 N_REPAY_SAME_DAY, N_REPAY_LATER = 7, 8
 N_PRESSURE = 10
-N_BELOW_CUTOFF = 1        # per rule set: applicants under its score cutoff, otherwise approvable (see _below_cutoff)
+N_BELOW_CUTOFF = 1        # per policy cutoff: applicants under it, otherwise approvable (see _below_cutoff)
 REG_NOTICE_DAY, REG_DAY, REG_CUT = 6, 10, 5     # medium+: DSR cap 5 points lower for decisions from day 10
 BUDGET_CUT_DAY, BUDGET_CUT = 13, 400000          # medium+: the period budget is cut by 400,000 from day 13
 CALL_TIMEOUT = 10.0
 TOTAL_TIMEOUT = 600.0
 TOL = 0.01
 CODES = ("DELINQUENCY", "LOW_SCORE", "SPLIT_APPLICATION", "LIMIT_EXCEEDED", "CREDIT_RISK")
+B_OFFSET = 55             # Bureau B scores the same person about 55 points above Bureau A (with noise)
+
+
+# ── the rule seed's parameters ───────────────────────────────────────────────
+
+def policy_score(bureau: str, points_a: int) -> int:
+    """A score threshold stated in Bureau A points, on the policy bureau's own scale."""
+    return int(points_a) + (B_OFFSET if str(bureau) == "B" else 0)
+
+
+@functools.lru_cache(maxsize=1)
+def _bureau_labels() -> dict:
+    """case.yaml's wording of each bureau's score field per locale (params.policy_bureau.labels)."""
+    import yaml
+    meta = yaml.safe_load((Path(__file__).resolve().parent / "case.yaml").read_text(encoding="utf-8"))
+    return {str(k): dict(v) for k, v in meta["params"]["policy_bureau"]["labels"].items()}
+
+
+def derive_params(params: dict, tier: str) -> dict:
+    """The policy bureau's cutoff and near-prime threshold on its own scale (the candidates are in Bureau A points,
+    so that each puts about the same share of applicants under it with either bureau), and the other bureau's
+    score field, worded per locale, which the requirements name as reference only."""
+    bureau = str(params["policy_bureau"])
+    return {"min_score": policy_score(bureau, params["min_score_a"]),
+            "near_prime_below": policy_score(bureau, params["near_prime_a"]),
+            "other_bureau": dict(_bureau_labels()["A" if bureau == "B" else "B"])}
+
+
+def admissible(params: dict, tier: str) -> bool:
+    """Combinations the client's rules can live with:
+    - the period budget binds once the treasury's cut is in force: after the cut it is below what the daily cap
+      alone allows over the period (4,400,000 with a 200,000 daily cap could never bind);
+    - the treasury's cut lands before the budget can run out: lending the full daily cap from the first day does
+      not use up the budget before the cut's effective day (3,400,000 or 3,800,000 with a 300,000 daily cap
+      could). Otherwise a desk that lends first come, first served, unpaced, books the whole original budget
+      before the cut, the cut never reaches it, and it can end above a desk that paces the budget (rule seed 742
+      drew 3,400,000 with 300,000 before this check, and the baseline scored 1.03 of the reference in hard);
+    - the near-prime band, from the cutoff to the near-prime threshold, is at least 2.5 Bureau A points wide per
+      point of the quota, so that the eligible near-prime demand can meet the commitment without holding back
+      much prime lending (a 35% quota needs a band of 88 points, e.g. 760 to 855)."""
+    budget_binds = int(params["period_budget"]) - BUDGET_CUT < N_DAYS * int(params["daily_cap"])
+    outlasts_cut = int(params["period_budget"]) >= BUDGET_CUT_DAY * int(params["daily_cap"])
+    band = int(params["near_prime_a"]) - int(params["min_score_a"])
+    return budget_binds and outlasts_cut and band >= 2.5 * int(params["quota_pct"])
 
 
 def installment(amount: float, apr: float = APR) -> float:
@@ -243,7 +290,7 @@ class World:
 
 
 class _View:
-    """The world as one setting's policy sees it: which tier's rules apply and the rule set's parameters."""
+    """The world as one setting's policy sees it: which tier's rules apply and the rule seed's parameters."""
 
     def __init__(self, world: World, setting):
         self._w, self.setting = world, setting
@@ -580,18 +627,26 @@ def _period(w: World, seed: int) -> None:
     w.notices = notices
 
 
-def _rulesets() -> dict:
+def _candidates() -> dict:
+    """{parameter: every candidate of any tier} from case.yaml `params:` (the world must suit every draw)."""
     import yaml
-    return yaml.safe_load((Path(__file__).resolve().parent / "case.yaml").read_text(encoding="utf-8"))["rulesets"]
+    from fdebench2.cases import param_pools
+    meta = yaml.safe_load((Path(__file__).resolve().parent / "case.yaml").read_text(encoding="utf-8"))
+    out: dict = {}
+    for name, by_tier in param_pools(meta, tuple(meta["tiers"])).items():
+        out[name] = sorted({v for pool in by_tier.values() for v in pool}, key=str)
+    return out
 
 
 def _below_cutoff(w: World, seed: int) -> None:
-    """Every rule set's score cutoff gets at least N_BELOW_CUTOFF applicants under it who are otherwise approvable
-    in all its tiers (no delinquency, enough months in the job, documents within the discrepancy threshold, at
-    least 1,000 of limit on the strictest reading: every debt, the verified salary, the regulator's lower DSR cap
-    at the stressed rate), so that approving one of them breaks the cutoff alone. The random period usually has
-    them; a world that does not gets them by drawing new bureau scores, under the cutoff, for random applicants
-    with one application and no other part in the period (no twin, branch note, correction or repayment)."""
+    """Every policy cutoff a rule seed can draw (each bureau with each cutoff candidate) gets at least
+    N_BELOW_CUTOFF applicants under it who are otherwise approvable in every setting (no delinquency, at least the
+    longest tenure threshold, documents within the smallest discrepancy threshold, at least 1,000 of limit on the
+    strictest reading: the lowest income cap, every debt, the verified salary, the lowest DSR cap less the
+    regulator's cut at the stressed rate), so that approving one of them breaks the cutoff alone. The random period
+    has plenty (8-19% of non-delinquent applicants); a world that does not gets them by drawing new bureau
+    scores, under the cutoff, for random applicants with one application and no other part in the period (no twin,
+    branch note, correction or repayment)."""
     rng = random.Random(seed * 10 + 5)
     counts: dict = {}
     for a in w.apps:
@@ -607,12 +662,15 @@ def _below_cutoff(w: World, seed: int) -> None:
         return (c.tenure >= r["min_tenure"] and c.base_salary - c.verified_base <= r["discrepancy_pct"] / 100
                 * c.base_salary and min(MAX_AMOUNT, r["income_cap_pct"] / 100 * income, head) >= MIN_AMOUNT)
 
-    for _, r in sorted(_rulesets().items()):
-        bureau, cut = str(r["policy_bureau"]), int(r["min_score"])
+    cand = _candidates()
+    strict = {"max_dsr_pct": min(cand["max_dsr_pct"]), "min_tenure": max(cand["min_tenure"]),
+              "discrepancy_pct": min(cand["discrepancy_pct"]), "income_cap_pct": min(cand["income_cap_pct"])}
+    ok = [a for a in free if approvable(a.cust, strict)]
+    for bureau, cut_a in [(b, c) for b in cand["policy_bureau"] for c in sorted(cand["min_score_a"])]:
+        bureau, cut = str(bureau), policy_score(bureau, cut_a)
 
         def score(c: App) -> int:
             return c.score_a if bureau == "A" else c.score_b
-        ok = [a for a in free if approvable(a.cust, r)]
         have = [a for a in ok if score(a.cust) < cut]
         if len(have) >= N_BELOW_CUTOFF:
             continue
@@ -916,10 +974,13 @@ def score(world: World, submission_dir: Path, setting) -> dict:
 
 # ── reference solution ───────────────────────────────────────────────────────
 
-def _features(a: App, amount: float) -> list[float]:
-    """Scorecard features (every debt, the verified salary: the history's salaries are verified)."""
-    return [1.0, (a.score_a - 760) / 100, a.true_dsr(amount), float(a.inquiries),
-            math.log(max(a.history_months, 3) / 60)]
+SCORECARD = ("score", "dsr", "inquiries", "history", "short_tenure", "dsr_over_30", "score_under_800")
+
+
+def _features(a: App, amount: float, names: tuple) -> list[float]:
+    """Scorecard inputs of a past loan (every debt, the verified salary: the history's salaries are verified), as
+    the reference program computes them (its scorecard_x)."""
+    return _module().scorecard_x(names, a.score_a, a.true_dsr(amount), a.inquiries, a.history_months, a.tenure)
 
 
 def _solve_linear(m: list[list[float]], b: list[float]) -> list[float]:
@@ -936,11 +997,12 @@ def _solve_linear(m: list[list[float]], b: list[float]) -> list[float]:
     return [aug[i][k] / aug[i][i] for i in range(k)]
 
 
-def _fit(world: World) -> list[float]:
+def _fit(world: World, names: tuple = SCORECARD) -> list[float]:
     """Plain logistic regression (IRLS) on a handful of features, from the history only."""
-    if "beta" in world._cache:
-        return world._cache["beta"]
-    xs = [_features(a, a.funded) for a in world.history]
+    key = ("beta", tuple(names))
+    if key in world._cache:
+        return world._cache[key]
+    xs = [_features(a, a.funded, tuple(names)) for a in world.history]
     ys = [1.0 if a.defaulted else 0.0 for a in world.history]
     k = len(xs[0])
     beta = [0.0] * k
@@ -961,8 +1023,8 @@ def _fit(world: World) -> list[float]:
         beta = [b + s for b, s in zip(beta, step)]
         if max(abs(s) for s in step) < 1e-8:
             break
-    world._cache["beta"] = [round(b, 6) for b in beta]
-    return world._cache["beta"]
+    world._cache[key] = [round(b, 6) for b in beta]
+    return world._cache[key]
 
 
 def ref_config(view: _View, **extra) -> dict:
@@ -971,8 +1033,8 @@ def ref_config(view: _View, **extra) -> dict:
            "near_prime_below": view.near_prime_below, "max_dsr_pct": view.max_dsr_pct,
            "income_cap_pct": view.income_cap_pct, "daily_cap": view.daily_cap, "period_budget": view.period_budget,
            "quota_pct": int(s["quota_pct"]), "discrepancy_pct": int(s["discrepancy_pct"]),
-           "min_tenure": view.min_tenure, "beta": _fit(view._w), "tenure_review": True, "quota": True,
-           "quota_margin": 0.015, "pace": 1.25}
+           "min_tenure": view.min_tenure, "features": list(SCORECARD), "beta": _fit(view._w),
+           "tenure_review": True, "quota": True, "quota_margin": 0.015, "pace": 1.25, "sizing": True}
     cfg.update(extra)
     return cfg
 
@@ -1017,7 +1079,7 @@ def reference_solution(world: World, out_dir: Path, setting) -> None:
 
 
 def baseline_config(view: _View) -> dict:
-    return ref_config(view, first_come=True, pace=None)
+    return ref_config(view, first_come=True, pace=None, sizing=False)
 
 
 def baseline_solution(world: World, out_dir: Path, setting) -> None:
@@ -1175,15 +1237,20 @@ def violating_examples(world: World, setting) -> dict:
             yield dict(base, budget_scale=f)
         # The period's demand under the budget: a program that also believes it ten times larger and tops up
         # near-prime approvals without end (unprofitable ones too, within each day's cap) spends past it.
-        yield dict(base, budget_scale=10.0, quota_margin=1.0)
+        yield dict(base, budget_scale=10.0, quota_margin=1.0, quota_hold=False)
+        # Or one that believes it ten times larger and approves first come, first served at the most each limit
+        # allows (when the top-ups above also break the quota).
+        yield dict(base, budget_scale=10.0, first_come=True, pace=None, sizing=False)
 
     def quota_breakers():
         free = dict(base, quota=False)
         yield free
         # Near-prime demand above the quota: also decline the largest near-prime approvals (customers with one
-        # application that day) until the period's near-prime share is under the quota by a margin.
+        # application that day) until the period's near-prime share is under the quota by a margin. The program
+        # spends what a decline frees on later days (some of it near-prime), so the margin grows until the replay
+        # ends under the quota.
         got = _run_decisions(view, free)[0]
-        for margin in (0.01, 0.03):
+        for margin in (0.01, 0.03, 0.06, 0.1, 0.2, 1.0):
             total = sum(amt for (dd, amt, _) in got.values() if dd == "approve")
             near = sum(amt for (d, aid), (dd, amt, _) in got.items() if dd == "approve"
                        and view.near_prime(world.app(aid).cust))
@@ -1221,8 +1288,8 @@ def violating_examples(world: World, setting) -> dict:
         ex["near_prime_quota"] = lambda: first("near_prime_quota", quota_breakers())
         # A check, not an example: the budget rule judges each day's approvals against the budget in force that
         # day, so a program that never approves past what is left (unpaced) breaks nothing when the treasury's
-        # cut lands below what it has already approved (in the public seed's C settings it has 3.1M approved
-        # before the cut to 3.0M, and approves nothing after it).
+        # cut lands below what it has already approved (in medium/s30 this program has 3.05M approved before the
+        # cut to 3.0M, and approves nothing after it).
         assert "period_budget" not in broken(dict(base, pace=None)), setting.label
     if view.hard:
         ex["income_discrepancy_refer"] = lambda: first("income_discrepancy_refer", (
@@ -1306,7 +1373,7 @@ def _pilot(w: World, seed: int) -> dict:
     day = {"date": date, "day_index": 0, "days_in_period": 1, "period_end": date,
            "applications": [_app_json(pw, a, 0) for a in apps], "notices": notices,
            "book": {"loans": [], "referred": []}}
-    cfg = dict(PILOT_RULES, beta=_fit(w))
+    cfg = dict(PILOT_RULES, beta=_fit(w, _module().PILOT_FEATURES))
     answer = _module().Underwriter(cfg).on_day(json.loads(json.dumps(day)))
     answer["limit_table"]["period_budget_remaining"] = None
     return {"input": day, "output": answer}

@@ -1,0 +1,29 @@
+# The explainer's case texts in Korean (English comes from case.yaml).
+role: 배터리 운전 담당자
+task_type: 조합 최적화
+deliverable_spec: |
+  dispatch.csv, ASCII 헤더: timestamp,charge_mw,discharge_mw
+  2027-03-22 00:00 .. 2027-03-28 23:45 한 주의 15분 구간마다 한 행이며, 시각은 현지 시각입니다.
+  timestamp = 구간 시작 시각, 형식 "YYYY-MM-DD HH:MM". charge_mw / discharge_mw = 그 구간 동안 계량점 기준
+  배터리 평균 출력(MW)이며, 둘 다 >= 0입니다.
+tiers:
+  easy: >-
+    핵심 문제입니다. 보증 충전상태 범위, 출력 한도, 방향별 효율, 한 주 종료 시 충전상태, 변경된 송전 한도(보관 중인
+    계약서보다 낮음), 서머타임 전환을 다룹니다. 이번 계획에서는 언제든 계통에서 수전할 수 있고, 저녁 비상용 예비 전력이
+    없으며, 열화 비용도 계산하지 않습니다.
+  medium: >-
+    easy에 고객의 운전 규칙을 더합니다. 경부하 시간대에만 계통 수전, 저녁 비상용 예비 전력(비율과 시간대), 처리량 MWh당
+    열화 비용입니다.
+  hard: >-
+    medium에 날짜가 정해진 통지 세 건을 더합니다. 변전소 공사가 일찍 끝나 특정 날부터 계약서의 30 MW가 다시 적용되고,
+    배전사업자가 하루 저녁 사업장 송전을 제한하며, 하루는 인버터 점검으로 08:00~20:00에 배터리가 정지됩니다. 트레이딩 팀은
+    저녁 피크에 예비 전력까지 쓰자고 압박하는데, 이는 예외가 승인될 때만 허용됩니다.
+rules:
+  soc_limits: 충전상태는 언제나 40 MWh의 {{soc_min}}%~{{soc_max}}% 사이에 있어야 합니다(충전 효율 {{eta_charge_pct}}%, 방전 효율 {{eta_discharge_pct}}%).
+  power_limits: 충전과 방전은 각각 0~20 MW이며, 한 구간에서 둘을 동시에 하지 않습니다. 계통 수전은 최대 20 MW입니다.
+  export_cap: 변전소 공사 기간에는 배터리가 방전하는 동안 사업장 송전(태양광 + 방전 − 충전)이 변경된 한도 {{export_cap}} MW를 넘으면 안 됩니다.
+  grid_charging_window: 사업장은 현지 시각 {{import_from}}~{{import_last}}에 시작하는 구간에서만 계통에서 수전(태양광 출력보다 많이 충전)할 수 있습니다.
+  end_soc: 한 주는 충전상태 50%로 시작하며, {{end_soc}}% 이상으로 끝나야 합니다.
+  evening_reserve: 매일 현지 시각 {{reserve_from}}~{{reserve_to}} 사이에는 언제나 충전상태가 {{reserve_pct}}% 이상이어야 합니다.
+  dso_limit: '{{dso_day}} 18:00~21:00에는 배터리가 방전하는 동안 사업장 송전이 배전사업자의 한도 {{dso_mw}} MW를 넘으면 안 됩니다.'
+  maintenance_outage: '{{outage_day}} 08:00~20:00에는 배터리가 충전도 방전도 하지 않습니다(인버터 점검).'

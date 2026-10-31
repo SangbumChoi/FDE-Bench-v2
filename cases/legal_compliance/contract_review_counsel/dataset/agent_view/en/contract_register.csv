@@ -1,0 +1,41 @@
+﻿contract_id,supplier,category,annual_value_usd,contract_file
+C001,Ashford Digital Ltd,IT & data services,7000,contracts/C001.txt
+C002,Glenmore Logistics Ltd,Logistics,21000,contracts/C002.txt
+C003,Marisma Servicios Integrales S.L.,Facilities,383000,contracts/C003.txt
+C004,Tamworth Facility Services Ltd,Facilities,462000,contracts/C004.txt
+C005,Stanwick Digital Ltd,IT & data services,68000,contracts/C005.txt
+C006,Silverdale Logistics Ltd,Logistics,250000,contracts/C006.txt
+C007,Harrowgate Consulting Ltd,Professional services,25000,contracts/C007.txt
+C008,Hartwell Materials Ltd,Raw materials,214000,contracts/C008.txt
+C009,Ivybridge Materials Ltd,Raw materials,1175000,contracts/C009.txt
+C010,Upton Vale Materials Ltd,Raw materials,178000,contracts/C010.txt
+C011,Yarrow Media Ltd,Marketing,1038000,contracts/C011.txt
+C012,Denholm Digital Ltd,IT & data services,10000,contracts/C012.txt
+C013,Wexley Digital Ltd,IT & data services,100000,contracts/C013.txt
+C014,Alameda Sistemas S.L.,IT & data services,124000,contracts/C014.txt
+C015,Coldwater Materials Ltd,Raw materials,566000,contracts/C015.txt
+C016,Millbrook Digital Ltd,IT & data services,7000,contracts/C016.txt
+C017,Quarry Hill Digital Ltd,IT & data services,60000,contracts/C017.txt
+C018,Brookline Logistics Ltd,Logistics,473000,contracts/C018.txt
+C019,Kingsmere Logistics Ltd,Logistics,69000,contracts/C019.txt
+C020,Rowan Digital Ltd,IT & data services,647000,contracts/C020.txt
+C021,Larkfield Facility Services Ltd,Facilities,20000,contracts/C021.txt
+C022,Elmstead Facility Services Ltd,Facilities,6000,contracts/C022.txt
+C023,Cantábrica Consultores S.L.,Professional services,885000,contracts/C023.txt
+C024,Newhaven Facility Services Ltd,Facilities,77000,contracts/C024.txt
+C025,Redmarsh Materials Ltd,Raw materials,19000,contracts/C025.txt
+C026,Bahía Logística S.A.,Logistics,71000,contracts/C026.txt
+C027,Oakhurst Media Ltd,Marketing,145000,contracts/C027.txt
+C028,Penbury Digital Ltd,IT & data services,669000,contracts/C028.txt
+C029,Horizonte Comunicación S.L.,Marketing,759000,contracts/C029.txt
+C030,Kestrel Consulting Ltd,Professional services,17000,contracts/C030.txt
+C031,Alder Consulting Ltd,Professional services,21000,contracts/C031.txt
+C032,Vega Sistemas S.L.,IT & data services,18000,contracts/C032.txt
+C033,Merriton Materials Ltd,Raw materials,144000,contracts/C033.txt
+C034,Foxley Consulting Ltd,Professional services,122000,contracts/C034.txt
+C035,Lindale Digital Ltd,IT & data services,150000,contracts/C035.txt
+C036,Westcliff Media Ltd,Marketing,50000,contracts/C036.txt
+C037,Pemberton Logistics Ltd,Logistics,89000,contracts/C037.txt
+C038,Thornbury Facility Services Ltd,Facilities,198000,contracts/C038.txt
+C039,Greystone Media Ltd,Marketing,157000,contracts/C039.txt
+C040,Fairhaven Digital Ltd,IT & data services,1040000,contracts/C040.txt

@@ -1,0 +1,25 @@
+{
+  "baseline_objective": 0.0225,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.0262787,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "decision_accuracy": 0.9,
+    "fn": 24,
+    "fp": 9,
+    "issue_f1": 0.8374,
+    "precision": 0.9043,
+    "recall": 0.7798,
+    "scored_contracts": 40,
+    "tp": 85
+  },
+  "objective": 0.8562068965517241,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

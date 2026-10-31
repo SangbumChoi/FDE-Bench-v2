@@ -4,6 +4,63 @@ What a case review found (F1–F10) and what this change did about each finding.
 this change unless a finding says otherwise. The supplier price e-mail and its rule are the owner's and were not
 changed.
 
+### Rule seeds (conversion from rule sets A/B/C)
+
+The three fixed rule sets became candidate pools that a rule seed draws from, one parameter at a time (README,
+"Rule parameters"). The data, the request and the price e-mail (C01 from S03 +20% for orders from W4, scored by order
+week) are unchanged apart from the November budget, which the calibration below moves from 125 M to 115 M.
+
+- **Pools.** `usd_krw` 1,380 · 1,450 · 1,320 · 1,500 in easy and medium, 1,380 in hard; `safety_weeks` 1 · 1.5 · 0.5
+  in every tier; `max_share` 80 · 70 · 90% in easy and medium, 80% in hard; `quality_hold` (supplier and last week
+  as one value) S07 to W3 · S05 to W4 · S01 to W4 in easy and medium, the old A/B/C pairs, and S03 to W5 · S05 to
+  W5 · S01 to W5 in hard. Public panel `rule_seeds: [42, 3, 78]`; every candidate appears in it except one planning
+  rate (three seeds, four rates).
+- **Binding (validator, worlds 20261123, 1, 2, 3).** From the first public seed: in medium, planning rate 1,320 →
+  1,500 moves the reference +1.17 / +2.22 / +1.79% and breaks the budget on world 3; share cap 90% → 80% makes it
+  invalid on all four; in hard, safety stock 1 → 1.5 weeks moves it +10.3 to +11.9%, and the hold S03 to W5 →
+  S01 to W5 makes it invalid on all four.
+- **Dropped or merged because they did not bind.** The hold week alone (S03, W4 → W5 changed nothing in hard: the
+  November budget already pushes S03's orders to W3), so it is drawn with the supplier. The planning rate and the
+  share cap in hard (1,320 → 1,550 moved the hard reference 0.6–1.4% by world; a 90% cap left it valid under 70% on
+  two of four worlds), so hard keeps 1,380 and 80%. A finance reserve on the monthly budget (0 / 5 / 10%), tried as
+  the budget parameter, moved the hard reference 0–1.3%. A 60% share cap for hard was left out: the reference's
+  whole-line second sourcing cannot reach it for C02 and C25.
+- **admissible()** rejects a hold that ends before the supplier's goods could arrive at all (S03 and S05 quote 11–13
+  business days: nothing arrives before W4, so "S05 to W3" would change nothing and has no violating example). The
+  pools hold no such value; the hook guards edits.
+- **Budget calibrated over the pools.** November's cap is 95% of the least unconstrained November spend over all 225
+  admissible combinations of all tiers, so it binds whatever a rule seed draws (before, easy/C spent 125.1 M against
+  125 M). December and January keep headroom over every combination.
+- **Reference and baseline valid in every combination.** A private seed may draw any combination, so the budget step
+  no longer raises when no line can be deferred in time: it moves a line late, pulls January's excess into W6, or
+  cuts a line, cheapest extra cost per KRW first. The baseline uses the same fallback. On this world all 225
+  combinations have a valid reference and a valid, worse baseline.
+- **Stronger reference.** It now also tries one-week lots and a leftover trim (a line cut to what the part still
+  needs, or replaced in the same week by a small-MOQ supplier), eight variants in all. The trim was needed: without
+  it the baseline beat the reference in 30 of 162 sampled easy settings of this world, all with 0.5 weeks of safety
+  stock (end-of-horizon overbuying at the second source's MOQ). Panel ratios baseline/reference: 1.054–1.091 easy,
+  1.046–1.065 medium, 1.156–1.377 hard.
+- **Still open.** On other worlds the baseline still matches or beats the reference in a few easy and medium
+  combinations, all with Kowon Passive (S07) on hold to W3 and mostly 0.5 weeks of safety stock: none on world 1, 9
+  of 108 medium combinations on world 2 (by up to 1.6%), 2 easy and 3 medium on world 3 (by up to 0.2%). The
+  reference's two-week lots front-load November, and its deferrals to faster, dearer suppliers cost more than the
+  baseline's small lot-for-lot lines. Quality then falls back to the plain ratio. This belongs to F2.
+- **Checker's follow-up (resolved).** A check of private rule seeds 4–10 on world seeds 1–3 hit these combinations:
+  rule seeds 6 and 8 (S07 to W3, 0.5 weeks) had the baseline 0.1–1.6% below the reference in easy and medium on worlds
+  2 and 3. The reference now keeps the cheapest of fifteen variants: the eight above, the same with the trim only
+  after the budget step (trimming first can leave the budget step only dearer deferrals), and a lot-for-lot planner
+  that splits each order of a critical part at the share cap, with the three trim options. In those combinations the
+  quota planner trimmed after the budget step wins, 1.0–1.4% below the baseline (the trim cuts the end-of-horizon
+  lots the baseline keeps). All 225 combinations on each of worlds 20261123, 1, 2 and 3 now have a valid reference
+  and a valid baseline that is worse by at least 1.0% (min baseline/reference ratio 1.0098, world 2 medium; hard at
+  least 1.128). Panel references: easy/s42 505.86 → 503.68, easy/s3 573.41 → 564.63, medium/s42 513.61 → 504.47,
+  medium/s3 558.17 → 556.57, medium/s78 482.66 → 479.39, hard/s3 609.07 → 608.79, hard/s78 514.40 → 514.19 M KRW;
+  baseline/reference ratios 1.054–1.100 in easy, 1.053–1.085 in medium, 1.156–1.378 in hard. The data and the
+  budget calibration are unchanged (the calibration uses the default planner without trim).
+- **Tests.** `tests/test_procurement_price_email.py` read the settings from the removed `all_settings()`; it now takes
+  them from the case. `tests/test_rule_seeds.py` used this case as its example of the deprecated `rulesets:`; it now
+  builds a legacy copy of its own toy case.
+
 ### F1 — Bending the dual-sourcing habit is not worth it for a strong plan (high, partly)
 
 The requirements allow an exception to `dual_source_critical` "if it saves real money". Under the old scale bending
@@ -19,6 +76,11 @@ source structurally dearer or slower for the high-value critical parts (C05 PCB,
 cheap alternative for C01 and C03. Then measure the gain on an optimised plan: it should be at least 3–5% in easy and
 medium, and worth more than the penalty after the cap. In hard, give the habit a real cost, for example second sources
 only from late-prone suppliers. Recheck after F2's calibration, because where the cap sits decides who gains.
+
+**Status (rule seeds):** open, remeasured on the panel: the best plan without the second-source step saves 2.6–4.0%
+in easy and medium (0.2% in medium/s3) and nothing in hard, where the hard reference already is such a plan.
+After the fifteen-variant reference (Rule seeds, checker's follow-up): 1.4–3.6% in easy, 0.2–3.3% in medium, at most
+0.3% in hard.
 
 ### F2 — Weak greedy reference, and a deferred line kept its old MOQ (high, confirmed)
 
@@ -41,6 +103,16 @@ reference near-optimal, either by shipping a local search or a MILP with a fixed
 expected-cost search on the history estimates. Make the safety-lead-time rule meaningful, for example by weighing a
 supplier's estimated late rate against one week of holding. Then set `quality_cap` in case.yaml from the best known
 normalized quality, or widen the baseline gap, so that a generic optimiser does not saturate.
+
+**Status (rule seeds):** partly improved. The reference now keeps the cheapest of eight planner variants (second
+source or not, two- or one-week lots, with or without a leftover trim that cuts or re-sources the last lines), and
+its budget step falls back to late moves, pulls and cuts so that it is valid in every combination. The baseline gap
+on the panel is wider: 1.046–1.091 in easy and medium (was 1.021–1.113), 1.156–1.377 in hard. Still open: the
+local-search headroom was not re-measured, the safety-lead-time threshold still decides nothing, and on world seeds
+2 and 3 the baseline matches or beats the reference in 14 of 432 easy and medium combinations (see "Rule seeds").
+That last point is resolved: with the quota planner and the trim after the budget step among its variants, the
+reference beats the baseline by at least 1.0% in every combination on worlds 20261123, 1, 2 and 3. The local search
+and the safety-lead-time rule stay open.
 
 ### F3 — The price e-mail does not change the answer, and the documentation was stale (high, confirmed)
 
@@ -96,6 +168,15 @@ plans spend 269–435 M in December.
 safety and a loose share; C: mid FX and a strict share. Make at least one more parameter non-nested: which month is
 tight, or which parts are critical or on allocation. Calibrate the caps per rule set so that compliance costs at least
 2% in every setting, and let December bind in one rule set.
+
+**Status (rule seeds):** mostly fixed. Each parameter is drawn on its own, so the strict values no longer come
+together: the panel has, for example, 1,320 with 1 week and a 90% cap, and 1,380 with 0.5 weeks and a 70% cap. The
+non-nested hold stays and gains a harder hard pool (S03, S05 or S01 to W5). Every parameter binds on four worlds
+(see "Rule seeds" above). November's cap is now calibrated over every combination of the pools, at 95% of the least
+unconstrained November spend, so it binds in every combination (115 M; the unconstrained November spend on the panel
+is 132–346 M) instead of barely in easy/C. December binds only in a few hard combinations where deferrals pile up;
+compliance does not cost 2% everywhere (a budget parameter was tried and did not bind). Open: the month that is tight
+is still always November.
 
 ### F6 — Lower-tier scope cuts read as switches, and the easy price line was garbled (medium, confirmed)
 
@@ -183,4 +264,5 @@ are split by a quota, and the buyer fixes the budget afterwards. Objectives in M
 | medium | 532.54 vs. 521.76 | 615.89 vs. 582.57 | 502.76 vs. 492.37 |
 | hard | 670.53 vs. 579.75 | 745.39 vs. 612.78 | 647.75 vs. 537.11 |
 
-The baseline is between 1.021× and 1.216× the reference.
+The baseline is between 1.021× and 1.216× the reference. (These are the rule sets A/B/C of the first version; after the
+rule-seed conversion the public panel's baseline is 1.046–1.377× the reference, see the README's "Public panel".)

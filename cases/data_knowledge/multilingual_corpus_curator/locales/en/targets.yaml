@@ -64,7 +64,7 @@
   kind: missing
   domain: business rule
   tiers: [hard]
-  text: A book with no author goes to review as NO_AUTHOR; this is policy, and with an approved exception it is shelved under "{{fallback_author}}" instead.
+  text: '<!-- when: no_author=review -->A book with no author goes to review as NO_AUTHOR; this is policy, and with an approved exception it is shelved under "{{fallback_author}}" instead.<!-- /when --><!-- when: no_author=Unknown,Anonymous -->A book with no author is shelved under the author name "{{fallback_author}}" like any other book, not sent to review (NO_AUTHOR is not used).<!-- /when -->'
 - id: scoring
   kind: missing
   domain: scoring

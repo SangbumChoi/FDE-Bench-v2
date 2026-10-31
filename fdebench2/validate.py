@@ -3,7 +3,8 @@
 1. case.yaml is complete; every rule has a class; no TODO is left from the
    scaffold in case.yaml, case.py, README.md or the locales.
 2. All five locales have request.md, requirements.md and targets.yaml, with the
-   same target ids, parameters and setting blocks as en, written in the right script.
+   same target ids, parameters and setting blocks (tier and when markers) as en,
+   written in the right script.
 3. Data renders in every locale, deterministically (same bytes twice, and the same
    bytes in two processes with different PYTHONHASHSEED), with the same file set
    shape in every locale and no foreign-language labels.
@@ -13,27 +14,54 @@
 5. Each declared violating example breaks exactly the rule it names; when the
    rule is not physical, relaxing it makes the example valid again.
 
-A case with settings (tiers x rule sets) is checked in every setting (4-5 run
-per setting, with that setting's rules and parameters), and also:
+A case with settings (tiers x rule seeds) is checked in every public setting
+(tier x public rule seed; 4-5 run per setting, with that setting's rules and
+drawn parameters, and every setting's reference is computed once and reused),
+and also:
 
 6. request.md has no setting markers or parameters, and the agent's whole view
    (prompt and workspace) is byte-identical in every setting;
-7. the rule sets are really different ground truths: within a tier, each rule
-   set's reference is invalid, or at least 1% worse, under every other rule set;
-8. markers, parameters and `tiers:` / `rulesets:` lists only name declared ones.
+7. params: is well formed (a non-empty pool per tier, scalar candidates, a
+   wording per locale for every candidate when labels are given), rule_seeds:
+   lists distinct ints, every public setting draws, derive_params works on
+   every combination a private rule seed can draw, and every candidate is
+   admissible with some combination of the others (case.py admissible);
+8. every parameter binds in every tier where it has 2+ candidates: take the first
+   public seed's setting s in that tier and change only that parameter to each
+   other admissible candidate (s'). It binds there if the reference of s is
+   invalid under s', or its objective under s' moves by at least 1% (relative),
+   or the reference of s' beats it under s' by at least 1%. One that binds in no
+   tier, or not in the highest tier where it varies, "changes nothing"; one that
+   does not bind in a lower tier whose hidden texts state it (the requirements,
+   targets or rules of s and s' differ) fails too, unless OPEN_BINDING_FINDINGS
+   lists it for that tier and world (then a warning until the case changes);
+   one that varies in a lower tier where nothing in force uses it (the texts are
+   the same for every candidate) is a warning;
+9. markers (in requirements, target texts and rule descriptions; balanced),
+   parameters, `tiers:` and `when:` only name declared tiers, parameters and
+   candidates.
 
 Every case also stores its data and ground truth in dataset/ (fdebench2.dataset);
 the stored files must match what the generator produces now.
 
 Warnings do not fail a case but point at likely authoring slips: a case without a
-baseline, two tiers with the same answer, a number in a rule that the requirements
-never state, and a "name (ID)" in the texts that the data gives another name.
+baseline, two tiers with the same answer, a public panel that shows only one
+candidate of a parameter, a parameter that varies in a tier where nothing uses
+it, a number in a rule that the requirements never state, and a "name (ID)" in
+the texts that the data gives another name.
+
+The fixed rule sets that rule seeds replaced (`rulesets:`, `param_labels:`,
+`<!-- ruleset: ... -->` blocks, `rulesets:` on rules and targets) are reported
+with the rule-seed form to use instead.
 """
 
 from __future__ import annotations
 
 import hashlib
+import itertools
+import math
 import os
+import random
 import re
 import subprocess
 import sys
@@ -44,17 +72,46 @@ from pathlib import Path
 
 import yaml
 
-from .cases import BASELINE_MIN_GAP, LOCALES, PARAM, RULESETS, TIERS, NativeCase, load_fields
+from .cases import (BASELINE_MIN_GAP, LOCALES, PARAM, TIERS, NativeCase, derive_full, load_fields, value_text,
+                    when_values)
 from .transforms.language import detect_locale
 from .transforms.policy import RULE_CLASSES
 
-DISTINCT_MARGIN = 0.01           # on the objective ratio: rule sets whose answers differ by less look the same
+DISTINCT_MARGIN = 0.01           # on objectives: a parameter whose answers differ by less changes nothing
 BASELINE_REQUIRED = True         # a case without baseline_solution fails validation
+ADMISSIBLE_SEARCH = 5000         # combinations tried per candidate before it is called never admissible
+# Per-tier binding findings that the cases had when the check became per tier, warned about instead of failing
+# until each case's owner decides: (case id, parameter, tier) -> (worlds, why it changes nothing there), where
+# worlds are the world seeds the finding holds on (None: on every world, the public one included). Remove an entry
+# once the case is changed; any other finding of this kind, on another tier or another world, fails validation.
+OPEN_BINDING_FINDINGS: dict[tuple[str, str, str], tuple[tuple[int, ...] | None, str]] = {
+    ("data_knowledge/bi_data_analyst", "dont_know_reward", "easy"): (
+        None, "the reference answers every scored question right (objective 1.0), so the reward for a null moves "
+              "no reference objective; it moves the all-null baseline and so the quality scale"),
+    ("data_knowledge/bi_data_analyst", "dont_know_reward", "medium"): (
+        None, "the reference answers every scored question right (objective 1.0), so the reward for a null moves "
+              "no reference objective; it moves the all-null baseline and so the quality scale"),
+    ("logistics/bakery_delivery_dispatcher", "late_cost", "easy"): (
+        None, "the easy reference is hardly ever late at a café, so the cost of a late minute moves no reference "
+              "objective by 1%"),
+    ("logistics/bakery_delivery_dispatcher", "shift_end", "easy"): (
+        (2, 3), "the reference of rule seed 5 stays valid with the same objective under every shift end (10:00, "
+                "09:30, 09:00)"),
+    ("logistics/bakery_delivery_dispatcher", "shift_end", "medium"): (
+        (2, 3), "the reference of rule seed 5 stays valid with the same objective under every shift end (10:00, "
+                "09:30, 09:00)"),
+    ("people_hr/resume_screening_specialist", "interview_date", "medium"): (
+        (3,), "the reference of rule seed 31 stays valid with the same objective under every interview date "
+              "(2026-11-02, 2026-11-16, 2026-11-30)"),
+}
 REQUIRED_META = ("id", "role", "field", "task_type", "objective", "seed", "deliverable_spec", "rules")
 HANGUL = re.compile(r"[가-힣]")
 KANA = re.compile(r"[぀-ヿ]")
 HAN = re.compile(r"[一-鿿]")
-MARKER = re.compile(r"<!-- (tier|ruleset): ([A-Za-z ]+) -->")
+MARKER = re.compile(r"<!-- (tier|when): ([^>]*?) -->")
+RULESET_MARKER = re.compile(r"<!-- /?ruleset\b")    # the rule-set blocks that when-blocks replaced
+WHEN_SPEC = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)")
+NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 TODO = re.compile(r"(?<![A-Za-z0-9])TODO(?![A-Za-z0-9])")   # also the scaffold's ids (TODO_rule, TODO_target)
 NUMBER = re.compile(r"(?<![\w.,])\d+(?:,\d{3})*(?:\.\d+)?(?!\w)")
 DATE_OR_TIME = re.compile(r"\d{4}-\d{2}-\d{2}|\b\d{1,2}:\d{2}\b")
@@ -113,7 +170,7 @@ def _script_problem(text: str, lang: str) -> str | None:
 def _todos(root: Path) -> list[str]:
     """Scaffold placeholders still in the case's own files: a new case fails until every TODO is filled."""
     problems = []
-    for p in [root / "case.yaml", root / "case.py", root / "README.md"] + sorted((root / "locales").rglob("*")):
+    for p in [root / "case.yaml", root / "case.py"] + sorted(root.glob("README*.md")) + sorted((root / "locales").rglob("*")):
         if p.is_file():
             lines = [str(i) for i, line in enumerate(p.read_text(encoding="utf-8", errors="replace").splitlines(), 1)
                      if TODO.search(line)]
@@ -128,11 +185,42 @@ def _difference(want, got) -> str:
     return "; ".join(([f"missing {missing}"] if missing else []) + ([f"extra {extra}"] if extra else []))
 
 
-def _locale_parity(requirements: dict[str, str], targets: dict[str, list[dict]]) -> list[str]:
-    """Every locale has en's parameters, setting blocks and target ids: a translation must not drop or add one."""
-    def blocks(text: str) -> list[str]:
-        return [f"{kind}: {' '.join(names.split())}" for kind, names in MARKER.findall(text)]
+def _translations(case: NativeCase) -> list[str]:
+    """The explainer in every language: locales/<lang>/explainer.yaml covers the case's own words (role, task
+    type, every tier and rule, the deliverable spec), and README.md / REVIEW.md have a README.<lang>.md /
+    REVIEW.<lang>.md next to them."""
+    problems = []
+    rule_ids = [r["id"] for r in case.meta.get("rules", [])]
+    for lang in LOCALES:
+        if lang == "en":
+            continue
+        path = case.root / "locales" / lang / "explainer.yaml"
+        if not path.is_file():
+            problems.append(f"{lang}/explainer.yaml is missing (the explainer's case texts in this language)")
+            continue
+        doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        missing = [k for k in ("role", "task_type", "deliverable_spec") if not doc.get(k)]
+        missing += [f"tiers.{t}" for t in case.tiers if not (doc.get("tiers") or {}).get(t)]
+        missing += [f"rules.{r}" for r in rule_ids if not (doc.get("rules") or {}).get(r)]
+        extra = sorted(set(doc.get("rules") or {}) - set(rule_ids)) + sorted(set(doc.get("tiers") or {}) - set(case.tiers))
+        if missing or extra:
+            problems.append(f"{lang}/explainer.yaml: " + "; ".join(
+                ([f"missing {', '.join(missing)}"] if missing else []) + ([f"unknown {', '.join(extra)}"] if extra else [])))
+        for doc_name in ("README", "REVIEW"):
+            if (case.root / f"{doc_name}.md").is_file() and not (case.root / f"{doc_name}.{lang}.md").is_file():
+                problems.append(f"{doc_name}.{lang}.md is missing (the translation of {doc_name}.md)")
+    return problems
 
+
+def _blocks(text: str) -> list[str]:
+    """The sequence of setting markers in a text: "tier: medium hard", "when: cap=4,5", ..."""
+    return [f"{kind}: {spec.replace(' ', '') if kind == 'when' else ' '.join(spec.split())}"
+            for kind, spec in MARKER.findall(text)]
+
+
+def _locale_parity(requirements: dict[str, str], targets: dict[str, list[dict]]) -> list[str]:
+    """Every locale has en's parameters, setting blocks (tier and when markers) and target ids: a translation
+    must not drop or add one."""
     problems = []
     en_ids = [t.get("id") for t in targets["en"]]
     en_params = {t.get("id"): PARAM.findall(t.get("text", "")) for t in targets["en"]}
@@ -142,7 +230,7 @@ def _locale_parity(requirements: dict[str, str], targets: dict[str, list[dict]])
         diff = _difference(PARAM.findall(requirements["en"]), PARAM.findall(requirements[lang]))
         if diff:
             problems.append(f"{lang}/requirements.md: parameters differ from en ({diff})")
-        want, got = blocks(requirements["en"]), blocks(requirements[lang])
+        want, got = _blocks(requirements["en"]), _blocks(requirements[lang])
         if got != want:
             i = next(i for i in range(max(len(got), len(want))) if got[i:i + 1] != want[i:i + 1])
             problems.append(f"{lang}/requirements.md: setting markers differ from en at block {i + 1}: "
@@ -155,6 +243,10 @@ def _locale_parity(requirements: dict[str, str], targets: dict[str, list[dict]])
             diff = t.get("id") in en_params and _difference(en_params[t["id"]], PARAM.findall(t.get("text", "")))
             if diff:
                 problems.append(f"{lang}/targets.yaml {t['id']}: parameters differ from en ({diff})")
+            en_text = next((x.get("text", "") for x in targets["en"] if x.get("id") == t.get("id")), None)
+            if en_text is not None and ([b for b in _blocks(t.get("text", "")) if b.startswith("when")]
+                                        != [b for b in _blocks(en_text) if b.startswith("when")]):
+                problems.append(f"{lang}/targets.yaml {t['id']}: when markers differ from en")
     return problems
 
 
@@ -228,17 +320,335 @@ def check_hash_seed(root: Path) -> list[str]:
     return []
 
 
-def check_world_seed(case: NativeCase, seed: int) -> list[str]:
-    """The case also works on a world from another seed: every setting's reference is valid at quality 1.0,
-    every rule has a clean violating example, and rule sets still lead to different solutions."""
+# ── settings: parameters, rule seeds and what they change ────────────────────
+
+def _unique(values: list) -> list:
+    """Candidates without repeats (compared as value_text), in order."""
+    seen, out = set(), []
+    for v in values:
+        if value_text(v) not in seen:
+            seen.add(value_text(v))
+            out.append(v)
+    return out
+
+
+def _is_scalar(value) -> bool:
+    return value is None or isinstance(value, (str, int, float, bool))
+
+
+def check_params(case: NativeCase) -> tuple[list[str], list[str]]:
+    """case.yaml `params:` and `rule_seeds:` (problems, warnings): pools, labels, the public panel, draws and
+    admissibility. Only for a case with tiers."""
+    problems, warnings = [], []
+    meta, tiers = case.meta, case.tiers
+    spec = meta.get("params")
+    if "param_labels" in meta:
+        problems.append("case.yaml: param_labels: belonged to the rule sets that rule seeds replaced and is not "
+                        "read; word a parameter's values under params.<name>.labels")
+    if not isinstance(spec, dict):
+        problems.append("case.yaml: params: maps each parameter name to {values: [...], labels: {...}}")
+        return problems, warnings
+    seeds = meta.get("rule_seeds")
+    if not isinstance(seeds, list) or not seeds:
+        problems.append("case.yaml: rule_seeds: lists the public rule seeds, e.g. [1, 2, 3]")
+    elif any(isinstance(s, bool) or not isinstance(s, int) for s in seeds) or len(set(seeds)) < len(seeds):
+        problems.append(f"case.yaml: rule_seeds: must be distinct ints, got {seeds}")
+    for name, p in spec.items():
+        where = f"case.yaml params.{name}"
+        if not isinstance(name, str) or not NAME.fullmatch(name):
+            problems.append(f"{where}: a parameter name is a word of letters, digits and _")
+        if not isinstance(p, dict) or "values" not in p:
+            problems.append(f"{where}: needs values: [candidates] or values: {{easy: [...], medium: [...], hard: [...]}}")
+            continue
+        if set(p) - {"values", "labels"}:
+            problems.append(f"{where}: unknown keys {sorted(set(p) - {'values', 'labels'})} (values, labels)")
+        values = p["values"]
+        if isinstance(values, dict):
+            if set(values) - set(tiers):
+                problems.append(f"{where}.values: {sorted(set(values) - set(tiers), key=str)} are not declared tiers")
+            if [t for t in tiers if t not in values]:
+                problems.append(f"{where}.values: no pool for tier(s) {', '.join(t for t in tiers if t not in values)}")
+            pools = {f".{t}": values.get(t) for t in tiers if t in values}
+        else:
+            pools = {"": values}
+        candidates = []
+        for suffix, pool in pools.items():
+            if not isinstance(pool, list) or not pool:
+                problems.append(f"{where}.values{suffix}: needs a list of at least one candidate")
+                continue
+            if not all(_is_scalar(v) for v in pool):
+                problems.append(f"{where}.values{suffix}: candidates are strings, numbers or booleans "
+                                f"(quote dates; a list or mapping cannot be a candidate)")
+            if len(_unique(pool)) < len(pool):
+                problems.append(f"{where}.values{suffix}: a candidate is listed twice")
+            candidates += pool
+        labels = p.get("labels")
+        if labels is None:
+            continue
+        if not isinstance(labels, dict):
+            problems.append(f"{where}.labels: maps each candidate to its wording per locale {{zh, en, ko, ja, es}}")
+            continue
+        texts = {value_text(k): v for k, v in labels.items()}
+        for v in _unique(candidates):
+            wording = texts.get(value_text(v))
+            if not isinstance(wording, dict):
+                problems.append(f"{where}.labels: no wording of candidate {v!r}")
+                continue
+            missing = [lang for lang in LOCALES if wording.get(lang) is None or str(wording[lang]).strip() == ""]
+            if missing:
+                problems.append(f"{where}.labels: {v!r} has no wording in {', '.join(missing)}")
+        stray = sorted(set(texts) - {value_text(v) for v in candidates})
+        if stray:
+            warnings.append(f"{where}.labels: {stray} are no candidates")
+    if problems:
+        return problems, warnings
+
+    # every public setting draws (derive_params and admissible run here first)
+    for c in case.settings():
+        try:
+            c.setting
+        except Exception as e:  # a hook that fails, or a seed with no admissible draw
+            problems.append(f"[{c.tier}/s{c.rule_seed}] the rule seed does not draw: {e}"[:400])
+    if problems:
+        return problems, warnings
+    problems += _draw_space(case)
+
+    # the public panel shows what the pools hold
+    pools = case.param_candidates
+    if len(case.rule_seeds) > 1 and not any(len(_unique(pool)) >= 2 for p in pools.values() for pool in p.values()):
+        warnings.append("no parameter has two or more candidates in any tier: every rule seed draws the same "
+                        "parameters, so the public panel repeats one ground truth per tier")
+    for name, by_tier in pools.items():
+        narrow = []
+        for t in tiers:
+            if len(_unique(by_tier[t])) >= 2:
+                shown = {value_text(case.at(t, s).drawn_params[name]) for s in case.rule_seeds}
+                if len(shown) < 2:
+                    narrow.append(f"{t} ({next(iter(shown))} of {len(_unique(by_tier[t]))} candidates)")
+        if narrow:
+            warnings.append(f"parameter {name}: every public rule seed draws the same value in "
+                            f"{', '.join(narrow)}: the panel should show at least two of its candidates "
+                            f"(add or change a seed in rule_seeds)")
+    return problems, warnings
+
+
+def _draw_space(case: NativeCase) -> list[str]:
+    """The combinations a private rule seed can draw, beyond the public panel: derive_params and admissible run
+    on every combination of a tier's candidates (up to ADMISSIBLE_SEARCH of them, else as many drawn at random),
+    and a candidate that admissible() rejects in every combination with the others can never be drawn."""
+    admissible = getattr(case.module, "admissible", None)
+    derive = getattr(case.module, "derive_params", None)
+    if admissible is None and derive is None:
+        return []
+    pools, problems = case.param_candidates, []
+    for tier in case.tiers:
+        names = list(pools)
+        options = {n: _unique(pools[n][tier]) for n in names}
+        # derive_params on the tier's combinations (all of them, or ADMISSIBLE_SEARCH drawn at random)
+        rng = random.Random(f"{case.id}|derive|{tier}")
+        combos = (itertools.product(*options.values()) if math.prod(map(len, options.values())) <= ADMISSIBLE_SEARCH
+                  else (tuple(rng.choice(o) for o in options.values()) for _ in range(ADMISSIBLE_SEARCH)))
+        for combo in combos:
+            drawn = dict(zip(names, combo))
+            try:
+                derive_full(drawn, tier, derive)
+            except Exception as e:
+                return problems + [f"[{tier}] derive_params fails on {drawn}, which a private rule seed can draw: "
+                                   f"{e!r}"[:400]]
+        if admissible is None:
+            continue
+        for name in names:
+            others = [n for n in names if n != name]
+            size = math.prod(len(options[n]) for n in others)
+            rng = random.Random(f"{case.id}|admissible|{tier}|{name}")
+            for v in options[name]:
+                combos = (itertools.product(*(options[n] for n in others)) if size <= ADMISSIBLE_SEARCH else
+                          (tuple(rng.choice(options[n]) for n in others) for _ in range(ADMISSIBLE_SEARCH)))
+                ok = False
+                for combo in combos:
+                    chosen = {**dict(zip(others, combo)), name: v}
+                    drawn = {n: chosen[n] for n in names}           # in case.yaml's order, as a draw has it
+                    try:
+                        ok = bool(admissible(derive_full(drawn, tier, derive), tier))
+                    except Exception as e:
+                        return problems + [f"[{tier}] admissible() fails on {drawn}: {e!r}"[:400]]
+                    if ok:
+                        break
+                if not ok:
+                    problems.append(f"params.{name}: candidate {v!r} is never admissible in tier {tier} "
+                                    f"(admissible() rejects every combination with it)")
+    return problems
+
+
+def _objective(res: dict) -> float | None:
+    """The objective of a raw score, None when the submission is not valid."""
+    if "fatal" in res or res.get("violations"):
+        return None
+    obj = float(res["objective"])
+    return obj if math.isfinite(obj) else None
+
+
+@dataclass
+class Trial:
+    """One candidate tried by the binding check: setting s' is s with one parameter set to `value`."""
+
+    value: str                  # the candidate, as value_text spells it
+    binds: bool                 # s' has another ground truth than s
+    moved: float | None         # the objective of s's reference scored under s' (None: not valid there)
+    own: float | None = None    # the objective of the reference of s' under s' (None: not needed, or not valid)
+    stated: bool = False        # the client knows s' differently: its requirements, targets or rules differ
+
+
+def _hidden_texts(case: NativeCase) -> tuple:
+    """What the client knows and what is in force in a setting (en): requirements, targets and rules."""
+    return (case.requirements("en"), tuple((t.id, t.text) for t in case.targets("en")),
+            tuple((r.id, r.description) for r in case.rules().rules))
+
+
+def _trial(case: NativeCase, alt: NativeCase, name: str, ref: Path, obj: float, texts: tuple, problems: list[str],
+           prefix: str) -> Trial:
+    """Whether setting `alt` (parameter `name` changed) has another ground truth than `case`, whose reference is in
+    `ref` with objective `obj` and whose hidden texts are `texts`: that reference is invalid under alt, or its
+    objective moves by DISTINCT_MARGIN, or alt's own reference beats it under alt by DISTINCT_MARGIN."""
+    value = value_text(alt.drawn_params[name])
+    try:
+        stated = _hidden_texts(alt) != texts
+    except Exception:              # its texts do not render (reported with the texts): count it as stated
+        stated = True
+    try:
+        moved = _objective(alt.raw_score(ref))
+    except Exception:              # the evaluator cannot read it under alt: as good as invalid
+        moved = None
+    if moved is None or (moved != obj and abs(moved - obj) >= DISTINCT_MARGIN * abs(obj)):
+        return Trial(value, True, moved, stated=stated)
+    with tempfile.TemporaryDirectory() as tmp:
+        try:
+            alt.write_reference(Path(tmp))
+            own = _objective(alt.raw_score(Path(tmp)))
+        except Exception as e:
+            own, why = None, repr(e)
+        else:
+            why = "it breaks a rule"
+    if own is None:
+        problems.append(f"{prefix}[{alt.setting.label}] the reference is not valid in this combination, which a "
+                        f"private rule seed can draw ({why})"[:400])
+        return Trial(value, False, moved, None, stated)
+    better = own - moved if case.meta.get("objective") == "maximize" else moved - own
+    return Trial(value, better > 0 and better >= DISTINCT_MARGIN * abs(moved), moved, own, stated)
+
+
+def _num(x: float | None) -> str:
+    return "not valid" if x is None else f"{x:.6g}"
+
+
+def _idle(name: str, s: NativeCase, current: str, obj: float, trials: list[Trial]) -> str:
+    """Why a parameter changes nothing in one tier, with the numbers the check compared."""
+    tried = "; ".join(f"{name} = {x.value}: {_num(obj)} -> {_num(x.moved)}, its own reference {_num(x.own)}"
+                      for x in trials)
+    return (f"in {s.setting.label} ({name} = {current}) the reference stays valid and its objective moves by less "
+            f"than {DISTINCT_MARGIN:.0%}, and no other reference beats it by {DISTINCT_MARGIN:.0%} ({tried})")
+
+
+def _open_finding(case: NativeCase, name: str, tier: str) -> str | None:
+    """How OPEN_BINDING_FINDINGS words a lower-tier finding of `name` in `tier` on this case's world, or None when
+    it lists no such finding (another case, parameter, tier or world)."""
+    entry = OPEN_BINDING_FINDINGS.get((case.id, name, tier))
+    if entry is None:
+        return None
+    worlds, why = entry
+    if worlds is None:
+        return f"known and open: {why}"
+    if case.world_seed not in worlds:
+        return None
+    return f"known and open on world seed{'s' if len(worlds) > 1 else ''} {', '.join(map(str, worlds))}: {why}"
+
+
+def check_binding(case: NativeCase, refs: dict[tuple, Path], prefix: str = "") -> tuple[list[str], list[str]]:
+    """(problems, warnings): every parameter changes the ground truth in each tier where it has 2+ candidates.
+
+    In each such tier s is the first public rule seed's setting; for each other admissible candidate v in turn,
+    s' is s with only that parameter set to v (derived values recomputed), until one binds (_trial). A parameter
+    that binds in no tier, or not in the highest tier where it varies, changes nothing (a problem). One that
+    does not bind in a lower tier is a problem there when the client states it in that tier (the hidden texts
+    of s and s' differ; OPEN_BINDING_FINDINGS turns a known one into a warning on the worlds it lists), and a
+    warning when nothing in force in that tier uses it (the texts are the same for every candidate). `refs`
+    holds the reference of every public setting (by (tier, rule seed)), written once by the caller; the
+    reference objective of each s is the one validate-case cached, or is scored once per tier.
+    """
+    problems, warnings = [], []
+    if not case.tiers:
+        return problems, warnings
+    seed = case.rule_seeds[0]
+    base: dict[str, tuple] = {}        # tier -> (the reference's objective in s, the hidden texts of s)
+    for name, by_tier in case.param_candidates.items():
+        varies = [t for t in case.tiers if len(_unique(by_tier[t])) >= 2]
+        checked = {}                   # tier -> (s, current value, objective, trials)
+        for tier in varies:
+            s, ref = case.at(tier, seed), refs.get((tier, seed))
+            if ref is None:            # its reference failed: reported already
+                continue
+            if tier not in base:
+                obj = (s.__dict__["reference_objective"] if "reference_objective" in s.__dict__
+                       else _objective(s.raw_score(ref)))
+                base[tier] = (obj, _hidden_texts(s) if obj is not None else None)
+            obj, texts = base[tier]
+            if obj is None:
+                continue
+            current, trials = value_text(s.drawn_params[name]), []
+            for v in _unique(by_tier[tier]):
+                if value_text(v) == current:
+                    continue
+                alt = s.with_params(**{name: v})
+                if not alt.is_admissible():
+                    continue
+                trials.append(_trial(s, alt, name, ref, obj, texts, problems, prefix))
+                if trials[-1].binds:
+                    break
+            if not trials:
+                warnings.append(f"{prefix}parameter {name}: no other candidate is admissible in {s.setting.label}, "
+                                f"so whether it binds in {tier} was not checked")
+                continue
+            checked[tier] = (s, current, obj, trials)
+        idle = {t: c for t, c in checked.items() if not any(x.binds for x in c[3])}
+        top = varies[-1] if varies else None       # the highest tier where it varies must bind, used there or not
+        if top in idle and len(idle) == len(checked):
+            problems.append(f"{prefix}parameter {name} changes nothing: "
+                            + "; ".join(_idle(name, *c) for c in idle.values()))
+            continue
+        for tier, c in idle.items():
+            if tier == top:
+                problems.append(f"{prefix}parameter {name} changes nothing in tier {tier}, the highest tier where it "
+                                f"varies: {_idle(name, *c)}")
+            elif any(x.stated for x in c[3]):
+                finding = (f"{prefix}parameter {name} changes nothing in tier {tier}, where the client states it: "
+                           f"{_idle(name, *c)}")
+                known = _open_finding(case, name, tier)
+                if known:
+                    warnings.append(f"{finding} ({known})")
+                else:
+                    problems.append(finding)
+            else:
+                warnings.append(f"{prefix}parameter {name} varies in tier {tier} but changes nothing there, and "
+                                f"nothing in force in {tier} uses it (its requirements, targets and rules read the "
+                                f"same under every candidate): {_idle(name, *c)}; one candidate in {tier} would say "
+                                f"so")
+    return problems, warnings
+
+
+def check_world_seed(case: NativeCase, seed: int) -> tuple[list[str], list[str]]:
+    """(problems, warnings): the case also works on a world from another seed: every public setting's reference
+    is valid at quality 1.0, every rule has a clean violating example, and every parameter still binds in every
+    tier where it varies. Of the binding check's warnings only the known and open findings are passed on (the
+    others repeat what the public world shows)."""
     other = case.with_world_seed(seed)
     problems: list[str] = []
+    warnings: list[str] = []
     refs: dict[tuple, Path] = {}
     keep = tempfile.TemporaryDirectory()
     try:
         for c in other.settings():
             at = f"[seed {seed}{' ' + c.setting.label if c.tiers else ''}] "
-            ref = Path(keep.name) / f"ref_{c.tier}_{c.ruleset}"
+            ref = Path(keep.name) / f"ref_{c.setting.folder if c.tiers else 'default'}"
             ref.mkdir()
             try:
                 c.write_reference(ref)
@@ -247,29 +657,25 @@ def check_world_seed(case: NativeCase, seed: int) -> list[str]:
             except Exception as e:  # a generator that cannot handle this seed
                 problems.append(f"{at}fails: {e!r}"[:400])
                 continue
-            refs[(c.tier, c.ruleset)] = ref
+            refs[(c.tier, c.rule_seed)] = ref
             if res["validity_score"] != 1.0 or abs(res["quality_score"] - 1.0) > 1e-9:
                 problems.append(f"{at}reference scores {res.get('error_info') or res['quality_score']}")
             for rule_id in [r.id for r in c.rules().rules]:
                 if rule_id not in examples:
                     problems.append(f"{at}rule {rule_id}: no violating example")
             for rule_id, make in examples.items():
-                ex = ref.parent / f"viol_{c.tier}_{c.ruleset}_{rule_id}"
+                ex = ref.parent / f"viol_{c.setting.folder if c.tiers else 'default'}_{rule_id}"
                 ex.mkdir()
                 make(ex)
                 broken = {v["rule"] for v in c.evaluate(ex, "en")["violations"]}
                 if broken != {rule_id}:
                     problems.append(f"{at}rule {rule_id}: example breaks {sorted(broken)}")
-        for tier in other.tiers:
-            for x in other.rulesets:
-                for y in other.rulesets:
-                    if x != y and (tier, x) in refs:
-                        res = other.at(tier, y).evaluate(refs[(tier, x)], "en")
-                        if res["validity_score"] == 1.0 and res["quality_ratio"] > 1.0 - DISTINCT_MARGIN:
-                            problems.append(f"[seed {seed} {tier}] rule sets {x} and {y} give the same solution")
+        found, notes = check_binding(other, refs, f"[seed {seed}] ")
+        problems += found
+        warnings += [n for n in notes if "(known and open" in n]
     finally:
         keep.cleanup()
-    return problems
+    return problems, warnings
 
 
 def _scores_as_reference(case: NativeCase, submission: Path) -> bool:
@@ -285,7 +691,11 @@ def validate_case(root: Path, world_seeds: list[int] = ()) -> list[str]:
 def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
     report = Report()
     problems, warnings = report.problems, report.warnings
-    case = NativeCase(root)
+    try:
+        case = NativeCase(root)
+    except (ValueError, KeyError, TypeError) as e:
+        problems.append(f"case.yaml: {e.args[0] if e.args else repr(e)}")
+        return report
     meta = case.meta
     problems += [f"case.yaml: missing {k}" for k in REQUIRED_META if k not in meta]
     if meta.get("id") != root.name:
@@ -308,28 +718,93 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
         problems.append("case.yaml: deliverable_type must be batch or program")
     if meta.get("objective") not in ("minimize", "maximize"):
         problems.append("case.yaml: objective must be minimize or maximize")
-    tiers, rulesets = case.tiers, case.rulesets
+    tiers = case.tiers
     if meta.get("tiers") and set(meta["tiers"]) - set(TIERS):
         problems.append(f"case.yaml: tiers must be among {TIERS}")
-    if meta.get("rulesets") and set(meta["rulesets"]) - set(RULESETS):
-        problems.append(f"case.yaml: rulesets must be among {RULESETS}")
-    if tiers and (len(tiers) != 3 or len(rulesets) != 3):
-        problems.append("case.yaml: a case with settings declares all three tiers and all three rule sets")
-    if rulesets and len({tuple(sorted((meta["rulesets"][r] or {}).items(), key=str)) for r in rulesets}) < len(rulesets):
-        problems.append("case.yaml: two rule sets have the same parameters")
-    params = set().union(*[(meta["rulesets"][r] or {}).keys() for r in rulesets]) if rulesets else set()
+    if tiers and len(tiers) != 3:
+        problems.append("case.yaml: a case with settings declares all three tiers")
+    pools: dict[str, dict[str, list]] = {}
+    if tiers:
+        found, notes = check_params(case)
+        problems += found
+        warnings += notes
+        params = set(meta.get("params") or {}) if isinstance(meta.get("params"), dict) else set()
+        pools = case.param_candidates if params else {}
+        for c in case.settings():   # derived keys are parameters too (a setting that cannot draw is reported)
+            try:
+                params |= set(c.setting.params)
+            except Exception:
+                pass
+    else:
+        params = set()
+        for key in ("params", "rule_seeds", "param_labels"):
+            if key in meta:
+                problems.append(f"case.yaml: {key}: needs tiers: (a case without tiers has no settings)")
 
     def bad_tiers(names) -> bool:
         return not tiers or not set(names) <= set(tiers)
 
-    def bad_rulesets(names) -> bool:
-        return not rulesets or not set(names) <= set(rulesets)
+    def no_rulesets(item: dict, where: str) -> list[str]:
+        """rulesets: on a rule or target belonged to the rule sets that rule seeds replaced."""
+        if "rulesets" not in item:
+            return []
+        return [f"{where}: rulesets: {item['rulesets']} is no longer read (rule seeds replaced the rule sets A / B / "
+                f"C): apply it under some parameter values with when: {{name: [values]}}"]
+
+    def when_problems(name: str, values: list, where: str) -> list[str]:
+        """A when-condition names a parameter (drawn or derived) and, for a drawn one, only its candidates."""
+        if not tiers:
+            return [f"{where}: when-conditions need params: (a case with settings drawn by rule seeds)"]
+        if name not in params:
+            return [f"{where}: when names {name!r}, which is not a parameter"]
+        if name in pools:
+            candidates = {value_text(v) for pool in pools[name].values() for v in pool}
+            never = [v for v in map(value_text, values) if v not in candidates]
+            if never:
+                return [f"{where}: when {name} = {', '.join(never)}, which is never a candidate of {name}"]
+        return []
+
+    def check_when(item: dict, where: str) -> list[str]:
+        when = item.get("when")
+        if when is None:
+            return []
+        if not isinstance(when, dict) or not when:
+            return [f"{where}: when: maps parameters to their values, e.g. when: {{cap: [4, 5]}}"]
+        out = []
+        for name, values in when.items():
+            out += when_problems(str(name), values if isinstance(values, list) else [values], where)
+        return out
+
+    def check_markers(text: str, where: str, when_names: bool = True) -> list[str]:
+        """Balanced tier and when markers in a text; tier markers name declared tiers, and (when_names) when
+        markers are well formed and name parameters and their candidates. Other locales than en follow en's when
+        markers (locale parity), so their names need no second check."""
+        out = []
+        opened = re.findall(r"<!-- tier: ([A-Za-z ]+) -->", text)
+        if len(opened) != text.count("<!-- /tier -->"):
+            out.append(f"{where}: unbalanced tier markers")
+        if any(bad_tiers(o.split()) for o in opened):
+            out.append(f"{where}: tier markers name undeclared tiers")
+        if RULESET_MARKER.search(text):
+            out.append(f"{where}: <!-- ruleset: ... --> blocks are no longer read (rule seeds replaced the rule sets "
+                       f"A / B / C): use <!-- when: name=v1,v2 --> ... <!-- /when -->")
+        whens = re.findall(r"<!-- when: ([^>]*?) -->", text)
+        if len(whens) != text.count("<!-- /when -->"):
+            out.append(f"{where}: unbalanced when markers")
+        for spec in whens if when_names else ():
+            m = WHEN_SPEC.fullmatch(spec.strip())
+            if not m:
+                out.append(f"{where}: malformed when marker {spec!r} (<!-- when: name=v1,v2 -->)")
+            else:
+                out += when_problems(m.group(1), when_values(m.group(2)), where)
+        return out
 
     for r in meta.get("rules", []):
         if "tiers" in r and bad_tiers(r["tiers"]):
             problems.append(f"rule {r.get('id')}: tiers {r['tiers']} are not declared in case.yaml")
-        if "rulesets" in r and bad_rulesets(r["rulesets"]):
-            problems.append(f"rule {r.get('id')}: rulesets {r['rulesets']} are not declared in case.yaml")
+        problems += no_rulesets(r, f"rule {r.get('id')}")
+        problems += check_when(r, f"rule {r.get('id')}")
+        problems += check_markers(str(r.get("description", "")), f"rule {r.get('id')} description")
         if r.get("class") not in RULE_CLASSES:
             problems.append(f"rule {r.get('id')}: class must be one of {RULE_CLASSES}")
         if not r.get("description"):
@@ -349,12 +824,7 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
             why = _script_problem(body, lang)
             if why:
                 problems.append(f"{lang}/{name}: {why}")
-            for marker, bad in (("tier", bad_tiers), ("ruleset", bad_rulesets)):
-                opened = re.findall(rf"<!-- {marker}: ([A-Za-z ]+) -->", body)
-                if len(opened) != body.count(f"<!-- /{marker} -->"):
-                    problems.append(f"{lang}/{name}: unbalanced {marker} markers")
-                if any(bad(o.split()) for o in opened):
-                    problems.append(f"{lang}/{name}: {marker} markers name undeclared {marker}s")
+            problems += check_markers(body, f"{lang}/{name}", when_names=lang == "en")
             unknown = set(PARAM.findall(body)) - params
             if unknown:
                 problems.append(f"{lang}/{name}: unknown parameters {sorted(unknown)}")
@@ -372,8 +842,12 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                 problems.append(f"en/targets.yaml {t.get('id')}: needs kind and domain")
             if lang == "en" and "tiers" in t and bad_tiers(t["tiers"]):
                 problems.append(f"en/targets.yaml {t.get('id')}: tiers {t['tiers']} are not declared")
-            if lang == "en" and "rulesets" in t and bad_rulesets(t["rulesets"]):
-                problems.append(f"en/targets.yaml {t.get('id')}: rulesets {t['rulesets']} are not declared")
+            if lang == "en":
+                problems += no_rulesets(t, f"en/targets.yaml {t.get('id')}")
+            if lang == "en":
+                problems += check_when(t, f"en/targets.yaml {t.get('id')}")
+            problems += check_markers(str(t.get("text", "")), f"{lang}/targets.yaml {t.get('id')}",
+                                      when_names=lang == "en")
             unknown = set(PARAM.findall(t.get("text", ""))) - params
             if unknown:
                 problems.append(f"{lang}/targets.yaml {t.get('id')}: unknown parameters {sorted(unknown)}")
@@ -415,8 +889,8 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
             problems.append("data file sets differ in shape across locales")
     problems += check_hash_seed(root)
 
-    # ── scoring, in every setting ───────────────────────────────────────────
-    refs: dict[tuple, Path] = {}
+    # ── scoring, in every public setting ────────────────────────────────────
+    refs: dict[tuple, Path] = {}          # (tier, rule seed) -> the reference, written once for every check
     keep = tempfile.TemporaryDirectory()
     baseline = getattr(case.module, "baseline_solution", None)
     if baseline is None:
@@ -426,7 +900,7 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
     # Numbers the agent meets in the data or at run time (a dated notice in the hidden inputs) count as stated,
     # from 10 up: small numbers are everywhere in data and would hide a rule that says 2 where the text says 6.
     # Each row is read whole (1,200 in a text) and as cells (a CSV's ,120,).
-    in_data = {x for d in (root / "dataset" / "visible" / "en", root / "dataset" / "hidden") if d.is_dir()
+    in_data = {x for d in (root / "dataset" / "agent_view" / "en", root / "dataset" / "hidden") if d.is_dir()
                for row in _data_rows(d) for text in (row, re.sub(r"[,;\t|]", " ", row))
                for x in (float(n.replace(",", "")) for n in NUMBER.findall(text)) if x >= 10}
     broken_baseline = False
@@ -464,14 +938,31 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                     broken_baseline = True
                     continue
                 base_obj = res["objective"]
-            ref_dir = Path(keep.name) / f"ref_{c.tier}_{c.ruleset}"
+                if math.isfinite(float(base_obj)):     # what every evaluation scores against: not computed again
+                    c.__dict__.setdefault("baseline_objective", float(base_obj))
+            # The reference is written once and scored once here; that objective is the setting's
+            # reference_objective for every later check (a slow program case is not run again for it). A second
+            # write must give the same files, and a second scoring the same objective.
+            ref_dir = Path(keep.name) / f"ref_{c.setting.folder if c.tiers else 'default'}"
             ref_dir.mkdir()
             c.write_reference(ref_dir)
-            refs[(c.tier, c.ruleset)] = ref_dir
+            again = Path(tmp) / "reference_again"
+            again.mkdir()
+            c.write_reference(again)
+            if _tree_digest(again) != _tree_digest(ref_dir):
+                problems.append(at + "reference_solution is not deterministic (two writes differ)")
+            try:
+                ref_obj = _objective(c.raw_score(ref_dir))
+            except Exception as e:
+                problems.append(f"{at}the reference cannot be scored: {e!r}"[:400])
+                continue
+            refs[(c.tier, c.rule_seed)] = ref_dir
+            if ref_obj is not None:
+                c.__dict__.setdefault("reference_objective", ref_obj)
             first = c.evaluate(ref_dir, "en")
             if first["validity_score"] != 1.0 or abs(first["quality_score"] - 1.0) > 1e-9:
                 problems.append(f"{at}reference solution scores {first}")
-            if c.evaluate(ref_dir, "en").get("objective") != first.get("objective"):
+            if first.get("objective") != ref_obj:
                 problems.append(at + "scoring is not deterministic (two evaluations of the reference differ)")
             if kind == "program" and not (ref_dir / "program").is_dir():
                 problems.append(at + "program case: reference_solution must write program/")
@@ -521,35 +1012,29 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
         keep.cleanup()
         return report
 
-    # ── rule sets are different ground truths ───────────────────────────────
-    for tier in tiers:
-        for x in rulesets:
-            for y in rulesets:
-                if x == y or (tier, x) not in refs:
-                    continue
-                res = case.at(tier, y).evaluate(refs[(tier, x)], "en")
-                if res["validity_score"] == 1.0 and res["quality_ratio"] > 1.0 - DISTINCT_MARGIN:
-                    problems.append(f"[{tier}] rule set {x}'s reference scores {res['quality_ratio']:.4f} under "
-                                    f"rule set {y}: the two rule sets do not lead to different solutions")
+    # ── every parameter changes the ground truth, in every tier where it varies ──
+    found, notes = check_binding(case, refs)
+    problems += found
+    warnings += notes
 
     # ── tiers add signal: two tiers with the same answer test the same thing ─
     for i, low in enumerate(tiers):
         for high in tiers[i + 1:]:
             same, scored = [], []
-            for r in rulesets:
+            for r in case.rule_seeds:
                 if (low, r) not in refs or (high, r) not in refs:
                     continue
                 if _tree_digest(refs[(low, r)]) == _tree_digest(refs[(high, r)]):
-                    same.append(r)
+                    same.append(str(r))
                 elif (_scores_as_reference(case.at(high, r), refs[(low, r)])
                       and _scores_as_reference(case.at(low, r), refs[(high, r)])):
-                    scored.append(r)
+                    scored.append(str(r))
             if same:
-                warnings.append(f"[{low} vs {high}] the references are byte-identical in rule set(s) "
+                warnings.append(f"[{low} vs {high}] the references are byte-identical in rule seed(s) "
                                 f"{', '.join(same)}: the tier adds no signal")
             if scored:
-                warnings.append(f"[{low} vs {high}] each reference scores as the other tier's reference in rule "
-                                f"set(s) {', '.join(scored)}: the tier adds no signal")
+                warnings.append(f"[{low} vs {high}] each reference scores as the other tier's reference in "
+                                f"rule seed(s) {', '.join(scored)}: the tier adds no signal")
     keep.cleanup()
 
     # ── the stored dataset matches the generator ────────────────────────────
@@ -561,7 +1046,9 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
 
     # ── optional: other worlds (contamination-resistant runs use private seeds) ──
     for seed in world_seeds:
-        problems += check_world_seed(case, seed)
+        found, notes = check_world_seed(case, seed)
+        problems += found
+        warnings += notes
 
     # ── the agent sees the same thing in every setting ──────────────────────
     if tiers:
@@ -571,6 +1058,7 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
         if len(set(views.values())) > 1:
             problems.append(f"the agent's view differs between settings: {sorted(views)} -> "
                             f"{len(set(views.values()))} distinct views")
+    problems += _translations(case)     # last, so a missing translation never hides the other checks
     return report
 
 
@@ -583,7 +1071,7 @@ def agent_view(case: NativeCase, lang: str = "en") -> str:
     with tempfile.TemporaryDirectory() as tmp:
         ws = Path(tmp) / "workspace"
         spec = VariantSpec(case.id, customer_locale=lang, agent_locale=lang, difficulty=case.tier or "medium",
-                           ruleset=case.ruleset or "A")
+                           rule_seed=case.rule_seed)
         variant = build_variant(spec, case, ws, Translator(None, Path(tmp) / "cache"))
         files = sorted(p.relative_to(ws).as_posix() for p in (ws / "data").rglob("*") if p.is_file())
         system, user = render_task_prompt(variant, "/workspace", files)
