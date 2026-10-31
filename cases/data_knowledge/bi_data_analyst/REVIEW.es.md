@@ -4,43 +4,46 @@ Hallazgos de la revisión del caso, comprobados de nuevo contra el código con l
 semillas de mundo 1–20. F1, F3, F8 y F9 se corrigieron cuando se atendió la revisión por primera vez (el «primer
 cambio» de más abajo). F10 es la petición del responsable del caso: tres niveles × tres conjuntos de reglas, y
 respuestas que pueden ser correctas, «no sé» o erróneas, con recompensas que difieren según el conjunto de reglas. Se
-resolvió en el segundo cambio, que también hace avanzar F2, F4 y F5. El resto son propuestas abiertas para el
-responsable del caso.
+resolvió en el segundo cambio, que también hace avanzar F2, F4 y F5. El tercer cambio sustituye los tres conjuntos de
+reglas fijos por semillas de reglas que sortean cada regla entre sus candidatos (sección «Semillas de reglas» al
+final); vuelve a mover F1, F2, F4, F5, F9 y F10. El resto son propuestas abiertas para el responsable del caso.
 
 ### F1 — La regla de redondeo hacía imposible acertar Q07 y Q09 (alta, en parte)
 
 Las respuestas monetarias tenían que ser miles enteros de KRW, pero se puntuaban dentro del 0.5 % de la cifra sin
-redondear. En las medias por pedido esto falla: Q07 = 41,618 se redondea a 42,000 (+0.92 %) y Q09 = 35,780 se
-redondea a 36,000 (+0.62 %). Así, una hoja que siguiera la regla podía obtener como mucho 10/12, y la referencia
-guardada obtenía 9. Las respuestas exactas redondeadas solo pasaban en el 35 % (Q07) y el 45 % (Q09) de las semillas
-1–20. Flexibilizar `report_rounding` subía la puntuación: una hoja con días en UTC obtenía 7/12 redondeando y 9/12
-con cifras exactas.
+redondear. En las medias por pedido esto falla: Q07 = 41,618 se redondea a 42,000 (+0.92 %) y Q09 = 35,780 se redondea
+a 36,000 (+0.62 %). Así, una hoja que siguiera la regla podía obtener como mucho 10/12, y la referencia guardada
+obtenía 9. Las respuestas exactas redondeadas solo pasaban en el 35 % (Q07) y el 45 % (Q09) de las semillas 1–20.
+Flexibilizar `report_rounding` subía la puntuación: una hoja con días en UTC obtenía 7/12 redondeando y 9/12 con
+cifras exactas.
 
 **Estado:** corregido en el primer cambio. Una respuesta monetaria es ahora correcta si queda dentro del 0.5 % o de
 500 KRW de la cifra exacta, lo que sea más amplio, de modo que la cifra exacta redondeada al millar más cercano
-siempre cuenta. La sección «Cómo se evalúan las respuestas» y la pregunta clave `report_rounding` lo dicen en los cinco
-idiomas. `violating_examples` comprueba ahora que las respuestas exactas, redondeadas como exige finanzas, obtienen
-12/12 sin ningún incumplimiento en todos los mundos que construye el validador; así ocurre en las semillas 1–20. La
-referencia sube de 9 a 11 (Q07 y Q09 ahora cuentan), y seguir la regla ya no cuesta ninguna pregunta: la hoja con días
-en UTC obtiene 9/12 redondeando o con cifras exactas. La objeción del verificador se mantiene: no se añadió ninguna
-comprobación general de que «flexibilizar nunca ayuda», porque en otros casos las reglas flexibilizables están
+siempre cuenta. La sección «Cómo se evalúan las respuestas» y la pregunta clave `report_rounding` lo dicen en los
+cinco idiomas. `violating_examples` comprueba ahora que las respuestas exactas, redondeadas como exige finanzas,
+obtienen 12/12 sin ningún incumplimiento en todos los mundos que construye el validador; así ocurre en las semillas
+1–20. La referencia sube de 9 a 11 (Q07 y Q09 ahora cuentan), y seguir la regla ya no cuesta ninguna pregunta: la hoja
+con días en UTC obtiene 9/12 redondeando o con cifras exactas. La objeción del verificador se mantiene: no se añadió
+ninguna comprobación general de que «flexibilizar nunca ayuda», porque en otros casos las reglas flexibilizables están
 pensadas para costar objetivo. Segundo cambio: la unidad de redondeo es ahora un parámetro del conjunto de reglas
 (1,000 / 10,000 / 100 KRW), la tolerancia monetaria es del 0.5 % o media unidad, y la misma comprobación (objetivo
-1.0, ningún incumplimiento) se ejecuta en las nueve configuraciones.
+1.0, ningún incumplimiento) se ejecuta en las nueve configuraciones. Semillas de reglas: la unidad es un parámetro
+sorteado (candidatos 100 / 1,000 / 10,000 KRW), y la comprobación se ejecuta en todas las configuraciones públicas, en
+todos los mundos que construye el validador (comprobadas las semillas 1–20).
 
 ### F2 — Sin margen entre la referencia y el techo (alta, confirmado)
 
 La referencia es `compute()` sin el cambio de nombre de la categoría. Con la antigua escala recortada obtenía 9, y
 cualquier hoja con 9 o más aciertos recibía la calidad completa. Con la corrección de F1 y la nueva escala, el
 problema se invierte. La referencia obtiene 11 y la línea base 0, así que una hoja perfecta tiene una calidad
-normalizada de 12/11 = 1.09. Con el tope de la política de 1.5, una hoja perfecta solo obtiene el 73 % de la puntuación
-de calidad, y el cambio de nombre (Q06) es el único hecho que la separa de la referencia.
+normalizada de 12/11 = 1.09. Con el tope de la política de 1.5, una hoja perfecta solo obtiene el 73 % de la
+puntuación de calidad, y el cambio de nombre (Q06) es el único hecho que la separa de la referencia.
 
 **Estado:** abierto, y modificado por el segundo cambio (F10). La referencia sigue fallando solo el cambio de nombre,
 y Q06 solo se puntúa en hard. Por eso, en easy y medium la referencia acierta todas las preguntas puntuadas y *es* el
 techo: una hoja perfecta tiene calidad normalizada 1.000 en esas seis configuraciones. Con el tope de la política de
-1.5, la mejor hoja posible obtiene allí el 67 % de la puntuación de calidad. En hard, la hoja perfecta obtiene 1.091 (A),
-1.125 (B) y 1.091 (C) con la semilla pública: la referencia deja Q06 como «no sé» con A y C, y la falla con B. Su
+1.5, la mejor hoja posible obtiene allí el 67 % de la puntuación de calidad. En hard, la hoja perfecta obtiene 1.091
+(A), 1.125 (B) y 1.091 (C) con la semilla pública: la referencia deja Q06 como «no sé» con A y C, y la falla con B. Su
 objetivo es 0.958 / 0.917 / 0.979 en todas las semillas comprobadas (1–20), y las líneas base apenas mueven la cifra
 normalizada. La propuesta anterior (`quality_cap: 1.09`) ya no encaja. Un único tope para todo el caso no puede dar la
 puntuación completa a la hoja perfecta en las nueve configuraciones: un tope de 1.0 daría también la puntuación
@@ -48,15 +51,20 @@ completa en hard a una hoja del nivel de la referencia, y un tope por encima de 
 el segundo cambio no fija `quality_cap`. Propuestas: (a) un `quality_cap` por nivel en el framework (1.0 para easy y
 medium, 1.10 para hard); (b) dar a la referencia una laguna deliberada en cada nivel, por ejemplo una pregunta que no
 pueda resolver en easy y otra en medium, para que también se abstenga allí; (c) ponderar cada pregunta por el número
-de preguntas clave efectivas que pone en juego, para que cada hecho oculto cueste más o menos lo mismo.
+de preguntas clave efectivas que pone en juego, para que cada hecho oculto cueste más o menos lo mismo. Semillas de
+reglas: sin cambios de fondo. El objetivo de la referencia solo depende del nivel y de la recompensa del `null`
+sorteada: 1.000 en easy y medium, y 0.917 / 0.958 / 0.979 en hard para un `null` que vale 0.5 / 1 / 1.5, en las 81
+combinaciones con las semillas de mundo 1–10. Así, la calidad normalizada de la hoja perfecta en hard es 1.125 cuando
+un `null` vale 0.5 y 1.091 en los demás casos (hard/s12, y hard/s4 y hard/s23, en las semillas de reglas públicas).
+Sigue sin haber `quality_cap`.
 
 ### F3 — Reembolsos con fecha posterior a la de referencia y una tolerancia de Q11 hipersensible (alta, en parte)
 
 `refunds.csv` tiene 23 reembolsos con fecha del 2026-10-01 al 2026-10-18 (hora de Corea), por 853,041 KRW sin
 impuestos. La solución correcta los imputa al periodo de su pedido. Los requisitos ya daban la regla de imputación,
 pero no la fecha de la exportación. Cortar los reembolsos en la fecha de referencia mueve Q11 de −2.57 % a +0.38 %.
-Q11 se puntuaba dentro del 0.5 % de su propio valor, es decir, ±0.013 puntos porcentuales, o unos ±3,700 KRW sobre
-29 M KRW de ingreso mensual.
+Q11 se puntuaba dentro del 0.5 % de su propio valor, es decir, ±0.013 puntos porcentuales, o unos ±3,700 KRW sobre 29
+M KRW de ingreso mensual.
 
 **Estado:** corregido en el primer cambio, con la opción de texto, que deja intactos los datos y todas las soluciones
 correctas. Los requisitos en los cinco idiomas dicen ahora que la exportación se hizo el 2026-10-31 y contiene los
@@ -93,7 +101,12 @@ conjuntos de reglas, más Q02 con B. La cláusula de prorrata pasó a `category_
 la cláusula del tipo de cambio de la fecha del reembolso, y que `fx_order_date` no cueste nada en algunos mundos
 (semilla 2 con A y B, semilla 1 con B). El punto de los 89 días es ahora una ventana un día más corta en cada conjunto
 de reglas: cuesta Q03 en todas las configuraciones con la semilla pública y con las semillas 1–3, salvo A con la
-semilla pública y B con la semilla 1.
+semilla pública y B con la semilla 1. Semillas de reglas: el mismo panorama con las nuevas semillas de reglas
+públicas. `fx_order_date` no cuesta nada con la semilla de mundo 2 con el año que empieza en abril y con el que
+empieza en julio (s23, s12), ni con la semilla de mundo 1 con el año que empieza en julio, en todos los niveles. La
+ventana un día más corta cuesta Q03 en todas partes salvo con la ventana de 90 días (s23) en el mundo público y con la
+de 60 días (s4) en la semilla de mundo 1. Otro valor de los candidatos de la ventana siempre cuesta Q03. Sigue
+abierto.
 
 ### F5 — Sin configuraciones y sin README (media, confirmado)
 
@@ -120,6 +133,13 @@ y lo que se construyó:
 - Comprobar que la hoja de cada conjunto de reglas pierde al menos una pregunta con los otros dos. *Construido:*
   validate-case comprueba que cada referencia es inválida o al menos un 1 % peor con los otros conjuntos de reglas de
   su nivel. Pasan los 18 pares: 9 son inválidos (redondeo), y los 9 válidos obtienen 0.00–0.40 de la otra referencia.
+
+Semillas de reglas (tercer cambio): las configuraciones son ahora niveles × semillas de reglas. Los cuatro parámetros
+de los conjuntos de reglas son listas de candidatos que una semilla de reglas sortea de forma independiente (81
+combinaciones por nivel), y la comprobación de que las referencias son distintas que hacía validate-case se sustituye
+por la comprobación de efecto: cambiar uno solo de los parámetros de `hard/s4` invalida su referencia o mueve su
+puntuación (los cuatro influyen). Los 18 pares cruzados de las nuevas semillas de reglas públicas (semillas 4, 12, 23)
+siguen pasando: 9 inválidos y los 9 válidos en 0.00–0.38. Corregido en lo que respecta a las configuraciones.
 
 ### F6 — Ni eventos con fecha ni presión (media, confirmado)
 
@@ -150,21 +170,21 @@ pedidos empieza el 2025-01-01.
 
 ### F8 — Redacción coreana: dos semestres y una Q12 ambigua (baja, confirmado)
 
-La Q05 coreana llamaba a las rebajas del 2026-07-01 "상반기 결산 세일" (primer semestre natural), mientras que Q07
-usa "FY2026 상반기" para abril–septiembre. Eso empuja hacia un año fiscal natural. La Q12 "몇 개의 상품" admite una
+La Q05 coreana llamaba a las rebajas del 2026-07-01 "상반기 결산 세일" (primer semestre natural), mientras que Q07 usa
+"FY2026 상반기" para abril–septiembre. Eso empuja hacia un año fiscal natural. La Q12 "몇 개의 상품" admite una
 lectura de productos distintos: 1.66 líneas por pedido frente a las 2.105 unidades reales.
 
-**Estado:** corregido en el primer cambio. El archivo de preguntas coreano dice ahora "Q05: 여름 세일 당일(2026-07-01)…"
-y "Q12: FY2025 주문 1건당 평균 상품 수량(낱개 기준)은 얼마인가요?". La redacción ja (中間セール, 点数) y zh (年中大促, 件)
-no tiene esa colisión, así que no cambia. Se mantiene la etiqueta de categoría 팬트리; ese punto es cuestión de gusto
-y no estaba en la lista de correcciones.
+**Estado:** corregido en el primer cambio. El archivo de preguntas coreano dice ahora "Q05: 여름 세일
+당일(2026-07-01)…" y "Q12: FY2025 주문 1건당 평균 상품 수량(낱개 기준)은 얼마인가요?". La redacción ja (中間セール,
+点数) y zh (年中大促, 件) no tiene esa colisión, así que no cambia. Se mantiene la etiqueta de categoría 팬트리; ese
+punto es cuestión de gusto y no estaba en la lista de correcciones.
 
 ### F9 — El control de cuentas de prueba es más estrecho que el texto de su regla (baja, en parte)
 
 El control solo comprueba que Q03, Q04, Q05 y Q10 no sean exactamente iguales a la cifra en hora de Corea que incluye
 las cuentas de prueba. Las respuestas monetarias que incluyen las cuentas de prueba pasan la validez (8/12, ningún
-incumplimiento), y también una hoja que excluye solo la cuenta 10027 (4/12). Los requisitos ya describían bien el control;
-case.yaml no.
+incumplimiento), y también una hoja que excluye solo la cuenta 10027 (4/12). Los requisitos ya describían bien el
+control; case.yaml no.
 
 **Estado:** corregido en el primer cambio. La regla de case.yaml dice ahora «una respuesta de recuento o de
 identificador de cliente (Q03, Q04, Q05, Q10) que coincida con la cifra que incluye las cuentas de prueba, cuando esta
@@ -174,16 +194,22 @@ de mundo 1, su Q10 = 639 es igual a la cifra con cuentas de prueba y queda marca
 que sea igual a la cifra sin cuentas de prueba con cualquiera de las dos convenciones de día. Segundo cambio: el
 control solo revisa las preguntas que puntúa el nivel, con los periodos de la configuración, y un `null` nunca lo
 activa. La coincidencia de la semilla 1 aparece ahora en easy/A, medium/A y hard/A, porque Q10 se puntúa en todos los
-niveles. Sigue abierto.
+niveles. Sigue abierto. Semillas de reglas: aparece siempre que el año fiscal empieza en abril (s23 en las semillas de
+reglas públicas), en los tres niveles. Sigue abierto.
 
 **Línea base:** «aún no disponible» (`null`) en todas las preguntas, lo que finanzas informa sin un analista. Obtiene
-la recompensa de «no sé» en todas partes (0.5 / 0.25 / 0.75 con A / B / C), de modo que decir «no sé» a todo vale 0
-en la escala normalizada. La hoja a valor nominal (la exportación sumada tal cual: periodos de año natural sobre fechas
+la recompensa de «no sé» en todas partes (0.5 / 0.25 / 0.75 con A / B / C), de modo que decir «no sé» a todo vale 0 en
+la escala normalizada. La hoja a valor nominal (la exportación sumada tal cual: periodos de año natural sobre fechas
 UTC, todos los estados de pedido, totales con impuestos menos los reembolsos fechados en el periodo, el tipo de cambio
 del 2026-09-30, una ventana de actividad de 30 días, solo la etiqueta `pantry`; cuentas de prueba fuera, importes
 redondeados) puntúa por debajo de ella en todas las configuraciones y en las semillas 1–20 (como mucho 0.60, en
 easy/C, frente a 0.75). Las respuestas exactas redondeadas a la unidad de la configuración obtienen 1.0 en todas
-partes.
+partes. Semillas de reglas: se mantiene la línea base de todo `null`. La hoja a valor nominal ya no queda por debajo
+de ella con cualquier sorteo, porque ahora un año que empieza en enero (el año natural que ella supone) puede salir
+junto con un `null` que vale 0.5 o 1. En las semillas de reglas públicas queda por debajo con el mundo público, pero
+easy/s4 (enero, un `null` que vale 1) llega a 0.60 frente a 0.50 con las semillas de mundo 4 y 7; en las 81
+combinaciones con las semillas de mundo 1–10 alcanza la línea base en 117 de 2,430 casos (nivel, combinación, mundo),
+con un máximo de 0.60 frente a 0.25 (calidad normalizada 0.47). Véase «Semillas de reglas» más abajo.
 
 ### F10 — Las respuestas no podían decir «no sé» y el caso tenía una sola solución correcta (petición del responsable; hecho)
 
@@ -192,13 +218,15 @@ según el conjunto de reglas. El benchmark debería medir entonces si un agente 
 calibrada), y si acierta cuando sí responde. El caso tampoco tenía configuraciones (F5).
 
 **Estado:** hecho en el segundo cambio. Los datos, la solicitud y el archivo de preguntas no cambian y son idénticos
-byte a byte en las nueve configuraciones. Las cifras de la semilla pública con el conjunto de reglas A son las del caso
-sin configuraciones.
+byte a byte en las nueve configuraciones. Las cifras de la semilla pública con el conjunto de reglas A son las del
+caso sin configuraciones. Tercer cambio: los tres conjuntos de reglas fijos son ahora listas de candidatos que sortea
+la semilla de reglas (sección «Semillas de reglas»); el esquema de recompensas, las preguntas de cada nivel, la línea
+base de todo `null` y la política de abstención de la referencia no cambian.
 
 - **Respuestas.** `answers.json` asigna a cada identificador Q01..Q12 un número o `null` («no sé»). Una clave que
-  falte, o un valor que no sea ni un número finito ni `null`, incumple `answer_format` en cualquier pregunta, se puntúe
-  o no. Lo dicen la especificación del entregable, los textos de las reglas y los requisitos en los cinco idiomas. Al
-  extractor se le indica que escriba `null` donde el ingeniero no dio ninguna cifra.
+  falte, o un valor que no sea ni un número finito ni `null`, incumple `answer_format` en cualquier pregunta, se
+  puntúe o no. Lo dicen la especificación del entregable, los textos de las reglas y los requisitos en los cinco
+  idiomas. Al extractor se le indica que escriba `null` donde el ingeniero no dio ninguna cifra.
 - **Puntuación.** Cada pregunta puntuada obtiene 2 si es correcta, `dont_know_reward` si es `null` y 0 si es errónea.
   El objetivo es total / (2 × preguntas puntuadas), en [0, 1]. Métricas: `scored`, `answered`, `right`, `wrong`,
   `dont_know`, `accuracy_on_answered`, `coverage`, `reward`, y las listas de preguntas erróneas y de «no sé». Una
@@ -236,13 +264,64 @@ sin configuraciones.
   aparte esa única comprobación, con las semillas de mundo 1–3 (y las semillas 1–20 para las comprobaciones de
   semillas de mundo), y pasan.
 - **Comprobado de nuevo.** Una segunda revisión volvió a calcular las recompensas con hojas hechas a mano (todo
-  correcto, todo `null`, un `null` y una errónea, respuestas no puntuadas de todo tipo), la regla de formato (clave que
-  falta, cadena, booleano, lista, NaN, Infinity), la disyuntiva de abstención en Q06, las puntuaciones cruzadas entre
-  conjuntos de reglas, las tablas del README (objetivos, la tabla de un solo hecho erróneo y las respuestas del nivel
-  hard) y los rangos de las semillas 1–20; todo se reproduce. Corregido: un entero JSON demasiado grande para un float
-  (p. ej., de 400 dígitos) hacía que la puntuación lanzara una excepción en vez de incumplir `answer_format`; la lista
-  del README de las preguntas que mueve otro conjunto de reglas estaba incompleta (Q04, Q07, Q09); los textos en
+  correcto, todo `null`, un `null` y una errónea, respuestas no puntuadas de todo tipo), la regla de formato (clave
+  que falta, cadena, booleano, lista, NaN, Infinity), la disyuntiva de abstención en Q06, las puntuaciones cruzadas
+  entre conjuntos de reglas, las tablas del README (objetivos, la tabla de un solo hecho erróneo y las respuestas del
+  nivel hard) y los rangos de las semillas 1–20; todo se reproduce. Corregido: un entero JSON demasiado grande para un
+  float (p. ej., de 400 dígitos) hacía que la puntuación lanzara una excepción en vez de incumplir `answer_format`; la
+  lista del README de las preguntas que mueve otro conjunto de reglas estaba incompleta (Q04, Q07, Q09); los textos en
   español decían "FY2025 = del …". La comprobación «con B, abstenerse puntúa menos que responder mal» no puede
   cumplirse tal como está formulada: con cualquier esquema, un `null` obtiene más que una respuesta errónea. Lo que se
-  cumple es la expectativa con la probabilidad del 50 % de la referencia: responder supera a abstenerse con B (1 frente
-  a 0.5 por pregunta), empata con A y pierde con C.
+  cumple es la expectativa con la probabilidad del 50 % de la referencia: responder supera a abstenerse con B (1
+  frente a 0.5 por pregunta), empata con A y pierde con C.
+
+### Semillas de reglas — los conjuntos de reglas A / B / C pasan a ser listas de candidatos (petición del responsable; hecho)
+
+El responsable del caso sustituyó los conjuntos de reglas fijos por semillas de reglas: un caso declara una lista de
+valores candidatos para cada regla oculta, una semilla de reglas sortea cada una por separado, y los informes dan la
+media sobre las semillas de reglas de un nivel. Los datos, la solicitud, el archivo de preguntas y la vista del agente
+no cambian y son idénticos byte a byte en todas las configuraciones.
+
+- **Parámetros.** `params:` de case.yaml tiene cuatro listas de candidatos, las mismas en todos los niveles:
+  `fy_start` enero / abril / julio, `active_days` 30 / 60 / 90, `rounding_unit` 100 / 1,000 / 10,000 KRW (el
+  responsable quiere que la unidad de los informes sea una regla oculta sorteada por la semilla) y `dont_know_reward`
+  0.5 / 1 / 1.5. Son los valores de los antiguos A / B / C, ahora combinados libremente: 81 combinaciones por nivel en
+  lugar de tres. `right_reward` 2 y `wrong_reward` 0 son fijos y salen de `derive_params`, junto con las cadenas de
+  periodo que citan los textos (`fy2025`, `fy2026_q1`, `fy2026_h1`, redactadas en cada idioma) y `active_from`.
+  case.yaml ya no enumera los periodos, así que desaparece la comprobación al importar de que coinciden con el código:
+  ahora los escribe el código. `admissible` mantiene las salvaguardas anteriores (recompensas que suben de errónea a
+  «no sé» y a correcta, un FY2026 que ha empezado en la fecha de referencia) y añade una ventana dentro de los datos;
+  todas las combinaciones actuales lo cumplen.
+- **Semillas públicas.** `rule_seeds: [4, 12, 23]`, el primer trío de semillas en el que cada valor de cada lista
+  aparece una vez: s4 = enero, 60 días, 100 KRW, 1; s12 = julio, 30 días, 10,000 KRW, 0.5; s23 = abril, 90 días, 1,000
+  KRW, 1.5. Las configuraciones son `easy/s4` … `hard/s23`, guardadas en `dataset/gt/<tier>_s<seed>/` con los valores
+  sorteados y derivados en `setting.json`. s23 es el conjunto de reglas A con un `null` que vale 1.5 en lugar de 1;
+  los antiguos B y C ya no están como tales entre las semillas públicas (B es la semilla 21, y C no corresponde a
+  ninguna semilla por debajo de 400).
+- **Textos.** Marcadores como antes; las antiguas etiquetas de los periodos por conjunto de reglas son ahora valores
+  derivados. Tres pasajes `<!-- when: -->` en los cinco idiomas: con un año que empieza en julio, la nota del año
+  fiscal añade que el primer semestre del FY2026 solo ha transcurrido del 2026-07-01 a la fecha de referencia, los
+  mismos meses que su primer trimestre; con un `null` que vale 0.5, el cliente añade que el consejo prefiere ver una
+  cifra antes que un hueco, y con 1.5, que tras las correcciones de los dos últimos dosieres prefiere, con diferencia,
+  un hueco a una cifra errónea. El texto del nivel medium (y sus cuatro traducciones en la página explicativa) dice
+  «Q02 cuando el año fiscal empieza en julio» en lugar de «con el conjunto de reglas B». Las cuatro preguntas clave de
+  los parámetros (`fiscal_year`, `active_customer`, `report_rounding`, `answer_rewards`) llevan el sorteo; las otras
+  siete son iguales con cualquier sorteo.
+- **Código.** `RULESETS` y `_check_rulesets` desaparecen; los sustituyen `derive_params` y `admissible`. La
+  puntuación, la referencia (falla el cambio de nombre; responde Q06 solo cuando ½ × 2 > la recompensa del `null`, es
+  decir, con 0.5), la línea base de todo `null`, la hoja a valor nominal y los ejemplos de incumplimiento no cambian y
+  leen los parámetros de la configuración.
+- **Cifras.** Referencia 1.000 en easy y medium, 0.958 (s4) / 0.917 (s12) / 0.979 (s23) en hard; línea base 0.500 /
+  0.250 / 0.750. La comprobación de efecto del validador pasa para los cuatro parámetros desde `hard/s4`; advierte de
+  que las referencias de medium y hard son idénticas byte a byte con s4 y s23 (Q06 en `null` en ambas). La tabla de un
+  solo hecho erróneo, las respuestas del nivel hard y los rangos de semillas de mundo de README.md se han recalculado
+  para las nuevas semillas públicas.
+- **Abierto.** (a) La hoja a valor nominal supera la línea base de todo `null` con algunos sorteos privados (año que
+  empieza en enero, un `null` que vale 0.5 o 1; véase la nota sobre la línea base más arriba). Es realista, porque
+  entonces la lectura ingenua de año natural es la correcta, pero da a una hoja sin esfuerzo una calidad positiva de
+  hasta 0.47 en esos sorteos. Si el responsable quiere que tenga calidad 0 en todas partes, la línea base podría ser
+  la mejor de las dos hojas en cada configuración. (b) No se añadieron candidatos más difíciles para hard: los
+  candidatos son los valores antiguos en todos los niveles. Un año fiscal que empiece en septiembre u octubre (con el
+  primer trimestre del FY2026 extendiéndose más allá de la fecha de referencia) sería un candidato natural solo para
+  hard. (c) README.<lang>.md y REVIEW.<lang>.md siguen describiendo los conjuntos de reglas A / B / C; se volverán a
+  traducir más adelante.
