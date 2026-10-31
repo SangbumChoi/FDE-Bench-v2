@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FDE-Bench v2 — 構築済みのケース</title><style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--muted:#6b6a65;--line:#e4e1d8;--card:#ffffff;--accent:#2f5d8a;--code:#f2efe8;
+--phys:#8a2f2f;--cont:#8a6a1f;--biz:#2f6d4a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#161615;--fg:#ecebe6;--muted:#a3a198;
+--line:#33322e;--card:#1e1e1c;--accent:#8ab4e0;--code:#262623;--phys:#e08a8a;--cont:#e0c27a;--biz:#86d0a4}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);
+font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans","Noto Sans CJK KR",sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 80px}
+header{border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:8px}
+.eyebrow{text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--muted);margin:0}
+h1{font-size:28px;margin:4px 0}h2{font-size:21px;margin:36px 0 8px;padding-top:8px;border-top:1px solid var(--line)}
+h3{font-size:16px;margin:20px 0 6px}h4,h5,h6{font-size:15px;margin:16px 0 4px}
+.muted{color:var(--muted)}a{color:var(--accent)}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.92em}
+pre{background:var(--code);padding:12px;border-radius:8px;overflow:auto;font-size:13px;line-height:1.45}
+pre.tree{max-height:420px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:12px 0}
+.facts div{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+dt{font-size:12px;color:var(--muted)}dd{margin:2px 0 0}
+nav{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px}nav a{text-decoration:none}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;margin:6px 0;font-size:14px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--card)}
+details{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:6px 0}
+summary{cursor:pointer;font-weight:600}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;border:1px solid currentColor}
+.pill.physical{color:var(--phys)}.pill.contractual{color:var(--cont)}.pill.business_policy{color:var(--biz)}
+.legend{list-style:none;padding:0}.legend li{margin:3px 0}
+.controls{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}
+select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px}
+.doc{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 16px}
+.langs{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;margin:0 0 8px}
+.langs a{padding:2px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;font-size:13px}
+.langs a[aria-current]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.site-nav{max-width:1100px;margin:0 auto;padding:12px 16px;font-size:14px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px 16px}.site-nav a{color:var(--accent);text-decoration:none}.site-nav a:hover{text-decoration:underline}</style></head><body><nav class="site-nav"><a href="../ja/index.html">すべてのケース</a><a href="../direction.html">方向性 （英語）</a><a href="../design.html">設計 （英語）</a><a href="../catalog.html">カタログ （英語）</a><a href="https://github.com/SangbumChoi/FDE-Bench-v2">GitHub のソース</a></nav><main><header><nav class="langs" aria-label="言語"><a href="../index.html" data-lang="en" hreflang="en">English</a><a href="../ko/index.html" data-lang="ko" hreflang="ko">한국어</a><a href="../zh/index.html" data-lang="zh" hreflang="zh">中文</a><a href="../ja/index.html" data-lang="ja" hreflang="ja" aria-current="page">日本語</a><a href="../es/index.html" data-lang="es" hreflang="es">Español</a></nav><p class="eyebrow">FDE-Bench v2</p><h1>構築済みのケース</h1>
+<p class="muted">全 13 件のケースです。各リンクからケースの説明ページ（依頼、設定、ルール、隠れた要件、確認すべき事項、保存されたデータと正解、レビュー結果）を開けます。</p></header>
+<section><div class="scroll"><table><thead><tr><th>分野</th><th>役割</th><th>ケース ID</th><th>成果物</th><th>設定</th><th>タスクの種類</th></tr></thead><tbody><tr><td>カスタマーサービス・運用</td><td><a href="../ja/customer_service/callcenter_workforce_planner/index.html">コールセンター要員計画担当</a></td><td><code>customer_service/callcenter_workforce_planner</code></td><td>batch</td><td>3×3</td><td>組合せ最適化</td></tr><tr><td>データ・ナレッジワーク</td><td><a href="../ja/data_knowledge/bi_data_analyst/index.html">BI データアナリスト</a></td><td><code>data_knowledge/bi_data_analyst</code></td><td>batch</td><td>3×3</td><td>データ分析</td></tr><tr><td>データ・ナレッジワーク</td><td><a href="../ja/data_knowledge/multilingual_corpus_curator/index.html">多言語コーパスキュレーター</a></td><td><code>data_knowledge/multilingual_corpus_curator</code></td><td>program</td><td>3×3</td><td>データエンジニアリング</td></tr><tr><td>エネルギー・公益</td><td><a href="../ja/energy_utilities/battery_dispatch_operator/index.html">蓄電池運転オペレーター</a></td><td><code>energy_utilities/battery_dispatch_operator</code></td><td>batch</td><td>3×3</td><td>組合せ最適化</td></tr><tr><td>金融・銀行</td><td><a href="../ja/finance/loan_underwriting_specialist/index.html">ローン審査スペシャリスト</a></td><td><code>finance/loan_underwriting_specialist</code></td><td>program</td><td>3×3</td><td>意思決定プログラム</td></tr><tr><td>金融・銀行</td><td><a href="../ja/finance/stock_trading_strategist/index.html">株式売買ストラテジスト</a></td><td><code>finance/stock_trading_strategist</code></td><td>program</td><td>3×3</td><td>戦略</td></tr><tr><td>医療</td><td><a href="../ja/healthcare/hospital_appointment_scheduler/index.html">病院の外来予約担当者</a></td><td><code>healthcare/hospital_appointment_scheduler</code></td><td>program</td><td>3×3</td><td>意思決定プログラム</td></tr><tr><td>法務・コンプライアンス</td><td><a href="../ja/legal_compliance/contract_review_counsel/index.html">契約審査担当弁護士</a></td><td><code>legal_compliance/contract_review_counsel</code></td><td>batch</td><td>3×3</td><td>情報抽出</td></tr><tr><td>物流・運輸</td><td><a href="../ja/logistics/bakery_delivery_dispatcher/index.html">ベーカリー配送の配車担当者</a></td><td><code>logistics/bakery_delivery_dispatcher</code></td><td>batch</td><td>3×3</td><td>組合せ最適化</td></tr><tr><td>製造・サプライチェーン</td><td><a href="../ja/manufacturing/procurement_specialist/index.html">購買スペシャリスト</a></td><td><code>manufacturing/procurement_specialist</code></td><td>batch</td><td>3×3</td><td>組合せ最適化</td></tr><tr><td>人事</td><td><a href="../ja/people_hr/resume_screening_specialist/index.html">書類選考スペシャリスト</a></td><td><code>people_hr/resume_screening_specialist</code></td><td>batch</td><td>3×3</td><td>ランキング</td></tr><tr><td>公共部門</td><td><a href="../ja/public_sector/benefits_eligibility_officer/index.html">給付資格審査担当者</a></td><td><code>public_sector/benefits_eligibility_officer</code></td><td>batch</td><td>3×3</td><td>ルールに基づく判定</td></tr><tr><td>小売・EC</td><td><a href="../ja/retail/grocery_demand_forecaster/index.html">食品スーパーの需要予測担当者</a></td><td><code>retail/grocery_demand_forecaster</code></td><td>batch</td><td>3×3</td><td>機械学習</td></tr></tbody></table></div></section></main><script>
+(function(){var here=document.documentElement.lang,links=document.querySelectorAll('.langs a[data-lang]');
+links.forEach(function(a){a.addEventListener('click',function(){try{localStorage.setItem('fde-lang',a.dataset.lang)}catch(e){}})});
+var want=null;try{want=localStorage.getItem('fde-lang')}catch(e){}
+if(want&&want!==here){links.forEach(function(a){if(a.dataset.lang===want)location.replace(a.href+location.hash)})}})();
+</script></body></html>

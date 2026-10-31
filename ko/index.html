@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FDE-Bench v2 — 구축된 케이스</title><style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--muted:#6b6a65;--line:#e4e1d8;--card:#ffffff;--accent:#2f5d8a;--code:#f2efe8;
+--phys:#8a2f2f;--cont:#8a6a1f;--biz:#2f6d4a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#161615;--fg:#ecebe6;--muted:#a3a198;
+--line:#33322e;--card:#1e1e1c;--accent:#8ab4e0;--code:#262623;--phys:#e08a8a;--cont:#e0c27a;--biz:#86d0a4}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);
+font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans","Noto Sans CJK KR",sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 80px}
+header{border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:8px}
+.eyebrow{text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--muted);margin:0}
+h1{font-size:28px;margin:4px 0}h2{font-size:21px;margin:36px 0 8px;padding-top:8px;border-top:1px solid var(--line)}
+h3{font-size:16px;margin:20px 0 6px}h4,h5,h6{font-size:15px;margin:16px 0 4px}
+.muted{color:var(--muted)}a{color:var(--accent)}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.92em}
+pre{background:var(--code);padding:12px;border-radius:8px;overflow:auto;font-size:13px;line-height:1.45}
+pre.tree{max-height:420px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:12px 0}
+.facts div{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+dt{font-size:12px;color:var(--muted)}dd{margin:2px 0 0}
+nav{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px}nav a{text-decoration:none}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;margin:6px 0;font-size:14px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--card)}
+details{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:6px 0}
+summary{cursor:pointer;font-weight:600}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;border:1px solid currentColor}
+.pill.physical{color:var(--phys)}.pill.contractual{color:var(--cont)}.pill.business_policy{color:var(--biz)}
+.legend{list-style:none;padding:0}.legend li{margin:3px 0}
+.controls{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}
+select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px}
+.doc{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 16px}
+.langs{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;margin:0 0 8px}
+.langs a{padding:2px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;font-size:13px}
+.langs a[aria-current]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.site-nav{max-width:1100px;margin:0 auto;padding:12px 16px;font-size:14px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px 16px}.site-nav a{color:var(--accent);text-decoration:none}.site-nav a:hover{text-decoration:underline}</style></head><body><nav class="site-nav"><a href="../ko/index.html">전체 케이스</a><a href="../direction.html">방향성 (영문)</a><a href="../design.html">설계 (영문)</a><a href="../catalog.html">카탈로그 (영문)</a><a href="https://github.com/SangbumChoi/FDE-Bench-v2">GitHub 소스</a></nav><main><header><nav class="langs" aria-label="언어"><a href="../index.html" data-lang="en" hreflang="en">English</a><a href="../ko/index.html" data-lang="ko" hreflang="ko" aria-current="page">한국어</a><a href="../zh/index.html" data-lang="zh" hreflang="zh">中文</a><a href="../ja/index.html" data-lang="ja" hreflang="ja">日本語</a><a href="../es/index.html" data-lang="es" hreflang="es">Español</a></nav><p class="eyebrow">FDE-Bench v2</p><h1>구축된 케이스</h1>
+<p class="muted">케이스는 13개입니다. 각 링크는 케이스 설명 페이지로 이어지며, 요청, 설정, 규칙, 숨은 요구사항, 질문 목표, 저장된 데이터와 정답, 리뷰 발견 사항을 보여 줍니다.</p></header>
+<section><div class="scroll"><table><thead><tr><th>분야</th><th>역할</th><th>케이스 ID</th><th>산출물</th><th>설정</th><th>과제 유형</th></tr></thead><tbody><tr><td>고객서비스·운영</td><td><a href="../ko/customer_service/callcenter_workforce_planner/index.html">콜센터 인력 운영 플래너</a></td><td><code>customer_service/callcenter_workforce_planner</code></td><td>batch</td><td>3×3</td><td>조합 최적화</td></tr><tr><td>데이터·지식 업무</td><td><a href="../ko/data_knowledge/bi_data_analyst/index.html">BI 데이터 분석가</a></td><td><code>data_knowledge/bi_data_analyst</code></td><td>batch</td><td>3×3</td><td>데이터 분석</td></tr><tr><td>데이터·지식 업무</td><td><a href="../ko/data_knowledge/multilingual_corpus_curator/index.html">다국어 코퍼스 큐레이터</a></td><td><code>data_knowledge/multilingual_corpus_curator</code></td><td>program</td><td>3×3</td><td>데이터 엔지니어링</td></tr><tr><td>에너지·유틸리티</td><td><a href="../ko/energy_utilities/battery_dispatch_operator/index.html">배터리 운전 담당자</a></td><td><code>energy_utilities/battery_dispatch_operator</code></td><td>batch</td><td>3×3</td><td>조합 최적화</td></tr><tr><td>금융·은행</td><td><a href="../ko/finance/loan_underwriting_specialist/index.html">대출 심사 전문가</a></td><td><code>finance/loan_underwriting_specialist</code></td><td>program</td><td>3×3</td><td>의사결정 프로그램</td></tr><tr><td>금융·은행</td><td><a href="../ko/finance/stock_trading_strategist/index.html">주식 매매 전략가</a></td><td><code>finance/stock_trading_strategist</code></td><td>program</td><td>3×3</td><td>전략</td></tr><tr><td>의료</td><td><a href="../ko/healthcare/hospital_appointment_scheduler/index.html">병원 진료 예약 담당자</a></td><td><code>healthcare/hospital_appointment_scheduler</code></td><td>program</td><td>3×3</td><td>의사결정 프로그램</td></tr><tr><td>법무·컴플라이언스</td><td><a href="../ko/legal_compliance/contract_review_counsel/index.html">계약 검토 변호사</a></td><td><code>legal_compliance/contract_review_counsel</code></td><td>batch</td><td>3×3</td><td>정보 추출</td></tr><tr><td>물류·운송</td><td><a href="../ko/logistics/bakery_delivery_dispatcher/index.html">베이커리 배송 배차 담당자</a></td><td><code>logistics/bakery_delivery_dispatcher</code></td><td>batch</td><td>3×3</td><td>조합 최적화</td></tr><tr><td>제조·공급망</td><td><a href="../ko/manufacturing/procurement_specialist/index.html">구매 전문가</a></td><td><code>manufacturing/procurement_specialist</code></td><td>batch</td><td>3×3</td><td>조합 최적화</td></tr><tr><td>인사</td><td><a href="../ko/people_hr/resume_screening_specialist/index.html">서류 심사 전문가</a></td><td><code>people_hr/resume_screening_specialist</code></td><td>batch</td><td>3×3</td><td>순위 매기기</td></tr><tr><td>공공 부문</td><td><a href="../ko/public_sector/benefits_eligibility_officer/index.html">복지급여 자격심사관</a></td><td><code>public_sector/benefits_eligibility_officer</code></td><td>batch</td><td>3×3</td><td>규칙 기반 의사결정</td></tr><tr><td>리테일·이커머스</td><td><a href="../ko/retail/grocery_demand_forecaster/index.html">식료품 수요 예측 담당자</a></td><td><code>retail/grocery_demand_forecaster</code></td><td>batch</td><td>3×3</td><td>머신러닝</td></tr></tbody></table></div></section></main><script>
+(function(){var here=document.documentElement.lang,links=document.querySelectorAll('.langs a[data-lang]');
+links.forEach(function(a){a.addEventListener('click',function(){try{localStorage.setItem('fde-lang',a.dataset.lang)}catch(e){}})});
+var want=null;try{want=localStorage.getItem('fde-lang')}catch(e){}
+if(want&&want!==here){links.forEach(function(a){if(a.dataset.lang===want)location.replace(a.href+location.hash)})}})();
+</script></body></html>
