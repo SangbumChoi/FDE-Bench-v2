@@ -9,7 +9,9 @@ limits, the cash kept for the withdrawal), so that the example breaks one rule o
   spend_cash   (cash_withdrawal) from call `from_day` to the payment date, buys stock with the cash kept for the
                client's withdrawal, most liquid names first, until settled cash at the payment falls to half of it;
                in call `rotate_day` (the session before the payment) it also sells holdings to buy them back on
-               the date, since those proceeds settle only after it
+               the date, since those proceeds settle only after it. With `pay` (the payment date, which the case
+               passes) it starts before the notice too, for a book that holds more cash than it can spend in the
+               sessions between the notice and the payment
   overweight   (position_limit) from call `from_day` to `until_day`, takes the most liquid stock that may be
                bought, and whose sector has room, to `over` above the stock limit, then leaves it to the reference
                to trade back
@@ -122,7 +124,7 @@ def make(cfg, reference_path):
 
         # ── the deviations ───────────────────────────────────────────────────
         def _spend_cash(self, day_input, orders, k):
-            pay = self.withdrawal["pay"] if self.withdrawal else ""
+            pay = self.withdrawal["pay"] if self.withdrawal else self.ex.get("pay", "")
             if k < self.ex["from_day"] or day_input["market"]["next_date"] > pay:
                 return
             # no sells but the close-out: they would raise cash for the payment, or take a ticker's order

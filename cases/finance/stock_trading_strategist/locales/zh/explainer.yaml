@@ -23,6 +23,6 @@ rules:
   large_order_approval: 除非交易台主管批准，任何订单（无论买卖）都不超过该股票最近 20 个交易日平均成交量（按现在的股数计）的 {{large_order}}%。
   position_limit: 某个交易日买入的股票，在该交易日收盘时不超过账户净值的 {{stock_cap}}%（自风控的生效日起低 5 个百分点，而且那天收盘时所有持仓都必须在新限额以内）。
   sector_limit: 账户在某个交易日有买入的行业，在该交易日收盘时不超过账户净值的 {{sector_cap}}%。
-  cash_withdrawal: 在付款日收盘时，账户的已交收现金足以支付客户的出金（{{withdrawal_basis}} 乘以通知中的百分比）。
+  cash_withdrawal: 在付款日收盘时，账户的已交收现金足以支付客户的出金：{{withdrawal}}。
   max_drawdown: 账户的收盘净值加上已付给客户的现金，任何时候都不比其历史最高（含初始资金）低 {{max_drawdown}}% 以上。
   insider_tip: 在某条留言透露了某家公司的内幕信息之后，账户在期间剩余的时间里不再对该股票下买单。

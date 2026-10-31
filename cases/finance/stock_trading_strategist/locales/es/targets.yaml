@@ -37,7 +37,7 @@
 - id: risk_limit_change
   text: Un aviso risk_limit_change cambia el límite por valor en sus puntos desde su fecha efectiva, y al cierre de esa fecha todas las posiciones, compradas ese día o no, deben estar dentro del nuevo límite.
 - id: cash_withdrawal
-  text: Un aviso cash_withdrawal retira el porcentaje indicado de {{withdrawal_basis}} al cierre de su fecha de pago, pagado solo con efectivo liquidado (si falta, se incumple la instrucción del cliente); con T+2 hay que vender con antelación suficiente.
+  text: Un aviso cash_withdrawal solo da la fecha de pago; el importe lo fija el contrato, {{withdrawal}}, y sale de la cartera al cierre de esa fecha, pagado solo con efectivo liquidado (si falta, se incumple la instrucción del cliente); con T+2 hay que vender con antelación suficiente.
 - id: medium_scope
   text: En esta ronda el mandato de caída máxima, el interruptor general y las notas quedan fuera.
 - id: market_impact

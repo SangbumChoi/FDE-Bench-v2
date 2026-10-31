@@ -37,7 +37,7 @@
 - id: risk_limit_change
   text: risk_limit_change 통지는 효력일부터 종목 한도를 해당 포인트만큼 바꾸며, 효력일 마감 시점에는 그날 매수 여부와 관계없이 모든 보유 종목이 새 한도 안에 있어야 합니다.
 - id: cash_withdrawal
-  text: cash_withdrawal 통지는 {{withdrawal_basis}}의 해당 퍼센트를 지급일 마감 시점에 결제 완료 현금에서만 빼 갑니다(모자라면 고객 지시 위반). T+2이므로 매도는 충분히 일찍 해야 합니다.
+  text: cash_withdrawal 통지에는 지급일만 있고, 금액은 계약이 정하며 {{withdrawal}}입니다. 지급일 마감 시점에 결제 완료 현금에서만 지급됩니다(모자라면 고객 지시 위반). T+2이므로 매도는 충분히 일찍 해야 합니다.
 - id: medium_scope
   text: 이번 라운드에서 최대 낙폭 한도, 서킷브레이커, 메모는 평가 대상이 아닙니다.
 - id: market_impact

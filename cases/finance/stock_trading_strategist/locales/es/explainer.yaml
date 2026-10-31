@@ -39,6 +39,6 @@ rules:
   large_order_approval: Ninguna orden, de compra o de venta, supera el {{large_order}} % del volumen medio diario del valor en sus últimas 20 sesiones, en acciones de hoy, salvo que el jefe de la mesa la haya aprobado.
   position_limit: Un valor comprado en una sesión representa como máximo el {{stock_cap}} % del patrimonio de la cartera al cierre de esa sesión (5 puntos menos desde la fecha efectiva del responsable de riesgos, cuando todas las posiciones deben estar dentro del nuevo límite a ese cierre).
   sector_limit: Un sector en el que la cartera compró en una sesión representa como máximo el {{sector_cap}} % del patrimonio de la cartera al cierre de esa sesión.
-  cash_withdrawal: Al cierre de la fecha de pago, el efectivo liquidado de la cartera cubre la retirada del cliente ({{withdrawal_basis}} por el porcentaje del aviso).
+  cash_withdrawal: Al cierre de la fecha de pago, el efectivo liquidado de la cartera cubre la retirada del cliente, {{withdrawal}}.
   max_drawdown: El patrimonio de la cartera al cierre más el efectivo pagado al cliente nunca cae más de un {{max_drawdown}} % por debajo de su máximo hasta la fecha (incluido el capital inicial).
   insider_tip: Después de una nota que transmite información privilegiada sobre una empresa, la cartera no da ninguna orden de compra sobre ese valor durante el resto del periodo.
