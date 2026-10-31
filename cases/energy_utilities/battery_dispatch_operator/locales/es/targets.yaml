@@ -1,18 +1,26 @@
 - id: efficiency
-  text: La eficiencia se modela como un 92 % en la carga y un 92 % en la descarga (no como el 84,6 % de ida y vuelta aplicado una sola vez); cargar P MW durante un cuarto de hora añade 0,25*P*0,92 MWh y descargar P MW retira 0,25*P/0,92 MWh.
+  text: La eficiencia se modela por sentido, un {{eta_charge_pct}} % en la carga y un {{eta_discharge_pct}} % en la descarga (no como el 84,6 % de ida y vuelta aplicado una sola vez); cargar P MW durante un cuarto de hora añade 0,25*P*{{eta_charge}} MWh y descargar P MW retira 0,25*P/{{eta_discharge}} MWh.
 - id: soc_window
-  text: La garantía exige un estado de carga entre el 10 % y el 90 % (de 4 a 36 MWh) en todo momento, un margen más estrecho que el 5 %-95 % del fabricante.
+  text: 'La garantía exige un estado de carga entre el {{soc_min}} % y el {{soc_max}} % (de {{soc_min_mwh}} a {{soc_max_mwh}} MWh) en todo momento<!-- when: soc_window=10-90,15-85 -->, un margen más estrecho que el 5 %-95 % del fabricante<!-- /when --><!-- when: soc_window=5-95 -->, el mismo margen que el del fabricante<!-- /when -->.'
 - id: start_end_soc
-  text: La batería arranca la semana con un estado de carga del 50 % (20 MWh) y debe terminarla con un 50 % o más de carga.
+  text: La batería arranca la semana con un estado de carga del 50 % (20 MWh) y debe terminarla con un {{end_soc}} % ({{end_soc_mwh}} MWh) o más de carga.
 - id: export_cap
-  text: El límite de vertido es temporalmente de 25 MW (no los 30 MW del contrato); mientras se descarga, solar + descarga − carga no puede superar 25 MW, y la solar por encima de 25 MW se recorta salvo que la batería la absorba.
+  text: El límite de vertido es temporalmente de {{export_cap}} MW (no los 30 MW del contrato); mientras se descarga, solar + descarga − carga no puede superar {{export_cap}} MW, y la solar por encima de {{export_cap}} MW se recorta salvo que la batería la absorba.
 - id: grid_charging
-  text: Cargar desde la solar se permite siempre, pero tomar energía de la red solo en los cuartos de hora que empiezan entre las 00:00 y las 05:45 hora local (máximo 20 MW); nunca se carga y descarga en el mismo cuarto de hora.
+  text: '<!-- tier: easy -->Esta semana el emplazamiento puede cargar desde la red a cualquier hora (máximo 20 MW)<!-- /tier --><!-- tier: medium hard -->Cargar desde la solar se permite siempre, pero tomar energía de la red solo en los cuartos de hora que empiezan entre las {{import_from}} y las {{import_last}} hora local (máximo 20 MW)<!-- /tier -->; nunca se carga y descarga en el mismo cuarto de hora.'
 - id: quarter_settlement
   text: La liquidación es por cuartos de hora; el precio horario se aplica a los cuatro cuartos de la hora, los MW son medias del cuarto de hora y la energía es MW × 0,25.
 - id: dst_clock
   text: Las horas son locales y el domingo 28 de marzo se adelanta el reloj, así que ese día tiene 23 horas, no hay filas de 02:00 a 02:45 y el plan tiene exactamente 668 filas.
 - id: evening_reserve
-  text: La política de la empresa exige mantener al menos un 20 % de estado de carga en todo momento entre las 17:00 y las 21:00, todos los días.
+  text: La política de la empresa exige mantener al menos un {{reserve_pct}} % ({{reserve_mwh}} MWh) de estado de carga en todo momento entre las {{reserve_from}} y las {{reserve_to}}, todos los días.
+- id: degradation
+  text: Cada MWh cargado más descargado en el contador cuesta {{degradation}} EUR de degradación, que se resta del beneficio.
 - id: profit_scoring
-  text: El plan se evalúa a precios reales como ingresos por vertido menos coste de la energía tomada de la red, menos lo que ganaría la solar sola (recortada a 25 MW), menos 5 EUR por MWh de energía cargada más descargada.
+  text: 'El plan se evalúa a precios reales como ingresos por vertido menos coste de la energía tomada de la red, menos lo que ganaría la solar sola (ambos recortados al límite de vertido)<!-- tier: medium hard -->, menos el coste de degradación de la energía cargada más descargada<!-- /tier -->.'
+- id: works_end
+  text: Las obras de la subestación terminan antes; el límite de {{export_cap}} MW rige hasta el {{works_end}} a las 00:00 y desde entonces vuelven a aplicarse los 30 MW del contrato.
+- id: dso_limit
+  text: La distribuidora limita el vertido del emplazamiento a {{dso_mw}} MW el {{dso_day}} de 18:00 a 21:00; si la batería descarga en esas horas, solar + descarga − carga no puede superar {{dso_mw}} MW.
+- id: maintenance_outage
+  text: La batería está fuera de servicio por mantenimiento del inversor el {{outage_day}} de 08:00 a 20:00; en esos cuartos de hora no carga ni descarga.

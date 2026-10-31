@@ -1,0 +1,27 @@
+{
+  "baseline_objective": 0.0,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.0,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "battery_profit_eur": 21995.28,
+    "curtailed_mwh": 142.872,
+    "degradation_eur": 0.0,
+    "end_soc_pct": 30.0,
+    "export_revenue_eur": 56317.17,
+    "grid_import_cost_eur": 7133.72,
+    "max_soc_pct": 85.0,
+    "min_soc_pct": 15.0,
+    "solar_only_revenue_eur": 27188.17,
+    "throughput_mwh": 701.69
+  },
+  "objective": 21995.277729250007,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

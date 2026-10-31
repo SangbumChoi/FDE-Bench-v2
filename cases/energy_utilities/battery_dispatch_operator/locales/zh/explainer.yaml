@@ -5,10 +5,16 @@ deliverable_spec: |
   dispatch.csv，ASCII 表头：timestamp,charge_mw,discharge_mw
   2027-03-22 00:00 .. 2027-03-28 23:45 这一周每个 15 分钟时段一行，使用当地时间；timestamp = 时段开始时间，
   格式为 "YYYY-MM-DD HH:MM"。charge_mw / discharge_mw = 该时段内电池在计量点的平均功率（MW），两者均 >= 0。
+tiers:
+  easy: 核心问题：质保荷电状态范围、功率限制、分方向效率、周末荷电状态、修订后的上网上限（低于存档的协议）以及夏令时切换。本轮场站任何时候都可以从电网取电，没有傍晚应急备用，也不计损耗成本。
+  medium: 在 easy 的基础上加上客户的运行规定：只能在低谷时段从电网取电、傍晚应急备用（比例和时段）以及每 MWh 吞吐量的损耗成本。
+  hard: 在 medium 的基础上加上三份有日期的通知：变电站施工提前完工，从某天起恢复协议的 30 MW；配电公司在某个傍晚限制场站上网；某天 08:00 到 20:00 电池因逆变器检修停运。交易部门还要求在晚高峰动用应急备用，这只有获批例外才允许。
 rules:
-  soc_limits: 荷电状态任何时刻都在 40 MWh 的 10%-90% 之间（充电和放电效率各为 92%）。
+  soc_limits: 荷电状态任何时刻都在 40 MWh 的 {{soc_min}}%-{{soc_max}}% 之间（充电效率 {{eta_charge_pct}}%，放电效率 {{eta_discharge_pct}}%）。
   power_limits: 充电和放电各在 0 到 20 MW 之间，同一时段不能既充又放；下网不超过 20 MW。
-  export_cap: 电池放电时，场站上网功率（光伏 + 放电 − 充电）不得超过修订后的 25 MW 上限。
-  grid_charging_window: 场站只能在当地时间 00:00-05:45 开始的时段从电网取电（充电功率超过光伏出力）。
-  end_soc: 整周以 50% 荷电状态开始，结束时不得低于 50%。
-  reserve_20pct: 每天当地时间 17:00 到 21:00 之间的任何时刻，荷电状态都不低于 20%。
+  export_cap: 变电站施工期间，电池放电时场站上网功率（光伏 + 放电 − 充电）不得超过修订后的 {{export_cap}} MW 上限。
+  grid_charging_window: 场站只能在当地时间 {{import_from}}-{{import_last}} 开始的时段从电网取电（充电功率超过光伏出力）。
+  end_soc: 整周以 50% 荷电状态开始，结束时不得低于 {{end_soc}}%。
+  evening_reserve: 每天当地时间 {{reserve_from}} 到 {{reserve_to}} 之间的任何时刻，荷电状态都不低于 {{reserve_pct}}%。
+  dso_limit: '{{dso_day}} 18:00 到 21:00，电池放电时场站上网功率不得超过配电公司规定的 {{dso_mw}} MW。'
+  maintenance_outage: '{{outage_day}} 08:00 到 20:00 电池既不充电也不放电（逆变器检修）。'
