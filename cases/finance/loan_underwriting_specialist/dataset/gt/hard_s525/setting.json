@@ -1,0 +1,27 @@
+{
+  "derived": {
+    "min_score": 830,
+    "near_prime_below": 910,
+    "other_bureau": {
+      "en": "bureau_a_score",
+      "es": "bureau_a_score (buró A)",
+      "ja": "bureau_a_score（A社スコア）",
+      "ko": "bureau_a_score(A평가사 점수)",
+      "zh": "bureau_a_score（A评分机构分数）"
+    }
+  },
+  "params": {
+    "daily_cap": 200000,
+    "discrepancy_pct": 20,
+    "income_cap_pct": 80,
+    "max_dsr_pct": 45,
+    "min_score_a": 775,
+    "min_tenure": 12,
+    "near_prime_a": 855,
+    "period_budget": 3800000,
+    "policy_bureau": "B",
+    "quota_pct": 30
+  },
+  "rule_seed": 525,
+  "tier": "hard"
+}
