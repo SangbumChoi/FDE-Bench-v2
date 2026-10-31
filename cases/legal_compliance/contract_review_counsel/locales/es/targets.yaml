@@ -1,20 +1,38 @@
 - id: liability_cap
-  text: El límite de responsabilidad debe ser al menos 1 vez el importe_anual_usd del registro; un límite de lo pagado en N meses equivale a N/12 del importe anual, un límite igual es correcto y un contrato sin límite también.
+  text: El límite de responsabilidad debe ser al menos {{cap_multiple}} × el importe_anual_usd del registro (un importe fijo se compara con {{cap_multiple}} × el importe, un múltiplo del importe anual debe ser al menos {{cap_multiple}}); un límite exactamente igual al mínimo es correcto y un contrato sin límite también.
+- id: period_caps_out_of_round
+  text: Los límites fijados como lo pagado en los últimos N meses se están sustituyendo en un trabajo aparte y no se marcan en esta ronda.
+- id: period_caps
+  text: Un límite igual a lo pagado en los últimos N meses equivale a N/12 del importe anual.
 - id: governing_law
-  text: La ley aplicable debe ser la de Suiza o la de Singapur; solo cuenta la ley aplicable, no los tribunales ni la sede del arbitraje.
+  text: El contrato debe regirse por {{governing_law}}; si se rige por otra ley, es una incidencia.
+- id: law_not_forum
+  text: En esta ronda solo cuenta la ley aplicable, no los tribunales ni la sede del arbitraje.
+- id: dispute_forum
+  text: Los tribunales o la sede del arbitraje también deben estar en una jurisdicción aceptada; una ley aceptada con el foro en otro lugar es una incidencia, y también lo es un foro aceptado con otra ley.
 - id: auto_renewal
-  text: Un contrato que se prorroga automáticamente, con cualquier redacción, necesita un preaviso de no renovación de al menos 60 días; cada mes cuenta como 30 días; los contratos que simplemente vencen son correctos.
+  text: Un contrato que se prorroga automáticamente, con cualquier redacción, necesita un preaviso de no renovación de al menos {{renewal_notice_days}} días; cada mes cuenta como 30 días; los contratos que simplemente vencen son correctos.
 - id: payment_terms
-  text: El plazo de pago debe ser de al menos 45 días desde la recepción de la factura.
+  text: El plazo de pago debe ser de al menos {{payment_days}} días desde la recepción de la factura.
 - id: data_protection
-  text: Los contratos de la categoría TI y servicios de datos deben incluir una cláusula sobre el tratamiento de datos personales, sea cual sea su título; las demás categorías no la necesitan.
+  text: Los contratos de {{dp_categories}} deben incluir una cláusula sobre el tratamiento de datos personales, sea cual sea su título.
+- id: customer_personal_data
+  text: Un contrato de cualquier otra categoría también necesita la cláusula de protección de datos cuando el proveedor trata datos personales de nuestros propios clientes en virtud de él (entregas en el domicilio de los clientes, cartas a clientes); la cláusula de objeto lo indica.
 - id: termination_convenience
-  text: Los contratos con un importe anual superior a 150.000 USD deben permitirnos desistir por conveniencia, en cualquier momento y sin causa; la resolución por incumplimiento no basta.
+  text: Los contratos con un importe anual superior a {{tfc_above}} USD (estrictamente mayor) deben permitirnos desistir por conveniencia, en cualquier momento y sin causa; la resolución por incumplimiento no basta.
 - id: indemnity_mutual
   text: Las indemnidades deben ser recíprocas; una cláusula en la que solo nosotros indemnizamos al proveedor es una incidencia.
 - id: issue_codes
   text: Cada punto de nuestros criterios que no se cumple es una incidencia con su código; los códigos son LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS, DATA_PROTECTION, TERMINATION_CONVENIENCE e INDEMNITY.
+- id: round_points
+  text: En esta ronda solo se revisan LIABILITY_CAP, GOVERNING_LAW, PAYMENT_TERMS e INDEMNITY; la renovación, la protección de datos y la resolución las revisa compras, y los demás códigos no se tienen en cuenta.
+- id: round_contracts
+  text: Los contratos en el modelo del propio proveedor, los que tienen un registro de modificación y aquel del que trata el correo los lleva compras en esta ronda; necesitan una entrada, pero no se usa su respuesta. Todos los demás contratos se revisan, también los pequeños.
 - id: decision_rule
-  text: LIABILITY_CAP, DATA_PROTECTION e INDEMNITY son las incidencias críticas; la decisión es reject cuando hay dos o más incidencias críticas, negotiate cuando hay alguna incidencia y sign en los demás casos.
+  text: Las incidencias críticas son LIABILITY_CAP e INDEMNITY, y también DATA_PROTECTION cuando se revisa; la decisión es reject con {{reject_at}} incidencias críticas, negotiate con alguna incidencia y sign en los demás casos.
+- id: amendments
+  text: Una modificación solo cuenta si ambas partes la han acordado y su fecha es posterior al borrador del contrato; un cambio propuesto por el proveedor que no aceptamos, o uno con fecha anterior al borrador, no cuenta.
+- id: requests_to_sign
+  text: La petición de un responsable de negocio de firmar un contrato sin más (aunque lo haya aprobado el consejero delegado) no cambia la revisión; las incidencias y la decisión siguen nuestros criterios.
 - id: small_contract_fast_track
-  text: Los contratos con un importe anual inferior a 20.000 USD se marcan como sign sin incidencias y sin revisión jurídica.
+  text: Los contratos con un importe anual inferior a {{fast_track_below}} USD se marcan como sign sin incidencias y sin revisión jurídica.

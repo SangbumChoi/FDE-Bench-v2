@@ -1,27 +1,55 @@
 - id: liability_cap
   kind: missing
   domain: calculation
-  text: The liability cap must be at least 1x annual_value_usd from the register; a cap of fees over N months is worth N/12 of the annual value, an equal cap is fine and an uncapped contract is fine.
+  text: The liability cap must be at least {{cap_multiple}}x annual_value_usd from the register (a fixed amount is compared with {{cap_multiple}}x the value, a multiple of the annual fees must be at least {{cap_multiple}}); a cap exactly at the minimum is fine and an uncapped contract is fine.
+- id: period_caps_out_of_round
+  kind: missing
+  domain: business rule
+  tiers: [easy]
+  text: Caps written as the fees paid over the last N months are being replaced in a separate exercise and are not flagged this round.
+- id: period_caps
+  kind: missing
+  domain: calculation
+  tiers: [medium, hard]
+  text: A cap equal to the fees paid over the last N months is worth N/12 of the annual value.
 - id: governing_law
   kind: missing
   domain: business rule
-  text: The governing law must be Switzerland or Singapore; only the governing law counts, not the courts or arbitration seat.
+  text: The governing law must be {{governing_law}}.
+- id: law_not_forum
+  kind: ambiguous
+  domain: business rule
+  tiers: [easy]
+  text: Only the governing law counts this round, not the courts or arbitration seat.
+- id: dispute_forum
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: The courts or arbitration seat must also be in one of the accepted jurisdictions; an accepted law with a forum elsewhere is an issue, and so is an accepted forum with another law.
 - id: auto_renewal
   kind: missing
   domain: calculation
-  text: A contract that renews automatically (in any wording) needs a non-renewal notice period of at least 60 days; a month counts as 30 days; contracts that simply expire are fine.
+  tiers: [medium, hard]
+  text: A contract that renews automatically (in any wording) needs a non-renewal notice period of at least {{renewal_notice_days}} days; a month counts as 30 days; contracts that simply expire are fine.
 - id: payment_terms
   kind: missing
   domain: business rule
-  text: The payment term must be at least 45 days from receipt of the invoice.
+  text: The payment term must be at least {{payment_days}} days from receipt of the invoice.
 - id: data_protection
   kind: ambiguous
   domain: data semantics
-  text: Contracts in the IT & data services category must contain a clause on handling personal data, whatever its title; other categories do not need one.
+  tiers: [medium, hard]
+  text: Contracts in {{dp_categories}} must contain a clause on handling personal data, whatever its title.
+- id: customer_personal_data
+  kind: missing
+  domain: data semantics
+  tiers: [hard]
+  text: A contract in any other category needs the data-protection clause too when the supplier handles personal data of our own customers under it (deliveries to customers' addresses, letters to customers); the scope article says so.
 - id: termination_convenience
   kind: missing
   domain: business rule
-  text: Contracts with an annual value above USD 150,000 must allow us to terminate for convenience (any time, no reason needed); termination for breach alone is not enough.
+  tiers: [medium, hard]
+  text: Contracts with an annual value above USD {{tfc_above}} (strictly more) must allow us to terminate for convenience (any time, no reason needed); termination for breach alone is not enough.
 - id: indemnity_mutual
   kind: missing
   domain: business rule
@@ -30,11 +58,32 @@
   kind: missing
   domain: deliverable
   text: Every playbook point that fails is one issue with its code; the codes are LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS, DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY.
+- id: round_points
+  kind: missing
+  domain: deliverable
+  tiers: [easy]
+  text: This round only LIABILITY_CAP, GOVERNING_LAW, PAYMENT_TERMS and INDEMNITY are checked; renewal, data protection and termination are left to procurement, and other codes are ignored.
+- id: round_contracts
+  kind: missing
+  domain: deliverable
+  tiers: [easy, medium]
+  text: The contracts on the supplier's own paper, those with an amendment record and the one the e-mail is about are handled by procurement this round; they need an entry but are not used. Every other contract is reviewed, small ones included.
 - id: decision_rule
   kind: missing
   domain: business rule
-  text: LIABILITY_CAP, DATA_PROTECTION and INDEMNITY are critical; the decision is reject with two or more critical issues, negotiate with any issue, otherwise sign.
+  text: The critical issues are LIABILITY_CAP and INDEMNITY, plus DATA_PROTECTION when it is checked; the decision is reject with {{reject_at}} critical issues, negotiate with any issue, otherwise sign.
+- id: amendments
+  kind: missing
+  domain: data semantics
+  tiers: [hard]
+  text: An amendment counts only when both parties agreed to it and it is dated after the contract's draft; a change the supplier proposed that we did not accept, or one dated before the draft, does not count.
+- id: requests_to_sign
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: A business owner's request to just sign a contract (even with CEO approval) does not change the review; issues and decision follow the playbook.
 - id: small_contract_fast_track
   kind: missing
   domain: business rule
-  text: Contracts with an annual value below USD 20,000 are marked sign with no issues, without legal review.
+  tiers: [hard]
+  text: Contracts with an annual value below USD {{fast_track_below}} are marked sign with no issues, without legal review.

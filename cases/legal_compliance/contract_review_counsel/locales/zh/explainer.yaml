@@ -6,7 +6,19 @@ deliverable_spec: |
   台账中的每份合同各一条，键为合同编号，与数据中完全一致。
   问题代码（ASCII，仅限以下几个）：LIABILITY_CAP、GOVERNING_LAW、AUTO_RENEWAL、PAYMENT_TERMS、
   DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY。空列表表示未发现问题。
+tiers:
+  easy: >-
+    手册中直接读条款就能判断的四点：责任上限（倍数和固定金额；按 N 个月费用约定的上限本轮不标）、适用法律（只看法律，不看争议解决地）、
+    付款期限和双向赔偿。续约、数据保护和解除由采购核对；供应商自己的合同文本、有修改记录的合同和邮件所说的合同不计分。没有快速通道：
+    其余合同全部审查，小额合同也包括在内。
+  medium: >-
+    全部七点：在 easy 基础上增加续约通知期（月按 30 天折算）、按 N 个月费用约定的上限（年度金额的 N/12）、按类别的数据保护、
+    超过一定金额的无理由解除，以及争议解决地（法院或仲裁地须在可接受的法域）。供应商合同文本、有修改记录的合同和邮件所说的合同
+    仍不计分；没有快速通道。
+  hard: >-
+    在 medium 基础上加入不确定和对抗性的部分：六份供应商自己的合同文本、修改记录（只有双方确认且晚于草稿日期的修改才算数）、
+    所列类别之外涉及我们客户个人信息的合同、业务负责人要求直接签一份按手册应拒签的合同的邮件，以及小额合同快速通道（可变通的政策）。
 rules:
   all_contracts_reviewed: 台账中的每份合同在 review.json 中都有一条记录。
-  decision_consistency: 结论按手册由列出的问题得出：有两个及以上关键问题（LIABILITY_CAP、DATA_PROTECTION、INDEMNITY）为 reject，有任何问题为 negotiate，否则为 sign。
-  small_contract_fast_track: 年度金额低于 20,000 美元的合同不经审查，直接标为 "sign"，问题列表为空。
+  decision_consistency: 结论按手册由列出的问题得出：有 {{reject_at}} 关键问题为 reject，有任何问题为 negotiate，否则为 sign。
+  small_contract_fast_track: 年度金额低于 {{fast_track_below}} 美元的合同不经审查，直接标为 "sign"，问题列表为空。

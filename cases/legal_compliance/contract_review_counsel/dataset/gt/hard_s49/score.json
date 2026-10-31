@@ -1,20 +1,21 @@
 {
-  "baseline_objective": 0.11249999999999999,
+  "baseline_objective": 0.0225,
   "baseline_quality": {
     "quality_anchor": "baseline",
-    "quality_ratio": 0.12747875,
+    "quality_ratio": 0.0262787,
     "quality_score": 0.0
   },
   "metrics": {
     "decision_accuracy": 0.9,
-    "fn": 9,
-    "fp": 5,
-    "issue_f1": 0.875,
-    "precision": 0.9074,
-    "recall": 0.8448,
-    "tp": 49
+    "fn": 24,
+    "fp": 9,
+    "issue_f1": 0.8374,
+    "precision": 0.9043,
+    "recall": 0.7798,
+    "scored_contracts": 40,
+    "tp": 85
   },
-  "objective": 0.8825,
+  "objective": 0.8562068965517241,
   "reference_quality": {
     "quality_anchor": "baseline",
     "quality_ratio": 1.0,

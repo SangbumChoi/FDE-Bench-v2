@@ -1,30 +1,35 @@
-SUPPLY AGREEMENT No. C021
+供货与服务合同
+合同编号：C021
+草稿日期：2026-09-23
 
-This Agreement is made between Brightvale Holdings (the "Customer") and Glenmore Digital Ltd (the "Supplier").
+甲方：明谷集团
+乙方：天成物业服务有限公司
 
-Article 1. Scope and Term
-1.1 The Supplier provides the Customer with cloud hosting, software maintenance and related data services.
-1.2 This Agreement starts on the date of signature and runs for an initial term of three years. At the end of each term the Agreement continues for a further year on the same conditions, unless a party objects in writing no later than 30 days before the term ends.
+甲乙双方经友好协商，就乙方向甲方提供产品及服务事宜订立本合同，以资共同遵守。
 
-Article 2. Fees and Payment
-2.1 The fees are set out in the order forms agreed between the parties.
-2.2 The Customer shall pay each undisputed invoice within forty-five days of receipt.
+第一条　合同标的与期限
+1.1　乙方向甲方提供保洁及楼宇维护服务。
+1.2　本合同自双方签字之日起生效，初始期限为一年。期限届满后本合同即告终止，如需续约，双方应另行签订书面协议。
 
-Article 3. Confidentiality
-Each party shall keep confidential all business information received from the other party and use it only for the purposes of this Agreement. This obligation survives the end of the Agreement for three years.
+第二条　价款与支付
+2.1　具体费用以双方确认的订单为准。
+2.2　甲方应在收到无争议发票后30日内付款。
 
-Article 4. Indemnity
-The Customer shall indemnify and hold harmless the Supplier against all third-party claims, losses and costs arising out of or in connection with this Agreement.
+第三条　保密
+双方应对从对方获得的商业信息予以保密，且仅可为履行本合同之目的使用。本条义务在合同终止后三年内继续有效。
 
-Article 5. Limitation of Liability
-Except for liability for death, personal injury or fraud, the total liability of either party under this Agreement shall not exceed 100% of the annual fees payable under this Agreement.
+第四条　赔偿
+任何一方因违反本合同或存在过失而导致第三方索赔的，应赔偿对方因此遭受的全部损失和费用。
 
-Article 6. Termination
-6.1 Either party may terminate this Agreement with immediate effect by written notice if the other party commits a material breach and fails to remedy it within 30 days of being notified.
-6.2 The Customer may terminate this Agreement for convenience at any time by giving 60 days' written notice.
+第五条　责任限制
+除因死亡、人身伤害或欺诈产生的责任外，任何一方在本合同项下的累计赔偿责任不超过本合同项下年度费用的两倍。
 
-Article 7. Governing Law and Disputes
-This Agreement is governed by the laws of Switzerland. The courts of London have exclusive jurisdiction over any dispute arising from it.
+第六条　合同解除
+6.1　任何一方严重违约且在收到书面通知后30日内未予纠正的，对方可书面通知立即解除本合同。
+6.2　甲方有权为自身便利随时解除本合同，但应提前90日书面通知乙方。
 
-Signed for and on behalf of the Customer: ______________________
-Signed for and on behalf of the Supplier: ______________________
+第七条　适用法律与争议解决
+本合同受瑞士法律管辖。因本合同产生的任何争议，由苏黎世有管辖权的法院专属管辖。
+
+甲方（盖章）：______________
+乙方（盖章）：______________

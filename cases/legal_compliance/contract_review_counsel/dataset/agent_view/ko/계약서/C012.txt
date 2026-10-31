@@ -1,32 +1,31 @@
-SUPPLY AGREEMENT No. C012
+공급 및 용역 계약서
+계약번호: C012
+초안 일자: 2026-10-06
 
-This Agreement is made between Brightvale Holdings (the "Customer") and Oakhurst Digital Ltd (the "Supplier").
+브라이트베일 홀딩스(이하 "갑")와 (주)동양테크(이하 "을")는 다음과 같이 계약을 체결한다.
 
-Article 1. Scope and Term
-1.1 The Supplier provides the Customer with cloud hosting, software maintenance and related data services.
-1.2 This Agreement starts on the date of signature and runs for an initial term of three years. It then expires unless the parties agree a renewal in writing.
+제1조 (목적 및 기간)
+① 을은 갑에게 클라우드 호스팅, 소프트웨어 유지보수 및 관련 데이터 서비스를 제공한다.
+② 이 계약은 서명일부터 효력이 발생하며 최초 계약기간은 3년으로 한다. 계약기간이 만료되면 이 계약은 종료되며, 갱신하려면 당사자들이 별도로 서면 합의하여야 한다.
 
-Article 2. Fees and Payment
-2.1 The fees are set out in the order forms agreed between the parties.
-2.2 The Customer shall pay each undisputed invoice within 90 days of receipt.
+제2조 (대금 및 지급)
+① 구체적인 대금은 당사자가 합의한 주문서에 따른다.
+② 갑은 이의가 없는 청구서를 수령한 날부터 15일 이내에 대금을 지급한다.
 
-Article 3. Confidentiality
-Each party shall keep confidential all business information received from the other party and use it only for the purposes of this Agreement. This obligation survives the end of the Agreement for three years.
+제3조 (비밀유지)
+각 당사자는 상대방으로부터 받은 영업 정보를 비밀로 유지하고 이 계약의 이행 목적으로만 사용한다. 이 의무는 계약 종료 후 3년간 존속한다.
 
-Article 4. Data Protection
-The Supplier shall process personal data only on the Customer's documented instructions and in compliance with applicable data protection laws. It shall implement appropriate technical and organisational security measures, notify the Customer of any personal data breach within 48 hours and delete or return all personal data at the end of the Agreement.
+제4조 (손해배상)
+갑은 이 계약과 관련하여 발생하는 모든 제3자의 청구, 손해 및 비용으로부터 을을 면책하고 을에게 이를 배상한다.
 
-Article 5. Indemnity
-The Customer shall indemnify and hold harmless the Supplier against all third-party claims, losses and costs arising out of or in connection with this Agreement.
+제5조 (책임의 제한)
+사망, 신체 상해 또는 사기로 인한 책임을 제외하고, 이 계약에 따른 각 당사자의 손해배상 책임 총액은 미화 5,000달러를 초과하지 아니한다.
 
-Article 6. Limitation of Liability
-Except for liability for death, personal injury or fraud, the total liability of either party under this Agreement shall not exceed USD 7,500.
+제6조 (계약의 해지)
+어느 당사자가 계약을 중대하게 위반하고 서면 통지를 받은 날부터 30일 이내에 시정하지 않으면, 상대방은 서면 통지로 즉시 이 계약을 해지할 수 있다.
 
-Article 7. Termination
-Either party may terminate this Agreement with immediate effect by written notice if the other party commits a material breach and fails to remedy it within 30 days of being notified.
+제7조 (준거법 및 분쟁해결)
+이 계약은 독일 법에 따라 규율된다. 이 계약과 관련한 모든 분쟁은 취리히 소재 법원의 전속관할로 한다.
 
-Article 8. Governing Law and Disputes
-This Agreement is governed by the laws of Switzerland. The courts of Zurich have exclusive jurisdiction over any dispute arising from it.
-
-Signed for and on behalf of the Customer: ______________________
-Signed for and on behalf of the Supplier: ______________________
+갑: ______________ (인)
+을: ______________ (인)

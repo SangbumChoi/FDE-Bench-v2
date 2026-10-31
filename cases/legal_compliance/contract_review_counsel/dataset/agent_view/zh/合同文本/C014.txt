@@ -1,37 +1,31 @@
-供货与服务合同
-合同编号：C014
+SUPPLY AGREEMENT No. C014
+Draft of 2026-09-22
 
-甲方：明谷集团
-乙方：致远物流有限公司
+This Agreement is made between Brightvale Holdings (the "Customer") and Draycott Digital Ltd (the "Supplier").
 
-甲乙双方经友好协商，就乙方向甲方提供产品及服务事宜订立本合同，以资共同遵守。
+Article 1. Scope and Term
+1.1 The Supplier provides the Customer with cloud hosting, software maintenance and related data services.
+1.2 This Agreement starts on the date of signature and runs for an initial term of one year. It then expires unless the parties agree a renewal in writing.
 
-第一条　合同标的与期限
-1.1　乙方向甲方提供仓储及公路货运服务。
-1.2　本合同自双方签字之日起生效，初始期限为三年。期限届满后本合同即告终止，如需续约，双方应另行签订书面协议。
+Article 2. Fees and Payment
+2.1 The fees are set out in the order forms agreed between the parties.
+2.2 Undisputed invoices are payable net 60 from the date of receipt.
 
-第二条　价款与支付
-2.1　具体费用以双方确认的订单为准。
-2.2　甲方应在收到无争议发票后90日内付款。
+Article 3. Confidentiality
+Each party shall keep confidential all business information received from the other party and use it only for the purposes of this Agreement. This obligation survives the end of the Agreement for three years.
 
-第三条　保密
-双方应对从对方获得的商业信息予以保密，且仅可为履行本合同之目的使用。本条义务在合同终止后三年内继续有效。
+Article 4. Indemnity
+The Supplier shall indemnify the Customer against third-party claims, losses and costs caused by the Supplier's breach of this Agreement or negligence, and the Customer shall indemnify the Supplier on the same terms for its own breach or negligence.
 
-第四条　个人信息
-乙方在履行本合同过程中接触到的任何可识别特定自然人的信息，仅可按甲方的要求使用。乙方应妥善保管，发生丢失或未经授权访问时应立即告知甲方，并在合同结束时予以销毁或交还。
+Article 5. Limitation of Liability
+Except for liability for death, personal injury or fraud, the total liability of either party under this Agreement shall not exceed the total fees paid or payable by the Customer in the twelve months preceding the event giving rise to the claim.
 
-第五条　赔偿
-任何一方因违反本合同或存在过失而导致第三方索赔的，应赔偿对方因此遭受的全部损失和费用。
+Article 6. Termination
+6.1 Either party may terminate this Agreement with immediate effect by written notice if the other party commits a material breach and fails to remedy it within 30 days of being notified.
+6.2 The Customer may terminate this Agreement for convenience at any time by giving 30 days' written notice.
 
-第六条　责任限制
-除因死亡、人身伤害或欺诈产生的责任外，任何一方在本合同项下的累计赔偿责任不超过引起索赔的事件发生前12个月内甲方已付或应付的费用总额。
+Article 7. Governing Law and Disputes
+This Agreement is governed by the laws of the State of New York. Any dispute arising from it shall be finally resolved by arbitration seated in New York.
 
-第七条　合同解除
-7.1　任何一方严重违约且在收到书面通知后30日内未予纠正的，对方可书面通知立即解除本合同。
-7.2　甲方亦可在任何时候不说明理由终止本合同，但须提前60日书面通知乙方。
-
-第八条　适用法律与争议解决
-本合同受瑞士法律管辖。因本合同产生的任何争议，由纽约有管辖权的法院专属管辖。
-
-甲方（盖章）：______________
-乙方（盖章）：______________
+Signed for and on behalf of the Customer: ______________________
+Signed for and on behalf of the Supplier: ______________________

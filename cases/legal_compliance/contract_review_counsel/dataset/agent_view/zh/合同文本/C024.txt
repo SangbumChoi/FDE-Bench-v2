@@ -1,33 +1,35 @@
-SUPPLY AGREEMENT No. C024
+供货与服务合同
+合同编号：C024
+草稿日期：2026-09-01
 
-This Agreement is made between Brightvale Holdings (the "Customer") and Merriton Facility Services Ltd (the "Supplier").
+甲方：明谷集团
+乙方：嘉信物业服务有限公司
 
-Article 1. Scope and Term
-1.1 The Supplier provides the Customer with cleaning and building maintenance services.
-1.2 This Agreement starts on the date of signature and runs for an initial term of one year. It then expires unless the parties agree a renewal in writing.
+甲乙双方经友好协商，就乙方向甲方提供产品及服务事宜订立本合同，以资共同遵守。
 
-Article 2. Fees and Payment
-2.1 The fees are set out in the order forms agreed between the parties.
-2.2 The Customer shall pay each undisputed invoice within thirty days of receipt.
+第一条　合同标的与期限
+1.1　乙方向甲方提供保洁及楼宇维护服务。
+1.2　本合同自双方签字之日起生效，初始期限为一年。每一期限届满时，如任何一方未在届满前60日以书面形式提出异议，本合同按相同条件延续一年。
 
-Article 3. Confidentiality
-Each party shall keep confidential all business information received from the other party and use it only for the purposes of this Agreement. This obligation survives the end of the Agreement for three years.
+第二条　价款与支付
+2.1　具体费用以双方确认的订单为准。
+2.2　无争议发票的付款账期为30天，自甲方收到发票之日起算。
 
-Article 4. Data Protection
-The Supplier shall process personal data only on the Customer's documented instructions and in compliance with applicable data protection laws. It shall implement appropriate technical and organisational security measures, notify the Customer of any personal data breach within 48 hours and delete or return all personal data at the end of the Agreement.
+第三条　保密
+双方应对从对方获得的商业信息予以保密，且仅可为履行本合同之目的使用。本条义务在合同终止后三年内继续有效。
 
-Article 5. Indemnity
-Each party shall indemnify the other party against all third-party claims, losses and costs arising from its own breach of this Agreement or its negligence.
+第四条　赔偿
+对于因本合同引起或与本合同相关的一切第三方索赔、损失和费用，甲方应向乙方作出赔偿，并使乙方免受损害。
 
-Article 6. Limitation of Liability
-Except for liability for death, personal injury or fraud, the total liability of either party under this Agreement shall not exceed the total fees paid or payable by the Customer in the twelve months preceding the event giving rise to the claim.
+第五条　责任限制
+双方明确约定，任何一方在本合同项下的责任均不设金额上限。
 
-Article 7. Termination
-7.1 Either party may terminate this Agreement with immediate effect by written notice if the other party commits a material breach and fails to remedy it within 30 days of being notified.
-7.2 The Customer may terminate this Agreement for convenience at any time by giving 30 days' written notice.
+第六条　合同解除
+6.1　任何一方严重违约且在收到书面通知后30日内未予纠正的，对方可书面通知立即解除本合同。
+6.2　甲方有权为自身便利随时解除本合同，但应提前30日书面通知乙方。
 
-Article 8. Governing Law and Disputes
-This Agreement is governed by the laws of the Hong Kong SAR. Any dispute arising from it shall be finally resolved by arbitration seated in Hong Kong.
+第七条　适用法律与争议解决
+本合同适用香港特别行政区法律。因本合同产生的任何争议，由新加坡有管辖权的法院专属管辖。
 
-Signed for and on behalf of the Customer: ______________________
-Signed for and on behalf of the Supplier: ______________________
+甲方（盖章）：______________
+乙方（盖章）：______________

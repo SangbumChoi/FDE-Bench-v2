@@ -1,32 +1,31 @@
-SUPPLY AGREEMENT No. C012
+業務委託・供給契約書
+契約番号：C012
+草案日付：2026-10-06
 
-This Agreement is made between Brightvale Holdings (the "Customer") and Oakhurst Digital Ltd (the "Supplier").
+ブライトベール・ホールディングス（以下「甲」という。）と若葉テクノロジー株式会社（以下「乙」という。）は、次のとおり契約を締結する。
 
-Article 1. Scope and Term
-1.1 The Supplier provides the Customer with cloud hosting, software maintenance and related data services.
-1.2 This Agreement starts on the date of signature and runs for an initial term of three years. It then expires unless the parties agree a renewal in writing.
+第1条（目的および期間）
+1　乙は、甲に対し、クラウドホスティング、ソフトウェア保守および関連するデータサービスを提供する。
+2　本契約の有効期間は、締結日から3年間とする。期間満了をもって本契約は終了し、更新する場合は当事者間で別途書面により合意するものとする。
 
-Article 2. Fees and Payment
-2.1 The fees are set out in the order forms agreed between the parties.
-2.2 The Customer shall pay each undisputed invoice within 90 days of receipt.
+第2条（代金および支払）
+1　具体的な代金は、当事者間で合意した注文書に定める。
+2　甲は、異議のない請求書を受領した日から15日以内に代金を支払う。
 
-Article 3. Confidentiality
-Each party shall keep confidential all business information received from the other party and use it only for the purposes of this Agreement. This obligation survives the end of the Agreement for three years.
+第3条（秘密保持）
+各当事者は、相手方から開示された営業上の情報を秘密として保持し、本契約の履行の目的にのみ使用する。本条の義務は、本契約終了後3年間存続する。
 
-Article 4. Data Protection
-The Supplier shall process personal data only on the Customer's documented instructions and in compliance with applicable data protection laws. It shall implement appropriate technical and organisational security measures, notify the Customer of any personal data breach within 48 hours and delete or return all personal data at the end of the Agreement.
+第4条（補償）
+甲は、本契約に起因または関連して生じる一切の第三者からの請求、損害および費用について、乙を補償し、乙に損害を被らせないものとする。
 
-Article 5. Indemnity
-The Customer shall indemnify and hold harmless the Supplier against all third-party claims, losses and costs arising out of or in connection with this Agreement.
+第5条（責任の制限）
+死亡、身体の傷害または詐欺に基づく責任を除き、本契約に基づく各当事者の損害賠償責任の総額は、5,000米ドルを上限とする。
 
-Article 6. Limitation of Liability
-Except for liability for death, personal injury or fraud, the total liability of either party under this Agreement shall not exceed USD 7,500.
+第6条（解除）
+いずれかの当事者が本契約に重大な違反をし、書面による通知を受けた日から30日以内に是正しない場合、相手方は書面で通知することにより直ちに本契約を解除することができる。
 
-Article 7. Termination
-Either party may terminate this Agreement with immediate effect by written notice if the other party commits a material breach and fails to remedy it within 30 days of being notified.
+第7条（準拠法および紛争解決）
+本契約はドイツ法に準拠する。本契約に関して生じた一切の紛争については、チューリッヒの裁判所を専属的合意管轄裁判所とする。
 
-Article 8. Governing Law and Disputes
-This Agreement is governed by the laws of Switzerland. The courts of Zurich have exclusive jurisdiction over any dispute arising from it.
-
-Signed for and on behalf of the Customer: ______________________
-Signed for and on behalf of the Supplier: ______________________
+甲：______________ 印
+乙：______________ 印

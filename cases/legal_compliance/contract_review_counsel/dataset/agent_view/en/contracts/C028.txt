@@ -1,33 +1,33 @@
-CONTRATO DE SUMINISTRO Y SERVICIOS N.º C028
+SUPPLY AGREEMENT No. C028
+Draft of 2026-09-23
 
-Este contrato se celebra entre Brightvale Holdings (el «Cliente») y Tajo Sistemas S.L. (el «Proveedor»).
+This Agreement is made between Brightvale Holdings (the "Customer") and Penbury Digital Ltd (the "Supplier").
 
-Cláusula 1. Objeto y duración
-1.1 El Proveedor presta al Cliente servicios de alojamiento en la nube, mantenimiento de software y tratamiento de datos asociados.
-1.2 El contrato entra en vigor en la fecha de su firma y tiene una duración inicial de dos años. Al vencimiento, se renovará automáticamente por periodos sucesivos de un año, salvo que cualquiera de las partes notifique por escrito su voluntad de no renovarlo con una antelación mínima de un mes.
+Article 1. Scope and Term
+1.1 The Supplier provides the Customer with cloud hosting, software maintenance and related data services.
+1.2 This Agreement starts on the date of signature and runs for an initial term of two years. At the end of each term the Agreement continues for a further year on the same conditions, unless a party objects in writing no later than 30 days before the term ends.
 
-Cláusula 2. Precio y forma de pago
-2.1 Los precios se fijan en los pedidos acordados por las partes.
-2.2 Las facturas no controvertidas vencen a 45 días fecha de recepción.
+Article 2. Fees and Payment
+2.1 The fees are set out in the order forms agreed between the parties.
+2.2 The Customer shall pay each undisputed invoice within 45 days of receipt.
 
-Cláusula 3. Confidencialidad
-Cada parte mantendrá la confidencialidad de la información comercial recibida de la otra y la utilizará únicamente para los fines de este contrato. Esta obligación subsistirá durante tres años tras la terminación.
+Article 3. Confidentiality
+Each party shall keep confidential all business information received from the other party and use it only for the purposes of this Agreement. This obligation survives the end of the Agreement for three years.
 
-Cláusula 4. Protección de datos
-El Proveedor tratará los datos personales únicamente siguiendo las instrucciones documentadas del Cliente y conforme a la normativa de protección de datos aplicable. Aplicará medidas técnicas y organizativas de seguridad adecuadas, notificará al Cliente cualquier violación de seguridad de los datos personales en un plazo de 48 horas y, al finalizar el contrato, suprimirá o devolverá todos los datos personales.
+Article 4. Data Protection
+The Supplier shall process personal data only on the Customer's documented instructions and in compliance with applicable data protection laws. It shall implement appropriate technical and organisational security measures, notify the Customer of any personal data breach within 48 hours and delete or return all personal data at the end of the Agreement.
 
-Cláusula 5. Indemnidad
-Cada parte mantendrá indemne a la otra frente a cualesquiera reclamaciones de terceros, daños y gastos derivados de su propio incumplimiento de este contrato o de su negligencia.
+Article 5. Indemnity
+Each party shall indemnify the other party against all third-party claims, losses and costs arising from its own breach of this Agreement or its negligence.
 
-Cláusula 6. Limitación de responsabilidad
-Salvo en caso de muerte, lesiones personales o fraude, la responsabilidad total de cada parte en virtud de este contrato no podrá superar 10.000 USD.
+Article 6. Limitation of Liability
+Except for liability for death, personal injury or fraud, the total liability of either party under this Agreement shall not exceed one half of the annual fees payable under this Agreement.
 
-Cláusula 7. Resolución del contrato
-7.1 Cualquiera de las partes podrá resolver el contrato con efecto inmediato mediante notificación escrita si la otra incurre en un incumplimiento grave y no lo subsana en los 30 días siguientes a su notificación.
-7.2 El Cliente podrá asimismo poner fin al contrato en cualquier momento y sin necesidad de alegar causa, mediante preaviso escrito de 60 días.
+Article 7. Termination
+Either party may terminate this Agreement with immediate effect by written notice if the other party commits a material breach and fails to remedy it within 30 days of being notified.
 
-Cláusula 8. Ley aplicable y jurisdicción
-Este contrato se rige por la legislación de Singapur. Toda controversia derivada del mismo se resolverá definitivamente mediante arbitraje con sede en Singapur.
+Article 8. Governing Law and Disputes
+This Agreement is governed by the laws of Switzerland. Any dispute arising from it shall be finally resolved by arbitration seated in Zurich.
 
-Por el Cliente: ______________________
-Por el Proveedor: ______________________
+Signed for and on behalf of the Customer: ______________________
+Signed for and on behalf of the Supplier: ______________________

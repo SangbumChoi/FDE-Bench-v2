@@ -1,31 +1,31 @@
-業務委託・供給契約書
-契約番号：C026
+SUPPLY AGREEMENT No. C026
+Draft of 2026-10-06
 
-ブライトベール・ホールディングス（以下「甲」という。）と日進企画株式会社（以下「乙」という。）は、次のとおり契約を締結する。
+This Agreement is made between Brightvale Holdings (the "Customer") and Everleigh Logistics Ltd (the "Supplier").
 
-第1条（目的および期間）
-1　乙は、甲に対し、広告キャンペーンおよびイベント運営サービスを提供する。
-2　本契約の有効期間は、締結日から2年間とする。期間満了の30日前までにいずれの当事者からも書面による更新拒絶の通知がない場合、本契約は同一条件でさらに1年間自動的に更新され、以後も同様とする。
+Article 1. Scope and Term
+1.1 The Supplier provides the Customer with warehousing and road freight services, including home deliveries to the Customer's own customers, for which the Customer passes on their names, delivery addresses and telephone numbers.
+1.2 This Agreement starts on the date of signature and runs for an initial term of two years. It then renews automatically for successive one-year periods unless either party gives written notice of non-renewal at least forty-five days before the end of the current term.
 
-第2条（代金および支払）
-1　具体的な代金は、当事者間で合意した注文書に定める。
-2　甲は、異議のない請求書を受領した日から30日以内に代金を支払う。
+Article 2. Fees and Payment
+2.1 The fees are set out in the order forms agreed between the parties.
+2.2 The Customer shall pay each undisputed invoice within 30 days of receipt.
 
-第3条（秘密保持）
-各当事者は、相手方から開示された営業上の情報を秘密として保持し、本契約の履行の目的にのみ使用する。本条の義務は、本契約終了後3年間存続する。
+Article 3. Confidentiality
+Each party shall keep confidential all business information received from the other party and use it only for the purposes of this Agreement. This obligation survives the end of the Agreement for three years.
 
-第4条（補償）
-各当事者は、自らの本契約違反または過失に起因する第三者からの請求、損害および費用について、相手方を補償する。
+Article 4. Indemnity
+The Supplier shall indemnify the Customer against third-party claims, losses and costs caused by the Supplier's breach of this Agreement or negligence, and the Customer shall indemnify the Supplier on the same terms for its own breach or negligence.
 
-第5条（責任の制限）
-死亡、身体の傷害または詐欺に基づく責任を除き、本契約に基づく各当事者の損害賠償責任の総額は、請求の原因となった事由の発生前24か月間に甲が支払った又は支払うべき代金の総額を上限とする。
+Article 5. Limitation of Liability
+Except for liability for death, personal injury or fraud, the total liability of either party under this Agreement shall not exceed the total fees paid or payable by the Customer in the six months preceding the event giving rise to the claim.
 
-第6条（解除）
-1　いずれかの当事者が本契約に重大な違反をし、書面による通知を受けた日から30日以内に是正しない場合、相手方は書面で通知することにより直ちに本契約を解除することができる。
-2　甲は、90日前までに書面で通知することにより、いつでも任意に本契約を解約することができる。
+Article 6. Termination
+6.1 Either party may terminate this Agreement with immediate effect by written notice if the other party commits a material breach and fails to remedy it within 30 days of being notified.
+6.2 The Customer may terminate this Agreement for convenience at any time by giving 90 days' written notice.
 
-第7条（準拠法および紛争解決）
-本契約は米国ニューヨーク州法に準拠する。本契約に関して生じた一切の紛争については、ニューヨークの裁判所を専属的合意管轄裁判所とする。
+Article 7. Governing Law and Disputes
+This Agreement is governed by the laws of Switzerland. Any dispute arising from it shall be finally resolved by arbitration seated in Zurich.
 
-甲：______________ 印
-乙：______________ 印
+Signed for and on behalf of the Customer: ______________________
+Signed for and on behalf of the Supplier: ______________________
