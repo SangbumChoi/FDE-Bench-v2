@@ -1,34 +1,28 @@
 {
   "assignments": [
     {
+      "agent": "A10",
+      "day": "2026-11-09",
+      "shift": "P0800",
+      "language": "ko"
+    },
+    {
+      "agent": "A23",
+      "day": "2026-11-09",
+      "shift": "P0800",
+      "language": "en"
+    },
+    {
       "agent": "A09",
       "day": "2026-11-09",
       "shift": "P1600",
       "language": "en"
     },
     {
-      "agent": "A19",
-      "day": "2026-11-09",
-      "shift": "P1600",
-      "language": "ko"
-    },
-    {
-      "agent": "A29",
-      "day": "2026-11-09",
-      "shift": "P1600",
-      "language": "ko"
-    },
-    {
       "agent": "A15",
       "day": "2026-11-09",
       "shift": "P1800",
       "language": "zh"
-    },
-    {
-      "agent": "A23",
-      "day": "2026-11-09",
-      "shift": "P1800",
-      "language": "en"
     },
     {
       "agent": "A03",
@@ -121,10 +115,22 @@
       "language": "es"
     },
     {
-      "agent": "A05",
+      "agent": "A24",
+      "day": "2026-11-09",
+      "shift": "S1400",
+      "language": "en"
+    },
+    {
+      "agent": "A30",
+      "day": "2026-11-09",
+      "shift": "S1400",
+      "language": "ko"
+    },
+    {
+      "agent": "A10",
       "day": "2026-11-10",
-      "shift": "P1600",
-      "language": "es"
+      "shift": "P0800",
+      "language": "ko"
     },
     {
       "agent": "A09",
@@ -133,34 +139,10 @@
       "language": "en"
     },
     {
-      "agent": "A15",
-      "day": "2026-11-10",
-      "shift": "P1600",
-      "language": "zh"
-    },
-    {
-      "agent": "A19",
-      "day": "2026-11-10",
-      "shift": "P1600",
-      "language": "ko"
-    },
-    {
-      "agent": "A29",
-      "day": "2026-11-10",
-      "shift": "P1600",
-      "language": "ko"
-    },
-    {
       "agent": "A07",
       "day": "2026-11-10",
       "shift": "P1800",
       "language": "ja"
-    },
-    {
-      "agent": "A23",
-      "day": "2026-11-10",
-      "shift": "P1800",
-      "language": "en"
     },
     {
       "agent": "A03",
@@ -235,22 +217,58 @@
       "language": "ja"
     },
     {
-      "agent": "A05",
-      "day": "2026-11-11",
-      "shift": "P1600",
-      "language": "es"
+      "agent": "A12",
+      "day": "2026-11-10",
+      "shift": "S1400",
+      "language": "zh"
     },
     {
-      "agent": "A09",
-      "day": "2026-11-11",
-      "shift": "P1600",
+      "agent": "A20",
+      "day": "2026-11-10",
+      "shift": "S1400",
       "language": "en"
     },
     {
-      "agent": "A15",
+      "agent": "A22",
+      "day": "2026-11-10",
+      "shift": "S1400",
+      "language": "es"
+    },
+    {
+      "agent": "A25",
+      "day": "2026-11-10",
+      "shift": "S1400",
+      "language": "ko"
+    },
+    {
+      "agent": "A30",
+      "day": "2026-11-10",
+      "shift": "S1400",
+      "language": "ko"
+    },
+    {
+      "agent": "A07",
+      "day": "2026-11-11",
+      "shift": "P0800",
+      "language": "ja"
+    },
+    {
+      "agent": "A10",
+      "day": "2026-11-11",
+      "shift": "P0800",
+      "language": "zh"
+    },
+    {
+      "agent": "A19",
       "day": "2026-11-11",
       "shift": "P1600",
-      "language": "zh"
+      "language": "ko"
+    },
+    {
+      "agent": "A23",
+      "day": "2026-11-11",
+      "shift": "P1600",
+      "language": "en"
     },
     {
       "agent": "A01",
@@ -271,10 +289,10 @@
       "language": "ko"
     },
     {
-      "agent": "A12",
+      "agent": "A13",
       "day": "2026-11-11",
       "shift": "S0800",
-      "language": "zh"
+      "language": "ko"
     },
     {
       "agent": "A14",
@@ -301,22 +319,34 @@
       "language": "en"
     },
     {
-      "agent": "A02",
+      "agent": "A20",
       "day": "2026-11-11",
       "shift": "S1000",
-      "language": "ja"
+      "language": "en"
     },
     {
-      "agent": "A13",
+      "agent": "A02",
       "day": "2026-11-11",
       "shift": "S1400",
       "language": "en"
     },
     {
-      "agent": "A25",
+      "agent": "A12",
+      "day": "2026-11-11",
+      "shift": "S1400",
+      "language": "zh"
+    },
+    {
+      "agent": "A21",
       "day": "2026-11-11",
       "shift": "S1400",
       "language": "ko"
+    },
+    {
+      "agent": "A22",
+      "day": "2026-11-11",
+      "shift": "S1400",
+      "language": "es"
     },
     {
       "agent": "A26",
@@ -331,22 +361,22 @@
       "language": "ko"
     },
     {
+      "agent": "A19",
+      "day": "2026-11-12",
+      "shift": "P0800",
+      "language": "ko"
+    },
+    {
       "agent": "A05",
       "day": "2026-11-12",
       "shift": "P1600",
       "language": "es"
     },
     {
-      "agent": "A10",
+      "agent": "A23",
       "day": "2026-11-12",
       "shift": "P1600",
-      "language": "zh"
-    },
-    {
-      "agent": "A19",
-      "day": "2026-11-12",
-      "shift": "P1600",
-      "language": "ko"
+      "language": "en"
     },
     {
       "agent": "A07",
@@ -355,10 +385,10 @@
       "language": "ja"
     },
     {
-      "agent": "A29",
+      "agent": "A11",
       "day": "2026-11-12",
       "shift": "P1800",
-      "language": "ko"
+      "language": "es"
     },
     {
       "agent": "A03",
@@ -403,28 +433,16 @@
       "language": "en"
     },
     {
-      "agent": "A12",
-      "day": "2026-11-12",
-      "shift": "S1000",
-      "language": "zh"
-    },
-    {
       "agent": "A13",
       "day": "2026-11-12",
       "shift": "S1000",
       "language": "ko"
     },
     {
-      "agent": "A20",
+      "agent": "A24",
       "day": "2026-11-12",
       "shift": "S1000",
       "language": "en"
-    },
-    {
-      "agent": "A25",
-      "day": "2026-11-12",
-      "shift": "S1000",
-      "language": "ko"
     },
     {
       "agent": "A26",
@@ -433,16 +451,46 @@
       "language": "ja"
     },
     {
-      "agent": "A30",
+      "agent": "A02",
       "day": "2026-11-12",
       "shift": "S1400",
       "language": "en"
     },
     {
-      "agent": "A11",
+      "agent": "A12",
+      "day": "2026-11-12",
+      "shift": "S1400",
+      "language": "zh"
+    },
+    {
+      "agent": "A18",
+      "day": "2026-11-12",
+      "shift": "S1400",
+      "language": "ko"
+    },
+    {
+      "agent": "A25",
+      "day": "2026-11-12",
+      "shift": "S1400",
+      "language": "ko"
+    },
+    {
+      "agent": "A29",
+      "day": "2026-11-13",
+      "shift": "P0800",
+      "language": "ko"
+    },
+    {
+      "agent": "A09",
       "day": "2026-11-13",
       "shift": "P1600",
-      "language": "es"
+      "language": "en"
+    },
+    {
+      "agent": "A19",
+      "day": "2026-11-13",
+      "shift": "P1600",
+      "language": "ko"
     },
     {
       "agent": "A06",
@@ -451,28 +499,22 @@
       "language": "ja"
     },
     {
-      "agent": "A10",
+      "agent": "A15",
       "day": "2026-11-13",
       "shift": "P1800",
       "language": "zh"
     },
     {
-      "agent": "A01",
+      "agent": "A03",
       "day": "2026-11-13",
       "shift": "S0800",
-      "language": "es"
+      "language": "ko"
     },
     {
-      "agent": "A02",
+      "agent": "A04",
       "day": "2026-11-13",
       "shift": "S0800",
-      "language": "ja"
-    },
-    {
-      "agent": "A08",
-      "day": "2026-11-13",
-      "shift": "S0800",
-      "language": "zh"
+      "language": "ko"
     },
     {
       "agent": "A13",
@@ -481,22 +523,22 @@
       "language": "ko"
     },
     {
-      "agent": "A18",
+      "agent": "A14",
       "day": "2026-11-13",
       "shift": "S0800",
-      "language": "ko"
+      "language": "zh"
     },
     {
-      "agent": "A21",
+      "agent": "A16",
       "day": "2026-11-13",
       "shift": "S0800",
-      "language": "ko"
+      "language": "ja"
     },
     {
-      "agent": "A22",
+      "agent": "A17",
       "day": "2026-11-13",
       "shift": "S0800",
-      "language": "en"
+      "language": "es"
     },
     {
       "agent": "A27",
@@ -505,196 +547,226 @@
       "language": "en"
     },
     {
-      "agent": "A14",
+      "agent": "A28",
+      "day": "2026-11-13",
+      "shift": "S0800",
+      "language": "en"
+    },
+    {
+      "agent": "A08",
       "day": "2026-11-13",
       "shift": "S1000",
       "language": "zh"
     },
     {
-      "agent": "A16",
+      "agent": "A20",
+      "day": "2026-11-13",
+      "shift": "S1000",
+      "language": "en"
+    },
+    {
+      "agent": "A26",
       "day": "2026-11-13",
       "shift": "S1000",
       "language": "ja"
     },
     {
-      "agent": "A20",
+      "agent": "A01",
       "day": "2026-11-13",
+      "shift": "S1400",
+      "language": "en"
+    },
+    {
+      "agent": "A12",
+      "day": "2026-11-13",
+      "shift": "S1400",
+      "language": "es"
+    },
+    {
+      "agent": "A18",
+      "day": "2026-11-13",
+      "shift": "S1400",
+      "language": "ko"
+    },
+    {
+      "agent": "A25",
+      "day": "2026-11-13",
+      "shift": "S1400",
+      "language": "ko"
+    },
+    {
+      "agent": "A05",
+      "day": "2026-11-14",
+      "shift": "P1600",
+      "language": "es"
+    },
+    {
+      "agent": "A06",
+      "day": "2026-11-14",
+      "shift": "P1600",
+      "language": "ja"
+    },
+    {
+      "agent": "A29",
+      "day": "2026-11-14",
+      "shift": "P1600",
+      "language": "ko"
+    },
+    {
+      "agent": "A11",
+      "day": "2026-11-14",
+      "shift": "P1800",
+      "language": "es"
+    },
+    {
+      "agent": "A01",
+      "day": "2026-11-14",
+      "shift": "S0800",
+      "language": "es"
+    },
+    {
+      "agent": "A02",
+      "day": "2026-11-14",
+      "shift": "S0800",
+      "language": "ja"
+    },
+    {
+      "agent": "A08",
+      "day": "2026-11-14",
+      "shift": "S0800",
+      "language": "zh"
+    },
+    {
+      "agent": "A18",
+      "day": "2026-11-14",
+      "shift": "S0800",
+      "language": "ko"
+    },
+    {
+      "agent": "A21",
+      "day": "2026-11-14",
+      "shift": "S0800",
+      "language": "ko"
+    },
+    {
+      "agent": "A27",
+      "day": "2026-11-14",
+      "shift": "S0800",
+      "language": "en"
+    },
+    {
+      "agent": "A22",
+      "day": "2026-11-14",
       "shift": "S1000",
+      "language": "en"
+    },
+    {
+      "agent": "A25",
+      "day": "2026-11-14",
+      "shift": "S1000",
+      "language": "ko"
+    },
+    {
+      "agent": "A12",
+      "day": "2026-11-14",
+      "shift": "S1400",
+      "language": "zh"
+    },
+    {
+      "agent": "A20",
+      "day": "2026-11-14",
+      "shift": "S1400",
+      "language": "en"
+    },
+    {
+      "agent": "A30",
+      "day": "2026-11-14",
+      "shift": "S1400",
+      "language": "ko"
+    },
+    {
+      "agent": "A05",
+      "day": "2026-11-15",
+      "shift": "P1600",
+      "language": "es"
+    },
+    {
+      "agent": "A06",
+      "day": "2026-11-15",
+      "shift": "P1600",
+      "language": "ja"
+    },
+    {
+      "agent": "A15",
+      "day": "2026-11-15",
+      "shift": "P1600",
+      "language": "zh"
+    },
+    {
+      "agent": "A29",
+      "day": "2026-11-15",
+      "shift": "P1600",
+      "language": "ko"
+    },
+    {
+      "agent": "A11",
+      "day": "2026-11-15",
+      "shift": "P1800",
+      "language": "es"
+    },
+    {
+      "agent": "A02",
+      "day": "2026-11-15",
+      "shift": "S0800",
+      "language": "ja"
+    },
+    {
+      "agent": "A08",
+      "day": "2026-11-15",
+      "shift": "S0800",
+      "language": "zh"
+    },
+    {
+      "agent": "A18",
+      "day": "2026-11-15",
+      "shift": "S0800",
+      "language": "ko"
+    },
+    {
+      "agent": "A21",
+      "day": "2026-11-15",
+      "shift": "S0800",
+      "language": "ko"
+    },
+    {
+      "agent": "A22",
+      "day": "2026-11-15",
+      "shift": "S0800",
+      "language": "es"
+    },
+    {
+      "agent": "A30",
+      "day": "2026-11-15",
+      "shift": "S0800",
       "language": "en"
     },
     {
       "agent": "A24",
-      "day": "2026-11-13",
-      "shift": "S1200",
-      "language": "en"
-    },
-    {
-      "agent": "A25",
-      "day": "2026-11-13",
-      "shift": "S1400",
-      "language": "ko"
-    },
-    {
-      "agent": "A28",
-      "day": "2026-11-13",
-      "shift": "S1400",
-      "language": "en"
-    },
-    {
-      "agent": "A30",
-      "day": "2026-11-13",
-      "shift": "S1400",
-      "language": "ko"
-    },
-    {
-      "agent": "A06",
-      "day": "2026-11-14",
-      "shift": "P1600",
-      "language": "ja"
-    },
-    {
-      "agent": "A10",
-      "day": "2026-11-14",
-      "shift": "P1600",
-      "language": "zh"
-    },
-    {
-      "agent": "A11",
-      "day": "2026-11-14",
-      "shift": "P1600",
-      "language": "es"
-    },
-    {
-      "agent": "A07",
-      "day": "2026-11-14",
-      "shift": "P1800",
-      "language": "ja"
-    },
-    {
-      "agent": "A23",
-      "day": "2026-11-14",
-      "shift": "P1800",
-      "language": "en"
-    },
-    {
-      "agent": "A02",
-      "day": "2026-11-14",
-      "shift": "S0800",
-      "language": "ja"
-    },
-    {
-      "agent": "A08",
-      "day": "2026-11-14",
-      "shift": "S0800",
-      "language": "zh"
-    },
-    {
-      "agent": "A18",
-      "day": "2026-11-14",
-      "shift": "S0800",
-      "language": "ko"
-    },
-    {
-      "agent": "A21",
-      "day": "2026-11-14",
-      "shift": "S0800",
-      "language": "ko"
-    },
-    {
-      "agent": "A22",
-      "day": "2026-11-14",
-      "shift": "S0800",
-      "language": "es"
-    },
-    {
-      "agent": "A20",
-      "day": "2026-11-14",
+      "day": "2026-11-15",
       "shift": "S1000",
-      "language": "en"
-    },
-    {
-      "agent": "A25",
-      "day": "2026-11-14",
-      "shift": "S1000",
-      "language": "ko"
-    },
-    {
-      "agent": "A30",
-      "day": "2026-11-14",
-      "shift": "S1000",
-      "language": "en"
-    },
-    {
-      "agent": "A03",
-      "day": "2026-11-14",
-      "shift": "S1400",
-      "language": "ko"
-    },
-    {
-      "agent": "A06",
-      "day": "2026-11-15",
-      "shift": "P1600",
-      "language": "ja"
-    },
-    {
-      "agent": "A11",
-      "day": "2026-11-15",
-      "shift": "P1600",
-      "language": "es"
-    },
-    {
-      "agent": "A02",
-      "day": "2026-11-15",
-      "shift": "S0800",
-      "language": "ja"
-    },
-    {
-      "agent": "A08",
-      "day": "2026-11-15",
-      "shift": "S0800",
-      "language": "zh"
-    },
-    {
-      "agent": "A18",
-      "day": "2026-11-15",
-      "shift": "S0800",
-      "language": "ko"
-    },
-    {
-      "agent": "A21",
-      "day": "2026-11-15",
-      "shift": "S0800",
-      "language": "ko"
-    },
-    {
-      "agent": "A22",
-      "day": "2026-11-15",
-      "shift": "S0800",
-      "language": "es"
-    },
-    {
-      "agent": "A30",
-      "day": "2026-11-15",
-      "shift": "S0800",
       "language": "en"
     },
     {
       "agent": "A20",
       "day": "2026-11-15",
-      "shift": "S1000",
+      "shift": "S1400",
       "language": "en"
     },
     {
-      "agent": "A04",
+      "agent": "A25",
       "day": "2026-11-15",
       "shift": "S1400",
       "language": "ko"
-    },
-    {
-      "agent": "A27",
-      "day": "2026-11-15",
-      "shift": "S1400",
-      "language": "en"
     }
   ]
 }

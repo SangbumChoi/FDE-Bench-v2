@@ -9,15 +9,22 @@
 - id: holiday_wednesday
   kind: missing
   domain: data semantics
-  text: Wednesday 11 November is a regional public holiday in the client's main market; the demand for that day is 60% of the forecast, rounded up, and the file was not updated.
+  tiers: [medium, hard]
+  text: Wednesday 11 November is a regional public holiday in the client's main market; the demand for that day is {{holiday_factor}} of the forecast, rounded up, and the file was not updated.
 - id: contract_limits
   kind: missing
   domain: business rule
-  text: Full-timers work only 8-hour shifts and at most 5 a week; part-timers work only 4-hour shifts and at most 3 a week.
+  text: Full-timers work only 8-hour shifts and at most {{ft_max_shifts}} a week; part-timers work only 4-hour shifts and at most 3 a week.
+- id: one_shift_a_day
+  kind: missing
+  domain: business rule
+  tiers: [easy]
+  text: An agent works at most one shift a day.
 - id: min_rest
   kind: missing
   domain: business rule
-  text: There must be at least 11 hours of rest between the end of one shift and the start of the next shift of the same agent.
+  tiers: [medium, hard]
+  text: There must be at least {{min_rest}} hours of rest between the end of one shift and the start of the next shift of the same agent.
 - id: leave_dates
   kind: ambiguous
   domain: data semantics
@@ -25,12 +32,24 @@
 - id: overtime
   kind: missing
   domain: scoring
-  text: A full-timer's normal week is 4 shifts; the 5th shift is overtime and costs 1.5 times the hourly rate.
+  tiers: [medium, hard]
+  text: A full-timer's contract week is {{ft_week_hours}} hours ({{ft_regular_shifts}} shifts); the {{ft_max_shifts}}th shift of the week is overtime and costs 1.5 times the hourly rate.
 - id: buddy_rule
   kind: missing
   domain: business rule
+  tiers: [medium, hard]
   text: A new hire must never be alone on a language; in every half-hour slot they work, at least one non-new agent is on the same language.
 - id: understaffing_penalty
   kind: missing
   domain: scoring
-  text: The roster is scored as 40 for every missing agent per half-hour slot and language, plus the labor cost of all shifts; lower is better.
+  text: The roster is scored as {{under_weight}} for every missing agent per half-hour slot and language (the client's estimate, in the units of the hourly rates, of what a missing agent costs) plus the labor cost of all shifts; lower is better.
+- id: sick_call
+  kind: missing
+  domain: data semantics
+  tiers: [hard]
+  text: The team lead's note is out of date; on Friday morning the client received the doctor's certificate of the agent it names, who is off sick up to and including {{sick_until}} and must not be rostered before then, whatever the note says.
+- id: easy_scope
+  kind: missing
+  domain: business rule
+  tiers: [easy]
+  text: This round the forecast is used as it is on every day, every shift is costed at its plain hourly rate, rest times are checked on the floor (only one shift a day matters), and new hires can be rostered like anyone else.

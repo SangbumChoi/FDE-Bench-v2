@@ -1,0 +1,20 @@
+{
+  "baseline_objective": 30061.0,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.73434017,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "assignments": 120,
+    "labor_cost": 18000.0,
+    "under_covered_agent_slots": 163
+  },
+  "objective": 22075.0,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

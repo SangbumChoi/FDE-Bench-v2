@@ -1,0 +1,15 @@
+{
+  "derived": {
+    "ft_max_shifts": 6,
+    "ft_regular_shifts": 5
+  },
+  "params": {
+    "ft_week_hours": 40,
+    "holiday_factor": 0.6,
+    "min_rest": 13,
+    "sick_until": "2026-11-12",
+    "under_weight": 25
+  },
+  "rule_seed": 2,
+  "tier": "hard"
+}
