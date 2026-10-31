@@ -8,18 +8,18 @@ deliverable_spec: |
 tiers:
   easy: >-
     El núcleo del reparto: el límite de bandejas por furgoneta de esta semana, el turno de los conductores (salida
-    desde las 05:00, vuelta antes del fin del turno), una sola visita por cafetería, la cafetería cerrada esta semana,
-    una velocidad constante de 25 km/h (este lunes no hay hora punta) y el coste de llegar tarde. Esta semana el socio
-    lleva sus refrigerados él mismo, así que cualquier furgoneta puede atender las cafeterías de marca asociada, y la
-    costumbre de atender primero las premium queda en suspenso.
+    desde las 05:00, vuelta como muy tarde al fin del turno), una sola visita por cafetería, la cafetería cerrada esta
+    semana, una velocidad constante de 25 km/h (este lunes no hay hora punta) y el coste de llegar tarde. Esta semana
+    el socio lleva sus refrigerados él mismo, así que cualquier furgoneta puede atender las cafeterías de marca
+    asociada, y la costumbre de atender primero las premium queda en suspenso.
   medium: >-
     Lo de easy más la cadena de frío del socio (las cafeterías de marca asociada, solo con la furgoneta refrigerada V4)
-    y, cuando la semilla de reglas la saca, la costumbre de atender primero las premium (en cada ruta, las premium antes
-    que las estándar).
+    y, cuando la semilla de reglas la sortea, la costumbre de atender primero las premium (en cada ruta, las premium
+    antes que las estándar).
   hard: >-
-    Lo de medium más la hora punta (30 km/h antes de una hora sorteada y 20 km/h desde ella, también en un tramo ya
-    empezado), un suceso con fecha (el lunes V2 está en el taller hasta las 06:40) y la presión de la encargada de una
-    cafetería premium que insiste en ser la primera parada de la mañana (no es una norma).
+    Lo de medium más la hora punta de la mañana (30 km/h antes de una hora sorteada y 20 km/h desde ella, también en un
+    tramo ya empezado), un evento con fecha (el lunes V2 está en el taller hasta las 06:40) y la presión de la
+    encargada de una cafetería premium que insiste en ser la primera parada de la mañana (no es una regla).
 rules:
   van_capacity: Esta semana una furgoneta lleva como máximo {{van_capacity}} bandejas (en sus estanterías caben 120).
   shift_window: Las furgonetas no salen antes de las 05:00 y están de vuelta en la cocina a las {{shift_end}} como muy tarde.

@@ -20,6 +20,12 @@ la cafetería como lo hacen los datos: South Hill café (C11), 남산점(C11), �
 (C11). C10 sigue abierta. La comprobación `name (ID)` del validador, que señalaba la discrepancia en los cinco
 idiomas, ya no da ningún aviso.
 
+**Semillas de reglas:** la cafetería cerrada es ahora un parámetro (C11, C03 o C14). La forma de nombrar cada
+candidato en cada idioma sale de `params.closed_cafe.labels` en case.yaml y es el nombre que los datos dan a ese
+código (en todos los mundos, el nombre de una cafetería va con su código), así que la corrección se mantiene sea cual
+sea la cafetería sorteada; la cafetería que presiona en el nivel hard, C07, también se nombra como en los datos. La
+comprobación `name (ID)` no da ningún aviso en ninguna configuración pública.
+
 ### F2 — Poco margen de mejora sobre la referencia (alta, confirmado)
 
 La búsqueda llega a 601.51 cumpliendo todas las reglas, un 3.8% por debajo de los 625.55 de la referencia. La calidad
@@ -31,6 +37,10 @@ revisión con salidas ajustadas (686.39) obtiene q = 0.82. Así, los planes inge
 **Estado:** abierto — propuesta: o reforzar la referencia (movimientos de intercambio y 2-opt, salidas al minuto:
 unos 601.5 en este mundo) o mantenerla y fijar `quality_cap: 1.1` en case.yaml, para que un plan al nivel del mejor
 conocido obtenga la puntuación completa. Ajustar más la instancia (F3, F4) separaría más los planes.
+
+**Semillas de reglas:** la referencia parte ahora también del plan de respaldo del nivel y añade 300 rondas de
+destrucción y reconstrucción (ruin and recreate) tras la reubicación. Las cifras de arriba corresponden al antiguo
+problema único; el margen de mejora con las nuevas reglas no se ha medido. Sigue abierto.
 
 ### F3 — Saltarse premium primero solo compensa por poco, y no donde la costumbre perjudica (alta, en parte)
 
@@ -50,6 +60,13 @@ salta y que la razón de negocio sea la que el agente debe dar. Mantener al día
 README (601.51 frente a 521.98). Si no, eliminar el conflicto (por ejemplo, un `deliver_by` más tardío para C05) o
 hacer contractual la costumbre, para que saltársela nunca deje una ganancia neta.
 
+**Semillas de reglas:** la costumbre es ahora un parámetro: medium y hard sortean si se aplica o no, y en easy no se
+aplica. Donde se aplica cuesta mucho más que antes, el 27.5% (hard/s5) y el 28.4% (medium/s5) del objetivo de la
+referencia con la semilla del caso, porque las ventanas de entrega son ahora más estrechas; flexibilizarla con una
+excepción aprobada compensa claramente donde la costumbre del negocio es flexible. `build_world` exige al menos un 1%
+en la combinación principal de hard para que el parámetro influya. Sigue abierto si flexibilizarla debe compensar
+tanto.
+
 ### F4 — La capacidad, el turno y la pregunta de una sola visita no deciden el mejor plan (media, en parte)
 
 En el mejor plan que cumple las reglas, las cargas son de 89/85/115/67 bandejas frente a 120, y la vuelta más tardía
@@ -64,6 +81,13 @@ el óptimo: un fin de turno a las 09:00, o una demanda cercana al 90% de la flot
 porque la ruta de V4 que cumple las reglas lleva 67 bandejas. O bien eliminar la pregunta `one_visit`, o bien permitir
 entregas divididas con bandejas por parada, para que ese hecho cambie el entregable.
 
+**Semillas de reglas:** resuelto en parte. El fin del turno (09:00, 09:30, 10:00) y el límite de bandejas de esta
+semana (100, 110, 120; un hecho oculto por debajo de los 120 visibles de `max_trays`, planteado como cajas nuevas más
+hondas) son parámetros, y `build_world` solo conserva los mundos en los que pueden cambiar la respuesta: la referencia
+de la combinación principal de hard tiene una furgoneta que vuelve después de las 09:00 y la de medium una que lleva
+más de 100 bandejas (semilla del caso: 09:03 y 103 bandejas), así que ambos influyen ahí. `van_capacity` tiene ahora
+una pregunta clave (`tray_limit`) siempre que está por debajo de 120. La pregunta `one_visit` no cambia (abierto).
+
 ### F5 — El coste del retraso solo aparecía como regla de puntuación (media, confirmado)
 
 El peso de 3× sobre los minutos de retraso solo figuraba en "Cómo se evalúa el plan". El prompt del cliente prohíbe
@@ -76,6 +100,9 @@ coste como un hecho del negocio, justo después de la línea de `deliver_by` (ve
 acepta, pero nos cuesta: cada minuto que una cafetería recibe el pedido después de su `entregar_antes` nos cuesta lo
 mismo que tres minutos de furgoneta (quejas y abonos a la cafetería)." La sección "Cómo se evalúa el plan" no cambia;
 reducirla a la voz del gerente queda en manos del responsable del caso.
+
+**Semillas de reglas:** el peso es el parámetro `late_cost` (2, 3 o 5), expresado del mismo modo en las notas sobre
+los datos, en la sección de evaluación y en la pregunta `lateness`.
 
 ### F6 — Algunas semillas de mundo hacían fallar el generador (media, confirmado)
 
@@ -90,6 +117,12 @@ cafeterías asociadas y con órdenes barajados. Las semillas de mundo 1–50 se 
 `validate-case --world-seeds 1,...,50` pasa: referencia, ejemplos de incumplimiento y la nueva línea base. Los papeles
 siguen fijados por índice; la nueva extracción resuelve el problema.
 
+**Semillas de reglas:** `build_world` exige ahora además un plan válido con la combinación más estricta de cada nivel
+(el plan de respaldo del nivel) y mundos en los que todos los parámetros puedan influir (véase "Semillas de reglas"
+más abajo). Pasa alrededor del 9% de las extracciones, con 0.8 s por mundo de media. La semilla del caso y las
+semillas de mundo 1–30 se construyen; `validate-case --world-seeds 1,...,20` pasa. Los datos de la semilla del caso
+cambiaron con ello.
+
 ### F7 — Entrega en horario de apertura, el escalón de velocidad y los nombres de barrio (media, en parte)
 
 Las furgonetas esperan a que abra la cafetería, y `deliver_by` cae entre 45 y 90 minutos después de la apertura,
@@ -103,6 +136,11 @@ juicios de realismo y no defectos: las reglas están enunciadas y se aplican por
 en el local desde") con `deliver_by` a la hora de apertura o antes, usar una velocidad que cambie a mitad de tramo (o
 que varíe gradualmente entre las 06:45 y las 07:15) y asignar los nombres de barrio a partir de las coordenadas. Cada
 uno de estos cambios modifica los datos y la referencia, así que corresponden al rediseño de F8 y no a un parche.
+
+**Semillas de reglas:** hecho en parte. En hard, la velocidad cambia ahora a las `rush_start` también en un tramo ya
+empezado (un tramo que empieza más tarde nunca tarda menos); easy y medium usan 25 km/h constantes. `deliver_by` cae
+ahora 30, 45 o 60 minutos después de la apertura (antes 45, 60 o 90), así que el retraso es un compromiso real. No se
+han hecho ni `opens` como ventana de recepción ni los nombres de barrio a partir de las coordenadas (abierto).
 
 ### F8 — Sin configuraciones y solo con hechos ocultos (media, confirmado)
 
@@ -121,6 +159,12 @@ reglas podrían variar qué cafetería está cerrada, el fin del turno, el peso 
 Una capacidad oculta de V4 contradiría el `max_trays` visible, así que debería plantearse como un hecho oculto ("el
 estante refrigerado de V4 está averiado esta semana").
 
+**Estado (semillas de reglas):** resuelto — convertido a 3 niveles y 6 parámetros sorteados por semillas de reglas,
+con V2 en el taller hasta las 06:40 como evento con fecha y la exigencia de la encargada de la Cafetería Lago Este
+(C07) como presión, ambos en hard; véase "Semillas de reglas" más abajo. El límite de bandejas se plantea como un
+hecho oculto para todas las furgonetas (cajas nuevas), no solo para V4. Las pruebas del fixture siguen en este caso,
+con los cambios mínimos.
+
 ### F9 — La redacción coreana del límite de las 07:00 y una etiqueta de columna (baja, confirmado)
 
 `07:00 이전` / `07:00 이후` incluyen ambas las 07:00 en el uso estándar del coreano, así que un tramo que empezaba
@@ -132,8 +176,59 @@ idiomas.
 시속 30km, 07:00부터 출발하는 구간은 시속 20km". La columna coreana pasa a llamarse `납품마감` en los datos (case.py)
 y en todos los textos coreanos que la nombran.
 
+**Semillas de reglas:** las frases de la velocidad se reescribieron para el nuevo modelo (easy y medium: 25 km/h
+constantes; hard: `{{rush_start}} 전까지는 시속 30km, {{rush_start}}부터는 시속 20km`), manteniendo un límite sin
+ambigüedad. `납품마감` no cambia.
+
 **Línea base:** el plan del propio coordinador de reparto (V4 se encarga de las cafeterías asociadas; el resto se
 reparte por acimut alrededor de la cocina y se carga en V1, V2, V3 y luego V4; premium primero y después por orden de
 apertura; todas las furgonetas salen a las 05:00): 963.09 frente a los 625.55 de la referencia con la semilla 20261025
 (×1.54). Con las semillas de mundo 1, 2 y 3: 1,292.28 frente a 568.06, 1,192.03 frente a 779.02 y 1,402.46 frente a
 560.91. En las semillas 1–50 es válida en todos los mundos, entre ×1.37 y ×4.16 de la referencia (mediana ×2.19).
+
+## Semillas de reglas
+
+El caso ha pasado de un único problema fijo al contrato de semillas de reglas (DESIGN.md, Settings): tres niveles en
+case.yaml y seis parámetros que una semilla de reglas sortea, cada uno por separado, entre los candidatos de cada
+nivel. Los datos y `request.md` son los mismos en todas las configuraciones; los requisitos, las preguntas clave, las
+reglas y la puntuación siguen los valores sorteados.
+
+- **Niveles.** Easy: el límite de bandejas de esta semana, el turno, una sola visita, la cafetería cerrada, 25 km/h
+  constantes y el coste del retraso; los requisitos dicen con las palabras del cliente que esta semana el socio lleva
+  sus refrigerados él mismo, que la costumbre de atender primero las premium queda en suspenso, que el lunes no hay
+  hora punta (no hay colegio) y que la revisión de frenos de V2 es el martes. Medium añade la cadena de frío y la
+  costumbre donde se sortea. Hard añade la hora punta (30 km/h antes de `rush_start` y 20 km/h desde esa hora, también
+  a mitad de tramo), V2 en el taller hasta las 06:40 (nueva regla `van_ready`) y la presión de la encargada de C07 (no
+  es una regla; pregunta clave `manager_pressure`).
+- **Parámetros.** `closed_cafe` (C11, C03, C14, nombrados en cada idioma mediante labels), `late_cost` (3, 2, 5),
+  `shift_end` (09:30, 09:00, 10:00), `van_capacity` (100, 110, 120 en easy y medium; 110 en hard, así que se compara
+  en medium), `rush_start` (none en easy y medium; 07:00, 06:30, 07:30 en hard) y `premium_first` (false en easy; true
+  o false en medium y hard). Sin valores derivados; toda combinación es admisible.
+- **Panel público.** Semillas de reglas 5, 13 y 58: aparecen todos los candidatos, y la semilla 5 sortea la
+  combinación principal de medium y de hard (el fin de turno más tardío, el límite de bandejas más alto y el primer
+  candidato del resto).
+- **Toda configuración tiene un plan válido.** `build_world` resuelve la combinación más estricta de cada nivel con
+  las 18 cafeterías abiertas y guarda el plan como plan de respaldo del nivel; sin la cafetería cerrada sigue siendo
+  válido con cualquier sorteo del nivel, semillas privadas incluidas. La referencia parte de él además de la
+  construcción voraz.
+- **Todos los parámetros influyen**, en cualquier mundo que `build_world` acepte: la cafetería cerrada y el inicio de
+  la hora punta, siempre; el fin del turno, el límite de bandejas, el peso del retraso y la costumbre, porque
+  `build_world` solo conserva los mundos en los que cambian la referencia de la combinación principal (una furgoneta
+  que vuelve después de las 09:00 en hard, una por encima de 100 bandejas en medium, un retraso de al menos el 1% del
+  objetivo y una costumbre que cuesta al menos un 1% en hard). El filtro de mundos está calibrado solo sobre los
+  candidatos.
+- **Cambio en los datos.** `deliver_by` cae 30, 45 o 60 minutos después de la apertura (antes 45, 60 o 90) y el mundo
+  aceptado con cada semilla cambió con el nuevo filtro, así que los datos de la semilla del caso y todas las cifras
+  difieren de los hallazgos de arriba.
+- **Línea base.** Sigue siendo el barrido del coordinador de reparto (V4 se encarga de las cafeterías asociadas cuando
+  se aplica la cadena de frío; todas las furgonetas salen a las 05:00, V2 a las 06:40 en hard), válida en todas las
+  configuraciones comprobadas (semilla del caso y semillas de mundo 1–30, semillas de reglas 5, 13, 58 y 101–105)
+  entre 1.17 y 9.76 veces la referencia.
+- **Pruebas.** `tests/test_validator.py` mantiene este caso como su fixture rápido: sus líneas base plantadas y la
+  sustitución del ejemplo reciben el argumento de configuración, y dos aserciones se ajustan a los mensajes por
+  configuración. `tests/test_end_to_end.py` y `tests/test_isolation.py` escriben la referencia mediante
+  `NativeCase.write_reference` y resuelven la semilla de reglas de la especificación antes de buscar una carpeta de
+  ejecución. `tests/test_rule_seeds.py` usaba este caso como "un caso sin configuraciones"; ahora escribe para ello un
+  case.yaml mínimo sin configuraciones.
+- **Abierto:** el margen de mejora sobre la nueva referencia (F2), si flexibilizar la costumbre debe compensar tanto
+  (F3), la pregunta `one_visit` (F4), las ventanas de recepción y los nombres de barrio (F7).
