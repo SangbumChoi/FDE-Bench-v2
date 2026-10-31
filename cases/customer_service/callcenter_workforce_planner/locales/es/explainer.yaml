@@ -21,7 +21,7 @@ tiers:
     la tarifa) y la costumbre de no dejar sola a una persona de nuevo ingreso en un idioma. La persona de la nota del
     responsable de equipo vuelve el lunes.
   hard: >-
-    Medium más una baja médica con fecha: la nota del jueves del responsable de equipo pide programar como siempre a la
+    Medium más un aviso de baja médica con fecha: la nota del jueves del responsable de equipo pide programar como siempre a la
     persona que nombra, pero el parte médico que el cliente recibió el viernes por la mañana la mantiene de baja los primeros
     días de la semana; programarla en uno de esos días incumple una regla.
 rules:
