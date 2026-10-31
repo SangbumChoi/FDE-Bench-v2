@@ -1,361 +1,361 @@
 ﻿採用ID,職種コード,入社日,入社時関連経験年数,スキル,入社時有効資格,最終学歴,卒業年,性別,年齢層,国籍,社員紹介,入社1年後評価点
-H001,R1,2021-01-02,3.4,Python;SQL;Kubernetes;AWS;Scrum,AWS Certified Solutions Architect - Associate,短大・専門,2014,女性,30歳未満,シンガポール,いいえ,50.1
-H002,R2,2021-01-05,5.6,Python;SQL;統計学;Excel;Power BI,Tableau Desktop Specialist,学士,2014,男性,30歳未満,シンガポール,いいえ,69.7
-H003,R2,2021-01-14,5.6,Python;SQL;統計学;Tableau;Power BI,,学士,2014,男性,30歳未満,シンガポール,いいえ,72.2
-H004,R3,2021-01-14,6.4,Go;Kubernetes;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,学士,2014,男性,30歳未満,中国,いいえ,74.1
-H005,R1,2021-01-14,5.5,Python;Go;SQL;Kubernetes;インシデント対応,,修士,2008,女性,40〜49歳,シンガポール,いいえ,45.2
-H006,R2,2021-01-19,6.3,Python;Java;SQL;統計学;Tableau,,学士,2008,男性,30〜39歳,シンガポール,いいえ,56.2
-H007,R2,2021-01-21,10.3,Python;SQL;AWS;統計学;Excel;Tableau;クラウドセキュリティ,,学士,2010,女性,30〜39歳,シンガポール,はい,61.2
-H008,R3,2021-01-24,2.3,統計学;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,修士,2016,男性,30歳未満,マレーシア,いいえ,53.3
-H009,R3,2021-01-28,2.1,Java;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CompTIA Security+,短大・専門,2012,女性,30〜39歳,マレーシア,いいえ,29.0
-H010,R1,2021-02-02,5.0,Python;SQL;Tableau;ネットワークセキュリティ;SIEM,AWS Certified Solutions Architect - Associate,学士,2015,女性,30歳未満,マレーシア,いいえ,30.7
-H011,R2,2021-02-03,4.6,Python;SQL;統計学;Excel;Tableau;A/Bテスト,,学士,2013,女性,30〜39歳,ベトナム,はい,57.6
-H012,R1,2021-02-04,5.9,Python;SQL;AWS;統計学,,学士,2014,男性,30〜39歳,フィリピン,いいえ,50.7
-H013,R1,2021-02-07,3.0,Python;SQL;Kubernetes;Docker;A/Bテスト;R,AWS Certified Solutions Architect - Associate,学士,2017,男性,30歳未満,シンガポール,いいえ,64.3
-H014,R2,2021-02-13,3.1,Python;SQL;AWS;統計学;Tableau;Power BI,,学士,2015,男性,30歳未満,マレーシア,いいえ,50.5
-H015,R2,2021-02-15,14.1,SQL;Kubernetes;統計学;Power BI,,学士,2004,男性,30〜39歳,マレーシア,いいえ,45.2
-H016,R3,2021-02-19,5.3,ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2013,男性,30歳未満,中国,いいえ,62.0
-H017,R3,2021-02-19,6.9,Python;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,学士,2011,男性,30〜39歳,シンガポール,いいえ,67.6
-H018,R3,2021-02-20,3.1,Python;統計学;ネットワークセキュリティ;SIEM;Linux,CISSP,学士,2011,男性,30〜39歳,中国,いいえ,45.4
-H019,R1,2021-03-05,5.7,Python;Go;SQL;Docker;AWS;統計学;Linux,,修士,2011,女性,30〜39歳,シンガポール,いいえ,53.3
-H020,R3,2021-03-07,3.1,ネットワークセキュリティ;SIEM;インシデント対応,CISSP,修士,2015,男性,30〜39歳,シンガポール,いいえ,66.8
-H021,R3,2021-03-09,3.4,Python;統計学;Power BI;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,短大・専門,2016,女性,30歳未満,フィリピン,いいえ,50.4
-H022,R3,2021-03-10,4.7,Python;ネットワークセキュリティ;SIEM;インシデント対応,CISSP,修士,2012,男性,30〜39歳,マレーシア,いいえ,57.8
-H023,R1,2021-03-11,5.4,Python;Java;SQL;Kubernetes,,学士,2013,女性,30歳未満,中国,いいえ,50.9
-H024,R3,2021-03-22,3.9,Python;Java;Kubernetes;統計学;ネットワークセキュリティ;SIEM,CISSP,短大・専門,2016,男性,30歳未満,シンガポール,いいえ,57.4
-H025,R3,2021-04-01,2.3,Java;ネットワークセキュリティ;SIEM,CISSP,修士,2016,女性,30歳未満,シンガポール,いいえ,44.1
-H026,R3,2021-04-14,3.2,Python;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CISSP,修士,2017,男性,30〜39歳,シンガポール,いいえ,72.4
-H027,R3,2021-04-16,9.0,Python;Docker;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CISSP,学士,2010,男性,30〜39歳,シンガポール,いいえ,74.7
-H028,R1,2021-04-24,4.2,Python;SQL;Tableau,,学士,2013,男性,30〜39歳,インド,いいえ,44.8
-H029,R1,2021-05-01,5.5,Python;Go;SQL;AWS;Linux;Scrum,AWS Certified Solutions Architect - Associate,学士,2014,女性,30〜39歳,シンガポール,いいえ,55.2
-H030,R1,2021-05-03,5.1,Python;Go;SQL;Tableau;A/Bテスト,,学士,2011,女性,30〜39歳,マレーシア,いいえ,38.6
-H031,R3,2021-05-07,3.5,Python;ネットワークセキュリティ;SIEM,CompTIA Security+,修士,2015,女性,30〜39歳,マレーシア,いいえ,21.9
-H032,R1,2021-05-08,12.8,Python;SQL;AWS,AWS Certified Solutions Architect - Associate,短大・専門,2002,男性,30〜39歳,シンガポール,いいえ,64.8
-H033,R1,2021-05-18,14.7,Python;Go;SQL;Kubernetes,,修士,2002,男性,40〜49歳,マレーシア,いいえ,54.7
-H034,R1,2021-05-23,3.0,Python;Java;SQL;Excel,AWS Certified Solutions Architect - Associate,学士,2017,男性,30歳未満,シンガポール,いいえ,47.8
-H035,R3,2021-05-27,3.3,Java;Docker;統計学;Excel;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,学士,2015,その他・無回答,30歳未満,中国,いいえ,46.6
-H036,R1,2021-05-27,6.7,Python;SQL;統計学,AWS Certified Solutions Architect - Associate,短大・専門,2014,女性,30歳未満,マレーシア,いいえ,37.5
-H037,R2,2021-06-03,7.7,SQL;Kubernetes;統計学;Tableau;SIEM,Tableau Desktop Specialist,修士,2007,男性,30〜39歳,シンガポール,はい,61.9
-H038,R1,2021-06-04,12.1,Python;Go;SQL;AWS;R;ネットワークセキュリティ,,学士,2007,女性,30〜39歳,インド,いいえ,54.1
-H039,R1,2021-06-05,3.6,Python;Go;SQL,,学士,2016,男性,30歳未満,シンガポール,いいえ,51.5
-H040,R2,2021-06-06,4.7,SQL;統計学;Excel;A/Bテスト;クラウドセキュリティ,Tableau Desktop Specialist,学士,2010,男性,30〜39歳,中国,いいえ,63.3
-H041,R1,2021-06-07,4.5,Python;SQL;Docker;Linux,,学士,2015,男性,30〜39歳,シンガポール,いいえ,51.2
-H042,R3,2021-06-07,3.2,Python;Docker;ネットワークセキュリティ;SIEM;Linux;Scrum,CompTIA Security+,短大・専門,2017,男性,30〜39歳,シンガポール,いいえ,60.6
-H043,R2,2021-06-09,5.6,SQL;統計学;Tableau;Power BI;A/Bテスト,,学士,2012,女性,30〜39歳,インドネシア,はい,49.3
-H044,R1,2021-06-17,7.9,Python;Go;SQL;AWS;Tableau;ネットワークセキュリティ,,学士,2009,男性,30〜39歳,フィリピン,いいえ,58.3
-H045,R2,2021-06-22,4.5,SQL;統計学;Excel;Tableau;A/Bテスト;インシデント対応,,学士,2009,男性,40〜49歳,シンガポール,いいえ,60.1
-H046,R2,2021-06-23,6.1,Go;SQL;統計学;Power BI;クラウドセキュリティ,Tableau Desktop Specialist,修士,2014,女性,30〜39歳,中国,いいえ,47.4
-H047,R3,2021-06-23,2.7,Python;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,学士,2017,男性,30歳未満,フィリピン,いいえ,60.4
-H048,R3,2021-07-04,3.1,SQL;R;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,学士,2011,女性,30〜39歳,シンガポール,いいえ,50.7
-H049,R2,2021-07-14,2.2,Python;SQL;統計学;Power BI,,修士,2017,男性,30〜39歳,マレーシア,いいえ,44.6
-H050,R3,2021-07-15,8.5,ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2012,男性,30〜39歳,シンガポール,いいえ,67.8
-H051,R1,2021-07-28,3.2,Python;Go;SQL;Kubernetes;Excel,AWS Certified Solutions Architect - Associate,学士,2014,男性,30〜39歳,マレーシア,いいえ,66.0
-H052,R3,2021-08-10,7.8,Python;ネットワークセキュリティ;SIEM;Scrum,CompTIA Security+,短大・専門,2006,女性,30〜39歳,マレーシア,いいえ,38.9
-H053,R3,2021-08-25,3.4,Python;Go;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,学士,2015,女性,30歳未満,シンガポール,いいえ,59.0
-H054,R1,2021-09-06,9.9,Python;Go;SQL;Linux,,修士,2011,女性,30〜39歳,マレーシア,いいえ,38.8
-H055,R1,2021-09-08,5.1,Python;Go;SQL;Docker;Scrum,,学士,2014,男性,30〜39歳,シンガポール,いいえ,56.7
-H056,R2,2021-09-08,4.2,Python;Java;Go;SQL;統計学;Power BI;A/Bテスト;ネットワークセキュリティ,,博士,2013,女性,40〜49歳,インド,いいえ,42.4
-H057,R3,2021-09-18,5.5,ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,修士,2012,男性,30〜39歳,マレーシア,いいえ,64.2
-H058,R1,2021-09-21,5.9,Python;SQL,,学士,2011,その他・無回答,30〜39歳,シンガポール,いいえ,52.9
-H059,R1,2021-10-03,3.8,Python;Go;SQL;Docker;A/Bテスト,,学士,2016,女性,30〜39歳,シンガポール,いいえ,32.2
-H060,R1,2021-10-07,9.3,Python;Java;SQL;Kubernetes;Power BI;ネットワークセキュリティ,,学士,2008,男性,30〜39歳,シンガポール,いいえ,75.5
-H061,R1,2021-10-15,7.7,Python;Go;SQL;Docker;AWS;ネットワークセキュリティ,,修士,2011,男性,30〜39歳,シンガポール,いいえ,64.0
-H062,R3,2021-10-19,7.4,ネットワークセキュリティ;SIEM,CompTIA Security+,短大・専門,2012,男性,30〜39歳,インド,いいえ,49.8
-H063,R1,2021-10-21,4.3,Python;SQL;AWS,AWS Certified Solutions Architect - Associate,修士,2015,男性,30〜39歳,シンガポール,いいえ,56.3
-H064,R2,2021-11-16,5.8,SQL;統計学;Power BI;A/Bテスト;クラウドセキュリティ,Tableau Desktop Specialist,短大・専門,2015,男性,30歳未満,シンガポール,いいえ,73.2
-H065,R2,2021-11-20,3.8,Python;SQL;Kubernetes;AWS;統計学;A/Bテスト;SIEM;Scrum,,修士,2016,男性,30〜39歳,シンガポール,いいえ,67.5
-H066,R1,2021-11-27,4.3,Python;SQL;Docker;AWS,AWS Certified Solutions Architect - Associate,学士,2013,男性,30歳未満,シンガポール,いいえ,62.0
-H067,R3,2021-12-04,7.3,Go;Excel;ネットワークセキュリティ;SIEM;Linux,CISSP,学士,2007,その他・無回答,30〜39歳,シンガポール,いいえ,60.4
-H068,R1,2021-12-05,6.5,Python;SQL;Kubernetes;A/Bテスト;Linux;Scrum,AWS Certified Solutions Architect - Associate,学士,2011,男性,30〜39歳,シンガポール,いいえ,67.4
-H069,R2,2021-12-05,4.0,SQL;統計学;A/Bテスト,,修士,2016,女性,30歳未満,マレーシア,いいえ,45.0
-H070,R1,2021-12-15,5.5,Python;Java;Go;SQL;インシデント対応,AWS Certified Solutions Architect - Associate,学士,2012,女性,30〜39歳,マレーシア,いいえ,44.8
-H071,R1,2021-12-20,7.4,Python;SQL;Kubernetes;Docker;Tableau;クラウドセキュリティ,AWS Certified Solutions Architect - Associate,学士,2011,女性,30〜39歳,シンガポール,いいえ,46.9
-H072,R1,2021-12-28,4.9,Python;SQL;Tableau,,修士,2013,男性,30〜39歳,マレーシア,いいえ,46.9
-H073,R3,2022-01-03,5.0,Kubernetes;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CISSP,修士,2015,女性,30〜39歳,中国,はい,59.2
-H074,R3,2022-01-05,3.2,ネットワークセキュリティ;SIEM,CISSP,修士,2017,女性,30〜39歳,シンガポール,いいえ,45.5
-H075,R2,2022-01-08,14.5,Python;Go;SQL;統計学;Excel;Tableau;Power BI;A/Bテスト,,学士,2004,男性,30〜39歳,中国,いいえ,66.1
-H076,R3,2022-01-08,2.5,Python;Excel;ネットワークセキュリティ;SIEM,CISSP,修士,2017,男性,30〜39歳,マレーシア,いいえ,41.1
-H077,R1,2022-01-09,7.7,Python;Go;SQL;Docker;AWS,AWS Certified Solutions Architect - Associate,学士,2012,男性,30〜39歳,フィリピン,いいえ,72.6
-H078,R2,2022-01-13,6.6,Python;SQL;統計学;Tableau;Power BI;A/Bテスト,Tableau Desktop Specialist,学士,2014,男性,30〜39歳,シンガポール,いいえ,69.9
-H079,R1,2022-01-13,7.9,Python;SQL;AWS;R,AWS Certified Solutions Architect - Associate,学士,2013,男性,30〜39歳,シンガポール,いいえ,67.1
-H080,R3,2022-01-23,7.1,Python;Java;AWS;統計学;Excel;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CISSP,学士,2008,男性,30〜39歳,インド,いいえ,63.0
-H081,R3,2022-01-27,2.8,Python;SQL;Tableau;Power BI;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,修士,2017,男性,30歳未満,インド,いいえ,58.1
-H082,R2,2022-01-28,10.6,SQL;統計学;Tableau;Power BI;A/Bテスト,Tableau Desktop Specialist,短大・専門,2004,女性,40〜49歳,シンガポール,いいえ,54.5
-H083,R2,2022-02-10,4.3,Python;SQL;統計学;A/Bテスト;インシデント対応,,修士,2015,女性,30〜39歳,マレーシア,いいえ,51.3
-H084,R3,2022-02-17,9.7,Python;Tableau;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CompTIA Security+,学士,2011,女性,30〜39歳,シンガポール,いいえ,57.3
-H085,R2,2022-02-22,2.4,Python;SQL;Kubernetes;統計学;Tableau;A/Bテスト,,学士,2018,男性,30〜39歳,マレーシア,いいえ,52.7
-H086,R3,2022-03-05,4.4,Python;Go;SQL;AWS;統計学;ネットワークセキュリティ;SIEM,CompTIA Security+,学士,2015,男性,30歳未満,インド,いいえ,39.2
-H087,R1,2022-03-14,3.8,Python;Go;SQL,,学士,2018,女性,30歳未満,中国,いいえ,33.9
-H088,R2,2022-03-16,11.8,Python;SQL;統計学;Excel;Tableau;Power BI,Tableau Desktop Specialist,学士,2006,男性,30〜39歳,シンガポール,いいえ,70.3
-H089,R3,2022-03-22,3.7,R;ネットワークセキュリティ;SIEM;インシデント対応,CISSP,修士,2016,男性,30〜39歳,シンガポール,いいえ,67.2
-H090,R1,2022-03-23,6.7,Python;Go;SQL;Kubernetes;Docker;AWS;SIEM;Scrum,,修士,2012,女性,30〜39歳,中国,いいえ,59.8
-H091,R1,2022-03-25,5.8,Python;Go;SQL;Kubernetes;AWS;Excel;A/Bテスト,,学士,2014,男性,30歳未満,フィリピン,いいえ,66.9
-H092,R2,2022-03-28,3.7,Go;SQL;統計学;Excel,,学士,2011,男性,30〜39歳,シンガポール,いいえ,49.3
-H093,R2,2022-04-03,3.3,Python;SQL;Kubernetes;統計学;Tableau;A/Bテスト;ネットワークセキュリティ,Tableau Desktop Specialist,修士,2017,男性,30〜39歳,マレーシア,いいえ,62.1
-H094,R2,2022-04-08,15.5,Python;SQL;Kubernetes;統計学;Excel;Tableau;Power BI;SIEM,,学士,2002,男性,40〜49歳,フィリピン,いいえ,47.4
-H095,R3,2022-04-13,5.4,Python;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,短大・専門,2015,男性,30歳未満,シンガポール,いいえ,75.5
-H096,R2,2022-04-20,3.5,SQL;統計学;Excel;Tableau;Power BI,,学士,2012,男性,30〜39歳,シンガポール,いいえ,52.6
-H097,R2,2022-04-24,5.4,Java;SQL;統計学;Tableau;A/Bテスト;R,Tableau Desktop Specialist,修士,2014,男性,30〜39歳,マレーシア,いいえ,67.7
-H098,R2,2022-04-25,5.3,Python;Java;SQL;AWS;統計学,,学士,2016,男性,30〜39歳,シンガポール,いいえ,62.8
-H099,R3,2022-05-04,2.1,Python;統計学;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CISSP,学士,2017,男性,30歳未満,インド,いいえ,56.0
-H100,R2,2022-05-05,3.4,Python;SQL;統計学;A/Bテスト,,学士,2017,女性,30〜39歳,マレーシア,いいえ,43.3
-H101,R2,2022-05-12,2.3,Python;Java;SQL;統計学;Excel;Tableau;A/Bテスト;ネットワークセキュリティ;SIEM;Linux,,学士,2017,男性,30〜39歳,インド,はい,55.8
-H102,R1,2022-05-15,5.1,Python;Go;SQL;Kubernetes;統計学;Scrum,,修士,2013,女性,30〜39歳,シンガポール,いいえ,53.8
-H103,R1,2022-05-19,3.3,Python;Go;SQL;Excel,,博士,2016,男性,30〜39歳,中国,いいえ,46.2
-H104,R3,2022-05-20,10.9,Python;ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2010,女性,30〜39歳,シンガポール,いいえ,60.0
-H105,R2,2022-05-23,12.2,Python;SQL;統計学;A/Bテスト;SIEM,Tableau Desktop Specialist,学士,2007,男性,40〜49歳,シンガポール,いいえ,58.0
-H106,R1,2022-05-26,3.0,Python;Java;Go;SQL;Kubernetes,,学士,2012,女性,30〜39歳,インド,いいえ,35.9
-H107,R2,2022-06-10,16.0,Go;SQL;統計学;Excel;Power BI,,修士,2002,女性,40〜49歳,シンガポール,いいえ,38.3
-H108,R3,2022-06-26,2.2,AWS;ネットワークセキュリティ;SIEM;インシデント対応,CISSP,修士,2017,女性,30〜39歳,ベトナム,いいえ,51.0
-H109,R3,2022-06-28,14.6,Python;R;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Scrum,CompTIA Security+,修士,2006,女性,30〜39歳,中国,いいえ,49.8
-H110,R3,2022-07-03,2.7,Python;統計学;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,短大・専門,2015,男性,30歳未満,シンガポール,いいえ,57.8
-H111,R1,2022-07-25,3.3,Python;Go;SQL;Kubernetes;Docker;SIEM,,学士,2017,女性,30歳未満,マレーシア,いいえ,46.8
-H112,R2,2022-08-05,10.1,Python;SQL;Docker;AWS;統計学;Power BI;A/Bテスト,Tableau Desktop Specialist,修士,2010,男性,40〜49歳,シンガポール,いいえ,69.6
-H113,R3,2022-08-06,4.5,Python;Go;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CISSP,学士,2013,女性,30〜39歳,シンガポール,はい,62.9
-H114,R1,2022-08-10,3.2,Python;Go;SQL;Kubernetes;AWS;R;インシデント対応,AWS Certified Solutions Architect - Associate,学士,2015,女性,30歳未満,インド,いいえ,52.4
-H115,R2,2022-08-12,7.6,Python;SQL;統計学;Excel,Tableau Desktop Specialist,博士,2014,男性,30〜39歳,フィリピン,いいえ,67.8
-H116,R3,2022-08-13,3.0,Python;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,修士,2017,男性,30〜39歳,シンガポール,いいえ,54.4
-H117,R2,2022-08-14,2.1,SQL;統計学;Power BI,Tableau Desktop Specialist,短大・専門,2019,男性,30歳未満,マレーシア,いいえ,47.1
-H118,R3,2022-08-21,11.4,Python;Java;Excel;ネットワークセキュリティ;SIEM;Linux,CompTIA Security+,学士,2003,その他・無回答,40〜49歳,インド,いいえ,36.2
-H119,R3,2022-08-24,3.0,ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,学士,2012,男性,30〜39歳,シンガポール,いいえ,61.9
-H120,R3,2022-08-26,8.3,Python;ネットワークセキュリティ;SIEM;Linux,CompTIA Security+,学士,2010,女性,30〜39歳,フィリピン,いいえ,41.4
-H121,R3,2022-08-28,11.4,SQL;AWS;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2009,男性,30〜39歳,中国,いいえ,54.9
-H122,R1,2022-09-04,3.3,Python;SQL;Docker;AWS,,学士,2018,女性,30歳未満,シンガポール,いいえ,46.9
-H123,R3,2022-09-07,2.3,ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,修士,2018,その他・無回答,30歳未満,シンガポール,いいえ,55.0
-H124,R3,2022-09-10,2.8,Python;R;ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,短大・専門,2016,男性,30歳未満,シンガポール,いいえ,60.1
-H125,R1,2022-09-14,3.5,Python;Java;SQL;Kubernetes;Docker;AWS;R,,学士,2016,男性,30〜39歳,シンガポール,いいえ,66.0
-H126,R3,2022-09-17,14.1,SQL;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2001,男性,40〜49歳,シンガポール,はい,51.6
-H127,R1,2022-09-18,5.0,Python;SQL;Kubernetes;Docker;AWS,AWS Certified Solutions Architect - Associate,短大・専門,2010,女性,30〜39歳,インド,いいえ,54.5
-H128,R2,2022-09-24,2.2,Python;Java;SQL;統計学;Excel;Tableau;A/Bテスト;ネットワークセキュリティ,,学士,2019,男性,30歳未満,フィリピン,いいえ,51.1
-H129,R2,2022-09-25,5.1,Python;SQL;統計学;A/Bテスト,,学士,2014,男性,30〜39歳,シンガポール,いいえ,79.9
-H130,R3,2022-10-07,2.5,Java;Kubernetes;A/Bテスト;ネットワークセキュリティ;SIEM;インシデント対応,CISSP,学士,2019,男性,30歳未満,インドネシア,いいえ,46.4
-H131,R2,2022-10-10,2.0,Python;SQL;統計学;Power BI,,学士,2013,男性,30〜39歳,シンガポール,いいえ,60.6
-H132,R1,2022-10-12,6.2,Python;Go;SQL;Kubernetes;Docker;AWS,,博士,2013,男性,30〜39歳,フィリピン,いいえ,65.8
-H133,R1,2022-10-15,3.2,Python;Go;SQL;Kubernetes,AWS Certified Solutions Architect - Associate,博士,2018,男性,30〜39歳,シンガポール,いいえ,65.7
-H134,R1,2022-11-03,9.1,Python;Java;Go;SQL;Docker;AWS,,修士,2012,女性,40〜49歳,インド,いいえ,34.1
-H135,R3,2022-11-16,3.2,Python;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CISSP,学士,2018,男性,30歳未満,フィリピン,いいえ,59.6
-H136,R2,2022-11-19,2.9,Go;SQL;統計学;Tableau;A/Bテスト,Tableau Desktop Specialist,学士,2012,その他・無回答,30〜39歳,シンガポール,いいえ,63.4
-H137,R1,2022-11-20,5.1,Python;Go;SQL;Kubernetes;SIEM,,学士,2016,男性,30歳未満,シンガポール,いいえ,64.8
-H138,R2,2022-11-20,2.9,Python;SQL;統計学;A/Bテスト;Scrum,,短大・専門,2012,男性,30歳未満,インドネシア,いいえ,58.0
-H139,R3,2022-12-03,15.8,Python;R;ネットワークセキュリティ;SIEM;インシデント対応,CISSP,修士,2002,男性,40〜49歳,中国,いいえ,58.8
-H140,R1,2022-12-13,14.9,Python;Go;SQL;Kubernetes;Docker,,修士,2006,男性,40〜49歳,シンガポール,いいえ,60.4
-H141,R3,2022-12-23,3.6,ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,短大・専門,2014,男性,30〜39歳,フィリピン,いいえ,48.8
-H142,R3,2023-01-03,2.1,SQL;AWS;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CISSP,学士,2017,女性,30歳未満,シンガポール,いいえ,58.3
-H143,R3,2023-01-03,3.4,統計学;R;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2019,男性,30〜39歳,マレーシア,いいえ,46.3
-H144,R3,2023-01-07,3.3,Python;Power BI;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CISSP,修士,2012,男性,40〜49歳,シンガポール,いいえ,57.9
-H145,R3,2023-01-09,15.3,Python;ネットワークセキュリティ;SIEM;Linux,CompTIA Security+,修士,2006,女性,40〜49歳,中国,いいえ,36.5
-H146,R1,2023-01-10,5.6,Python;Go;SQL;Kubernetes;Docker;AWS;統計学;Excel;A/Bテスト,AWS Certified Solutions Architect - Associate,短大・専門,2015,男性,30歳未満,中国,いいえ,67.7
-H147,R3,2023-01-13,4.8,Python;Java;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,短大・専門,2016,女性,30歳未満,中国,いいえ,52.2
-H148,R3,2023-01-14,4.9,ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,修士,2017,女性,30歳未満,シンガポール,いいえ,51.7
-H149,R2,2023-01-25,2.0,SQL;Docker;統計学;Power BI;A/Bテスト,,学士,2014,女性,30〜39歳,シンガポール,いいえ,46.4
-H150,R1,2023-02-03,8.2,Python;Go;SQL;Kubernetes,,博士,2008,男性,40〜49歳,フィリピン,いいえ,63.3
-H151,R1,2023-02-05,5.6,Python;SQL;AWS;Tableau;ネットワークセキュリティ,,博士,2016,男性,30〜39歳,マレーシア,いいえ,56.4
-H152,R1,2023-02-07,4.2,Python;SQL;Kubernetes;AWS,,学士,2017,女性,30〜39歳,フィリピン,いいえ,41.6
-H153,R1,2023-02-09,5.9,Python;SQL;統計学,,修士,2010,女性,30〜39歳,シンガポール,いいえ,45.7
-H154,R3,2023-02-09,3.8,Python;SQL;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2012,女性,30〜39歳,ベトナム,はい,35.4
-H155,R2,2023-02-11,3.9,Python;SQL;統計学;Tableau;A/Bテスト,,修士,2016,男性,30〜39歳,フィリピン,いいえ,66.4
-H156,R2,2023-02-20,3.1,Python;SQL;統計学;Power BI;A/Bテスト,,学士,2019,女性,30歳未満,シンガポール,いいえ,55.5
-H157,R1,2023-02-27,15.8,Python;SQL;Docker;AWS;Scrum,,学士,2004,女性,40〜49歳,中国,いいえ,33.0
-H158,R1,2023-02-28,8.8,Python;SQL;AWS;R;Linux,AWS Certified Solutions Architect - Associate,学士,2013,男性,30〜39歳,マレーシア,はい,62.5
-H159,R3,2023-03-07,9.0,Python;SQL;Excel;R;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CISSP,修士,2013,男性,30〜39歳,マレーシア,いいえ,78.0
-H160,R3,2023-03-07,2.2,SQL;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,学士,2018,男性,30〜39歳,インド,いいえ,53.6
-H161,R3,2023-03-10,2.9,Python;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,学士,2018,男性,30〜39歳,フィリピン,はい,63.2
-H162,R3,2023-03-13,3.9,ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,修士,2018,男性,30歳未満,シンガポール,いいえ,73.9
-H163,R2,2023-03-17,2.3,Java;Go;SQL;統計学;Excel;Tableau;A/Bテスト;ネットワークセキュリティ,Tableau Desktop Specialist,修士,2017,男性,30〜39歳,シンガポール,いいえ,58.7
-H164,R2,2023-03-26,3.9,SQL;統計学;Excel;Tableau;A/Bテスト;ネットワークセキュリティ,,学士,2016,女性,30歳未満,シンガポール,いいえ,55.9
-H165,R2,2023-04-06,3.4,SQL;統計学,,修士,2017,女性,30歳未満,中国,いいえ,44.3
-H166,R2,2023-04-20,3.9,SQL;AWS;統計学;Tableau,Tableau Desktop Specialist,修士,2012,男性,30〜39歳,シンガポール,いいえ,64.2
-H167,R1,2023-04-27,3.4,Python;SQL,,修士,2019,男性,30歳未満,シンガポール,いいえ,48.0
-H168,R2,2023-04-27,6.4,SQL;統計学;Excel;Tableau;Power BI;SIEM;Scrum,Tableau Desktop Specialist,短大・専門,2012,男性,30〜39歳,マレーシア,はい,51.6
-H169,R2,2023-05-06,6.8,Python;SQL;Kubernetes;統計学;Excel;Tableau;A/Bテスト;Linux,Tableau Desktop Specialist,修士,2012,女性,30〜39歳,シンガポール,いいえ,57.1
-H170,R3,2023-05-08,4.3,Python;Kubernetes;AWS;統計学;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,学士,2012,男性,30〜39歳,中国,いいえ,56.1
-H171,R3,2023-05-15,3.9,ネットワークセキュリティ;SIEM,CISSP,学士,2016,女性,30歳未満,中国,いいえ,35.0
-H172,R2,2023-05-15,2.3,SQL;統計学;Excel;Tableau;Power BI,,学士,2019,その他・無回答,30歳未満,シンガポール,いいえ,42.0
-H173,R2,2023-05-20,15.0,Python;Java;Go;SQL;統計学;A/Bテスト;Scrum,Tableau Desktop Specialist,学士,2006,女性,40〜49歳,インド,はい,40.0
-H174,R2,2023-06-01,4.3,Python;SQL;AWS;統計学;Excel;Power BI;A/Bテスト;Scrum,,学士,2018,女性,30歳未満,シンガポール,いいえ,56.3
-H175,R1,2023-06-02,6.4,Python;Java;SQL;Kubernetes,AWS Certified Solutions Architect - Associate,学士,2014,男性,30〜39歳,インドネシア,いいえ,60.0
-H176,R3,2023-06-02,2.3,Kubernetes;Excel;ネットワークセキュリティ;SIEM;Linux,CompTIA Security+,学士,2019,女性,30歳未満,シンガポール,いいえ,42.1
-H177,R2,2023-06-05,4.4,Python;SQL;統計学;Linux,,学士,2012,女性,30〜39歳,シンガポール,いいえ,42.5
-H178,R2,2023-06-05,2.0,Python;SQL;統計学;Tableau,,学士,2018,女性,30〜39歳,フィリピン,いいえ,28.1
-H179,R3,2023-06-15,2.6,Go;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,修士,2014,女性,30〜39歳,シンガポール,いいえ,48.9
-H180,R3,2023-06-17,11.2,Python;Java;ネットワークセキュリティ;SIEM;Linux,CompTIA Security+,修士,2010,男性,30〜39歳,マレーシア,いいえ,56.0
-H181,R2,2023-06-20,8.3,SQL;統計学,,学士,2008,その他・無回答,30〜39歳,シンガポール,いいえ,47.0
-H182,R3,2023-06-28,3.7,Go;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Scrum,CompTIA Security+,学士,2017,男性,30歳未満,インド,いいえ,50.2
-H183,R2,2023-07-01,3.8,SQL;統計学;Excel;Tableau,,修士,2017,男性,30歳未満,シンガポール,いいえ,63.6
-H184,R2,2023-07-07,3.6,SQL;統計学;Excel;Tableau;Power BI,,学士,2017,男性,30歳未満,シンガポール,いいえ,58.0
-H185,R2,2023-07-28,4.6,SQL;統計学;Excel;Tableau;Power BI;A/Bテスト,,学士,2014,女性,30〜39歳,中国,いいえ,51.8
-H186,R1,2023-07-28,8.1,Python;SQL;Kubernetes;Docker;AWS;Tableau;Power BI;Scrum,AWS Certified Solutions Architect - Associate,学士,2008,女性,40〜49歳,シンガポール,いいえ,59.9
-H187,R1,2023-08-07,10.6,Python;SQL;Docker;AWS;インシデント対応,,修士,2011,女性,30〜39歳,フィリピン,いいえ,35.9
-H188,R3,2023-08-10,4.9,Python;A/Bテスト;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,学士,2016,男性,30歳未満,シンガポール,はい,72.1
-H189,R3,2023-08-17,3.0,Python;SQL;Power BI;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CompTIA Security+,学士,2016,男性,30歳未満,シンガポール,いいえ,49.0
-H190,R1,2023-08-26,3.3,Python;Java;SQL;Docker;AWS;R;インシデント対応,,学士,2019,男性,30歳未満,シンガポール,いいえ,61.9
-H191,R1,2023-09-02,3.6,Python;SQL;AWS,AWS Certified Solutions Architect - Associate,学士,2012,男性,30〜39歳,インド,いいえ,51.1
-H192,R3,2023-09-03,6.0,Python;Power BI;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,学士,2013,男性,30〜39歳,中国,いいえ,61.7
-H193,R2,2023-09-05,4.0,Python;SQL;統計学;Power BI,,学士,2016,男性,30歳未満,インド,いいえ,46.7
-H194,R1,2023-09-07,3.4,Python;Go;SQL;ネットワークセキュリティ,,修士,2018,男性,30〜39歳,インド,はい,47.7
-H195,R2,2023-09-19,6.1,Python;SQL;AWS;統計学;Tableau;Power BI;A/Bテスト,,学士,2016,女性,30〜39歳,マレーシア,いいえ,60.8
-H196,R2,2023-09-21,6.2,SQL;Kubernetes;AWS;統計学;Excel;A/Bテスト,Tableau Desktop Specialist,短大・専門,2014,男性,30歳未満,フィリピン,いいえ,61.9
-H197,R3,2023-09-22,2.5,Python;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,学士,2016,男性,30歳未満,シンガポール,いいえ,63.4
-H198,R3,2023-09-23,3.9,Excel;ネットワークセキュリティ;SIEM;インシデント対応;Linux;Scrum,CISSP,学士,2015,男性,30〜39歳,シンガポール,いいえ,67.4
-H199,R2,2023-09-28,3.1,SQL;Kubernetes;統計学;Tableau;Power BI;A/Bテスト;Linux,,学士,2017,女性,30歳未満,シンガポール,いいえ,52.2
-H200,R2,2023-10-04,8.2,SQL;統計学;Tableau;Power BI,,短大・専門,2012,女性,30〜39歳,マレーシア,いいえ,40.6
-H201,R1,2023-10-07,16.0,Python;SQL;Kubernetes,,学士,2006,男性,30〜39歳,シンガポール,はい,70.6
-H202,R3,2023-10-09,6.9,Python;Go;A/Bテスト;ネットワークセキュリティ;SIEM,CompTIA Security+,学士,2014,男性,30〜39歳,シンガポール,いいえ,60.6
-H203,R1,2023-10-12,4.8,Python;Go;SQL,AWS Certified Solutions Architect - Associate,修士,2017,女性,30歳未満,シンガポール,いいえ,39.6
-H204,R2,2023-10-16,6.1,SQL;Kubernetes;統計学;Excel;Tableau;A/Bテスト,,学士,2016,男性,30歳未満,インド,いいえ,64.4
-H205,R1,2023-10-24,3.0,Python;Go;SQL;Kubernetes;AWS;Excel,,修士,2013,女性,30〜39歳,インドネシア,いいえ,40.0
-H206,R3,2023-10-24,4.2,Python;Go;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,学士,2017,男性,30歳未満,マレーシア,いいえ,62.0
-H207,R3,2023-10-27,3.9,Python;A/Bテスト;ネットワークセキュリティ;SIEM,CompTIA Security+,短大・専門,2012,男性,30〜39歳,シンガポール,いいえ,50.7
-H208,R2,2023-11-01,16.0,Python;Go;SQL;統計学;インシデント対応,,学士,2000,女性,50歳以上,マレーシア,いいえ,21.5
-H209,R2,2023-11-06,4.4,Python;Java;SQL;統計学;Excel,,学士,2018,男性,30〜39歳,インド,はい,54.1
-H210,R3,2023-11-08,2.5,Python;ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2018,その他・無回答,30歳未満,シンガポール,いいえ,52.5
-H211,R2,2023-11-11,7.3,Python;Go;SQL;統計学;Tableau;Power BI;Linux,Tableau Desktop Specialist,学士,2015,男性,30歳未満,シンガポール,いいえ,75.0
-H212,R1,2023-11-20,3.8,Python;Go;SQL;Kubernetes;Docker;AWS,,博士,2018,女性,30〜39歳,ベトナム,はい,45.3
-H213,R2,2023-11-25,4.2,Python;SQL;統計学;Excel;Tableau;Power BI;A/Bテスト,,修士,2017,女性,30歳未満,シンガポール,いいえ,78.1
-H214,R1,2023-12-04,8.0,Python;Go;SQL;Kubernetes,AWS Certified Solutions Architect - Associate,修士,2014,男性,30〜39歳,シンガポール,いいえ,66.0
-H215,R2,2023-12-09,3.5,Python;SQL;統計学;Excel,,学士,2019,男性,30歳未満,マレーシア,いいえ,58.7
-H216,R3,2023-12-12,3.2,統計学;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,博士,2012,男性,30〜39歳,インド,いいえ,44.5
-H217,R3,2023-12-12,6.0,ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CISSP,短大・専門,2013,男性,30〜39歳,シンガポール,いいえ,73.0
-H218,R2,2023-12-22,3.1,Python;Go;SQL;Kubernetes;統計学;Excel;A/Bテスト;R;ネットワークセキュリティ,,学士,2012,男性,30〜39歳,中国,いいえ,55.1
-H219,R3,2024-01-08,2.9,Python;Kubernetes;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2019,男性,30歳未満,シンガポール,いいえ,59.5
-H220,R1,2024-01-09,6.0,Python;Go;SQL;Kubernetes;Docker,AWS Certified Solutions Architect - Associate,学士,2014,女性,30〜39歳,マレーシア,いいえ,49.7
-H221,R3,2024-01-11,3.6,Python;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,修士,2016,男性,30〜39歳,シンガポール,いいえ,72.7
-H222,R1,2024-01-13,5.5,Python;Go;SQL;Kubernetes;AWS,AWS Certified Solutions Architect - Associate,学士,2011,女性,30〜39歳,マレーシア,いいえ,52.9
-H223,R1,2024-01-27,4.8,Python;Go;SQL;Kubernetes;Tableau;ネットワークセキュリティ;インシデント対応,,学士,2018,男性,30〜39歳,インドネシア,はい,47.3
-H224,R1,2024-02-04,7.3,Python;Go;SQL;Kubernetes;Docker;AWS;A/Bテスト;Linux,,学士,2014,男性,30〜39歳,シンガポール,いいえ,69.0
-H225,R3,2024-02-07,6.5,Docker;Excel;ネットワークセキュリティ;SIEM;Linux,CompTIA Security+,修士,2015,その他・無回答,30〜39歳,シンガポール,はい,54.4
-H226,R1,2024-02-10,4.8,Python;SQL;SIEM,,短大・専門,2016,女性,30〜39歳,インド,いいえ,38.1
-H227,R3,2024-02-14,5.8,Python;Docker;AWS;A/Bテスト;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,学士,2014,男性,30〜39歳,シンガポール,いいえ,74.0
-H228,R3,2024-02-26,3.6,Python;A/Bテスト;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,学士,2014,女性,30〜39歳,中国,いいえ,45.3
-H229,R3,2024-03-03,5.3,Python;ネットワークセキュリティ;SIEM;Scrum,CompTIA Security+,修士,2016,女性,30〜39歳,シンガポール,いいえ,51.9
-H230,R1,2024-03-04,4.6,Python;SQL;Docker;AWS;R,AWS Certified Solutions Architect - Associate,学士,2018,その他・無回答,30歳未満,シンガポール,いいえ,54.8
-H231,R1,2024-03-07,4.2,Python;SQL;AWS;Tableau;Linux,,学士,2013,男性,30〜39歳,マレーシア,いいえ,56.7
-H232,R2,2024-03-08,3.1,SQL;統計学;Tableau;Power BI;A/Bテスト,,学士,2019,女性,30歳未満,マレーシア,いいえ,39.6
-H233,R3,2024-03-11,5.4,ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,修士,2014,女性,30〜39歳,マレーシア,いいえ,50.4
-H234,R2,2024-03-23,6.5,Python;SQL;統計学;Tableau;Power BI;R;ネットワークセキュリティ,Tableau Desktop Specialist,短大・専門,2013,男性,30〜39歳,インド,いいえ,60.9
-H235,R1,2024-03-27,3.5,Python;SQL;Kubernetes;AWS,,学士,2018,その他・無回答,30歳未満,シンガポール,いいえ,54.6
-H236,R1,2024-04-02,8.3,Python;SQL;Kubernetes;Docker;R;Scrum,,修士,2014,女性,30〜39歳,シンガポール,はい,57.7
-H237,R2,2024-04-04,3.8,Python;SQL;統計学;R,Tableau Desktop Specialist,学士,2017,男性,30〜39歳,シンガポール,いいえ,53.8
-H238,R2,2024-04-06,4.6,SQL;Kubernetes;統計学;Excel;Tableau;Power BI;A/Bテスト;インシデント対応,Tableau Desktop Specialist,学士,2017,男性,30〜39歳,シンガポール,いいえ,65.1
-H239,R3,2024-04-06,3.3,Kubernetes;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,学士,2014,女性,30〜39歳,フィリピン,いいえ,54.9
-H240,R3,2024-04-10,3.5,SQL;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,修士,2014,男性,30〜39歳,インド,いいえ,59.6
-H241,R1,2024-04-17,6.6,Python;SQL;AWS;A/Bテスト,,修士,2016,女性,30〜39歳,インド,いいえ,44.3
-H242,R2,2024-04-20,3.3,SQL;統計学;Excel;Tableau;Power BI,,修士,2017,男性,30〜39歳,シンガポール,はい,58.3
-H243,R2,2024-04-25,5.8,Python;SQL;統計学;Excel;Power BI,Tableau Desktop Specialist,学士,2018,女性,30〜39歳,マレーシア,いいえ,45.2
-H244,R3,2024-05-02,2.3,ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CISSP,学士,2017,女性,30歳未満,インド,いいえ,36.4
-H245,R1,2024-05-05,6.6,Python;SQL;Kubernetes;Docker;AWS;クラウドセキュリティ,,修士,2017,男性,30〜39歳,シンガポール,いいえ,58.7
-H246,R3,2024-05-15,6.4,Java;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,博士,2010,女性,40〜49歳,シンガポール,はい,57.4
-H247,R3,2024-05-16,4.8,Python;Excel;Power BI;ネットワークセキュリティ;SIEM;インシデント対応;Linux;Scrum,CompTIA Security+,学士,2016,女性,30〜39歳,マレーシア,いいえ,48.6
-H248,R1,2024-05-19,5.6,Python;SQL;AWS;Power BI,,学士,2018,男性,30歳未満,マレーシア,いいえ,57.4
-H249,R1,2024-05-20,4.2,Python;Go;SQL;Kubernetes;Docker;AWS;ネットワークセキュリティ,,短大・専門,2018,女性,30歳未満,マレーシア,いいえ,46.9
-H250,R3,2024-05-27,4.3,Python;Go;Docker;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CISSP,修士,2013,その他・無回答,40〜49歳,シンガポール,いいえ,47.3
-H251,R1,2024-05-27,9.6,Python;SQL;Kubernetes;Docker;SIEM;クラウドセキュリティ,,博士,2008,女性,40〜49歳,シンガポール,いいえ,33.8
-H252,R2,2024-05-28,6.3,Go;SQL;統計学;Excel;Power BI;A/Bテスト,Tableau Desktop Specialist,学士,2016,女性,30〜39歳,シンガポール,いいえ,59.6
-H253,R1,2024-06-08,12.4,Python;SQL;AWS;インシデント対応;Linux,AWS Certified Solutions Architect - Associate,学士,2005,女性,40〜49歳,フィリピン,いいえ,30.2
-H254,R3,2024-06-10,10.4,Python;ネットワークセキュリティ;SIEM;Linux,CISSP,修士,2013,女性,30〜39歳,シンガポール,いいえ,52.8
-H255,R1,2024-06-15,4.5,Python;Go;SQL;AWS,,学士,2017,男性,30歳未満,シンガポール,いいえ,66.3
-H256,R2,2024-06-18,2.7,SQL;統計学;Excel;Power BI;A/Bテスト,,修士,2020,女性,30歳未満,中国,いいえ,50.3
-H257,R3,2024-06-20,4.7,Python;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CompTIA Security+,修士,2016,男性,30〜39歳,シンガポール,いいえ,68.3
-H258,R2,2024-06-21,4.8,Python;SQL;統計学;Tableau;A/Bテスト,Tableau Desktop Specialist,学士,2019,女性,30歳未満,シンガポール,いいえ,55.4
-H259,R1,2024-06-28,6.5,Python;SQL;Docker;A/Bテスト;Scrum,AWS Certified Solutions Architect - Associate,修士,2015,男性,30〜39歳,シンガポール,いいえ,58.1
-H260,R3,2024-07-03,4.7,Python;統計学;A/Bテスト;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,学士,2018,男性,30歳未満,シンガポール,はい,68.8
-H261,R2,2024-07-09,4.3,Python;SQL;統計学;インシデント対応,Tableau Desktop Specialist,学士,2019,男性,30歳未満,シンガポール,いいえ,64.4
-H262,R2,2024-07-19,6.8,Python;SQL;AWS;統計学;A/Bテスト;Scrum,,学士,2013,その他・無回答,30〜39歳,ベトナム,いいえ,54.1
-H263,R3,2024-07-22,4.2,ネットワークセキュリティ;SIEM;Linux,CompTIA Security+,学士,2018,女性,30歳未満,シンガポール,いいえ,37.2
-H264,R1,2024-08-04,7.3,Python;Go;SQL;Docker,,短大・専門,2014,女性,30〜39歳,フィリピン,いいえ,41.5
-H265,R1,2024-08-07,3.0,Python;Go;SQL;Docker;統計学,AWS Certified Solutions Architect - Associate,学士,2019,女性,30歳未満,マレーシア,いいえ,35.9
-H266,R2,2024-08-08,2.6,SQL;統計学;Tableau;Power BI;A/Bテスト;クラウドセキュリティ;Scrum,,学士,2017,女性,30〜39歳,シンガポール,いいえ,54.3
-H267,R3,2024-09-01,4.3,Python;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CISSP,修士,2019,女性,30〜39歳,マレーシア,いいえ,53.9
-H268,R1,2024-09-04,12.3,Python;Go;SQL;Kubernetes;AWS;クラウドセキュリティ;Linux,,学士,2009,女性,40〜49歳,中国,いいえ,44.9
-H269,R1,2024-09-05,9.9,Python;SQL;Docker;SIEM,AWS Certified Solutions Architect - Associate,修士,2010,男性,40〜49歳,中国,いいえ,54.9
-H270,R2,2024-09-10,3.7,Python;SQL;統計学;Tableau;Power BI;A/Bテスト,,修士,2018,女性,30歳未満,インド,いいえ,60.4
-H271,R2,2024-09-15,5.7,SQL;統計学;Tableau;A/Bテスト;Linux,,学士,2017,男性,30〜39歳,シンガポール,いいえ,74.8
-H272,R3,2024-09-16,9.0,Python;Docker;A/Bテスト;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,学士,2014,女性,30〜39歳,マレーシア,いいえ,58.4
-H273,R2,2024-09-17,9.8,SQL;統計学;Excel;Power BI;A/Bテスト,,短大・専門,2007,その他・無回答,40〜49歳,シンガポール,いいえ,47.4
-H274,R2,2024-09-20,4.9,Python;SQL;統計学;Power BI,,修士,2015,男性,30〜39歳,中国,いいえ,60.3
-H275,R3,2024-09-20,7.8,Python;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CISSP,学士,2015,その他・無回答,30〜39歳,シンガポール,いいえ,73.1
-H276,R2,2024-10-05,14.5,SQL;統計学;Power BI;A/Bテスト;インシデント対応,Tableau Desktop Specialist,修士,2008,男性,40〜49歳,シンガポール,いいえ,61.2
-H277,R1,2024-10-11,6.6,Python;Java;Go;SQL;Docker;AWS,AWS Certified Solutions Architect - Associate,短大・専門,2014,女性,30〜39歳,シンガポール,いいえ,66.3
-H278,R1,2024-10-20,10.6,Python;Go;SQL;AWS;R,AWS Certified Solutions Architect - Associate,短大・専門,2010,男性,40〜49歳,インド,いいえ,55.9
-H279,R2,2024-10-23,5.0,Python;SQL;統計学;Excel;A/Bテスト,,修士,2017,女性,30〜39歳,インドネシア,いいえ,56.6
-H280,R1,2024-11-03,6.9,Python;Go;SQL;AWS;Tableau,AWS Certified Solutions Architect - Associate,修士,2015,男性,30〜39歳,シンガポール,いいえ,63.6
-H281,R1,2024-11-04,5.8,Python;Java;Go;SQL;Kubernetes;AWS;Excel;Power BI;インシデント対応,,博士,2015,男性,30〜39歳,シンガポール,いいえ,76.3
-H282,R3,2024-11-12,7.1,統計学;Power BI;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CISSP,学士,2016,男性,30〜39歳,マレーシア,いいえ,65.5
-H283,R2,2024-11-13,4.1,Python;SQL;統計学;Power BI;A/Bテスト,Tableau Desktop Specialist,短大・専門,2013,男性,30〜39歳,シンガポール,いいえ,67.9
-H284,R2,2024-12-07,10.7,Python;SQL;Kubernetes;統計学;Excel;Power BI;A/Bテスト;インシデント対応,,修士,2010,男性,30〜39歳,シンガポール,いいえ,79.9
-H285,R3,2024-12-16,2.4,Go;AWS;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CISSP,修士,2019,女性,30〜39歳,中国,いいえ,40.5
-H286,R2,2025-01-03,3.8,SQL;AWS;統計学;Excel;Scrum,Tableau Desktop Specialist,学士,2019,男性,30〜39歳,ベトナム,いいえ,46.1
-H287,R2,2025-01-07,5.3,Python;Go;SQL;統計学,,短大・専門,2018,女性,30歳未満,シンガポール,いいえ,45.5
-H288,R3,2025-01-09,3.9,Python;SQL;Kubernetes;統計学;Tableau;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,短大・専門,2020,男性,30歳未満,マレーシア,いいえ,57.0
-H289,R2,2025-01-12,6.7,SQL;AWS;統計学;Tableau;A/Bテスト,Tableau Desktop Specialist,学士,2014,男性,30〜39歳,ベトナム,いいえ,66.3
-H290,R3,2025-01-17,8.0,ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,学士,2015,男性,30〜39歳,マレーシア,いいえ,64.4
-H291,R1,2025-01-20,9.4,Python;SQL;統計学;Scrum,AWS Certified Solutions Architect - Associate,学士,2015,男性,30〜39歳,インド,いいえ,47.3
-H292,R3,2025-01-22,2.5,ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CompTIA Security+,修士,2022,男性,30〜39歳,フィリピン,いいえ,43.9
-H293,R2,2025-01-23,4.7,Python;SQL;統計学;Tableau;Power BI;A/Bテスト,,学士,2019,男性,30〜39歳,ベトナム,いいえ,70.7
-H294,R2,2025-02-01,11.1,SQL;AWS;統計学;Excel;A/Bテスト;ネットワークセキュリティ;インシデント対応,Tableau Desktop Specialist,修士,2011,女性,30〜39歳,シンガポール,いいえ,61.0
-H295,R1,2025-02-03,5.8,Python;Go;SQL;Docker;AWS;統計学;A/Bテスト,,学士,2016,男性,30〜39歳,シンガポール,いいえ,68.0
-H296,R1,2025-02-07,3.0,Python;SQL;Kubernetes;AWS;Tableau;インシデント対応;Scrum,,短大・専門,2021,女性,30歳未満,フィリピン,いいえ,34.9
-H297,R3,2025-02-22,3.4,Python;AWS;ネットワークセキュリティ;SIEM;インシデント対応,CISSP,学士,2015,男性,30〜39歳,シンガポール,いいえ,55.0
-H298,R1,2025-02-24,8.1,Python;Go;SQL;AWS;Excel;SIEM,,学士,2016,男性,30〜39歳,中国,いいえ,61.4
-H299,R2,2025-03-01,7.7,SQL;Kubernetes;統計学;Tableau;Power BI;R;インシデント対応,,学士,2015,女性,30〜39歳,シンガポール,いいえ,48.7
-H300,R2,2025-03-06,4.0,Python;SQL;AWS;統計学;Tableau;R,,修士,2019,女性,30〜39歳,シンガポール,いいえ,56.4
-H301,R2,2025-03-12,7.1,SQL;AWS;統計学;Tableau;Power BI;A/Bテスト;SIEM,,学士,2015,女性,30〜39歳,中国,いいえ,45.5
-H302,R2,2025-03-12,3.6,Python;SQL;統計学;Excel;ネットワークセキュリティ,Tableau Desktop Specialist,学士,2019,男性,30歳未満,シンガポール,いいえ,65.9
-H303,R1,2025-03-17,5.6,Python;Go;SQL;Kubernetes;SIEM,,学士,2019,男性,30〜39歳,シンガポール,いいえ,63.2
-H304,R3,2025-03-17,9.7,ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CompTIA Security+,短大・専門,2013,男性,30〜39歳,中国,いいえ,62.0
-H305,R1,2025-03-18,4.9,Python;SQL;Kubernetes,AWS Certified Solutions Architect - Associate,短大・専門,2017,女性,30歳未満,シンガポール,いいえ,62.0
-H306,R1,2025-03-22,5.7,Python;SQL;Kubernetes;AWS;インシデント対応,,学士,2017,女性,30歳未満,シンガポール,いいえ,58.4
-H307,R2,2025-03-28,4.9,Python;SQL;統計学;Tableau;Power BI,,学士,2019,女性,30歳未満,シンガポール,いいえ,56.9
-H308,R3,2025-04-03,7.4,Kubernetes;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2015,男性,30〜39歳,フィリピン,いいえ,62.7
-H309,R1,2025-04-03,3.9,Python;SQL;Kubernetes;Docker,AWS Certified Solutions Architect - Associate,博士,2020,男性,30〜39歳,シンガポール,いいえ,60.7
-H310,R1,2025-04-14,6.4,Python;SQL;Kubernetes;AWS,,修士,2015,男性,30〜39歳,シンガポール,いいえ,69.0
-H311,R2,2025-04-17,5.4,Python;Go;SQL;統計学;Excel,,博士,2016,女性,40〜49歳,インド,いいえ,43.6
-H312,R1,2025-04-20,5.1,Python;Go;SQL;Kubernetes;Docker,AWS Certified Solutions Architect - Associate,学士,2018,女性,30〜39歳,インドネシア,いいえ,44.3
-H313,R1,2025-05-01,6.7,Python;Go;SQL;ネットワークセキュリティ;インシデント対応,,学士,2011,女性,30〜39歳,シンガポール,いいえ,49.5
-H314,R1,2025-05-03,5.0,Python;SQL;Docker;AWS;A/Bテスト,AWS Certified Solutions Architect - Associate,学士,2016,女性,30〜39歳,ベトナム,いいえ,45.7
-H315,R2,2025-05-08,4.0,Java;SQL;統計学;Tableau;A/Bテスト;R,,学士,2020,男性,30歳未満,中国,いいえ,61.0
-H316,R2,2025-05-09,13.2,Python;SQL;Kubernetes;統計学;Excel;Power BI,,学士,2011,男性,30〜39歳,フィリピン,いいえ,54.7
-H317,R2,2025-05-20,7.5,Python;SQL;統計学,Tableau Desktop Specialist,修士,2015,男性,30〜39歳,マレーシア,いいえ,61.5
-H318,R3,2025-05-23,4.1,Python;A/Bテスト;ネットワークセキュリティ;SIEM;インシデント対応,CISSP,学士,2020,男性,30〜39歳,フィリピン,いいえ,56.6
-H319,R1,2025-06-03,3.2,Python;SQL;AWS,,学士,2014,女性,30〜39歳,インド,いいえ,38.1
-H320,R3,2025-06-12,2.3,Python;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,学士,2022,男性,30歳未満,シンガポール,はい,49.7
-H321,R1,2025-06-14,4.2,Python;SQL;Kubernetes;Excel;Tableau,AWS Certified Solutions Architect - Associate,修士,2014,男性,40〜49歳,フィリピン,いいえ,45.3
-H322,R3,2025-06-15,11.9,Python;ネットワークセキュリティ;SIEM,CompTIA Security+,修士,2012,女性,40〜49歳,フィリピン,いいえ,24.0
-H323,R2,2025-06-19,2.1,Python;Java;SQL;統計学;Power BI;A/Bテスト,,学士,2019,男性,30歳未満,シンガポール,いいえ,60.8
-H324,R2,2025-06-20,8.3,SQL;統計学;Excel;Tableau,,学士,2015,男性,30〜39歳,マレーシア,いいえ,60.3
-H325,R2,2025-06-20,3.5,Java;SQL;統計学;Excel;Power BI;A/Bテスト,,修士,2018,男性,30〜39歳,シンガポール,はい,54.1
-H326,R3,2025-07-06,4.6,Python;ネットワークセキュリティ;SIEM;Linux,CompTIA Security+,短大・専門,2016,男性,30〜39歳,シンガポール,はい,54.2
-H327,R3,2025-07-06,2.8,Python;A/Bテスト;ネットワークセキュリティ;SIEM;Linux,CISSP,修士,2019,男性,30歳未満,シンガポール,いいえ,53.1
-H328,R3,2025-07-09,8.1,Go;AWS;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CompTIA Security+,学士,2016,男性,30〜39歳,シンガポール,はい,73.3
-H329,R1,2025-08-01,12.4,Python;Go;SQL;Kubernetes;Docker;Excel,,学士,2005,女性,40〜49歳,中国,いいえ,38.9
-H330,R2,2025-08-11,15.7,SQL;統計学;Power BI;A/Bテスト;Linux,,博士,2005,女性,40〜49歳,シンガポール,いいえ,55.3
-H331,R2,2025-08-11,7.6,Python;SQL;統計学;Scrum,,学士,2011,女性,30〜39歳,シンガポール,いいえ,41.0
-H332,R1,2025-08-14,3.1,Python;Go;SQL;Kubernetes;Docker;AWS,,学士,2020,男性,30〜39歳,インド,いいえ,56.4
-H333,R3,2025-08-15,8.6,Tableau;ネットワークセキュリティ;SIEM,CISSP,短大・専門,2015,女性,30〜39歳,シンガポール,いいえ,54.6
-H334,R1,2025-08-20,7.4,Python;Go;SQL;Docker;R;クラウドセキュリティ,,修士,2013,女性,30〜39歳,シンガポール,いいえ,55.7
-H335,R2,2025-08-23,2.1,Python;SQL;統計学;Excel,,学士,2022,男性,30歳未満,シンガポール,はい,45.6
-H336,R3,2025-09-03,4.1,Python;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,修士,2014,男性,30〜39歳,シンガポール,はい,65.7
-H337,R1,2025-09-22,3.8,Python;Go;SQL;Kubernetes;Docker;AWS,AWS Certified Solutions Architect - Associate,学士,2018,女性,30〜39歳,フィリピン,いいえ,47.3
-H338,R2,2025-09-24,2.5,Python;Java;SQL;統計学;Excel;Tableau;Power BI;A/Bテスト;インシデント対応;Linux,,学士,2018,男性,30歳未満,インド,はい,54.3
-H339,R1,2025-09-25,5.6,Python;Go;SQL;Docker;クラウドセキュリティ;Linux,AWS Certified Solutions Architect - Associate,学士,2017,女性,30〜39歳,シンガポール,いいえ,59.1
-H340,R2,2025-09-26,6.3,Python;Go;SQL;Docker;統計学;Excel;Tableau;Power BI,,学士,2017,女性,30〜39歳,インド,いいえ,46.7
-H341,R3,2025-10-02,13.1,Python;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CompTIA Security+,学士,2009,男性,30〜39歳,中国,いいえ,48.1
-H342,R3,2025-10-04,6.6,Python;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CISSP,学士,2014,女性,30〜39歳,マレーシア,いいえ,66.9
-H343,R2,2025-10-05,10.1,SQL;統計学;Tableau;Power BI;ネットワークセキュリティ;Scrum,,修士,2013,女性,30〜39歳,シンガポール,いいえ,47.9
-H344,R1,2025-10-15,5.7,Python;Go;SQL;Docker;AWS;SIEM,,修士,2016,女性,30〜39歳,マレーシア,いいえ,57.1
-H345,R1,2025-10-20,6.2,Python;SQL;AWS;A/Bテスト,AWS Certified Solutions Architect - Associate,修士,2017,その他・無回答,30〜39歳,ベトナム,いいえ,59.3
-H346,R2,2025-10-21,5.8,SQL;統計学;Excel;A/Bテスト;Scrum,,学士,2017,男性,30歳未満,中国,いいえ,56.9
-H347,R1,2025-10-23,9.7,Python;Go;SQL;Docker;AWS;Power BI,AWS Certified Solutions Architect - Associate,修士,2012,男性,30〜39歳,マレーシア,いいえ,71.6
-H348,R1,2025-10-24,16.0,Python;Go;SQL;Kubernetes;AWS,AWS Certified Solutions Architect - Associate,学士,2006,女性,40〜49歳,マレーシア,いいえ,55.5
-H349,R1,2025-10-26,8.3,Python;Go;SQL;Kubernetes;Power BI,,修士,2013,男性,30〜39歳,インド,いいえ,56.3
-H350,R1,2025-10-26,4.9,Python;Go;SQL;Docker,AWS Certified Solutions Architect - Associate,修士,2017,その他・無回答,30〜39歳,シンガポール,いいえ,58.2
-H351,R2,2025-11-14,4.8,Python;SQL;AWS;統計学;Excel;A/Bテスト,,学士,2019,女性,30〜39歳,マレーシア,いいえ,61.0
-H352,R1,2025-11-15,10.0,Python;Go;SQL;AWS,,学士,2014,女性,30〜39歳,シンガポール,いいえ,58.9
-H353,R2,2025-11-17,2.9,SQL;統計学;Tableau;Power BI;A/Bテスト;クラウドセキュリティ,,学士,2018,男性,30歳未満,インド,いいえ,51.9
-H354,R2,2025-11-18,9.0,SQL;統計学;Excel;Tableau;R;インシデント対応;Linux,,学士,2015,男性,30〜39歳,シンガポール,いいえ,61.4
-H355,R2,2025-12-01,3.1,SQL;統計学;Excel;A/Bテスト,,短大・専門,2021,女性,30歳未満,マレーシア,はい,37.4
-H356,R3,2025-12-03,12.7,ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,修士,2008,女性,40〜49歳,シンガポール,いいえ,48.2
-H357,R3,2025-12-13,3.3,Python;ネットワークセキュリティ;SIEM;Linux;Scrum,CISSP,短大・専門,2017,女性,30歳未満,フィリピン,はい,34.0
-H358,R1,2025-12-17,5.8,Python;SQL;Kubernetes,,修士,2016,女性,30〜39歳,シンガポール,いいえ,50.3
-H359,R3,2025-12-21,3.0,A/Bテスト;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2019,男性,30〜39歳,ベトナム,いいえ,53.8
-H360,R2,2025-12-21,3.6,Python;SQL;Kubernetes;統計学;Tableau;Power BI;インシデント対応,,学士,2014,男性,30〜39歳,フィリピン,いいえ,58.0
+H001,R1,2021-01-08,3.8,Python;Go;SQL;Kubernetes;Docker;AWS;Tableau;インシデント対応,,学士,2015,女性,30〜39歳,インド,いいえ,49.9
+H002,R3,2021-01-12,2.9,Python;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CompTIA Security+,短大・専門,2014,女性,30歳未満,シンガポール,はい,55.3
+H003,R3,2021-01-13,14.8,Tableau;ネットワークセキュリティ;SIEM,CompTIA Security+,学士,1999,男性,40〜49歳,シンガポール,いいえ,46.4
+H004,R2,2021-01-17,3.0,SQL;統計学;Excel;Linux,,修士,2017,女性,30歳未満,シンガポール,いいえ,43.2
+H005,R1,2021-01-18,7.0,Python;Go;SQL;Docker;AWS;Excel,,修士,2013,男性,30〜39歳,シンガポール,いいえ,64.1
+H006,R2,2021-01-21,4.5,Python;SQL;統計学;Excel;Linux,,学士,2015,女性,30歳未満,シンガポール,いいえ,62.1
+H007,R1,2021-01-22,4.7,Python;Go;SQL;Kubernetes;Docker;AWS,AWS Certified Solutions Architect - Associate,短大・専門,2015,女性,30歳未満,シンガポール,いいえ,62.5
+H008,R2,2021-01-25,3.1,SQL;統計学;Power BI;A/Bテスト,,学士,2016,男性,30歳未満,シンガポール,いいえ,56.8
+H009,R2,2021-02-09,8.4,Python;SQL;Docker;統計学;Excel;Tableau,,短大・専門,2009,男性,30〜39歳,シンガポール,いいえ,56.2
+H010,R2,2021-02-16,2.5,Go;SQL;統計学;Excel;Power BI,Tableau Desktop Specialist,学士,2017,女性,30歳未満,マレーシア,いいえ,27.0
+H011,R2,2021-02-18,8.2,SQL;統計学;Tableau,,修士,2011,女性,40〜49歳,シンガポール,いいえ,50.3
+H012,R3,2021-02-21,7.2,Python;統計学;ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2013,男性,30歳未満,シンガポール,いいえ,74.3
+H013,R3,2021-03-02,3.1,Python;Kubernetes;統計学;ネットワークセキュリティ;SIEM;インシデント対応,CISSP,学士,2016,女性,30歳未満,ベトナム,いいえ,44.8
+H014,R2,2021-03-16,6.1,Python;SQL;統計学;Power BI,Tableau Desktop Specialist,短大・専門,2011,その他・無回答,30〜39歳,インド,いいえ,46.9
+H015,R2,2021-03-21,7.8,SQL;統計学;Excel;A/Bテスト,,修士,2006,男性,40〜49歳,シンガポール,いいえ,67.4
+H016,R1,2021-03-25,4.0,Python;Go;SQL;Kubernetes;Docker;AWS,,修士,2016,男性,30〜39歳,インド,いいえ,51.3
+H017,R1,2021-03-28,6.2,Python;Go;SQL;Excel,AWS Certified Solutions Architect - Associate,学士,2014,女性,30〜39歳,インド,いいえ,53.3
+H018,R3,2021-04-02,9.6,ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,修士,2010,女性,30〜39歳,中国,いいえ,51.2
+H019,R2,2021-04-02,3.4,Java;SQL;統計学;Power BI;Linux,Tableau Desktop Specialist,学士,2016,男性,30歳未満,マレーシア,はい,46.9
+H020,R1,2021-04-05,4.4,Python;SQL;Kubernetes;SIEM,AWS Certified Solutions Architect - Associate,学士,2015,女性,30〜39歳,フィリピン,いいえ,47.3
+H021,R2,2021-04-05,2.3,SQL;統計学;Power BI;Linux,Tableau Desktop Specialist,学士,2018,女性,30歳未満,シンガポール,いいえ,40.1
+H022,R1,2021-04-05,12.6,Python;Go;SQL;Docker,AWS Certified Solutions Architect - Associate,学士,2006,男性,40〜49歳,マレーシア,はい,52.0
+H023,R3,2021-04-18,11.3,ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CISSP,修士,2006,男性,30〜39歳,中国,いいえ,75.3
+H024,R3,2021-04-21,4.5,Python;Power BI;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,学士,2009,男性,30〜39歳,シンガポール,いいえ,71.6
+H025,R2,2021-04-24,2.5,Python;SQL;統計学,Tableau Desktop Specialist,短大・専門,2016,女性,30歳未満,インド,はい,30.9
+H026,R3,2021-05-01,2.6,Python;Java;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,学士,2018,女性,30歳未満,マレーシア,いいえ,34.1
+H027,R3,2021-05-02,4.7,Tableau;R;ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2010,女性,30〜39歳,中国,はい,56.1
+H028,R1,2021-05-08,4.8,Python;SQL;Kubernetes;Docker;AWS,,学士,2009,女性,30〜39歳,シンガポール,いいえ,61.3
+H029,R3,2021-05-12,4.8,Python;AWS;Tableau;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CISSP,学士,2015,女性,30〜39歳,中国,いいえ,59.1
+H030,R3,2021-05-17,5.3,ネットワークセキュリティ;SIEM;クラウドセキュリティ,CISSP,学士,2011,男性,30〜39歳,フィリピン,いいえ,62.5
+H031,R2,2021-05-23,4.5,Python;SQL;統計学;Excel;Tableau;A/Bテスト;Linux,,学士,2016,男性,30〜39歳,フィリピン,いいえ,70.6
+H032,R2,2021-05-25,2.4,Python;SQL;統計学;Tableau;Power BI,,学士,2018,男性,30歳未満,インドネシア,いいえ,48.0
+H033,R2,2021-06-12,4.4,SQL;統計学;Tableau;Power BI,Tableau Desktop Specialist,学士,2015,女性,30歳未満,シンガポール,いいえ,47.8
+H034,R2,2021-06-13,5.7,SQL;統計学;Excel;Tableau;Power BI,,学士,2014,男性,30歳未満,インド,いいえ,57.1
+H035,R1,2021-06-15,9.3,Python;Go;SQL;Docker;AWS;Tableau;Power BI,AWS Certified Solutions Architect - Associate,修士,2008,女性,30〜39歳,シンガポール,いいえ,63.0
+H036,R3,2021-06-17,12.0,Docker;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CISSP,修士,2002,女性,40〜49歳,シンガポール,いいえ,51.8
+H037,R3,2021-06-20,4.4,Python;Java;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2012,女性,30〜39歳,ベトナム,いいえ,40.3
+H038,R1,2021-06-28,3.1,Python;SQL;クラウドセキュリティ;Scrum,,学士,2014,男性,30歳未満,シンガポール,いいえ,50.2
+H039,R1,2021-07-01,3.1,Python;SQL;Kubernetes;AWS,,学士,2015,女性,30歳未満,インド,いいえ,40.4
+H040,R2,2021-07-16,4.4,Go;SQL;AWS;統計学;Tableau;Power BI,Tableau Desktop Specialist,博士,2013,女性,30〜39歳,マレーシア,いいえ,44.4
+H041,R1,2021-07-18,4.5,Python;SQL;Kubernetes;Docker;A/Bテスト,,博士,2015,女性,40〜49歳,インド,いいえ,32.4
+H042,R1,2021-07-18,4.3,Python;Go;SQL;AWS;SIEM,AWS Certified Solutions Architect - Associate,修士,2016,男性,30〜39歳,フィリピン,いいえ,55.5
+H043,R3,2021-07-19,9.6,Python;Excel;ネットワークセキュリティ;SIEM,CompTIA Security+,学士,2009,女性,30〜39歳,インド,いいえ,43.5
+H044,R3,2021-07-22,3.6,ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CISSP,学士,2011,女性,30〜39歳,シンガポール,いいえ,65.0
+H045,R3,2021-07-24,7.8,Kubernetes;ネットワークセキュリティ;SIEM,CompTIA Security+,学士,2012,男性,30〜39歳,シンガポール,はい,61.1
+H046,R2,2021-07-27,5.0,Python;SQL;統計学;A/Bテスト,Tableau Desktop Specialist,学士,2009,男性,30〜39歳,シンガポール,いいえ,73.4
+H047,R3,2021-07-28,6.1,Excel;ネットワークセキュリティ;SIEM;インシデント対応,CISSP,学士,2013,女性,30〜39歳,シンガポール,はい,56.3
+H048,R1,2021-08-03,8.0,Python;SQL;Docker;A/Bテスト,AWS Certified Solutions Architect - Associate,学士,2009,女性,40〜49歳,インド,いいえ,40.6
+H049,R2,2021-08-23,2.4,Python;SQL;統計学;Excel;Tableau;Power BI,,修士,2012,女性,30〜39歳,マレーシア,いいえ,45.6
+H050,R1,2021-09-05,9.2,Python;Go;SQL;Kubernetes;Docker;SIEM,AWS Certified Solutions Architect - Associate,学士,2005,女性,30〜39歳,マレーシア,いいえ,53.9
+H051,R2,2021-09-11,4.7,Python;SQL;統計学;Excel,Tableau Desktop Specialist,学士,2016,その他・無回答,30〜39歳,シンガポール,いいえ,53.8
+H052,R3,2021-09-11,3.5,Python;Java;Go;Tableau;ネットワークセキュリティ;SIEM,CompTIA Security+,学士,2016,女性,30歳未満,シンガポール,いいえ,42.8
+H053,R2,2021-09-15,2.3,Python;SQL;統計学;A/Bテスト;R,,学士,2012,男性,30〜39歳,シンガポール,はい,59.3
+H054,R1,2021-09-22,3.4,Python;Go;SQL;Docker;AWS,,学士,2014,女性,30歳未満,マレーシア,いいえ,38.6
+H055,R2,2021-09-25,4.5,Python;Go;SQL;統計学;Excel;Tableau;ネットワークセキュリティ,Tableau Desktop Specialist,短大・専門,2014,女性,30〜39歳,マレーシア,いいえ,47.1
+H056,R1,2021-10-02,3.3,Python;SQL;Docker;AWS;ネットワークセキュリティ,,学士,2016,男性,30歳未満,マレーシア,いいえ,51.0
+H057,R1,2021-10-07,6.4,Python;SQL;Kubernetes;Docker;AWS;Tableau,,短大・専門,2014,女性,30〜39歳,シンガポール,いいえ,60.5
+H058,R2,2021-10-10,3.2,SQL;Kubernetes;統計学;Power BI;A/Bテスト;クラウドセキュリティ,,修士,2011,男性,30〜39歳,シンガポール,いいえ,65.0
+H059,R2,2021-10-13,4.1,SQL;Kubernetes;統計学;Excel;Tableau,Tableau Desktop Specialist,学士,2010,女性,30〜39歳,シンガポール,いいえ,50.5
+H060,R3,2021-10-20,2.2,R;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,学士,2018,男性,30歳未満,インド,いいえ,50.8
+H061,R3,2021-10-23,3.2,Python;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2015,男性,30歳未満,シンガポール,いいえ,51.0
+H062,R2,2021-11-03,8.8,Python;SQL;統計学;Power BI;A/Bテスト;Linux,,修士,2008,女性,30〜39歳,インド,いいえ,54.9
+H063,R3,2021-11-07,2.7,Python;R;ネットワークセキュリティ;SIEM;Linux,CISSP,学士,2017,男性,30歳未満,ベトナム,いいえ,53.1
+H064,R3,2021-11-09,5.2,Python;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,修士,2012,男性,30〜39歳,シンガポール,いいえ,63.7
+H065,R1,2021-11-10,4.2,Python;Go;SQL;Kubernetes;Docker,AWS Certified Solutions Architect - Associate,学士,2010,男性,30〜39歳,インド,いいえ,60.2
+H066,R3,2021-11-17,3.7,Excel;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CISSP,修士,2015,男性,30歳未満,シンガポール,いいえ,77.7
+H067,R1,2021-11-17,6.0,Python;Go;SQL;Kubernetes;AWS;統計学;ネットワークセキュリティ;Scrum,,博士,2014,男性,30〜39歳,シンガポール,いいえ,76.4
+H068,R2,2021-11-18,3.3,SQL;統計学;Excel;Tableau;A/Bテスト,Tableau Desktop Specialist,博士,2014,男性,40〜49歳,シンガポール,いいえ,58.3
+H069,R1,2021-11-19,15.0,Python;Java;SQL;Kubernetes;Docker;Linux,,修士,2003,男性,40〜49歳,マレーシア,はい,50.6
+H070,R3,2021-11-21,7.3,Python;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CISSP,学士,2010,男性,30〜39歳,インド,いいえ,66.6
+H071,R1,2021-11-22,5.4,Python;Go;SQL;AWS;ネットワークセキュリティ,,短大・専門,2015,女性,30歳未満,マレーシア,いいえ,43.5
+H072,R2,2021-11-22,12.1,Python;SQL;統計学;Excel;Tableau;Power BI;A/Bテスト;Linux,,修士,2008,男性,30〜39歳,シンガポール,いいえ,79.1
+H073,R3,2021-11-23,7.0,Python;Power BI;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,博士,2012,男性,30〜39歳,シンガポール,いいえ,69.1
+H074,R2,2021-11-24,3.9,Python;SQL;統計学;Excel;Tableau;SIEM,Tableau Desktop Specialist,学士,2011,男性,30〜39歳,フィリピン,いいえ,59.1
+H075,R1,2021-12-01,4.2,Python;SQL;SIEM,,学士,2015,女性,30〜39歳,シンガポール,いいえ,38.7
+H076,R3,2021-12-02,8.1,統計学;Power BI;ネットワークセキュリティ;SIEM,CompTIA Security+,修士,2012,男性,30〜39歳,インド,いいえ,49.6
+H077,R3,2021-12-16,2.3,Python;Go;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,修士,2011,男性,30〜39歳,インドネシア,いいえ,32.8
+H078,R3,2021-12-26,16.0,Python;Kubernetes;Power BI;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux;Scrum,CompTIA Security+,短大・専門,2002,男性,40〜49歳,マレーシア,いいえ,52.6
+H079,R3,2022-01-03,2.5,A/Bテスト;ネットワークセキュリティ;SIEM;インシデント対応;Linux;Scrum,CompTIA Security+,学士,2017,女性,30歳未満,シンガポール,いいえ,52.1
+H080,R1,2022-01-04,3.5,Python;Go;SQL;Kubernetes;Docker;AWS;ネットワークセキュリティ;SIEM,,学士,2015,男性,30歳未満,中国,いいえ,60.9
+H081,R2,2022-01-16,2.1,Go;SQL;Docker;統計学;Excel;Tableau;Power BI;A/Bテスト,,学士,2018,女性,30歳未満,インド,いいえ,42.3
+H082,R2,2022-01-19,6.8,Python;SQL;Docker;統計学;Excel;Tableau;Power BI;A/Bテスト,,学士,2011,男性,30〜39歳,シンガポール,いいえ,80.2
+H083,R2,2022-01-23,3.1,SQL;AWS;統計学;Excel;A/Bテスト,,学士,2015,男性,30〜39歳,インド,いいえ,50.0
+H084,R2,2022-01-25,9.5,SQL;統計学;Excel;A/Bテスト,,短大・専門,2009,男性,30〜39歳,マレーシア,いいえ,54.7
+H085,R3,2022-02-03,6.8,Python;Excel;R;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,修士,2013,女性,30〜39歳,フィリピン,いいえ,45.9
+H086,R2,2022-02-09,2.9,SQL;統計学;Excel;Tableau;Power BI,Tableau Desktop Specialist,修士,2012,女性,30〜39歳,マレーシア,いいえ,31.8
+H087,R1,2022-02-12,15.1,Python;SQL;Docker;AWS,AWS Certified Solutions Architect - Associate,修士,2003,男性,40〜49歳,シンガポール,いいえ,61.4
+H088,R3,2022-02-18,3.2,Python;Kubernetes;ネットワークセキュリティ;SIEM,CompTIA Security+,学士,2014,男性,30〜39歳,マレーシア,いいえ,33.6
+H089,R3,2022-02-20,5.1,ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,修士,2010,女性,30〜39歳,マレーシア,いいえ,50.2
+H090,R3,2022-02-21,6.8,ネットワークセキュリティ;SIEM;クラウドセキュリティ,CISSP,学士,2012,女性,30〜39歳,シンガポール,いいえ,58.7
+H091,R1,2022-02-24,8.1,Python;Go;SQL;Kubernetes;Docker,,学士,2013,男性,30〜39歳,シンガポール,いいえ,72.5
+H092,R1,2022-02-28,5.2,Python;SQL;Kubernetes;Docker;AWS,,修士,2010,男性,30〜39歳,シンガポール,いいえ,65.8
+H093,R2,2022-03-01,7.4,Python;SQL;統計学,,学士,2011,男性,30〜39歳,シンガポール,いいえ,57.1
+H094,R3,2022-03-09,4.9,Docker;ネットワークセキュリティ;SIEM;Linux,CompTIA Security+,学士,2015,女性,30〜39歳,シンガポール,いいえ,46.2
+H095,R1,2022-03-13,9.8,Python;SQL;Kubernetes;Docker,,学士,2010,男性,30〜39歳,シンガポール,いいえ,64.9
+H096,R2,2022-03-21,2.4,SQL;統計学;Tableau,,博士,2018,男性,30〜39歳,シンガポール,いいえ,59.2
+H097,R3,2022-03-24,10.3,Python;Tableau;ネットワークセキュリティ;SIEM;Linux,CISSP,修士,2008,男性,40〜49歳,シンガポール,いいえ,62.3
+H098,R1,2022-03-24,9.5,Python;Go;SQL;Kubernetes;AWS,,修士,2005,女性,40〜49歳,シンガポール,いいえ,51.4
+H099,R1,2022-04-03,16.0,Python;SQL;AWS;Tableau;Power BI;ネットワークセキュリティ;SIEM,AWS Certified Solutions Architect - Associate,修士,2004,男性,40〜49歳,インド,いいえ,45.7
+H100,R3,2022-04-03,5.0,A/Bテスト;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,学士,2014,女性,30〜39歳,シンガポール,いいえ,49.6
+H101,R2,2022-04-03,3.5,SQL;統計学;Excel,Tableau Desktop Specialist,学士,2018,女性,30歳未満,シンガポール,いいえ,50.0
+H102,R1,2022-04-07,4.4,Python;Go;SQL;Kubernetes;AWS;Power BI,,学士,2016,女性,30歳未満,シンガポール,いいえ,63.8
+H103,R2,2022-04-10,2.7,SQL;統計学;Tableau;A/Bテスト;R,,修士,2017,男性,30歳未満,中国,いいえ,53.6
+H104,R3,2022-04-17,2.1,Python;R;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CISSP,博士,2019,女性,30〜39歳,シンガポール,いいえ,47.8
+H105,R3,2022-05-05,3.4,統計学;A/Bテスト;ネットワークセキュリティ;SIEM;Linux;Scrum,CISSP,学士,2018,男性,30歳未満,シンガポール,いいえ,57.4
+H106,R2,2022-05-08,3.2,Python;SQL;AWS;統計学;Excel;Tableau;A/Bテスト,,修士,2017,女性,30〜39歳,シンガポール,いいえ,64.3
+H107,R3,2022-05-12,8.6,Python;AWS;Power BI;ネットワークセキュリティ;SIEM,CISSP,短大・専門,2011,男性,30〜39歳,マレーシア,いいえ,56.2
+H108,R2,2022-05-13,2.6,Python;Java;SQL;統計学;Excel,,修士,2013,男性,30〜39歳,シンガポール,いいえ,55.1
+H109,R3,2022-05-18,4.7,Python;SQL;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,学士,2016,女性,30歳未満,インド,はい,51.8
+H110,R1,2022-05-20,7.6,Python;SQL;Linux,AWS Certified Solutions Architect - Associate,修士,2011,男性,30〜39歳,インド,いいえ,55.5
+H111,R2,2022-06-08,10.0,Go;SQL;統計学;Power BI;A/Bテスト;インシデント対応;クラウドセキュリティ;Scrum,,修士,2010,男性,30〜39歳,マレーシア,いいえ,63.6
+H112,R1,2022-06-11,3.5,Python;Java;Go;SQL,,学士,2017,男性,30歳未満,シンガポール,はい,58.4
+H113,R3,2022-06-19,6.9,Python;ネットワークセキュリティ;SIEM;Scrum,CompTIA Security+,修士,2014,女性,30〜39歳,シンガポール,いいえ,45.1
+H114,R3,2022-07-03,3.6,Python;統計学;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CISSP,短大・専門,2017,女性,30〜39歳,インド,はい,55.1
+H115,R2,2022-07-12,8.8,Python;SQL;統計学;Excel;Power BI;A/Bテスト,Tableau Desktop Specialist,修士,2007,男性,40〜49歳,シンガポール,いいえ,71.7
+H116,R1,2022-07-12,3.6,Python;SQL;AWS;Excel,,学士,2014,男性,30〜39歳,シンガポール,いいえ,50.1
+H117,R3,2022-07-17,6.1,Python;A/Bテスト;ネットワークセキュリティ;SIEM;Linux,CISSP,学士,2015,男性,30歳未満,インドネシア,いいえ,61.2
+H118,R2,2022-08-01,6.7,SQL;統計学;Excel;Tableau;Power BI;A/Bテスト;SIEM,Tableau Desktop Specialist,修士,2014,女性,30〜39歳,インド,いいえ,60.3
+H119,R2,2022-08-07,3.6,Python;SQL;統計学;Power BI;A/Bテスト,,修士,2016,男性,30〜39歳,シンガポール,いいえ,61.0
+H120,R3,2022-08-08,3.8,Python;ネットワークセキュリティ;SIEM;Linux,CompTIA Security+,修士,2015,女性,30〜39歳,シンガポール,いいえ,45.5
+H121,R3,2022-08-09,8.0,ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CompTIA Security+,修士,2013,女性,30〜39歳,シンガポール,いいえ,52.2
+H122,R1,2022-08-14,8.0,Python;Go;SQL;Kubernetes;Docker;AWS,,学士,2010,男性,30〜39歳,マレーシア,いいえ,68.2
+H123,R1,2022-08-19,3.7,Python;SQL;Kubernetes,,学士,2011,男性,30〜39歳,シンガポール,いいえ,64.4
+H124,R1,2022-08-21,3.0,Python;Java;Go;SQL;Kubernetes;インシデント対応;Linux,,学士,2016,男性,30歳未満,マレーシア,いいえ,44.7
+H125,R1,2022-08-21,4.1,Python;Java;Go;SQL;AWS,,学士,2015,その他・無回答,30歳未満,ベトナム,いいえ,49.8
+H126,R2,2022-09-08,3.4,Python;SQL;統計学;Excel;Tableau;A/Bテスト;インシデント対応;クラウドセキュリティ,Tableau Desktop Specialist,修士,2016,男性,30〜39歳,シンガポール,いいえ,71.2
+H127,R3,2022-09-12,5.1,Python;A/Bテスト;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2014,男性,30〜39歳,シンガポール,いいえ,65.1
+H128,R2,2022-09-13,2.5,Go;SQL;統計学;Excel;Power BI;A/Bテスト;Scrum,Tableau Desktop Specialist,短大・専門,2019,男性,30歳未満,フィリピン,いいえ,59.5
+H129,R3,2022-09-16,2.5,SQL;ネットワークセキュリティ;SIEM;Linux,CompTIA Security+,学士,2017,女性,30歳未満,シンガポール,はい,43.5
+H130,R3,2022-09-17,2.2,ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2017,男性,30歳未満,シンガポール,いいえ,57.1
+H131,R2,2022-09-18,3.0,SQL;AWS;統計学;Excel;Power BI;インシデント対応;クラウドセキュリティ,,修士,2012,女性,30〜39歳,シンガポール,いいえ,46.6
+H132,R3,2022-09-19,4.2,統計学;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CISSP,修士,2017,男性,30歳未満,シンガポール,いいえ,79.4
+H133,R2,2022-09-21,3.5,SQL;統計学;Power BI;A/Bテスト,,修士,2015,女性,30〜39歳,中国,はい,38.6
+H134,R3,2022-09-28,6.0,ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2012,男性,30〜39歳,ベトナム,いいえ,52.4
+H135,R1,2022-10-01,9.2,Python;SQL;Docker;統計学,,修士,2009,男性,30〜39歳,シンガポール,いいえ,58.5
+H136,R1,2022-10-18,11.2,Python;Go;SQL;Kubernetes,,学士,2007,女性,40〜49歳,マレーシア,いいえ,45.6
+H137,R1,2022-10-26,12.0,Python;Go;SQL;Kubernetes;AWS;統計学,,学士,2008,女性,30〜39歳,シンガポール,いいえ,60.7
+H138,R3,2022-11-01,2.7,ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,学士,2015,男性,30歳未満,ベトナム,いいえ,48.9
+H139,R1,2022-11-06,6.4,Python;SQL;Excel,,短大・専門,2014,女性,30歳未満,マレーシア,いいえ,41.8
+H140,R2,2022-11-15,4.0,SQL;Docker;統計学;Power BI;A/Bテスト,,学士,2017,女性,30〜39歳,インド,いいえ,47.4
+H141,R2,2022-11-16,4.1,SQL;統計学;Excel;Power BI,,修士,2017,女性,30〜39歳,シンガポール,いいえ,50.6
+H142,R2,2022-11-24,4.2,SQL;AWS;統計学;Tableau;ネットワークセキュリティ;クラウドセキュリティ,,博士,2011,男性,40〜49歳,インド,いいえ,45.0
+H143,R1,2022-11-25,8.8,Python;Go;SQL;Docker;R;ネットワークセキュリティ,,学士,2009,女性,30〜39歳,シンガポール,いいえ,48.8
+H144,R2,2022-11-26,2.4,SQL;AWS;統計学;Excel;Power BI,Tableau Desktop Specialist,学士,2012,女性,30〜39歳,シンガポール,いいえ,32.7
+H145,R1,2022-12-01,9.7,Python;Go;SQL;Kubernetes;Docker,,学士,2009,男性,30〜39歳,インド,いいえ,56.3
+H146,R3,2022-12-02,9.0,ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2011,女性,30〜39歳,シンガポール,はい,71.0
+H147,R1,2022-12-03,6.4,Python;SQL;Kubernetes;Docker,,学士,2008,男性,30〜39歳,マレーシア,いいえ,51.9
+H148,R2,2022-12-11,3.8,SQL;統計学;Excel;Tableau,,修士,2017,男性,30〜39歳,インド,いいえ,49.6
+H149,R1,2022-12-16,3.3,Python;SQL;Kubernetes;AWS,,修士,2011,男性,30〜39歳,フィリピン,いいえ,48.2
+H150,R3,2022-12-19,6.8,Python;A/Bテスト;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CISSP,修士,2013,女性,30〜39歳,シンガポール,いいえ,71.4
+H151,R2,2022-12-21,2.9,SQL;統計学;Tableau;A/Bテスト,,学士,2018,男性,30〜39歳,シンガポール,いいえ,64.2
+H152,R2,2022-12-26,5.0,SQL;統計学;Excel;Power BI;SIEM,Tableau Desktop Specialist,修士,2013,男性,30〜39歳,シンガポール,いいえ,64.8
+H153,R1,2023-01-06,4.0,Python;Go;SQL;Kubernetes;Power BI,,学士,2018,男性,30歳未満,シンガポール,いいえ,62.2
+H154,R2,2023-01-08,4.7,Python;SQL;統計学;Tableau,Tableau Desktop Specialist,修士,2017,男性,30歳未満,中国,いいえ,61.7
+H155,R2,2023-01-17,6.1,Python;SQL;統計学;Excel;A/Bテスト;ネットワークセキュリティ;インシデント対応;クラウドセキュリティ;Scrum,Tableau Desktop Specialist,修士,2010,女性,30〜39歳,中国,いいえ,59.2
+H156,R3,2023-01-26,2.4,Python;ネットワークセキュリティ;SIEM,CompTIA Security+,学士,2014,女性,30〜39歳,マレーシア,いいえ,28.3
+H157,R3,2023-02-07,7.2,Excel;Power BI;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CISSP,修士,2012,女性,30〜39歳,中国,はい,55.9
+H158,R2,2023-02-10,3.3,SQL;統計学;Excel;ネットワークセキュリティ,,修士,2017,男性,30歳未満,中国,いいえ,50.4
+H159,R1,2023-02-14,3.9,Python;Go;SQL;Kubernetes;Docker;SIEM,,学士,2017,男性,30歳未満,シンガポール,いいえ,58.6
+H160,R3,2023-02-18,4.4,Python;ネットワークセキュリティ;SIEM;Linux,CISSP,修士,2017,男性,30歳未満,シンガポール,いいえ,62.7
+H161,R1,2023-02-19,7.2,Python;Java;Go;SQL;Scrum,,修士,2008,女性,30〜39歳,マレーシア,いいえ,41.9
+H162,R2,2023-02-20,3.4,Go;SQL;統計学;Power BI;A/Bテスト,Tableau Desktop Specialist,学士,2018,女性,30歳未満,中国,いいえ,39.9
+H163,R3,2023-02-24,2.2,ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,学士,2014,男性,30〜39歳,シンガポール,いいえ,62.7
+H164,R3,2023-03-10,2.2,Tableau;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,学士,2020,男性,30〜39歳,シンガポール,いいえ,66.1
+H165,R3,2023-03-11,3.2,Java;AWS;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,修士,2013,男性,30〜39歳,シンガポール,いいえ,65.9
+H166,R1,2023-03-15,3.3,Python;Go;SQL;Kubernetes;Docker;A/Bテスト;SIEM;Linux,AWS Certified Solutions Architect - Associate,修士,2018,男性,30歳未満,シンガポール,いいえ,65.7
+H167,R2,2023-03-22,4.8,SQL;統計学;Excel;Tableau;Power BI;Scrum,,修士,2017,男性,30〜39歳,シンガポール,いいえ,61.2
+H168,R3,2023-03-23,2.4,ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2020,男性,30〜39歳,マレーシア,はい,47.3
+H169,R2,2023-03-25,8.4,SQL;統計学;Excel;Tableau;Power BI;A/Bテスト,Tableau Desktop Specialist,学士,2011,男性,30〜39歳,シンガポール,はい,72.9
+H170,R1,2023-03-27,6.0,Python;Go;SQL;Kubernetes;Docker;AWS;Linux,,学士,2015,男性,30歳未満,マレーシア,いいえ,73.8
+H171,R3,2023-03-28,3.6,Python;ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,博士,2017,その他・無回答,30〜39歳,シンガポール,いいえ,55.9
+H172,R3,2023-03-28,6.3,Python;ネットワークセキュリティ;SIEM,CompTIA Security+,学士,2015,女性,30〜39歳,インド,はい,48.4
+H173,R1,2023-04-01,4.1,Python;Go;SQL;AWS;統計学;ネットワークセキュリティ;インシデント対応,AWS Certified Solutions Architect - Associate,学士,2015,男性,30〜39歳,シンガポール,いいえ,64.0
+H174,R3,2023-04-02,4.5,Go;AWS;統計学;A/Bテスト;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,博士,2018,その他・無回答,30〜39歳,フィリピン,いいえ,56.4
+H175,R2,2023-04-03,4.2,SQL;Kubernetes;統計学;Excel;Tableau,Tableau Desktop Specialist,学士,2015,女性,30歳未満,中国,いいえ,38.0
+H176,R1,2023-04-04,6.8,Python;SQL;Kubernetes;Docker;クラウドセキュリティ;Linux,,短大・専門,2015,男性,30歳未満,中国,いいえ,62.4
+H177,R3,2023-04-09,3.9,Python;AWS;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CISSP,学士,2018,男性,30歳未満,シンガポール,いいえ,75.0
+H178,R2,2023-04-17,2.4,Python;SQL;Docker;AWS;統計学;R;ネットワークセキュリティ;Scrum,Tableau Desktop Specialist,短大・専門,2017,男性,30歳未満,シンガポール,いいえ,57.8
+H179,R3,2023-04-20,9.9,Python;Java;A/Bテスト;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CISSP,修士,2006,男性,40〜49歳,シンガポール,いいえ,68.5
+H180,R3,2023-04-25,2.4,Python;Go;SQL;Power BI;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CompTIA Security+,学士,2014,男性,30〜39歳,シンガポール,いいえ,48.3
+H181,R1,2023-05-02,5.8,Python;Go;SQL;Kubernetes;Docker;AWS;Power BI;SIEM,,修士,2016,男性,30〜39歳,シンガポール,いいえ,74.8
+H182,R1,2023-05-06,9.8,Python;SQL;Kubernetes,,博士,2006,女性,40〜49歳,フィリピン,いいえ,44.9
+H183,R2,2023-05-07,4.1,Go;SQL;統計学;Excel;Tableau;Power BI;A/Bテスト,,学士,2017,男性,30歳未満,インド,いいえ,68.9
+H184,R3,2023-05-08,8.3,Java;SQL;Power BI;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Scrum,CISSP,学士,2008,女性,30〜39歳,中国,いいえ,55.6
+H185,R3,2023-05-11,3.3,Python;統計学;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CISSP,短大・専門,2013,男性,30〜39歳,中国,はい,67.2
+H186,R2,2023-05-27,8.0,SQL;統計学;Power BI;A/Bテスト,,学士,2011,男性,30〜39歳,インド,いいえ,58.3
+H187,R1,2023-06-03,8.2,Python;Go;SQL;Docker;ネットワークセキュリティ,AWS Certified Solutions Architect - Associate,修士,2011,女性,30〜39歳,中国,いいえ,48.7
+H188,R1,2023-06-04,12.7,Python;SQL;AWS,,修士,2009,女性,30〜39歳,シンガポール,いいえ,52.5
+H189,R3,2023-06-08,3.2,Python;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux;Scrum,CompTIA Security+,修士,2019,男性,30歳未満,中国,いいえ,65.3
+H190,R1,2023-06-13,3.7,Python;Go;SQL;Kubernetes;Docker;AWS;A/Bテスト;インシデント対応,,学士,2012,男性,30〜39歳,シンガポール,はい,61.9
+H191,R3,2023-06-15,6.2,Python;Go;Docker;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CISSP,修士,2015,男性,30〜39歳,インド,いいえ,68.3
+H192,R3,2023-06-17,3.8,Python;Excel;Tableau;ネットワークセキュリティ;SIEM;Linux;Scrum,CompTIA Security+,学士,2016,男性,30歳未満,シンガポール,いいえ,53.4
+H193,R1,2023-06-20,3.5,Python;Go;SQL;Docker;AWS;Excel;Power BI;インシデント対応,AWS Certified Solutions Architect - Associate,学士,2019,男性,30歳未満,シンガポール,いいえ,62.0
+H194,R1,2023-06-21,3.3,Python;SQL;Docker;AWS;SIEM;Linux,,学士,2017,女性,30〜39歳,シンガポール,いいえ,36.8
+H195,R3,2023-06-22,13.6,Python;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2008,女性,40〜49歳,シンガポール,いいえ,44.5
+H196,R1,2023-07-04,6.3,Python;SQL;R;SIEM;Scrum,,学士,2015,男性,30〜39歳,シンガポール,いいえ,52.9
+H197,R1,2023-07-06,4.7,Python;SQL;AWS;統計学;Excel;R,AWS Certified Solutions Architect - Associate,学士,2017,男性,30〜39歳,シンガポール,いいえ,64.4
+H198,R3,2023-07-13,7.2,Python;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,学士,2015,男性,30〜39歳,シンガポール,いいえ,79.4
+H199,R3,2023-07-14,5.1,ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,修士,2014,女性,30〜39歳,シンガポール,いいえ,50.2
+H200,R1,2023-07-15,3.8,Python;Java;Go;SQL;Docker;AWS;Tableau,,短大・専門,2019,男性,30歳未満,シンガポール,いいえ,68.7
+H201,R3,2023-07-19,2.4,ネットワークセキュリティ;SIEM,CompTIA Security+,学士,2019,男性,30〜39歳,インド,いいえ,37.3
+H202,R2,2023-07-21,5.2,SQL;統計学;Excel;Tableau;Power BI,Tableau Desktop Specialist,学士,2011,女性,30〜39歳,フィリピン,いいえ,47.5
+H203,R2,2023-07-21,4.7,Python;SQL;統計学;Excel;Tableau,Tableau Desktop Specialist,修士,2014,女性,30〜39歳,中国,いいえ,50.1
+H204,R1,2023-07-24,6.5,Python;Go;SQL;Kubernetes;AWS;統計学;Excel;ネットワークセキュリティ;Scrum,AWS Certified Solutions Architect - Associate,学士,2013,男性,30〜39歳,インド,いいえ,64.6
+H205,R3,2023-07-26,11.7,Python;Go;SQL;ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2010,男性,40〜49歳,インド,いいえ,53.7
+H206,R3,2023-08-16,4.0,Python;SQL;Excel;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CISSP,学士,2018,男性,30〜39歳,中国,いいえ,55.7
+H207,R1,2023-08-20,4.2,Python;SQL;Docker;AWS,AWS Certified Solutions Architect - Associate,学士,2012,女性,30〜39歳,シンガポール,いいえ,44.6
+H208,R1,2023-08-22,5.9,Python;Java;SQL;AWS;A/Bテスト;R,,短大・専門,2014,女性,30歳未満,インドネシア,いいえ,48.4
+H209,R3,2023-08-23,3.8,Python;ネットワークセキュリティ;SIEM;インシデント対応,CISSP,修士,2017,男性,30歳未満,シンガポール,いいえ,70.7
+H210,R1,2023-09-27,8.1,Python;Java;Go;SQL,,学士,2013,男性,30〜39歳,シンガポール,いいえ,63.2
+H211,R2,2023-09-28,5.9,Python;SQL;統計学;Tableau;Power BI;A/Bテスト,,修士,2016,女性,30〜39歳,シンガポール,いいえ,61.2
+H212,R3,2023-10-01,3.1,Java;ネットワークセキュリティ;SIEM,CompTIA Security+,学士,2018,女性,30歳未満,マレーシア,いいえ,40.4
+H213,R3,2023-10-03,5.3,Python;SQL;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,学士,2014,女性,30〜39歳,フィリピン,いいえ,49.6
+H214,R1,2023-10-11,3.7,Python;SQL;Kubernetes;AWS;Tableau;R,,学士,2012,女性,30〜39歳,シンガポール,いいえ,43.4
+H215,R2,2023-10-18,5.0,Python;SQL;統計学;Power BI;A/Bテスト,Tableau Desktop Specialist,修士,2015,男性,30〜39歳,中国,いいえ,72.1
+H216,R2,2023-11-12,4.9,Java;SQL;統計学;Excel;Power BI;A/Bテスト,Tableau Desktop Specialist,学士,2018,女性,30歳未満,中国,いいえ,46.2
+H217,R3,2023-11-14,5.8,AWS;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CISSP,学士,2010,男性,40〜49歳,中国,いいえ,52.4
+H218,R1,2023-11-15,10.0,Python;Go;SQL;Kubernetes;ネットワークセキュリティ,,修士,2012,その他・無回答,30〜39歳,シンガポール,いいえ,66.9
+H219,R2,2023-11-17,2.7,Python;SQL;AWS;統計学;A/Bテスト;Linux,,修士,2018,女性,30〜39歳,インド,いいえ,53.3
+H220,R2,2023-11-18,8.3,Python;Go;SQL;統計学;Excel,,修士,2008,女性,30〜39歳,マレーシア,はい,55.4
+H221,R2,2023-12-03,2.5,SQL;統計学;Excel;Tableau;Power BI;ネットワークセキュリティ,Tableau Desktop Specialist,学士,2019,男性,30歳未満,シンガポール,いいえ,53.5
+H222,R3,2023-12-06,8.3,ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CompTIA Security+,博士,2014,男性,40〜49歳,インドネシア,いいえ,65.8
+H223,R1,2023-12-16,6.4,Python;Go;SQL;Kubernetes,,学士,2009,男性,30〜39歳,シンガポール,いいえ,67.6
+H224,R2,2023-12-25,2.2,Java;SQL;統計学,Tableau Desktop Specialist,学士,2020,男性,30歳未満,マレーシア,いいえ,34.9
+H225,R2,2023-12-26,9.0,Python;SQL;統計学;Excel;Tableau;Power BI;A/Bテスト,Tableau Desktop Specialist,学士,2012,男性,30〜39歳,インド,いいえ,75.8
+H226,R1,2023-12-27,4.1,Python;Go;SQL;Kubernetes;Docker;AWS,,修士,2018,男性,30歳未満,シンガポール,いいえ,64.4
+H227,R2,2023-12-27,6.4,SQL;統計学;Excel,,学士,2010,女性,30〜39歳,シンガポール,いいえ,42.1
+H228,R1,2024-01-02,3.3,Python;Go;SQL,,修士,2017,女性,30〜39歳,シンガポール,いいえ,41.0
+H229,R2,2024-01-07,3.4,Python;SQL;統計学;Tableau;Power BI,,修士,2017,女性,30〜39歳,フィリピン,いいえ,48.7
+H230,R1,2024-01-11,5.1,Python;SQL;Kubernetes;AWS;Excel,AWS Certified Solutions Architect - Associate,学士,2017,女性,30〜39歳,シンガポール,いいえ,68.0
+H231,R2,2024-01-11,8.0,Python;SQL;統計学;SIEM,Tableau Desktop Specialist,修士,2009,その他・無回答,40〜49歳,シンガポール,いいえ,47.9
+H232,R3,2024-01-11,2.3,Python;R;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CompTIA Security+,学士,2020,男性,30歳未満,中国,いいえ,47.4
+H233,R1,2024-01-17,4.4,Python;Go;SQL;Kubernetes;Docker;AWS;ネットワークセキュリティ;インシデント対応;クラウドセキュリティ,,学士,2018,男性,30〜39歳,シンガポール,いいえ,63.7
+H234,R2,2024-01-24,2.4,Python;SQL;統計学;Excel;Tableau;Power BI,Tableau Desktop Specialist,学士,2020,その他・無回答,30歳未満,シンガポール,いいえ,54.3
+H235,R2,2024-02-15,2.0,Python;SQL;AWS;統計学;Tableau;A/Bテスト,Tableau Desktop Specialist,学士,2020,男性,30歳未満,インド,いいえ,52.5
+H236,R3,2024-02-17,3.3,SQL;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ;Linux,CISSP,修士,2018,女性,30歳未満,シンガポール,はい,60.6
+H237,R3,2024-02-18,4.7,Python;R;ネットワークセキュリティ;SIEM;Linux,CompTIA Security+,学士,2017,男性,30〜39歳,インド,いいえ,47.4
+H238,R1,2024-02-18,4.0,Python;Go;SQL,AWS Certified Solutions Architect - Associate,修士,2018,女性,30〜39歳,マレーシア,いいえ,41.0
+H239,R3,2024-02-22,7.3,Java;Kubernetes;AWS;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,学士,2014,女性,30〜39歳,中国,いいえ,54.2
+H240,R1,2024-02-27,4.1,Python;SQL;Docker;AWS,AWS Certified Solutions Architect - Associate,学士,2016,男性,30〜39歳,インド,いいえ,57.1
+H241,R3,2024-03-09,6.1,Power BI;ネットワークセキュリティ;SIEM,CISSP,修士,2014,女性,30〜39歳,ベトナム,いいえ,42.2
+H242,R1,2024-03-14,5.6,Python;Go;SQL;Docker,,学士,2017,男性,30歳未満,インド,はい,57.1
+H243,R3,2024-03-16,2.3,ネットワークセキュリティ;SIEM;Linux,CompTIA Security+,学士,2019,女性,30歳未満,シンガポール,いいえ,35.7
+H244,R2,2024-03-18,3.9,Python;SQL;統計学;Excel;A/Bテスト,,短大・専門,2013,女性,30〜39歳,マレーシア,はい,54.4
+H245,R3,2024-03-24,2.9,ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,学士,2020,女性,30歳未満,マレーシア,いいえ,44.8
+H246,R2,2024-04-01,10.8,Python;SQL;統計学;Power BI;R,,修士,2011,女性,30〜39歳,シンガポール,いいえ,50.5
+H247,R3,2024-04-02,9.8,Python;Docker;AWS;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CISSP,学士,2010,男性,30〜39歳,シンガポール,はい,71.9
+H248,R2,2024-04-04,4.2,Python;SQL;統計学;Excel;Power BI;A/Bテスト,Tableau Desktop Specialist,博士,2016,女性,30〜39歳,シンガポール,いいえ,63.3
+H249,R3,2024-04-13,8.0,Python;統計学;ネットワークセキュリティ;SIEM;Scrum,CompTIA Security+,博士,2015,男性,40〜49歳,シンガポール,いいえ,54.2
+H250,R1,2024-04-16,8.1,Python;Go;SQL;Docker;AWS;Power BI,AWS Certified Solutions Architect - Associate,学士,2014,女性,30〜39歳,インド,いいえ,51.8
+H251,R2,2024-05-04,2.3,SQL;統計学;Excel;Tableau;Power BI;A/Bテスト,Tableau Desktop Specialist,学士,2020,女性,30歳未満,インド,いいえ,39.9
+H252,R1,2024-05-06,8.4,Python;Go;SQL;Docker;Tableau;Linux,,修士,2013,男性,30〜39歳,シンガポール,いいえ,58.0
+H253,R1,2024-05-14,5.5,Python;SQL;Kubernetes;AWS,,短大・専門,2018,女性,30歳未満,インド,いいえ,49.8
+H254,R1,2024-05-15,4.4,Python;SQL;AWS;A/Bテスト,,修士,2017,男性,30〜39歳,中国,いいえ,52.8
+H255,R3,2024-05-15,8.1,Python;A/Bテスト;ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2013,女性,30〜39歳,シンガポール,いいえ,50.0
+H256,R2,2024-05-15,4.3,Python;SQL;統計学;Excel;Tableau,,学士,2018,女性,30〜39歳,中国,いいえ,41.4
+H257,R2,2024-06-10,2.9,SQL;統計学;Tableau,Tableau Desktop Specialist,短大・専門,2017,男性,30歳未満,シンガポール,いいえ,59.1
+H258,R2,2024-06-13,3.4,SQL;統計学;Power BI,,修士,2018,男性,30歳未満,マレーシア,いいえ,47.1
+H259,R2,2024-06-15,3.3,SQL;統計学;Tableau;A/Bテスト,,博士,2020,男性,30〜39歳,マレーシア,いいえ,69.7
+H260,R1,2024-06-16,11.0,Python;Go;SQL;R,,修士,2012,男性,30〜39歳,インド,いいえ,50.0
+H261,R3,2024-07-10,7.7,Python;A/Bテスト;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CISSP,学士,2010,女性,30〜39歳,フィリピン,いいえ,57.6
+H262,R3,2024-07-13,2.1,Python;Java;ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CISSP,修士,2018,男性,30〜39歳,シンガポール,いいえ,68.1
+H263,R3,2024-07-16,2.2,Python;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,短大・専門,2019,男性,30歳未満,フィリピン,いいえ,53.0
+H264,R1,2024-07-25,4.1,Python;SQL;Kubernetes;Docker;AWS;Power BI,,学士,2019,男性,30歳未満,フィリピン,いいえ,56.7
+H265,R1,2024-08-03,3.2,Python;SQL;Kubernetes;Docker;AWS,,修士,2019,男性,30〜39歳,インドネシア,いいえ,58.2
+H266,R2,2024-08-05,2.3,Java;SQL;Kubernetes;統計学;Tableau;Power BI;A/Bテスト;Linux,Tableau Desktop Specialist,学士,2014,男性,30〜39歳,シンガポール,いいえ,62.9
+H267,R3,2024-08-05,2.0,Python;Kubernetes;Docker;ネットワークセキュリティ;SIEM,CISSP,短大・専門,2015,男性,30〜39歳,中国,いいえ,36.3
+H268,R3,2024-08-10,2.6,Python;R;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CISSP,学士,2020,女性,30歳未満,シンガポール,いいえ,50.0
+H269,R1,2024-08-13,10.3,Python;Go;SQL;Kubernetes;Docker;AWS;SIEM,AWS Certified Solutions Architect - Associate,修士,2006,女性,40〜49歳,マレーシア,いいえ,50.2
+H270,R2,2024-08-15,3.0,Python;SQL;統計学;Excel;Tableau,,学士,2020,女性,30歳未満,中国,いいえ,41.3
+H271,R3,2024-08-22,5.3,ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,博士,2015,女性,40〜49歳,中国,いいえ,35.7
+H272,R2,2024-08-23,2.1,Python;SQL;統計学;Tableau;Power BI;A/Bテスト,,短大・専門,2015,男性,30〜39歳,マレーシア,いいえ,51.0
+H273,R2,2024-09-02,4.6,Python;SQL;AWS;統計学;Excel;Tableau;A/Bテスト;インシデント対応,Tableau Desktop Specialist,修士,2016,男性,30〜39歳,シンガポール,いいえ,72.4
+H274,R1,2024-09-10,3.9,Python;Go;SQL;Kubernetes;Docker;AWS;ネットワークセキュリティ;SIEM;Linux,,学士,2013,女性,30〜39歳,インド,いいえ,46.1
+H275,R1,2024-09-19,3.4,Python;SQL;Kubernetes;A/Bテスト;Scrum,,修士,2013,男性,30〜39歳,フィリピン,いいえ,53.0
+H276,R1,2024-10-10,3.1,Python;SQL;Kubernetes,,学士,2017,女性,30〜39歳,シンガポール,はい,41.7
+H277,R2,2024-10-14,2.3,Python;SQL;統計学;Tableau;Power BI,,学士,2019,女性,30歳未満,シンガポール,いいえ,53.9
+H278,R1,2024-10-26,7.4,Python;SQL;Kubernetes;Docker,,学士,2014,女性,30〜39歳,マレーシア,いいえ,40.1
+H279,R1,2024-11-04,7.2,Python;SQL;インシデント対応;Linux,,学士,2016,男性,30〜39歳,マレーシア,いいえ,50.9
+H280,R2,2024-11-08,2.8,Python;SQL;統計学;Excel;Power BI;インシデント対応;クラウドセキュリティ,,学士,2014,男性,30〜39歳,マレーシア,いいえ,49.9
+H281,R1,2024-11-09,6.7,Python;SQL;Kubernetes;AWS;SIEM;インシデント対応,AWS Certified Solutions Architect - Associate,博士,2016,男性,30〜39歳,マレーシア,いいえ,76.7
+H282,R2,2024-11-10,6.3,SQL;統計学;Excel;Power BI,Tableau Desktop Specialist,修士,2014,男性,40〜49歳,インド,いいえ,50.4
+H283,R3,2024-12-01,4.3,Python;ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2019,男性,30〜39歳,インド,はい,55.4
+H284,R1,2024-12-04,5.5,Python;SQL;Docker;A/Bテスト,,学士,2012,女性,30〜39歳,ベトナム,いいえ,40.9
+H285,R2,2024-12-08,3.1,SQL;Kubernetes;AWS;統計学;Power BI,,学士,2017,男性,30〜39歳,フィリピン,はい,44.4
+H286,R2,2024-12-10,2.4,SQL;Kubernetes;Docker;統計学;Power BI;A/Bテスト,,学士,2020,女性,30〜39歳,シンガポール,いいえ,43.1
+H287,R3,2024-12-19,3.2,R;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CISSP,博士,2020,男性,30〜39歳,中国,いいえ,61.7
+H288,R1,2024-12-21,3.2,Python;Go;SQL;Docker;AWS;ネットワークセキュリティ,AWS Certified Solutions Architect - Associate,学士,2019,男性,30歳未満,マレーシア,いいえ,52.0
+H289,R3,2025-01-01,6.0,ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,短大・専門,2018,女性,30歳未満,シンガポール,はい,53.5
+H290,R2,2025-01-10,7.0,SQL;統計学;Excel;インシデント対応,,修士,2017,男性,30〜39歳,シンガポール,いいえ,63.0
+H291,R1,2025-01-11,5.1,Python;SQL;Docker;AWS,,学士,2018,男性,30〜39歳,シンガポール,いいえ,66.2
+H292,R3,2025-01-12,4.0,ネットワークセキュリティ;SIEM,CompTIA Security+,修士,2020,男性,30歳未満,シンガポール,いいえ,57.7
+H293,R2,2025-01-17,6.6,Python;SQL;統計学;Excel;Tableau;Power BI,,修士,2011,女性,30〜39歳,ベトナム,いいえ,52.6
+H294,R2,2025-01-20,6.6,Python;SQL;統計学;SIEM,Tableau Desktop Specialist,修士,2012,男性,30〜39歳,マレーシア,いいえ,55.7
+H295,R1,2025-01-23,6.1,Python;SQL;Kubernetes;AWS;Tableau;インシデント対応;Linux,,修士,2012,女性,30〜39歳,シンガポール,いいえ,55.3
+H296,R2,2025-01-26,5.5,Python;SQL;統計学,Tableau Desktop Specialist,修士,2017,男性,30〜39歳,フィリピン,いいえ,60.6
+H297,R2,2025-01-27,4.8,Python;Go;SQL;統計学;Excel;Tableau;A/Bテスト,,短大・専門,2019,男性,30歳未満,シンガポール,いいえ,70.4
+H298,R1,2025-02-02,5.9,Python;SQL;統計学;インシデント対応,AWS Certified Solutions Architect - Associate,修士,2019,男性,30〜39歳,中国,いいえ,58.6
+H299,R2,2025-02-03,3.5,Python;SQL;統計学;Power BI;R;クラウドセキュリティ,,学士,2017,男性,30〜39歳,シンガポール,いいえ,56.5
+H300,R2,2025-02-07,4.3,Python;SQL;統計学;Excel;Tableau,Tableau Desktop Specialist,学士,2019,男性,30歳未満,中国,いいえ,65.9
+H301,R2,2025-03-01,4.5,SQL;統計学;Excel;Tableau;A/Bテスト,,学士,2020,男性,30〜39歳,フィリピン,いいえ,64.4
+H302,R1,2025-03-02,3.1,Python;SQL;AWS;Power BI,AWS Certified Solutions Architect - Associate,博士,2018,女性,30〜39歳,中国,いいえ,40.0
+H303,R1,2025-03-03,7.8,Python;Java;SQL;Linux,,学士,2011,女性,30〜39歳,シンガポール,いいえ,44.2
+H304,R3,2025-03-06,16.0,Python;SQL;AWS;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CISSP,短大・専門,2007,男性,40〜49歳,フィリピン,いいえ,64.6
+H305,R1,2025-03-06,5.4,Python;SQL;Kubernetes;AWS,AWS Certified Solutions Architect - Associate,学士,2017,その他・無回答,30〜39歳,インド,いいえ,67.5
+H306,R2,2025-03-09,2.4,Go;SQL;統計学;Tableau;Power BI;A/Bテスト,,学士,2015,男性,30〜39歳,シンガポール,いいえ,62.8
+H307,R3,2025-03-10,7.0,ネットワークセキュリティ;SIEM;Linux,CISSP,学士,2016,女性,30〜39歳,マレーシア,はい,38.0
+H308,R1,2025-03-10,4.7,Python;Go;SQL;Kubernetes;Docker;Excel;Scrum,,修士,2018,男性,30〜39歳,インド,いいえ,54.0
+H309,R2,2025-03-22,4.9,Java;SQL;統計学;Excel;Tableau;Power BI,Tableau Desktop Specialist,博士,2018,女性,30〜39歳,フィリピン,いいえ,47.5
+H310,R1,2025-04-10,5.7,Python;SQL;Docker;AWS;クラウドセキュリティ,,短大・専門,2012,女性,30〜39歳,シンガポール,いいえ,51.3
+H311,R2,2025-04-10,3.1,SQL;統計学;Tableau,Tableau Desktop Specialist,博士,2019,女性,30〜39歳,シンガポール,いいえ,50.3
+H312,R1,2025-04-11,7.9,Python;SQL;AWS;統計学,,修士,2010,男性,40〜49歳,シンガポール,はい,55.0
+H313,R1,2025-04-20,3.7,Python;SQL;Kubernetes;Docker;統計学;Excel;ネットワークセキュリティ;Linux,AWS Certified Solutions Architect - Associate,修士,2018,女性,30〜39歳,マレーシア,いいえ,37.6
+H314,R2,2025-05-02,4.7,Python;SQL;Kubernetes;AWS;統計学;Tableau,,学士,2020,女性,30〜39歳,インドネシア,いいえ,41.7
+H315,R3,2025-05-09,6.0,Tableau;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2012,男性,30〜39歳,シンガポール,いいえ,59.7
+H316,R1,2025-05-10,3.5,Python;Go;SQL;Docker,,学士,2021,女性,30歳未満,マレーシア,いいえ,34.5
+H317,R3,2025-05-16,4.5,AWS;Tableau;ネットワークセキュリティ;SIEM;インシデント対応;Linux,CompTIA Security+,学士,2013,女性,30〜39歳,マレーシア,いいえ,45.3
+H318,R2,2025-05-21,5.5,SQL;統計学;Excel;Tableau;Power BI;A/Bテスト;SIEM,,学士,2013,女性,30〜39歳,シンガポール,いいえ,63.6
+H319,R1,2025-05-24,4.5,Python;Go;SQL;Kubernetes;Docker;AWS,,修士,2019,女性,30歳未満,シンガポール,いいえ,63.2
+H320,R1,2025-05-28,6.6,Python;Go;SQL;AWS;Tableau;クラウドセキュリティ,,学士,2016,男性,30〜39歳,マレーシア,いいえ,56.4
+H321,R1,2025-06-01,4.0,Python;SQL;Docker;AWS,,学士,2014,男性,30〜39歳,中国,いいえ,48.5
+H322,R2,2025-06-01,3.9,SQL;統計学;Excel;Tableau;Power BI;A/Bテスト,,学士,2015,女性,30〜39歳,中国,いいえ,51.4
+H323,R2,2025-06-03,9.6,Python;SQL;統計学;Excel;Tableau;Power BI,Tableau Desktop Specialist,短大・専門,2014,男性,30〜39歳,シンガポール,いいえ,73.6
+H324,R3,2025-06-14,5.5,Python;Tableau;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CompTIA Security+,学士,2016,男性,30〜39歳,マレーシア,いいえ,59.5
+H325,R1,2025-06-25,5.6,Python;Go;SQL;AWS;ネットワークセキュリティ;Linux,AWS Certified Solutions Architect - Associate,学士,2019,男性,30歳未満,フィリピン,いいえ,63.5
+H326,R2,2025-06-28,4.5,SQL;Docker;統計学;Excel;A/Bテスト,,学士,2018,女性,30〜39歳,シンガポール,いいえ,53.3
+H327,R1,2025-07-08,3.4,Python;SQL;Kubernetes;Docker;AWS;Linux,,学士,2019,男性,30歳未満,シンガポール,いいえ,64.9
+H328,R1,2025-07-09,9.2,Python;Go;SQL;Docker;AWS;Power BI,AWS Certified Solutions Architect - Associate,学士,2015,男性,30〜39歳,シンガポール,いいえ,78.1
+H329,R2,2025-07-12,5.0,Python;SQL;Kubernetes;AWS;統計学;Excel;Power BI,Tableau Desktop Specialist,学士,2019,女性,30〜39歳,シンガポール,いいえ,49.8
+H330,R3,2025-07-23,2.7,Python;ネットワークセキュリティ;SIEM,CompTIA Security+,学士,2020,男性,30歳未満,フィリピン,いいえ,44.1
+H331,R3,2025-07-24,2.6,ネットワークセキュリティ;SIEM;クラウドセキュリティ;Linux,CompTIA Security+,学士,2021,女性,30歳未満,シンガポール,いいえ,51.1
+H332,R3,2025-07-25,2.4,Python;ネットワークセキュリティ;SIEM;インシデント対応;Scrum,CISSP,学士,2022,男性,30歳未満,インドネシア,いいえ,50.9
+H333,R2,2025-08-02,6.6,SQL;統計学;Excel;Tableau;Power BI;R,Tableau Desktop Specialist,修士,2011,男性,30〜39歳,シンガポール,いいえ,64.2
+H334,R1,2025-08-12,6.4,Python;SQL;Docker;AWS;クラウドセキュリティ,,学士,2017,女性,30〜39歳,インド,いいえ,55.1
+H335,R3,2025-08-14,2.5,Tableau;Power BI;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2022,女性,30歳未満,インドネシア,いいえ,41.7
+H336,R1,2025-08-15,4.0,Python;Java;Go;SQL;Excel;クラウドセキュリティ,,修士,2020,男性,30〜39歳,ベトナム,いいえ,44.2
+H337,R3,2025-08-23,3.3,Python;SQL;ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2014,男性,30〜39歳,シンガポール,いいえ,60.3
+H338,R2,2025-08-25,4.5,Go;SQL;統計学;Power BI;A/Bテスト;インシデント対応,,修士,2018,女性,30〜39歳,マレーシア,いいえ,57.0
+H339,R1,2025-08-27,3.9,Python;Go;SQL;Kubernetes;Docker;AWS;Tableau;SIEM,,修士,2020,男性,30歳未満,マレーシア,いいえ,62.6
+H340,R3,2025-09-03,3.5,ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,学士,2014,男性,30〜39歳,シンガポール,はい,57.4
+H341,R1,2025-09-04,7.7,Python;SQL;Kubernetes;Docker;統計学;Power BI,AWS Certified Solutions Architect - Associate,学士,2017,女性,30歳未満,フィリピン,いいえ,48.3
+H342,R3,2025-09-12,3.1,Python;統計学;Excel;ネットワークセキュリティ;SIEM;Linux,CISSP,学士,2020,男性,30歳未満,シンガポール,はい,60.5
+H343,R2,2025-09-17,2.2,SQL;Kubernetes;AWS;統計学;Excel;Power BI;Linux,,学士,2022,女性,30歳未満,インドネシア,いいえ,25.7
+H344,R3,2025-09-25,7.2,Python;ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,修士,2014,男性,30〜39歳,シンガポール,いいえ,61.8
+H345,R1,2025-10-01,3.5,Python;SQL;Kubernetes;Docker;統計学;インシデント対応,,学士,2021,男性,30歳未満,シンガポール,いいえ,49.5
+H346,R1,2025-10-08,4.1,Python;Go;SQL;Tableau,,学士,2014,男性,30〜39歳,フィリピン,はい,40.6
+H347,R2,2025-10-14,3.9,SQL;統計学;Excel;Tableau,,博士,2014,男性,30〜39歳,シンガポール,いいえ,70.3
+H348,R3,2025-10-15,2.3,A/Bテスト;ネットワークセキュリティ;SIEM,CompTIA Security+,学士,2020,男性,30〜39歳,フィリピン,いいえ,39.8
+H349,R3,2025-10-18,3.1,ネットワークセキュリティ;SIEM;インシデント対応,CompTIA Security+,学士,2021,女性,30歳未満,シンガポール,いいえ,56.0
+H350,R3,2025-11-04,5.1,ネットワークセキュリティ;SIEM;Linux,CISSP,学士,2019,女性,30歳未満,マレーシア,いいえ,43.1
+H351,R1,2025-11-06,3.9,Python;SQL;Kubernetes;Docker;Excel,AWS Certified Solutions Architect - Associate,短大・専門,2020,男性,30歳未満,インド,いいえ,61.5
+H352,R1,2025-11-10,16.0,Python;Go;SQL;AWS;R;Linux,,博士,2007,男性,40〜49歳,シンガポール,いいえ,61.2
+H353,R1,2025-11-20,9.3,Python;SQL;Kubernetes;クラウドセキュリティ,,修士,2015,女性,30〜39歳,インドネシア,いいえ,37.8
+H354,R3,2025-11-21,2.5,ネットワークセキュリティ;SIEM;クラウドセキュリティ,CompTIA Security+,修士,2016,男性,30〜39歳,ベトナム,いいえ,44.8
+H355,R2,2025-12-06,5.1,SQL;統計学;Tableau;A/Bテスト,Tableau Desktop Specialist,学士,2017,男性,30〜39歳,シンガポール,いいえ,66.3
+H356,R2,2025-12-06,12.3,Python;SQL;統計学;Tableau;Power BI,Tableau Desktop Specialist,学士,2011,男性,30〜39歳,マレーシア,いいえ,62.8
+H357,R1,2025-12-06,7.6,Python;SQL;Kubernetes,,学士,2013,男性,30〜39歳,シンガポール,いいえ,66.5
+H358,R3,2025-12-07,3.7,Python;Java;ネットワークセキュリティ;SIEM;インシデント対応;クラウドセキュリティ,CISSP,学士,2019,男性,30歳未満,インド,いいえ,65.5
+H359,R2,2025-12-21,2.4,Go;SQL;統計学;Excel;Linux,Tableau Desktop Specialist,修士,2018,男性,30〜39歳,シンガポール,いいえ,58.9
+H360,R2,2025-12-26,4.4,Python;SQL;統計学;Excel;Power BI;A/Bテスト,,学士,2018,女性,30歳未満,シンガポール,いいえ,63.0

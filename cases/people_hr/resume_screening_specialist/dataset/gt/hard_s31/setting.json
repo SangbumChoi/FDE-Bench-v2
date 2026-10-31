@@ -1,0 +1,15 @@
+{
+  "derived": {
+    "shortlist_total": 18
+  },
+  "params": {
+    "cutoff_date": "2026-10-23",
+    "interview_date": "2026-11-02",
+    "min_r1": 36,
+    "min_r2": 24,
+    "min_r3": 24,
+    "shortlist_size": 6
+  },
+  "rule_seed": 31,
+  "tier": "hard"
+}

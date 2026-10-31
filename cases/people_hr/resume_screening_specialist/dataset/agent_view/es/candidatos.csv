@@ -1,251 +1,251 @@
 ﻿id_candidato,puestos_solicitados,fecha_solicitud,ubicacion,permiso_trabajo,nivel_estudios,anio_graduacion,anios_experiencia_total,habilidades,idiomas,referido,genero,rango_edad,nacionalidad
-C001,R3,2026-10-11,Centro,ciudadano,grado,2004,9.8,Docker;Power BI;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube,inglés;mandarín,sí,hombre,40-49,Singapur
-C002,R1;R2,2026-10-23,Extranjero,requiere patrocinio de visado,máster,2012,9.3,Python;SQL;Docker;AWS;Excel,indonesio;inglés,no,mujer,30-39,Indonesia
-C003,R3,2026-10-23,Centro,ciudadano,doctorado,2015,6.1,seguridad de redes;SIEM;Linux,inglés;mandarín,no,hombre,30-39,Singapur
-C004,R1,2026-10-11,Norte,ciudadano,máster,1996,10.8,Python;SQL;Docker;Excel;Scrum,inglés;mandarín,no,mujer,50 o más,Singapur
-C005,R3,2026-10-10,Norte,ciudadano,grado,2007,3.6,Python;seguridad de redes;SIEM;respuesta a incidentes,inglés;mandarín,no,mujer,40-49,Singapur
-C006,R1;R2,2026-10-25,Oeste,ciudadano,grado,1995,13.3,Python;SQL;estadística;Tableau;Power BI,inglés;mandarín,sí,hombre,50 o más,Singapur
-C007,R2;R3,2026-10-01,Centro,residente permanente,máster,2013,11.0,SQL;Kubernetes;Docker;AWS;estadística;Power BI;seguridad de redes;SIEM;seguridad en la nube;Linux,inglés;hindi,no,mujer,30-39,India
-C008,R1,2026-10-03,Centro,ciudadano,grado,2023,1.2,SQL;Tableau;seguridad de redes;Scrum,inglés;tamil,no,hombre,menos de 30,Singapur
-C009,R2,2026-10-12,Oeste,permiso de trabajo vigente,grado,2008,1.8,SQL;seguridad en la nube,mandarín;inglés,no,hombre,40-49,China
-C010,R3,2026-10-18,Centro,ciudadano,grado,1996,12.5,Java;seguridad de redes;SIEM;Scrum,inglés;tamil,sí,hombre,50 o más,Singapur
-C011,R1;R2,2026-10-19,Norte,residente permanente,grado,1996,12.4,Python;SQL;Kubernetes;estadística;Excel,mandarín;inglés,no,mujer,50 o más,China
-C012,R2,2026-10-20,Este,ciudadano,grado,2017,7.8,Python;estadística;Excel,inglés;mandarín,no,mujer,30-39,Singapur
-C013,R2;R3,2026-10-09,Centro,residente permanente,grado,2017,1.5,Python;Java;SQL;estadística;Excel;pruebas A/B,inglés;mandarín,no,mujer,30-39,Singapur
-C014,R1;R3,2026-10-12,Extranjero,requiere patrocinio de visado,grado,2017,7.4,SQL;Kubernetes;Docker;seguridad en la nube,inglés;hindi;español,no,mujer,30-39,India
-C015,R1;R3,2026-10-06,Extranjero,requiere patrocinio de visado,máster,2009,14.6,Python;SQL;Kubernetes;Docker;Excel,mandarín;inglés,sí,hombre,40-49,China
-C016,R3,2026-10-25,Oeste,residente permanente,grado,2006,2.8,Java;Docker;seguridad de redes;respuesta a incidentes,malayo;inglés,no,mujer,40-49,Malasia
-C017,R2;R3,2026-10-02,Centro,ciudadano,grado,2009,16.2,Python;SQL;estadística;Tableau;pruebas A/B;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube,inglés;mandarín,no,hombre,30-39,Singapur
-C018,R3,2026-10-14,Norte,ciudadano,máster,2021,3.6,Python;Java;Tableau;seguridad de redes;SIEM,inglés;malayo,no,mujer,30-39,Singapur
-C019,R1,2026-10-05,Norte,permiso de trabajo vigente,grado,2004,3.8,Python;SQL;Kubernetes;Excel;Tableau;respuesta a incidentes,inglés;tamil,no,hombre,40-49,India
-C020,R1,2026-10-10,Oeste,permiso de trabajo vigente,técnico superior,2013,6.6,Python;SQL;Kubernetes;Tableau;SIEM,malayo;inglés;coreano,no,mujer,30-39,Malasia
-C021,R2,2026-10-25,Centro,ciudadano,grado,1992,4.4,Python;SQL;estadística;Excel;Scrum,inglés;malayo,no,mujer,50 o más,Singapur
-C022,R2;R3,2026-10-07,Norte,residente permanente,grado,2021,3.2,Python;Excel;R;seguridad de redes;SIEM;seguridad en la nube,inglés;mandarín,no,hombre,30-39,Singapur
-C023,R2;R3,2026-10-10,Norte,ciudadano,grado,1989,9.3,SQL;estadística;pruebas A/B;seguridad de redes;SIEM;respuesta a incidentes;Linux;Scrum,inglés;tamil,no,hombre,50 o más,Singapur
-C024,R2,2026-10-09,Este,ciudadano,grado,2015,3.5,Tableau,inglés;mandarín,no,hombre,30-39,Singapur
-C025,R2,2026-10-24,Centro,ciudadano,grado,2018,5.0,SQL;estadística;Excel;pruebas A/B,inglés;mandarín;coreano,no,hombre,30-39,Singapur
-C026,R1;R2,2026-10-18,Extranjero,requiere patrocinio de visado,grado,2002,14.8,Python;SQL;Kubernetes;Docker;AWS;estadística,indonesio;inglés;español,no,mujer,40-49,Indonesia
-C027,R1,2026-10-07,Centro,permiso de trabajo vigente,máster,1992,6.9,Python;SQL;Kubernetes;Docker;Excel;Linux,inglés;tamil,no,mujer,50 o más,India
-C028,R2,2026-10-19,Centro,ciudadano,máster,2005,5.8,Python;SQL;Docker;estadística;Power BI;seguridad de redes,inglés;tamil,no,mujer,40-49,Singapur
-C029,R1,2026-10-06,Norte,residente permanente,grado,2010,9.4,Python;Go;SQL;Excel;respuesta a incidentes,mandarín;inglés,no,mujer,30-39,China
-C030,R1;R2,2026-10-12,Norte,ciudadano,grado,2008,10.8,Python;Go;AWS;estadística;Tableau;seguridad de redes,inglés;mandarín,no,mujer,30-39,Singapur
-C031,R1;R2,2026-10-18,Centro,permiso de trabajo vigente,grado,2017,2.3,Python;SQL;Excel;Tableau;Power BI,inglés;hindi,no,hombre,30-39,India
-C032,R3,2026-10-08,Centro,ciudadano,máster,2024,1.0,Python;Go;SQL;seguridad de redes;SIEM,inglés;mandarín,no,hombre,30-39,Singapur
-C033,R3,2026-10-06,Norte,ciudadano,técnico superior,2009,8.6,Python;Excel;seguridad de redes;SIEM;respuesta a incidentes;Linux,inglés;malayo,no,mujer,30-39,Singapur
-C034,R2,2026-10-10,Oeste,ciudadano,máster,1998,7.7,Python;SQL;AWS;estadística;Power BI;SIEM,inglés;mandarín,no,hombre,50 o más,Singapur
-C035,R2;R3,2026-10-24,Centro,residente permanente,máster,1995,12.5,SQL;Docker;estadística;Tableau;Power BI;pruebas A/B;seguridad de redes;SIEM;respuesta a incidentes;Scrum,inglés;hindi,no,hombre,50 o más,India
-C036,R1;R2,2026-10-01,Centro,ciudadano,técnico superior,2015,3.2,Kubernetes;Docker;Power BI;seguridad de redes,inglés;tamil,no,mujer,30-39,Singapur
-C037,R1;R2,2026-10-15,Centro,ciudadano,grado,2000,14.5,Python;Go;SQL;Kubernetes;estadística;Excel;Tableau;Power BI;pruebas A/B,inglés;mandarín,no,mujer,50 o más,Singapur
-C038,R3,2026-10-02,Norte,permiso de trabajo vigente,grado,2008,11.0,Python;seguridad de redes;SIEM;Linux;Scrum,vietnamita;inglés,sí,otro / no indica,40-49,Vietnam
-C039,R3,2026-10-16,Centro,permiso de trabajo vigente,máster,1993,13.5,Go;Docker;seguridad de redes;SIEM,mandarín;inglés,no,mujer,50 o más,China
-C040,R1,2026-10-02,Centro,permiso de trabajo vigente,grado,2012,5.2,Python;SQL;estadística;Excel;Linux;Scrum,inglés;tamil,no,hombre,30-39,India
-C041,R2;R3,2026-10-07,Este,permiso de trabajo vigente,grado,2012,4.7,Python;SQL;estadística;Excel;Power BI;pruebas A/B;SIEM;Linux;Scrum,mandarín,no,hombre,30-39,China
-C042,R1,2026-10-08,Este,ciudadano,máster,2017,6.1,Python;Go;SQL;AWS,inglés;malayo,no,hombre,30-39,Singapur
-C043,R2;R3,2026-10-20,Este,ciudadano,máster,2001,6.4,Python;SQL;estadística;Excel;Power BI;pruebas A/B,inglés;tamil,no,hombre,50 o más,Singapur
-C044,R1,2026-10-20,Centro,residente permanente,grado,2014,6.6,Python;Java;SQL;AWS;Power BI;pruebas A/B,mandarín;inglés,no,hombre,30-39,China
-C045,R1,2026-10-12,Oeste,permiso de trabajo vigente,grado,1996,14.8,Python;SQL;Kubernetes;AWS;Linux,mandarín;inglés,no,mujer,50 o más,China
-C046,R3,2026-10-10,Extranjero,requiere patrocinio de visado,máster,2010,14.8,,mandarín;inglés,no,hombre,40-49,China
-C047,R3,2026-10-23,Extranjero,requiere patrocinio de visado,grado,2010,14.3,seguridad de redes;SIEM;seguridad en la nube,inglés;hindi,no,mujer,40-49,India
-C048,R1;R2,2026-10-08,Centro,ciudadano,máster,2000,4.0,Python;SQL;AWS;estadística,inglés;mandarín,no,hombre,50 o más,Singapur
-C049,R2,2026-10-16,Oeste,requiere patrocinio de visado,máster,2007,15.1,Python;SQL;Excel;Power BI;pruebas A/B;SIEM,tagalo;inglés;español,no,hombre,40-49,Filipinas
-C050,R1;R3,2026-10-04,Este,ciudadano,técnico superior,2017,8.0,Excel;SIEM;respuesta a incidentes;seguridad en la nube,inglés;tamil,no,hombre,menos de 30,Singapur
-C051,R2;R3,2026-10-20,Este,permiso de trabajo vigente,máster,2012,6.2,SQL;Kubernetes;estadística;Excel;Linux,tagalo;inglés,sí,mujer,30-39,Filipinas
-C052,R2,2026-10-24,Centro,ciudadano,grado,2008,8.8,SQL;estadística,inglés;mandarín,no,hombre,30-39,Singapur
-C053,R1;R2,2026-10-20,Norte,residente permanente,doctorado,2023,2.8,SQL;AWS;estadística;Excel;Tableau;Power BI;seguridad de redes;Linux;Scrum,inglés;tamil,no,hombre,30-39,Singapur
-C054,R1,2026-10-23,Centro,ciudadano,grado,2009,3.3,Python;Go;SQL;Kubernetes;AWS;Excel,inglés;mandarín,no,otro / no indica,30-39,Singapur
-C055,R1,2026-10-13,Centro,requiere patrocinio de visado,grado,2010,5.3,Python;SQL;AWS,vietnamita,no,mujer,40-49,Vietnam
-C056,R1,2026-10-08,Centro,permiso de trabajo vigente,grado,2016,6.3,Python;Go;SQL;Docker;Excel,malayo;inglés,no,mujer,30-39,Malasia
-C057,R2;R3,2026-10-05,Centro,permiso de trabajo vigente,grado,1998,11.8,Java;SQL;estadística;Excel;Tableau;pruebas A/B;seguridad de redes;SIEM,indonesio;inglés,no,hombre,50 o más,Indonesia
-C058,R3,2026-10-05,Centro,ciudadano,máster,2014,6.1,Python;estadística;seguridad de redes;SIEM,inglés;tamil,no,mujer,30-39,Singapur
-C059,R2,2026-10-25,Centro,ciudadano,máster,2018,5.3,seguridad de redes;SIEM;seguridad en la nube,inglés;tamil,no,mujer,30-39,Singapur
-C060,R1;R2,2026-10-09,Este,ciudadano,máster,2015,6.3,Python;SQL;Tableau;pruebas A/B;seguridad de redes;respuesta a incidentes,inglés;mandarín,no,hombre,40-49,Singapur
-C061,R1,2026-10-22,Este,requiere patrocinio de visado,grado,2016,7.7,Kubernetes;Docker;AWS;Excel;Scrum,inglés;hindi,no,hombre,30-39,India
-C062,R2,2026-10-12,Este,residente permanente,grado,2008,14.8,SQL;Docker;estadística;Excel,inglés;tamil,no,hombre,30-39,Singapur
-C063,R2,2026-10-24,Centro,residente permanente,grado,2013,4.1,SQL;estadística;pruebas A/B,malayo;mandarín,no,mujer,30-39,Malasia
-C064,R2;R3,2026-10-17,Centro,permiso de trabajo vigente,grado,2010,12.1,Python;Java;estadística;Tableau;seguridad de redes;SIEM;respuesta a incidentes;Scrum,vietnamita,no,mujer,30-39,Vietnam
-C065,R1,2026-10-23,Centro,residente permanente,grado,2015,10.0,Python;SQL;Kubernetes;AWS;pruebas A/B;respuesta a incidentes,inglés;tamil,no,mujer,30-39,India
-C066,R1,2026-10-18,Oeste,permiso de trabajo vigente,grado,2015,9.8,Python;SQL;Docker;Power BI;pruebas A/B;Scrum,malayo;mandarín,no,hombre,30-39,Malasia
-C067,R3,2026-10-07,Norte,permiso de trabajo vigente,grado,2015,3.2,Python;Excel;seguridad de redes,malayo;mandarín,no,mujer,30-39,Malasia
-C068,R1;R2,2026-10-06,Centro,ciudadano,grado,2008,9.8,SQL;estadística;Power BI,inglés;mandarín;español,no,hombre,40-49,Singapur
-C069,R1,2026-10-22,Este,ciudadano,grado,2008,5.9,Go;SQL;Kubernetes;Scrum,inglés;mandarín,sí,mujer,40-49,Singapur
-C070,R3,2026-10-04,Este,permiso de trabajo vigente,grado,2015,7.7,Java;Excel;respuesta a incidentes,inglés;tamil,no,mujer,30-39,India
-C071,R1;R3,2026-10-02,Este,ciudadano,técnico superior,2013,12.3,Python;Go;SQL;Kubernetes;AWS;Excel;Power BI;seguridad de redes;SIEM;Scrum,inglés;mandarín,no,mujer,30-39,Singapur
-C072,R1;R2,2026-10-20,Oeste,residente permanente,técnico superior,2012,12.5,Python;SQL;Docker;AWS;Excel;Tableau;Power BI;R;SIEM,inglés;tamil,no,mujer,30-39,India
-C073,R1;R3,2026-10-05,Oeste,ciudadano,grado,2012,9.0,Python;Java;SQL;SIEM;Scrum,inglés;mandarín,no,mujer,30-39,Singapur
-C074,R1,2026-10-13,Centro,requiere patrocinio de visado,grado,2001,9.1,Python;Go;SQL;Kubernetes;Docker;AWS;estadística;R;Scrum,inglés;hindi,no,hombre,40-49,India
-C075,R3,2026-10-11,Oeste,residente permanente,grado,1992,3.9,seguridad de redes;SIEM,tagalo;inglés;español,no,mujer,50 o más,Filipinas
-C076,R1;R2,2026-10-25,Extranjero,requiere patrocinio de visado,grado,2012,10.5,Python;SQL;Kubernetes;Docker;estadística;Tableau;Scrum,vietnamita;inglés,no,mujer,30-39,Vietnam
-C077,R2,2026-10-09,Centro,permiso de trabajo vigente,grado,1992,2.6,SQL;Kubernetes;estadística;Power BI;pruebas A/B;seguridad en la nube,mandarín;inglés,no,mujer,50 o más,China
-C078,R2,2026-10-07,Norte,ciudadano,grado,1993,12.0,Python;SQL;AWS;estadística;Tableau;seguridad de redes;SIEM,inglés;malayo,no,mujer,50 o más,Singapur
-C079,R3,2026-10-13,Centro,ciudadano,técnico superior,2014,9.1,Python;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube,inglés;mandarín,no,hombre,30-39,Singapur
-C080,R2;R3,2026-10-09,Oeste,residente permanente,máster,2010,14.1,Python;Go;SQL;estadística;Tableau;pruebas A/B;Scrum,mandarín;inglés,no,mujer,30-39,China
-C081,R1;R2,2026-10-02,Este,permiso de trabajo vigente,máster,1993,8.2,Python;SQL;Docker;AWS;estadística;Tableau;Power BI;pruebas A/B;Scrum,tagalo;inglés,no,mujer,50 o más,Filipinas
-C082,R3,2026-10-03,Extranjero,requiere patrocinio de visado,grado,2017,7.1,Java;estadística;seguridad de redes;SIEM;seguridad en la nube;Linux,inglés;hindi,no,mujer,30-39,India
-C083,R3,2026-10-18,Centro,permiso de trabajo vigente,técnico superior,2016,6.7,Python;seguridad de redes;SIEM;Linux,inglés;hindi,no,hombre,30-39,India
-C084,R2,2026-10-21,Oeste,ciudadano,máster,2007,8.8,Excel;SIEM;Scrum,inglés;malayo,no,hombre,40-49,Singapur
-C085,R3,2026-10-03,Oeste,residente permanente,grado,2005,9.9,seguridad de redes;SIEM;respuesta a incidentes;Linux,inglés;tamil,no,mujer,40-49,India
-C086,R1,2026-10-05,Oeste,ciudadano,grado,2006,1.5,Python;SQL;Docker;pruebas A/B,inglés;mandarín,no,hombre,40-49,Singapur
-C087,R1;R2,2026-10-15,Extranjero,requiere patrocinio de visado,máster,2016,8.8,Python;SQL;estadística;Excel,inglés;tamil,no,hombre,30-39,India
-C088,R1,2026-10-20,Este,ciudadano,grado,2018,3.6,Python;SQL;Kubernetes;Docker;AWS;Excel;Scrum,inglés;mandarín,no,mujer,30-39,Singapur
-C089,R2,2026-10-10,Centro,ciudadano,máster,2001,10.8,SQL;estadística;Excel;pruebas A/B;respuesta a incidentes,inglés;tamil,no,hombre,50 o más,Singapur
-C090,R3,2026-10-06,Oeste,permiso de trabajo vigente,grado,2008,15.8,Python;Go;estadística;Excel;seguridad de redes;SIEM;Linux;Scrum,malayo;inglés,no,mujer,40-49,Malasia
-C091,R1;R3,2026-10-15,Centro,ciudadano,técnico superior,2007,13.9,Python;Go;SQL;estadística;Excel;seguridad de redes;SIEM;Linux,inglés;mandarín,no,hombre,30-39,Singapur
-C092,R3,2026-10-13,Oeste,ciudadano,técnico superior,2018,4.4,Python;Docker;Tableau;SIEM;Scrum,inglés;tamil,no,hombre,menos de 30,Singapur
-C093,R1,2026-10-19,Centro,ciudadano,técnico superior,2023,2.1,SQL;Kubernetes;Docker;AWS;estadística;Power BI;pruebas A/B,inglés;mandarín,no,hombre,menos de 30,Singapur
-C094,R1;R2,2026-10-19,Centro,residente permanente,grado,2000,9.0,Python;SQL;Kubernetes;estadística;Tableau;R,inglés;mandarín;español,no,mujer,40-49,Singapur
-C095,R3,2026-10-05,Este,ciudadano,grado,2017,3.8,Python;pruebas A/B;seguridad de redes;SIEM;respuesta a incidentes;Linux,inglés;malayo,no,hombre,30-39,Singapur
-C096,R1,2026-10-13,Oeste,residente permanente,técnico superior,2011,2.7,Python;Go;SQL,inglés;mandarín,no,mujer,30-39,Singapur
-C097,R1,2026-10-19,Este,residente permanente,máster,2018,7.0,Python;SQL;Docker;Excel;pruebas A/B;Scrum,malayo;mandarín,no,mujer,30-39,Malasia
-C098,R1,2026-10-16,Norte,requiere patrocinio de visado,técnico superior,2020,5.2,Python;SQL;Kubernetes;estadística;Excel,vietnamita,no,hombre,menos de 30,Vietnam
-C099,R2,2026-10-01,Centro,permiso de trabajo vigente,máster,2010,14.3,Java;Docker;seguridad en la nube;Scrum,tagalo;inglés,no,hombre,40-49,Filipinas
-C100,R1;R3,2026-10-07,Oeste,ciudadano,técnico superior,2007,14.2,Python;Go;SQL;estadística,inglés;mandarín,no,mujer,30-39,Singapur
-C101,R1;R2,2026-10-20,Centro,ciudadano,técnico superior,1998,2.2,Python;SQL;estadística;Tableau;Power BI;Scrum,inglés;mandarín,no,mujer,50 o más,Singapur
-C102,R1,2026-10-15,Oeste,residente permanente,grado,2016,8.7,Go;SQL;SIEM,inglés;mandarín,no,mujer,30-39,Singapur
-C103,R1,2026-10-08,Oeste,ciudadano,grado,2016,3.6,Python;Go;SQL;Docker;Scrum,inglés;mandarín,no,mujer,30-39,Singapur
-C104,R1;R2,2026-10-17,Extranjero,requiere patrocinio de visado,grado,2018,4.2,Python;SQL;Kubernetes;Scrum,mandarín;inglés,no,hombre,30-39,China
-C105,R1;R3,2026-10-05,Centro,permiso de trabajo vigente,grado,2013,3.2,Excel;seguridad de redes;SIEM;seguridad en la nube;Linux,malayo;mandarín,sí,mujer,30-39,Malasia
-C106,R2;R3,2026-10-01,Centro,requiere patrocinio de visado,máster,1999,10.8,AWS;Tableau;seguridad de redes;SIEM,malayo;mandarín,sí,mujer,50 o más,Malasia
-C107,R3,2026-10-05,Norte,ciudadano,grado,2014,5.2,Docker;seguridad de redes;SIEM,inglés;tamil,no,mujer,30-39,Singapur
-C108,R2;R3,2026-10-17,Este,requiere patrocinio de visado,doctorado,2014,9.5,SQL;estadística;Power BI;pruebas A/B;seguridad de redes;SIEM,inglés;tamil,no,hombre,30-39,India
-C109,R1,2026-10-17,Norte,ciudadano,grado,2017,8.5,Docker;Excel,inglés;tamil,no,mujer,30-39,Singapur
-C110,R1,2026-10-17,Centro,ciudadano,grado,1998,9.5,Python;Go;SQL;Docker;AWS;R,inglés;mandarín,no,hombre,50 o más,Singapur
-C111,R3,2026-10-13,Norte,ciudadano,técnico superior,1988,7.2,Kubernetes;Tableau;pruebas A/B;seguridad de redes;SIEM;seguridad en la nube;Linux,inglés;mandarín,no,mujer,50 o más,Singapur
-C112,R1;R3,2026-10-03,Norte,ciudadano,grado,2008,14.8,Python;Go;SQL;estadística;seguridad de redes;SIEM;respuesta a incidentes;Linux,inglés;tamil,no,otro / no indica,30-39,Singapur
-C113,R2;R3,2026-10-02,Centro,permiso de trabajo vigente,grado,2012,13.4,estadística,tagalo;inglés,no,mujer,30-39,Filipinas
-C114,R1;R3,2026-10-05,Oeste,residente permanente,grado,2023,2.2,Python;SQL;Kubernetes;Docker;estadística;seguridad de redes,inglés;tamil,no,mujer,menos de 30,Singapur
-C115,R2,2026-10-12,Centro,ciudadano,doctorado,2022,3.4,Python;SQL;estadística;Excel;Tableau;Power BI;pruebas A/B;respuesta a incidentes,inglés;mandarín,no,hombre,30-39,Singapur
-C116,R3,2026-10-05,Centro,requiere patrocinio de visado,máster,2020,4.0,Python;seguridad de redes;SIEM,tagalo;inglés,no,mujer,30-39,Filipinas
-C117,R2,2026-10-07,Centro,ciudadano,grado,2003,6.1,AWS;seguridad en la nube;Scrum,inglés;mandarín;japonés,no,mujer,40-49,Singapur
-C118,R1;R3,2026-10-17,Extranjero,requiere patrocinio de visado,grado,2003,10.3,SQL;Excel;Scrum,mandarín;inglés,sí,mujer,40-49,China
-C119,R1;R3,2026-10-19,Este,residente permanente,grado,2008,15.8,,malayo;mandarín,no,hombre,40-49,Malasia
-C120,R2,2026-10-09,Este,ciudadano,grado,1990,11.5,Python;SQL;estadística;Tableau;respuesta a incidentes,inglés;tamil,no,hombre,50 o más,Singapur
-C121,R1,2026-10-02,Centro,residente permanente,grado,1992,5.8,Python;SQL;Docker;AWS;Excel;Tableau,inglés;mandarín;español,no,mujer,50 o más,Singapur
-C122,R1,2026-10-04,Centro,ciudadano,grado,2009,5.5,SQL;Power BI,inglés;malayo,no,mujer,40-49,Singapur
-C123,R2,2026-10-01,Este,permiso de trabajo vigente,máster,1993,11.7,Python;SQL;Kubernetes;estadística;Tableau;Power BI;seguridad en la nube;Linux,mandarín;inglés,no,mujer,50 o más,China
-C124,R3,2026-10-13,Centro,permiso de trabajo vigente,grado,2006,4.8,seguridad de redes;SIEM;seguridad en la nube;Linux;Scrum,malayo;inglés,no,hombre,40-49,Malasia
-C125,R3,2026-10-04,Centro,permiso de trabajo vigente,grado,2010,13.9,,malayo;inglés,no,hombre,40-49,Malasia
-C126,R2,2026-10-25,Este,ciudadano,grado,1998,8.4,SQL;estadística;Power BI;pruebas A/B,inglés;mandarín,no,hombre,50 o más,Singapur
-C127,R3,2026-10-22,Centro,permiso de trabajo vigente,máster,2000,10.2,SQL;Excel;seguridad de redes;SIEM;seguridad en la nube;Scrum,mandarín;inglés,no,mujer,50 o más,China
-C128,R2;R3,2026-10-04,Norte,ciudadano,máster,2012,2.1,estadística;Excel;Power BI,inglés;mandarín,no,mujer,30-39,Singapur
-C129,R1;R2,2026-10-21,Oeste,ciudadano,máster,2021,1.1,Python;SQL;Docker;AWS;Excel,inglés;mandarín,sí,otro / no indica,menos de 30,Singapur
-C130,R3,2026-10-19,Centro,ciudadano,técnico superior,2021,3.0,Excel;Scrum,inglés;mandarín,no,mujer,menos de 30,Singapur
-C131,R1,2026-10-22,Centro,permiso de trabajo vigente,grado,2008,9.8,Python;Go;SQL;SIEM,tagalo;inglés;japonés,no,hombre,30-39,Filipinas
-C132,R2,2026-10-05,Norte,ciudadano,técnico superior,2009,9.5,Python;SQL;respuesta a incidentes,inglés;mandarín,no,mujer,40-49,Singapur
-C133,R1,2026-10-08,Norte,requiere patrocinio de visado,máster,2019,5.7,Python;Go;SQL;Tableau;pruebas A/B;Scrum,mandarín;inglés,sí,hombre,30-39,China
-C134,R2,2026-10-09,Oeste,residente permanente,máster,2002,10.2,Python;SQL;estadística;Excel;Power BI;seguridad en la nube,inglés;hindi,no,hombre,50 o más,India
-C135,R2,2026-10-06,Centro,permiso de trabajo vigente,grado,2010,8.6,SQL;estadística;Power BI,malayo;mandarín,no,mujer,30-39,Malasia
-C136,R1,2026-10-10,Este,requiere patrocinio de visado,grado,2006,16.2,Python;Go;SQL;Kubernetes;AWS;Excel,mandarín;japonés,no,mujer,40-49,China
-C137,R3,2026-10-18,Este,residente permanente,grado,2016,2.1,Tableau;Linux,mandarín;inglés;coreano,no,hombre,30-39,China
-C138,R1,2026-10-17,Oeste,ciudadano,máster,2011,7.2,Python;Go;SQL;Kubernetes;AWS,inglés;malayo,no,hombre,30-39,Singapur
-C139,R3,2026-10-22,Norte,permiso de trabajo vigente,grado,2005,3.2,Java;Go;Tableau;seguridad de redes;SIEM,tagalo;inglés;coreano,no,mujer,40-49,Filipinas
-C140,R1,2026-10-24,Extranjero,requiere patrocinio de visado,técnico superior,2019,6.0,Python;Go;SQL;Kubernetes;Docker;AWS;Excel;pruebas A/B;R;respuesta a incidentes;Scrum,inglés;hindi,no,mujer,menos de 30,India
-C141,R2;R3,2026-10-20,Extranjero,requiere patrocinio de visado,grado,2020,5.0,Excel;Power BI;Scrum,mandarín,no,mujer,30-39,China
-C142,R2;R3,2026-10-04,Centro,permiso de trabajo vigente,grado,2005,9.9,Python;estadística;Power BI;seguridad de redes;seguridad en la nube,tagalo;inglés,no,hombre,40-49,Filipinas
-C143,R2,2026-10-23,Oeste,requiere patrocinio de visado,grado,2017,5.8,SQL;Kubernetes;estadística;pruebas A/B;Scrum,inglés;tamil;japonés,no,mujer,30-39,India
-C144,R2,2026-10-14,Extranjero,requiere patrocinio de visado,doctorado,2008,5.3,Python;SQL;Kubernetes;AWS;estadística;Excel,inglés;hindi,no,hombre,40-49,India
-C145,R1,2026-10-25,Norte,ciudadano,grado,2018,1.3,Python;Go;SQL;Kubernetes;Excel,inglés;mandarín,no,mujer,menos de 30,Singapur
-C146,R1,2026-10-03,Norte,residente permanente,grado,2012,10.4,Python;SQL;SIEM,inglés;tamil,sí,mujer,30-39,India
-C147,R2;R3,2026-10-14,Este,residente permanente,doctorado,2022,1.3,Go;SQL;Kubernetes;estadística;Excel,inglés;mandarín,no,mujer,30-39,Singapur
-C148,R1,2026-10-04,Centro,ciudadano,grado,2006,16.2,Python;SQL,inglés;mandarín,no,hombre,40-49,Singapur
-C149,R1;R3,2026-10-06,Este,requiere patrocinio de visado,grado,2002,14.9,Python;Java;Go;SQL;Kubernetes;Excel;seguridad de redes;SIEM;seguridad en la nube,tagalo;inglés,no,hombre,40-49,Filipinas
-C150,R2,2026-10-16,Centro,ciudadano,grado,2014,8.4,SQL;estadística;Tableau;Power BI;Scrum,inglés;mandarín,no,hombre,30-39,Singapur
-C151,R3,2026-10-12,Norte,residente permanente,máster,2018,5.6,pruebas A/B;seguridad de redes;SIEM;seguridad en la nube;Linux;Scrum,inglés;tamil;español,no,mujer,30-39,Singapur
-C152,R2;R3,2026-10-09,Centro,permiso de trabajo vigente,máster,2011,14.3,SQL;estadística;Tableau;Power BI;pruebas A/B;seguridad de redes;SIEM;respuesta a incidentes;Scrum,inglés;hindi;español,no,mujer,30-39,India
-C153,R2,2026-10-07,Centro,ciudadano,máster,2001,8.6,SQL;estadística;Tableau;pruebas A/B;respuesta a incidentes,inglés;mandarín;japonés,no,mujer,40-49,Singapur
-C154,R1,2026-10-10,Este,permiso de trabajo vigente,máster,2003,4.5,Python;Java;Go;SQL;AWS;Excel,malayo;mandarín,no,hombre,40-49,Malasia
-C155,R1,2026-10-13,Este,ciudadano,máster,2018,3.8,Python;Go;SQL;Excel,inglés;mandarín,no,mujer,30-39,Singapur
-C156,R1,2026-10-01,Centro,residente permanente,grado,2010,14.1,Python;SQL;Kubernetes;Docker;Excel;Power BI,mandarín;inglés,no,mujer,30-39,China
-C157,R1;R3,2026-10-23,Oeste,ciudadano,técnico superior,2009,16.4,Java;Go;SQL;Kubernetes;AWS,inglés;malayo,no,mujer,40-49,Singapur
-C158,R3,2026-10-15,Centro,requiere patrocinio de visado,máster,2020,4.4,Python;Kubernetes;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube;Linux,malayo;mandarín,no,mujer,30-39,Malasia
-C159,R3,2026-10-22,Centro,permiso de trabajo vigente,grado,2010,12.2,Python;Excel;pruebas A/B;R;seguridad de redes;SIEM;seguridad en la nube,inglés;hindi,no,mujer,30-39,India
-C160,R3,2026-10-15,Centro,ciudadano,grado,2004,5.9,Python;Excel;pruebas A/B;seguridad de redes;SIEM;seguridad en la nube,inglés;mandarín,no,hombre,40-49,Singapur
-C161,R1,2026-10-23,Centro,residente permanente,grado,2005,4.8,Java,malayo;inglés,no,hombre,40-49,Malasia
-C162,R3,2026-10-15,Norte,ciudadano,grado,2020,1.6,SQL;Kubernetes;AWS;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube;Linux,inglés;mandarín,no,mujer,menos de 30,Singapur
-C163,R2,2026-10-20,Extranjero,requiere patrocinio de visado,grado,1999,15.8,Excel;respuesta a incidentes;Scrum,malayo;mandarín,no,hombre,40-49,Malasia
-C164,R1;R2,2026-10-16,Este,permiso de trabajo vigente,técnico superior,2004,7.1,SQL;estadística;Excel;Tableau;Power BI;respuesta a incidentes,malayo;inglés,no,hombre,40-49,Malasia
-C165,R1,2026-10-24,Oeste,ciudadano,técnico superior,2007,2.7,Python;Java;SQL;Kubernetes;Scrum,inglés;mandarín,no,hombre,40-49,Singapur
-C166,R2,2026-10-10,Oeste,permiso de trabajo vigente,máster,2017,5.4,Go;SQL;AWS;estadística;Excel;Power BI;pruebas A/B,malayo;mandarín,no,hombre,30-39,Malasia
-C167,R1;R2,2026-10-13,Extranjero,requiere patrocinio de visado,máster,2018,6.1,Python;SQL;seguridad de redes;Scrum,inglés;tamil,no,hombre,30-39,India
-C168,R2,2026-10-10,Norte,permiso de trabajo vigente,grado,1991,6.8,Python;SQL;estadística;Tableau;Power BI;R,vietnamita;inglés,no,mujer,50 o más,Vietnam
-C169,R2;R3,2026-10-10,Norte,ciudadano,máster,2015,3.9,Python;seguridad de redes;SIEM,inglés;malayo,no,hombre,40-49,Singapur
-C170,R2,2026-10-13,Norte,residente permanente,máster,2010,9.8,SQL;estadística;Excel;Power BI;pruebas A/B;Scrum,mandarín;inglés,no,hombre,40-49,China
-C171,R3,2026-10-14,Centro,ciudadano,grado,1998,16.3,Excel;seguridad de redes;SIEM;seguridad en la nube;Linux;Scrum,inglés;mandarín,no,hombre,50 o más,Singapur
-C172,R3,2026-10-20,Este,residente permanente,máster,2005,4.7,Python;Kubernetes;Docker;Tableau;R;seguridad de redes;SIEM;respuesta a incidentes;Linux;Scrum,malayo;inglés,no,hombre,40-49,Malasia
-C173,R2,2026-10-13,Este,residente permanente,grado,2023,1.8,Java;SQL;estadística;Excel;pruebas A/B;seguridad en la nube;Scrum,indonesio;inglés,no,mujer,menos de 30,Indonesia
-C174,R1,2026-10-11,Oeste,ciudadano,grado,2012,3.3,Python;Docker;R;SIEM,inglés;tamil,no,mujer,30-39,Singapur
-C175,R1,2026-10-04,Norte,ciudadano,máster,1993,14.4,Java;Kubernetes;estadística,inglés;mandarín,no,mujer,50 o más,Singapur
-C176,R3,2026-10-06,Extranjero,requiere patrocinio de visado,máster,2021,2.9,Python;Go;Tableau;seguridad de redes;SIEM;seguridad en la nube;Linux,vietnamita;inglés,no,hombre,30-39,Vietnam
-C177,R1,2026-10-08,Oeste,ciudadano,grado,2007,3.8,Python;SQL;Kubernetes;Docker;AWS,inglés;mandarín,no,hombre,40-49,Singapur
-C178,R1,2026-10-19,Este,requiere patrocinio de visado,máster,2007,2.4,Python;Go;SQL;AWS,malayo;mandarín,no,hombre,40-49,Malasia
-C179,R2;R3,2026-10-19,Extranjero,requiere patrocinio de visado,grado,2015,9.1,Java,tagalo;inglés,no,mujer,30-39,Filipinas
-C180,R1,2026-10-13,Extranjero,requiere patrocinio de visado,máster,2013,12.0,Python;SQL;Kubernetes;AWS;seguridad de redes,tagalo;inglés,no,hombre,40-49,Filipinas
-C181,R3,2026-10-07,Centro,permiso de trabajo vigente,máster,2003,11.8,Power BI;R,mandarín,no,mujer,50 o más,China
-C182,R3,2026-10-14,Centro,residente permanente,máster,2013,11.0,Python;SQL;SIEM,inglés;mandarín,no,hombre,30-39,Singapur
-C183,R1,2026-10-17,Este,ciudadano,máster,2020,4.9,Python;SQL;Kubernetes;Docker;SIEM,inglés;malayo,no,mujer,menos de 30,Singapur
-C184,R2,2026-10-10,Centro,permiso de trabajo vigente,grado,2012,8.1,SQL;estadística;Excel;Tableau;pruebas A/B;Linux;Scrum,malayo;mandarín,no,mujer,30-39,Malasia
-C185,R2,2026-10-15,Centro,ciudadano,grado,1994,3.8,Python;SQL;estadística;Tableau;pruebas A/B;Scrum,inglés;mandarín,no,hombre,50 o más,Singapur
-C186,R1,2026-10-13,Norte,residente permanente,doctorado,2014,10.2,Power BI,inglés;mandarín,no,hombre,40-49,Singapur
-C187,R1;R2,2026-10-20,Norte,ciudadano,grado,2016,4.8,Java;SQL;estadística;pruebas A/B;Scrum,inglés;mandarín,no,hombre,30-39,Singapur
-C188,R1;R3,2026-10-20,Centro,requiere patrocinio de visado,técnico superior,2014,4.4,Python;Go;SQL;Kubernetes;estadística;Excel;seguridad de redes;seguridad en la nube,indonesio;inglés,no,mujer,30-39,Indonesia
-C189,R2,2026-10-04,Centro,ciudadano,grado,2008,4.8,Python;SQL;Power BI;pruebas A/B;seguridad de redes;SIEM;seguridad en la nube,inglés;mandarín,no,mujer,40-49,Singapur
-C190,R3,2026-10-13,Centro,requiere patrocinio de visado,grado,2009,13.8,Power BI;seguridad de redes;SIEM;Linux,mandarín,no,mujer,40-49,China
-C191,R3,2026-10-10,Este,ciudadano,máster,2010,4.2,Python;Docker;estadística;Excel;seguridad de redes;SIEM;seguridad en la nube;Linux;Scrum,inglés;mandarín,no,hombre,40-49,Singapur
-C192,R1,2026-10-12,Oeste,ciudadano,grado,2022,2.2,Python;SQL;Kubernetes;Docker;Excel;Power BI,inglés;malayo,no,hombre,menos de 30,Singapur
-C193,R2;R3,2026-10-06,Oeste,permiso de trabajo vigente,máster,2013,10.0,Python;SQL;estadística;Tableau;Power BI;pruebas A/B;seguridad en la nube,inglés;tamil,no,hombre,30-39,India
-C194,R2,2026-10-02,Oeste,permiso de trabajo vigente,grado,1999,10.8,Python;SQL;estadística;Tableau;Power BI;pruebas A/B;Scrum,indonesio,no,hombre,40-49,Indonesia
-C195,R3,2026-10-05,Centro,residente permanente,grado,2013,9.6,Python;AWS;seguridad de redes;seguridad en la nube;Linux,inglés;malayo,no,hombre,30-39,Singapur
-C196,R2;R3,2026-10-15,Norte,ciudadano,grado,2011,12.2,Python;Java;SQL;Kubernetes;estadística;pruebas A/B;Scrum,inglés;tamil;japonés,no,hombre,30-39,Singapur
-C197,R2;R3,2026-10-10,Extranjero,requiere patrocinio de visado,máster,2014,9.0,Python;Excel;seguridad de redes;SIEM;seguridad en la nube;Linux,inglés;hindi,no,hombre,30-39,India
-C198,R2,2026-10-20,Este,requiere patrocinio de visado,máster,1995,13.4,SQL;Docker;estadística;Excel;Tableau;pruebas A/B;Scrum,inglés;tamil,no,mujer,50 o más,India
-C199,R3,2026-10-08,Oeste,ciudadano,grado,2012,13.8,Docker;Power BI,inglés;mandarín,no,hombre,40-49,Singapur
-C200,R1;R2,2026-10-25,Centro,ciudadano,técnico superior,2005,3.9,Java;Go;SQL;Kubernetes;Excel;pruebas A/B;respuesta a incidentes;Scrum,inglés;mandarín;japonés,no,hombre,40-49,Singapur
-C201,R1,2026-10-16,Oeste,permiso de trabajo vigente,grado,1993,15.9,Python;SQL;AWS,mandarín;inglés;japonés,no,mujer,50 o más,China
-C202,R3,2026-10-19,Norte,ciudadano,grado,1994,4.2,Excel;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube;Linux,inglés;tamil,no,mujer,50 o más,Singapur
-C203,R1,2026-10-06,Norte,ciudadano,técnico superior,2011,9.2,Python;SQL;Docker,inglés;mandarín;japonés,no,mujer,30-39,Singapur
-C204,R1,2026-10-06,Este,requiere patrocinio de visado,máster,2018,5.3,,mandarín;japonés,no,hombre,30-39,China
-C205,R1,2026-10-12,Este,residente permanente,grado,2019,4.4,Python;SQL;Docker;Linux,inglés;mandarín,no,hombre,menos de 30,Singapur
-C206,R1;R2,2026-10-24,Norte,residente permanente,técnico superior,2010,5.0,Python;Go;Scrum,malayo;inglés,no,mujer,30-39,Malasia
-C207,R1;R3,2026-10-13,Extranjero,requiere patrocinio de visado,técnico superior,2018,5.6,Python;SQL;Kubernetes;Docker;Scrum,tagalo;inglés,no,hombre,menos de 30,Filipinas
-C208,R1;R3,2026-10-21,Extranjero,requiere patrocinio de visado,máster,2018,5.9,Python;SQL;respuesta a incidentes,mandarín;inglés,no,hombre,30-39,China
-C209,R2,2026-10-01,Norte,residente permanente,grado,1987,5.5,Python;SQL;estadística;Tableau;Power BI;R,mandarín;inglés,no,mujer,50 o más,China
-C210,R2;R3,2026-10-18,Extranjero,requiere patrocinio de visado,grado,2005,14.5,Kubernetes;seguridad de redes;SIEM,malayo;inglés,no,hombre,40-49,Malasia
-C211,R1;R2,2026-10-13,Centro,ciudadano,grado,1991,2.9,SQL;estadística;Excel;Power BI;pruebas A/B;R;seguridad en la nube,inglés;mandarín,no,mujer,50 o más,Singapur
-C212,R2,2026-10-18,Centro,ciudadano,máster,2016,7.4,SQL;estadística;Excel;Power BI;Scrum,inglés;mandarín,no,hombre,30-39,Singapur
-C213,R1;R3,2026-10-20,Oeste,ciudadano,técnico superior,2018,5.4,Java;seguridad de redes;SIEM;seguridad en la nube,inglés;mandarín,no,mujer,30-39,Singapur
-C214,R1;R2,2026-10-15,Centro,residente permanente,técnico superior,2011,14.8,Python;SQL;AWS;estadística;Scrum,mandarín;inglés,no,hombre,30-39,China
-C215,R1;R2,2026-10-13,Oeste,ciudadano,máster,2013,11.7,Python;SQL;estadística;Excel;Tableau;pruebas A/B,inglés;mandarín,no,mujer,30-39,Singapur
-C216,R3,2026-10-01,Oeste,permiso de trabajo vigente,grado,2010,10.5,Excel;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube,malayo;inglés,no,hombre,30-39,Malasia
-C217,R1,2026-10-17,Norte,residente permanente,grado,1998,16.2,Python;Go;SQL;Docker;AWS;Excel,malayo;inglés,no,mujer,50 o más,Malasia
-C218,R2,2026-10-18,Centro,permiso de trabajo vigente,grado,2021,3.8,,inglés;tamil,no,hombre,menos de 30,India
-C219,R3,2026-10-03,Norte,ciudadano,máster,2000,4.3,Python;Excel;pruebas A/B;seguridad de redes;SIEM,inglés;mandarín,no,hombre,50 o más,Singapur
-C220,R1,2026-10-19,Oeste,residente permanente,grado,2011,9.2,Python;SQL,malayo;inglés,no,mujer,30-39,Malasia
-C221,R2,2026-10-20,Norte,ciudadano,grado,2007,3.1,Java;SQL;Excel;R;seguridad en la nube;Scrum,inglés;mandarín,no,hombre,40-49,Singapur
-C222,R2,2026-10-13,Oeste,permiso de trabajo vigente,grado,2016,3.4,SQL;Tableau;pruebas A/B;Scrum,malayo;inglés,no,mujer,30-39,Malasia
-C223,R1,2026-10-12,Extranjero,requiere patrocinio de visado,grado,2015,3.8,Python;Go;SQL;AWS;Power BI;Scrum,indonesio,no,otro / no indica,30-39,Indonesia
-C224,R1;R3,2026-10-04,Centro,ciudadano,grado,2008,7.2,seguridad en la nube,inglés;mandarín,no,mujer,40-49,Singapur
-C225,R1;R3,2026-10-11,Este,ciudadano,doctorado,2023,2.1,Go;SQL;Docker;AWS;estadística;R;Linux,inglés;mandarín,no,hombre,30-39,Singapur
-C226,R2;R3,2026-10-11,Centro,residente permanente,grado,2019,4.4,Excel;Tableau;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube,tagalo;inglés,no,mujer,menos de 30,Filipinas
-C227,R1,2026-10-13,Oeste,ciudadano,grado,2008,6.5,SQL;Kubernetes;AWS,inglés;malayo,no,mujer,40-49,Singapur
-C228,R2,2026-10-23,Centro,ciudadano,máster,2005,4.7,SQL;Excel,inglés;tamil,no,mujer,40-49,Singapur
-C229,R2;R3,2026-10-08,Norte,ciudadano,grado,2018,7.3,Java;SQL;estadística;Tableau;Power BI;pruebas A/B;seguridad de redes;SIEM;respuesta a incidentes,inglés;mandarín,no,mujer,menos de 30,Singapur
-C230,R1,2026-10-06,Este,ciudadano,máster,1997,12.1,Python;Go;SQL;Kubernetes;Docker;AWS;Excel,inglés;mandarín,no,hombre,50 o más,Singapur
-C231,R3,2026-10-20,Extranjero,requiere patrocinio de visado,grado,2020,5.6,SQL;Tableau;respuesta a incidentes,indonesio,no,mujer,menos de 30,Indonesia
-C232,R1,2026-10-11,Este,permiso de trabajo vigente,técnico superior,2016,3.0,Python;Go;Docker;pruebas A/B;seguridad en la nube,indonesio;inglés,no,hombre,menos de 30,Indonesia
-C233,R1;R2,2026-10-10,Norte,permiso de trabajo vigente,doctorado,2002,10.2,Python;Go;SQL;Docker;estadística;Scrum,indonesio;inglés,no,mujer,50 o más,Indonesia
-C234,R1;R2,2026-10-18,Centro,ciudadano,grado,2011,3.3,Python;SQL;Kubernetes;Excel,inglés;mandarín,no,mujer,30-39,Singapur
-C235,R3,2026-10-25,Centro,residente permanente,máster,2012,10.8,estadística;seguridad de redes;SIEM,mandarín;inglés,no,hombre,30-39,China
-C236,R1;R2,2026-10-19,Este,residente permanente,doctorado,2018,6.9,SQL;pruebas A/B;Linux;Scrum,mandarín,no,mujer,30-39,China
-C237,R3,2026-10-22,Centro,permiso de trabajo vigente,doctorado,2001,14.6,Python;Java;seguridad de redes;SIEM;respuesta a incidentes,tagalo;inglés,no,mujer,50 o más,Filipinas
-C238,R3,2026-10-17,Este,requiere patrocinio de visado,grado,2015,10.1,Python;Go;Tableau;seguridad de redes;SIEM,vietnamita;inglés,no,hombre,30-39,Vietnam
-C239,R1,2026-10-21,Extranjero,requiere patrocinio de visado,grado,2011,7.9,SQL;AWS;Excel;seguridad de redes;SIEM,malayo;inglés,no,mujer,40-49,Malasia
-C240,R1,2026-10-25,Este,permiso de trabajo vigente,grado,2002,8.7,Python;SQL;Kubernetes;Scrum,malayo;mandarín,no,hombre,40-49,Malasia
-C241,R1,2026-10-16,Norte,permiso de trabajo vigente,máster,2021,2.9,Python;SQL;AWS;Excel;Tableau;respuesta a incidentes,tagalo;inglés,no,mujer,30-39,Filipinas
-C242,R1;R3,2026-10-01,Norte,permiso de trabajo vigente,grado,1998,13.2,Go;SQL;Kubernetes;AWS;Excel;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube;Linux,inglés;hindi,no,mujer,50 o más,India
-C243,R1;R2,2026-10-03,Centro,ciudadano,doctorado,1998,10.7,Docker;estadística;pruebas A/B,inglés;tamil,no,mujer,50 o más,Singapur
-C244,R2,2026-10-20,Extranjero,requiere patrocinio de visado,técnico superior,2017,3.5,Python;SQL;estadística;Excel,mandarín;inglés,no,hombre,30-39,China
-C245,R2,2026-10-08,Centro,requiere patrocinio de visado,grado,2020,5.9,SQL;Excel;seguridad en la nube;Scrum,inglés;hindi,no,mujer,30-39,India
-C246,R2,2026-10-15,Extranjero,requiere patrocinio de visado,máster,2010,13.2,seguridad de redes,malayo;inglés,no,mujer,30-39,Malasia
-C247,R2;R3,2026-10-15,Norte,permiso de trabajo vigente,grado,1991,7.9,Python;SQL;estadística;Excel;Tableau;pruebas A/B;SIEM;Scrum,mandarín;inglés,no,hombre,50 o más,China
-C248,R2;R3,2026-10-14,Norte,residente permanente,grado,1990,3.1,Python;SQL;estadística;Tableau;Power BI;Scrum,inglés;mandarín,sí,hombre,50 o más,Singapur
-C249,R2;R3,2026-10-14,Centro,permiso de trabajo vigente,máster,2006,8.7,Python;seguridad de redes;SIEM;Linux;Scrum,malayo;inglés,no,hombre,40-49,Malasia
-C250,R1;R3,2026-10-04,Norte,residente permanente,grado,2016,9.2,Go;SQL;AWS;Excel;seguridad de redes;SIEM;Linux,inglés;tamil,sí,hombre,30-39,India
+C001,R1;R3,2026-10-04,Oeste,residente permanente,grado,2020,3.8,Go;Docker;seguridad de redes;seguridad en la nube;Linux;Scrum,inglés;tamil,no,hombre,30-39,Singapur
+C002,R1,2026-10-25,Este,permiso de trabajo vigente,grado,2006,6.5,Python;SQL;Excel,inglés;hindi,no,hombre,40-49,India
+C003,R1,2026-10-20,Centro,permiso de trabajo vigente,grado,2022,1.8,Python;SQL;Excel;Linux,mandarín;inglés,sí,mujer,menos de 30,China
+C004,R3,2026-10-11,Norte,residente permanente,doctorado,1995,15.6,,mandarín,no,hombre,50 o más,China
+C005,R2,2026-10-19,Norte,permiso de trabajo vigente,técnico superior,2009,6.6,SQL;Kubernetes;estadística,inglés;tamil,no,mujer,30-39,India
+C006,R1;R3,2026-10-22,Oeste,ciudadano,grado,2001,5.7,Python;Go;SQL;Kubernetes;Excel;Scrum,inglés;tamil,no,mujer,40-49,Singapur
+C007,R1,2026-10-17,Extranjero,requiere patrocinio de visado,máster,2021,3.1,SQL;Power BI;seguridad de redes,inglés;hindi,no,hombre,30-39,India
+C008,R2,2026-10-05,Centro,residente permanente,máster,2009,12.2,Python;SQL;Docker;Tableau;Power BI;Scrum,mandarín;inglés,no,mujer,40-49,China
+C009,R2;R3,2026-10-25,Oeste,permiso de trabajo vigente,grado,2019,2.3,Docker;AWS;seguridad de redes,vietnamita;inglés,no,mujer,menos de 30,Vietnam
+C010,R3,2026-10-16,Centro,permiso de trabajo vigente,máster,2014,7.7,Python;SQL;seguridad de redes;SIEM;respuesta a incidentes;Linux,mandarín;inglés,no,hombre,30-39,China
+C011,R2;R3,2026-10-03,Oeste,ciudadano,máster,1997,14.3,Python;Go;SQL;estadística;Excel;Tableau;Power BI;pruebas A/B;seguridad de redes;SIEM;seguridad en la nube;Linux,inglés;tamil,no,mujer,50 o más,Singapur
+C012,R3,2026-10-10,Extranjero,requiere patrocinio de visado,grado,2011,12.2,SIEM,malayo;inglés,no,mujer,30-39,Malasia
+C013,R3,2026-10-10,Este,residente permanente,máster,2008,11.9,,inglés;mandarín,no,mujer,40-49,Singapur
+C014,R1;R2,2026-10-02,Centro,ciudadano,máster,2011,11.8,Java;SQL;estadística,inglés;mandarín,no,mujer,30-39,Singapur
+C015,R1,2026-10-17,Centro,permiso de trabajo vigente,grado,2016,1.8,Python;Go;SQL;Docker,mandarín,no,mujer,30-39,China
+C016,R2,2026-10-04,Centro,ciudadano,máster,2013,5.2,Python;SQL;estadística;Excel;pruebas A/B;Scrum,inglés;malayo,no,mujer,30-39,Singapur
+C017,R2,2026-10-01,Oeste,residente permanente,máster,2013,1.5,estadística,inglés;mandarín,no,mujer,30-39,Singapur
+C018,R1,2026-10-04,Centro,ciudadano,grado,2005,3.9,Python;SQL;Kubernetes;Docker;Excel;Tableau,inglés;mandarín,sí,hombre,40-49,Singapur
+C019,R1;R2,2026-10-15,Oeste,residente permanente,grado,2014,7.1,Python;Go;SQL;Kubernetes;Docker;AWS,inglés;mandarín,no,mujer,30-39,Singapur
+C020,R2,2026-10-13,Centro,permiso de trabajo vigente,grado,2023,1.8,Python;SQL;estadística;Excel;Tableau;Power BI;pruebas A/B,malayo;inglés,no,hombre,30-39,Malasia
+C021,R2,2026-10-17,Este,requiere patrocinio de visado,grado,2007,2.3,SQL,inglés;tamil,no,mujer,40-49,India
+C022,R2;R3,2026-10-03,Norte,permiso de trabajo vigente,técnico superior,2008,14.3,Python;estadística;Excel;Tableau;Power BI;seguridad de redes;SIEM;seguridad en la nube,mandarín,no,hombre,30-39,China
+C023,R1;R2,2026-10-08,Centro,ciudadano,máster,2023,1.8,Go;Excel;respuesta a incidentes;Scrum,inglés;malayo,no,mujer,menos de 30,Singapur
+C024,R2,2026-10-22,Oeste,residente permanente,grado,2017,5.3,Python;Go;SQL;estadística;Excel,mandarín;inglés;español,sí,mujer,30-39,China
+C025,R2;R3,2026-10-07,Norte,ciudadano,grado,2007,1.8,,inglés;mandarín,no,hombre,40-49,Singapur
+C026,R2,2026-10-19,Este,permiso de trabajo vigente,técnico superior,2015,7.8,Python;SQL;AWS;estadística;Excel;Tableau;Power BI;pruebas A/B;seguridad en la nube,malayo;inglés,no,mujer,30-39,Malasia
+C027,R3,2026-10-01,Centro,ciudadano,técnico superior,2014,3.1,Excel;pruebas A/B;seguridad de redes;respuesta a incidentes;Linux,inglés;mandarín;coreano,no,mujer,30-39,Singapur
+C028,R3,2026-10-25,Centro,residente permanente,máster,2006,4.3,Excel;respuesta a incidentes;Scrum,inglés;malayo,no,hombre,40-49,Singapur
+C029,R3,2026-10-01,Norte,ciudadano,máster,2001,6.6,pruebas A/B;seguridad de redes;SIEM;respuesta a incidentes;Linux,inglés;tamil,no,mujer,50 o más,Singapur
+C030,R3,2026-10-14,Centro,permiso de trabajo vigente,máster,2017,3.7,Python;seguridad de redes;SIEM;respuesta a incidentes,vietnamita;inglés,no,mujer,30-39,Vietnam
+C031,R2,2026-10-22,Oeste,requiere patrocinio de visado,grado,2009,10.1,AWS,inglés;hindi,no,hombre,30-39,India
+C032,R3,2026-10-18,Oeste,permiso de trabajo vigente,grado,2016,2.8,SQL;Excel;seguridad de redes;SIEM;Linux;Scrum,tagalo;inglés;coreano,sí,hombre,30-39,Filipinas
+C033,R2,2026-10-05,Norte,residente permanente,doctorado,2008,1.2,Go;Power BI;Linux,tagalo;inglés,no,mujer,40-49,Filipinas
+C034,R3,2026-10-04,Centro,residente permanente,grado,2020,3.4,Power BI;R;seguridad en la nube;Scrum,inglés;mandarín,no,hombre,30-39,Singapur
+C035,R1,2026-10-09,Norte,ciudadano,máster,2004,6.7,,inglés;mandarín,no,hombre,40-49,Singapur
+C036,R2;R3,2026-10-03,Centro,ciudadano,máster,2006,11.2,Python;Tableau;Power BI;seguridad de redes;SIEM;respuesta a incidentes,inglés;mandarín;japonés,sí,mujer,40-49,Singapur
+C037,R1;R2,2026-10-13,Extranjero,requiere patrocinio de visado,técnico superior,2007,8.3,Python;SQL;Kubernetes;estadística,mandarín;inglés,no,hombre,40-49,China
+C038,R3,2026-10-21,Este,ciudadano,grado,2015,8.2,Excel;seguridad de redes;SIEM;seguridad en la nube,inglés;mandarín,no,hombre,30-39,Singapur
+C039,R2,2026-10-06,Oeste,residente permanente,grado,2017,1.9,SQL;estadística;Excel;Tableau;pruebas A/B;respuesta a incidentes,malayo;mandarín,no,hombre,30-39,Malasia
+C040,R2,2026-10-19,Oeste,ciudadano,doctorado,2017,4.5,Python;SQL;estadística;Power BI;respuesta a incidentes;Scrum,inglés;mandarín,no,hombre,30-39,Singapur
+C041,R2;R3,2026-10-22,Centro,ciudadano,grado,2009,15.1,SQL;Excel;pruebas A/B;seguridad en la nube;Linux;Scrum,inglés;tamil,no,otro / no indica,30-39,Singapur
+C042,R2,2026-10-21,Este,ciudadano,máster,2002,15.8,Python;estadística;Excel,inglés;mandarín,no,hombre,40-49,Singapur
+C043,R1;R3,2026-10-11,Centro,ciudadano,doctorado,2023,1.1,Python;Go;SQL;AWS,inglés;mandarín;coreano,no,mujer,30-39,Singapur
+C044,R1,2026-10-08,Norte,ciudadano,grado,2006,3.9,Python,inglés;malayo,no,hombre,40-49,Singapur
+C045,R2,2026-10-22,Norte,permiso de trabajo vigente,técnico superior,2012,11.8,SQL;estadística;pruebas A/B,mandarín;inglés,no,hombre,30-39,China
+C046,R3,2026-10-12,Oeste,residente permanente,grado,2020,4.7,Power BI;seguridad de redes;SIEM;Linux,inglés;hindi,sí,hombre,30-39,India
+C047,R2;R3,2026-10-14,Centro,residente permanente,doctorado,1999,15.3,Python;seguridad de redes;SIEM,inglés;malayo,sí,hombre,50 o más,Singapur
+C048,R1,2026-10-05,Centro,ciudadano,grado,2004,16.1,Python;Go;SQL;Docker;Excel;Tableau;pruebas A/B,inglés;mandarín,no,mujer,50 o más,Singapur
+C049,R1;R2,2026-10-24,Norte,ciudadano,grado,2019,6.2,estadística;Power BI;pruebas A/B;Linux,inglés;mandarín,no,hombre,30-39,Singapur
+C050,R1,2026-10-18,Centro,permiso de trabajo vigente,máster,2021,4.1,Docker;R;Scrum,mandarín;inglés,no,hombre,menos de 30,China
+C051,R2;R3,2026-10-13,Centro,residente permanente,técnico superior,1995,14.5,Go;SQL;estadística;Excel;Tableau;pruebas A/B;R;seguridad de redes;SIEM;respuesta a incidentes;Linux,inglés;mandarín,no,otro / no indica,50 o más,Singapur
+C052,R1,2026-10-23,Extranjero,requiere patrocinio de visado,grado,2001,9.3,R;SIEM,tagalo;inglés,no,mujer,50 o más,Filipinas
+C053,R3,2026-10-12,Centro,residente permanente,grado,2003,16.2,estadística;Excel;seguridad de redes;SIEM;Linux;Scrum,malayo;inglés,no,mujer,50 o más,Malasia
+C054,R3,2026-10-13,Centro,ciudadano,doctorado,2017,6.2,Kubernetes;Excel;seguridad de redes;respuesta a incidentes,inglés;tamil;español,no,hombre,30-39,Singapur
+C055,R1;R3,2026-10-14,Norte,ciudadano,grado,2010,15.0,Python;Go;SQL;Kubernetes;Docker;AWS;seguridad de redes;SIEM;Linux,inglés;mandarín,no,hombre,30-39,Singapur
+C056,R3,2026-10-07,Centro,permiso de trabajo vigente,grado,2015,9.3,Python;Power BI;seguridad de redes;SIEM;seguridad en la nube;Linux,mandarín;inglés,no,mujer,30-39,China
+C057,R1,2026-10-09,Este,permiso de trabajo vigente,grado,2006,3.4,Java;Go;Excel;R;Linux,malayo;inglés,no,mujer,40-49,Malasia
+C058,R2;R3,2026-10-19,Centro,ciudadano,grado,2006,13.3,SQL;estadística;Excel;Tableau;pruebas A/B;seguridad de redes;SIEM;seguridad en la nube;Scrum,inglés;mandarín,no,mujer,40-49,Singapur
+C059,R1,2026-10-21,Este,permiso de trabajo vigente,técnico superior,2024,1.1,Python;SQL;AWS;Excel,indonesio;inglés,no,hombre,menos de 30,Indonesia
+C060,R1,2026-10-04,Centro,residente permanente,doctorado,2019,2.3,Python;Java;SQL;Docker;Scrum,inglés;mandarín,no,hombre,30-39,Singapur
+C061,R2,2026-10-12,Extranjero,requiere patrocinio de visado,grado,2015,2.4,Excel;R;respuesta a incidentes,tagalo;inglés;coreano,no,hombre,30-39,Filipinas
+C062,R1;R3,2026-10-16,Oeste,permiso de trabajo vigente,grado,2010,12.8,Python;SQL;AWS;seguridad de redes;SIEM;Linux,malayo;inglés,no,hombre,30-39,Malasia
+C063,R1;R3,2026-10-16,Centro,ciudadano,máster,2013,10.4,Python;Go;SQL;Kubernetes;Docker;seguridad de redes;SIEM;respuesta a incidentes;Linux;Scrum,inglés;mandarín,no,mujer,30-39,Singapur
+C064,R1,2026-10-22,Este,ciudadano,doctorado,2011,10.9,Python;SQL;Kubernetes;AWS;Tableau;pruebas A/B;SIEM,inglés;mandarín,no,hombre,40-49,Singapur
+C065,R2;R3,2026-10-11,Norte,ciudadano,doctorado,2014,9.9,Tableau;seguridad de redes;SIEM;Scrum,inglés;mandarín,no,otro / no indica,30-39,Singapur
+C066,R2,2026-10-10,Este,permiso de trabajo vigente,máster,2018,7.2,Tableau;Linux;Scrum,indonesio;inglés,no,hombre,30-39,Indonesia
+C067,R1,2026-10-02,Centro,ciudadano,grado,2006,4.2,Python;Docker;AWS,inglés;malayo;coreano,no,hombre,40-49,Singapur
+C068,R1;R2,2026-10-20,Centro,ciudadano,máster,1992,15.0,SQL;estadística;Tableau;pruebas A/B,inglés;mandarín,no,mujer,50 o más,Singapur
+C069,R2,2026-10-03,Norte,ciudadano,grado,2016,8.8,SQL;estadística,inglés;mandarín,no,mujer,30-39,Singapur
+C070,R1,2026-10-14,Centro,residente permanente,máster,1993,5.1,Python;Go;SQL,inglés;hindi,no,mujer,50 o más,India
+C071,R2,2026-10-08,Este,residente permanente,grado,2022,1.6,SQL;AWS;estadística;Excel;Power BI;Scrum,inglés;hindi,no,hombre,30-39,India
+C072,R2;R3,2026-10-20,Centro,ciudadano,máster,2004,12.5,Go;SQL;estadística;Excel;Tableau;pruebas A/B;seguridad de redes;SIEM;Linux,inglés;malayo,no,mujer,40-49,Singapur
+C073,R1;R2,2026-10-10,Centro,permiso de trabajo vigente,grado,2012,9.5,Python;SQL;estadística;Excel,mandarín;japonés,no,hombre,30-39,China
+C074,R1,2026-10-11,Extranjero,requiere patrocinio de visado,grado,2023,2.8,Python;SQL;Kubernetes;Docker;Power BI,tagalo;inglés,no,mujer,menos de 30,Filipinas
+C075,R3,2026-10-20,Este,ciudadano,grado,2013,9.1,Kubernetes;seguridad de redes;SIEM,inglés;mandarín,no,mujer,30-39,Singapur
+C076,R1,2026-10-15,Norte,ciudadano,máster,2012,1.9,Go;SQL;Docker,inglés;tamil,no,otro / no indica,30-39,Singapur
+C077,R1;R3,2026-10-18,Centro,permiso de trabajo vigente,grado,1998,5.0,Python;estadística;seguridad de redes;SIEM;seguridad en la nube;Linux,tagalo;inglés,no,mujer,40-49,Filipinas
+C078,R3,2026-10-21,Extranjero,requiere patrocinio de visado,doctorado,2020,3.8,Python;Java;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube;Linux,tagalo;inglés,no,mujer,40-49,Filipinas
+C079,R1;R3,2026-10-22,Centro,residente permanente,grado,2010,13.8,SQL;Kubernetes;seguridad de redes;SIEM;seguridad en la nube;Linux,inglés;mandarín;coreano,no,hombre,30-39,Singapur
+C080,R1;R2,2026-10-03,Este,residente permanente,grado,2009,11.2,Python;Java;SQL;Excel;pruebas A/B;SIEM,inglés;mandarín;español,no,mujer,30-39,Singapur
+C081,R1,2026-10-01,Extranjero,requiere patrocinio de visado,técnico superior,2022,2.8,Kubernetes,malayo;mandarín,sí,mujer,menos de 30,Malasia
+C082,R3,2026-10-04,Este,requiere patrocinio de visado,máster,2020,1.3,Excel;seguridad de redes;SIEM;respuesta a incidentes;Linux,inglés;hindi;japonés,sí,hombre,30-39,India
+C083,R1;R3,2026-10-15,Norte,ciudadano,grado,2006,8.3,SQL;Kubernetes;Docker;AWS;Tableau;R;seguridad de redes;SIEM;seguridad en la nube;Linux;Scrum,inglés;mandarín,no,hombre,40-49,Singapur
+C084,R3,2026-10-16,Extranjero,requiere patrocinio de visado,máster,2007,5.4,Python;seguridad de redes;SIEM;seguridad en la nube;Linux,malayo;inglés;japonés,no,mujer,40-49,Malasia
+C085,R2,2026-10-18,Oeste,residente permanente,máster,2016,6.8,SQL;estadística;Tableau;pruebas A/B;Scrum,inglés;tamil,no,hombre,30-39,India
+C086,R3,2026-10-18,Centro,ciudadano,grado,2016,9.6,Python;Excel;pruebas A/B;seguridad de redes;respuesta a incidentes;seguridad en la nube,inglés;mandarín,no,mujer,30-39,Singapur
+C087,R1;R3,2026-10-20,Extranjero,requiere patrocinio de visado,grado,2012,3.8,Python;SQL;Kubernetes;Tableau,vietnamita;inglés,no,mujer,40-49,Vietnam
+C088,R3,2026-10-12,Centro,requiere patrocinio de visado,máster,2019,3.2,AWS;seguridad de redes;SIEM;Linux;Scrum,mandarín;inglés,no,mujer,30-39,China
+C089,R3,2026-10-08,Oeste,requiere patrocinio de visado,máster,2008,7.0,Python;Excel;seguridad de redes;SIEM,malayo;mandarín,no,mujer,40-49,Malasia
+C090,R2;R3,2026-10-04,Oeste,ciudadano,grado,1997,10.3,SQL;estadística;Excel;Tableau;Power BI;Scrum,inglés;malayo;japonés,no,mujer,50 o más,Singapur
+C091,R1,2026-10-20,Centro,residente permanente,grado,2019,2.7,Python;Go;SQL;Kubernetes;Docker;Excel;Linux,inglés;mandarín,no,hombre,30-39,Singapur
+C092,R1;R2,2026-10-07,Norte,requiere patrocinio de visado,grado,2003,15.6,Go;estadística;Power BI,tagalo;inglés,no,mujer,40-49,Filipinas
+C093,R3,2026-10-11,Centro,ciudadano,máster,2017,2.2,Java;Docker;Excel;seguridad de redes;SIEM,inglés;tamil,no,hombre,30-39,Singapur
+C094,R1,2026-10-17,Centro,ciudadano,grado,1998,4.2,Python;SQL;Kubernetes;Docker;AWS;seguridad en la nube,inglés;mandarín,no,hombre,40-49,Singapur
+C095,R2,2026-10-06,Oeste,permiso de trabajo vigente,máster,2016,6.1,Docker;Excel;pruebas A/B,malayo;inglés,no,hombre,30-39,Malasia
+C096,R3,2026-10-17,Centro,ciudadano,grado,2019,1.2,Python;Go;seguridad de redes;SIEM;respuesta a incidentes;Linux;Scrum,inglés;tamil,no,hombre,30-39,Singapur
+C097,R2,2026-10-07,Centro,ciudadano,grado,2000,4.7,Python;SQL;estadística;Tableau;pruebas A/B,inglés;malayo;japonés,no,hombre,40-49,Singapur
+C098,R2,2026-10-13,Este,ciudadano,grado,1987,10.2,Python;SQL;Kubernetes;estadística;Power BI;seguridad de redes,inglés;mandarín,no,mujer,50 o más,Singapur
+C099,R2;R3,2026-10-11,Este,permiso de trabajo vigente,máster,2003,9.0,Python;SQL;estadística;seguridad de redes;SIEM;respuesta a incidentes;Scrum,mandarín;inglés,no,hombre,40-49,China
+C100,R2;R3,2026-10-19,Extranjero,requiere patrocinio de visado,doctorado,2017,1.5,Python;SIEM;seguridad en la nube;Linux,mandarín;inglés,no,mujer,30-39,China
+C101,R3,2026-10-02,Extranjero,requiere patrocinio de visado,grado,2019,5.8,Python;seguridad de redes;seguridad en la nube;Linux,vietnamita;inglés,no,hombre,30-39,Vietnam
+C102,R2,2026-10-04,Norte,residente permanente,grado,2015,9.2,Excel,mandarín,no,mujer,30-39,China
+C103,R3,2026-10-23,Centro,permiso de trabajo vigente,máster,2007,7.1,Excel;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube,mandarín;inglés,no,mujer,40-49,China
+C104,R1,2026-10-07,Centro,ciudadano,grado,2012,8.8,Python;SQL;Kubernetes;respuesta a incidentes;Scrum,inglés;mandarín,no,mujer,30-39,Singapur
+C105,R2,2026-10-07,Oeste,permiso de trabajo vigente,máster,1998,14.7,AWS,inglés;tamil,no,hombre,50 o más,India
+C106,R3,2026-10-06,Extranjero,requiere patrocinio de visado,grado,1998,16.7,seguridad de redes;SIEM;Linux,inglés;hindi,no,hombre,50 o más,India
+C107,R2;R3,2026-10-01,Centro,permiso de trabajo vigente,grado,2019,5.9,Python;R;seguridad de redes,malayo;inglés,sí,mujer,menos de 30,Malasia
+C108,R2,2026-10-11,Extranjero,requiere patrocinio de visado,máster,1998,3.2,Python;SQL;AWS;estadística;Power BI;pruebas A/B;seguridad de redes;Scrum,tagalo;inglés,no,hombre,50 o más,Filipinas
+C109,R2,2026-10-25,Norte,residente permanente,grado,1999,8.1,Python;SQL;AWS;estadística;Excel;Tableau;pruebas A/B,tagalo;inglés,no,mujer,40-49,Filipinas
+C110,R1;R2,2026-10-05,Centro,permiso de trabajo vigente,máster,2024,1.1,Python;SQL;Kubernetes;Docker;AWS;Linux;Scrum,indonesio;inglés,no,mujer,menos de 30,Indonesia
+C111,R1,2026-10-21,Este,permiso de trabajo vigente,técnico superior,2020,5.1,Python;Go;SQL;Excel,mandarín;inglés;español,no,hombre,30-39,China
+C112,R1;R2,2026-10-25,Centro,residente permanente,máster,2009,10.2,Python;SQL;Kubernetes;estadística;Tableau;Power BI;pruebas A/B;seguridad de redes;Scrum,mandarín;inglés;japonés,no,hombre,40-49,China
+C113,R1;R3,2026-10-10,Este,residente permanente,máster,2008,7.0,Python;seguridad de redes,indonesio;inglés,no,mujer,40-49,Indonesia
+C114,R1;R3,2026-10-16,Este,ciudadano,grado,1996,9.6,Python;SQL;Kubernetes;Docker;seguridad de redes;respuesta a incidentes,inglés;mandarín,no,hombre,50 o más,Singapur
+C115,R2,2026-10-04,Este,ciudadano,técnico superior,2011,2.5,SQL;Kubernetes;estadística;Excel,inglés;mandarín,sí,mujer,40-49,Singapur
+C116,R3,2026-10-02,Extranjero,requiere patrocinio de visado,doctorado,2000,10.2,Docker;Power BI,tagalo;inglés,no,mujer,50 o más,Filipinas
+C117,R2,2026-10-22,Centro,ciudadano,máster,2018,6.3,respuesta a incidentes;Linux,inglés;mandarín,no,hombre,30-39,Singapur
+C118,R2;R3,2026-10-15,Centro,ciudadano,máster,2014,10.2,SQL;AWS;estadística;Excel;SIEM;Linux,inglés;mandarín,no,hombre,30-39,Singapur
+C119,R1;R2,2026-10-10,Oeste,permiso de trabajo vigente,máster,2011,13.4,Python;Java;Docker;estadística;Tableau;pruebas A/B;R;Scrum,inglés;tamil,no,mujer,40-49,India
+C120,R3,2026-10-12,Norte,requiere patrocinio de visado,grado,2021,3.1,Python;Tableau;seguridad de redes;SIEM,inglés;tamil,no,mujer,30-39,India
+C121,R2,2026-10-05,Centro,ciudadano,grado,1993,3.1,SQL;AWS;estadística;Excel;Tableau,inglés;mandarín,no,hombre,50 o más,Singapur
+C122,R1;R2,2026-10-15,Centro,residente permanente,máster,2012,10.5,Python;Go;Docker,tagalo;inglés,no,hombre,30-39,Filipinas
+C123,R3,2026-10-04,Centro,permiso de trabajo vigente,grado,1998,4.2,Excel;seguridad de redes;SIEM;respuesta a incidentes;Linux,mandarín,no,hombre,50 o más,China
+C124,R2,2026-10-20,Centro,permiso de trabajo vigente,técnico superior,2008,2.4,SQL;Excel;pruebas A/B;Scrum,vietnamita;inglés,no,mujer,40-49,Vietnam
+C125,R2;R3,2026-10-04,Centro,ciudadano,máster,1994,9.2,SQL;Kubernetes;estadística;Excel;Power BI;seguridad de redes;SIEM;seguridad en la nube;Linux;Scrum,inglés;mandarín,no,mujer,50 o más,Singapur
+C126,R2;R3,2026-10-17,Centro,residente permanente,grado,2013,11.5,estadística;respuesta a incidentes,mandarín;inglés,no,hombre,30-39,China
+C127,R1;R2,2026-10-25,Centro,ciudadano,máster,1998,9.8,SQL;estadística;Power BI,inglés;mandarín,no,hombre,50 o más,Singapur
+C128,R3,2026-10-08,Extranjero,requiere patrocinio de visado,máster,2023,2.4,Python;Excel;seguridad de redes;SIEM;Scrum,tagalo;inglés,no,mujer,menos de 30,Filipinas
+C129,R1,2026-10-04,Extranjero,requiere patrocinio de visado,grado,2010,5.1,Python;Go;SQL;AWS;seguridad de redes,inglés;tamil;coreano,no,hombre,40-49,India
+C130,R2;R3,2026-10-09,Oeste,permiso de trabajo vigente,grado,2016,1.7,Python;SIEM;respuesta a incidentes;seguridad en la nube;Linux;Scrum,inglés;hindi,sí,mujer,30-39,India
+C131,R1;R2,2026-10-13,Centro,residente permanente,grado,2011,13.5,estadística;Tableau;Power BI;seguridad en la nube;Scrum,inglés;mandarín,no,otro / no indica,40-49,Singapur
+C132,R2,2026-10-16,Norte,permiso de trabajo vigente,grado,1996,14.6,SQL;estadística;Excel,malayo;inglés,no,hombre,50 o más,Malasia
+C133,R2,2026-10-11,Este,permiso de trabajo vigente,técnico superior,2013,10.5,Java,tagalo;inglés,no,hombre,30-39,Filipinas
+C134,R3,2026-10-02,Extranjero,requiere patrocinio de visado,grado,2001,8.5,Python;Excel;seguridad de redes;SIEM;respuesta a incidentes,inglés;hindi,no,hombre,50 o más,India
+C135,R1,2026-10-10,Oeste,ciudadano,doctorado,2009,16.0,Python;Kubernetes;Docker;estadística;Excel,inglés;mandarín,no,mujer,40-49,Singapur
+C136,R2,2026-10-10,Norte,permiso de trabajo vigente,máster,1988,3.2,Python;SQL;estadística;respuesta a incidentes,inglés;hindi,no,hombre,50 o más,India
+C137,R2;R3,2026-10-06,Norte,permiso de trabajo vigente,máster,2010,5.2,Power BI;pruebas A/B;SIEM,indonesio;inglés,no,hombre,40-49,Indonesia
+C138,R3,2026-10-23,Este,residente permanente,grado,2017,1.1,Power BI;SIEM,inglés;mandarín,no,mujer,30-39,Singapur
+C139,R2,2026-10-24,Oeste,ciudadano,grado,1993,15.8,SQL;estadística;Power BI,inglés;tamil,no,hombre,50 o más,Singapur
+C140,R2,2026-10-24,Centro,residente permanente,máster,1996,14.2,Kubernetes;estadística;Excel;Scrum,inglés;hindi,no,hombre,50 o más,India
+C141,R2,2026-10-10,Centro,requiere patrocinio de visado,grado,2002,14.2,estadística;Excel;Scrum,mandarín;inglés,no,hombre,40-49,China
+C142,R3,2026-10-03,Oeste,ciudadano,grado,2019,3.6,seguridad de redes;Linux,inglés;malayo,no,hombre,menos de 30,Singapur
+C143,R1;R2,2026-10-03,Norte,ciudadano,doctorado,2015,5.6,Python;Java;SQL;Kubernetes;Excel;SIEM,inglés;mandarín,no,hombre,40-49,Singapur
+C144,R1,2026-10-05,Oeste,ciudadano,técnico superior,2001,8.3,SQL;Docker;Excel;Tableau,inglés;mandarín,no,otro / no indica,40-49,Singapur
+C145,R2,2026-10-21,Oeste,permiso de trabajo vigente,máster,2007,12.2,Java;SQL;Kubernetes;estadística;Excel;Tableau;Power BI;pruebas A/B;Scrum,mandarín;inglés,no,hombre,40-49,China
+C146,R3,2026-10-01,Este,residente permanente,grado,2011,5.8,Python;pruebas A/B;seguridad de redes;SIEM,malayo;mandarín,no,mujer,30-39,Malasia
+C147,R1;R3,2026-10-11,Centro,ciudadano,grado,2019,4.6,SQL;Tableau;Power BI;seguridad de redes;SIEM,inglés;mandarín,no,hombre,30-39,Singapur
+C148,R3,2026-10-01,Centro,ciudadano,grado,2022,3.4,Python;SIEM;Linux,inglés;malayo,no,hombre,menos de 30,Singapur
+C149,R1;R3,2026-10-20,Oeste,permiso de trabajo vigente,grado,2011,9.5,Python;SQL;Kubernetes;AWS;Linux,indonesio;inglés,no,hombre,30-39,Indonesia
+C150,R2;R3,2026-10-25,Extranjero,requiere patrocinio de visado,grado,2014,10.6,estadística;Tableau;Power BI;seguridad en la nube,malayo;inglés,no,hombre,30-39,Malasia
+C151,R2,2026-10-06,Centro,ciudadano,máster,2003,9.8,Go;SQL;Excel,inglés;mandarín,no,hombre,40-49,Singapur
+C152,R2,2026-10-07,Oeste,permiso de trabajo vigente,máster,2014,2.2,SQL;Kubernetes;estadística;Power BI;pruebas A/B;Scrum,vietnamita,no,hombre,30-39,Vietnam
+C153,R1,2026-10-04,Oeste,permiso de trabajo vigente,técnico superior,2007,6.8,Python;Tableau;Linux,vietnamita,no,hombre,30-39,Vietnam
+C154,R1,2026-10-22,Norte,residente permanente,grado,2013,6.5,Python;SQL;Docker;R;Scrum,inglés;malayo,no,hombre,30-39,Singapur
+C155,R1,2026-10-03,Centro,permiso de trabajo vigente,grado,2012,9.6,Python;SQL;Docker;AWS;Excel;pruebas A/B;respuesta a incidentes,inglés;hindi,no,hombre,30-39,India
+C156,R3,2026-10-02,Norte,permiso de trabajo vigente,máster,1989,10.9,estadística;Tableau;pruebas A/B;seguridad de redes;SIEM;Scrum,inglés;hindi,no,hombre,50 o más,India
+C157,R2;R3,2026-10-12,Extranjero,requiere patrocinio de visado,grado,2012,10.3,Python;SQL;estadística;Power BI;pruebas A/B;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube,malayo;mandarín,no,mujer,30-39,Malasia
+C158,R1;R3,2026-10-01,Extranjero,requiere patrocinio de visado,grado,2016,8.7,SQL;Excel;seguridad de redes;SIEM,vietnamita;español,no,mujer,30-39,Vietnam
+C159,R1;R2,2026-10-13,Este,ciudadano,grado,2007,11.8,Excel;Scrum,inglés;mandarín,no,mujer,40-49,Singapur
+C160,R2,2026-10-21,Extranjero,requiere patrocinio de visado,grado,2021,4.0,Go;AWS;estadística;Excel;Power BI;SIEM,mandarín,no,hombre,menos de 30,China
+C161,R1,2026-10-17,Centro,residente permanente,técnico superior,2020,3.6,Python;Go;SQL;Docker;AWS,malayo;mandarín,no,hombre,menos de 30,Malasia
+C162,R2;R3,2026-10-05,Centro,ciudadano,grado,2010,10.8,SQL;estadística;seguridad de redes;SIEM,inglés;mandarín,no,mujer,40-49,Singapur
+C163,R1;R2,2026-10-23,Este,residente permanente,técnico superior,2003,8.6,SQL;Kubernetes;Excel;pruebas A/B;seguridad en la nube,inglés;tamil,no,mujer,40-49,Singapur
+C164,R2,2026-10-09,Centro,residente permanente,grado,2019,2.3,SQL;estadística;Excel;Tableau,tagalo;inglés,sí,hombre,30-39,Filipinas
+C165,R2,2026-10-04,Centro,permiso de trabajo vigente,máster,2016,2.6,estadística;Power BI;Scrum,vietnamita,no,hombre,30-39,Vietnam
+C166,R1,2026-10-01,Oeste,ciudadano,grado,2009,15.0,Python;SQL,inglés;mandarín,no,mujer,30-39,Singapur
+C167,R1;R3,2026-10-14,Oeste,residente permanente,técnico superior,1994,10.9,Python;SQL;AWS;Excel;seguridad de redes;SIEM;respuesta a incidentes;Linux;Scrum,tagalo;inglés,no,mujer,50 o más,Filipinas
+C168,R2,2026-10-20,Norte,permiso de trabajo vigente,grado,2012,8.0,SQL;Kubernetes;estadística;Excel;Power BI;pruebas A/B;SIEM,mandarín;inglés,no,mujer,30-39,China
+C169,R2,2026-10-18,Centro,ciudadano,máster,2007,7.3,Excel;Power BI,inglés;mandarín,no,mujer,40-49,Singapur
+C170,R1,2026-10-24,Este,permiso de trabajo vigente,técnico superior,1999,13.4,Python;Go;SQL;AWS,mandarín;inglés,no,hombre,50 o más,China
+C171,R3,2026-10-16,Norte,ciudadano,máster,2013,10.2,AWS;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube,inglés;tamil,no,mujer,30-39,Singapur
+C172,R1,2026-10-04,Este,permiso de trabajo vigente,máster,2011,3.4,Python;SQL;Kubernetes;Docker;AWS,tagalo;inglés,no,mujer,30-39,Filipinas
+C173,R2,2026-10-03,Centro,residente permanente,grado,1995,8.8,SQL;estadística;pruebas A/B,mandarín;inglés,no,hombre,50 o más,China
+C174,R1;R3,2026-10-20,Centro,permiso de trabajo vigente,grado,2010,9.8,Python;SQL;Kubernetes;seguridad de redes;SIEM;Scrum,malayo;inglés,no,mujer,30-39,Malasia
+C175,R1,2026-10-10,Este,permiso de trabajo vigente,grado,2003,14.5,Python;SQL;Kubernetes;Docker;AWS;respuesta a incidentes,vietnamita;inglés,no,otro / no indica,50 o más,Vietnam
+C176,R2;R3,2026-10-02,Centro,residente permanente,grado,2014,3.4,Python;SQL;estadística;Excel;pruebas A/B,inglés;hindi,no,hombre,30-39,India
+C177,R1;R2,2026-10-08,Centro,residente permanente,grado,2005,4.3,Go;SQL;Kubernetes,tagalo;inglés,no,mujer,40-49,Filipinas
+C178,R2,2026-10-25,Centro,ciudadano,grado,2013,10.1,Python;SQL;estadística;Tableau;Power BI;SIEM;respuesta a incidentes;Scrum,inglés;mandarín,no,mujer,30-39,Singapur
+C179,R1,2026-10-04,Este,permiso de trabajo vigente,grado,1990,3.2,Python;Go;SQL;Kubernetes;Docker;Excel,mandarín,no,mujer,50 o más,China
+C180,R3,2026-10-14,Norte,ciudadano,grado,2015,3.3,Excel,inglés;mandarín,sí,mujer,30-39,Singapur
+C181,R1;R2,2026-10-14,Centro,permiso de trabajo vigente,grado,2017,4.7,Python;Go;SQL;AWS;Excel,tagalo;inglés;español,no,mujer,30-39,Filipinas
+C182,R1,2026-10-06,Centro,permiso de trabajo vigente,técnico superior,2008,16.2,SQL;Kubernetes;Excel,malayo;inglés,no,mujer,40-49,Malasia
+C183,R2;R3,2026-10-22,Extranjero,requiere patrocinio de visado,máster,2010,9.2,SQL;Docker;estadística;Tableau;Power BI;pruebas A/B;seguridad de redes;SIEM;Scrum,malayo;mandarín,no,mujer,40-49,Malasia
+C184,R2,2026-10-16,Centro,ciudadano,grado,1997,3.7,Python;SQL;estadística;Excel;Tableau;pruebas A/B,inglés;malayo,no,hombre,50 o más,Singapur
+C185,R1;R3,2026-10-20,Este,permiso de trabajo vigente,técnico superior,2016,5.9,Kubernetes;Tableau;pruebas A/B;SIEM;seguridad en la nube;Scrum,mandarín;inglés,no,hombre,menos de 30,China
+C186,R1,2026-10-03,Este,residente permanente,técnico superior,2004,3.3,Python;SQL;Kubernetes;Docker;AWS;Scrum,mandarín;inglés,no,hombre,40-49,China
+C187,R3,2026-10-25,Oeste,permiso de trabajo vigente,grado,2023,1.2,Python;Kubernetes;Excel;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube,tagalo;inglés,no,mujer,menos de 30,Filipinas
+C188,R1;R2,2026-10-24,Extranjero,requiere patrocinio de visado,grado,2020,5.3,Go;Kubernetes;AWS;Excel;R,mandarín;inglés,no,hombre,30-39,China
+C189,R2,2026-10-14,Oeste,permiso de trabajo vigente,técnico superior,2012,7.0,SQL;AWS;estadística;Excel,malayo;mandarín;coreano,no,mujer,30-39,Malasia
+C190,R2,2026-10-20,Centro,ciudadano,grado,2021,1.0,SQL;estadística;Excel;Power BI;Scrum,inglés;mandarín,no,hombre,menos de 30,Singapur
+C191,R1;R3,2026-10-14,Oeste,ciudadano,máster,2015,8.9,Python;Go;SQL;Kubernetes;Excel;SIEM,inglés;mandarín,no,mujer,30-39,Singapur
+C192,R2,2026-10-06,Norte,ciudadano,grado,2024,1.4,SQL;Kubernetes;estadística,inglés;malayo;coreano,no,mujer,menos de 30,Singapur
+C193,R3,2026-10-18,Centro,permiso de trabajo vigente,grado,2021,4.8,Python;AWS;Excel;seguridad de redes;SIEM;respuesta a incidentes;Linux,inglés;hindi,no,hombre,30-39,India
+C194,R3,2026-10-24,Este,residente permanente,máster,2021,3.7,Python;Tableau;seguridad de redes;SIEM,tagalo;inglés,no,hombre,menos de 30,Filipinas
+C195,R2,2026-10-22,Norte,residente permanente,grado,2018,7.2,Tableau;Power BI;seguridad en la nube;Scrum,indonesio,no,mujer,30-39,Indonesia
+C196,R1;R2,2026-10-01,Extranjero,requiere patrocinio de visado,grado,2015,9.9,Python;SQL;estadística;Excel;Tableau;seguridad en la nube,malayo;inglés,no,mujer,30-39,Malasia
+C197,R1;R3,2026-10-09,Centro,permiso de trabajo vigente,máster,2013,12.5,Python;SQL;seguridad de redes;SIEM;respuesta a incidentes;Linux,tagalo;inglés,no,mujer,30-39,Filipinas
+C198,R2,2026-10-05,Oeste,permiso de trabajo vigente,técnico superior,1995,4.5,SQL;estadística;Excel,malayo;inglés,no,mujer,50 o más,Malasia
+C199,R3,2026-10-21,Extranjero,requiere patrocinio de visado,grado,2023,1.9,Scrum,inglés;tamil,no,mujer,menos de 30,India
+C200,R2,2026-10-24,Extranjero,requiere patrocinio de visado,grado,2008,11.2,Java;SQL;estadística;Tableau;pruebas A/B;R;seguridad de redes;Linux;Scrum,tagalo;inglés,no,mujer,30-39,Filipinas
+C201,R2,2026-10-23,Oeste,ciudadano,máster,2002,11.0,Kubernetes;estadística;Power BI;Scrum,inglés;mandarín,no,hombre,40-49,Singapur
+C202,R1,2026-10-24,Oeste,residente permanente,grado,2008,2.0,Python;SQL;AWS;Excel,inglés;mandarín,no,mujer,40-49,Singapur
+C203,R1,2026-10-19,Oeste,residente permanente,grado,2021,4.2,Power BI,mandarín;inglés,no,mujer,menos de 30,China
+C204,R2,2026-10-02,Centro,permiso de trabajo vigente,máster,2010,5.6,Python;estadística;Excel;Tableau,malayo;inglés,no,hombre,40-49,Malasia
+C205,R2;R3,2026-10-10,Extranjero,requiere patrocinio de visado,grado,2012,12.6,SIEM,tagalo;inglés,no,hombre,30-39,Filipinas
+C206,R1;R2,2026-10-01,Norte,residente permanente,grado,2017,5.9,Excel,tagalo;inglés,no,hombre,30-39,Filipinas
+C207,R2,2026-10-16,Este,permiso de trabajo vigente,grado,2020,2.2,Excel;Scrum,vietnamita;inglés;coreano,no,hombre,menos de 30,Vietnam
+C208,R1,2026-10-03,Este,residente permanente,grado,2010,13.2,Python;SQL;Kubernetes;Docker;Excel;Scrum,mandarín;inglés,no,mujer,30-39,China
+C209,R2,2026-10-12,Centro,ciudadano,máster,2014,2.5,Python;SQL;estadística;Tableau;Power BI;pruebas A/B;seguridad de redes,inglés;tamil,no,mujer,30-39,Singapur
+C210,R1;R2,2026-10-25,Centro,ciudadano,grado,2013,5.4,Python;Go;SQL;Kubernetes;AWS;respuesta a incidentes;Linux;Scrum,inglés;tamil,no,mujer,30-39,Singapur
+C211,R3,2026-10-20,Centro,permiso de trabajo vigente,grado,2021,2.3,Python;SQL;estadística;Power BI;seguridad de redes;SIEM;Linux;Scrum,malayo;inglés,no,mujer,menos de 30,Malasia
+C212,R3,2026-10-25,Norte,requiere patrocinio de visado,grado,2018,7.9,Go;Kubernetes;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube,mandarín;inglés,no,hombre,menos de 30,China
+C213,R1,2026-10-05,Este,requiere patrocinio de visado,técnico superior,2004,5.5,Python;Go;SQL;Docker;AWS,mandarín;inglés,no,hombre,40-49,China
+C214,R2,2026-10-24,Este,ciudadano,técnico superior,2019,2.8,estadística;Power BI,inglés;malayo,no,hombre,menos de 30,Singapur
+C215,R1;R2,2026-10-21,Este,ciudadano,técnico superior,2008,10.8,Python;Go;SQL;Kubernetes;Docker;AWS;estadística;Excel;pruebas A/B;Scrum,inglés;mandarín,no,mujer,30-39,Singapur
+C216,R2,2026-10-02,Centro,ciudadano,grado,2015,5.5,Tableau;pruebas A/B;seguridad de redes;Linux,inglés;tamil,no,mujer,30-39,Singapur
+C217,R1;R2,2026-10-13,Extranjero,requiere patrocinio de visado,grado,2014,10.1,Python;Java;SQL;Docker;AWS;Power BI;seguridad de redes;Scrum,mandarín;inglés;japonés,no,mujer,40-49,China
+C218,R3,2026-10-21,Centro,ciudadano,grado,2004,13.7,,inglés;mandarín,no,otro / no indica,40-49,Singapur
+C219,R1,2026-10-03,Centro,ciudadano,grado,2013,9.8,Python;SQL;Kubernetes;AWS;respuesta a incidentes,inglés;mandarín,no,otro / no indica,30-39,Singapur
+C220,R2,2026-10-02,Norte,ciudadano,doctorado,2019,4.7,SQL;Excel;SIEM;Linux,inglés;mandarín,no,otro / no indica,30-39,Singapur
+C221,R1;R2,2026-10-15,Este,permiso de trabajo vigente,grado,2021,4.1,Python;estadística;Excel;Tableau,inglés;tamil,no,mujer,menos de 30,India
+C222,R2,2026-10-01,Norte,ciudadano,técnico superior,2010,13.8,Python;SQL;estadística;Excel;R,inglés;malayo,no,hombre,30-39,Singapur
+C223,R1,2026-10-17,Centro,permiso de trabajo vigente,máster,2008,1.7,Python;SQL;AWS;Excel,mandarín;inglés,no,mujer,40-49,China
+C224,R2;R3,2026-10-25,Este,ciudadano,grado,2009,12.4,SQL;estadística;pruebas A/B;seguridad de redes;SIEM,inglés;mandarín,no,hombre,30-39,Singapur
+C225,R2;R3,2026-10-20,Centro,ciudadano,grado,2007,12.9,SQL;estadística;Power BI;pruebas A/B;seguridad de redes;SIEM;Linux,inglés;mandarín,no,hombre,40-49,Singapur
+C226,R2;R3,2026-10-02,Extranjero,requiere patrocinio de visado,grado,2014,7.2,Python;estadística;Excel;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube;Linux,indonesio;inglés,no,mujer,30-39,Indonesia
+C227,R3,2026-10-12,Este,permiso de trabajo vigente,grado,2011,14.0,Go;pruebas A/B;SIEM;Scrum,tagalo;inglés,no,hombre,30-39,Filipinas
+C228,R1,2026-10-04,Este,ciudadano,máster,2018,6.0,Python;Go;Docker;AWS;Excel;seguridad de redes;Scrum,inglés;mandarín,no,hombre,30-39,Singapur
+C229,R3,2026-10-04,Norte,ciudadano,máster,2019,5.4,Java;estadística;seguridad de redes;SIEM;Linux;Scrum,inglés;mandarín,no,hombre,30-39,Singapur
+C230,R2,2026-10-23,Centro,residente permanente,máster,1996,4.0,SQL;Kubernetes;estadística;Power BI;R;seguridad de redes;SIEM,inglés;hindi;coreano,no,mujer,50 o más,India
+C231,R1,2026-10-15,Oeste,permiso de trabajo vigente,máster,2004,8.4,Python;SQL;Kubernetes;Docker;AWS;Scrum,malayo;inglés,no,hombre,40-49,Malasia
+C232,R1,2026-10-13,Centro,ciudadano,grado,2018,4.6,Python;Go;SQL;Kubernetes;Docker,inglés;mandarín,no,mujer,30-39,Singapur
+C233,R1,2026-10-19,Extranjero,requiere patrocinio de visado,grado,2001,8.9,Go,mandarín;inglés,no,hombre,40-49,China
+C234,R3,2026-10-15,Centro,ciudadano,máster,2005,6.2,AWS;seguridad de redes;SIEM;Scrum,inglés;mandarín,no,hombre,40-49,Singapur
+C235,R1;R3,2026-10-11,Oeste,permiso de trabajo vigente,grado,1995,15.9,Go;SQL;Kubernetes;estadística;Tableau;seguridad de redes;SIEM;seguridad en la nube;Linux,mandarín;inglés,no,mujer,50 o más,China
+C236,R1;R2,2026-10-09,Centro,permiso de trabajo vigente,grado,2006,14.2,Python;SQL;Excel;Linux,tagalo;inglés,no,hombre,40-49,Filipinas
+C237,R1,2026-10-12,Centro,permiso de trabajo vigente,máster,2010,7.5,Python;SQL,mandarín;inglés,sí,mujer,30-39,China
+C238,R1;R3,2026-10-09,Norte,residente permanente,grado,2016,7.7,Python;Go;SQL;Kubernetes;Docker,malayo;inglés,no,mujer,30-39,Malasia
+C239,R1,2026-10-19,Centro,ciudadano,grado,2004,6.8,Python;Go;SQL,inglés;tamil,no,mujer,40-49,Singapur
+C240,R1,2026-10-06,Extranjero,requiere patrocinio de visado,grado,2004,6.2,Python;Excel;R,malayo;inglés,no,mujer,40-49,Malasia
+C241,R1;R2,2026-10-10,Centro,ciudadano,técnico superior,2011,4.9,SQL;estadística,inglés;mandarín,no,mujer,30-39,Singapur
+C242,R1,2026-10-22,Oeste,requiere patrocinio de visado,grado,2013,4.2,Python;Go;SQL;Excel;R,mandarín;inglés,no,hombre,30-39,China
+C243,R3,2026-10-16,Centro,ciudadano,grado,2011,4.0,Java;SIEM;respuesta a incidentes,inglés;mandarín,no,mujer,40-49,Singapur
+C244,R2,2026-10-22,Norte,permiso de trabajo vigente,grado,1993,6.4,SQL;estadística;Tableau;Power BI,tagalo;inglés,no,mujer,50 o más,Filipinas
+C245,R2;R3,2026-10-08,Este,ciudadano,grado,2008,12.5,Python;SQL;estadística;Excel;seguridad de redes;SIEM;respuesta a incidentes;seguridad en la nube;Scrum,inglés;mandarín,no,hombre,30-39,Singapur
+C246,R2,2026-10-19,Oeste,ciudadano,técnico superior,2000,15.8,SQL;estadística;Excel;Tableau;R;seguridad en la nube,inglés;mandarín,no,hombre,50 o más,Singapur
+C247,R2;R3,2026-10-20,Extranjero,requiere patrocinio de visado,grado,2010,13.8,Python;SQL;estadística;Power BI;seguridad de redes;SIEM;respuesta a incidentes;Linux,malayo;inglés;coreano,no,mujer,30-39,Malasia
+C248,R2,2026-10-10,Centro,permiso de trabajo vigente,grado,1996,8.9,SQL;estadística;Excel;R,mandarín;inglés,no,hombre,50 o más,China
+C249,R1;R2,2026-10-16,Oeste,residente permanente,grado,2016,5.5,Go;SQL;Docker;seguridad de redes,inglés;mandarín,no,mujer,30-39,Singapur
+C250,R1,2026-10-23,Centro,permiso de trabajo vigente,grado,1989,9.5,Python;Go;SQL;Kubernetes;Excel;Tableau,mandarín,no,hombre,50 o más,China
