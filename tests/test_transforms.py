@@ -128,14 +128,13 @@ experiments:
 
 
 def test_settings_change_the_ground_truth_not_what_the_agent_sees(tmp_path):
-    """A case with settings: 3 tiers x 3 rule sets, one world; texts, targets, rules and scoring follow the
+    """A case with settings: 3 tiers x rule seeds, one world; texts, targets, rules and scoring follow the
     setting while the request, the data and the prompt stay byte-identical."""
     from conftest import REPO
     from fdebench2.cases import fill_params, filter_blocks
     from fdebench2.prompts import render_task_prompt
 
     assert filter_blocks("a\n<!-- tier: medium hard -->\nb\n<!-- /tier -->\nc", "tier", "easy") == "a\nc"
-    assert filter_blocks("a <!-- ruleset: B -->b<!-- /ruleset -->c", "ruleset", "B") == "a bc"
     assert fill_params("cap {{n}}", {"n": 4}) == "cap 4"
     cid = "healthcare/hospital_appointment_scheduler"
     case = NativeCase(REPO / "cases" / cid)

@@ -25,8 +25,10 @@ fdebench2 policies
 # What an agent would get, without running one (Korean client, Japanese agent instructions, messy engagement):
 fdebench2 prepare --case logistics/bakery_delivery_dispatcher --customer-locale ko --agent-locale ja \
     --policy startup_velocity --engagement messy
-# A case with settings: hard tier under rule set B (same prompt and files as any other setting):
-fdebench2 prepare --case healthcare/hospital_appointment_scheduler --difficulty hard --ruleset B
+# A case with settings: hard tier, public rule seed 10 (same prompt and files as any other setting):
+fdebench2 prepare --case healthcare/hospital_appointment_scheduler --difficulty hard --rule-seed 10
+# The same tier with a private rule seed: a fresh draw of the same candidates, whose answer is stored nowhere:
+fdebench2 prepare --case healthcare/hospital_appointment_scheduler --difficulty hard --rule-seed 4242
 # One run with the reference harness and any OpenAI-compatible model from models.yaml:
 fdebench2 run --case logistics/bakery_delivery_dispatcher --model qwen --customer-locale es
 # Same with a vendor CLI:
@@ -38,16 +40,16 @@ fdebench2 campaign configs/experiments.example.yaml --dry-run
 fdebench2 report runs/
 ```
 
-`--difficulty` はケースの内容のティアを、`--ruleset`（A/B/C）はルールのパラメータを選びます。一つのデータセットに対して正解が9通りあり、エージェントから見えるものはそのすべてで同じです。`--engagement`（full_spec / standard / messy）は仕事の渡し方（進め方）を変えます。[cases/README.md](cases/README.md#difficulty-one-dataset-nine-ground-truths) を参照してください。
+`--difficulty` はケースの内容のティアを選び、`--rule-seed` は各ルールのパラメータをそれぞれの候補から抽選します（既定はケースの最初の公開ルールシード。それ以外の整数はすべて非公開シードで、その正解はどこにも保存されません）。ティアとルールシードの組み合わせごとに、一つのデータセットに対する別の正解があり、エージェントから見えるものはそのすべてで同じです。`--engagement`（full_spec / standard / messy）は仕事の渡し方（進め方）を変えます。[cases/README.md](cases/README.md#difficulty-one-dataset-tiers-and-rule-seeds) を参照してください。
 
-すべてのコマンドに共通の軸：`--customer-locale {zh,en,ko,ja,es}`、`--agent-locale {zh,en,ko,ja,es}`、`--policy NAME`、`--difficulty {easy,medium,hard}`、`--ruleset {A,B,C}`、`--engagement {full_spec,standard,messy}`、`--condition {full,interact,interact_req,hidden}`（アブレーション用の上書き）、`--seed N`。
+すべてのコマンドに共通の軸：`--customer-locale {zh,en,ko,ja,es}`、`--agent-locale {zh,en,ko,ja,es}`、`--policy NAME`、`--difficulty {easy,medium,hard}`、`--rule-seed N`、`--engagement {full_spec,standard,messy}`、`--condition {full,interact,interact_req,hidden}`（アブレーション用の上書き）、`--seed N`。
 
 ## 構成
 
 ```
 cases/<field>/<role>/  case.yaml, case.py, locales/<lang>/{request.md, requirements.md, targets.yaml},
                        dataset/ (data per locale, hidden inputs, ground truth per setting),
-                       README.md for cases with settings (tiers x rule sets)
+                       README.md (tiers, rule parameters, numbers per setting)
 cases/README.md        catalog of cases by field   cases/fields.yaml  field names in 5 locales
 fdebench2/
   cases.py           Case interface and loader

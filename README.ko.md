@@ -31,8 +31,10 @@ fdebench2 policies
 # What an agent would get, without running one (Korean client, Japanese agent instructions, messy engagement):
 fdebench2 prepare --case logistics/bakery_delivery_dispatcher --customer-locale ko --agent-locale ja \
     --policy startup_velocity --engagement messy
-# A case with settings: hard tier under rule set B (same prompt and files as any other setting):
-fdebench2 prepare --case healthcare/hospital_appointment_scheduler --difficulty hard --ruleset B
+# A case with settings: hard tier, public rule seed 10 (same prompt and files as any other setting):
+fdebench2 prepare --case healthcare/hospital_appointment_scheduler --difficulty hard --rule-seed 10
+# The same tier with a private rule seed: a fresh draw of the same candidates, whose answer is stored nowhere:
+fdebench2 prepare --case healthcare/hospital_appointment_scheduler --difficulty hard --rule-seed 4242
 # One run with the reference harness and any OpenAI-compatible model from models.yaml:
 fdebench2 run --case logistics/bakery_delivery_dispatcher --model qwen --customer-locale es
 # Same with a vendor CLI:
@@ -44,13 +46,15 @@ fdebench2 campaign configs/experiments.example.yaml --dry-run
 fdebench2 report runs/
 ```
 
-`--difficulty`는 케이스의 콘텐츠 티어를, `--ruleset`(A/B/C)은 규칙 파라미터를 고릅니다. 데이터셋 하나에 정답이
-아홉 개이며, 에이전트가 보는 내용은 아홉 설정 모두에서 같습니다. `--engagement`(full_spec / standard / messy)는 작업이
-에이전트에게 전달되는 방식을 바꿉니다. [cases/README.md](cases/README.md#difficulty-one-dataset-nine-ground-truths)를
+`--difficulty`는 케이스의 콘텐츠 티어를 고르고, `--rule-seed`는 각 규칙 파라미터를 그 후보 중에서 뽑습니다(기본값은
+케이스의 첫 번째 공개 규칙 시드이며, 그 밖의 정수는 모두 정답이 어디에도 저장되지 않는 비공개 시드입니다). 티어와 규칙 시드의
+조합마다 데이터셋 하나에 대한 정답이 따로 있으며, 에이전트가 보는 내용은 모든 설정에서 같습니다. `--engagement`(full_spec /
+standard / messy)는 작업이 에이전트에게 전달되는 방식을 바꿉니다.
+[cases/README.md](cases/README.md#difficulty-one-dataset-tiers-and-rule-seeds)를
 참조하세요.
 
 모든 명령에 공통인 축: `--customer-locale {zh,en,ko,ja,es}`, `--agent-locale {zh,en,ko,ja,es}`,
-`--policy NAME`, `--difficulty {easy,medium,hard}`, `--ruleset {A,B,C}`, `--engagement {full_spec,standard,messy}`,
+`--policy NAME`, `--difficulty {easy,medium,hard}`, `--rule-seed N`, `--engagement {full_spec,standard,messy}`,
 `--condition {full,interact,interact_req,hidden}`(어블레이션 실험용 재정의), `--seed N`.
 
 ## 디렉터리 구조
@@ -58,7 +62,7 @@ fdebench2 report runs/
 ```
 cases/<field>/<role>/  case.yaml, case.py, locales/<lang>/{request.md, requirements.md, targets.yaml},
                        dataset/ (data per locale, hidden inputs, ground truth per setting),
-                       README.md for cases with settings (tiers x rule sets)
+                       README.md (tiers, rule parameters, numbers per setting)
 cases/README.md        catalog of cases by field   cases/fields.yaml  field names in 5 locales
 fdebench2/
   cases.py           Case interface and loader

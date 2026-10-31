@@ -22,7 +22,7 @@ from fdebench2.dataset import check_dataset, export_dataset
 from fdebench2.explain import build_page, write_page
 from fdebench2.runner import Bench, Settings, case_rule_seeds, expand, load_campaign
 from fdebench2.scaffold import new_case
-from fdebench2.scoring.report import difficulty_table, settings_table
+from fdebench2.scoring.report import difficulty_table, load_results, report, settings_table
 from fdebench2.transforms.language import Translator
 from fdebench2.transforms.variant import Variant, VariantSpec, build_variant
 from fdebench2.validate import check_binding, check_case
@@ -225,10 +225,24 @@ def expected_draw(name: str, pool: list, seed: int, salt: int = 0):
     return pool[random.Random(key).randrange(len(pool))]
 
 
-# The toy with the deprecated fixed rule sets A / B / C instead of params: and rule_seeds:.
-LEGACY_YAML = (CASE_YAML[:CASE_YAML.index("params:")]
-               + "rulesets: {A: {cap: 10, price: 3}, B: {cap: 12, price: 4}, C: {cap: 14, price: 5}}\n"
-               + CASE_YAML[CASE_YAML.index("rules:"):])
+# The toy with the fixed rule sets A / B / C that params: and rule_seeds: replaced.
+RULESETS_YAML = (CASE_YAML[:CASE_YAML.index("params:")]
+                 + "rulesets: {A: {cap: 10, price: 3}, B: {cap: 12, price: 4}, C: {cap: 14, price: 5}}\n"
+                 + CASE_YAML[CASE_YAML.index("rules:"):])
+
+# A parameter that only the hard tier's scoring reads: it binds in hard and changes nothing in easy and medium.
+BONUS_YAML = CASE_YAML.replace("rule_seeds:", "  bonus:\n    values: [0, 1]\nrule_seeds:")
+BONUS_PY = '''
+
+_score = score
+
+
+def score(world, submission_dir, setting):
+    res = _score(world, submission_dir, setting)
+    if "objective" in res and setting.tier == "hard":
+        res["objective"] += 10 * setting["bonus"]
+    return res
+'''
 
 POOLS = {"cap": {"easy": [10, 12], "medium": [14, 16], "hard": [18, 20, 22]},
          "price": {t: [3, 4, 5] for t in ("easy", "medium", "hard")}}
@@ -327,7 +341,7 @@ def test_when_blocks_rules_and_targets(tmp_path):
 def test_toy_case_passes_validation_on_two_worlds(tmp_path):
     report = check_case(make_toy(tmp_path), world_seeds=[2])
     assert report.problems == []
-    assert not any("deprecated" in w for w in report.warnings)
+    assert not any(w.startswith("parameter ") for w in report.warnings)     # cap and price bind in every tier
     assert report.notes and report.notes[0].startswith("baseline/reference objective: easy/s1 ")
 
 
@@ -339,10 +353,113 @@ def test_binding_check_catches_a_parameter_that_changes_nothing(tmp_path):
         refs[(c.tier, c.rule_seed)] = ref = tmp_path / "refs" / c.setting.folder
         c.write_reference(ref)
     problems, warnings = check_binding(case, refs)
-    assert len(problems) == 1 and problems[0].startswith("parameter colour changes nothing: in hard/s1 (colour = ")
+    assert len(problems) == 1 and problems[0].startswith("parameter colour changes nothing: in easy/s1 (colour = ")
+    assert "; in medium/s1 (colour = " in problems[0] and "; in hard/s1 (colour = " in problems[0]   # every tier
     assert warnings == []
     # through validate-case as well (cap and price bind: the reference breaks the cap or is worth another amount)
     assert any(p.startswith("parameter colour changes nothing") for p in check_case(case.root).problems)
+
+
+def _refs(case: NativeCase, where: Path) -> dict:
+    refs = {}
+    for c in case.settings():
+        refs[(c.tier, c.rule_seed)] = ref = where / c.setting.folder
+        c.write_reference(ref)
+    return refs
+
+
+def test_binding_is_checked_in_every_tier_where_a_parameter_varies(tmp_path, monkeypatch):
+    import fdebench2.validate as validate
+    found = {}
+    for stated, text in ((False, "<!-- tier: hard -->\n- A bonus of {{bonus}}.\n<!-- /tier -->\n"),
+                         (True, "- A bonus of {{bonus}}.\n")):
+        root = make_toy(tmp_path / str(stated), BONUS_YAML, extra_py=BONUS_PY, dataset=False)
+        path = root / "locales" / "en" / "requirements.md"
+        path.write_text(path.read_text(encoding="utf-8") + text, encoding="utf-8")
+        case = NativeCase(root)
+        found[stated] = (case, _refs(case, tmp_path / f"refs_{stated}"))
+    # only the hard tier states the bonus: easy and medium vary it, but nothing in force there uses it
+    problems, warnings = check_binding(*found[False])
+    assert problems == [] and len(warnings) == 2
+    assert warnings[0].startswith("parameter bonus varies in tier easy but changes nothing there, and nothing in "
+                                  "force in easy uses it")
+    assert warnings[1].startswith("parameter bonus varies in tier medium but changes nothing there")
+    # the client states the bonus in every tier: where it changes nothing, that fails, with the numbers compared
+    case, refs = found[True]
+    problems, warnings = check_binding(case, refs)
+    assert warnings == [] and len(problems) == 2
+    assert problems[0].startswith("parameter bonus changes nothing in tier easy, where the client states it: in "
+                                  "easy/s1 (bonus = ")
+    obj = case.at("easy", 1).reference_objective
+    assert f"{obj:.6g} -> {obj:.6g}, its own reference {obj:.6g}" in problems[0]
+    # a known and open finding is a warning until the case changes
+    monkeypatch.setitem(validate.OPEN_BINDING_FINDINGS, (TOY, "bonus", "easy"), (None, "the owner decides"))
+    problems, warnings = check_binding(case, refs)
+    assert [p.split(" in tier ")[1][:6] for p in problems] == ["medium"]
+    assert len(warnings) == 1 and warnings[0].endswith("(known and open: the owner decides)")
+    # ... only on the worlds it was found on: listed for world seed 2, it still fails on the public world
+    monkeypatch.setitem(validate.OPEN_BINDING_FINDINGS, (TOY, "bonus", "easy"), ((2,), "the owner decides"))
+    problems, warnings = check_binding(case, refs)
+    assert [p.split(" in tier ")[1].split(",")[0] for p in problems] == ["easy", "medium"] and warnings == []
+    other = case.with_world_seed(2)
+    problems, warnings = check_binding(other, _refs(other, tmp_path / "refs_world_2"), "[seed 2] ")
+    assert [p.split(" in tier ")[1][:6] for p in problems] == ["medium"]
+    assert len(warnings) == 1 and warnings[0].startswith("[seed 2] parameter bonus changes nothing in tier easy")
+    assert warnings[0].endswith("(known and open on world seed 2: the owner decides)")
+    # the highest tier where a parameter varies must bind, whether anything there uses it or not
+    root = make_toy(tmp_path / "top", BONUS_YAML, extra_py=BONUS_PY.replace('"hard"', '"easy"'), dataset=False)
+    path = root / "locales" / "en" / "requirements.md"
+    path.write_text(path.read_text(encoding="utf-8") + "<!-- tier: easy -->\n- A bonus of {{bonus}}.\n<!-- /tier -->\n",
+                    encoding="utf-8")
+    case = NativeCase(root)
+    problems, warnings = check_binding(case, _refs(case, tmp_path / "refs_top"))
+    assert len(problems) == 1 and problems[0].startswith("parameter bonus changes nothing in tier hard, the highest "
+                                                         "tier where it varies: in hard/s1 (bonus = ")
+    assert len(warnings) == 1 and warnings[0].startswith("parameter bonus varies in tier medium but changes nothing")
+    # the highest tier is the highest where the pool varies, even when no candidate could be tried there: then a
+    # lower tier where nothing uses the parameter is only a warning, not the highest tier's error
+    root = make_toy(tmp_path / "unchecked", BONUS_YAML, dataset=False,
+                    extra_py=BONUS_PY + "\n\ndef admissible(params, tier):\n"
+                                        "    return tier != 'hard' or params['bonus'] == 0\n")
+    case = NativeCase(root)
+    problems, warnings = check_binding(case, _refs(case, tmp_path / "refs_unchecked"))
+    assert problems == [] and len(warnings) == 3
+    assert warnings[0] == ("parameter bonus: no other candidate is admissible in hard/s1, so whether it binds in hard "
+                           "was not checked")
+    assert warnings[1].startswith("parameter bonus varies in tier easy but changes nothing there")
+    assert warnings[2].startswith("parameter bonus varies in tier medium but changes nothing there")
+
+
+BONUS_LINE = {"en": "- A bonus of {{bonus}}.\n", "es": "- Una prima de {{bonus}}.\n", "ko": "- 보너스 {{bonus}}.\n",
+              "ja": "- ボーナス {{bonus}}。\n", "zh": "- 奖金 {{bonus}}。\n"}
+
+
+def test_validate_case_reports_lower_tier_findings_per_world(tmp_path, monkeypatch):
+    """Through validate-case with a world-seed panel: the client states the bonus in every tier, but only hard
+    scores it. A known and open finding is a warning on the worlds it lists and a problem elsewhere."""
+    import fdebench2.validate as validate
+    root = make_toy(tmp_path, BONUS_YAML, extra_py=BONUS_PY, dataset=False)
+    for lang, line in BONUS_LINE.items():
+        path = root / "locales" / lang / "requirements.md"
+        path.write_text(path.read_text(encoding="utf-8") + line, encoding="utf-8")
+    export_dataset(root)
+    write_page(root)
+    report = check_case(root, world_seeds=[2])
+    assert sorted(p.split(" in tier ")[1].split(",")[0] for p in report.problems) == ["easy", "easy", "medium", "medium"]
+    assert sum(p.startswith("[seed 2] parameter bonus changes nothing") for p in report.problems) == 2
+    monkeypatch.setitem(validate.OPEN_BINDING_FINDINGS, (TOY, "bonus", "easy"), (None, "every world"))
+    monkeypatch.setitem(validate.OPEN_BINDING_FINDINGS, (TOY, "bonus", "medium"), ((2,), "world 2 only"))
+    report = check_case(root, world_seeds=[2])
+    assert report.problems == [p for p in report.problems if p.startswith("parameter bonus changes nothing in tier "
+                                                                          "medium, where the client states it")]
+    assert len(report.problems) == 1                     # the public world is not listed for medium
+    known = [w for w in report.warnings if "(known and open" in w]
+    assert len(known) == 3
+    assert known[0].startswith("parameter bonus changes nothing in tier easy") and known[0].endswith("(known and "
+                                                                                                     "open: every world)")
+    assert known[1].startswith("[seed 2] parameter bonus changes nothing in tier easy")
+    assert known[2].startswith("[seed 2] parameter bonus changes nothing in tier medium")
+    assert known[2].endswith("(known and open on world seed 2: world 2 only)")
 
 
 def test_contract_slips_are_reported(tmp_path):
@@ -411,8 +528,12 @@ def test_variant_carries_rule_seed_and_params(tmp_path):
     del old["rule_seed"], old["params"], old["spec"]["rule_seed"]
     old["spec"]["ruleset"] = "C"
     (tmp_path / "saved" / "variant.json").write_text(json.dumps(old))
-    again = Variant.load(tmp_path / "saved")
-    assert again.rule_seed == 3 and again.spec.rule_seed == 3
+    with pytest.raises(ValueError, match="set up with rule set C, before rule seeds replaced rule sets; run it again"):
+        Variant.load(tmp_path / "saved")
+    del old["spec"]["ruleset"]                          # the rule set named only next to the spec: refused the same
+    (tmp_path / "saved" / "variant.json").write_text(json.dumps(old))
+    with pytest.raises(ValueError, match="set up with rule set C, before rule seeds replaced rule sets; run it again"):
+        Variant.load(tmp_path / "saved")
 
 
 def test_campaign_runs_the_public_panel_or_private_seeds(tmp_path):
@@ -433,12 +554,10 @@ experiments:
     assert len(toy) == 2 * 3 + 2 and {k.split("__r-")[1].split("__")[0] for k in toy} == {"1", "2", "3", "101", "102"}
     assert [k for k in keys if k.startswith(plain)] == [k for k in keys if k.startswith(plain) and "__r-" not in k]
     assert len([k for k in keys if k.startswith(plain)]) == 2 + 1                   # once per difficulty
-    legacy = NativeCase(make_toy(tmp_path / "legacy", LEGACY_YAML, dataset=False))
-    assert case_rule_seeds(legacy, None) == [1, 2, 3]
-    with pytest.raises(ValueError, match="rule seed 7"):
-        case_rule_seeds(legacy, 7)                       # deprecated rulesets: has no private seeds
+    toy = NativeCase(tmp_path / "cases" / TOY)
+    assert case_rule_seeds(toy, None) == [1, 2, 3] and case_rule_seeds(toy, 7) == [7]
     cfg.write_text("defaults: {models: m.yaml}\nexperiments:\n  old: {ruleset: [A]}\n")
-    with pytest.raises(ValueError, match="ruleset is replaced by rule_seeds"):
+    with pytest.raises(ValueError, match="ruleset is no longer an axis: rule seeds replaced the rule sets"):
         load_campaign(cfg)
 
 
@@ -464,23 +583,43 @@ def test_report_averages_over_rule_seeds_then_cases():
     assert settings_table([{**results[0], "rule_seed": None, "spec": {"case_id": "c/z", "difficulty": "easy"}}]) is None
 
 
-def test_deprecated_rulesets_are_rule_seeds_1_2_3(tmp_path):
-    root = make_toy(tmp_path, LEGACY_YAML, dataset=False)
-    case = NativeCase(root)
-    assert case.rule_seeds == (1, 2, 3) and case.rule_seed == 1
-    b = case.at("hard", 2)
-    assert (b.setting.label, b.setting.folder, b.setting.ruleset) == ("hard/B", "hard_B", "B")
-    assert b.drawn_params == yaml.safe_load((root / "case.yaml").read_text())["rulesets"]["B"]
-    with pytest.raises(KeyError, match="private rule seeds need params"):
-        case.at("hard", 4)
-    with pytest.raises(ValueError):
-        b.with_params(cap=1)
-    assert check_binding(case, {}) == ([], [])
-    path = root / "locales" / "en" / "request.md"              # a slip, so validation stops after the texts
-    path.write_text(path.read_text(encoding="utf-8") + "\n{{cap}}\n", encoding="utf-8")
-    report = check_case(root)
-    assert "en/request.md: must be the same in every setting (no markers or parameters)" in report.problems
-    assert any(w.startswith("case.yaml: rulesets: is deprecated") for w in report.warnings)
+def test_report_refuses_a_result_scored_under_a_rule_set(tmp_path):
+    run = tmp_path / "runs" / "reference--m" / "a__x"
+    run.mkdir(parents=True)
+    result = _result("a/x", "easy", 1, 1.0, True)
+    (run / "result.json").write_text(json.dumps(result))
+    assert load_results(tmp_path / "runs") == [result]
+    del result["rule_seed"], result["spec"]["rule_seed"]
+    result["spec"]["ruleset"] = "B"                     # scored before rule seeds replaced rule sets
+    (run / "result.json").write_text(json.dumps(result))
+    with pytest.raises(ValueError, match="scored under rule set B, before rule seeds replaced rule sets; run it "
+                                         "again or report it apart"):
+        report(tmp_path / "runs")
+
+
+def test_rule_sets_are_refused_with_the_rule_seed_form(tmp_path):
+    root = make_toy(tmp_path / "a", RULESETS_YAML, dataset=False)
+    with pytest.raises(ValueError, match=r"declare params: \(each parameter's candidate pool\) and rule_seeds:"):
+        NativeCase(root)
+    problems = check_case(root).problems
+    assert len(problems) == 1 and problems[0].startswith("case.yaml: logistics/toy_planner: case.yaml declares "
+                                                         "rulesets: (fixed rule sets A / B / C)")
+    # what is left of rule sets in a case that draws its parameters: each names what to use instead
+    leftovers = (CASE_YAML.replace("rule_seeds: [1, 2, 3]", "rule_seeds: [1, 2, 3]\nparam_labels: {cap: {}}")
+                 .replace("    when: {price: [5]}\n", "    when: {price: [5]}\n    rulesets: [C]\n"))
+    root = make_toy(tmp_path / "b", leftovers, dataset=False)
+    path = root / "locales" / "en" / "requirements.md"
+    path.write_text(path.read_text(encoding="utf-8") + "<!-- ruleset: A -->\n- Only in A.\n<!-- /ruleset -->\n",
+                    encoding="utf-8")
+    _edit_targets(root, "en", lambda ts: ts[0].update(rulesets=["A", "B"]))
+    problems = check_case(root).problems
+    assert any(p.startswith("case.yaml: param_labels: belonged to the rule sets that rule seeds replaced") and
+               p.endswith("params.<name>.labels") for p in problems)
+    assert any(p.startswith("rule even_lots: rulesets: ['C'] is no longer read") and "when: {name: [values]}" in p
+               for p in problems)
+    assert any(p.startswith("en/targets.yaml cap: rulesets: ['A', 'B'] is no longer read") for p in problems)
+    assert any(p.startswith("en/requirements.md: <!-- ruleset: ... --> blocks are no longer read") and
+               p.endswith("use <!-- when: name=v1,v2 --> ... <!-- /when -->") for p in problems)
 
 
 def test_one_parameter_variation_has_its_own_label(tmp_path):

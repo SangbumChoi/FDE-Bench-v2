@@ -14,7 +14,7 @@ format, cases, scoring and pipelines. It has no dependency on any other benchmar
 |---|---|
 | Languages | Cases authored natively in **zh / en / ko / ja / es**, data rendered in each locale; the agent's own instruction language is a separate variable. |
 | Company policies | **Policy profiles** (gates, weights, budgets, question caps, exception process) and rule classes that say which rules may bend. |
-| Realistic difficulty | **easy / medium / hard** content tiers, each scored under **three rule sets** (nine ground truths of the same data), plus an engagement axis with recoverable data noise and mid-task events. |
+| Realistic difficulty | **easy / medium / hard** content tiers, each scored under several **rule seeds** that draw the rules' parameters from candidate pools (a ground truth per tier and rule seed, all on the same data; private seeds give answers published nowhere), plus an engagement axis with recoverable data noise and mid-task events. |
 | Fair comparison | The agent's prompt and files are byte-identical in every setting, and runs are isolated so nothing that differs between settings is reachable. |
 | Any model, any harness | One **OpenAI-compatible** model protocol plus vendor CLIs over a shared **MCP** client channel. |
 
@@ -46,8 +46,9 @@ cases/<field>/<role>/
   dataset/                  the generated data and ground truth as files (fdebench2 export-dataset):
     agent_view/<lang>/      what the agent receives, per customer locale
     hidden/                 inputs the agent never sees (a program case's hidden period or corpus)
-    gt/<tier>_<ruleset>/    per setting: setting.json, reference/, score.json (with the baseline's
-                            objective) and case extras
+    gt/<tier>_s<seed>/      per public setting (tier × public rule seed): setting.json (the drawn
+                            parameters), reference/, score.json (with the baseline's objective) and
+                            case extras
     MANIFEST.json           sha256 of every file; validate-case checks it against the generator
 ```
 
@@ -91,8 +92,11 @@ Design rules that keep scoring language-independent:
 - the case still works on world seeds 1, 2 and 3 (`--world-seeds` chooses others, `--no-world-seeds` skips).
 
 Warnings, which do not fail validation: two tiers whose references are byte-identical or score as each
-other's reference; a number in a rule description that neither the requirements nor the data state; a `name (ID)` in a
-locale's texts whose ID's data rows never mention that name; a baseline within 2% of the reference.
+other's reference; a parameter that varies in a tier where nothing in force uses it; a lower-tier binding
+finding listed in `validate.OPEN_BINDING_FINDINGS` (Settings, below); a number in a rule
+description that neither the requirements nor the data state; a `name (ID)` in a locale's texts whose ID's data
+rows never mention that name. Notes give each setting's baseline/reference objective ratio and the settings
+where the baseline is within 5% of the reference (quality's zero point is then held 5% away from it).
 
 ### Settings: one world, tiers × rule seeds
 
@@ -118,7 +122,7 @@ A case may declare **settings**: three content tiers (`tiers:` easy / medium / h
 
 ```yaml
 tiers: {easy: text, medium: text, hard: text}
-params:                                   # the rule parameters (replaces rulesets: and param_labels:)
+params:                                   # the rule parameters a rule seed draws
   <name>:
     values: [v1, v2, v3]                  # one pool for every tier, or
     values: {easy: [..], medium: [..], hard: [..]}   # a pool per tier (harder candidates in harder tiers)
@@ -185,35 +189,32 @@ every candidate in every locale), `rule_seeds:` (distinct ints), that every publ
 `derive_params` works on every combination of a tier's candidates (a private seed may draw any of them), that
 every candidate is admissible with some combination of the others, and that `when` conditions and markers (in
 requirements, target texts and rule descriptions, balanced) name parameters and candidates. **Parameter
-binding:** for each parameter with 2+ candidates in some tier, take the first public seed's setting s in the
-highest such tier and, for each other admissible candidate v in turn, s' = s with only that parameter set to v
-(derived values recomputed), until one binds. The parameter binds if the reference of s is invalid under s',
-or its objective under s' differs from its objective under s by at least 1% (relative), or the reference of s'
-scores at least 1% better than the reference of s under s'. A parameter that never binds is an error
-("parameter X changes nothing"); so is a reference of s' that is not valid under s' when the check gets that
-far (a private seed can draw that combination). It warns when the public panel shows only one value of a
-parameter whose pool has 2+ values, when no parameter has two candidates at all, and when two tiers lead to the
-same answer. The world-seed check
+binding**, in every tier where a parameter has 2+ candidates: take the first public seed's setting s in that
+tier and, for each other admissible candidate v in turn, s' = s with only that parameter set to v (derived
+values recomputed), until one binds. The parameter binds in that tier if the reference of s is invalid under
+s', or its objective under s' differs from its objective under s by at least 1% (relative), or the reference
+of s' scores at least 1% better than the reference of s under s'. The references of the public settings are
+the ones the other checks wrote and scored, so a tier costs only the variations it tries. A parameter that
+binds in no tier, or not in the highest tier where it varies, is an error ("parameter X changes nothing").
+One that does not bind in a lower tier whose hidden texts state it (the requirements, targets or rules of s
+and s' differ there) is an error too: the client tells the agent a value that changes nothing. One that varies
+in a lower tier where nothing in force uses it (the texts read the same under every candidate) is a warning:
+a single candidate in that tier would say so.
+A reference of s' that is not valid under s' is an error when the check gets that far (a private seed can
+draw that combination). Lower-tier findings the built cases had when the check became per tier are listed in
+`validate.OPEN_BINDING_FINDINGS` (case, parameter, tier, and the world seeds where one was found only on some
+worlds) and reported as warnings until their owners decide; any other one, in another tier or on another
+world, fails. The
+validator also warns when the public panel shows only one value of a parameter whose pool has 2+ values, when
+no parameter has two candidates at all, and when two tiers lead to the same answer. The world-seed check
 (`--world-seeds`) repeats the reference, rule-example and binding checks on other worlds with the public rule
 seeds. Cases without settings are the same problem at every difficulty.
 
-**Converting a case** that still declares the deprecated `rulesets:` (fixed rule sets A / B / C, kept working
-during the transition with a validator warning, as rule seeds 1 / 2 / 3, without private seeds; removed once
-every case is converted):
-
-1. Replace `rulesets:` and `param_labels:` by `params:` (each parameter's candidates, at least the old A / B
-   / C values; a pool per tier where harder tiers should draw harder values; the labels under
-   `params.<name>.labels`) and `rule_seeds:` (a panel that shows at least two values of every parameter).
-2. Values that follow from others (periods from a fiscal-year start) become `derive_params`; combinations
-   that cannot work (a cap below what the data needs) are rejected by `admissible`.
-3. `<!-- ruleset: B -->` blocks become `<!-- when: name=v -->` blocks, `rulesets: [...]` on rules and targets
-   `when: {name: [...]}`, in all five locales.
-4. case.py stops reading `rulesets` from case.yaml: calibration over "all settings" runs over the candidate
-   pools (`fdebench2.cases.param_pools(meta, tiers)` reads them from case.yaml, with `derive_params` applied to
-   each combination), a setting is read only through the `Setting` it is given, and a `Setting` the case builds
-   itself is `Setting(tier, rule_seed, params)` with the full params.
-5. `fdebench2 export-dataset` (gt folders become `<tier>_s<seed>`), update README's parameter table, then
-   `fdebench2 validate-case` until every parameter binds.
+**Rule sets are gone.** The fixed rule sets A / B / C that rule seeds replaced are no longer read: a
+case.yaml with `rulesets:` does not load (the error says to declare `params:` and `rule_seeds:`), and
+`validate-case` names any `param_labels:`, `rulesets:` on a rule or target, or `<!-- ruleset: ... -->` block
+with the rule-seed form to use instead (`params.<name>.labels`, `when: {name: [values]}`,
+`<!-- when: name=v1,v2 -->`). A run set up with a rule set cannot be re-scored; run it again.
 
 ### Program deliverables
 
@@ -255,7 +256,7 @@ matches `case.yaml`, and checks that scoring is deterministic.
           │ language: pick the customer locale; agent instructions in agent   │
           │           locale; all generated messages from a 5-locale catalog  │
           │ policy:   profile + agent-visible brief                           │
-          │ setting:  difficulty (tier) × rule set → hidden reqs + evaluator  │
+          │ setting:  difficulty (tier) × rule seed → hidden reqs + evaluator │
           │ engagement: condition · persona · data noise · scheduled events   │
           └──────────────────────────────┬────────────────────────────────────┘
                                          ▼
@@ -329,12 +330,13 @@ the rule id, an approval covers only that rule, and the first decision on a rule
 request costs a question round and needs a reachable client; under `justify` it is a record and works in
 every condition.
 
-### 5.3 Difficulty and rule sets
+### 5.3 Difficulty and rule seeds
 
-`difficulty` (easy / medium / hard) picks a case's content tier and `ruleset` (A / B / C) its rule
-parameters (§3, Settings). Neither changes what the agent sees. Campaigns run all three rule sets per
-difficulty and report their mean, so a difficulty column is the average over three ground truths of the
-same data. Cases without settings run the same problem at every difficulty.
+`difficulty` (easy / medium / hard) picks a case's content tier and `rule_seed` draws its rule parameters
+from their candidates (§3, Settings). Neither changes what the agent sees. Campaigns run several rule seeds
+per difficulty, each case's public panel (`rule_seeds: public`) or private seeds (`rule_seeds: [101, 102,
+103]`), and report their mean, so a difficulty column is the average over several ground truths of the same
+data. Cases without settings run the same problem at every difficulty.
 
 ### 5.4 Engagement
 
@@ -352,7 +354,7 @@ agent's prompt fixed (`configs/engagement.yaml`):
 Everything in `messy` is **recoverable**: noise touches only the agent's copy (scoring uses the world),
 the client knows the fact that undoes each noise op (it becomes an extra clarification target), a non-owner
 stakeholder's conflicting message is resolvable by asking the client, and a corrected file arrives mid-task.
-Noise and events are seeded by the engagement (`noise_seed`), never by the difficulty or rule set: the
+Noise and events are seeded by the engagement (`noise_seed`), never by the difficulty or rule seed: the
 volunteered requirement is the same target in every setting. What the client knows about an event reaches it
 only when the event fires, and inbox messages have neutral names (`inbox/NN_message.md`).
 
@@ -385,8 +387,9 @@ final = 0                                          if a hard gate fails (validit
 Reported per cell: final, quality (normalized, and the plain ratio to the reference), validity rate, DSR
 (quality ≥ reference), "all valid" (every seed and trial of a case valid), Ask-F1, with 95% case-bootstrap
 intervals. Case-macro averages; deltas within one agent against its baseline cell. The difficulty table has
-one column per difficulty, each the mean over the three rule sets, with "all-3": the share of (case, seed)
-cells valid under every rule set. With `trials` > 1, pass^k is the τ-bench estimator C(c, k) / C(n, k) over
+one column per difficulty, each the mean over the rule seeds run, with "all valid across rule seeds": the share
+of runs (the same variant apart from its rule seed) valid under every rule seed of the tier. With `trials` > 1,
+pass^k is the τ-bench estimator C(c, k) / C(n, k) over
 repeated trials. Every run has a status (ok, invalid, agent_error, timeout, extract_failed, harness_error,
 infra_error); harness and infrastructure errors are listed apart and never averaged in as zeros. Cost
 columns give tokens and dollars per run for the solver, client, extractor and judges (a CLI solver's own
@@ -396,12 +399,16 @@ engagement, model configs, agent, sandbox, framework version).
 ## 7. Status
 
 - Harness, transforms, scoring, MCP bridge, campaign runner and report: implemented and tested.
-- Case format, settings (tiers × rule sets), `casekit`, validator and 5-locale message catalog: implemented.
+- Case format, settings (tiers × rule seeds drawn from candidate pools, public and private), `casekit`,
+  validator (parameter binding in every tier) and 5-locale message catalog: implemented. The fixed rule sets
+  A / B / C are gone; every case draws its parameters.
 - Built cases: one or more per field (see `cases/README.md`), all passing `validate-case` in all five
   locales and on world seeds 1–3, each with a baseline, a README and a REVIEW.md of open findings, and an
-  explainer in every language. Cases with settings: loan underwriting, hospital scheduling, procurement, stock
-  trading (program), multilingual corpus curation (program) and BI analysis (answers may be "don't know"; the
-  rule set prices right, don't-know and wrong answers).
+  explainer in every language. Every case has settings: three tiers and a public panel of rule seeds, among
+  them stock trading, loan underwriting, hospital scheduling and multilingual corpus curation as programs, and
+  BI analysis, where answers may be "don't know" and the rule seed draws what a don't-know answer earns.
+  Open binding findings (a parameter stated in a tier where it changes nothing) are listed in
+  `validate.OPEN_BINDING_FINDINGS`.
 - Program deliverables: implemented and tested (state across calls, step-by-step sessions, input/output
   folders, per-call and total timeouts, crashes, non-JSON outputs, environment and network isolation,
   collection, an end-to-end run).

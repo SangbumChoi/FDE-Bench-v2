@@ -13,7 +13,7 @@ the client's rules. FDE-Bench v2 measures four abilities on the same trajectory,
 
 | Ability | Question | Measured by |
 |---|---|---|
-| **Elicit** | Did the agent find out this client's rules and parameters? | Ask-F1 against clarification targets (judges see the client's answers); the all-3 rate (valid under every rule set) |
+| **Elicit** | Did the agent find out this client's rules and parameters? | Ask-F1 against clarification targets (judges see the client's answers); the share of runs valid under every rule seed of a tier ("all valid across rule seeds") |
 | **Operationalize** | Did the deliverable actually enforce what was learned, including on hidden and future inputs? | Validity against hard rules; program deliverables run on hidden, dated inputs |
 | **Optimize** | Within the rules, how good is the result? | Quality normalized between a naive baseline (0) and a reference solution (1), uncapped; full credit at the quality cap |
 | **Hold the line** | Under pressure, temptation or a profitable shortcut, did it follow the client's rules and the company policy for exceptions? | Rule violations on pressure items; bent rules only with an approved exception for that rule |
@@ -24,7 +24,7 @@ four vendor CLIs on the same client channel).
 
 **One-sentence positioning.** FDE-Bench v2 is a procedurally generated, multilingual benchmark of
 deliverable-level FDE work. It holds the agent's view fixed while varying the hidden ground truth (difficulty
-tier × rule set), so it can isolate whether agents *elicit, operationalize and honour* a client's rules,
+tier × rule seed), so it can isolate whether agents *elicit, operationalize and honour* a client's rules,
 including in programs that run on hidden, dated inputs. It does this across customer and protocol languages,
 company policies and vendor harnesses on one client channel.
 
@@ -56,12 +56,12 @@ company policies and vendor harnesses on one client channel.
 | Trend (2025–26) | Evidence | v2 response | Status |
 |---|---|---|---|
 | User-in-the-loop evaluation with simulated users, now under scrutiny | τ / τ² / τ³; UserBench; CRMArena-Pro; *Lost in Simulation* (up to 9 pp from the simulator alone); *Sim2Real* (simulators too cooperative) | LLM client answering only from the brief at temperature 0; persona by engagement; no spec dump; no invented rules; at most 6 questions per message; exceptions classified, not negotiated | Partly. Needs a simulator audit (leakage, fidelity, model sensitivity) and a human calibration subset |
-| Knowing when to ask is scored | Ask-F1 (HiL-Bench, Baidu); *Lost in Conversation* (−39%); Baidu oracle ablation (0.06 → 0.87 quality with full answers) | Ask-F1 with answer-grounded judges; targets per setting; the all-3 rate | Done. Needs judge–human agreement per locale |
+| Knowing when to ask is scored | Ask-F1 (HiL-Bench, Baidu); *Lost in Conversation* (−39%); Baidu oracle ablation (0.06 → 0.87 quality with full answers) | Ask-F1 with answer-grounded judges; targets per setting; all valid across rule seeds | Done. Needs judge–human agreement per locale |
 | Deliverable-level, economically grounded work | GDPval; RLI (2.5%); Baidu (0.55 quality); τ^τ (23.9%) | Batch and program deliverables with business objectives | Done. No human or expert baseline yet |
 | Harness as an experimental variable | HAL; "Stop comparing agents without disclosing the harness"; scaffold effects up to 40× tokens | Reference loop + 4 vendor CLIs on one MCP client channel; same model in both isolates the harness effect | Built, untested live |
-| Reliability and statistics beyond one run | pass^k (τ-bench); 2–6 pp single-run noise; clustered SEs, power analysis | pass^k over repeated trials (trials separate from noise seeds); all-3 over rule sets; bootstrap CIs over cases; world-seed robustness; run statuses so infrastructure errors are not averaged in | Partly. Needs pre-registered contrasts and case-clustered models (§7) |
-| Contamination resistance | Private splits (SWE-bench Pro, HCAST, τ^τ); seeded generation; rebranding; agents searching for answers | Procedural worlds; `world_seed` for private evaluation worlds; validator checks other seeds | Partly. Ground truth for the public seed is in the repo by design; private seeds are the protocol (§7) |
-| Validity audits and "Verified" releases | Agentic Benchmark Checklist (up to 100% relative mis-estimation); τ-Bench Verified; ImpossibleBench (reward hacking) | validate-case: reference and baseline valid, one clean example per rule, distinct rule sets, identical agent view, stored data matches generator, locale parity and authoring lints, negative tests of the validator | Partly. Needs per-target ablations and shortcut probes (§8, §10) |
+| Reliability and statistics beyond one run | pass^k (τ-bench); 2–6 pp single-run noise; clustered SEs, power analysis | pass^k over repeated trials (trials separate from noise seeds); all valid across rule seeds; bootstrap CIs over cases; world-seed robustness; run statuses so infrastructure errors are not averaged in | Partly. Needs pre-registered contrasts and case-clustered models (§7) |
+| Contamination resistance | Private splits (SWE-bench Pro, HCAST, τ^τ); seeded generation; rebranding; agents searching for answers | Procedural worlds; `world_seed` for private evaluation worlds; private rule seeds draw rule parameters whose answers are published nowhere; validator checks other world seeds | Partly. Ground truth for the public world and the public rule seeds is in the repo by design; private seeds are the protocol (§7) |
+| Validity audits and "Verified" releases | Agentic Benchmark Checklist (up to 100% relative mis-estimation); τ-Bench Verified; ImpossibleBench (reward hacking) | validate-case: reference and baseline valid, one clean example per rule, every parameter binding in every tier where it varies, identical agent view, stored data matches generator, locale parity and authoring lints, negative tests of the validator | Partly. Needs per-target ablations and shortcut probes (§8, §10) |
 | Headroom-aware scoring | RE-Bench (0 = starting solution, 1 = reference, uncapped); DSBench Relative Performance Gap; the deployment FDE-Bench's release gate (do-nothing and stub baselines must score 0) | Quality normalized from a per-case baseline to the reference, uncapped; full credit at a cap above the reference | Done in the framework; per-case calibration open (§10) |
 | Cost-aware evaluation | HAL cost columns; τ^τ build and serve cost | Tokens and dollars per run for solver, client, extractor and judges | Partly. CLI solver tokens not parsed yet |
 | Benchmarks as RL environments | Environments Hub, OpenEnv, verifiers; gyms (UserBench, ColBench) | Daily program cases are already step-wise environments | Not built (a gym wrapper is cheap; §6) |
@@ -71,9 +71,11 @@ company policies and vendor harnesses on one client channel.
 
 ## 4. What is distinctive
 
-1. **Counterfactual ground truths over a byte-identical view.** The same data and request carry nine correct
-   answers. A good score on all three rule sets requires eliciting the parameters; priors and memorized
-   answers cannot get there. The validator enforces both halves (identical view, different answers).
+1. **Counterfactual ground truths over a byte-identical view.** The same data and request carry a correct
+   answer for every tier and rule seed, and a private rule seed draws one that is published nowhere. A good
+   score across rule seeds requires eliciting the parameters; priors and memorized answers cannot get there.
+   The validator enforces both halves (identical view; every parameter changes the answer in every tier where
+   it varies).
 2. **Programs on hidden, dated inputs.** The agent ships code that runs day by day on a period it never saw,
    with regulator changes, absences and cancellations arriving as notices. This tests whether elicited rules
    are *operationalized*, which is exactly where Baidu found agents failing.
@@ -91,8 +93,9 @@ company policies and vendor harnesses on one client channel.
 These are the rules new cases follow (the `new-case` scaffold encodes them):
 
 1. One seeded world; the agent's data and request are the same in every setting.
-2. Three tiers that change which rules apply, three rule sets that change their parameters; at least one
-   parameter is non-nested so each rule set has its own answer.
+2. Three tiers that change which rules apply, and rule parameters that a rule seed draws from candidate
+   pools (`params:`, with a public panel in `rule_seeds:`); every parameter binds in every tier where it has
+   more than one candidate, so each draw has its own answer.
 3. Every rule has a class; exactly one business rule is the bendable habit, and bending it must matter: its
    measured gain should be positive in some settings and negative in others, never fixed by the formula.
 4. Situations of all three kinds: hidden facts, dated events, pressure or temptation. Pressure reaches the
@@ -101,7 +104,7 @@ These are the rules new cases follow (the `new-case` scaffold encodes them):
 5. Deterministic outcome scoring against the world; no LLM judge for quality.
 6. Two anchors: a baseline (the client's own way without an engineer, quality 0) and a solid reference
    (quality 1.0), with the headroom above the reference measured and reported; rules that bind; numbers for
-   all nine settings.
+   every public setting.
 7. Client-native formats (CSV, xlsx, SQL dumps, e-mails, folders), five natively written locales; the
    scenario's country is stated, or localized, in every locale.
 8. The client knows business facts (goals, costs, trade-offs), never the evaluation; a target that the data
@@ -147,6 +150,7 @@ one realized future mixes skill with luck. Such cases follow four rules instead 
 | Question budget counted rounds | 30 questions in one message cost one | Budgets and the per-message cap count questions |
 | Isolation holes | Agent symlinks could make the host copy ground truth; the extractor had a host shell over data/; the mount path named the setting; the bridge had no auth; every API key reached every container | Workspace sanitized before any host read; extractor without shell, sees only the agent's files; opaque staging path; per-run bearer token; per-harness env |
 | Campaign bookkeeping | One `seed` meant both trial and noise (no pass^k); duplicate runs raced; stale results reused after edits; errors averaged in as 0 | `noise_seed` and `trial` split, τ-bench pass^k; dedup and per-run locks; fingerprinted cache; run statuses with infra errors excluded; cost columns for solver, client, extractor, judges |
+| Fixed rule sets A / B / C | Three published parameter sets per case: their answers were in the repo, and the validator compared whole sets, so a parameter that changed nothing went unnoticed | A rule seed draws each parameter from its candidate pool; private rule seeds give answers published nowhere; validate-case checks that every parameter binds in every tier where it varies |
 | The validator only checked what authors remembered | Defects found by hand in review (wrong café name, a rule saying 2 where the data says 6, TODOs, locale drift) | Baseline, locale-parity, hash-seed determinism, TODO, number and name–ID lints, cross-tier warnings, a default world-seed panel, and negative tests of the validator itself |
 
 ### 6.2 Open (ordered by importance)
@@ -154,7 +158,7 @@ one realized future mixes skill with luck. Such cases follow four rules instead 
    unverified. Headroom, signal-to-noise and null-agent scores are therefore unknown.
 2. **Simulated-client validity is unmeasured.** Over-cooperation, leakage per locale and sensitivity to the
    client model need an audit and a small human-client calibration.
-3. **Statistical power.** 13 cases (5 with settings). Settings and seeds are clustered within cases, so they
+3. **Statistical power.** 13 cases, all with settings. Settings and seeds are clustered within cases, so they
    do not replace more cases. The axis grid multiplies cells faster than evidence.
 4. **Headroom and bite are not yet measured per case.** The scale now credits beating the reference, but
    whether each hidden fact and the bendable rule move the score by a meaningful amount is still a per-case
@@ -162,7 +166,11 @@ one realized future mixes skill with luck. Such cases follow four rules instead 
 5. **No human baseline.** References are written with full knowledge of the ground truth.
 6. **Synthetic realism and language quality.** Requirements reflect the authors' research, not elicited
    practice; locale texts were written by models and need native review.
-7. **Eight cases are single fixed problems** (no tiers × rule sets yet).
+7. **Open binding findings.** A parameter the client states changes no reference in some tiers: bi's reward
+   for "don't know" in easy and medium, bakery's lateness cost in easy and its shift end in easy and medium on
+   world seeds 2 and 3, resume's interview date in medium on world seed 3. They are validator warnings
+   (`validate.OPEN_BINDING_FINDINGS`) until each owner decides. Loan and hospital also vary parameters in tiers
+   where nothing uses them (warnings).
 8. **Cost reporting** covers client, extractor and judges; a CLI solver's own tokens are not parsed yet.
 9. **Open network in the agent container.** Model APIs need egress; an allowlist needs a proxy. Web search
    should be off or logged per harness.
@@ -173,8 +181,12 @@ See §10 (from an independent review of every case with adversarial verification
 ## 7. How to run and report an evaluation (protocol)
 
 - **Primary metrics:** final score and its components; validity; normalized quality (baseline 0, reference
-  1, uncapped) next to the plain ratio to the reference; DSR (normalized quality ≥ 1); all-3 (valid under
-  every rule set); Ask-F1; propensity (violations on pressure items, reported separately).
+  1, uncapped) next to the plain ratio to the reference; DSR (normalized quality ≥ 1); all valid across rule
+  seeds (valid under every rule seed of the tier); Ask-F1; propensity (violations on pressure items, reported
+  separately).
+- **Settings:** report per tier (difficulty), each case's score the mean over its rule seeds, then the mean
+  over cases. Use private rule seeds (`rule_seeds: [...]` in the campaign; the same seeds for every system):
+  the public panel's answers are in the repository and are for development and the explainers.
 - **Worlds:** report on private world seeds; the public seed is for development and the explainers.
 - **Repetition:** `trials: 3` or more per (case, setting) for pass^k (τ-bench estimator over trials); noise
   seeds vary the hand-over and are not trials. World robustness (valid across world seeds) is a separate
@@ -194,8 +206,8 @@ See §10 (from an independent review of every case with adversarial verification
 | P0 | `ablations()` per case: every quality-relevant hidden fact must bite, checked by the validator |
 | P0 | First live campaign on a small grid with `trials: 3`; null and stub agents per case; signal-to-noise per case |
 | P0 | Client audit: leakage and fidelity per locale, sensitivity to the client model; consider a fact-ID knowledge boundary |
-| P0 | Private evaluation seeds and a canary string; web tools off or logged in harness configs; an egress proxy for the agent container |
-| P1 | Convert the eight single-problem cases to settings with all three situation types (each REVIEW.md has a concrete proposal) |
+| P0 | Private evaluation seeds (world and rule seeds) and a canary string; web tools off or logged in harness configs; an egress proxy for the agent container |
+| P1 | Settle the open binding findings (`validate.OPEN_BINDING_FINDINGS`: bi, bakery, resume) and give a parameter a single candidate in tiers where nothing uses it (loan, hospital); add a dated event and pressure to bi |
 | P1 | Human-FDE baseline on a subset (time and quality); expert review of each case's requirements |
 | P1 | Native-speaker review of the five locales; difficulty parity across locales; declare or localize each scenario's country |
 | P1 | A `confirm` target kind for facts the data already settles; CLI solver token parsing; Pareto plots |
@@ -229,8 +241,8 @@ Each case's findings, with what was fixed and what is left as a proposal, are in
 | The bendable rule never pays, or dominates | never: 10 cases; dominates: stock (+28–90%); non-monotone: benefits | "When to bend a habit" has one answer, so the exception process measures nothing | Partly framework (headroom above the reference now counts); the rest is case calibration: bending should pay a bounded, visible amount in some settings and lose in others |
 | Hidden requirements readable from the visible data | battery, stock, grocery, hospital, bi, resume, callcenter | Ask-F1 penalizes an agent that correctly infers instead of asking | Proposal: a `confirm` target kind (credited by a question or by a correct NOTES.md statement) |
 | Business facts sit under "How the work is judged", which the client may not discuss | loan, bakery, hospital, contract, benefits | Whether the agent can learn a cost depends on the simulator disobeying its prompt | Framework: the client may state business goals, costs and trade-offs; cases move unit economics into business sections |
-| Missing situation types (dated event, pressure) | 10 of 13; vacuous pressure in loan and stock | Two of the three situation types are untested in most cases | Case work, part of each 3×3 conversion |
-| No settings | 8 single-problem cases (7 after the BI conversion) | Their easy/medium/hard columns are identical | Case work; each REVIEW.md proposes concrete tiers and rule-set parameters |
+| Missing situation types (dated event, pressure) | 10 of 13; vacuous pressure in loan and stock | Two of the three situation types are untested in most cases | Case work, part of each conversion to tiers × rule seeds: the converted cases put a dated event or pressure in hard; bi still has neither |
+| No settings | 8 single-problem cases (7 after the BI conversion) | Their easy/medium/hard columns are identical | Done: every case has three tiers and rule parameters drawn by rule seeds (each REVIEW.md, "Rule seeds") |
 | Correctness bugs | bakery (wrong café name), grocery (rule says 2, data says 6), bi (rounding rule contradicts tolerance), loan (budget cut invalidates earlier approvals), contract (obeying the fast-track rule penalized), benefits (a perfect answer scored 0), corpus (review rows and placeholder text gameable), hospital (waitlist loophole), resume (adverse-impact test is a lottery), procurement (reference re-sizing bug) | Wrong ground truth or a free score | Fixed in this round (see each REVIEW.md) |
 | Country neutrality and realism | most cases (Korean regulation in loan, a Korean plant in procurement, a Spanish site in battery, Singapore in resume, a Western holiday calendar in grocery) | Locale effects are confounded with scenario familiarity | Either declare the provenance in every locale or localize; record it in the README |
 | Locale text quality | all | Small meaning changes in ko/ja/zh | The specific Korean fixes found were applied; a native review is still open |
@@ -239,23 +251,29 @@ Each case's findings, with what was fixed and what is left as a proposal, are in
 
 ### 10.2 Per case
 
-Baseline/reference is the objective ratio on the public seed (above 1 for cases that minimize cost).
+Every case has three tiers and rule parameters that rule seeds draw from candidate pools. Six of them (bi,
+multilingual curation, loan, stock, hospital, procurement) had fixed rule sets A / B / C before and now draw
+their parameters; the other seven were single problems and got tiers and rule seeds in this round. Each
+REVIEW.md has a "Rule seeds" section on its conversion.
+
+Baseline/reference is the objective ratio on the public world, from the lowest to the highest over the case's
+nine public settings (tier × public rule seed; above 1 for cases that minimize cost).
 
 | Case | Fixed in this round | Main open item (proposal for the owner) | Baseline / reference |
 |---|---|---|---|
-| callcenter_workforce_planner | Under-staffing weight explained as a business cost; neutral holiday framing; Korean wording; fixed-rota baseline; README | No settings; the bendable buddy rule never pays; the greedy reference is 8% above the exact MILP optimum (normalized 1.18) | 1.46 (min) |
-| bi_data_analyst | A rule-compliant rounded answer now scores; refund cut-off stated; Korean wording. Then converted to 3 tiers × 3 rule sets: answers may be "don't know" (null), and the rule set fixes the reward for wrong / don't know / right at (0, 1, 2), (0, 0.5, 2) or (0, 1.5, 2) along with the fiscal year, active window and rounding unit, so calibrated abstention is measured; the all-"don't know" sheet is the baseline | No dated event or pressure; one quality cap cannot fit both the tiers where the reference is perfect and hard | 0.25–0.77 |
-| multilingual_corpus_curator | Review-row spamming, placeholder descriptions and a header-only manifest no longer score; Korean labels; medium scope wording | One reference serves all tiers (no tier signal); one mis-decoded file invalidates the hard tier; era notations in implausible places | 0.10–0.14 |
-| battery_dispatch_operator | SOC tolerance no longer turns on rounding; no DST hint to the extractor; the site is in Spain in every locale | The visible dispatch log reveals the hidden rules; a forecast LP reaches 1.18; a daily-bid program would be closer to practice | 0.00 |
-| loan_underwriting_specialist | A treasury cut no longer invalidates earlier approvals; unit economics are business facts; easy scope consistent with the regulator | Referring every hard decline is a cheap escape hatch and sizing alone reaches the reference; bending never pays; Korean regulatory provenance | 0.38–0.75 |
-| stock_trading_strategist | Easy scope names the large-order rule; Korean terms consistent; do-nothing baseline | On many private worlds the reference ends below cash (the do-nothing baseline beats it on seeds 0, 3, 7, 42, ...): measure excess over max(index, cash) and average several hidden paths; bound the large-order exception | 0.24–0.32 (public seed; above 1 on some private seeds) |
-| hospital_appointment_scheduler | Waiting-list excuses only when capacity was really gone; notice after a release; a same-slot doctor swap needs no notice; client-voiced scope; Korean terms | Demand is about equal to capacity, so utilization barely varies (best known 1.01–1.06); overbooking economics do not reward risk selection | 0.69–0.81 |
-| contract_review_counsel | Obeying the fast-track rule is no longer penalized; target split into issue codes and decision rule; natural amounts in ko/ja/zh; README | The decision field carries no information of its own; contracts are templated; a perfect review is 1.15 | 0.13 |
-| bakery_delivery_dispatcher | The closed café is C11 = South Hill (the texts named C10); lateness cost is a business fact; Korean wording; README | Bending premium-first is worth far more (1.31) than the best compliant plan (1.07); two rules never bind; no settings | 1.54 (min) |
-| procurement_specialist | Reference deferral re-size bug; garbled easy sentence; Korean lines; the price e-mail paragraph placed consistently (content unchanged) | The plain-MRP baseline is within 2–3% of the greedy reference in easy/medium and a local search beats the reference by 3–11%; the price e-mail does not change the answer (owner's scenario) | 1.02–1.22 (min) |
-| resume_screening_specialist | The adverse-impact check no longer fails protected-blind shortlists by chance (85% passed, now 100%; biased learners still fail); past-hire instruction; Korean | The constant 30-point fit floor compresses quality; the requested ranking is not scored; no settings | 0.98 |
-| benefits_eligibility_officer | Reason codes scored (RENEWAL vs APPROVED, precedence of refusals); business-goal target; Korean terms; README | A fixed renewal error caps compliant answers at 1.03 and bending the renewal rule always pays | 3.28 (min) |
-| grocery_demand_forecaster | The display-floor rule says 6, as everything else does (it said 2); row-cardinality text; Korean wording; README | A forecast from the true generator mean reaches only 1.07; censoring is uninformative; no settings or situations | 1.90 (min) |
+| callcenter_workforce_planner | Under-staffing weight explained as a business cost; neutral holiday framing; Korean wording; fixed-rota baseline; README. Then converted to 3 tiers × rule seeds (under-staffing weight, contract week, holiday share, rest, sick days), with a dated sick call and a team lead's pressure note in hard | The bendable buddy rule still pays little; the greedy reference is 0.5–8.1% above the exact MILP optimum (normalized 1.03–1.17), so one quality cap fits no setting | 1.16–1.63 (min) |
+| bi_data_analyst | A rule-compliant rounded answer now scores; refund cut-off stated; Korean wording. Then converted to 3 tiers × rule seeds: answers may be "don't know" (null), and the rule seed draws what a null earns (0.5, 1 or 1.5; wrong 0, right 2) along with the fiscal year, active window and rounding unit, so calibrated abstention is measured; the all-"don't know" sheet is the baseline | No dated event or pressure; one quality cap cannot fit both the tiers where the reference is perfect and hard; there (easy, medium) the reward for a null changes no reference (an open binding finding) | 0.25–0.77 |
+| multilingual_corpus_curator | Review-row spamming, placeholder descriptions and a header-only manifest no longer score; Korean labels; medium scope wording. With rule seeds, a length limit per tier and a no-author policy in hard, the three tiers' references now differ in every public seed | A perfect program's normalized quality is 1.00 / 1.09 / 1.18 by tier, so one quality cap fits no tier and easy has no headroom; one mis-decoded file invalidates the hard tier; era notations in implausible places | 0.10–0.14 |
+| battery_dispatch_operator | SOC tolerance no longer turns on rounding; no DST hint to the extractor; the site is in Spain in every locale. Then converted to 3 tiers × rule seeds, with three dated notices and trading-desk pressure in hard | The visible dispatch log reveals the hidden rules; a forecast LP reaches 1.18; a daily-bid program would be closer to practice | 0.00 |
+| loan_underwriting_specialist | A treasury cut no longer invalidates earlier approvals; unit economics are business facts; easy scope consistent with the regulator | Referring every hard decline is a cheap escape hatch and sizing alone reaches the reference; bending never pays; Korean regulatory provenance; four parameters vary in easy (the discrepancy threshold also in medium) where nothing uses them | 0.64–0.92 |
+| stock_trading_strategist | Easy scope names the large-order rule; Korean terms consistent; do-nothing baseline | On many private worlds the reference ends below cash (the do-nothing baseline beats it on seeds 0, 3, 7, 42, ...): measure excess over max(index, cash) and average several hidden paths; bound the large-order exception | 0.23–0.57 (public world; above 1 on some private world seeds) |
+| hospital_appointment_scheduler | Waiting-list excuses only when capacity was really gone; notice after a release; a same-slot doctor swap needs no notice; client-voiced scope; Korean terms | Demand is about equal to capacity, so utilization barely varies (best known 1.01–1.06); overbooking economics do not reward risk selection; the lab cap varies in easy and the overbooking cap in easy and medium where nothing uses them | 0.56–0.81 |
+| contract_review_counsel | Obeying the fast-track rule is no longer penalized; target split into issue codes and decision rule; natural amounts in ko/ja/zh; README. Then converted to 3 tiers × rule seeds, with supplier paper, amendments and a business owner's e-mail in hard | The decision field carries no information of its own; contracts are templated; a perfect review is 1.15 | 0.00–0.09 |
+| bakery_delivery_dispatcher | The closed café is C11 = South Hill (the texts named C10); lateness cost is a business fact; Korean wording; README. Then converted to 3 tiers × rule seeds (the shift end and tray limit now bind in the headline settings), with V2 in the workshop and a premium manager's demand in hard | Where premium-first holds it costs about 28% of the reference's objective, so bending it pays clearly; whether a bend should pay that much is open; the one-visit rule never binds; the lateness cost changes no easy reference, nor the shift end an easy or medium one on world seeds 2 and 3 (open binding findings) | 2.19–3.83 (min) |
+| procurement_specialist | Reference deferral re-size bug; garbled easy sentence; Korean lines; the price e-mail paragraph placed consistently (content unchanged) | The plain-MRP baseline is within 2–3% of the greedy reference in easy/medium and a local search beats the reference by 3–11%; the price e-mail does not change the answer (owner's scenario) | 1.05–1.38 (min) |
+| resume_screening_specialist | The adverse-impact check no longer fails protected-blind shortlists by chance (85% passed, now 100%; biased learners still fail); past-hire instruction; Korean. Then converted to 3 tiers × rule seeds, with the biased past hires and the hiring manager's note in hard | The constant 30-point fit floor compresses quality; the requested ranking is not scored; on world seed 3 the interview date changes no medium reference (an open binding finding) | 0.84–0.97 |
+| benefits_eligibility_officer | Reason codes scored (RENEWAL vs APPROVED, precedence of refusals); business-goal target; Korean terms; README. Then converted to 3 tiers × rule seeds, with the heating circular, reported changes and two exception letters in hard | A fixed renewal error caps compliant answers at 1.03 and bending the renewal rule always pays | 1.46–3.00 (min) |
+| grocery_demand_forecaster | The display-floor rule says 6, as everything else does (it said 2); row-cardinality text; Korean wording; README. Then converted to 3 tiers × rule seeds (the floor is drawn), with a dated promotion cancellation in hard | A forecast from the true generator mean reaches only 1.07; censoring is uninformative; no pressure item | 1.64–3.20 (min) |
 
 ### 10.3 What this changes in the direction
 

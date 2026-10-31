@@ -327,8 +327,8 @@ class Bench:
         case = (self.cases[variant.spec.case_id].with_world_seed(getattr(variant, "world_seed", None))
                 .at(variant.case_tier, variant.rule_seed))
         if variant.params and variant.params != case.drawn_params:
-            # The case's candidates changed since the run (or it was converted from rule sets): the client
-            # answered from other parameters than the ones the evaluator would use now.
+            # The case's candidates changed since the run: the client answered from other parameters than the
+            # ones the evaluator would use now.
             raise ValueError(f"{case.id}: rule seed {variant.rule_seed} now draws {case.drawn_params}, but the run "
                              f"was set up with {variant.params}; run it again instead of re-scoring it")
         workspace = run_dir / "workspace"
@@ -465,8 +465,9 @@ def load_campaign(path: Path) -> tuple[Settings, list[AgentSpec], list[tuple[str
     noise_seeds = d.get("noise_seeds", d.get("seeds", [0]))
     trials = int(d.get("trials", 1))
     if "ruleset" in d or any("ruleset" in (exp or {}) for exp in (doc.get("experiments") or {}).values()):
-        raise ValueError("ruleset is replaced by rule_seeds: 'public' (each case's public panel, the default) or a "
-                         "list of ints (private rule seeds)")
+        raise ValueError("ruleset is no longer an axis: rule seeds replaced the rule sets A / B / C; use "
+                         "rule_seeds: 'public' (each case's public panel, the default) or a list of ints (private "
+                         "rule seeds)")
     # rule_seeds: "public" (default) runs every rule seed of each case's public panel, so a (case, difficulty)
     # cell is the mean over its ground truths; a list of ints runs those seeds instead (private draws).
     default_rule_seeds = rule_seed_list(d.get("rule_seeds", PUBLIC), "defaults")
@@ -535,10 +536,6 @@ def case_rule_seeds(case: Case, rule_seed: int | None) -> list[int | None]:
         return [None]
     if rule_seed is None:
         return list(case.rule_seeds)
-    try:
-        case.at(None, rule_seed)
-    except KeyError as e:          # a case that still declares the deprecated rulesets: has no private seeds
-        raise ValueError(f"rule seed {rule_seed}: {e.args[0] if e.args else e}") from None
     return [rule_seed]
 
 

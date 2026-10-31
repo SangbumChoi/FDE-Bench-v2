@@ -8,9 +8,8 @@ Built cases to copy patterns from: a batch case with settings is
 `manufacturing/procurement_specialist`; daily program cases are
 `finance/loan_underwriting_specialist`, `healthcare/hospital_appointment_scheduler`
 and `finance/stock_trading_strategist`; a program that processes a folder is
-`data_knowledge/multilingual_corpus_curator`. (Until they are converted, these
-still declare the deprecated `rulesets:`; a new case draws its parameters with
-`params:` and `rule_seeds:` as DESIGN.md, Settings, describes.)
+`data_knowledge/multilingual_corpus_curator`. Every case draws its rule
+parameters with `params:` and `rule_seeds:` as DESIGN.md, Settings, describes.
 """
 
 from __future__ import annotations

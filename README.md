@@ -32,8 +32,10 @@ fdebench2 policies
 # What an agent would get, without running one (Korean client, Japanese agent instructions, messy engagement):
 fdebench2 prepare --case logistics/bakery_delivery_dispatcher --customer-locale ko --agent-locale ja \
     --policy startup_velocity --engagement messy
-# A case with settings: hard tier under rule set B (same prompt and files as any other setting):
-fdebench2 prepare --case healthcare/hospital_appointment_scheduler --difficulty hard --ruleset B
+# A case with settings: hard tier, public rule seed 10 (same prompt and files as any other setting):
+fdebench2 prepare --case healthcare/hospital_appointment_scheduler --difficulty hard --rule-seed 10
+# The same tier with a private rule seed: a fresh draw of the same candidates, whose answer is stored nowhere:
+fdebench2 prepare --case healthcare/hospital_appointment_scheduler --difficulty hard --rule-seed 4242
 # One run with the reference harness and any OpenAI-compatible model from models.yaml:
 fdebench2 run --case logistics/bakery_delivery_dispatcher --model qwen --customer-locale es
 # Same with a vendor CLI:
@@ -45,12 +47,14 @@ fdebench2 campaign configs/experiments.example.yaml --dry-run
 fdebench2 report runs/
 ```
 
-`--difficulty` picks a case's content tier and `--ruleset` (A/B/C) its rule parameters: nine ground truths of
-one dataset, with the agent's view identical in all of them. `--engagement` (full_spec / standard / messy)
-changes how the work is handed over. See [cases/README.md](cases/README.md#difficulty-one-dataset-nine-ground-truths).
+`--difficulty` picks a case's content tier and `--rule-seed` draws its rule parameters, each from its own
+candidates (default: the case's first public rule seed; any other int is a private seed, a draw whose answer is
+stored nowhere). Each pair of tier and rule seed is a ground truth of the same dataset, with the agent's view
+identical in all of them. `--engagement` (full_spec / standard / messy) changes how the work is handed over. See
+[cases/README.md](cases/README.md#difficulty-one-dataset-tiers-and-rule-seeds).
 
 Axes on every command: `--customer-locale {zh,en,ko,ja,es}`, `--agent-locale {zh,en,ko,ja,es}`,
-`--policy NAME`, `--difficulty {easy,medium,hard}`, `--ruleset {A,B,C}`, `--engagement {full_spec,standard,messy}`,
+`--policy NAME`, `--difficulty {easy,medium,hard}`, `--rule-seed N`, `--engagement {full_spec,standard,messy}`,
 `--condition {full,interact,interact_req,hidden}`
 (ablation override), `--seed N`.
 
@@ -59,7 +63,7 @@ Axes on every command: `--customer-locale {zh,en,ko,ja,es}`, `--agent-locale {zh
 ```
 cases/<field>/<role>/  case.yaml, case.py, locales/<lang>/{request.md, requirements.md, targets.yaml},
                        dataset/ (data per locale, hidden inputs, ground truth per setting),
-                       README.md for cases with settings (tiers x rule sets)
+                       README.md (tiers, rule parameters, numbers per setting)
 cases/README.md        catalog of cases by field   cases/fields.yaml  field names in 5 locales
 fdebench2/
   cases.py           Case interface and loader

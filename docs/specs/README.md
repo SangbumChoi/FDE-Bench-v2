@@ -7,12 +7,14 @@ itself is [`cases/README.md`](../cases/README.md).
 
 ## Before authoring a case from a spec
 
-1. **One rule set per case, for every locale.** Scoring is language-independent (DESIGN.md §3): a case's
-   hidden requirements, thresholds and rules are the same whichever customer locale it runs in. Where a spec
-   describes country-specific law (axle limits, reference-price windows, notification deadlines, tax-document
-   rules), pick one rule set for the case and state it in every locale's `requirements.md`; mention the other
-   countries' variants only as background. A few spec sections (notably in `logistics.md`) sketch per-locale
-   limits; collapse them this way when authoring.
+1. **One set of rules per case, the same in every locale.** Scoring is language-independent (DESIGN.md §3):
+   a case's hidden requirements, thresholds and rules are the same whichever customer locale it runs in; what
+   varies is the tier and the parameters a rule seed draws from candidate pools (DESIGN.md, Settings), never
+   the locale. Where a spec describes country-specific law (axle limits, reference-price windows,
+   notification deadlines, tax-document rules), pick one country's rules for the case and state them in every
+   locale's `requirements.md`; mention the other countries' variants only as background, or make a value that
+   differs between them a parameter whose candidates a rule seed draws. A few spec sections (notably in
+   `logistics.md`) sketch per-locale limits; collapse them this way when authoring.
 2. **Verify flagged facts.** The research ran into a shared web-search quota, so some regulatory details come
    from secondary sources or the researcher's background knowledge. Each file ends with, or marks inline,
    the facts to check against the primary text. The case itself states its numbers, so scoring never depends

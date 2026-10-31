@@ -9,10 +9,9 @@ writes, next to case.yaml:
       hidden/...              inputs the agent never sees: a program case's hidden period or corpus
                               (case.py `write_hidden(world, dir)`, optional)
       gt/<tier>_s<seed>/      one folder per public setting, tier x public rule seed (gt/default/ for a case
-                              without settings; gt/<tier>_<A|B|C>/ for a case that still declares the
-                              deprecated rulesets:):
+                              without settings):
         setting.json          {tier, rule_seed, params: the drawn values}, plus derived: the derive_params
-                              values when the case has that hook (deprecated rulesets: {tier, ruleset, params})
+                              values when the case has that hook
         reference/            the reference deliverable (files, or program/)
         score.json            the reference's objective and metrics under this setting; with a case.py
                               `baseline_solution`, also the baseline's objective and both solutions'
@@ -45,8 +44,6 @@ def setting_record(case: NativeCase) -> dict:
     s = case.setting
     if s is None:
         return {}
-    if s.ruleset:                       # deprecated rulesets: kept as they were stored
-        return {"tier": s.tier, "ruleset": s.ruleset, "params": s.params}
     drawn = case.drawn_params
     derived = {k: v for k, v in s.params.items() if k not in drawn}
     return {"tier": s.tier, "rule_seed": s.rule_seed, "params": drawn, **({"derived": derived} if derived else {})}

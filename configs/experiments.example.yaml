@@ -3,7 +3,8 @@
 # baseline = customer en, agent en, baseline policy, medium difficulty, standard engagement,
 # and every public rule seed of each case (rule_seeds: public), so each difficulty cell is the mean over
 # rule seeds. A list of ints instead (rule_seeds: [101, 102, 103]) runs private seeds: fresh draws of the
-# same rule-parameter candidates, whose answers are not in the stored dataset/.
+# same rule-parameter candidates, whose answers are not in the stored dataset/. Report results on private
+# rule seeds, the same for every system (docs/DIRECTION.md §7); the public panel is for development.
 defaults:
   cases_root: cases
   rule_seeds: public

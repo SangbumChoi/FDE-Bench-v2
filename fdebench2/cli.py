@@ -23,8 +23,7 @@ from pathlib import Path
 from .runner import AgentSpec, Bench, Settings, run_campaign
 from .scoring.report import report
 from .transforms.policy import list_policies
-from .cases import RULESETS
-from .transforms.variant import VariantSpec, legacy_rule_seed
+from .transforms.variant import VariantSpec
 
 
 def _axes(ap: argparse.ArgumentParser) -> None:
@@ -36,8 +35,6 @@ def _axes(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--rule-seed", type=int, default=None,
                     help="rule seed of a case with settings: draws its rule parameters (default: the case's first "
                          "public rule seed; any other int is a private draw)")
-    # Deprecated (hidden): a rule set A / B / C of a case that still declares rulesets: is rule seed 1 / 2 / 3.
-    ap.add_argument("--ruleset", default=None, choices=RULESETS, help=argparse.SUPPRESS)
     ap.add_argument("--engagement", default="standard", help="standard | full_spec | messy (configs/engagement.yaml)")
     ap.add_argument("--condition", default=None)
     ap.add_argument("--world-seed", type=int, default=None, help="generate the case world from this seed")
@@ -54,16 +51,10 @@ def _common(ap: argparse.ArgumentParser) -> None:
 
 
 def _spec(a, bench: Bench) -> VariantSpec:
-    rule_seed = a.rule_seed
-    if a.ruleset is not None:
-        print(f"note: --ruleset is deprecated; rule set {a.ruleset} is --rule-seed {legacy_rule_seed(a.ruleset)}",
-              file=sys.stderr)
-        if rule_seed is None:
-            rule_seed = legacy_rule_seed(a.ruleset)
     # resolve: the case's first public rule seed when none is given, none for a case without settings
     return bench.resolve(VariantSpec(case_id=a.case, customer_locale=a.customer_locale, agent_locale=a.agent_locale,
                                      policy=a.policy, difficulty=a.difficulty, noise_seed=a.noise_seed,
-                                     condition=a.condition, rule_seed=rule_seed, engagement=a.engagement,
+                                     condition=a.condition, rule_seed=a.rule_seed, engagement=a.engagement,
                                      world_seed=a.world_seed, trial=a.trial))
 
 

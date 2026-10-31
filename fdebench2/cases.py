@@ -19,10 +19,6 @@ and so the ground truth. Texts mark setting-specific passages with
 `<!-- when: name=v1,v2 -->` ... `<!-- /when -->` and insert parameters as
 `{{name}}`; targets and rules carry `tiers: [...]` and `when: {name: [...]}`.
 DESIGN.md (Settings) is the authoring contract.
-
-Deprecated until every case is converted: `rulesets:` (fixed rule sets A / B /
-C, with `param_labels:` and `<!-- ruleset: ... -->` blocks). Such a case still
-works; its rule sets are its rule seeds 1, 2 and 3, in that order.
 """
 
 from __future__ import annotations
@@ -48,9 +44,8 @@ LOCALES = ("zh", "en", "ko", "ja", "es")
 TIERS = ("easy", "medium", "hard")
 DEFAULT_TIER = "medium"
 MAX_REDRAWS = 100            # admissible(): salted redraws k = 1..MAX_REDRAWS before a rule seed is given up
-RULESETS = ("A", "B", "C")   # deprecated: the legacy fixed rule sets (case.yaml `rulesets:`)
 _BLOCK = {kind: re.compile(rf"<!-- {kind}: ([A-Za-z ]+) -->\n?(.*?)<!-- /{kind} -->\n?", re.S)
-          for kind in ("tier", "ruleset")}
+          for kind in ("tier",)}
 # The innermost when-block (its body holds no other when-marker), so nested blocks resolve from the inside out.
 _WHEN = re.compile(r"<!-- when: ([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([^>]*?) -->\n?"
                    r"((?:(?!<!-- /?when).)*?)<!-- /when -->\n?", re.S)
@@ -223,7 +218,7 @@ def draw_params(case_id: str, pools: dict[str, dict[str, list]], tier: str, rule
 
 
 def as_rule_seed(seed: Any) -> int:
-    """A rule seed is an int (not a bool, not a rule-set name)."""
+    """A rule seed is an int (not a bool, not a name)."""
     if isinstance(seed, bool):
         raise TypeError(f"a rule seed is an int, got {seed!r}")
     try:
@@ -242,9 +237,6 @@ class Setting:
     tier: str
     rule_seed: int
     params: dict[str, Any] = field(default_factory=dict)
-    # Deprecated: the rule set's name (A / B / C) of a case that still declares `rulesets:`. It keeps that
-    # case's labels and dataset folders ("easy/A", gt/easy_A) until the case is converted.
-    ruleset: str | None = field(default=None, compare=False)
     # A combination the validator builds by changing one drawn parameter ("name=value"). It keeps such a
     # setting's label apart from its rule seed's, since case code may cache by label.
     variation: str = field(default="", compare=False)
@@ -257,8 +249,6 @@ class Setting:
 
     @property
     def _seed_name(self) -> str:
-        if self.ruleset:
-            return self.ruleset
         return f"s{self.rule_seed}" if isinstance(self.rule_seed, int) else str(self.rule_seed)
 
     @property
@@ -429,11 +419,12 @@ class NativeCase(Case):
         self.task_type = self.meta.get("task_type", "")
         self.source_locale = "en"
         self._family = _family if _family is not None else {}    # shared by every setting of this case
+        if "rulesets" in self.meta:
+            raise ValueError(f"{self.id}: case.yaml declares rulesets: (fixed rule sets A / B / C), which are no "
+                             f"longer supported: declare params: (each parameter's candidate pool) and rule_seeds: "
+                             f"(the public panel, e.g. [1, 2, 3]) instead, as DESIGN.md (Settings) describes")
         drawn_contract = self.meta.get("params") is not None or self.meta.get("rule_seeds") is not None
-        if self.meta.get("rulesets") and drawn_contract:
-            raise ValueError(f"{self.id}: case.yaml declares the deprecated rulesets: and params: / rule_seeds:; "
-                             f"keep params: and rule_seeds: only")
-        if bool(self.tiers) != bool(self._legacy_names or drawn_contract):
+        if bool(self.tiers) != drawn_contract:
             raise ValueError(f"{self.id}: case.yaml must declare tiers together with params: and rule_seeds:, "
                              f"or neither")
         if self.tiers:
@@ -443,10 +434,6 @@ class NativeCase(Case):
             rule_seed = self.rule_seeds[0] if rule_seed is None else as_rule_seed(rule_seed)
             if tier not in self.tiers:
                 raise KeyError(f"{self.id}: unknown tier {tier!r}; declared: {self.tiers}")
-            if self._legacy_names and rule_seed not in self.rule_seeds:
-                raise KeyError(f"{self.id}: rule seed {rule_seed} is not one of the rule sets this case still "
-                               f"declares ({dict(zip(self.rule_seeds, self._legacy_names))}); private rule seeds "
-                               f"need params:")
         self.tier = tier if self.tiers else None
         self.rule_seed = rule_seed if self.tiers else None
         self._drawn = dict(_drawn) if _drawn is not None and self.tiers else None
@@ -458,16 +445,9 @@ class NativeCase(Case):
         return tuple(t for t in TIERS if t in (self.meta.get("tiers") or {}))
 
     @property
-    def _legacy_names(self) -> tuple[str, ...]:
-        """Deprecated: the rule sets (A / B / C) of a case that still declares `rulesets:`."""
-        return tuple(r for r in RULESETS if r in (self.meta.get("rulesets") or {}))
-
-    @property
     def rule_seeds(self) -> tuple[int, ...]:
         if not self.tiers:
             return ()
-        if self._legacy_names:          # deprecated rulesets: rule sets A, B, C are rule seeds 1, 2, 3
-            return tuple(range(1, len(self._legacy_names) + 1))
         return tuple(as_rule_seed(s) for s in (self.meta.get("rule_seeds") or []))
 
     @property
@@ -477,8 +457,6 @@ class NativeCase(Case):
 
     def param_labels(self) -> dict[str, dict[Any, dict[str, str]]]:
         """{name: {value: {locale: wording}}} for the parameters whose values case.yaml words per locale."""
-        if self._legacy_names:
-            return self.meta.get("param_labels") or {}
         specs = self.meta.get("params")
         return {name: spec["labels"] for name, spec in (specs.items() if isinstance(specs, dict) else ())
                 if isinstance(spec, dict) and isinstance(spec.get("labels"), dict)}
@@ -502,9 +480,6 @@ class NativeCase(Case):
     def setting(self) -> Setting | None:
         if not self.tiers:
             return None
-        if self._legacy_names:
-            name = self._legacy_names[self.rule_seed - 1]
-            return Setting(self.tier, self.rule_seed, dict(self.meta["rulesets"][name] or {}), ruleset=name)
         return Setting(self.tier, self.rule_seed, self._draw()[1], variation=self._variation)
 
     @property
@@ -512,8 +487,6 @@ class NativeCase(Case):
         """The values the rule seed drew: the setting's params without the derived keys ({} without settings)."""
         if not self.tiers:
             return {}
-        if self._legacy_names:
-            return dict(self.setting.params)
         return self._draw()[0]
 
     def settings(self) -> list["NativeCase"]:
@@ -536,7 +509,7 @@ class NativeCase(Case):
     def with_params(self, **changes: Any) -> "NativeCase":
         """This setting with some drawn parameters replaced and the derived ones recomputed: a combination its
         rule seed did not draw (the validator's parameter-binding check). Not cached; its label names the change."""
-        if not self.tiers or self._legacy_names:
+        if not self.tiers:
             raise ValueError(f"{self.id}: only a case with params: has parameters to change")
         unknown = sorted(set(changes) - set(self.param_candidates))
         if unknown:
@@ -548,7 +521,7 @@ class NativeCase(Case):
 
     def is_admissible(self) -> bool:
         """case.py admissible() on this setting's parameters (True without the hook or settings)."""
-        fn = self._hook("admissible") if self.tiers and not self._legacy_names else None
+        fn = self._hook("admissible") if self.tiers else None
         return fn is None or bool(fn(dict(self.setting.params), self.tier))
 
     def _applies(self, item: dict) -> bool:
@@ -556,18 +529,13 @@ class NativeCase(Case):
             return True
         if "tiers" in item and self.tier not in item["tiers"]:
             return False
-        setting = self.setting
-        if setting.ruleset and "rulesets" in item and setting.ruleset not in item["rulesets"]:
-            return False
-        return condition_holds(item.get("when"), setting.params)
+        return condition_holds(item.get("when"), self.setting.params)
 
     def _render(self, text: str, lang: str = "en") -> str:
         if self.tier is None:
             return text
         setting = self.setting
         text = filter_blocks(text, "tier", self.tier)
-        if setting.ruleset:
-            text = filter_blocks(text, "ruleset", setting.ruleset)
         text = filter_when(text, setting.params)
         return fill_params(text, setting.params, lang, self.param_labels())
 
@@ -640,13 +608,11 @@ class NativeCase(Case):
         return out
 
     def shared_target_ids(self) -> list[str]:
-        """Targets with no `when:` that every tier has (and, deprecated, every rule set): they apply under any
-        rule seed, so a pick among them is the same in every setting."""
+        """Targets with no `when:` that every tier has: they apply under any rule seed, so a pick among them is
+        the same in every setting."""
         ids = []
         for t in yaml.safe_load(self._raw("en", "targets.yaml")) or []:
             if t.get("when") or ("tiers" in t and not set(self.tiers) <= set(t["tiers"])):
-                continue
-            if self._legacy_names and "rulesets" in t and not set(self._legacy_names) <= set(t["rulesets"]):
                 continue
             ids.append(t["id"])
         return sorted(ids)

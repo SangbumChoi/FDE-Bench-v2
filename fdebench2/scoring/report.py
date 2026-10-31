@@ -38,7 +38,6 @@ from typing import Any
 from ..runner import NOT_SCORED, STATUSES
 
 AXES = ("customer_locale", "agent_locale", "policy", "difficulty", "rule_seed", "engagement", "condition")
-SETTING_KEYS = ("rule_seed", "ruleset")      # a run's rule seed (results from before rule seeds: its rule set)
 TIERS = ("easy", "medium", "hard")
 BOOT = 2000
 
@@ -68,8 +67,18 @@ def _num(x: float | None, digits: int = 3) -> str:
 
 
 def load_results(out: Path) -> list[dict[str, Any]]:
-    """Every out/<agent>/<run key>/result.json (never a file of that name an agent left in its workspace)."""
-    return [json.loads(p.read_text(encoding="utf-8")) for p in sorted(out.glob("*/*/result.json"))]
+    """Every out/<agent>/<run key>/result.json (never a file of that name an agent left in its workspace).
+
+    A result scored under a rule set (A / B / C, before rule seeds replaced them) is refused: its ground truth
+    is no longer what any rule seed draws, so it cannot be averaged with the others."""
+    results = []
+    for p in sorted(out.glob("*/*/result.json")):
+        r = json.loads(p.read_text(encoding="utf-8"))
+        if "ruleset" in r or "ruleset" in (r.get("spec") or {}):
+            raise ValueError(f"{p}: this run was scored under rule set {r.get('ruleset', r['spec'].get('ruleset'))}, "
+                             f"before rule seeds replaced rule sets; run it again or report it apart")
+        results.append(r)
+    return results
 
 
 def status(r: dict[str, Any]) -> str:
@@ -153,11 +162,10 @@ def _without(r: dict[str, Any], *keys: str) -> str:
 
 
 def rule_seed(r: dict[str, Any]) -> Any:
-    """The rule seed a run was scored at (None without settings; a result from before rule seeds: its rule set)."""
+    """The rule seed a run was scored at (None for a case without settings)."""
     if r.get("rule_seed") is not None:
         return r["rule_seed"]
-    spec = r["spec"]
-    return spec.get("rule_seed") if spec.get("rule_seed") is not None else spec.get("ruleset")
+    return r["spec"].get("rule_seed")
 
 
 def _seed_mean(rows: list[dict[str, Any]], value=lambda x: x["score"]["final"]) -> float:
@@ -189,7 +197,7 @@ def difficulty_table(results: list[dict[str, Any]]) -> str:
             groups: dict[str, list[bool]] = defaultdict(list)       # the same run under each rule seed
             for rs in by_case.values():
                 for x in rs:
-                    groups[_without(x, *SETTING_KEYS)].append(_valid(x))
+                    groups[_without(x, "rule_seed")].append(_valid(x))
             every = mean(all(v) for v in groups.values())
             row += [_fmt(per_case), f"{every:.2f}"]
         lines.append(f"| {agent} | " + " | ".join(row) + " |")

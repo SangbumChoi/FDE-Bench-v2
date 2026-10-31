@@ -11,7 +11,7 @@ from typing import Any
 import yaml
 
 from .. import i18n
-from ..cases import RULESETS, TIERS, Case, NotLocalized, Target
+from ..cases import TIERS, Case, NotLocalized, Target
 from . import noise as noise_ops
 from .events import Event, build_events
 from .language import Translator, check_locale
@@ -19,11 +19,6 @@ from .policy import Policy, load_policy, policy_brief_msgs
 
 ENGAGEMENT_FILE = Path(__file__).resolve().parents[2] / "configs" / "engagement.yaml"
 CONDITIONS = ("full", "interact", "interact_req", "hidden")
-
-
-def legacy_rule_seed(ruleset: Any) -> int | None:
-    """A rule-set name saved before rule seeds (A / B / C) as the rule seed it is now (1 / 2 / 3)."""
-    return RULESETS.index(ruleset) + 1 if ruleset in RULESETS else None
 
 
 @dataclass(frozen=True)
@@ -52,8 +47,9 @@ class VariantSpec:
         d = dict(d)
         if "seed" in d:                   # saved before noise_seed and trial were split
             d.setdefault("noise_seed", d.pop("seed"))
-        if "ruleset" in d:                # saved before rule seeds: rule sets A / B / C are rule seeds 1 / 2 / 3
-            d.setdefault("rule_seed", legacy_rule_seed(d.pop("ruleset")))
+        if "ruleset" in d:                # saved before rule seeds replaced the rule sets A / B / C
+            raise ValueError(f"{d.get('case_id')}: this variant was set up with rule set {d['ruleset']}, before rule "
+                             f"seeds replaced rule sets; run it again")
         return cls(**d)
 
     def key(self) -> str:
@@ -133,9 +129,9 @@ class Variant:
     @classmethod
     def load(cls, directory: Path) -> "Variant":
         doc = json.loads((directory / "variant.json").read_text(encoding="utf-8"))
+        if "ruleset" in doc and "ruleset" not in doc["spec"]:
+            doc["spec"] = {**doc["spec"], "ruleset": doc["ruleset"]}     # refused below, with the same message
         doc["spec"] = VariantSpec.from_dict(doc["spec"])
-        if "ruleset" in doc:            # saved before rule seeds
-            doc.setdefault("rule_seed", legacy_rule_seed(doc.pop("ruleset")))
         doc["targets"] = [Target(**t) for t in doc["targets"]]
         doc["policy"] = Policy.from_dict(doc["policy"])
         doc["events"] = [Event(**e) for e in doc["events"]]

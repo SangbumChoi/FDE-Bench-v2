@@ -46,7 +46,8 @@ def baseline_solution(world, out_dir, setting=None):
     _write(out_dir, BASE * (setting["scale"] if setting else 1))
 '''
 SETTINGS_YAML = """tiers: {easy: e, medium: m, hard: h}
-rulesets: {A: {scale: 1}, B: {scale: 2}, C: {scale: 3}}
+params: {scale: {values: [1, 2, 3]}}
+rule_seeds: [1, 2, 3]
 """
 
 
@@ -123,8 +124,12 @@ def test_degenerate_baseline_falls_back_to_the_ratio(tmp_path):
 
 def test_baseline_follows_the_setting_and_must_be_valid(tmp_path):
     case = make_case(tmp_path, "maximize", ref=80.0, base=40.0, settings=True)
-    assert [case.at("hard", r).baseline_objective for r in (1, 2, 3)] == [40.0, 80.0, 120.0]   # rule sets A, B, C
-    assert case.at("easy", 2).evaluate(submit(tmp_path, 200.0), "en")["quality_score"] == 1.5
+    seed_of = {}                                    # the first rule seed that draws each scale
+    for seed in range(1, 100):
+        seed_of.setdefault(case.at("hard", seed).setting["scale"], seed)
+    assert {k: case.at("hard", r).baseline_objective for k, r in seed_of.items()} == {1: 40.0, 2: 80.0, 3: 120.0}
+    # a shared pool draws the same scale in every tier: reference 160, baseline 80
+    assert case.at("easy", seed_of[2]).evaluate(submit(tmp_path, 200.0), "en")["quality_score"] == 1.5
     broken = make_case(tmp_path, "maximize", ref=80.0, base=40.0)
     broken.module.baseline_solution = lambda world, out_dir: broken.module._write(out_dir, 40.0, ["habit"])
     with pytest.raises(AssertionError, match="baseline solution is not valid"):

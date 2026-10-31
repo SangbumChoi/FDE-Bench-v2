@@ -185,13 +185,9 @@ def build_page(case_root: Path, lang: str = "en") -> str:
     root = case.root
     settings = case.settings()
     has_settings = bool(case.tiers)
-    legacy = bool(case._legacy_names)      # deprecated rulesets: (A / B / C), shown as before until converted
     labels = case.param_labels()
     own = case_texts(root, lang)
     t = lambda key, **kw: _t(lang, key, **kw)  # noqa: E731
-
-    def param_text(name, value):
-        return labels[name][value][lang] if name in labels else value
 
     def candidate(name, value) -> str:
         """A candidate value as code, with its wording in the page's language when the case gives one."""
@@ -221,10 +217,8 @@ def build_page(case_root: Path, lang: str = "en") -> str:
     deliverable = (t("program", entry=f"<code>{_esc(meta.get('entrypoint', ''))}</code>") if kind == "program"
                    else t("batch_files", files=", ".join(f"<code>{_esc(d)}</code>" for d in meta.get("deliverables", []))))
     field_name = load_fields(root.parent.parent).get(case.field, {}).get(lang, case.field)
-    settings_value = (t("one_problem") if not has_settings else
-                      t("settings_value", tiers=len(case.tiers), rulesets=len(case.rule_seeds), n=len(settings))
-                      if legacy else
-                      t("settings_value_seeds", tiers=len(case.tiers), seeds=len(case.rule_seeds), n=len(settings)))
+    settings_value = (t("settings_value", tiers=len(case.tiers), seeds=len(case.rule_seeds), n=len(settings))
+                      if has_settings else t("one_problem"))
     objective = meta.get("objective", "")
     parts.append(f"""
 <header>
@@ -256,23 +250,7 @@ def build_page(case_root: Path, lang: str = "en") -> str:
 <h3>{t("spec_title", label=spec_label)}</h3>{spec}</section>""")
 
     # settings
-    if has_settings and legacy:
-        tiers = {**(meta.get("tiers") or {}), **(own.get("tiers") or {})}
-        trows = [[f"<strong>{_esc(x)}</strong>", _esc(tiers.get(x, ""))] for x in case.tiers]
-        rs = meta.get("rulesets") or {}
-        sets = case._legacy_names
-        params = []
-        for r in sets:
-            for k in (rs[r] or {}):
-                if k not in params:
-                    params.append(k)
-        prow = [[f"<code>{_esc(k)}</code>"] + [_esc(param_text(k, (rs[r] or {}).get(k, "–"))) for r in sets]
-                for k in params]
-        parts.append(f"""<section id="settings"><h2>{t("settings_title", n=len(settings))}</h2>
-<p>{t("settings_intro")}</p>
-<h3>{t("tiers")}</h3>{_table([t("tier"), t("in_force")], trows)}
-<h3>{t("rulesets")}</h3>{_table([t("parameter")] + list(sets), prow)}</section>""")
-    elif has_settings:
+    if has_settings:
         tiers = {**(meta.get("tiers") or {}), **(own.get("tiers") or {})}
         trows = [[f"<strong>{_esc(x)}</strong>", _esc(tiers.get(x, ""))] for x in case.tiers]
         pools = case.param_candidates
@@ -285,7 +263,7 @@ def build_page(case_root: Path, lang: str = "en") -> str:
         note = (f"<p class='muted'>{t('derived_note', names=', '.join(f'<code>{_esc(k)}</code>' for k in derived))}</p>"
                 if derived else "")
         parts.append(f"""<section id="settings"><h2>{t("settings_title", n=len(settings))}</h2>
-<p>{t("settings_intro_seeds")}</p>
+<p>{t("settings_intro")}</p>
 <h3>{t("tiers")}</h3>{_table([t("tier"), t("in_force")], trows)}
 <h3>{t("param_candidates")}</h3>{_table([t("parameter")] + list(case.tiers), prow)}{note}
 <h3>{t("public_panel")}</h3><p class="muted">{t("public_panel_intro")}</p>
@@ -303,7 +281,7 @@ def build_page(case_root: Path, lang: str = "en") -> str:
                       _esc(tiers_txt) + condition(r), _esc(descriptions.get(r["id"]) or r.get("description", ""))])
     classes = "".join(f"<li><span class='pill {k}'>{t('class_' + k)}</span> {t('note_' + k)}</li>"
                       for k in ("physical", "contractual", "business_policy"))
-    described = t("description") if legacy or not has_settings else t("description_seeds")
+    described = t("description_params") if has_settings else t("description")
     parts.append(f"""<section id="rules"><h2>{t("rules_title")}</h2>
 <p>{t("rules_intro")}</p><ul class="legend">{classes}</ul>
 {_table([t("rule"), t("class"), t("tiers"), described], rrows)}</section>""")
@@ -313,8 +291,7 @@ def build_page(case_root: Path, lang: str = "en") -> str:
     for c in settings:
         key = c.setting.folder if has_settings else "default"
         texts[key] = markdown(c.requirements(lang))
-        names[key] = (key.replace("_", " / ") if legacy or not has_settings
-                      else f"{c.tier} / {UI[lang]['rule_seed']} {c.rule_seed}")
+        names[key] = f"{c.tier} / {UI[lang]['rule_seed']} {c.rule_seed}" if has_settings else key
     keys = list(texts)
     opts_s = "".join(f'<option value="{_esc(k)}"{" selected" if k == keys[len(keys) // 2] else ""}>'
                      f'{_esc(names[k])}</option>' for k in keys)
@@ -334,7 +311,7 @@ def build_page(case_root: Path, lang: str = "en") -> str:
               _esc(", ".join(x["tiers"]) if x.get("tiers") else t("all_tiers")) + condition(x), _esc(mine.get(x["id"], ""))]
              for x in src]
     parts.append(f"""<section id="targets"><h2>{t("targets_title")}</h2>
-<p class="muted">{t("targets_intro" if legacy or not has_settings else "targets_intro_seeds")}</p>
+<p class="muted">{t("targets_intro_params" if has_settings else "targets_intro")}</p>
 {_table(cols, trows)}</section>""")
 
     # data & answers

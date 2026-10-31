@@ -14,7 +14,7 @@ from fdebench2.validate import Report, check_case, check_hash_seed, validate_cas
 
 REPO = Path(__file__).resolve().parents[1]
 FAST = "logistics/bakery_delivery_dispatcher"         # the quickest full validation
-SETTINGS = "manufacturing/procurement_specialist"     # rule-set parameters, setting blocks and a README
+SETTINGS = "manufacturing/procurement_specialist"     # rule parameters, setting blocks and a README
 
 # The reference with every van leaving 30 minutes earlier: still valid, but the drivers wait at the cafés.
 WORSE_BASELINE = '''
@@ -63,7 +63,7 @@ def test_name_that_does_not_match_the_data(tmp_path):
 
 def test_setting_marker_in_request(tmp_path):
     root = _copy(tmp_path, SETTINGS)
-    _append(root / "locales/en/request.md", "\n<!-- ruleset: A -->\nOnly in rule set A.\n<!-- /ruleset -->\n")
+    _append(root / "locales/en/request.md", "\n<!-- tier: hard -->\nOnly in the hard tier.\n<!-- /tier -->\n")
     assert "en/request.md: must be the same in every setting (no markers or parameters)" in validate_case(root)
 
 
