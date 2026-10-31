@@ -139,21 +139,21 @@ def test_settings_change_the_ground_truth_not_what_the_agent_sees(tmp_path):
     assert fill_params("cap {{n}}", {"n": 4}) == "cap 4"
     cid = "healthcare/hospital_appointment_scheduler"
     case = NativeCase(REPO / "cases" / cid)
-    assert case.tiers == ("easy", "medium", "hard") and case.rulesets == ("A", "B", "C")
-    assert (case.tier, case.ruleset) == ("medium", "A") and len(case.settings()) == 9
-    assert case.at("hard", "C").world is case.world                   # one world for every setting
+    assert case.tiers == ("easy", "medium", "hard") and case.rule_seeds == (1, 2, 3)    # rule sets A, B, C
+    assert (case.tier, case.rule_seed) == ("medium", 1) and len(case.settings()) == 9
+    assert case.at("hard", 3).world is case.world                     # one world for every setting
 
     views, infos = {}, {}
-    for tier, rs in (("easy", "A"), ("hard", "C")):
+    for tier, rs in (("easy", 1), ("hard", 3)):
         ws = tmp_path / f"{tier}{rs}"
-        v = build_variant(VariantSpec(cid, customer_locale="ko", difficulty=tier, ruleset=rs), case, ws,
+        v = build_variant(VariantSpec(cid, customer_locale="ko", difficulty=tier, rule_seed=rs), case, ws,
                           _offline(tmp_path))
         files = sorted(p.relative_to(ws).as_posix() for p in (ws / "data").rglob("*") if p.is_file())
         views[(tier, rs)] = (render_task_prompt(v, "/workspace", files), _tree_hash(ws))
         infos[(tier, rs)] = v
-        assert (v.case_tier, v.ruleset) == (tier, rs)
-    assert views[("easy", "A")] == views[("hard", "C")]
-    easy, hard = infos[("easy", "A")], infos[("hard", "C")]
+        assert (v.case_tier, v.rule_seed) == (tier, rs)
+    assert views[("easy", 1)] == views[("hard", 3)]
+    easy, hard = infos[("easy", 1)], infos[("hard", 3)]
     assert "오버부킹" in hard.information and "오버부킹 슬롯은 최대 2개" in hard.information
     assert "피부과는 그날 휴진" in easy.information and "소아청소년과는 그날 휴진" in hard.information
     assert "{{" not in easy.information and "<!--" not in easy.information
@@ -163,4 +163,4 @@ def test_settings_change_the_ground_truth_not_what_the_agent_sees(tmp_path):
     assert "lab_capacity" not in rules["easy"] and "lab_capacity" in rules["medium"]
     hard.save(tmp_path / "saved")
     again = Variant.load(tmp_path / "saved")
-    assert (again.case_tier, again.ruleset) == ("hard", "C")
+    assert (again.case_tier, again.rule_seed) == ("hard", 3)

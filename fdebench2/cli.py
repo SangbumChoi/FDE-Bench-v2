@@ -23,7 +23,8 @@ from pathlib import Path
 from .runner import AgentSpec, Bench, Settings, run_campaign
 from .scoring.report import report
 from .transforms.policy import list_policies
-from .transforms.variant import VariantSpec
+from .cases import RULESETS
+from .transforms.variant import VariantSpec, legacy_rule_seed
 
 
 def _axes(ap: argparse.ArgumentParser) -> None:
@@ -32,7 +33,11 @@ def _axes(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--agent-locale", default="en")
     ap.add_argument("--policy", default="baseline")
     ap.add_argument("--difficulty", default="medium", help="content tier: easy | medium | hard")
-    ap.add_argument("--ruleset", default="A", help="rule parameters of cases with settings: A | B | C")
+    ap.add_argument("--rule-seed", type=int, default=None,
+                    help="rule seed of a case with settings: draws its rule parameters (default: the case's first "
+                         "public rule seed; any other int is a private draw)")
+    # Deprecated (hidden): a rule set A / B / C of a case that still declares rulesets: is rule seed 1 / 2 / 3.
+    ap.add_argument("--ruleset", default=None, choices=RULESETS, help=argparse.SUPPRESS)
     ap.add_argument("--engagement", default="standard", help="standard | full_spec | messy (configs/engagement.yaml)")
     ap.add_argument("--condition", default=None)
     ap.add_argument("--world-seed", type=int, default=None, help="generate the case world from this seed")
@@ -48,10 +53,18 @@ def _common(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--docker-image", help="run commands in this image (use {case} for per-case images)")
 
 
-def _spec(a) -> VariantSpec:
-    return VariantSpec(case_id=a.case, customer_locale=a.customer_locale, agent_locale=a.agent_locale,
-                       policy=a.policy, difficulty=a.difficulty, noise_seed=a.noise_seed, condition=a.condition,
-                       ruleset=a.ruleset, engagement=a.engagement, world_seed=a.world_seed, trial=a.trial)
+def _spec(a, bench: Bench) -> VariantSpec:
+    rule_seed = a.rule_seed
+    if a.ruleset is not None:
+        print(f"note: --ruleset is deprecated; rule set {a.ruleset} is --rule-seed {legacy_rule_seed(a.ruleset)}",
+              file=sys.stderr)
+        if rule_seed is None:
+            rule_seed = legacy_rule_seed(a.ruleset)
+    # resolve: the case's first public rule seed when none is given, none for a case without settings
+    return bench.resolve(VariantSpec(case_id=a.case, customer_locale=a.customer_locale, agent_locale=a.agent_locale,
+                                     policy=a.policy, difficulty=a.difficulty, noise_seed=a.noise_seed,
+                                     condition=a.condition, rule_seed=rule_seed, engagement=a.engagement,
+                                     world_seed=a.world_seed, trial=a.trial))
 
 
 def _bench(a) -> Bench:
@@ -134,11 +147,11 @@ def main(argv: list[str] | None = None) -> None:
     elif a.cmd == "cases":
         for cid, case in _bench(a).cases.items():
             print(f"{cid}\t{case.role}\t{case.task_type}\t{','.join(case.locales())}"
-                  f"\t{'settings=' + ','.join(case.tiers) + ' x ' + ','.join(case.rulesets) if case.tiers else ''}")
+                  f"\t{'settings=' + ','.join(case.tiers) + ' x rule seeds ' + ','.join(map(str, case.rule_seeds)) if case.tiers else ''}")
     elif a.cmd == "prepare":
         bench = _bench(a)
         run_dir = Path(tempfile.mkdtemp(prefix="fdeb2-prepare-"))
-        variant = bench.prepare(_spec(a), run_dir)
+        variant = bench.prepare(_spec(a, bench), run_dir)
         from .prompts import render_task_prompt
         files = sorted(p.relative_to(run_dir / "workspace").as_posix()
                        for p in (run_dir / "workspace" / "data").rglob("*") if p.is_file())
@@ -149,7 +162,7 @@ def main(argv: list[str] | None = None) -> None:
     elif a.cmd == "run":
         bench = _bench(a)
         agent = AgentSpec(harness=a.harness, model=a.model, max_steps=a.max_steps)
-        result = bench.run(_spec(a), agent, force=a.force)
+        result = bench.run(_spec(a, bench), agent, force=a.force)
         shown = result["score"] if result.get("score") else {"status": result["status"], "error": result.get("error")}
         print(json.dumps(shown, ensure_ascii=False, indent=2))
     elif a.cmd == "score":

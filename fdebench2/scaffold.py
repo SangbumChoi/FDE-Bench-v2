@@ -8,7 +8,9 @@ Built cases to copy patterns from: a batch case with settings is
 `manufacturing/procurement_specialist`; daily program cases are
 `finance/loan_underwriting_specialist`, `healthcare/hospital_appointment_scheduler`
 and `finance/stock_trading_strategist`; a program that processes a folder is
-`data_knowledge/multilingual_corpus_curator`.
+`data_knowledge/multilingual_corpus_curator`. (Until they are converted, these
+still declare the deprecated `rulesets:`; a new case draws its parameters with
+`params:` and `rule_seeds:` as DESIGN.md, Settings, describes.)
 """
 
 from __future__ import annotations
@@ -32,10 +34,11 @@ tiers:                          # difficulty -> which rules apply; the data is t
   easy: TODO the core problem
   medium: TODO easy + more domain rules
   hard: TODO medium + the uncertain or adversarial parts
-rulesets:                       # the client's rule parameters; include at least one non-nested one
-  A: {{example_param: 1}}
-  B: {{example_param: 2}}
-  C: {{example_param: 3}}
+params:                         # the client's rule parameters: a rule seed draws each one from its candidates
+  example_param:
+    values: [1, 2, 3]           # one pool for every tier, or {{easy: [..], medium: [..], hard: [..]}}
+    # labels: {{1: {{zh: .., en: .., ko: .., ja: .., es: ..}}}}   # optional: a value's wording per locale
+rule_seeds: [1, 2, 3]           # the public panel (dataset/, explainer); any other int is a private seed
 rules:                          # class: physical | contractual | business_policy (exactly one bendable rule)
   - id: TODO_rule
     class: physical
@@ -43,12 +46,13 @@ rules:                          # class: physical | contractual | business_polic
   - id: TODO_habit
     class: business_policy
     description: TODO the client's habit an exception may bend
+    # when: {{example_param: [2, 3]}}   # optional: the rule applies only for these drawn values
 """
 
 CASE_PY = '''"""{title} (original FDE-Bench v2 case).
 
 TODO: one paragraph on the client, the request and what decides validity and quality; then the tiers and
-what the rule sets vary.
+what the rule parameters vary (case.yaml params: holds their candidates).
 """
 
 from __future__ import annotations
@@ -77,8 +81,21 @@ def write_data(world: World, data_dir: Path, lang: str) -> None:
     raise NotImplementedError("TODO")
 
 
+def derive_params(params: dict, tier: str) -> dict:
+    """Optional: values computed from the drawn parameters (e.g. period dates from a fiscal-year start), usable
+    as setting["name"] and {{{{name}}}}. A value may be {{zh: .., en: .., ko: .., ja: .., es: ..}} to read per locale.
+    Delete this hook if nothing is derived."""
+    return {{}}
+
+
+def admissible(params: dict, tier: str) -> bool:
+    """Optional: False rejects a combination of drawn (and derived) values, e.g. a cap below what the data
+    allows; the rule seed then draws every parameter again. Delete this hook if every combination works."""
+    return True
+
+
 class _View:
-    """The world as one setting sees it: tier flags and the rule set's parameters."""
+    """The world as one setting sees it: tier flags and the parameters its rule seed drew."""
 
     def __init__(self, world: World, setting):
         self._w, self.setting = world, setting
@@ -135,11 +152,14 @@ TODO: files and formats the agent receives.
 | **Out of scope this round** | TODO | TODO | – |
 | **Quality** | TODO | TODO | TODO |
 
-## Rule sets: the client's parameters
+## Rule parameters: candidates and the public rule seeds
 
-| Parameter | A | B | C |
-|---|---|---|---|
-| TODO | | | |
+| Parameter | easy | medium | hard | What it changes |
+|---|---|---|---|---|
+| TODO | | | | |
+
+The public rule seeds (case.yaml `rule_seeds`) and the values they draw are in the explainer and in
+`dataset/gt/<tier>_s<seed>/setting.json`.
 
 ## Situations
 
@@ -151,10 +171,10 @@ TODO: files and formats the agent receives.
 
 ## Reference numbers
 
-TODO: reference objective for all nine settings, how often each rule binds, gain from bending the business
-rule, headroom; per-tier means.
+TODO: reference objective for every public setting (tier x public rule seed), how often each rule binds, gain
+from bending the business rule, headroom; per-tier means.
 
-TODO: baseline objective and baseline/reference for all nine settings (validate-case prints the ratios).
+TODO: baseline objective and baseline/reference for every public setting (validate-case prints the ratios).
 """
 
 REQUEST = "TODO: the client's short, under-specified request in this language (no setting markers).\n"
@@ -177,7 +197,10 @@ TODO
 
 ## How the work is judged
 
-TODO: hard constraints, then quality. Parameters come from the rule set, e.g. {{example_param}}.
+TODO: hard constraints, then quality. Parameters come from the rule seed's draw, e.g. {{example_param}}.
+<!-- when: example_param=2,3 -->
+- TODO (optional): a passage only for these drawn values.
+<!-- /when -->
 """
 TARGETS_EN = """- id: TODO_target
   kind: missing

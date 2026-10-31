@@ -1,8 +1,9 @@
 """One self-contained explainer page per case: cases/<field>/<role>/explainer.html.
 
 The page gathers everything a reviewer needs to understand a case without
-running it: the request, the hidden requirements in every setting and locale,
-the rules and their classes, the rule sets, the clarification targets, the
+running it: the request, the hidden requirements in every public setting and
+locale, the rules and their classes, the rule parameters (candidates per tier
+and the values the public rule seeds drew), the clarification targets, the
 case README, the stored dataset, the reference scores and the findings of a
 review (REVIEW.md, when the case has one). It is generated from the case files
 (`fdebench2 explain-case`, also run by `export-dataset`), works offline, and
@@ -18,7 +19,7 @@ from pathlib import Path
 
 import yaml
 
-from .cases import LOCALES, NativeCase, load_fields
+from .cases import LOCALES, NativeCase, load_fields, value_label, value_text
 from .dataset import DATASET_DIR
 
 PAGE = "explainer.html"
@@ -184,12 +185,33 @@ def build_page(case_root: Path, lang: str = "en") -> str:
     root = case.root
     settings = case.settings()
     has_settings = bool(case.tiers)
-    labels = meta.get("param_labels") or {}
+    legacy = bool(case._legacy_names)      # deprecated rulesets: (A / B / C), shown as before until converted
+    labels = case.param_labels()
     own = case_texts(root, lang)
     t = lambda key, **kw: _t(lang, key, **kw)  # noqa: E731
 
     def param_text(name, value):
         return labels[name][value][lang] if name in labels else value
+
+    def candidate(name, value) -> str:
+        """A candidate value as code, with its wording in the page's language when the case gives one."""
+        code = f"<code>{_esc(value_text(value))}</code>"
+        if name not in labels:
+            return code
+        try:
+            word = str(value_label(labels[name], value)[lang])
+        except KeyError:
+            return code
+        return code if word == value_text(value) else f"{code} {_esc(word)}"
+
+    def condition(item) -> str:
+        """" · only when name = v1, v2" for a rule or target with when: (empty without one)."""
+        when = item.get("when") or {}
+        if not when:
+            return ""
+        cond = "; ".join(f"{k} = {', '.join(value_text(v) for v in (vs if isinstance(vs, list) else [vs]))}"
+                         for k, vs in when.items())
+        return " · " + t("only_when", cond=_esc(cond))
 
     review_md, _ = localized_doc(root, "REVIEW.md", lang)
     parts: list[str] = []
@@ -199,8 +221,10 @@ def build_page(case_root: Path, lang: str = "en") -> str:
     deliverable = (t("program", entry=f"<code>{_esc(meta.get('entrypoint', ''))}</code>") if kind == "program"
                    else t("batch_files", files=", ".join(f"<code>{_esc(d)}</code>" for d in meta.get("deliverables", []))))
     field_name = load_fields(root.parent.parent).get(case.field, {}).get(lang, case.field)
-    settings_value = (t("settings_value", tiers=len(case.tiers), rulesets=len(case.rulesets), n=len(settings))
-                      if has_settings else t("one_problem"))
+    settings_value = (t("one_problem") if not has_settings else
+                      t("settings_value", tiers=len(case.tiers), rulesets=len(case.rule_seeds), n=len(settings))
+                      if legacy else
+                      t("settings_value_seeds", tiers=len(case.tiers), seeds=len(case.rule_seeds), n=len(settings)))
     objective = meta.get("objective", "")
     parts.append(f"""
 <header>
@@ -232,21 +256,40 @@ def build_page(case_root: Path, lang: str = "en") -> str:
 <h3>{t("spec_title", label=spec_label)}</h3>{spec}</section>""")
 
     # settings
-    if has_settings:
+    if has_settings and legacy:
         tiers = {**(meta.get("tiers") or {}), **(own.get("tiers") or {})}
         trows = [[f"<strong>{_esc(x)}</strong>", _esc(tiers.get(x, ""))] for x in case.tiers]
         rs = meta.get("rulesets") or {}
+        sets = case._legacy_names
         params = []
-        for r in case.rulesets:
+        for r in sets:
             for k in (rs[r] or {}):
                 if k not in params:
                     params.append(k)
-        prow = [[f"<code>{_esc(k)}</code>"] + [_esc(param_text(k, (rs[r] or {}).get(k, "–"))) for r in case.rulesets]
+        prow = [[f"<code>{_esc(k)}</code>"] + [_esc(param_text(k, (rs[r] or {}).get(k, "–"))) for r in sets]
                 for k in params]
         parts.append(f"""<section id="settings"><h2>{t("settings_title", n=len(settings))}</h2>
 <p>{t("settings_intro")}</p>
 <h3>{t("tiers")}</h3>{_table([t("tier"), t("in_force")], trows)}
-<h3>{t("rulesets")}</h3>{_table([t("parameter")] + list(case.rulesets), prow)}</section>""")
+<h3>{t("rulesets")}</h3>{_table([t("parameter")] + list(sets), prow)}</section>""")
+    elif has_settings:
+        tiers = {**(meta.get("tiers") or {}), **(own.get("tiers") or {})}
+        trows = [[f"<strong>{_esc(x)}</strong>", _esc(tiers.get(x, ""))] for x in case.tiers]
+        pools = case.param_candidates
+        prow = [[f"<code>{_esc(k)}</code>"] + [", ".join(candidate(k, v) for v in pools[k][x]) for x in case.tiers]
+                for k in pools]
+        panel = [[_esc(c.tier), _esc(c.rule_seed),
+                  f"<code>{_esc(json.dumps(c.drawn_params, ensure_ascii=False, default=str))}</code>"]
+                 for c in settings]
+        derived = sorted({k for c in settings for k in c.setting.params} - set(pools))
+        note = (f"<p class='muted'>{t('derived_note', names=', '.join(f'<code>{_esc(k)}</code>' for k in derived))}</p>"
+                if derived else "")
+        parts.append(f"""<section id="settings"><h2>{t("settings_title", n=len(settings))}</h2>
+<p>{t("settings_intro_seeds")}</p>
+<h3>{t("tiers")}</h3>{_table([t("tier"), t("in_force")], trows)}
+<h3>{t("param_candidates")}</h3>{_table([t("parameter")] + list(case.tiers), prow)}{note}
+<h3>{t("public_panel")}</h3><p class="muted">{t("public_panel_intro")}</p>
+{_table([t("tier"), t("rule_seed"), t("drawn_values")], panel)}</section>""")
     else:
         parts.append(f'<section id="settings"><h2>{t("settings")}</h2><p>{t("no_settings")}</p></section>')
 
@@ -257,21 +300,24 @@ def build_page(case_root: Path, lang: str = "en") -> str:
         tiers_txt = ", ".join(r.get("tiers", case.tiers)) if has_settings else "–"
         rrows.append([f"<code>{_esc(r['id'])}</code>",
                       f"<span class='pill {_esc(r['class'])}'>{t('class_' + r['class'])}</span>",
-                      _esc(tiers_txt), _esc(descriptions.get(r["id"]) or r.get("description", ""))])
+                      _esc(tiers_txt) + condition(r), _esc(descriptions.get(r["id"]) or r.get("description", ""))])
     classes = "".join(f"<li><span class='pill {k}'>{t('class_' + k)}</span> {t('note_' + k)}</li>"
                       for k in ("physical", "contractual", "business_policy"))
+    described = t("description") if legacy or not has_settings else t("description_seeds")
     parts.append(f"""<section id="rules"><h2>{t("rules_title")}</h2>
 <p>{t("rules_intro")}</p><ul class="legend">{classes}</ul>
-{_table([t("rule"), t("class"), t("tiers"), t("description")], rrows)}</section>""")
+{_table([t("rule"), t("class"), t("tiers"), described], rrows)}</section>""")
 
-    # hidden requirements per setting, in the page's language (JS switcher over the settings)
-    texts = {}
+    # hidden requirements per setting (tier x public rule seed), in the page's language (JS switcher)
+    texts, names = {}, {}
     for c in settings:
-        key = f"{c.tier}_{c.ruleset}" if has_settings else "default"
+        key = c.setting.folder if has_settings else "default"
         texts[key] = markdown(c.requirements(lang))
+        names[key] = (key.replace("_", " / ") if legacy or not has_settings
+                      else f"{c.tier} / {UI[lang]['rule_seed']} {c.rule_seed}")
     keys = list(texts)
     opts_s = "".join(f'<option value="{_esc(k)}"{" selected" if k == keys[len(keys) // 2] else ""}>'
-                     f'{_esc(k.replace("_", " / "))}</option>' for k in keys)
+                     f'{_esc(names[k])}</option>' for k in keys)
     parts.append(f"""<section id="requirements"><h2>{t("requirements_title")}</h2>
 <p class="muted">{t("requirements_intro")}</p>
 <div class="controls"><label>{t("setting")} <select id="req-setting">{opts_s}</select></label></div>
@@ -285,10 +331,10 @@ def build_page(case_root: Path, lang: str = "en") -> str:
                                                        .read_text(encoding="utf-8")) or []}
     cols = [t("target"), t("kind"), t("tiers"), t("fact")]
     trows = [[f"<code>{_esc(x['id'])}</code>", _esc(x.get("kind", "")),
-              _esc(", ".join(x["tiers"]) if x.get("tiers") else t("all_tiers")), _esc(mine.get(x["id"], ""))]
+              _esc(", ".join(x["tiers"]) if x.get("tiers") else t("all_tiers")) + condition(x), _esc(mine.get(x["id"], ""))]
              for x in src]
     parts.append(f"""<section id="targets"><h2>{t("targets_title")}</h2>
-<p class="muted">{t("targets_intro")}</p>
+<p class="muted">{t("targets_intro" if legacy or not has_settings else "targets_intro_seeds")}</p>
 {_table(cols, trows)}</section>""")
 
     # data & answers
@@ -406,7 +452,7 @@ def build_index(cases_root: Path, lang: str = "en") -> str:
     for cid, case in discover(cases_root).items():
         meta, own = case.meta, case_texts(case.root, lang)
         kind = meta.get("deliverable_type", "batch")
-        settings = f"{len(case.tiers)}×{len(case.rulesets)}" if case.tiers else "–"
+        settings = f"{len(case.tiers)}×{len(case.rule_seeds)}" if case.tiers else "–"
         rel = f"{cid}/{page_name(lang)}"
         rows.append([_esc(fields.get(case.field, {}).get(lang, case.field)),
                      f'<a href="{_esc(rel)}">{_esc(own.get("role") or case.role)}</a>', f"<code>{_esc(cid)}</code>",

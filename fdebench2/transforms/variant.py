@@ -11,7 +11,7 @@ from typing import Any
 import yaml
 
 from .. import i18n
-from ..cases import DEFAULT_RULESET, TIERS, Case, NotLocalized, Target
+from ..cases import RULESETS, TIERS, Case, NotLocalized, Target
 from . import noise as noise_ops
 from .events import Event, build_events
 from .language import Translator, check_locale
@@ -19,6 +19,11 @@ from .policy import Policy, load_policy, policy_brief_msgs
 
 ENGAGEMENT_FILE = Path(__file__).resolve().parents[2] / "configs" / "engagement.yaml"
 CONDITIONS = ("full", "interact", "interact_req", "hidden")
+
+
+def legacy_rule_seed(ruleset: Any) -> int | None:
+    """A rule-set name saved before rule seeds (A / B / C) as the rule seed it is now (1 / 2 / 3)."""
+    return RULESETS.index(ruleset) + 1 if ruleset in RULESETS else None
 
 
 @dataclass(frozen=True)
@@ -30,7 +35,9 @@ class VariantSpec:
     difficulty: str = "medium"        # content tier of cases that declare settings
     noise_seed: int = 0               # seeds the engagement: its data noise and events
     condition: str | None = None      # override the engagement's condition (ablations)
-    ruleset: str = DEFAULT_RULESET    # rule parameters of cases that declare settings (A / B / C)
+    rule_seed: int | None = None      # draws the rule parameters of a case with settings; None for a case without
+                                      # settings (Bench.resolve gives a case with settings its first public seed,
+                                      # a campaign job its public panel)
     engagement: str = "standard"      # how the work is handed over (configs/engagement.yaml)
     world_seed: int | None = None     # generate the case's world from this seed instead of its public one
     trial: int = 0                    # repeat index (pass^k): changes nothing in the variant
@@ -45,15 +52,18 @@ class VariantSpec:
         d = dict(d)
         if "seed" in d:                   # saved before noise_seed and trial were split
             d.setdefault("noise_seed", d.pop("seed"))
+        if "ruleset" in d:                # saved before rule seeds: rule sets A / B / C are rule seeds 1 / 2 / 3
+            d.setdefault("rule_seed", legacy_rule_seed(d.pop("ruleset")))
         return cls(**d)
 
     def key(self) -> str:
         """Run-directory name (outside the agent's sandbox: the agent never sees it).
 
-        Trial 0 keeps the name runs had before trials existed.
+        Trial 0 keeps the name runs had before trials existed; a case without settings has no rule seed part.
         """
         parts = [self.case_id, f"c-{self.customer_locale}", f"a-{self.agent_locale}", f"p-{self.policy}",
-                 f"d-{self.difficulty}", f"r-{self.ruleset}", f"e-{self.engagement}"]
+                 f"d-{self.difficulty}"] + ([f"r-{self.rule_seed}"] if self.rule_seed is not None else []) + [
+                 f"e-{self.engagement}"]
         if self.condition:
             parts.append(f"x-{self.condition}")
         if self.world_seed is not None:
@@ -97,7 +107,8 @@ class Variant:
     max_question_rounds: int
     submission_files: list[str]
     case_tier: str | None = None      # the content tier the case was scored at (None: no settings)
-    ruleset: str | None = None        # the rule set the case was scored at (None: no settings)
+    rule_seed: int | None = None      # the rule seed the case was scored at (None: no settings)
+    params: dict[str, Any] = field(default_factory=dict)   # the parameters that rule seed drew ({}: no settings)
     world_seed: int | None = None     # the world the case was built from (None: its public seed)
     rules: list[dict[str, str]] = field(default_factory=list)   # the setting's rules {id, class, description};
                                                                  # not shown to the agent (an exception reply names
@@ -123,6 +134,8 @@ class Variant:
     def load(cls, directory: Path) -> "Variant":
         doc = json.loads((directory / "variant.json").read_text(encoding="utf-8"))
         doc["spec"] = VariantSpec.from_dict(doc["spec"])
+        if "ruleset" in doc:            # saved before rule seeds
+            doc.setdefault("rule_seed", legacy_rule_seed(doc.pop("ruleset")))
         doc["targets"] = [Target(**t) for t in doc["targets"]]
         doc["policy"] = Policy.from_dict(doc["policy"])
         doc["events"] = [Event(**e) for e in doc["events"]]
@@ -145,8 +158,8 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
     if condition not in CONDITIONS:
         raise ValueError(f"unknown condition {condition!r}")
     policy = load_policy(spec.policy)
-    case = case.with_world_seed(spec.world_seed).at(spec.difficulty, spec.ruleset)
-    # Nothing the agent sees may depend on the difficulty or the rule set: noise and events are
+    case = case.with_world_seed(spec.world_seed).at(spec.difficulty, spec.rule_seed)
+    # Nothing the agent sees may depend on the difficulty or the rule seed: noise and events are
     # seeded by the engagement only.
     rng = random.Random(f"{spec.case_id}|{spec.engagement}|{spec.noise_seed}")
     src = case.source_locale
@@ -192,12 +205,12 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
             rel, _ = held
             correction = (rel, f"inbox/{Path(rel).name}")
 
-    # The client volunteers the same target in every setting (its wording may follow the rule set): one drawn
-    # with its own rng among the ids that every tier and rule set has, so `rng` stays setting-independent.
+    # The client volunteers the same target in every setting (its wording may follow the rule seed): one drawn
+    # with its own rng among the ids that apply in every tier under any rule seed, so `rng` stays
+    # setting-independent.
     volunteer = None
     if any(e["kind"] == "customer_volunteer" for e in eng.events):
-        settings = [case.at(t, r) for t in case.tiers for r in case.rulesets] or [case]
-        shared = sorted(set.intersection(*({t.id for t in c.targets(src)} for c in settings)))
+        shared = case.shared_target_ids()
         if shared:
             pick = random.Random(f"{spec.case_id}|{spec.engagement}|{spec.seed}|volunteer").choice(shared)
             volunteer = (pick, next(t.text for t in targets if t.id == pick))
@@ -234,7 +247,7 @@ def build_variant(spec: VariantSpec, case: Case, workspace: Path, translator: Tr
         instruction=instruction, information=information, targets=targets, policy=policy, policy_brief=brief,
         events=events, noise=applied, time_budget_s=eng.time_budget_s,
         max_question_rounds=eng.max_question_rounds, submission_files=case.submission_files,
-        case_tier=getattr(case, "tier", None), ruleset=getattr(case, "ruleset", None), world_seed=spec.world_seed,
+        case_tier=case.tier, rule_seed=case.rule_seed, params=case.drawn_params, world_seed=spec.world_seed,
         rules=[{"id": r.id, "class": r.rule_class, "description": r.description}
                for r in (case.rules().rules if case.rules() is not None else [])],
     )

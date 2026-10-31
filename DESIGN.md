@@ -94,35 +94,126 @@ Warnings, which do not fail validation: two tiers whose references are byte-iden
 other's reference; a number in a rule description that neither the requirements nor the data state; a `name (ID)` in a
 locale's texts whose ID's data rows never mention that name; a baseline within 2% of the reference.
 
-### Settings: one world, nine ground truths
+### Settings: one world, tiers × rule seeds
 
-A case may declare **settings**: three content tiers (`tiers:` easy / medium / hard) times three rule sets
-(`rulesets:` A / B / C). Together they give nine ground truths for **one** world:
+A case may declare **settings**: three content tiers (`tiers:` easy / medium / hard) and rule parameters that a
+**rule seed** draws from candidate pools (`params:`), the way a world seed draws the data. A setting is
+(tier, rule seed), and every setting is a ground truth for **one** world:
 
 - **The agent's view never changes.** `build_world(seed)` and `write_data(world, dir, lang)` never see the
   setting, and `request.md` has no setting-specific text, so the data, the request and the prompt are
-  byte-identical in all nine settings. Only the hidden requirements (which the simulated client answers
-  from) and the evaluator differ: the agent has to find out from the client which rules apply this time.
+  byte-identical in every setting. Only the hidden requirements (which the simulated client answers from)
+  and the evaluator differ: the agent has to find out from the client which rules apply this time.
 - **A tier** decides which rules apply and how strictly the deliverable is scored: easy is the core problem,
   medium adds domain rules, hard adds the uncertain or adversarial parts. The data is the same, so a lower
   tier's requirements say which parts of it are out of scope this round.
-- **A rule set** gives the rules' hyperparameters (caps, thresholds, which item a rule targets, scoring
-  weights), e.g. which clinic is closed on a holiday or how many interpreters there are. Different
-  parameters lead to different correct solutions; a solution tuned to one rule set fails or scores worse
-  under another.
-- `reference_solution`, `score` and `violating_examples` take the setting (`Setting.tier`, `.ruleset`,
-  `.at_least(tier)`, `setting["param"]`). Rules and targets carry `tiers: [...]` / `rulesets: [...]`;
-  requirements and targets use `<!-- tier: medium hard -->` / `<!-- ruleset: B -->` … blocks and
-  `{{param}}` placeholders (`param_labels` in case.yaml words a code parameter per locale).
-- **Evaluation:** the difficulty picks the tier and campaigns run every rule set (`ruleset: all`), so each
-  (case, difficulty) cell is the mean over A, B and C, and the report has one column per difficulty.
+- **A rule seed** draws the rules' hyperparameters (caps, thresholds, which item a rule targets, scoring
+  weights), e.g. which clinic is closed on a holiday or how many interpreters there are, each parameter
+  independently from its candidates. A tier may have its own, harder candidates. Different parameters lead to
+  different correct solutions, so a solution tuned to one draw fails or scores worse under another. The
+  case's **public panel** (`rule_seeds:`) is stored in `dataset/`, shown in the explainer and validated; any
+  other int is a **private seed**, a fresh draw of the same candidates whose answers are published nowhere.
 
-`validate-case` checks every setting: reference, baseline, determinism, empty submission and one
-rule-breaking example per rule, with that setting's rules and parameters. It also checks that each rule set's
-reference is invalid or at least 1% worse (objective ratio) under every other rule set of its tier, that
-request.md has no setting markers, and that the agent's prompt and workspace are byte-identical in all nine
-settings; it warns when two tiers lead to the same answer. Cases without settings are the same problem at
-every difficulty.
+**case.yaml**
+
+```yaml
+tiers: {easy: text, medium: text, hard: text}
+params:                                   # the rule parameters (replaces rulesets: and param_labels:)
+  <name>:
+    values: [v1, v2, v3]                  # one pool for every tier, or
+    values: {easy: [..], medium: [..], hard: [..]}   # a pool per tier (harder candidates in harder tiers)
+    labels: {<value>: {zh: .., en: .., ko: .., ja: .., es: ..}}   # optional wording of a code value per locale
+rule_seeds: [1, 2, 3]                     # the public panel; any other int is a private seed
+```
+
+Candidates are strings, numbers or booleans (quote a date). With `labels`, every candidate needs a wording in
+all five locales.
+
+**The draw.** For parameter `name`, rule seed `s` and tier `t`, with `pool` the parameter's candidates in `t`:
+`value = pool[random.Random(f"{case id}|{name}|{s}").randrange(len(pool))]`, where the case id is
+`<field>/<role>`. The position does not depend on the tier, so a shared pool gives the same value in every
+tier (and pools of the same size the same position), unless `admissible` rejects the draw in one tier only.
+Each parameter is drawn on its own: adding a parameter or changing one pool leaves the others' draws as they
+were. Two optional hooks in case.py shape it:
+
+- `derive_params(params, tier) -> dict`: extra keys computed from the drawn values (e.g. the period dates of
+  a fiscal year from its first month). They may not replace a drawn key. A derived value may be a dict keyed
+  by the five locales; `{{name}}` then words it per locale.
+- `admissible(params, tier) -> bool`: given the drawn and derived values, False rejects the combination.
+  Every parameter is then drawn again with the salt k = 1, 2, … (`Random(f"{case id}|{name}|{s}|{k}")`),
+  deterministically, at most 100 times before the rule seed is an error.
+
+**The setting in code.** `reference_solution`, `baseline_solution`, `score` and `violating_examples` take a
+`Setting` as their last argument: `setting.tier`, `setting.rule_seed`, `setting.at_least(tier)`,
+`setting["name"]`, and `setting.params`, the full dict (drawn and derived values). `setting.label` is
+`easy/s1` and `setting.folder` `easy_s1`; the validator's one-parameter variations carry the change in the
+label (`easy/s1[cap=5]`), so a case may cache per label. case.py reads its setting only from the `Setting`
+it is given, never from a fixed list of settings: anything calibrated across settings (a budget that must be
+feasible in every setting) is computed over the candidate pools, since a private seed may draw any admissible
+combination. `NativeCase.at(tier, rule_seed)` is the case in one setting, `settings()` the tiers × public rule
+seeds, `rule_seeds` the panel, `rule_seed` the current seed (None for a case without settings),
+`drawn_params` the drawn values and `param_candidates` the pools; `with_world_seed(seed)` keeps the setting.
+
+**Texts.** Requirements and targets insert parameters (drawn or derived) as `{{name}}` (worded by `labels`
+when the parameter has them), and mark passages with `<!-- tier: medium hard -->` … `<!-- /tier -->` and
+`<!-- when: name=v1,v2 -->` … `<!-- /when -->`, kept when the parameter's value, as a string (YAML's `true`,
+`false`, `null` for those), is listed; when-blocks may nest. Rule descriptions may use both too. Rules in
+case.yaml and targets in `en/targets.yaml` carry `tiers: [...]` and `when: {name: [values]}` (every named
+parameter must have one of its values; other locales' targets.yaml give only `id` and `text`). Every locale has
+the same `{{…}}` placeholders and the same sequence of tier and when markers.
+
+**Evaluation.** The difficulty picks the tier; a campaign runs each case's public panel (`rule_seeds:
+public`, the default) or the rule seeds it lists (`rule_seeds: [101, 102, 103]`, private seeds), at the
+defaults level or per experiment. Run keys carry `r-<seed>`; result.json stores `tier`, `rule_seed` and
+`params` (the drawn values). The report's difficulty table is per tier: a case's cell is the mean over its
+rule seeds of the mean over each seed's runs, columns are case-macro means, and "all valid" is the share of
+runs (the same variant apart from its rule seed) that are valid under every rule seed of the tier; the other
+tables weigh a case's rule seeds the same way. A settings table lists each (case, tier, rule seed) with its
+drawn parameters, mean final score and valid runs. A single run (`fdebench2 run`, `Bench.run`) without a rule
+seed runs the case's first public one, and its key says so; re-scoring a run whose stored parameters are no
+longer what its rule seed draws (the candidates changed) is refused.
+
+**Dataset.** `dataset/gt/<tier>_s<seed>/` for every public setting, with `setting.json` =
+`{tier, rule_seed, params: {drawn values}}` (plus `derived` when the case derives values).
+
+**Validation.** `validate-case` checks every public setting (tier × public rule seed), computing each
+setting's reference once and reusing it in every check: the reference is valid at quality 1.0 and scores the
+same twice, the baseline is valid and worse, an empty submission is invalid, every rule of the setting has an
+example that breaks exactly it, request.md has no setting markers, and the agent's prompt and workspace are
+byte-identical in every setting. It checks `params:` (a non-empty pool per tier, scalar candidates, labels for
+every candidate in every locale), `rule_seeds:` (distinct ints), that every public setting draws, that
+`derive_params` works on every combination of a tier's candidates (a private seed may draw any of them), that
+every candidate is admissible with some combination of the others, and that `when` conditions and markers (in
+requirements, target texts and rule descriptions, balanced) name parameters and candidates. **Parameter
+binding:** for each parameter with 2+ candidates in some tier, take the first public seed's setting s in the
+highest such tier and, for each other admissible candidate v in turn, s' = s with only that parameter set to v
+(derived values recomputed), until one binds. The parameter binds if the reference of s is invalid under s',
+or its objective under s' differs from its objective under s by at least 1% (relative), or the reference of s'
+scores at least 1% better than the reference of s under s'. A parameter that never binds is an error
+("parameter X changes nothing"); so is a reference of s' that is not valid under s' when the check gets that
+far (a private seed can draw that combination). It warns when the public panel shows only one value of a
+parameter whose pool has 2+ values, when no parameter has two candidates at all, and when two tiers lead to the
+same answer. The world-seed check
+(`--world-seeds`) repeats the reference, rule-example and binding checks on other worlds with the public rule
+seeds. Cases without settings are the same problem at every difficulty.
+
+**Converting a case** that still declares the deprecated `rulesets:` (fixed rule sets A / B / C, kept working
+during the transition with a validator warning, as rule seeds 1 / 2 / 3, without private seeds; removed once
+every case is converted):
+
+1. Replace `rulesets:` and `param_labels:` by `params:` (each parameter's candidates, at least the old A / B
+   / C values; a pool per tier where harder tiers should draw harder values; the labels under
+   `params.<name>.labels`) and `rule_seeds:` (a panel that shows at least two values of every parameter).
+2. Values that follow from others (periods from a fiscal-year start) become `derive_params`; combinations
+   that cannot work (a cap below what the data needs) are rejected by `admissible`.
+3. `<!-- ruleset: B -->` blocks become `<!-- when: name=v -->` blocks, `rulesets: [...]` on rules and targets
+   `when: {name: [...]}`, in all five locales.
+4. case.py stops reading `rulesets` from case.yaml: calibration over "all settings" runs over the candidate
+   pools (`fdebench2.cases.param_pools(meta, tiers)` reads them from case.yaml, with `derive_params` applied to
+   each combination), a setting is read only through the `Setting` it is given, and a `Setting` the case builds
+   itself is `Setting(tier, rule_seed, params)` with the full params.
+5. `fdebench2 export-dataset` (gt folders become `<tier>_s<seed>`), update README's parameter table, then
+   `fdebench2 validate-case` until every parameter binds.
 
 ### Program deliverables
 

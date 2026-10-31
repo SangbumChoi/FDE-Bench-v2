@@ -177,7 +177,7 @@ defaults: {models: m.yaml, seeds: [0, 1], trials: 2, cases: [healthcare/hospital
 agents: [{harness: reference, model: a}]
 experiments:
   all_rules: {}
-  only_a: {ruleset: [A]}
+  only_a: {rule_seeds: [1]}
 """)
     settings, agents, jobs, _ = load_campaign(cfg)
     assert len(jobs) == 8
@@ -185,7 +185,7 @@ experiments:
     bench = Bench(Settings(cases_root=REPO / "cases", models=tmp_path / "none.yaml", out=tmp_path / "runs"))
     runs = expand(bench, agents, jobs)
     keys = [spec.key() for _, spec in runs]
-    assert len(runs) == 12 and len(set(keys)) == 12          # rule sets A/B/C x 2 seeds x 2 trials, A once
+    assert len(runs) == 12 and len(set(keys)) == 12          # rule seeds 1/2/3 x 2 seeds x 2 trials, 1 once
     assert any(k.endswith("__s1__t1") for k in keys)
 
     cfg.write_text("defaults: {models: m.yaml}\nagents: [{harness: reference, model: a}, "

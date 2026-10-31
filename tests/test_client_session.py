@@ -188,7 +188,7 @@ def test_volunteered_target_is_the_same_in_every_setting(tmp_path):
     seen = {}
     for c in case.settings():
         ws = tmp_path / c.setting.label.replace("/", "_")
-        v = build_variant(VariantSpec(LOAN, engagement="messy", difficulty=c.tier, ruleset=c.ruleset), case, ws,
+        v = build_variant(VariantSpec(LOAN, engagement="messy", difficulty=c.tier, rule_seed=c.rule_seed), case, ws,
                           Translator(None, tmp_path / "cache"))
         volunteer, = (e for e in v.events if e.kind == "customer_volunteer")
         assert volunteer.payload["target"] in {t.id for t in v.targets}
@@ -227,8 +227,8 @@ def test_program_interface_block_for_program_cases_only(tmp_path):
     v, _ = variant(tmp_path / "ko", LOAN, agent_locale="ko", policy="enterprise_balanced")
     _, user = render_task_prompt(v, "/workspace", [])
     assert "## 프로그램 인터페이스" in user and "# 업무 수행 정책" in user
-    views = {render_task_prompt(variant(tmp_path / f"{t}{r}", LOAN, difficulty=t, ruleset=r)[0], "/workspace", [])
-             for t, r in (("easy", "A"), ("hard", "C"))}
+    views = {render_task_prompt(variant(tmp_path / f"{t}{r}", LOAN, difficulty=t, rule_seed=r)[0], "/workspace", [])
+             for t, r in (("easy", 1), ("hard", 3))}
     assert len(views) == 1
 
     v, _ = variant(tmp_path / "batch", condition="hidden")

@@ -4,10 +4,15 @@ Deltas are computed within an agent (same model, same harness) against the
 baseline cell, never across agents, so adding agents adds evidence without
 confounding.
 
-The difficulty table has one column per difficulty. A case's score in a
-column is the mean over its rule sets (A / B / C: three ground truths of the
-same data), seeds and trials; columns are case-macro averages. "all-3" is the
-share of (case, seed, trial) cells valid under every rule set.
+The difficulty table has one column per difficulty (tier) and is shown when
+difficulties differ or a case has settings. A case's score in a column is the
+mean over its rule seeds (each a ground truth of the same data: the public
+panel, or private seeds) of the mean over that seed's runs (noise seeds,
+trials); columns are case-macro averages, and the per-axis tables weigh a
+case's rule seeds the same way. "all valid" is the share of (case, noise seed,
+trial, ...) cells valid under every rule seed of the tier.
+The settings table lists every (case, tier, rule seed) with the parameters that
+seed drew, its mean final score and how many of its runs were valid.
 
 With few cases, differences between agents are noisy: every mean comes with a
 95% bootstrap interval over cases (cases resampled with replacement, fixed
@@ -32,7 +37,8 @@ from typing import Any
 
 from ..runner import NOT_SCORED, STATUSES
 
-AXES = ("customer_locale", "agent_locale", "policy", "difficulty", "ruleset", "engagement", "condition")
+AXES = ("customer_locale", "agent_locale", "policy", "difficulty", "rule_seed", "engagement", "condition")
+SETTING_KEYS = ("rule_seed", "ruleset")      # a run's rule seed (results from before rule seeds: its rule set)
 TIERS = ("easy", "medium", "hard")
 BOOT = 2000
 
@@ -101,12 +107,14 @@ def _cell(rows: list[dict[str, Any]]) -> dict[str, Any]:
         by_case[r["spec"]["case_id"]].append(r)
     valid = [_valid(r) for r in rows]
     asks = [r["clarification"]["ask_f1"] for r in rows if r.get("clarification") and r["clarification"]["ask_f1"] is not None]
-    # Case-macro averages: every case weighs the same regardless of how many seeds finished.
+    # Case-macro averages: every case weighs the same regardless of how many seeds finished, and within a case
+    # every rule seed weighs the same (as in the difficulty table).
+    finals = [_seed_mean(rs) for rs in by_case.values()]
     return {
         "n": len(rows),
-        "final": mean(mean(x["score"]["final"] for x in rs) for rs in by_case.values()),
-        "final_ci": bootstrap_ci([mean(x["score"]["final"] for x in rs) for rs in by_case.values()]),
-        "quality": mean(mean(x["score"]["components"]["quality"] for x in rs) for rs in by_case.values()),
+        "final": mean(finals),
+        "final_ci": bootstrap_ci(finals),
+        "quality": mean(_seed_mean(rs, lambda x: x["score"]["components"]["quality"]) for rs in by_case.values()),
         # Unclipped normalized quality (the reference 1.0; > 1.0 beats it) and the plain objective ratio to the
         # reference, where the scorer reports them.
         "quality_norm": _case_mean(rows, "quality_raw"),
@@ -144,15 +152,32 @@ def _without(r: dict[str, Any], *keys: str) -> str:
     return json.dumps({k: v for k, v in r["spec"].items() if k not in keys}, sort_keys=True)
 
 
+def rule_seed(r: dict[str, Any]) -> Any:
+    """The rule seed a run was scored at (None without settings; a result from before rule seeds: its rule set)."""
+    if r.get("rule_seed") is not None:
+        return r["rule_seed"]
+    spec = r["spec"]
+    return spec.get("rule_seed") if spec.get("rule_seed") is not None else spec.get("ruleset")
+
+
+def _seed_mean(rows: list[dict[str, Any]], value=lambda x: x["score"]["final"]) -> float:
+    """One case's score (final by default): the mean over its rule seeds of the mean over each seed's runs (a
+    case without settings: the mean over its runs)."""
+    by_seed: dict[str, list[float]] = defaultdict(list)
+    for x in rows:
+        by_seed[str(rule_seed(x))].append(value(x))
+    return mean(mean(v) for v in by_seed.values())
+
+
 def difficulty_table(results: list[dict[str, Any]]) -> str:
-    """Agents × difficulty; each cell = case-macro mean of (mean over rule sets, seeds and trials)."""
+    """Agents × difficulty; each cell = case-macro mean of (mean over rule seeds of the mean over their runs)."""
     cells: dict[tuple[str, str], dict[str, list[dict[str, Any]]]] = defaultdict(lambda: defaultdict(list))
     for r in results:
         cells[(_agent(r), r["spec"].get("difficulty", "medium"))][r["spec"]["case_id"]].append(r)
     agents = sorted({a for a, _ in cells})
-    head = " | ".join(f"{t} final [95% CI] | {t} all-3" for t in TIERS)
-    lines = ["### by difficulty (mean over rule sets A/B/C)", "", f"| agent | {head} |",
-             "|---|" + "---|---|" * len(TIERS)]
+    head = " | ".join(f"{t} final [95% CI] | {t} all valid" for t in TIERS)
+    lines = ["### by difficulty (mean over rule seeds, then cases; all valid = valid under every rule seed)", "",
+             f"| agent | {head} |", "|---|" + "---|---|" * len(TIERS)]
     for agent in agents:
         row = []
         for t in TIERS:
@@ -160,14 +185,40 @@ def difficulty_table(results: list[dict[str, Any]]) -> str:
             if not by_case:
                 row += ["–", "–"]
                 continue
-            per_case = [mean(x["score"]["final"] for x in rs) for rs in by_case.values()]
-            groups: dict[str, list[bool]] = defaultdict(list)       # the same run under each rule set
+            per_case = [_seed_mean(rs) for rs in by_case.values()]
+            groups: dict[str, list[bool]] = defaultdict(list)       # the same run under each rule seed
             for rs in by_case.values():
                 for x in rs:
-                    groups[_without(x, "ruleset")].append(_valid(x))
-            all3 = mean(all(v) for v in groups.values())
-            row += [_fmt(per_case), f"{all3:.2f}"]
+                    groups[_without(x, *SETTING_KEYS)].append(_valid(x))
+            every = mean(all(v) for v in groups.values())
+            row += [_fmt(per_case), f"{every:.2f}"]
         lines.append(f"| {agent} | " + " | ".join(row) + " |")
+    return "\n".join(lines)
+
+
+def settings_table(results: list[dict[str, Any]]) -> str | None:
+    """Agents × case × tier × rule seed: the parameters the seed drew, the mean final score and the valid runs.
+    None when no run has settings."""
+    cells: dict[tuple, list[dict[str, Any]]] = defaultdict(list)
+    for r in results:
+        if rule_seed(r) is not None:
+            cells[(_agent(r), r["spec"]["case_id"], r["spec"].get("difficulty", "medium"), rule_seed(r))].append(r)
+    if not cells:
+        return None
+
+    def order(key):
+        agent, case_id, tier, seed = key
+        return agent, case_id, TIERS.index(tier) if tier in TIERS else len(TIERS), str(type(seed)), seed
+
+    lines = ["### by case and setting (tier × rule seed, with the parameters it drew)", "",
+             "| agent | case | tier | rule seed | params | runs | final | valid |", "|---|---|---|---|---|---|---|---|"]
+    for key in sorted(cells, key=order):
+        rows = cells[key]
+        params = next((x["params"] for x in rows if x.get("params") is not None), None)
+        shown = "–" if params is None else "`" + json.dumps(params, ensure_ascii=False, default=str).replace("|", "\\|") + "`"
+        agent, case_id, tier, seed = key
+        lines.append(f"| {agent} | {case_id} | {tier} | {seed} | {shown} | {len(rows)} "
+                     f"| {mean(x['score']['final'] for x in rows):.3f} | {sum(map(_valid, rows))}/{len(rows)} |")
     return "\n".join(lines)
 
 
@@ -234,13 +285,15 @@ def report(out: Path) -> str:
     scored = [r for r in results if status(r) not in NOT_SCORED]
     parts: list[str | None] = []
     if scored:
-        tables = []
-        if len({r["spec"].get("difficulty") for r in scored}) > 1:
-            tables.append(difficulty_table(scored))
-        varied = [ax for ax in AXES if ax not in ("difficulty", "ruleset")
+        # per tier, averaged over rule seeds: whenever difficulties differ or a case has settings
+        several = len({r["spec"].get("difficulty") for r in scored}) > 1
+        if several or any(rule_seed(r) is not None for r in scored):
+            parts.append(difficulty_table(scored))
+        varied = [ax for ax in AXES if ax not in ("difficulty", "rule_seed")
                   and len({str(r["spec"].get(ax)) for r in scored}) > 1]
-        tables += [table(scored, ax) for ax in varied]
-        parts += tables or [table(scored, "policy")]
+        # one table per varied axis; with none (and one difficulty), the full table of the single cell
+        parts += [table(scored, ax) for ax in varied] or ([] if several else [table(scored, "policy")])
+        parts.append(settings_table(scored))
         parts.append(pass_k_table(scored))
     parts += [status_table(results), unscored_list(results)]
     return "\n\n".join(p for p in parts if p) + "\n"

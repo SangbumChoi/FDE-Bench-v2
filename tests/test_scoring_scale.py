@@ -123,8 +123,8 @@ def test_degenerate_baseline_falls_back_to_the_ratio(tmp_path):
 
 def test_baseline_follows_the_setting_and_must_be_valid(tmp_path):
     case = make_case(tmp_path, "maximize", ref=80.0, base=40.0, settings=True)
-    assert [case.at("hard", r).baseline_objective for r in "ABC"] == [40.0, 80.0, 120.0]
-    assert case.at("easy", "B").evaluate(submit(tmp_path, 200.0), "en")["quality_score"] == 1.5
+    assert [case.at("hard", r).baseline_objective for r in (1, 2, 3)] == [40.0, 80.0, 120.0]   # rule sets A, B, C
+    assert case.at("easy", 2).evaluate(submit(tmp_path, 200.0), "en")["quality_score"] == 1.5
     broken = make_case(tmp_path, "maximize", ref=80.0, base=40.0)
     broken.module.baseline_solution = lambda world, out_dir: broken.module._write(out_dir, 40.0, ["habit"])
     with pytest.raises(AssertionError, match="baseline solution is not valid"):

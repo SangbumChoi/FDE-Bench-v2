@@ -99,6 +99,26 @@ en:
   site_catalog: Catalog
   site_source: Source on GitHub
   site_english_only: (English)
+  # rule seeds (a case with params: and rule_seeds:)
+  settings_value_seeds: "{tiers} tiers × {seeds} public rule seeds = {n} ground truths (private seeds draw more)"
+  settings_intro_seeds: >-
+    The agent sees the same request and data in every setting. The <strong>tier</strong> (= difficulty) decides
+    which rules apply; the <strong>rule seed</strong> draws each rule parameter, independently of the others, from
+    its candidates below. Each difficulty is reported as the mean over rule seeds: the public ones below, or private
+    seeds that draw from the same candidates.
+  param_candidates: Parameter candidates
+  public_panel: Public rule seeds
+  public_panel_intro: >-
+    The settings stored in <code>dataset/</code> and shown on this page, with the values each rule seed drew. Any
+    other seed is private: a fresh draw from the same candidates.
+  rule_seed: Rule seed
+  drawn_values: Drawn values
+  derived_note: "Derived by the case from the drawn values: {names}."
+  description_seeds: "Description (parameters in {{…}} are drawn by the rule seed)"
+  targets_intro_seeds: >-
+    The facts a good engineer should ask the client for; Ask-F1 is scored against them.
+    <code>{{param}}</code> is filled from the rule seed's draw.
+  only_when: "only when {cond}"
 ko:
   language: 언어
   case_eyebrow: "{field} · FDE-Bench v2 케이스"
@@ -198,6 +218,25 @@ ko:
   site_catalog: 카탈로그
   site_source: GitHub 소스
   site_english_only: (영문)
+  # 규칙 시드 (params:와 rule_seeds:를 선언한 케이스)
+  settings_value_seeds: "티어 {tiers}개 × 공개 규칙 시드 {seeds}개 = 정답 {n}개 (비공개 시드로 더 뽑을 수 있음)"
+  settings_intro_seeds: >-
+    에이전트는 모든 설정에서 같은 요청과 데이터를 봅니다. <strong>티어</strong>(= 난이도)는 어떤 규칙이 적용되는지를 정하고,
+    <strong>규칙 시드</strong>는 각 규칙 파라미터를 아래 후보 중에서 다른 파라미터와 독립적으로 뽑습니다. 난이도별 점수는
+    규칙 시드들에 대한 평균으로 보고하며, 시드는 아래의 공개 시드이거나 같은 후보에서 뽑는 비공개 시드입니다.
+  param_candidates: 파라미터 후보
+  public_panel: 공개 규칙 시드
+  public_panel_intro: >-
+    <code>dataset/</code>에 저장되고 이 페이지에 나오는 설정과, 각 규칙 시드가 뽑은 값입니다. 그 밖의 시드는 모두
+    비공개이며, 같은 후보에서 새로 뽑습니다.
+  rule_seed: 규칙 시드
+  drawn_values: 뽑힌 값
+  derived_note: "케이스가 뽑힌 값으로부터 계산하는 값: {names}."
+  description_seeds: "설명 ({{…}} 안의 파라미터는 규칙 시드가 뽑음)"
+  targets_intro_seeds: >-
+    좋은 엔지니어라면 고객에게 물어봐야 할 사실이며, Ask-F1은 이를 기준으로 채점합니다.
+    <code>{{param}}</code>은 규칙 시드가 뽑은 값으로 채워집니다.
+  only_when: "{cond}일 때만"
 ja:
   language: 言語
   case_eyebrow: "{field} · FDE-Bench v2 ケース"
@@ -289,6 +328,21 @@ ja:
   site_catalog: カタログ
   site_source: GitHub のソース
   site_english_only: （英語）
+  # ルールシード（params: と rule_seeds: を宣言したケース）
+  settings_value_seeds: "ティア {tiers} × 公開ルールシード {seeds} = 正解 {n} 通り（非公開シードでさらに抽選できる）"
+  settings_intro_seeds: >-
+    エージェントはどの設定でも同じ依頼とデータを見ます。<strong>ティア</strong>（= 難易度）はどのルールが適用されるかを決め、<strong>ルールシード</strong>は各ルールのパラメータを下の候補から、ほかのパラメータとは独立に抽選します。難易度ごとのスコアはルールシードの平均で、シードは下の公開シードか、同じ候補から抽選する非公開シードです。
+  param_candidates: パラメータ候補
+  public_panel: 公開ルールシード
+  public_panel_intro: >-
+    <code>dataset/</code> に保存され、このページに示す設定と、各ルールシードが抽選した値です。それ以外のシードはすべて非公開で、同じ候補から新たに抽選します。
+  rule_seed: ルールシード
+  drawn_values: 抽選された値
+  derived_note: "抽選された値からケースが算出する値：{names}。"
+  description_seeds: "説明（{{…}} のパラメータはルールシードで抽選される）"
+  targets_intro_seeds: >-
+    優れたエンジニアなら顧客に確認すべき事実で、Ask-F1 はこれを基準に採点されます。<code>{{param}}</code> にはルールシードが抽選した値が入ります。
+  only_when: "{cond} の場合のみ"
 zh:
   language: 语言
   case_eyebrow: "{field} · FDE-Bench v2 案例"
@@ -382,6 +436,23 @@ zh:
   site_catalog: 目录
   site_source: GitHub 源码
   site_english_only: （英文）
+  # 规则种子（声明了 params: 和 rule_seeds: 的案例）
+  settings_value_seeds: "{tiers} 个层级 × {seeds} 个公开规则种子 = {n} 套标准答案（非公开种子可抽出更多）"
+  settings_intro_seeds: >-
+    智能体在所有设置下看到的需求和数据都相同。<strong>层级</strong>（= 难度）决定适用哪些规则，
+    <strong>规则种子</strong>从下面的候选值中为每个规则参数独立抽取一个值。每个难度的得分取各规则种子的平均值，
+    这些种子是下面的公开种子，或从同样候选值中抽取的非公开种子。
+  param_candidates: 参数候选值
+  public_panel: 公开规则种子
+  public_panel_intro: >-
+    保存在 <code>dataset/</code> 中并在本页展示的设置，以及每个规则种子抽到的值。其他种子都是非公开种子：从同样的候选值中重新抽取。
+  rule_seed: 规则种子
+  drawn_values: 抽到的值
+  derived_note: "案例根据抽到的值推导出的值：{names}。"
+  description_seeds: "说明（{{…}} 中的参数由规则种子抽取）"
+  targets_intro_seeds: >-
+    优秀的工程师应当向客户问清的事实，Ask-F1 据此评分。<code>{{param}}</code> 由规则种子抽到的值填入。
+  only_when: "仅当 {cond}"
 es:
   language: Idioma
   case_eyebrow: "{field} · caso de FDE-Bench v2"
@@ -483,3 +554,24 @@ es:
   site_catalog: Catálogo
   site_source: Código en GitHub
   site_english_only: (en inglés)
+  # semillas de reglas (un caso con params: y rule_seeds:)
+  settings_value_seeds: "{tiers} niveles × {seeds} semillas de reglas públicas = {n} soluciones correctas (las semillas privadas sortean más)"
+  settings_intro_seeds: >-
+    El agente ve la misma solicitud y los mismos datos en todas las configuraciones. El <strong>nivel</strong>
+    (= dificultad) decide qué reglas se aplican; la <strong>semilla de reglas</strong> sortea cada parámetro de las
+    reglas, de forma independiente de los demás, entre sus candidatos de abajo. Cada dificultad se presenta como la
+    media sobre las semillas de reglas: las públicas de abajo, o semillas privadas que sortean entre los mismos
+    candidatos.
+  param_candidates: Candidatos de parámetro
+  public_panel: Semillas de reglas públicas
+  public_panel_intro: >-
+    Las configuraciones guardadas en <code>dataset/</code> y mostradas en esta página, con los valores que sorteó cada
+    semilla de reglas. Cualquier otra semilla es privada: un sorteo nuevo entre los mismos candidatos.
+  rule_seed: Semilla de reglas
+  drawn_values: Valores sorteados
+  derived_note: "Valores que el caso deriva de los sorteados: {names}."
+  description_seeds: "Descripción (los parámetros entre {{…}} los sortea la semilla de reglas)"
+  targets_intro_seeds: >-
+    Los hechos por los que un buen ingeniero debería preguntar al cliente; el Ask-F1 se calcula sobre ellos.
+    <code>{{param}}</code> se completa con el sorteo de la semilla de reglas.
+  only_when: "solo si {cond}"
