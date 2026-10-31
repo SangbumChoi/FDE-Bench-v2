@@ -1,0 +1,27 @@
+{
+  "baseline_objective": 0.2939210856882626,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.60507023,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "judged_against": "till sales net of returns",
+    "mean_wape": 0.17784,
+    "short_weight": 1.0,
+    "wape_by_store": {
+      "S1": 0.15511,
+      "S2": 0.15064,
+      "S3": 0.19861,
+      "S4": 0.21201,
+      "S5": 0.17284
+    }
+  },
+  "objective": 0.1778428988384774,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}
