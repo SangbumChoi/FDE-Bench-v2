@@ -15,7 +15,7 @@ deliverable_spec: |
 tiers:
   easy: >-
     El núcleo de la citación diaria: primera visita = dos huecos consecutivos, revisión = uno; la especialidad; nunca
-    antes de la fecha más temprana; el plazo de las urgentes; la reserva de urgencias (los dos primeros huecos de una
+    antes de la fecha más temprana; el plazo de las urgentes; la reserva de urgencias (los dos o tres primeros huecos de una
     sesión de mañana se guardan para las urgentes hasta el día anterior); una consulta que cierra en el festivo del Día
     de la Ciudad aunque el calendario la siga mostrando; los intérpretes presenciales por día para primeras visitas; el
     preaviso para cambiar una cita; el orden de prioridad de la lista de espera; las revisiones con su médico anterior
@@ -42,9 +42,9 @@ rules:
   lab_capacity: El laboratorio admite como mucho {{lab_cap}} análisis de sangre en ayunas por día laborable.
   test_before_visit: Una solicitud que necesita el análisis de sangre en ayunas lo tiene fijado entre su fecha más temprana y el día laborable anterior a la visita (un día de análisis que se fija de nuevo ha de estar en el futuro).
   doctor_available: Una vez llegado un aviso de ausencia, no queda ni se da ninguna cita con ese médico en un día de su ausencia.
-  urgent_window: Toda solicitud urgente (U) se cita el día en que llega, dentro de los {{urgent_days}} días laborables siguientes a su primer día posible (la fecha más temprana o el día laborable siguiente), y sigue dentro de ese plazo.
-  urgent_reserve: Los dos primeros huecos de cada sesión de mañana (09:00 y 09:20) se guardan para las urgentes hasta el día laborable anterior; ninguna solicitud S o R se cita ni se mueve a ellos con dos o más días laborables de antelación.
-  move_notice: Cuando el hospital cambia la fecha o la hora de la cita de un paciente, la nueva cita es al menos {{move_notice_days}} días laborables después del día del cambio; para una solicitud que el hospital anuló y vuelve a citar más tarde, después del día de la anulación (otro médico a la misma fecha y hora no necesita preaviso).
+  urgent_window: Toda solicitud urgente (U) se cita el día en que llega, dentro de los 2 días laborables siguientes a su primer día posible (la fecha más temprana o el día laborable siguiente), y sigue dentro de ese plazo.
+  urgent_reserve: Los {{reserve_slots}} primeros huecos de cada sesión de mañana ({{reserve_times}}) se guardan para las urgentes hasta el día laborable anterior; ninguna solicitud S o R se cita ni se mueve a ellos con dos o más días laborables de antelación.
+  move_notice: Cuando el hospital cambia la fecha o la hora de la cita de un paciente, la nueva cita es al menos 3 días laborables después del día del cambio; para una solicitud que el hospital anuló y vuelve a citar más tarde, después del día de la anulación (otro médico a la misma fecha y hora no necesita preaviso).
   waitlist_priority: Las solicitudes en espera se citan en el orden de prioridad ({{waitlist_order}}); no se cita una solicitud mientras otra de mayor prioridad de la misma especialidad, el mismo tipo de visita y el mismo médico anterior sigue esperando y podría haber ocupado ese hueco.
   overbooking_limit: Como mucho {{overbooked_per_session}} huecos sobrecitados (huecos con dos revisiones) por médico y sesión (mañana o tarde).
   one_per_department: Un paciente tiene como mucho una cita por especialidad en el periodo (ya celebrada o pendiente); una solicitud duplicada (mismo paciente y especialidad) nunca se cita como segunda cita.

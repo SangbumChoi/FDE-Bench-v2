@@ -43,8 +43,11 @@ Una carpeta `program/` con un archivo `scheduler.py` que defina **`on_day(day)`*
 
 **Solicitudes urgentes**
 
-- Toda solicitud **urgente (U)** debe citarse **el mismo día en que llega**, en un día dentro de los **{{urgent_days}} días laborables** siguientes a su primer día posible (ese día o uno de los {{urgent_days}} siguientes), y debe seguir dentro de ese plazo si alguna vez se cambia.
-- **Reserva de urgencias:** los **dos primeros huecos de cada sesión de mañana (09:00 y 09:20)** se guardan para las urgentes. Con dos o más días laborables de antelación solo pueden usarlos solicitudes U. En la llamada del día laborable anterior (es decir, para las consultas de mañana) se liberan y cualquiera puede citarse en ellos.
+- Toda solicitud **urgente (U)** debe citarse **el mismo día en que llega**, en un día dentro de los **2 días laborables** siguientes a su primer día posible (ese día o uno de los dos siguientes), y debe seguir dentro de ese plazo si alguna vez se cambia.
+- **Reserva de urgencias:** los **{{reserve_slots}} primeros huecos de cada sesión de mañana ({{reserve_times}})** se guardan para las urgentes. Con dos o más días laborables de antelación solo pueden usarlos solicitudes U. En la llamada del día laborable anterior (es decir, para las consultas de mañana) se liberan y cualquiera puede citarse en ellos.
+<!-- when: reserve_slots=3 -->
+- Hasta ahora la oficina solo dejaba libres las 09:00 y las 09:20; desde el 9 de noviembre la reserva son tres huecos. Las citas que ya estaban dadas a las 09:40 se quedan donde están.
+<!-- /when -->
 
 **Quién ve a quién**
 
@@ -54,7 +57,7 @@ Una carpeta `program/` con un archivo `scheduler.py` que defina **`on_day(day)`*
 
 **Cambiar la cita de un paciente**
 
-- Cuando cambiamos la **fecha o la hora** de la cita de un paciente (un cambio, o anularla y volver a citarlo ese mismo día o más adelante), la nueva cita debe ser al menos **{{move_notice_days}} días laborables después del día del cambio** (si se anuló, del día de la anulación): el paciente necesita ese preaviso. Mantener la misma fecha y hora con otro médico no necesita preaviso.
+- Cuando cambiamos la **fecha o la hora** de la cita de un paciente (un cambio, o anularla y volver a citarlo ese mismo día o más adelante), la nueva cita debe ser al menos **3 días laborables después del día del cambio** (si se anuló, del día de la anulación): el paciente necesita ese preaviso. Mantener la misma fecha y hora con otro médico no necesita preaviso.
 - Cada cambio que hacemos en la cita de un paciente (cambio o anulación) es una molestia para él y resta en la puntuación; no mueva citas sin motivo.
 
 **La lista de espera**
@@ -109,7 +112,7 @@ Una carpeta `program/` con un archivo `scheduler.py` que defina **`on_day(day)`*
 Cada día, después de sus acciones, devuelva para cada código de especialidad (`IM`, `CARD`, `DERM`, `ORTH`, `PED`) tres números enteros sobre el **intervalo de citación** (los 10 días laborables siguientes):
 
 - `free_slots`: huecos del calendario de los médicos de la especialidad sin ninguna cita y en los que cualquiera puede citarse: sin contar los reservados (abajo) ni los de una consulta cerrada (el festivo)<!-- tier: medium hard --> ni los de un día de ausencia comunicada del médico<!-- /tier -->.
-- `held_back`: huecos de la reserva de urgencias (09:00 y 09:20 de una sesión de mañana) a dos o más días laborables vista y sin ninguna cita (con las mismas exclusiones).
+- `held_back`: huecos de la reserva de urgencias ({{reserve_times}} de una sesión de mañana) a dos o más días laborables vista y sin ninguna cita (con las mismas exclusiones).
 - `waitlist`: las solicitudes de la especialidad que siguen esperando después de sus acciones (recibidas hasta hoy, sin cita, no anuladas)<!-- tier: medium hard -->, sin contar primeras visitas con el volante caducado (válido hasta antes de mañana)<!-- /tier --><!-- tier: hard -->. Cuente **pacientes**, no solicitudes: un paciente con varias solicitudes en espera para la especialidad cuenta una vez, y no cuenta el paciente que tiene allí una cita pendiente o que ya tuvo una en el periodo<!-- /tier -->.
 
 Una entrada solo está bien si es exacta. Un día puntúa la proporción de sus 15 entradas que están bien; la precisión de la tabla es la media de los 20 días.
@@ -126,7 +129,7 @@ Una entrada solo está bien si es exacta. Un día puntúa la proporción de sus 
 - Un hueco tiene como mucho dos revisiones y una primera visita nunca comparte sus huecos; como mucho {{overbooked_per_session}} huecos sobrecitados por médico y sesión; como mucho una cita por paciente y especialidad en el periodo.
 <!-- /tier -->
 - Solo huecos del calendario (dos consecutivos de una sesión para una primera visita), la especialidad correcta, nunca antes de la fecha más temprana, ninguna cita de {{closed_dept}} el 23 de noviembre, como mucho {{interpreters_per_day}} primeras visitas con intérprete al día.
-- Urgentes citadas el día en que llegan dentro de {{urgent_days}} días laborables; la reserva de urgencias respetada a dos o más días vista; al menos {{move_notice_days}} días laborables de preaviso para una fecha u hora cambiada; el orden de prioridad de la lista de espera.
+- Urgentes citadas el día en que llegan dentro de 2 días laborables; la reserva de urgencias respetada a dos o más días vista; al menos 3 días laborables de preaviso para una fecha u hora cambiada; el orden de prioridad de la lista de espera.
 <!-- tier: medium hard -->
 - Volante válido el día de la visita; análisis al menos un día laborable antes de la visita, como mucho {{lab_cap}} al día; ninguna cita con un médico ausente; los intérpretes que de verdad hay.
 <!-- /tier -->

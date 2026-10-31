@@ -12,13 +12,13 @@ Each day:
     an absent day (another doctor of the department at the same time for new patients, else the earliest free
     slot at least the notice period ahead, else back to the waitlist), and move interpreted new-patient visits
     off a day that has lost an interpreter;
-  * take the waitlist and the new requests in priority order (urgent first; the rule set's order after that)
+  * take the waitlist and the new requests in priority order (urgent first; the setting's order after that)
     and book each into its earliest feasible slot in the next ten working days: department, follow-ups with
     their previous doctor, two consecutive slots for a new patient, never before the earliest date, the
-    urgent reserve (first two morning slots) only for urgent requests until the day before, the holiday
-    closure, in-person interpreters per day, (medium+) referral expiry and a blood test at least a working
-    day before the visit within the lab cap; (hard) one appointment per patient and department, and a second
-    department's visit on the same day when that costs at most two days;
+    urgent reserve (the first `reserve_slots` morning slots) only for urgent requests until the day before,
+    the holiday closure, in-person interpreters per day, (medium+) referral expiry and a blood test at least
+    a working day before the visit within the lab cap; (hard) one appointment per patient and department,
+    and a second department's visit on the same day when that costs at most two days;
   * (hard) overbook waiting follow-ups into slots of follow-ups whose patients' estimated no-show rate makes
     the expected gain positive (rate > 1 - seen value / collision cost), within the cap per session;
   * report the status table.
@@ -33,7 +33,7 @@ import json
 import os
 
 BASE = dt.date(2026, 1, 5)
-RESERVE = (540, 560)
+RESERVE_FIRST = 540                     # 09:00, the first slot of a morning session
 URG = {"U": 0, "S": 1, "R": 2}
 DEPTS = ("IM", "CARD", "DERM", "ORTH", "PED")
 
@@ -69,6 +69,8 @@ class Scheduler:
         self.cfg = cfg
         self.medium = cfg["tier"] in ("medium", "hard")
         self.hard = cfg["tier"] == "hard"
+        # the urgent reserve: the first N slots of every morning session
+        self.res_starts = tuple(RESERVE_FIRST + 20 * k for k in range(cfg.get("reserve_slots", 2)))
         self.reset()
 
     def reset(self):
@@ -91,7 +93,7 @@ class Scheduler:
     def reserve(self, doc, D, s):
         if not self.cfg.get("pilot_reserve", True):
             return False
-        return s in RESERVE and self.half.get((doc, D, s)) == "AM"
+        return s in self.res_starts and self.half.get((doc, D, s)) == "AM"
 
     def cap(self, D):
         return self.cfg["interpreters_per_day"] + (self.interp_cut.get(D, 0) if self.medium else 0)
