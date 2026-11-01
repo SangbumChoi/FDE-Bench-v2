@@ -2,7 +2,7 @@
 role: 股票交易策略师
 task_type: 策略
 deliverable_spec: |
-  一个 program/ 目录，其中的 strategy.py 定义 on_day(day)。引擎只加载它一次，在隐藏时段的每个交易日收盘后
+  一个 program/ 目录，其中的 strategy.py 定义 on_day(day)。引擎只加载它一次，在测试期（AI 从未见过的日子）的每个交易日收盘后
   按顺序各调用一次，都在同一个进程里，所以模块级状态会从一次调用保留到下一次；每次调用 10 秒，只用 Python
   标准库，运行时不能联网，也不能读数据文件。
   day = {"market": {...}, "portfolio": {...}, "notices": [...]}，与调用示例文件完全一致。

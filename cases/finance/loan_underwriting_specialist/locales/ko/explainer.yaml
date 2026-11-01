@@ -2,8 +2,8 @@
 role: 대출 심사 전문가
 task_type: 의사결정 프로그램
 deliverable_spec: |
-  program/ 폴더에 on_day(day)를 정의한 underwriter.py를 둡니다. 엔진은 이 프로그램을 한 번 불러와 숨은 기간의
-  영업일마다 순서대로, 같은 프로세스에서 한 번씩 호출합니다(모듈 수준의 상태는 호출 사이에 유지됩니다).
+  program/ 폴더에 on_day(day)를 정의한 underwriter.py를 둡니다. 엔진은 이 프로그램을 한 번 불러와 평가 기간(AI가 한 번도 보지
+  못하는 날들)의 영업일마다 순서대로, 같은 프로세스에서 한 번씩 호출합니다(모듈 수준의 상태는 호출 사이에 유지됩니다).
   호출당 10초, 파이썬 표준 라이브러리만 쓰며, 실행 중에는 네트워크도 데이터 파일 접근도 없습니다.
   day = {"date", "day_index", "days_in_period", "period_end", "applications": [...], "notices": [...],
   "book": {"loans": [...], "referred": [...]}}이며, 시범일 입력 파일과 정확히 같습니다.

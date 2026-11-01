@@ -21,7 +21,7 @@ tiers:
     semanas cortas por festivos.
   hard: >-
     Lo de medium más incertidumbre de suministro: los proveedores entregan una o dos semanas tarde con
-    probabilidades ocultas (los datos traen seis meses de historial de entregas), topes mensuales de asignación en
+    probabilidades que no se le dicen a la IA (los datos traen seis meses de historial de entregas), topes mensuales de asignación en
     tres componentes escasos y el cambio de ingeniería que sustituye la flash C04 por C25 desde W6 (la C04 que
     quede después de W5 se desecha); la calidad pasa a ser un coste esperado exacto. La retención de calidad dura
     hasta W5 y puede recaer en el principal fabricante de semiconductores; el tipo de cambio de planificación

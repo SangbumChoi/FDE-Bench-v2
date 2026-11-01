@@ -3,7 +3,7 @@ role: Gestor de citas hospitalarias
 task_type: Programa de decisión
 deliverable_spec: |
   Una carpeta program/ con scheduler.py, que define on_day(day). El motor lo carga una sola vez y lo llama una vez
-  por día laborable del periodo oculto, en orden y en el mismo proceso (el estado a nivel de módulo se conserva
+  por día laborable del periodo de prueba (días que la IA nunca ve), en orden y en el mismo proceso (el estado a nivel de módulo se conserva
   entre llamadas); 10 s por llamada, solo la biblioteca estándar de Python, sin red ni acceso a los archivos de
   datos durante la ejecución.
   day = {"date", "day_index", "days_in_period", "period_end", "booking_window": {"first", "last"}, "doctors",
@@ -26,7 +26,7 @@ tiers:
     dentro de un tope diario del laboratorio, las ausencias de médicos (las citas del médico ausente deben cambiarse,
     respetando el preaviso) y la ausencia de un intérprete (un intérprete menos ese día).
   hard: >-
-    Medium más las ausencias de pacientes (la tasa oculta de cada paciente sube con la antelación; el valor cuenta los
+    Medium más las ausencias de pacientes (la tasa de cada paciente, que no se le dice a la IA, sube con la antelación; el valor cuenta los
     pacientes atendidos esperados), la sobrecitación de revisiones (dos por hueco, un tope por sesión de médico, coste
     esperado de coincidencia), las solicitudes duplicadas (una cita por paciente y especialidad; una sola necesidad en
     la lista de espera) y los viajes de más de los pacientes citados en varias especialidades.

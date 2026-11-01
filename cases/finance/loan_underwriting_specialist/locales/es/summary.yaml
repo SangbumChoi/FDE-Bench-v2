@@ -46,8 +46,9 @@ ask:
 invalid_if:
   - "Falla o tarda más de 10 segundos en algún día, o deja sin decisión o con formato incorrecto alguna solicitud
     (un importe aprobado debe ser un número entero entre 1.000 y el importe solicitado)."
-  - "No rechaza a un solicitante en mora, aprueba a alguien con una puntuación por debajo del mínimo o no deriva a
-    un solicitante con poca antigüedad en el empleo (salvo que el cliente autorice una excepción)."
+  - "No rechaza a un solicitante en mora o aprueba a alguien con una puntuación por debajo del mínimo; o no deriva a
+    un solicitante con poca antigüedad en el empleo, salvo que la política de la empresa permita flexibilizar esta
+    regla y la IA haya pedido antes una excepción al cliente."
   - "Da a un cliente en un día más que su límite de esa mañana o aprueba en un día más que el tope diario; desde
     medium, también supera el presupuesto del período o termina por debajo de la cuota near-prime."
   - "Pone un código de motivo equivocado en un rechazo."

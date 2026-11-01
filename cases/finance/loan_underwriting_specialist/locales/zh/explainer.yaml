@@ -2,7 +2,7 @@
 role: 贷款审批专员
 task_type: 决策程序
 deliverable_spec: |
-  一个 program/ 文件夹，其中的 underwriter.py 定义 on_day(day)。引擎只加载一次，在隐藏期间的每个工作日按顺序、
+  一个 program/ 文件夹，其中的 underwriter.py 定义 on_day(day)。引擎只加载一次，在测试期（AI 从未见过的日子）的每个工作日按顺序、
   在同一进程中调用一次（模块级状态在两次调用之间保留）；每次调用10秒，只用 Python 标准库，运行时不联网，也不能访问数据文件。
   day = {"date", "day_index", "days_in_period", "period_end", "applications": [...], "notices": [...],
   "book": {"loans": [...], "referred": [...]}}，与试点日输入文件完全一致。

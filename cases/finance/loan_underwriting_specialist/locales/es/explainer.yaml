@@ -3,7 +3,7 @@ role: Especialista en evaluación de préstamos
 task_type: Programa de decisión
 deliverable_spec: |
   Una carpeta program/ con underwriter.py, que define on_day(day). El motor carga el programa una vez y lo llama una vez
-  por día hábil del período oculto, en orden y en el mismo proceso (el estado a nivel de módulo se conserva entre
+  por día hábil del período de prueba (días que la IA nunca ve), en orden y en el mismo proceso (el estado a nivel de módulo se conserva entre
   llamadas); 10 s por llamada, solo la biblioteca estándar de Python, sin red y sin acceso a los archivos de datos durante
   la ejecución.
   day = {"date", "day_index", "days_in_period", "period_end", "applications": [...], "notices": [...],

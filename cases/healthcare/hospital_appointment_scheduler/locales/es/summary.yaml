@@ -81,8 +81,8 @@ invalid_if:
     Una cita pasa a una fecha u hora a menos de 3 días laborables vista, o se cita una solicitud mientras espera otra de
     mayor prioridad que podía haber ocupado ese hueco.
   - >-
-    Una revisión va a otro médico sin la excepción de la jefa de la oficina de consultas externas, o (hard) un paciente
-    tiene dos citas en una especialidad.
+    En hard, un paciente tiene dos citas en una especialidad; o una revisión va a otro médico, salvo que la política de
+    la empresa permita flexibilizar esta regla y la IA haya pedido antes una excepción al cliente.
 quality: >-
   El 80 % es el valor operativo en puntos frente al del programa de referencia: +10 por cada hueco de 20 minutos de cada
   visita que se celebra (una primera visita son dos huecos), −0,4 por cada día laborable que espera una solicitud (×3

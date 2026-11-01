@@ -18,7 +18,7 @@ ask:
   - "Qué proveedor está en retención de calidad y hasta qué semana (su mercancía con llegada prevista hasta entonces se rechaza): Kowon Passive hasta W3, Seoul PCB Tech hasta W4 o Hanbit Electronics hasta W4; en hard, Mirae Semicon, Seoul PCB Tech o Hanbit Electronics, todos hasta W5."
   - "Que el presupuesto es un tope mensual que no se puede superar y que cada pedido cuenta en el mes del lunes de su semana: W1-W2 noviembre, W3-W6 diciembre, W7-W8 enero."
   - "Cómo leer los archivos: el stock de resistencias se cuenta en bobinas de 5.000 piezas; el pedido mínimo se aplica a cada línea de pedido (una semana, un componente y un proveedor), nunca a varias semanas sumadas; solo valen los proveedores «homologados» para ese componente."
-  - "Qué cubre esta ronda, que crece con la dificultad: plazos en semanas completas o en días hábiles (las semanas de Navidad y Año Nuevo tienen 4), precios de lista o tramos de precio, y si se aplican el cambio de la flash, los retrasos de entrega y los topes de asignación."
+  - "Qué se aplica en esta dificultad: plazos en semanas completas (easy) o en días hábiles, con solo 4 en las semanas de Navidad y Año Nuevo (medium y hard); precios de lista (easy) o tramos de precio (medium y hard); y, solo en hard, el cambio de la flash, los retrasos de entrega y los topes de asignación."
   - "Cómo se calcula el coste del plan: el precio de los pedidos más penalizaciones por el stock almacenado, por las placas que esperan una pieza y por los componentes críticos por debajo de su stock de seguridad."
 invalid_if:
   - "Pide un componente a un proveedor que no está «homologado» para él («en evaluación» y «suspendido» no valen)."

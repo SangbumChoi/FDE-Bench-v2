@@ -3,7 +3,7 @@ task: "Preparar el cuadrante de turnos de la próxima semana (del lunes 9 al dom
 given:
   - "La solicitud del cliente: unas líneas que piden el cuadrante de la próxima semana con «suficiente gente al teléfono para que los clientes no esperen, en todos los idiomas que atendemos». No da reglas ni cifras."
   - "`agentes.xlsx`: los 30 agentes (20 de jornada completa, 4 de ellos de nuevo ingreso, y 10 de media jornada) y los idiomas en los que puede atender cada uno."
-  - "`prevision_llamadas.csv`: cuántos agentes necesita cada idioma en cada media hora de 08:00 a 22:00, día por día (de 1 a 5), ya contados en personas, no en llamadas."
+  - "`prevision_llamadas.csv`: cuántos agentes necesita cada idioma en cada media hora de 08:00 a 22:00, día por día: entre 1 y 5, ya contados en personas, no en llamadas."
   - "`turnos.csv` y `costes.csv`: cuatro turnos de 8 horas para jornada completa (empiezan a las 08:00, 10:00, 12:00 y 14:00), cuatro de 4 horas para media jornada (08:00, 12:00, 16:00 y 18:00) y la tarifa por hora: 22 en jornada completa, 18 en media jornada, sin moneda."
   - "`ausencias.csv`: 5 solicitudes de ausencia con fechas en día/mes/año; una de ellas, rechazada."
   - "`nota_responsable_equipo.txt`: un mensaje del jueves 5 de noviembre que dice que una persona de baja por gripe «el lunes estará bien» y pide incluirla en el cuadrante como siempre."
@@ -21,7 +21,7 @@ invalid_if:
   - "Pone a alguien de jornada completa en un turno de 4 horas o a alguien de media jornada en uno de 8, o supera el máximo de turnos semanales (5 o 6 en jornada completa, 3 en media jornada)."
   - "Da a un agente dos turnos el mismo día o, en medium y hard, menos de 11 o 13 horas de descanso entre dos turnos."
   - "Programa a alguien en un día de ausencia aprobada."
-  - "En medium y hard, deja a una persona de nuevo ingreso al teléfono en una media hora sin ningún agente que no sea de nuevo ingreso en el mismo idioma."
+  - "En medium y hard, deja a una persona de nuevo ingreso al teléfono en una media hora sin ningún agente que no sea de nuevo ingreso en el mismo idioma, salvo que la política de la empresa permita flexibilizar esta regla y la IA haya pedido antes una excepción al cliente."
   - "En hard, programa a la persona de la nota del responsable de equipo algún día hasta el último día de su parte médico."
 quality: "Cuanto menor, mejor: 15, 25 o 40 (el cliente dice cuál) por cada agente que falte en cada media hora y cada idioma, más el coste de personal de todos los turnos (22 por hora en jornada completa, 18 en media jornada; desde medium, los turnos de hora extra a 1,5 veces), todo en las unidades de las tarifas por hora. La forma de trabajar del cliente (vale 0) es un cuadrante fijo hecho sin mirar la previsión; la solución de referencia (vale 1) va añadiendo el turno que más ahorra hasta que ningún turno compensa su coste."
 tiers:

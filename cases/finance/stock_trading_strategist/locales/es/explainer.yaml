@@ -3,7 +3,7 @@ role: Estratega de trading de acciones
 task_type: Estrategia
 deliverable_spec: |
   Un directorio program/ con strategy.py que defina on_day(day). El motor lo carga una vez y lo llama una vez por
-  sesión oculta tras el cierre, en orden y en el mismo proceso, así que el estado a nivel de módulo se conserva de una
+  sesión del periodo de prueba (días que la IA nunca ve) tras el cierre, en orden y en el mismo proceso, así que el estado a nivel de módulo se conserva de una
   llamada a la siguiente; 10 s por llamada, solo la biblioteca estándar de Python, sin red ni archivos de datos durante
   la ejecución.
   day = {"market": {...}, "portfolio": {...}, "notices": [...]} exactamente como en el archivo de llamada de ejemplo.
