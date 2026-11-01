@@ -88,7 +88,7 @@ en:
   site_catalog: Catalog
   site_source: Source on GitHub
   site_english_only: (English)
-  settings_value: '{tiers} tiers × {seeds} public rule seeds = {n} ground truths (private seeds draw more)'
+  settings_value: '{tiers} difficulties × {seeds} published versions (unpublished versions are used for evaluation)'
   settings_intro: The AI sees the same request and data in every version. The <strong>difficulty</strong> decides
     which client rules apply; the <strong>rule seed</strong> picks the exact values of those rules (a threshold,
     a unit, a date) from the candidates below. A difficulty's score is the average over rule seeds.
@@ -212,7 +212,7 @@ ko:
   site_catalog: 카탈로그
   site_source: GitHub 소스
   site_english_only: (영문)
-  settings_value: 티어 {tiers}개 × 공개 규칙 시드 {seeds}개 = 정답 {n}개 (비공개 시드로 더 뽑을 수 있음)
+  settings_value: 난이도 {tiers}단계 × 공개 버전 {seeds}개 (평가에는 공개하지 않은 버전을 씀)
   settings_intro: AI는 모든 버전에서 같은 요청과 데이터를 봅니다. <strong>난이도</strong>는 어떤 고객 규칙이 적용되는지를 정하고, <strong>규칙 시드</strong>는
     그 규칙의 구체적인 값(기준치, 단위, 날짜 등)을 아래 후보에서 고릅니다. 난이도별 점수는 여러 규칙 시드의 평균입니다.
   param_candidates: 파라미터 후보
@@ -329,7 +329,7 @@ ja:
   site_catalog: カタログ
   site_source: GitHub のソース
   site_english_only: （英語）
-  settings_value: ティア {tiers} × 公開ルールシード {seeds} = 正解 {n} 通り（非公開シードでさらに抽選できる）
+  settings_value: 難易度 {tiers}段階 × 公開バージョン {seeds}個（評価には非公開のバージョンを使う）
   settings_intro: AIはどのバージョンでも同じ依頼とデータを見ます。<strong>難易度</strong>はどの顧客ルールが適用されるかを決め、<strong>ルールシード</strong>はそのルールの具体的な値（基準値、単位、日付など）を下の候補から選びます。難易度ごとのスコアは複数のルールシードの平均です。
   param_candidates: パラメータ候補
   public_panel: 公開ルールシード
@@ -440,7 +440,7 @@ zh:
   site_catalog: 目录
   site_source: GitHub 源码
   site_english_only: （英文）
-  settings_value: '{tiers} 个层级 × {seeds} 个公开规则种子 = {n} 套标准答案（非公开种子可抽出更多）'
+  settings_value: '{tiers} 个难度 × {seeds} 个公开版本（评测使用未公开的版本）'
   settings_intro: AI 在所有版本中看到的需求和数据都相同。<strong>难度</strong>决定适用哪些客户规则；<strong>规则种子</strong>从下面的候选值中选出这些规则的具体数值（门槛、单位、日期等）。每个难度的得分是多个规则种子的平均值。
   param_candidates: 参数候选值
   public_panel: 公开规则种子
@@ -558,8 +558,7 @@ es:
   site_catalog: Catálogo
   site_source: Código en GitHub
   site_english_only: (en inglés)
-  settings_value: '{tiers} niveles × {seeds} semillas de reglas públicas = {n} soluciones correctas (las semillas
-    privadas sortean más)'
+  settings_value: '{tiers} dificultades × {seeds} versiones publicadas (la evaluación usa versiones no publicadas)'
   settings_intro: La IA ve la misma solicitud y los mismos datos en todas las versiones. La <strong>dificultad</strong>
     decide qué reglas del cliente se aplican; la <strong>semilla de reglas</strong> elige los valores concretos
     de esas reglas (un umbral, una unidad, una fecha) entre los candidatos de abajo. La puntuación de cada dificultad
