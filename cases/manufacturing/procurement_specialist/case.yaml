@@ -15,7 +15,7 @@ tiers:
   medium: >-
     Easy plus all-units price breaks per order line and lead times in business days with two short holiday weeks.
   hard: >-
-    Medium plus supply uncertainty: suppliers deliver one or two weeks late with hidden probabilities (six months
+    Medium plus supply uncertainty: suppliers deliver one or two weeks late with probabilities the AI is not told (six months
     of delivery history in the data), monthly allocation caps on three constrained parts, and the engineering
     change that replaces the flash C04 by C25 from W6 (C04 left after W5 is scrapped); quality becomes an exact
     expected cost. The quality hold runs to W5 and may fall on the main semiconductor maker; the planning rate and

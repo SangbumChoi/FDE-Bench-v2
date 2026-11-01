@@ -1,0 +1,52 @@
+# The case in plain words, shown at the top of its page.
+task: >-
+  An electronics assembler that builds two control-board models needs eight weeks of purchase orders (W1, the week of
+  23 November 2026, to W8): which parts to order, from which supplier, how many and in which week, so that production
+  never waits for parts and the total cost stays low. The AI hands in one file, `orders.csv`, with one row per order
+  line (week, part, supplier, quantity in pieces).
+given:
+  - "The client's request: two board models, about two dozen parts, \"plan what we should order from which supplier over the next two months so production doesn't stop and we don't overspend\". It also points to the delivery history, an allocation notice, a planned change of the flash memory and a supplier price email."
+  - "`production_plan.csv` and `bom.csv`: boards built per week for each model (W1 to W10), and how many pieces of each part go into one board, including the flash change (part C04 until W5, the new C25 from W6)."
+  - "`components.csv`, `inventory.csv` and `open_orders.csv`: the 25 parts with a critical flag and a standard cost, the stock at the start of W1, and orders already placed with their arrival week."
+  - "`supplier_quotes.xlsx` and `supplier_price_email.txt`: for each part and supplier the unit price (Pacific Parts quotes in dollars, everyone else in won), minimum order, two quantity discounts and lead time in days; the email raises the price of C01 from Mirae Semicon (S03) by 20% for orders from W4."
+  - "`approved_vendors.csv` and `budget.csv`: each supplier's status per part (approved, pending or suspended), and the monthly purchase budget: 115 million won for November, 475 million for December, 85 million for January."
+  - "`delivery_history.csv` and `allocations.csv`: 188 past deliveries with promised and received dates, and the most that two suppliers will confirm per month for three scarce parts."
+ask:
+  - "The exchange rate for Pacific Parts' dollar prices: 1,320, 1,380, 1,450 or 1,500 won per dollar, depending on the version (always 1,380 on hard)."
+  - "How much safety stock to keep of the parts marked critical (MCU, power IC, DRAM, flash, PCB, display): 0.5, 1 or 1.5 weeks of average demand, depending on the version (for the MCU one week is about 2,500 pieces)."
+  - "That every critical part must be bought from at least two suppliers, none getting more than 70%, 80% or 90% of its quantity, depending on the version (always 80% on hard). It is a company habit: the client allows an exception if it saves real money."
+  - "Which supplier is on quality hold and up to which week (its goods due to arrive by then are rejected), depending on the version: Kowon Passive up to W3, Seoul PCB Tech up to W4 or Hanbit Electronics up to W4; on hard Mirae Semicon, Seoul PCB Tech or Hanbit Electronics, all up to W5."
+  - "That the budget is a hard monthly cap, and an order counts in the month of its order week's Monday: W1-W2 November, W3-W6 December, W7-W8 January."
+  - "How to read the files: resistor stock is counted in reels of 5,000 pieces; the minimum order applies to each order line (one week, part and supplier), never to several weeks added up; only suppliers marked \"approved\" for that part may be used."
+  - "What applies at this difficulty: lead times in whole weeks (easy) or in working days, with only 4 in the Christmas and New Year weeks (medium and hard); list prices (easy) or quantity discounts (medium and hard); and, on hard only, the flash change, late deliveries and allocation caps."
+  - "How the plan is costed: the price of the orders plus penalties for stock held, for boards waiting for a part, and for critical parts below their safety stock."
+invalid_if:
+  - "Orders a part from a supplier that is not \"approved\" for it (\"pending\" and \"suspended\" do not count)."
+  - "Has an order line below the supplier's minimum order quantity."
+  - "Spends more in a month than that month's budget (an order counts in the month of its order week's Monday)."
+  - "Has goods from the supplier on quality hold due to arrive while the hold lasts."
+  - "On hard, orders more in a month than the allocation allows (Mirae Semicon: 6,500 MCU and 9,000 DRAM; Nara Display: 3,500 displays)."
+  - "Buys a critical part from only one supplier, or gives one supplier more than the agreed share, unless the company policy lets this rule bend and the AI asked the client for an exception first."
+quality: >-
+  Lower is better: the total cost in won, that is the price of all orders plus a week-by-week simulation of W1 to W10
+  that charges 0.5% of a part's standard cost per piece in stock each week, 5 times the standard cost per piece that
+  boards are waiting for each week, and 1.5 times per piece below a critical part's safety stock (on hard averaged
+  over the suppliers' real chances of being late, plus the standard cost of every C04 left at the end of W5). The
+  client's own way (score 0) orders just enough for the next shortage from the cheapest supplier still on time, splits
+  every critical-part order at the share limit and ignores discounts and late deliveries; the reference solution
+  (score 1) keeps the cheapest of fifteen plan variants that round orders up to a discount when it pays, trim leftover
+  stock and, on hard, allow one more week for suppliers that are often late.
+tiers:
+  easy: >-
+    The core plan: demand from boards times parts per board, stock and open orders, lead times in whole weeks (days
+    divided by 5, rounded up), list prices, minimum orders, approved suppliers, the monthly budget, safety stock, the
+    quality hold and two suppliers per critical part. The flash change, discounts, holidays, late deliveries and
+    allocations are left out.
+  medium: >-
+    Adds the quantity discounts (a whole order line gets the lower price once it reaches the discount quantity) and
+    lead times in working days, with only 4 in the Christmas week (W5) and the New Year week (W6).
+  hard: >-
+    Adds late deliveries (each supplier one or two weeks late, with odds the AI has to estimate from the history),
+    monthly allocation caps on three parts, the flash change (C25 replaces C04 from W6; C04 left after W5 is
+    scrapped), and a quality hold to W5 that may hit the main chip maker Mirae Semicon. The exchange rate and the
+    share limit are fixed at 1,380 and 80%.

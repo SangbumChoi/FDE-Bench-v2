@@ -1,0 +1,104 @@
+# The case in plain words, shown at the top of its page.
+task: >-
+  Write a Python program for a hospital's outpatient booking office. At the end of every working day it books the
+  day's appointment requests into the doctors' free 20-minute slots of the next 10 working days, refills freed slots
+  from the waitlist, and reports for each department the free slots, the slots held back for urgent patients and the
+  waiting requests. The aim is to leave as little doctor time empty as possible without breaking the hospital's
+  booking rules. The program is tested on 20 working days (9 November – 4 December 2026) that are not in the data.
+given:
+  - >-
+    The client's request: from Monday 9 November the booking office wants a program that books patients into the
+    doctors' free slots every working day and says where each department stands; "above all we want to stop losing
+    doctor time to empty slots". It names none of the booking rules.
+  - >-
+    `booking_system_export.sql`: the booking system as of Friday 6 November. 14 doctors in five departments (internal
+    medicine, cardiology, dermatology, orthopedics, pediatrics) with the languages they speak and their weekly clinics,
+    the clinic calendar to 20 November, four weeks of requests and appointments with what happened (about 22% of
+    patients did not turn up), cancellations, the waitlist (45 requests still waiting) and the 359 appointments already
+    booked from 9 November.
+  - >-
+    `mail/`: seven e-mails to the booking office: past absences of two doctors and an interpreter, a department head
+    asking for a list, the director's office asking to book an acquaintance "tomorrow morning", and the outpatient
+    office's notes on City Day (Monday 23 November; the calendar was not changed for it) and on the data codes.
+  - >-
+    `pilot_day_input.json` and `pilot_day_output.json`: one day's input exactly as the program will get it every day
+    (the calendar of the next 10 working days, new requests, notices such as cancellations and absences, the current
+    bookings and the waitlist) and the answer of the client's pilot program, which shows the output format.
+ask:
+  - >-
+    How urgent requests are handled: each is booked the day it arrives, for a day within 2 working days of the first
+    day it can come. The first two or three slots of every morning session (09:00 and 09:20, or 09:00 to 09:40,
+    depending on the version) are kept for urgent patients and open to everyone only on the working day before.
+  - >-
+    Which clinic is closed on City Day, Monday 23 November, although the calendar still lists its sessions:
+    Dermatology, Orthopedics or Pediatrics, depending on the version.
+  - >-
+    How many in-person interpreters the hospital has per day: 2, 3 or 4, depending on the version. Every new-patient
+    visit with a doctor who does not speak the patient's language needs one; follow-ups use phone interpreting, without
+    limit.
+  - >-
+    The waitlist order, depending on the version: by urgency, then by date received; urgent first, then everyone else
+    by date received; or by urgency, then by the earliest day the patient can come. A request may not be booked while
+    a higher-priority one for the same department, visit type and doctor still waits and could have taken that slot.
+  - >-
+    The booking basics: a new patient takes two consecutive 20-minute slots, a follow-up one, with the doctor the
+    patient saw last time (a habit; the head of the outpatient office can grant exceptions). A changed date or time
+    must be at least 3 working days after the day of the change, and every change costs points.
+  - >-
+    What the daily status table counts over the next 10 working days: empty slots anyone may book, empty urgent slots
+    two or more days ahead, and waiting requests (on hard, waiting patients), leaving out the closed clinic on City Day
+    and, on medium and hard, absent doctors' days and expired referrals. Each of its 15 numbers counts only if exact.
+  - >-
+    On medium and hard: a new patient's referral letter expires on a set date; a fasting blood test must be done at
+    least one working day before the visit, and the lab takes 5, 6 or 7 a day, depending on the version; when a doctor
+    or an interpreter is away, the affected appointments are moved or put back on the waitlist the day the notice
+    arrives.
+  - >-
+    On hard: each patient has their own no-show rate, about 1 percentage point higher per working day booked ahead; two
+    follow-ups may share a slot, at most 1, 2 or 3 such slots per doctor and session, depending on the version; a
+    second request by the same patient for the same department is the same need and is never booked.
+invalid_if:
+  - >-
+    Crashes or takes more than 10 seconds on any day, returns a malformed action, books a request that is not waiting,
+    or books outside the next 10 working days.
+  - >-
+    Puts two appointments in one slot (on hard: more than two follow-ups, a new patient sharing, or more shared slots
+    per doctor and session than allowed), or books off the calendar's slots, with another department's doctor or before
+    the patient's earliest date.
+  - >-
+    Books someone in the closed clinic on City Day, or more new-patient visits needing an interpreter on a day than
+    there are interpreters; on medium and hard also a visit after the referral expired, a blood test missing, too late
+    or over the lab's daily limit, or an appointment left with an absent doctor.
+  - >-
+    Leaves an urgent request unbooked at the end of the day it arrived or books it beyond its 2 working days, or puts a
+    non-urgent patient in one of the reserved morning slots two or more days ahead.
+  - >-
+    Gives an appointment a new date or time less than 3 working days ahead, or books a request while a higher-priority
+    one that could have taken that slot still waits.
+  - >-
+    On hard, gives a patient two appointments in one department; or sends a follow-up to another doctor, unless the
+    company policy lets this rule bend and the AI asked the client for an exception first.
+quality: >-
+  Higher is better. 80% is the operations value in points, measured against the reference program's: +10 per
+  20-minute slot of every visit that takes place (a new patient's visit is two slots), −0.4 per working day a request
+  waits (×3 if urgent, ×2 soon, ×1 routine), −10 per request never booked and −4 per appointment the hospital moves or
+  cancels. The other 20% is the share of status-table numbers that are exactly right. The client's own way (score 0)
+  books the same way but never opens the reserved morning slots for the next day and never double-books; the reference
+  solution (score 1) opens them, refills freed slots from the waitlist in order and, on hard, double-books follow-ups
+  of patients likely to stay away.
+tiers:
+  easy: >-
+    The daily booking core: visit lengths, departments, urgent requests and the reserved morning slots, the City Day
+    closure, interpreters, 3 days' notice for changes, the waitlist order, follow-ups with their own doctor and the
+    status table. The client leaves absence notices, referral letters, blood tests, no-shows and duplicate requests
+    aside.
+  medium: >-
+    Adds expiring referral letters, a fasting blood test at least one working day before the visit within the lab's
+    daily limit, and the absences during the 20 days: a pediatrician off sick for two weeks and a cardiologist at a
+    conference (their appointments must be moved or released the day the notice comes), and an interpreter away for a
+    day.
+  hard: >-
+    Adds no-shows (a patient counts only with the chance they come, which drops the further ahead they are booked), two
+    follow-ups per slot up to the client's limit (−12 × the chance both come), one appointment per patient and
+    department despite duplicate requests, −3 per extra hospital day of a patient booked in several departments, and
+    the client's word that staff notes carry no weight.

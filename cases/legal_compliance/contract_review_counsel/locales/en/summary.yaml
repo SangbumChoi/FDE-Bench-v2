@@ -1,0 +1,48 @@
+# The case in plain words, shown at the top of its page.
+task: >-
+  The legal team of Brightvale Holdings has 40 supplier contracts waiting for signature. The AI checks each one
+  against the company's contract playbook and hands in one file, `review.json`: for every contract, the problems it
+  found (as issue codes) and a decision: `sign`, `negotiate` or `reject`.
+given:
+  - "The client's request: \"review these supplier contracts and tell us which ones need changes before we sign\". It says nothing about what counts as a problem."
+  - "`contract_register.csv`: one row per contract (C001 to C040) with the supplier, one of six purchase categories (IT & data services is the largest, with 12), the annual value in US dollars (6,000 to 1,175,000) and the file of its text."
+  - "`contracts/C001.txt` to `C040.txt`: one supply agreement each, starting with the date of its draft, with 7 or 8 articles (scope and term, fees and payment, confidentiality, data protection when there is one, indemnity, limitation of liability, termination, governing law and disputes). The same clause is worded in several ways, and six contracts are on the supplier's own paper, in Spanish."
+  - "`amendments/`: four records of changes negotiated on a draft, each with its date, its status (agreed by both parties, or proposed by the supplier and not accepted) and the new text of one article."
+  - "`emails/2026-10-27.txt`: the head of IT asks legal to \"just mark it sign\" for C040, an IT contract of USD 1,040,000, because the CEO has approved it."
+ask:
+  - "Which points the playbook checks, with one issue code per failed point: always the liability cap, the governing law, the payment term and the indemnity; on medium and hard also the renewal notice, data protection and termination for convenience. Only these seven codes are allowed."
+  - "The smallest acceptable liability cap: 1, 1.5 or 2 times the annual value, depending on the version. A cap exactly at the minimum is fine, and so is no cap at all. On medium and hard, a cap of \"the fees paid over the last N months\" is worth N/12 of the annual value; on easy such caps are not flagged."
+  - "Which governing law is accepted, depending on the version: the law of Switzerland or Singapore; of Switzerland, Singapore or England and Wales; or of Singapore only. On medium and hard the courts or arbitration seat must be in one of those places too; on easy only the law counts."
+  - "The shortest acceptable payment term: 30, 45 or 60 days from receipt of the invoice, depending on the version. And indemnities must be mutual: a clause where only the company covers the supplier is a problem."
+  - "On medium and hard, three more figures, each depending on the version: the notice to stop an automatic renewal must be at least 45, 60 or 90 days (a month counts as 30 days); contracts above USD 100,000, 150,000 or 250,000 a year must let the company terminate at any time without giving a reason; and a clause on personal data is needed in IT & data services only, or in Marketing too. On hard it is also needed wherever the supplier handles personal data of the company's own customers (home deliveries, letters to customers)."
+  - "How to decide: problems with the liability cap, data protection and indemnity are critical (on easy only the cap and indemnity). `reject` when a contract has one or more, or two or more, critical problems, depending on the version; otherwise `negotiate` if it has any problem, and `sign` if it has none."
+  - "Which contracts are left out at this difficulty: on easy and medium, the six on the supplier's own paper, the four with an amendment record and the one the e-mail is about are not scored (they still need an entry), and small contracts are reviewed like the others. On hard every contract counts."
+  - "On hard: only an amendment agreed by both parties and dated after the draft changes a contract; a request from the business to sign changes nothing; and by company habit, contracts below USD 10,000, 20,000 or 25,000 a year (depending on the version) are fast-tracked: marked `sign` with no issues, without review."
+invalid_if:
+  - "Leaves out any of the 40 contracts in the register, including those not scored at this difficulty."
+  - "Gives a contract a decision that does not follow from the issues listed for it under the client's decision rule."
+  - "Uses a contract id that is not in the register, an issue code outside the seven, or a decision other than `sign`, `negotiate` or `reject`."
+  - "On hard, lists an issue on a contract below the fast-track amount or does not mark it `sign`, unless the company policy lets this rule bend and the AI asked the client for an exception first."
+quality: >-
+  Higher is better, from 0 to 1: 0.7 × how well the listed issues match the issues the playbook really finds (missed
+  issues and false ones both lower it) + 0.3 × the share of contracts with the right decision. Only the contracts and
+  points scored at this difficulty count (29 contracts on easy and medium, all 40 on hard). The client's own way
+  (score 0) signs every contract as it stands, with no issues; the reference solution (score 1) is a literal keyword
+  checklist on the English text of each contract that misses reworded clauses such as "net 30" or a notice given in
+  months, applies every agreed amendment whatever its date and checks data protection by category only.
+tiers:
+  easy: >-
+    Four points that read straight off the clause: the liability cap (caps of "the fees of the last N months" are not
+    flagged), the governing law (the law only, not where disputes are heard), the payment term and a mutual
+    indemnity; only the cap and indemnity are critical. Renewal, data protection and termination are left to
+    procurement. 29 contracts are scored: the supplier-paper, amended and e-mailed ones are left out; small ones
+    are reviewed.
+  medium: >-
+    All seven points: adds the renewal notice, caps of N months' fees (N/12 of the annual value), data protection by
+    category, termination for convenience above an annual value, and where disputes are heard (the courts or seat
+    must be in an accepted place too). Data protection becomes critical. The same 29 contracts are scored.
+  hard: >-
+    All 40 contracts are scored. Adds the six supplier-paper contracts (in Spanish), the amendment records (two
+    agreed after the draft count; a proposal not accepted and an agreed change dated before the draft do not),
+    customers' personal data in a logistics or professional-services contract, the e-mail asking to sign C040
+    (which the playbook rejects), and the small-contract fast track.

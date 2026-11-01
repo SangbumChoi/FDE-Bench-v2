@@ -1,0 +1,30 @@
+# The case in plain words, shown at the top of its page.
+task: "Preparar el cuadrante de turnos de la próxima semana (del lunes 9 al domingo 15 de noviembre de 2026) de un centro de llamadas que atiende en coreano, japonés, inglés, chino y español de 08:00 a 22:00. La IA decide, para cada uno de los 30 agentes, qué días trabaja, en qué turno y en qué idioma atiende, de modo que cada idioma tenga gente suficiente al menor coste total, y lo entrega como `roster.json`."
+given:
+  - "La solicitud del cliente: unas líneas que piden el cuadrante de la próxima semana con «suficiente gente al teléfono para que los clientes no esperen, en todos los idiomas que atendemos». No da reglas ni cifras."
+  - "`agentes.xlsx`: los 30 agentes (20 de jornada completa, 4 de ellos de nuevo ingreso, y 10 de media jornada) y los idiomas en los que puede atender cada uno."
+  - "`prevision_llamadas.csv`: cuántos agentes necesita cada idioma en cada media hora de 08:00 a 22:00, día por día (de 1 a 5), ya contados en personas, no en llamadas."
+  - "`turnos.csv` y `costes.csv`: cuatro turnos de 8 horas para jornada completa (empiezan a las 08:00, 10:00, 12:00 y 14:00), cuatro de 4 horas para media jornada (08:00, 12:00, 16:00 y 18:00) y la tarifa por hora: 22 en jornada completa, 18 en media jornada, sin moneda."
+  - "`ausencias.csv`: 5 solicitudes de ausencia con fechas en día/mes/año; una de ellas, rechazada."
+  - "`nota_responsable_equipo.txt`: un mensaje del jueves 5 de noviembre que dice que una persona de baja por gripe «el lunes estará bien» y pide incluirla en el cuadrante como siempre."
+ask:
+  - "Cuánto cuesta que falte un agente: el valor que el cliente da a un agente que falta media hora en un idioma, en las mismas unidades que las tarifas por hora: 15, 25 o 40, según la versión. Decide cuántos turnos vale la pena pagar."
+  - "Que un agente atiende en un solo idioma durante todo el turno: un agente bilingüe nunca cubre dos idiomas a la vez."
+  - "Los límites del contrato: jornada completa solo en turnos de 8 horas; media jornada solo en turnos de 4 horas y como máximo 3 a la semana. La semana de contrato de jornada completa es de 32 o 40 horas (4 o 5 turnos) y se puede hacer un turno más, así que el máximo es 5 o 6; desde medium ese turno de más cuenta como horas extra y se paga a 1,5 veces la tarifa."
+  - "Cómo leer el archivo de ausencias: día/mes/año (10/11/2026 es el 10 de noviembre, no el 11 de octubre), con ambas fechas incluidas; una solicitud rechazada no es ausencia."
+  - "El descanso entre turnos: en easy basta con un turno al día; en medium y hard, al menos 11 o 13 horas entre el final de un turno y el inicio del siguiente."
+  - "Medium y hard: el miércoles 11 de noviembre es festivo regional. Ese día se planifica con el 50 %, 60 % o 75 % de la previsión, redondeado hacia arriba; el archivo no se actualizó."
+  - "Medium y hard: una persona de nuevo ingreso nunca está sola en un idioma. En cada media hora en que trabaja, al menos un agente que no sea de nuevo ingreso debe atender en el mismo idioma."
+  - "Hard: si la nota del responsable de equipo sigue siendo cierta. No lo es: el parte médico recibido el viernes por la mañana mantiene a esa persona de baja hasta el martes 10, el miércoles 11 o el jueves 12 de noviembre."
+invalid_if:
+  - "Asigna a un agente un idioma que no está entre sus idiomas."
+  - "Pone a alguien de jornada completa en un turno de 4 horas o a alguien de media jornada en uno de 8, o supera el máximo de turnos semanales (5 o 6 en jornada completa, 3 en media jornada)."
+  - "Da a un agente dos turnos el mismo día o, en medium y hard, menos de 11 o 13 horas de descanso entre dos turnos."
+  - "Programa a alguien en un día de ausencia aprobada."
+  - "En medium y hard, deja a una persona de nuevo ingreso al teléfono en una media hora sin ningún agente que no sea de nuevo ingreso en el mismo idioma."
+  - "En hard, programa a la persona de la nota del responsable de equipo algún día hasta el último día de su parte médico."
+quality: "Cuanto menor, mejor: 15, 25 o 40 (el cliente dice cuál) por cada agente que falte en cada media hora y cada idioma, más el coste de personal de todos los turnos (22 por hora en jornada completa, 18 en media jornada; desde medium, los turnos de hora extra a 1,5 veces), todo en las unidades de las tarifas por hora. La forma de trabajar del cliente (vale 0) es un cuadrante fijo hecho sin mirar la previsión; la solución de referencia (vale 1) va añadiendo el turno que más ahorra hasta que ningún turno compensa su coste."
+tiers:
+  easy: "El cuadrante básico: un idioma por turno, la duración de turno que corresponde a cada contrato, los topes semanales, un turno al día, las ausencias aprobadas y el coste de que falte un agente. La previsión se usa tal cual, todos los turnos se pagan a la tarifa normal, las personas de nuevo ingreso se programan como cualquiera y la persona de la nota vuelve el lunes."
+  medium: "Añade 11 o 13 horas de descanso entre dos turnos, el festivo del miércoles 11 de noviembre (50 %, 60 % o 75 % de la previsión), las horas extra a 1,5 veces por encima de la semana de contrato de 32 o 40 horas y que nadie de nuevo ingreso quede solo en un idioma."
+  hard: "Añade la baja médica: la nota del responsable de equipo pide programar a esa persona como siempre, pero el parte médico recibido a la mañana siguiente la mantiene de baja hasta el martes 10, el miércoles 11 o el jueves 12 de noviembre."

@@ -60,7 +60,7 @@ params:                      # the client's rule parameters; a rule seed draws e
 rule_seeds: [30, 525, 1043]        # public panel: every candidate but quota_pct 35; binding is checked on 30
 deliverable_spec: |
   A program/ directory with underwriter.py defining on_day(day). The engine loads it once and calls it once per
-  business day of the hidden period, in order, in the same process (module-level state survives between calls);
+  business day of the test period (days the AI never sees), in order, in the same process (module-level state survives between calls);
   10 s per call, Python standard library only, no network and no access to the data files at run time.
   day = {"date", "day_index", "days_in_period", "period_end", "applications": [...], "notices": [...],
   "book": {"loans": [...], "referred": [...]}} exactly as in the pilot-day input file.

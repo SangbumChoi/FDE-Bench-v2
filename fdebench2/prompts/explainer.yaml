@@ -119,13 +119,16 @@ en:
     is 1. Better than the reference goes above 1; full credit at the policy's cap (1.5).</li><li><strong>Final score.</strong>
     Quality, plus how well the AI asked (did its questions uncover the facts above?), how it communicated (the client's
     language, a NOTES.md) and how efficient it was, weighted by the company policy.</li><li><strong>Several versions.</strong>
-    The data stays the same; only the client's exact values (a threshold, a unit, a date) change with the rule seed.
-    A difficulty's score is the average over several rule seeds, so memorising one answer does not help.</li></ol>
+    The data stays the same; only the client's exact values (a threshold, a unit, a date) change from one version
+    of the case to another. A difficulty's score is the average over several versions, so memorising one answer
+    does not help.</li></ol>
   tiers_title: Easy, medium and hard
   details_title: Details
   nav_details: Details
   details_intro: 'The full material behind the summary: the request as written, the client''s rules and their candidate
     values, what only the client knows, the data and the stored answers, and the case notes.'
+  difficulty: Difficulty
+  asks_for: What it asks for
 ko:
   language: 언어
   case_eyebrow: '{field} · FDE-Bench v2 케이스'
@@ -237,11 +240,13 @@ ko:
     요청했을 때만 인정됩니다.</li><li><strong>품질.</strong> 결과를 '엔지니어 없이 고객이 하던 방식 = 0점, 모범 답안 = 1점' 척도로 환산합니다. 모범 답안보다 나으면
     1을 넘고, 정책의 상한(1.5)에서 만점입니다.</li><li><strong>최종 점수.</strong> 품질에 더해 AI가 얼마나 잘 물어봤는지(질문으로 위의 사실들을 알아냈는지), 소통(고객의
     언어 사용, NOTES.md), 효율을 회사 정책의 가중치로 합칩니다.</li><li><strong>여러 버전.</strong> 데이터는 그대로 두고, 고객 규칙의 구체적인 값(기준치, 단위,
-    날짜 등)만 규칙 시드에 따라 바뀝니다. 난이도별 점수는 여러 규칙 시드의 평균이라 답 하나를 외워서는 점수가 나오지 않습니다.</li></ol>
+    날짜 등)만 케이스의 버전마다 바뀝니다. 난이도별 점수는 여러 버전의 평균이라 답 하나를 외워서는 점수가 나오지 않습니다.</li></ol>
   tiers_title: 난이도별 차이
   details_title: 자세히 보기
   nav_details: 자세히 보기
   details_intro: 요약의 근거가 되는 전체 자료입니다. 요청 원문, 고객 규칙과 그 값의 후보, 고객만 아는 요구사항, 데이터와 저장된 정답, 케이스 노트가 있습니다.
+  difficulty: 난이도
+  asks_for: 요구하는 것
 ja:
   language: 言語
   case_eyebrow: '{field} · FDE-Bench v2 ケース'
@@ -346,11 +351,13 @@ ja:
   quality_title: 有効なら、品質は…
   common_title: すべてのケースに共通
   common_body: <ol><li><strong>有効かどうか。</strong>上のルールを一つでも破ると成果物は無効で0点です。会社の方針が緩めることを認めたルールは、AIが顧客に例外を申請した場合にだけ認められます。</li><li><strong>品質。</strong>結果を「エンジニアなしで顧客がしていたやり方
-    = 0点、模範解答 = 1点」の尺度に換算します。模範解答より良ければ1を超え、方針の上限（1.5）で満点です。</li><li><strong>最終スコア。</strong>品質に加えて、AIの質問の良さ（質問で上の事実を引き出せたか）、コミュニケーション（顧客の言語、NOTES.md）、効率を、会社の方針の重みで合わせます。</li><li><strong>複数のバージョン。</strong>データは同じままで、顧客ルールの具体的な値（基準値、単位、日付など）だけがルールシードによって変わります。難易度ごとのスコアは複数のルールシードの平均なので、答えを一つ覚えても点にはなりません。</li></ol>
+    = 0点、模範解答 = 1点」の尺度に換算します。模範解答より良ければ1を超え、方針の上限（1.5）で満点です。</li><li><strong>最終スコア。</strong>品質に加えて、AIの質問の良さ（質問で上の事実を引き出せたか）、コミュニケーション（顧客の言語、NOTES.md）、効率を、会社の方針の重みで合わせます。</li><li><strong>複数のバージョン。</strong>データは同じままで、顧客ルールの具体的な値（基準値、単位、日付など）だけがケースのバージョンごとに変わります。難易度ごとのスコアは複数のバージョンの平均なので、答えを一つ覚えても点にはなりません。</li></ol>
   tiers_title: 難易度ごとの違い
   details_title: 詳しく見る
   nav_details: 詳しく見る
   details_intro: 概要のもとになる資料のすべてです。依頼の原文、顧客ルールとその値の候補、顧客だけが知っている要件、データと保存された正解、ケースのメモがあります。
+  difficulty: 難易度
+  asks_for: 求められること
 zh:
   language: 语言
   case_eyebrow: '{field} · FDE-Bench v2 案例'
@@ -455,11 +462,13 @@ zh:
   quality_title: 有效时，质量是……
   common_title: 所有案例通用
   common_body: <ol><li><strong>是否有效。</strong>违反上面任何一条规则，交付物即无效，得 0 分。公司政策允许放宽的规则，只有在 AI 向客户申请了例外时才算数。</li><li><strong>质量。</strong>把结果换算到“客户在没有工程师时的做法
-    = 0 分，参考答案 = 1 分”的尺度上。比参考答案好就超过 1，达到政策上限（1.5）即满分。</li><li><strong>最终得分。</strong>在质量之外，再加上 AI 提问的好坏（提问是否问出了上面的事实）、沟通（使用客户的语言、NOTES.md）和效率，按公司政策的权重合计。</li><li><strong>多个版本。</strong>数据不变，只有客户规则的具体数值（门槛、单位、日期等）随规则种子变化。每个难度的得分是多个规则种子的平均值，所以背下一个答案拿不到分。</li></ol>
+    = 0 分，参考答案 = 1 分”的尺度上。比参考答案好就超过 1，达到政策上限（1.5）即满分。</li><li><strong>最终得分。</strong>在质量之外，再加上 AI 提问的好坏（提问是否问出了上面的事实）、沟通（使用客户的语言、NOTES.md）和效率，按公司政策的权重合计。</li><li><strong>多个版本。</strong>数据不变，只有客户规则的具体数值（门槛、单位、日期等）随案例版本变化。每个难度的得分是多个版本的平均值，所以背下一个答案拿不到分。</li></ol>
   tiers_title: 各难度的区别
   details_title: 查看详情
   nav_details: 查看详情
   details_intro: 以下是摘要背后的全部材料：需求原文、客户规则及其候选值、只有客户知道的需求、数据和保存的答案，以及案例说明。
+  difficulty: 难度
+  asks_for: 要求做的事
 es:
   language: Idioma
   case_eyebrow: '{field} · caso de FDE-Bench v2'
@@ -586,11 +595,13 @@ es:
     La calidad, más lo bien que preguntó la IA (¿sus preguntas descubrieron los hechos de arriba?), cómo se comunicó
     (el idioma del cliente, un NOTES.md) y su eficiencia, ponderados según la política de la empresa.</li><li><strong>Varias
     versiones.</strong> Los datos no cambian; solo los valores concretos del cliente (un umbral, una unidad, una
-    fecha) cambian con la semilla de reglas. La puntuación de cada dificultad es la media sobre varias semillas
-    de reglas, así que memorizar una respuesta no sirve.</li></ol>
+    fecha) cambian de una versión del caso a otra. La puntuación de cada dificultad es la media de varias versiones,
+    así que memorizar una respuesta no sirve.</li></ol>
   tiers_title: Fácil, medio y difícil
   details_title: Detalles
   nav_details: Detalles
   details_intro: 'Todo el material detrás del resumen: la solicitud tal como está escrita, las reglas del cliente
     y sus valores candidatos, lo que solo sabe el cliente, los datos y las respuestas guardadas, y las notas del
     caso.'
+  difficulty: Dificultad
+  asks_for: Qué pide

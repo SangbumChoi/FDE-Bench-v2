@@ -1,0 +1,48 @@
+# The case in plain words, shown at the top of its page.
+task: >-
+  La cocina central de una panadería reparte cada mañana bandejas de pan a sus cafeterías con cuatro furgonetas. La IA
+  planifica las rutas del lunes por la mañana: qué furgoneta atiende cada cafetería, en qué orden y a qué hora sale cada
+  una, para que las cafeterías reciban sus bandejas a tiempo y los conductores estén fuera lo menos posible. El
+  entregable es `routes.json`: para cada furgoneta utilizada, su hora de salida y sus cafeterías en orden de visita.
+given:
+  - "La solicitud del cliente: tres frases que piden planificar qué furgoneta va a cada sitio mañana (lunes) por la mañana, «para que las cafeterías reciban sus bandejas a tiempo y los conductores no estén fuera más de lo necesario». No dice nada de límites ni de reglas."
+  - "`cafeterias.csv`: las 18 cafeterías, de C01 a C18, con sus coordenadas en el mapa en km (`x_km`, `y_km`), las bandejas que recibe cada una (de 10 a 29, 332 en total), si es premium o estándar, la hora de apertura (de 06:00 a 07:30), la hora límite de entrega (`entregar_antes`, de 30 a 60 minutos después de abrir) y si es de marca asociada (C05, C10 y C16). Una cafetería está cerrada esta semana, pero el archivo no dice cuál."
+  - "`furgonetas.csv`: las cuatro furgonetas, de V1 a V4, todas con `max_bandejas` 120; solo V4 es refrigerada."
+ask:
+  - "Cómo pasar del mapa a tiempos de conducción: las coordenadas son km desde la cocina, en (0, 0), la distancia por carretera es 1,3 veces la línea recta y las furgonetas van a una media de 25 km/h toda la mañana. En hard hay en cambio hora punta: 30 km/h hasta las 06:30, las 07:00 o las 07:30, según la versión, y 20 km/h desde entonces, también para una furgoneta que ya está en la carretera."
+  - "Cómo funciona una parada: cada cafetería recibe todas sus bandejas en una sola visita de una sola furgoneta, la descarga dura 4 minutos más 0,2 minutos por bandeja y una furgoneta que llega antes de la apertura espera a que abra."
+  - "El turno de los conductores: las furgonetas pueden salir desde las 05:00 y deben estar de vuelta en la cocina a las 09:00, las 09:30 o las 10:00, según la versión. En hard, V2 está en el taller el lunes y no puede salir antes de las 06:40."
+  - "El límite de bandejas por furgoneta de esta semana: 100, 110 o 120, según la versión (siempre 110 en hard). El 120 del archivo es lo que cabe en las estanterías, pero las cajas nuevas, más profundas, pueden bajarlo."
+  - "Qué cafetería está cerrada por reformas esta semana y no debe recibir nada: la Cafetería Colina Sur (C11), la Cafetería Estación Norte (C03) o la Cafetería Paseo de los Arces (C14), según la versión."
+  - "Qué furgonetas pueden atender las cafeterías de marca asociada: en easy, cualquiera (esta semana el socio lleva sus refrigerados él mismo); en medium y hard, solo la refrigerada, V4."
+  - "Si en cada ruta las cafeterías premium deben ir antes que las estándar: en easy no (la costumbre queda en suspenso); en medium y hard depende de la versión. En hard, la exigencia de la encargada de la Cafetería Lago Este (C07) de ser la primera parada, antes de las 06:30, no es una regla."
+  - "Cuánto cuesta llegar tarde: una entrega tardía se acepta, pero cada minuto después de la hora `entregar_antes` de la cafetería cuesta lo mismo que 2, 3 o 5 minutos de furgoneta, según la versión."
+invalid_if:
+  - "No se puede leer: falta `routes.json`, aparece un código de furgoneta o de cafetería que no está en los datos, una furgoneta tiene dos rutas o una hora de salida no está escrita como HH:MM."
+  - "Carga en una furgoneta más bandejas que el límite de esta semana (100, 110 o 120; 110 en hard)."
+  - "Hace salir una furgoneta antes de las 05:00 o la hace volver a la cocina después del fin del turno (09:00, 09:30 o 10:00); en hard, también hace salir V2 antes de las 06:40."
+  - "Entrega a la cafetería cerrada, deja sin atender una cafetería abierta o atiende una cafetería más de una vez."
+  - "En medium y hard, envía a una cafetería de marca asociada (C05, C10, C16) una furgoneta que no es V4."
+  - "En medium y hard, en las versiones en que rige la costumbre de atender primero las premium, visita en alguna ruta una cafetería premium después de una estándar, salvo que la política de la empresa permita flexibilizar esa costumbre y la IA haya pedido antes una excepción al cliente."
+quality: >-
+  Cuanto menor, mejor: el total de minutos que están fuera todas las furgonetas, desde que salen de la cocina hasta que
+  vuelven (la espera a que abra una cafetería cuenta), más 2, 3 o 5 veces cada minuto que una cafetería recibe el
+  pedido después de su hora `entregar_antes`. La forma de trabajar del cliente (vale 0) divide el mapa en porciones
+  alrededor de la cocina, llena V1, V2, V3 y V4 una tras otra, atiende primero las premium y hace salir todas las
+  furgonetas lo antes posible, así que esperan ante cafeterías que aún no han abierto y llegan tarde a las últimas
+  (entre unos 1.140 y 1.980 minutos en las versiones de esta página); la solución de referencia (vale 1) es una
+  búsqueda automática que va moviendo cafeterías entre rutas y elige para cada furgoneta la mejor hora de salida en
+  pasos de 5 minutos (entre unos 420 y 710 minutos).
+tiers:
+  easy: >-
+    El núcleo del reparto: el límite de bandejas, el fin del turno, una sola visita por cafetería, la cafetería cerrada,
+    25 km/h constantes y el coste de llegar tarde. Cualquier furgoneta puede atender las cafeterías de marca asociada y
+    las premium no tienen por qué ir primero.
+  medium: >-
+    Añade la cadena de frío (las cafeterías de marca asociada C05, C10 y C16, solo con la refrigerada V4) y, en algunas
+    versiones, la costumbre de atender primero las premium: en cada ruta, las premium antes que las estándar.
+  hard: >-
+    Añade la hora punta (30 km/h y luego 20 km/h desde las 06:30, las 07:00 o las 07:30), V2 en el taller hasta las
+    06:40 y la exigencia de la encargada de la Cafetería Lago Este (C07) de ser la primera parada antes de las 06:30.
+    No es una regla: su cafetería abre a las 07:00, así que hacerle caso solo deja una furgoneta esperando. El límite
+    de bandejas es siempre 110.

@@ -1,0 +1,111 @@
+# The case in plain words, shown at the top of its page.
+task: >-
+  Escribir un programa en Python que lleve la oficina de citas de consultas externas de un hospital: al final de cada
+  día laborable cita las solicitudes del día en los huecos libres de 20 minutos de los médicos en los 10 días
+  laborables siguientes, rellena con la lista de espera los huecos que se liberan e informa, por especialidad, de los
+  huecos libres, los reservados para urgencias y las solicitudes en espera. El objetivo es dejar vacío el menor tiempo
+  de médico posible sin romper ninguna regla de citación del hospital; el programa se evalúa en 20 días laborables (del
+  9 de noviembre al 4 de diciembre de 2026) que no están en los datos.
+given:
+  - >-
+    La solicitud del cliente: a partir del lunes 9 de noviembre la oficina de citas quiere trabajar con un programa que
+    cada día laborable cite a los pacientes en los huecos libres de los médicos y diga cómo está cada especialidad;
+    «sobre todo queremos dejar de perder tiempo de médico en huecos vacíos». No menciona ninguna regla de citación.
+  - >-
+    `exportacion_sistema_citas.sql`: el sistema de citas al cierre del viernes 6 de noviembre. Los 14 médicos de cinco
+    especialidades (Medicina Interna, Cardiología, Dermatología, Traumatología, Pediatría) con los idiomas que hablan y
+    sus consultas semanales, el calendario de consultas hasta el 20 de noviembre, cuatro semanas de solicitudes y citas
+    con lo que pasó en cada una (cerca del 22 % de los pacientes no acudió), anulaciones, la lista de espera (45
+    solicitudes siguen esperando) y las 359 citas ya dadas a partir del 9 de noviembre.
+  - >-
+    `mail/`: siete correos a la oficina de citas: ausencias pasadas de dos médicos y de una intérprete, un jefe de
+    servicio que pide una lista, la Dirección que pide citar a un conocido «mañana por la mañana», y los avisos de la
+    dirección de consultas externas sobre el Día de la Ciudad (lunes 23 de noviembre; el calendario no se cambió) y
+    sobre los códigos de los datos.
+  - >-
+    `dia_piloto_entrada.json` y `dia_piloto_salida.json`: la entrada de un día tal como el programa la recibirá cada día
+    (el calendario de los 10 días laborables siguientes, las solicitudes nuevas, avisos como anulaciones y ausencias,
+    las citas actuales y la lista de espera) y la respuesta del programa piloto del cliente, que muestra el formato de
+    salida.
+ask:
+  - >-
+    Cómo se tratan las urgentes: cada una se cita el mismo día en que llega, para un día dentro de los 2 días laborables
+    siguientes al primero en que puede venir. Los dos o tres primeros huecos de cada sesión de mañana (09:00 y 09:20, o
+    de 09:00 a 09:40, según la versión) se guardan para ellas y solo se abren a todos el día laborable anterior.
+  - >-
+    Qué consulta cierra el Día de la Ciudad, lunes 23 de noviembre, aunque el calendario siga mostrando sus sesiones:
+    Dermatología, Traumatología o Pediatría, según la versión.
+  - >-
+    Cuántos intérpretes presenciales tiene el hospital al día: 2, 3 o 4, según la versión. Cada primera visita con un
+    médico que no habla el idioma del paciente necesita uno; las revisiones usan interpretación telefónica, sin límite.
+  - >-
+    El orden de la lista de espera, uno de tres según la versión: por urgencia y luego por fecha de recepción; primero
+    las urgentes y luego todas las demás por fecha de recepción; o por urgencia y luego por el primer día en que el
+    paciente puede venir. No se puede citar una solicitud mientras otra de mayor prioridad de la misma especialidad,
+    tipo de visita y médico sigue esperando y podría haber ocupado ese hueco.
+  - >-
+    Lo básico de la citación: una primera visita ocupa dos huecos seguidos de 20 minutos y una revisión uno, con el
+    médico que vio al paciente la última vez (una costumbre; la jefa de la oficina de consultas externas puede autorizar
+    excepciones). Una fecha u hora cambiada debe quedar al menos 3 días laborables después del día del cambio, y cada
+    cambio resta puntos.
+  - >-
+    Qué cuenta la tabla de situación diaria en los 10 días laborables siguientes: los huecos vacíos que cualquiera puede
+    ocupar, los huecos de urgencias vacíos a dos o más días vista y las solicitudes en espera (en hard, los pacientes en
+    espera), sin la consulta cerrada el Día de la Ciudad y, desde medium, sin los días de médicos ausentes ni las
+    solicitudes con el volante caducado. Cada uno de sus 15 números solo cuenta si es exacto.
+  - >-
+    En medium y hard: el volante de una primera visita caduca en una fecha dada; el análisis de sangre en ayunas debe
+    hacerse al menos un día laborable antes de la visita y el laboratorio admite 5, 6 o 7 al día (según la versión);
+    cuando falta un médico o una intérprete, las citas afectadas se cambian o vuelven a la lista de espera el mismo día
+    en que llega el aviso.
+  - >-
+    En hard: cada paciente tiene su propia tasa de ausencias, alrededor de 1 punto porcentual más por cada día laborable
+    de antelación; un hueco puede tener dos revisiones, como mucho 1, 2 o 3 huecos así por médico y sesión (según la
+    versión); una segunda solicitud del mismo paciente para la misma especialidad es la misma necesidad y no se cita.
+invalid_if:
+  - >-
+    El programa falla o tarda más de 10 segundos algún día, devuelve una acción mal formada, cita una solicitud que no
+    está en espera o cita fuera de los 10 días laborables siguientes.
+  - >-
+    Dos citas comparten un hueco (en hard: más de dos revisiones, una primera visita compartida o más huecos
+    compartidos por médico y sesión de los permitidos), o una cita cae fuera de los huecos del calendario, con un médico
+    de otra especialidad o antes de la fecha más temprana del paciente.
+  - >-
+    Alguien queda citado en la consulta cerrada el Día de la Ciudad, o un día tiene más primeras visitas con intérprete
+    que intérpretes; en medium y hard también una visita con el volante ya caducado, un análisis que falta, llega tarde
+    o supera el tope diario del laboratorio, o una cita que se queda con un médico ausente.
+  - >-
+    Una urgente sigue sin cita al final del día en que llegó o queda más allá de sus 2 días laborables, o un paciente no
+    urgente ocupa uno de los huecos de la reserva de urgencias a dos o más días vista.
+  - >-
+    Una cita pasa a una fecha u hora a menos de 3 días laborables vista, o se cita una solicitud mientras espera otra de
+    mayor prioridad que podía haber ocupado ese hueco.
+  - >-
+    Una revisión va a otro médico sin la excepción de la jefa de la oficina de consultas externas, o (hard) un paciente
+    tiene dos citas en una especialidad.
+quality: >-
+  El 80 % es el valor operativo en puntos frente al del programa de referencia: +10 por cada hueco de 20 minutos de cada
+  visita que se celebra (una primera visita son dos huecos), −0,4 por cada día laborable que espera una solicitud (×3
+  urgente, ×2 preferente, ×1 ordinaria), −10 por cada solicitud que nunca consigue cita y −4 por cada cita que el
+  hospital cambia o anula; el 20 % restante es la proporción de números de la tabla de situación que son exactos. La
+  forma de trabajar del cliente (vale 0) cita igual, pero nunca abre los huecos de urgencias de la mañana para el día
+  siguiente y nunca pone dos citas en un hueco; la solución de referencia (vale 1) los abre, rellena por orden con la
+  lista de espera los huecos que se liberan y, en hard, pone dos revisiones en un mismo hueco cuando es probable que
+  esos pacientes falten.
+tiers:
+  easy: >-
+    Lo básico de la citación diaria: duración de las visitas, especialidades, urgentes y reserva de urgencias de la
+    mañana, el cierre del Día de la Ciudad, intérpretes, 3 días de preaviso para los cambios, el orden de la lista de
+    espera, revisiones con su médico y la tabla de situación. El cliente deja fuera las ausencias de médicos e
+    intérpretes, los volantes, los análisis, los pacientes que no acuden y las solicitudes duplicadas.
+  medium: >-
+    Añade los volantes que caducan, un análisis de sangre en ayunas al menos un día laborable antes de la visita dentro
+    del tope diario del laboratorio y las ausencias de los 20 días: un pediatra de baja dos semanas y un cardiólogo en un
+    congreso (sus citas deben cambiarse o volver a la lista de espera el día en que llega el aviso), y una intérprete
+    ausente un día.
+  hard: >-
+    Añade los pacientes que no acuden (un paciente cuenta solo con la probabilidad de que acuda, que baja cuanta más
+    antelación tiene la cita), dos revisiones por hueco hasta el tope del cliente (−12 × la probabilidad de que acudan
+    ambos), una cita por paciente y especialidad aunque haya solicitudes duplicadas, −3 por cada día de más que un
+    paciente citado en varias especialidades tiene que venir al hospital, y la advertencia del cliente de que las notas
+    del personal no cuentan.

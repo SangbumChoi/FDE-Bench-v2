@@ -55,7 +55,7 @@ params:                      # the client's and the desk's rule values; a rule s
 rule_seeds: [44, 20, 134]     # the public panel (see README: what it shows, and why seed 44 comes first)
 deliverable_spec: |
   A program/ directory with strategy.py defining on_day(day). The engine loads it once and calls it once per
-  hidden session after the close, in order, in the same process, so module-level state survives from one call to
+  session of the test period (days the AI never sees) after the close, in order, in the same process, so module-level state survives from one call to
   the next; 10 s per call, Python standard library only, no network and no data files at run time.
   day = {"market": {...}, "portfolio": {...}, "notices": [...]} exactly as in the sample call file.
   Return {"orders": [...], "status": {"stock_weights": {ticker: percent}, "sector_weights": {sector_code: percent},

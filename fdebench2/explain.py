@@ -259,7 +259,7 @@ def build_page(case_root: Path, lang: str = "en") -> str:
                   for x in case.tiers] if summary else []
     parts.append(f"""<section id="scoring"><h2>{t("scoring_title")}</h2>
 {f'<div class="cols"><div><h3>{t("invalid_title")}</h3>{li(summary.get("invalid_if"))}</div><div><h3>{t("quality_title")}</h3><p>{_inline(str(summary.get("quality", "")))}</p></div></div>' if summary else ""}
-{f'<h3 id="tiers">{t("tiers_title")}</h3>' + _table([t("tier"), t("in_force")], tiers_rows) if tiers_rows else ""}
+{f'<h3 id="tiers">{t("tiers_title")}</h3>' + _table([t("difficulty"), t("asks_for")], tiers_rows) if tiers_rows else ""}
 <h3>{t("common_title")}</h3><div class="common">{t("common_body")}</div></section>""")
 
     # everything else, folded: the full material behind the summary

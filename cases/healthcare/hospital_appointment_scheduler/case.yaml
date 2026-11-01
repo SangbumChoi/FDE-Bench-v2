@@ -21,7 +21,7 @@ tiers:                       # one world, one hidden period and the same request
     within a daily lab cap, doctor absences (the absent doctor's appointments must be moved, within the notice
     period) and an interpreter's absence (one fewer interpreter that day).
   hard: >-
-    Medium plus no-shows (each patient's hidden rate rising with lead time; the value counts expected patients
+    Medium plus no-shows (each patient's rate, which the AI is not told, rising with lead time; the value counts expected patients
     seen), overbooking of follow-ups (two to a slot, a cap per doctor session, expected collision cost),
     duplicate requests (one appointment per patient and department; one need on the waitlist) and extra trips
     of patients booked in several departments.
@@ -67,7 +67,7 @@ params:                      # the client's rule values; a rule seed draws each 
 rule_seeds: [1, 10, 64]          # every candidate of every pool appears at least once
 deliverable_spec: |
   A program/ directory with scheduler.py defining on_day(day). The engine loads it once and calls it once per
-  working day of the hidden period, in order, in the same process (module-level state survives between calls);
+  working day of the test period (days the AI never sees), in order, in the same process (module-level state survives between calls);
   10 s per call, Python standard library only, no network and no access to the data files at run time.
   day = {"date", "day_index", "days_in_period", "period_end", "booking_window": {"first", "last"}, "doctors",
   "sessions", "new_requests", "notices", "attendance", "book", "waitlist"} exactly as in the pilot-day input file.
