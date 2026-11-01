@@ -158,12 +158,12 @@ def test_review_findings_in_explainer(tmp_path):
     assert check_page(root) == ["explainer.html is out of date: run `fdebench2 explain-case` (or export-dataset)"]
     page = write_page(root).read_text(encoding="utf-8")
     assert '<section id="review">' in page and "C11 is the Clock Tower café in the texts only." in page
-    assert ("Deliverable spec (shown to the extractor that reshapes the agent's files, not to the agent)"
+    assert ("Deliverable spec (given to the converter that puts the AI's files into the scored format, not to the AI)"
             in html.unescape(page))
     assert check_page(root) == []
     # every language has its own page, its interface and the case's words in that language
     ko = (root / "explainer.ko.html").read_text(encoding="utf-8")
-    assert '<html lang="ko">' in ko and "에이전트가 받는 요청" in ko and "베이커리" in ko
+    assert '<html lang="ko">' in ko and "AI가 받는 요청" in ko and "베이커리" in ko
 
 
 @pytest.mark.parametrize("args, seeds", [([], [1, 2, 3]), (["--world-seeds", "7"], [7]), (["--world-seeds", ""], []),

@@ -209,6 +209,21 @@ TARGETS_EN = """- id: TODO_target
 TARGETS = """- id: TODO_target
   text: TODO (same ids and parameters as en/targets.yaml, e.g. {{example_param}}, written in this language)
 """
+SUMMARY = """# The case in plain words, shown at the top of its page. Keep each item to one short line.
+task: TODO one or two sentences, what the AI has to produce and why
+given:
+  - TODO the client's request
+  - TODO each data file or group of files, one line each
+ask:
+  - TODO each fact the AI must find out from the client (the rule and what it depends on)
+invalid_if:
+  - TODO each rule whose breach makes the deliverable score 0
+quality: TODO how a valid deliverable is measured, in one or two sentences
+tiers:
+  easy: TODO what easy asks for
+  medium: TODO what medium adds
+  hard: TODO what hard adds
+"""
 EXPLAINER = """# The explainer's case texts in this language (English comes from case.yaml).
 role: TODO the role title
 task_type: TODO
@@ -247,6 +262,7 @@ def new_case(case_id: str, cases_root: Path = Path("cases"), kind: str = "batch"
         (d / "request.md").write_text(REQUEST, encoding="utf-8")
         (d / "requirements.md").write_text(REQUIREMENTS, encoding="utf-8")
         (d / "targets.yaml").write_text(TARGETS_EN if lang == "en" else TARGETS, encoding="utf-8")
+        (d / "summary.yaml").write_text(SUMMARY, encoding="utf-8")
         if lang != "en":    # the explainer and the README in every language
             (d / "explainer.yaml").write_text(EXPLAINER, encoding="utf-8")
             (root / f"README.{lang}.md").write_text(f"TODO: README.md in {lang}.\n", encoding="utf-8")

@@ -78,6 +78,7 @@ from .transforms.language import detect_locale
 from .transforms.policy import RULE_CLASSES
 
 DISTINCT_MARGIN = 0.01           # on objectives: a parameter whose answers differ by less changes nothing
+SUMMARY_REQUIRED = False         # a case without locales/<lang>/summary.yaml: an error when True, a warning when False
 BASELINE_REQUIRED = True         # a case without baseline_solution fails validation
 ADMISSIBLE_SEARCH = 5000         # combinations tried per candidate before it is called never admissible
 # Per-tier binding findings that the cases had when the check became per tier, warned about instead of failing
@@ -183,6 +184,26 @@ def _todos(root: Path) -> list[str]:
 def _difference(want, got) -> str:
     missing, extra = sorted(set(want) - set(got)), sorted(set(got) - set(want))
     return "; ".join(([f"missing {missing}"] if missing else []) + ([f"extra {extra}"] if extra else []))
+
+
+def _summaries(case: NativeCase) -> list[str]:
+    """locales/<lang>/summary.yaml, the plain-words top of the case page, in every language: every key, the three
+    tiers, and as many items in each list as en has."""
+    from .explain import SUMMARY_KEYS, case_summary
+    problems, en = [], case_summary(case.root, "en")
+    for lang in LOCALES:
+        doc = case_summary(case.root, lang)
+        if not doc:
+            problems.append(f"{lang}/summary.yaml is missing (what the AI has to do, is given, must ask; how it is scored)")
+            continue
+        missing = [k for k in SUMMARY_KEYS if not doc.get(k)]
+        missing += [f"tiers.{t}" for t in case.tiers if not (doc.get("tiers") or {}).get(t)]
+        if missing:
+            problems.append(f"{lang}/summary.yaml: missing {', '.join(missing)}")
+        for key in ("given", "ask", "invalid_if"):
+            if lang != "en" and en.get(key) and len(doc.get(key) or []) != len(en[key]):
+                problems.append(f"{lang}/summary.yaml: {key} has {len(doc.get(key) or [])} items, en has {len(en[key])}")
+    return problems
 
 
 def _translations(case: NativeCase) -> list[str]:
@@ -1059,6 +1080,7 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
             problems.append(f"the agent's view differs between settings: {sorted(views)} -> "
                             f"{len(set(views.values()))} distinct views")
     problems += _translations(case)     # last, so a missing translation never hides the other checks
+    (problems if SUMMARY_REQUIRED else warnings).extend(_summaries(case))
     return report
 
 

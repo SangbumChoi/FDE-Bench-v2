@@ -161,6 +161,16 @@ def case_texts(case_root: Path, lang: str) -> dict:
     return (yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if lang != "en" and path.is_file() else {}
 
 
+SUMMARY_KEYS = ("task", "given", "ask", "invalid_if", "quality", "tiers")
+
+
+def case_summary(case_root: Path, lang: str) -> dict:
+    """locales/<lang>/summary.yaml: the case in plain words for the top of its page (what the AI has to do, what it
+    is given, what it must ask, what makes it score 0, how quality is measured, what each difficulty adds)."""
+    path = Path(case_root) / "locales" / lang / "summary.yaml"
+    return (yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if path.is_file() else {}
+
+
 def localized_doc(case_root: Path, name: str, lang: str) -> tuple[str | None, bool]:
     """(text, translated): README.<lang>.md for README.md and so on; the English file when it is missing."""
     base = Path(case_root) / name
@@ -210,6 +220,7 @@ def build_page(case_root: Path, lang: str = "en") -> str:
         return " · " + t("only_when", cond=_esc(cond))
 
     review_md, _ = localized_doc(root, "REVIEW.md", lang)
+    summary = case_summary(root, lang)
     parts: list[str] = []
 
     # header
@@ -233,11 +244,30 @@ def build_page(case_root: Path, lang: str = "en") -> str:
     <div><dt>{t("settings")}</dt><dd>{settings_value}</dd></div>
   </dl>
   <nav>
-    <a href="#request">{t("nav_request")}</a><a href="#settings">{t("nav_settings")}</a><a href="#rules">{t("nav_rules")}</a>
-    <a href="#requirements">{t("nav_requirements")}</a><a href="#targets">{t("nav_targets")}</a><a href="#data">{t("nav_data")}</a>
-    <a href="#readme">{t("nav_readme")}</a>{f'<a href="#review">{t("nav_review")}</a>' if review_md else ""}
+    {f'<a href="#glance">{t("nav_glance")}</a>' if summary else ""}<a href="#scoring">{t("nav_scoring")}</a><a href="#details">{t("nav_details")}</a>
   </nav>
 </header>""")
+
+    # the case in plain words: what the AI has to do, what it gets, what it must ask, how it is scored
+    li = lambda items: "<ul>" + "".join(f"<li>{_inline(str(x))}</li>" for x in items or []) + "</ul>"  # noqa: E731
+    if summary:
+        parts.append(f"""<section id="glance"><h2>{t("glance_title")}</h2>
+<div class="card"><h3>{t("task_title")}</h3><p>{_inline(str(summary.get("task", "")))}</p></div>
+<div class="cols"><div><h3>{t("given_title")}</h3>{li(summary.get("given"))}</div>
+<div><h3>{t("ask_title")}</h3>{li(summary.get("ask"))}</div></div></section>""")
+    tiers_rows = [[f"<strong>{_esc(x)}</strong>", _inline(str((summary.get("tiers") or {}).get(x, "")))]
+                  for x in case.tiers] if summary else []
+    parts.append(f"""<section id="scoring"><h2>{t("scoring_title")}</h2>
+{f'<div class="cols"><div><h3>{t("invalid_title")}</h3>{li(summary.get("invalid_if"))}</div><div><h3>{t("quality_title")}</h3><p>{_inline(str(summary.get("quality", "")))}</p></div></div>' if summary else ""}
+{f'<h3 id="tiers">{t("tiers_title")}</h3>' + _table([t("tier"), t("in_force")], tiers_rows) if tiers_rows else ""}
+<h3>{t("common_title")}</h3><div class="common">{t("common_body")}</div></section>""")
+
+    # everything else, folded: the full material behind the summary
+    parts.append(f"""<details class="more" id="details"{"" if summary else " open"}><summary>{t("details_title")}</summary>
+<p class="muted">{t("details_intro")}</p>
+<nav class="sub"><a href="#request">{t("nav_request")}</a><a href="#settings">{t("nav_settings")}</a><a href="#rules">{t("nav_rules")}</a>
+<a href="#requirements">{t("nav_requirements")}</a><a href="#targets">{t("nav_targets")}</a><a href="#data">{t("nav_data")}</a>
+<a href="#readme">{t("nav_readme")}</a>{f'<a href="#review">{t("nav_review")}</a>' if review_md else ""}</nav>""")
 
     # request, in the page's language only (the switcher at the top picks the language)
     req = f'<div class="doc">{markdown(case.request(lang))}</div>'
@@ -349,6 +379,7 @@ def build_page(case_root: Path, lang: str = "en") -> str:
 <div class="doc">{body}</div>
 </section>""")
 
+    parts.append("</details>")
     return _shell(own.get("role") or case.role, "\n".join(parts), lang=lang)
 
 
@@ -383,6 +414,12 @@ summary{cursor:pointer;font-weight:600}
 .controls{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}
 select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px}
 .doc{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 16px}
+.card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:4px 16px;margin:8px 0}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:4px 24px}
+.common{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 16px}
+details.more{background:none;border:0;padding:0;margin-top:36px;border-top:1px solid var(--line)}
+details.more>summary{font-size:21px;font-weight:700;padding:16px 0 8px}
+nav.sub{margin:0 0 8px}
 .langs{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;margin:0 0 8px}
 .langs a{padding:2px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;font-size:13px}
 .langs a[aria-current]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
@@ -393,6 +430,9 @@ JS = """
 var s=document.getElementById('req-setting'),b=document.getElementById('req-body');
 function show(){b.innerHTML=d[s.value]||'<p>'+b.dataset.empty+'</p>';}
 s.onchange=show;show();})();
+(function(){function reveal(){var id=location.hash.slice(1),el=id&&document.getElementById(id);
+if(el){var d=el.closest('details');if(d&&!d.open){d.open=true;el.scrollIntoView();}}}
+window.addEventListener('hashchange',reveal);reveal();})();
 """
 
 # The chosen language is remembered (a click on the switcher) and followed on every other page.
@@ -436,6 +476,7 @@ def build_index(cases_root: Path, lang: str = "en") -> str:
                      _esc(kind), _esc(settings), _esc(own.get("task_type") or meta.get("task_type", ""))])
     body = f"""<header>{_switcher(lang, index_name)}<p class="eyebrow">{t("index_eyebrow")}</p><h1>{t("index_title")}</h1>
 <p class="muted">{t("index_intro", n=len(rows))}</p></header>
+<section><h2>{t("scoring_title")}</h2><div class="common">{t("common_body")}</div></section>
 <section>{_table([t("field"), t("role"), t("case_id"), t("deliverable"), t("settings"), t("task_type")], rows)}</section>"""
     return _shell(f"FDE-Bench v2 — {UI[lang]['index_title']}", body, script=False, lang=lang)
 
