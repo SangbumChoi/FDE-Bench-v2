@@ -87,6 +87,9 @@ Design rules that keep scoring language-independent:
 - the stored `dataset/` and `explainer.html` match what the generator produces now; no TODO is left;
 - the reference scores validity 1 / quality 1.0 and an empty submission is invalid;
 - every case has a baseline, valid and strictly worse than the reference in every setting;
+- every case has a plain-words summary in every locale (`locales/<lang>/summary.yaml`: what the AI has to do,
+  what it is given, what it must ask, what makes it score 0, how quality is measured, what each difficulty asks
+  for), shown at the top of its page, with the same number of items in every locale;
 - every rule has an example that breaks exactly that rule, and that becomes valid when a non-physical rule
   is relaxed;
 - the case still works on world seeds 1, 2 and 3 (`--world-seeds` chooses others, `--no-world-seeds` skips).

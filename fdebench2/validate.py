@@ -78,7 +78,7 @@ from .transforms.language import detect_locale
 from .transforms.policy import RULE_CLASSES
 
 DISTINCT_MARGIN = 0.01           # on objectives: a parameter whose answers differ by less changes nothing
-SUMMARY_REQUIRED = False         # a case without locales/<lang>/summary.yaml: an error when True, a warning when False
+SUMMARY_REQUIRED = True          # a case without locales/<lang>/summary.yaml fails validation
 BASELINE_REQUIRED = True         # a case without baseline_solution fails validation
 ADMISSIBLE_SEARCH = 5000         # combinations tried per candidate before it is called never admissible
 # Per-tier binding findings that the cases had when the check became per tier, warned about instead of failing

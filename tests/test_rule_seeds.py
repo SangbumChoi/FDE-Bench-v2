@@ -181,6 +181,11 @@ EXPLAINER = {
 }
 
 
+SUMMARY = {"task": "Plan the orders.", "given": ["The request.", "The data."], "ask": ["The cap."],
+           "invalid_if": ["Orders above the cap."], "quality": "Lower cost is better.",
+           "tiers": {"easy": "The cap.", "medium": "Plus the price.", "hard": "Plus everything."}}
+
+
 def make_toy(tmp_path: Path, case_yaml: str = CASE_YAML, extra_py: str = "", dataset: bool = True) -> Path:
     """The toy case under tmp_path/cases/logistics/toy_planner, with its dataset and explainer when asked."""
     root = tmp_path / "cases" / TOY
@@ -203,6 +208,7 @@ def make_toy(tmp_path: Path, case_yaml: str = CASE_YAML, extra_py: str = "", dat
         (d / "targets.yaml").write_text(yaml.safe_dump(targets, allow_unicode=True, sort_keys=False), encoding="utf-8")
         if lang in EXPLAINER:
             (d / "explainer.yaml").write_text(yaml.safe_dump(EXPLAINER[lang], allow_unicode=True), encoding="utf-8")
+        (d / "summary.yaml").write_text(yaml.safe_dump(SUMMARY, allow_unicode=True), encoding="utf-8")
     if dataset:
         export_dataset(root)
         write_page(root)
@@ -506,7 +512,7 @@ def test_explainer_shows_candidates_panel_and_seed_selector(tmp_path):
     root = make_toy(tmp_path)
     en, ko = build_page(root, "en"), build_page(root, "ko")
     case = NativeCase(root)
-    assert "Parameter candidates" in en and "Public rule seeds" in en and "3 tiers × 3 public rule seeds" in en
+    assert "Parameter candidates" in en and "Public rule seeds" in en and "3 difficulties × 3 published versions" in en
     assert "<code>5</code> five euros" in en and "<code>budget</code>" in en
     assert json.dumps(case.at("easy", 2).drawn_params).replace('"', "&quot;") in en
     assert '<option value="easy_s2">easy / Rule seed 2</option>' in en
