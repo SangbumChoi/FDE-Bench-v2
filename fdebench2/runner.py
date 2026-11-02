@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
@@ -24,7 +24,8 @@ from .agents.base import AgentResult, RunContext
 from .agents.cli import CLIAgent
 from .agents.reference import ReferenceAgent
 from . import program
-from .cases import Case, discover
+from .cases import Case, Target, discover, is_case_doc
+from .dataset import AUDIT_FILE, DATASET_DIR
 from .llm import ModelRegistry, Usage
 from .mcp_bridge import CLIENT_USAGE
 from .prompts import render_task_prompt
@@ -43,7 +44,12 @@ CLI_HARNESSES = ("claude_code", "codex", "gemini", "opencode")
 # and a campaign runs them again instead of reusing the result.
 STATUSES = ("ok", "invalid", "agent_error", "timeout", "extract_failed", "harness_error", "infra_error")
 NOT_SCORED = ("harness_error", "infra_error")
-CASE_DOCS = {"README.md", "REVIEW.md", "explainer.html"}    # case files that never reach a run
+
+
+def never_in_a_run(rel: str) -> bool:
+    """Case files that never reach a run, so editing them keeps every stored result: the docs in every language
+    (cases.is_case_doc) and the stored ground truth audit, which audit-case writes together with the pages."""
+    return is_case_doc(rel) or rel == f"{DATASET_DIR}/{AUDIT_FILE}"
 
 
 @dataclass
@@ -86,12 +92,13 @@ def framework_version() -> str:
         return "unknown"
 
 
-def tree_hash(root: Path, skip: set[str] = frozenset()) -> str:
-    """sha256 over every file under root (relative path, size, content), except __pycache__ and `skip`."""
+def tree_hash(root: Path, skip: Callable[[str], bool] = lambda rel: False) -> str:
+    """sha256 over every file under root (relative path, size, content), except __pycache__ and the files whose
+    relative path (with /) `skip` names."""
     h = hashlib.sha256()
     for p in sorted(root.rglob("*")):
         rel = p.relative_to(root)
-        if p.is_file() and "__pycache__" not in rel.parts and rel.as_posix() not in skip:
+        if p.is_file() and "__pycache__" not in rel.parts and not skip(rel.as_posix()):
             h.update(f"{rel.as_posix()}\0{p.stat().st_size}\0".encode())
             h.update(p.read_bytes())
     return h.hexdigest()
@@ -145,6 +152,17 @@ def _names(role: Any) -> list[str]:
     return [] if role is None else [role] if isinstance(role, str) else list(role)
 
 
+def target_stages(targets: list[Target], clar: dict[str, Any] | None, raw: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """{target id: {revealed, learned, enforced}}: whether the client's replies stated the fact, whether a question
+    learned it (covered), and whether the deliverable implements it (the evaluator's enforced map); None where the
+    stage was not measured (no client, no answers, no diagnostic)."""
+    revealed = (clar or {}).get("revealed") or {}
+    covered = (clar or {}).get("covered") or {}
+    enforced = raw.get("enforced") or {}
+    return {t.id: {"revealed": revealed.get(t.id), "learned": covered.get(t.id), "enforced": enforced.get(t.id)}
+            for t in targets}
+
+
 class Bench:
     def __init__(self, settings: Settings, registry: ModelRegistry | None = None):
         self.s = settings
@@ -183,7 +201,7 @@ class Bench:
         """What a stored result depends on besides its run key: the case's files, the policy and engagement,
         the model configurations, the agent and sandbox settings and the framework version."""
         if spec.case_id not in self._case_hashes:
-            self._case_hashes[spec.case_id] = tree_hash(self.cases[spec.case_id].root, CASE_DOCS)
+            self._case_hashes[spec.case_id] = tree_hash(self.cases[spec.case_id].root, never_in_a_run)
         reg = self.registry
         names = {n for role in reg.roles.values() for n in _names(role)}
         if agent.harness == "reference":
@@ -385,6 +403,7 @@ class Bench:
             "extraction": extraction,
             "evaluator": raw,
             "clarification": clar,
+            "targets": target_stages(variant.targets, clar, raw),
             "events_fired": [r["id"] for r in transcript if r["kind"] == "event"],
             "score": score,
             "rescored": {p: under(load_policy(p))["final"] for p in extra_policies},

@@ -129,6 +129,49 @@ en:
     values, what only the client knows, the data and the stored answers, and the case notes.'
   difficulty: Difficulty
   asks_for: What it asks for
+  nav_evidence: Evidence
+  evidence_title: Evidence the facts matter
+  evidence_intro: 'Measured by <code>audit-case</code> on {n} settings of this dataset: the public rule seeds and other
+    combinations of the candidates. Everything is on the quality scale (the client''s own way 0, the reference solution
+    1), and a deliverable that breaks a rule earns 0.'
+  ablation_title: If the AI gets only this fact wrong
+  ablation_intro: 'The reference solution with this one fact misread and everything else right. Score lost is how much
+    of the way from the client''s own way to the reference it gives up (100%: it breaks a rule or does no better than
+    the client). The fact matters in a setting when at least {min} is lost; a wrong parameter value counts at its least
+    harmful.'
+  in_force_tiers: In force
+  checked_by: How it is checked
+  checked_param: the reference for another value of {param}
+  checked_hook: a misreading written by the case
+  checked_none: not checked yet
+  score_lost: Score lost
+  matters_in: Matters in
+  k_of_n: '{k} of {n} settings'
+  diagnostic: Checked directly
+  answer_yes: 'yes'
+  answer_no: 'no'
+  shortcuts_title: Shortcuts
+  shortcuts_intro: Strategies that skip the part of the task the case exists to test. A shortcut is closed in a setting
+    when it breaks a rule or scores at most {max}.
+  shortcut: Shortcut
+  what_it_does: What it does
+  closed_in: Closed in
+  best_quality: Best quality
+  no_shortcuts: (no shortcuts measured yet)
+  voi_title: Value of asking
+  voi_intro: What an AI that never asks the client can still earn, on average over the settings of a tier. The
+    reference solution, which knows everything the client knows, earns 1; the value of asking is the difference.
+  voi_params: Right for one setting, used for all
+  voi_robust: Never asks, plans for every setting
+  voi_reference: Asks (the reference)
+  bounds_title: How close the reference is to the best possible
+  bounds_intro: A stronger, slower solver (best known) and a proven limit that no solution can pass (bound), both on
+    the quality scale; the gap is how far the bound is from the reference's objective.
+  best_known: Best known
+  bound: Bound
+  gap_to_bound: Gap to bound
+  no_bounds: (no best known solution or bound yet)
+  not_measured: (not measured)
 ko:
   language: 언어
   case_eyebrow: '{field} · FDE-Bench v2 케이스'
@@ -247,6 +290,45 @@ ko:
   details_intro: 요약의 근거가 되는 전체 자료입니다. 요청 원문, 고객 규칙과 그 값의 후보, 고객만 아는 요구사항, 데이터와 저장된 정답, 케이스 노트가 있습니다.
   difficulty: 난이도
   asks_for: 요구하는 것
+  nav_evidence: 근거
+  evidence_title: 사실이 점수를 좌우한다는 근거
+  evidence_intro: <code>audit-case</code>로 이 데이터셋의 설정 {n}개(공개 규칙 시드와 후보값의 다른 조합)에서 잰 결과입니다. 모든 값은
+    품질 척도(기존 방식 = 0, 모범 답안 = 1) 위에 있고, 규칙을 어긴 산출물은 0입니다.
+  ablation_title: AI가 이 사실 하나만 잘못 알면
+  ablation_intro: '모범 답안에서 이 사실 하나만 잘못 읽고 나머지는 모두 맞게 한 경우입니다. 잃는 점수는 기존 방식에서 모범 답안까지의 거리 중 얼마를 잃는지입니다(100%:
+    규칙을 어기거나 기존 방식보다 낫지 않음). 설정에서 {min} 이상을 잃으면 그 사실이 중요하다고 봅니다. 파라미터 값을 잘못 고른 경우는 가장 피해가 적은 값으로 셉니다.'
+  in_force_tiers: 적용 티어
+  checked_by: 확인 방법
+  checked_param: '{param}의 다른 값에 맞춘 모범 답안'
+  checked_hook: 케이스가 정의한 잘못된 해석
+  checked_none: 아직 확인하지 않음
+  score_lost: 잃는 점수
+  matters_in: 중요한 설정
+  k_of_n: '{n}개 중 {k}개'
+  diagnostic: 직접 검사
+  answer_yes: 예
+  answer_no: 아니요
+  shortcuts_title: 지름길
+  shortcuts_intro: 케이스가 시험하려는 부분을 건너뛰는 전략입니다. 설정에서 규칙을 어기거나 품질이 {max} 이하이면 그 지름길은 막힌 것입니다.
+  shortcut: 지름길
+  what_it_does: 하는 일
+  closed_in: 막힌 설정
+  best_quality: 최고 품질
+  no_shortcuts: (아직 잰 지름길 없음)
+  voi_title: 질문의 가치
+  voi_intro: 고객에게 한 번도 묻지 않는 AI가 한 티어의 설정들에서 평균적으로 얻을 수 있는 점수입니다. 고객이 아는 것을 모두 아는 모범 답안은 1을 얻고, 그 차이가 질문의
+    가치입니다.
+  voi_params: 한 설정에 맞는 답을 모든 설정에 사용
+  voi_robust: 묻지 않고 모든 설정에 대비
+  voi_reference: 묻는 경우 (모범 답안)
+  bounds_title: 모범 답안이 최선에 얼마나 가까운가
+  bounds_intro: 더 강하고 느린 풀이(지금까지 찾은 가장 좋은 답)와 어떤 답도 넘을 수 없음이 증명된 한계(한계값)를 품질 척도로 나타냈습니다. 간격은 한계값이 모범 답안의 목표값에서
+    얼마나 떨어져 있는지입니다.
+  best_known: 지금까지 찾은 가장 좋은 답
+  bound: 한계값
+  gap_to_bound: 한계값까지의 간격
+  no_bounds: (지금까지 찾은 가장 좋은 답도, 한계값도 아직 없음)
+  not_measured: (재지 않음)
 ja:
   language: 言語
   case_eyebrow: '{field} · FDE-Bench v2 ケース'
@@ -358,6 +440,43 @@ ja:
   details_intro: 概要のもとになる資料のすべてです。依頼の原文、顧客ルールとその値の候補、顧客だけが知っている要件、データと保存された正解、ケースのメモがあります。
   difficulty: 難易度
   asks_for: 求められること
+  nav_evidence: 根拠
+  evidence_title: 事実がスコアを左右する根拠
+  evidence_intro: <code>audit-case</code> でこのデータセットの {n} 個の設定（公開ルールシードと候補値の別の組み合わせ）を測った結果です。どの値も品質の尺度（従来のやり方
+    = 0、模範解答 = 1）の上にあり、ルールを破った成果物は0です。
+  ablation_title: AIがこの事実だけを取り違えると
+  ablation_intro: 模範解答でこの事実だけを読み違え、ほかはすべて正しくした場合です。失う点数は、従来のやり方から模範解答までの距離のうちどれだけを失うかです（100%：ルールを破るか、従来のやり方より良くない）。ある設定で
+    {min} 以上を失えば、その事実は重要とみなします。パラメータの値を取り違えた場合は、最も害の小さい値で数えます。
+  in_force_tiers: 適用されるティア
+  checked_by: 確かめ方
+  checked_param: '{param} の別の値に合わせた模範解答'
+  checked_hook: ケースが定義した誤った解釈
+  checked_none: まだ確かめていない
+  score_lost: 失う点数
+  matters_in: 重要な設定
+  k_of_n: '{n} 個中 {k} 個'
+  diagnostic: 直接の検査
+  answer_yes: はい
+  answer_no: いいえ
+  shortcuts_title: 近道
+  shortcuts_intro: ケースが試したい部分を飛ばす戦略です。ある設定でルールを破るか品質が {max} 以下なら、その近道はふさがれています。
+  shortcut: 近道
+  what_it_does: すること
+  closed_in: ふさがれた設定
+  best_quality: 最高の品質
+  no_shortcuts: （まだ測った近道はありません）
+  voi_title: 質問の価値
+  voi_intro: 顧客に一度も尋ねないAIが、あるティアの設定で平均してまだ得られる点数です。顧客が知っていることをすべて知る模範解答は1を得て、その差が質問の価値です。
+  voi_params: 一つの設定の正解をすべてに使う
+  voi_robust: 尋ねずにすべての設定に備える
+  voi_reference: 尋ねる場合（模範解答）
+  bounds_title: 模範解答は最善にどれだけ近いか
+  bounds_intro: より強く遅い解法（これまでに見つかった最善の解答）と、どの解答も越えられないと証明された限界（限界値）を品質の尺度で示します。差は限界値が模範解答の目的の値からどれだけ離れているかです。
+  best_known: これまでに見つかった最善の解答
+  bound: 限界値
+  gap_to_bound: 限界値までの差
+  no_bounds: （これまでに見つかった最善の解答も限界値もまだありません）
+  not_measured: （測っていない）
 zh:
   language: 语言
   case_eyebrow: '{field} · FDE-Bench v2 案例'
@@ -469,6 +588,43 @@ zh:
   details_intro: 以下是摘要背后的全部材料：需求原文、客户规则及其候选值、只有客户知道的需求、数据和保存的答案，以及案例说明。
   difficulty: 难度
   asks_for: 要求做的事
+  nav_evidence: 依据
+  evidence_title: 这些事实确实影响得分的依据
+  evidence_intro: 由 <code>audit-case</code> 在本数据集的 {n} 个设置（公开规则种子和候选值的其他组合）上测得。所有数值都在质量尺度上（客户原来的做法 =
+    0，参考答案 = 1），违反规则的交付物得 0。
+  ablation_title: 如果 AI 只弄错这一个事实
+  ablation_intro: 参考答案只把这一个事实理解错、其余全部正确时的结果。失分是从客户原来的做法到参考答案这段距离中丢掉的比例（100%：违反规则，或不比客户原来的做法好）。在某个设置中失分达到
+    {min} 即认为该事实重要；参数取错值时按危害最小的那个值计。
+  in_force_tiers: 适用层级
+  checked_by: 检验方式
+  checked_param: 按 {param} 的另一个值做出的参考答案
+  checked_hook: 案例给出的错误理解
+  checked_none: 尚未检验
+  score_lost: 失分
+  matters_in: 起作用的设置
+  k_of_n: '{n} 个中的 {k} 个'
+  diagnostic: 直接检查
+  answer_yes: 是
+  answer_no: 否
+  shortcuts_title: 捷径
+  shortcuts_intro: 跳过案例要考查的那部分任务的策略。在某个设置中违反规则或质量不超过 {max}，这条捷径就被堵住了。
+  shortcut: 捷径
+  what_it_does: 做法
+  closed_in: 被堵住的设置
+  best_quality: 最高质量
+  no_shortcuts: （尚未测量捷径）
+  voi_title: 提问的价值
+  voi_intro: 从不向客户提问的 AI 在一个层级的各设置中平均还能得多少分。知道客户所知一切的参考答案得 1，两者之差就是提问的价值。
+  voi_params: 用一个设置的正确答案应对所有设置
+  voi_robust: 不提问，为所有设置做准备
+  voi_reference: 提问（参考答案）
+  bounds_title: 参考答案离最优有多近
+  bounds_intro: 更强、更慢的求解（已知最优解）和经证明任何解都无法超越的界限（界限值），都换算到质量尺度上；差距是界限值与参考答案目标值的距离。
+  best_known: 已知最优解
+  bound: 界限值
+  gap_to_bound: 与界限值的差距
+  no_bounds: （尚无已知最优解或界限值）
+  not_measured: （未测量）
 es:
   language: Idioma
   case_eyebrow: '{field} · caso de FDE-Bench v2'
@@ -604,3 +760,47 @@ es:
     caso.'
   difficulty: Dificultad
   asks_for: Qué pide
+  nav_evidence: Evidencia
+  evidence_title: Evidencia de que los hechos importan
+  evidence_intro: 'Medido con <code>audit-case</code> en {n} configuraciones de este conjunto de datos: las semillas de
+    reglas públicas y otras combinaciones de los candidatos. Todo está en la escala de calidad (la forma de trabajar del
+    cliente 0, la solución de referencia 1), y un entregable que rompe una regla vale 0.'
+  ablation_title: Si la IA se equivoca solo en este hecho
+  ablation_intro: 'La solución de referencia con solo este hecho mal entendido y todo lo demás bien. La puntuación perdida
+    es qué parte del camino entre la forma de trabajar del cliente y la referencia se pierde (100%: rompe una regla o no
+    mejora lo que hace el cliente). El hecho importa en una configuración cuando se pierde al menos {min}; un valor de
+    parámetro equivocado cuenta por el menos dañino.'
+  in_force_tiers: Se aplica en
+  checked_by: Cómo se comprueba
+  checked_param: la referencia para otro valor de {param}
+  checked_hook: una mala lectura escrita por el caso
+  checked_none: aún sin comprobar
+  score_lost: Puntuación perdida
+  matters_in: Importa en
+  k_of_n: '{k} de {n} configuraciones'
+  diagnostic: Comprobación directa
+  answer_yes: sí
+  answer_no: 'no'
+  shortcuts_title: Atajos
+  shortcuts_intro: Estrategias que se saltan la parte de la tarea que el caso quiere evaluar. Un atajo está cerrado en
+    una configuración cuando rompe una regla o su calidad es como mucho {max}.
+  shortcut: Atajo
+  what_it_does: Qué hace
+  closed_in: Cerrado en
+  best_quality: Mejor calidad
+  no_shortcuts: (aún no se ha medido ningún atajo)
+  voi_title: El valor de preguntar
+  voi_intro: Lo que todavía gana una IA que nunca pregunta al cliente, en promedio sobre las configuraciones de un
+    nivel. La solución de referencia, que sabe todo lo que sabe el cliente, gana 1; el valor de preguntar es la
+    diferencia.
+  voi_params: Correcta para una configuración, usada en todas
+  voi_robust: Nunca pregunta, se prepara para todas
+  voi_reference: Pregunta (la referencia)
+  bounds_title: Qué tan cerca está la referencia de lo mejor posible
+  bounds_intro: Un método más fuerte y más lento (la mejor conocida) y un límite demostrado que ninguna solución puede
+    superar (cota), ambos en la escala de calidad; la distancia es cuánto se aleja la cota del objetivo de la referencia.
+  best_known: Mejor conocida
+  bound: Cota
+  gap_to_bound: Distancia a la cota
+  no_bounds: (aún no hay mejor solución conocida ni cota)
+  not_measured: (sin medir)

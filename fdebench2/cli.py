@@ -2,6 +2,7 @@
 
   fdebench2 validate-case cases/<id> ...                  check native cases against the case contract
   fdebench2 export-dataset cases/<id> ...                 write each case's data and ground truth to dataset/
+  fdebench2 audit-case cases/<id> [--world-seed N]        the ground truth audit (dataset/audit.json)
   fdebench2 explain-case cases/<id> ...                   write each case's explainer.html
   fdebench2 new-case <field>/<role> [--program]          skeleton of a new case with settings
   fdebench2 cases                                        list cases
@@ -18,12 +19,24 @@ import argparse
 import json
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 from .runner import AgentSpec, Bench, Settings, run_campaign
 from .scoring.report import report
 from .transforms.policy import list_policies
 from .transforms.variant import VariantSpec
+
+
+def _count(text: str) -> int:
+    """A whole number of 0 or more (argparse type)."""
+    try:
+        n = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"not a whole number: {text!r}") from None
+    if n < 0:
+        raise argparse.ArgumentTypeError(f"must be 0 or more, got {n}")
+    return n
 
 
 def _axes(ap: argparse.ArgumentParser) -> None:
@@ -73,6 +86,12 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--no-world-seeds", action="store_true", help="skip the other-world check")
     p = sub.add_parser("export-dataset")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
+    p = sub.add_parser("audit-case", help="measure a case's ground truth (ablations, shortcuts, value of asking)")
+    p.add_argument("path", type=Path, help="a case directory under cases/")
+    p.add_argument("--world-seed", type=int, default=None, help="audit this world instead (printed, never stored)")
+    p.add_argument("--combos", type=_count, default=None,
+                   help="parameter combinations per tier besides the public panel (0 or more)")
+    p.add_argument("--no-write", action="store_true", help="print the report without storing dataset/audit.json")
     p = sub.add_parser("new-case")
     p.add_argument("case_id", help="<field>/<role>")
     p.add_argument("--program", action="store_true", help="the deliverable is a program, not files")
@@ -121,6 +140,17 @@ def main(argv: list[str] | None = None) -> None:
             write_page(path)
             n = sum(1 for f in dest.rglob("*") if f.is_file())
             print(f"{path.parent.name}/{path.name}: {n} files in {dest.relative_to(Path.cwd()) if dest.is_relative_to(Path.cwd()) else dest}")
+    elif a.cmd == "audit-case":
+        from .audit import AUDIT_COMBOS, audit_case, report, write_audit
+        from .cases import NativeCase
+        from .explain import write_page
+        started = time.time()
+        result = audit_case(NativeCase(a.path), a.world_seed, AUDIT_COMBOS if a.combos is None else a.combos)
+        print(report(result))
+        print(f"audited in {time.time() - started:.0f} s", file=sys.stderr)
+        if a.world_seed is None and not a.no_write:      # only the public world's audit is stored
+            print(write_audit(a.path, result))
+            write_page(a.path)                           # the explainer shows the stored audit
     elif a.cmd == "new-case":
         from .scaffold import new_case
         print(new_case(a.case_id, a.cases_root, kind="program" if a.program else "batch"))

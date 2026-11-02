@@ -19,6 +19,9 @@ writes, next to case.yaml:
         ...                   anything case.py `write_ground_truth(world, dir, setting)` adds
                               (e.g. the expected daily tables or the expected library)
       MANIFEST.json           sha256 of every file above
+      audit.json              the ground truth audit (`fdebench2 audit-case`, fdebench2.audit): not part of the
+                              manifest, kept when the dataset is exported again, and checked by its own
+                              fingerprint
 
 `validate-case` regenerates the dataset and compares it with MANIFEST.json, so
 the stored files can never drift from the generator. The dataset is part of
@@ -36,6 +39,7 @@ from pathlib import Path
 from .cases import LOCALES, NativeCase, quality_fields
 
 DATASET_DIR = "dataset"
+AUDIT_FILE = "audit.json"       # dataset/audit.json: written by audit-case, never by export-dataset
 
 
 def setting_record(case: NativeCase) -> dict:
@@ -81,12 +85,13 @@ def _write(case: NativeCase, out: Path) -> None:
 
 
 def _manifest(root: Path) -> dict[str, str]:
-    return {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in sorted(root.rglob("*")) if p.is_file() and p.name != "MANIFEST.json"}
+    """sha256 of every generated file (not MANIFEST.json itself, nor the audit, which has its own fingerprint)."""
+    return {rel: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob("*"))
+            if p.is_file() and (rel := p.relative_to(root).as_posix()) not in ("MANIFEST.json", AUDIT_FILE)}
 
 
 def export_dataset(case_root: Path) -> Path:
-    """(Re)write case_root/dataset/ from the generator."""
+    """(Re)write case_root/dataset/ from the generator, keeping a stored audit (too slow to run here)."""
     case = NativeCase(Path(case_root))
     dest = case.root / DATASET_DIR
     with tempfile.TemporaryDirectory() as tmp:
@@ -94,6 +99,8 @@ def export_dataset(case_root: Path) -> Path:
         _write(case, out)
         (out / "MANIFEST.json").write_text(json.dumps(_manifest(out), indent=1, sort_keys=True) + "\n",
                                            encoding="utf-8")
+        if (dest / AUDIT_FILE).is_file():
+            shutil.copy2(dest / AUDIT_FILE, out / AUDIT_FILE)
         if dest.exists():
             shutil.rmtree(dest)
         shutil.copytree(out, dest)

@@ -255,7 +255,7 @@ def test_judges_must_quote_the_answer():
     answers = ["Each van takes 40 trays.", "Shifts start at 5:00."]
 
     def judge(questions, quote):
-        return Fake(lambda m: json.dumps({"covered": True, "questions": questions, "quote": quote}))
+        return Fake(lambda m: json.dumps({"revealed": True, "quote": quote, "asked": True, "questions": questions}))
     good = judge([1], "Each van  takes\n40 trays")                 # whitespace differences are fine
     invented = judge([1], "Each van takes 45 trays")              # not in the answer
     wrong_round = judge([2], "Each van takes 40 trays")           # not in the cited round's answer
@@ -269,9 +269,10 @@ def test_judges_must_quote_the_answer():
     assert res.recall == 1.0 and res.precision == 0.5
     res = score_clarification([target], asks, [judge(1, "Each van takes 40 trays")], answers=answers)
     assert res.recall == 1.0                                                  # a bare number is a citation too
-    # Without answers there is nothing to quote: the vote counts as before.
-    res = score_clarification([target], asks, [judge([1], "")], answers=None)
-    assert res.recall == 1.0
+    # Without answers there is nothing to quote: the judge only says whether the questions would reveal it.
+    res = score_clarification([target], asks, [Fake(lambda m: json.dumps({"covered": True, "questions": [1]}))],
+                              answers=None)
+    assert res.recall == 1.0 and res.revealed == {"cap": None}
 
 
 

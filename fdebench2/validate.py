@@ -41,10 +41,21 @@ and also:
    the same for every candidate) is a warning;
 9. markers (in requirements, target texts and rule descriptions; balanced),
    parameters, `tiers:` and `when:` only name declared tiers, parameters and
-   candidates.
+   candidates, and a target's `param:` (en) names a declared parameter.
 
 Every case also stores its data and ground truth in dataset/ (fdebench2.dataset);
 the stored files must match what the generator produces now.
+
+A case with `audited: true` in case.yaml also needs a fresh ground truth audit
+(dataset/audit.json, written by `fdebench2 audit-case`, fdebench2.audit) whose
+findings pass: the reference and baseline work in every measured combination;
+every target in force has an ablation that bites in each of its tiers and a
+diagnostic that, if it exists, tells the reference from the ablations that bite;
+every shortcut is closed; asking is worth at least VOI_MIN in every tier; a best
+known solution or a bound exists, and quality_cap is set and not below the best
+known quality. OPEN_AUDIT_FINDINGS turns a known finding into a warning (the
+stored findings count even when the audit is stale). For any other case a stored
+audit that is stale is only a warning.
 
 Warnings do not fail a case but point at likely authoring slips: a case without a
 baseline, two tiers with the same answer, a public panel that shows only one
@@ -120,6 +131,11 @@ OPEN_NARROW_SCALES: dict[str, tuple[tuple[int, ...] | None, str]] = {
         None, "shortlisting by relevant years alone comes within 1-4% of the reference in most easy and medium "
               "settings (the 30-point fit floor compresses the objective)"),
 }
+# Ground truth audit findings of cases with `audited: true` that their owners know about: (case id, kind, key) ->
+# why it is open (kinds and keys as fdebench2.audit.findings gives them, e.g. ("no_bite", "safety_stock@easy") or
+# ("invalid_reference", "hard/cap=22,price=3"), and ("audit", "missing" or "stale")). A listed problem is a warning
+# until the case changes; waiving "stale" waives only that: the stored audit's own findings still count.
+OPEN_AUDIT_FINDINGS: dict[tuple[str, str, str], str] = {}
 REQUIRED_META = ("id", "role", "field", "task_type", "objective", "seed", "deliverable_spec", "rules")
 HANGUL = re.compile(r"[가-힣]")
 KANA = re.compile(r"[぀-ヿ]")
@@ -735,6 +751,47 @@ def check_world_seed(case: NativeCase, seed: int) -> tuple[list[str], list[str]]
     return problems, warnings
 
 
+def _audit_findings(case: NativeCase, audit: dict | None) -> list:
+    """What dataset/audit.json shows for a case: missing or stale (against the current sources) first, then, for a
+    case with `audited: true`, the stored audit's own findings, also when it is stale (marked so): waiving the stale
+    finding must not waive the others."""
+    from .audit import Finding, findings, fingerprint
+    audited = bool(case.meta.get("audited"))
+    if audit is None:
+        return [Finding(True, "audit", "missing", "dataset/audit.json is missing: run `fdebench2 audit-case`")
+                ] if audited else []
+    stale = [Finding(audited, "audit", "stale", "dataset/audit.json is stale (the case changed since it was "
+                                                "written): run `fdebench2 audit-case`")
+             ] if audit.get("fingerprint") != fingerprint(case.root) else []
+    if not audited:
+        return stale
+    try:
+        cap = case.quality_cap
+    except ValueError:          # reported with case.yaml
+        cap = None
+    try:
+        found = findings(audit, cap)
+    except (KeyError, TypeError, ValueError) as e:
+        return stale + [Finding(True, "audit", "unreadable", f"dataset/audit.json cannot be read ({e!r}): run "
+                                                             f"`fdebench2 audit-case`")]
+    return stale + [Finding(f.problem, f.kind, f.key, f"(stale audit) {f.text}") if stale else f for f in found]
+
+
+def check_audit(case: NativeCase) -> tuple[list[str], list[str]]:
+    """(problems, warnings) of the ground truth audit. A case with `audited: true` needs a fresh dataset/audit.json
+    whose findings pass (OPEN_AUDIT_FINDINGS turns a known problem into a warning); for any other case the audit
+    is neither run nor required, and a stored one that is stale is only a warning."""
+    from .audit import load_audit
+    problems, warnings = [], []
+    for f in _audit_findings(case, load_audit(case.root)):
+        why = OPEN_AUDIT_FINDINGS.get((case.id, f.kind, f.key))
+        if f.problem and why is None:
+            problems.append(f"audit: {f.text}")
+        else:
+            warnings.append(f"audit: {f.text}" + (f" (known and open: {why})" if f.problem else ""))
+    return problems, warnings
+
+
 def _scores_as_reference(case: NativeCase, submission: Path) -> bool:
     res = case.evaluate(submission, "en")
     return res["validity_score"] == 1.0 and abs(res["quality_score"] - 1.0) <= 1e-9
@@ -897,6 +954,9 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                 problems.append(f"{lang}/targets.yaml {t.get('id')}: {why}")
             if lang == "en" and (not t.get("kind") or not t.get("domain")):
                 problems.append(f"en/targets.yaml {t.get('id')}: needs kind and domain")
+            if lang == "en" and "param" in t and (not isinstance(t["param"], str) or t["param"] not in pools):
+                problems.append(f"en/targets.yaml {t.get('id')}: param {t['param']!r} is not a parameter in "
+                                f"case.yaml params:")
             if lang == "en" and "tiers" in t and bad_tiers(t["tiers"]):
                 problems.append(f"en/targets.yaml {t.get('id')}: tiers {t['tiers']} are not declared")
             if lang == "en":
@@ -1101,6 +1161,11 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
         from .explain import check_page
         problems += check_dataset(root)
         problems += check_page(root)
+
+    # ── the ground truth audit: enforced for `audited: true`, a stale one warned about otherwise ──
+    found, notes = check_audit(case)
+    problems += found
+    warnings += notes
 
     # ── optional: other worlds (contamination-resistant runs use private seeds) ──
     for seed in world_seeds:

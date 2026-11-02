@@ -17,6 +17,12 @@ evaluator runs on hidden inputs (e.g. `decide(application)`, `answer(question)`)
 per public setting with the reference deliverable and its score). Regenerate with `fdebench2 export-dataset`;
 `validate-case` fails if the stored files drift from the generator.
 
+**Ground truth audit:** `fdebench2 audit-case` measures whether each client fact matters (a deliverable that
+misreads only it loses credit), whether shortcuts are closed, what never asking is worth and how close the
+reference is to the best known solution, and stores it in `dataset/audit.json`. A case with `audited: true` in
+case.yaml must pass it in `validate-case`; no case is audited yet (see
+[DESIGN.md §3](../DESIGN.md#ground-truth-audit)).
+
 Detailed, research-grounded specs for every unbuilt role are in [`docs/specs/`](../docs/specs/README.md).
 
 Each row lists the hidden requirements the simulated client knows (examples, not exhaustive) and the

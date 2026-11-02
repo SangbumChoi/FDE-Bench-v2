@@ -31,6 +31,7 @@ import re
 import sys
 import tempfile
 from dataclasses import dataclass, field
+from fnmatch import fnmatchcase
 from functools import cached_property
 from pathlib import Path
 from types import ModuleType
@@ -51,6 +52,15 @@ _WHEN = re.compile(r"<!-- when: ([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([^>]*?) -->\n?"
                    r"((?:(?!<!-- /?when).)*?)<!-- /when -->\n?", re.S)
 PARAM = re.compile(r"\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}")
 MIN_QUALITY_SPAN = 0.05   # the validator's floor on a setting's quality scale, see quality_span()
+# Case files only people read, in every language: never part of a run (runner.Bench.fingerprint) or of what the
+# ground truth audit measures (audit.fingerprint). Paths relative to the case directory.
+CASE_DOCS = ("README*.md", "REVIEW*.md", "explainer*.html", "locales/*/summary.yaml", "locales/*/explainer.yaml")
+
+
+def is_case_doc(rel: str) -> bool:
+    """Whether a case file (path relative to the case directory, with /) is one of its docs: the READMEs, REVIEWs
+    and explainer pages next to case.yaml and the page texts locales/<lang>/summary.yaml and explainer.yaml."""
+    return any(fnmatchcase(rel, pattern) for pattern in CASE_DOCS)
 
 
 def quality_span(ref: float, base: float | None) -> float | None:
@@ -319,7 +329,8 @@ class Case:
 
     def evaluate(self, submission_dir: Path, lang: str, relaxed: frozenset[str] = frozenset()) -> dict[str, Any]:
         """{validity_score, quality_score, violations: [{rule, message}], metrics, error_info}; a valid
-        submission adds objective, reference_objective, baseline_objective and quality_fields()."""
+        submission adds objective, reference_objective, baseline_objective and quality_fields(), and a readable
+        one the case's per-target diagnostic (enforced, evidence) when the case reports it."""
         raise NotImplementedError
 
     def rules(self) -> CaseRules | None:
@@ -411,6 +422,15 @@ class NativeCase(Case):
                                                     the five locales, which {{name}} words per locale
       admissible(params, tier) -> bool              False rejects a combination (drawn and derived values): every
                                                     parameter is drawn again with a salt (see draw_params)
+    The ground truth audit (fdebench2.audit, DESIGN.md "Ground truth audit") reads more optional hooks:
+      ablations(world) -> {target_id: fn(out_dir)}  the reference misreading only that client fact
+      shortcuts(world) -> {name: fn(out_dir)}       degenerate strategies (the docstring's first line describes it)
+      robust_solution(world, out_dir, tier, candidates)   the best deliverable that never asks, from the
+                                                    tier's parameter pools {name: [values]}
+      best_known_solution(world, out_dir)          a stronger, possibly slow solver
+      objective_bound(world) -> float               a proven bound on the objective
+    and score() may add "enforced": {target_id: True | False | None} (and "evidence": {target_id: str}). With
+    settings, every one of them but robust_solution also gets the Setting as its last argument.
     case.yaml declares objective direction, the deliverable (`deliverable_type: batch` with `deliverables`,
     or `deliverable_type: program` with `entrypoint`), its spec, rule classes and optionally `quality_cap`
     (the normalized quality of the best known solution, which then earns full quality credit).
@@ -639,6 +659,28 @@ class NativeCase(Case):
         fn = getattr(self.module, "violating_examples", None)
         return fn(self.world, *self._args()) if fn else {}
 
+    # ── ground truth audit hooks (fdebench2.audit; all optional) ────────────
+    def ablations(self) -> dict:
+        """case.py ablations(): {target id: fn(out_dir)}, each the reference misreading only that client fact."""
+        fn = self._hook("ablations")
+        return fn(self.world, *self._args()) if fn else {}
+
+    def shortcuts(self) -> dict:
+        """case.py shortcuts(): {name: fn(out_dir)}, degenerate strategies the scoring must not reward."""
+        fn = self._hook("shortcuts")
+        return fn(self.world, *self._args()) if fn else {}
+
+    def write_robust(self, out_dir: Path) -> None:
+        """case.py robust_solution: the one deliverable for every setting of this tier, from the tier's pools."""
+        pools = {name: list(by_tier[self.tier]) for name, by_tier in self.param_candidates.items()}
+        self.module.robust_solution(self.world, Path(out_dir), self.tier, pools)
+
+    def write_best_known(self, out_dir: Path) -> None:
+        self.module.best_known_solution(self.world, Path(out_dir), *self._args())
+
+    def objective_bound(self) -> float:
+        return float(self.module.objective_bound(self.world, *self._args()))
+
     def raw_score(self, submission_dir: Path) -> dict:
         return self.module.score(self.world, Path(submission_dir), *self._args())
 
@@ -681,18 +723,23 @@ class NativeCase(Case):
         return float(cap)
 
     def evaluate(self, submission_dir: Path, lang: str, relaxed: frozenset[str] = frozenset()) -> dict[str, Any]:
-        out: dict[str, Any] = {"validity_score": 0.0, "quality_score": 0.0, "violations": [], "metrics": {},
-                               "error_info": {}}
         try:
             res = self.raw_score(Path(submission_dir))
         except Exception as e:  # a malformed submission must never crash scoring
-            out["error_info"] = {"fatal": f"evaluator error: {e!r}"}
-            return out
+            res = {"fatal": f"evaluator error: {e!r}"}
+        return self.judge(res, relaxed)
+
+    def judge(self, res: dict, relaxed: frozenset[str] = frozenset()) -> dict[str, Any]:
+        """evaluate()'s result from a raw score (case.py score()), for a caller that already has one."""
+        out: dict[str, Any] = {"validity_score": 0.0, "quality_score": 0.0, "violations": [], "metrics": {},
+                               "error_info": {}}
         if "fatal" in res:
             out["error_info"] = {"fatal": res["fatal"]}
             return out
         out["metrics"] = res.get("metrics", {})
         out["violations"] = [{"rule": r, "message": m} for r, m in res["violations"]]
+        # The per-target diagnostic (does the deliverable implement each client fact?), valid or not.
+        out.update({k: dict(res[k]) for k in ("enforced", "evidence") if k in res})
         blocking = [v for v in out["violations"] if v["rule"] not in relaxed]
         if blocking:
             out["error_info"] = {"constraint": [f"{v['rule']}: {v['message']}" for v in blocking[:8]]}

@@ -26,6 +26,7 @@ cp configs/models.example.yaml configs/models.yaml   # set endpoints and API-key
 fdebench2 cases                                   # <field>/<role>, role title, task type, locales
 fdebench2 validate-case cases/*/*/                # contract checks for every case
 fdebench2 export-dataset cases/<field>/<role>     # store a case's data and ground truth in dataset/
+fdebench2 audit-case cases/<field>/<role>         # measure its ground truth, stored in dataset/audit.json
 fdebench2 policies
 # What an agent would get, without running one (Korean client, Japanese agent instructions, messy engagement):
 fdebench2 prepare --case logistics/bakery_delivery_dispatcher --customer-locale ko --agent-locale ja \

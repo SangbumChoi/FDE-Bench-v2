@@ -12,7 +12,10 @@ trials); columns are case-macro averages, and the per-axis tables weigh a
 case's rule seeds the same way. "all valid" is the share of (case, noise seed,
 trial, ...) cells valid under every rule seed of the tier.
 The settings table lists every (case, tier, rule seed) with the parameters that
-seed drew, its mean final score and how many of its runs were valid.
+seed drew, its mean final score and how many of its runs were valid. The target
+funnel, per case, follows each client fact through a run: revealed by the
+client's replies, learned through a question, enforced by the deliverable (the
+case's diagnostic), and enforced given learned or not.
 
 With few cases, differences between agents are noisy: every mean comes with a
 95% bootstrap interval over cases (cases resampled with replacement, fixed
@@ -255,6 +258,39 @@ def pass_k_table(results: list[dict[str, Any]]) -> str | None:
     return "\n".join(lines)
 
 
+def _stage(runs: list[dict[str, Any]], stage: str, learned: bool | None = None) -> str:
+    """"0.50 (4)": the share of runs where a target passed `stage`, among the runs that measured it (and, with
+    `learned`, whose learned stage was that), and how many those were."""
+    flags = [x[stage] for x in runs if x[stage] is not None and (learned is None or x["learned"] is learned)]
+    return f"{mean(flags):.2f} ({len(flags)})" if flags else "–"
+
+
+def funnel_tables(results: list[dict[str, Any]]) -> str | None:
+    """Per case, the target funnel: for each target the share of runs where the client's replies revealed it, a
+    question learned it and the deliverable enforced it, and enforced given learned or not. Each column counts
+    only the runs that measured its stages (the enforced columns: runs whose evaluation diagnosed the target).
+    A target no run measured any stage of is left out, and so is a case with no target left; None when nothing
+    is left."""
+    by_case: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(lambda: defaultdict(list))
+    for r in results:
+        for target, stages in (r.get("targets") or {}).items():
+            by_case[r["spec"]["case_id"]][target].append(stages)
+    measured = {case_id: {target: runs for target, runs in targets.items()
+                          if any(v is not None for x in runs for v in x.values())}
+                for case_id, targets in by_case.items()}
+    parts = []
+    for case_id, targets in sorted(measured.items()):
+        if not targets:
+            continue
+        rows = [f"| {target} | {_stage(runs, 'revealed')} | {_stage(runs, 'learned')} | {_stage(runs, 'enforced')} "
+                f"| {_stage(runs, 'enforced', True)} | {_stage(runs, 'enforced', False)} |"
+                for target, runs in targets.items()]
+        parts.append("\n".join([f"### target funnel: {case_id} (share of runs, measured runs in brackets)", "",
+                                "| target | revealed | learned | enforced | enforced if learned "
+                                "| enforced if not learned |", "|---|---|---|---|---|---|", *rows]))
+    return "\n\n".join(parts) or None
+
+
 def status_table(results: list[dict[str, Any]]) -> str:
     """Runs per agent by how they ended, with tokens and dollars per run (solver, client, extractor, judges)."""
     by_agent: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -303,5 +339,6 @@ def report(out: Path) -> str:
         parts += [table(scored, ax) for ax in varied] or ([] if several else [table(scored, "policy")])
         parts.append(settings_table(scored))
         parts.append(pass_k_table(scored))
+        parts.append(funnel_tables(scored))
     parts += [status_table(results), unscored_list(results)]
     return "\n\n".join(p for p in parts if p) + "\n"

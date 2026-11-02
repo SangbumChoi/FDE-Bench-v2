@@ -4,8 +4,9 @@ The page gathers everything a reviewer needs to understand a case without
 running it: the request, the hidden requirements in every public setting and
 locale, the rules and their classes, the rule parameters (candidates per tier
 and the values the public rule seeds drew), the clarification targets, the
-case README, the stored dataset, the reference scores and the findings of a
-review (REVIEW.md, when the case has one). It is generated from the case files
+case README, the stored dataset, the reference scores, the findings of a
+review (REVIEW.md, when the case has one) and the evidence of its ground truth
+audit (dataset/audit.json, when audit-case stored one). It is generated from the case files
 (`fdebench2 explain-case`, also run by `export-dataset`), works offline, and
 validate-case checks that it is up to date.
 """
@@ -19,6 +20,7 @@ from pathlib import Path
 
 import yaml
 
+from .audit import load_audit, shortcut_summary, target_summary, tier_order
 from .cases import LOCALES, NativeCase, load_fields, value_label, value_text
 from .dataset import DATASET_DIR
 
@@ -156,7 +158,8 @@ def _t(lang: str, key: str, **values) -> str:
 
 def case_texts(case_root: Path, lang: str) -> dict:
     """locales/<lang>/explainer.yaml: the case's own words for the explainer (role, task type, tiers, rules,
-    deliverable spec) in that language. English comes from case.yaml."""
+    deliverable spec and, optionally, `shortcuts: {name: description}` for the audit's shortcuts) in that language.
+    English comes from case.yaml (and the shortcuts' docstrings)."""
     path = Path(case_root) / "locales" / lang / "explainer.yaml"
     return (yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if lang != "en" and path.is_file() else {}
 
@@ -186,6 +189,52 @@ def _switcher(lang: str, name) -> str:
     links = "".join(f'<a href="{name(l)}" data-lang="{l}" hreflang="{l}"{" aria-current=\"page\"" if l == lang else ""}>'
                     f"{LANG_NAMES[l]}</a>" for l in LANGS)
     return f'<nav class="langs" aria-label="{_t(lang, "language")}">{links}</nav>'
+
+
+def _pct(x: float | None) -> str:
+    return "–" if x is None else f"{x:.0%}"
+
+
+def _q(x: float | None) -> str:
+    return "–" if x is None else f"{x:.2f}"
+
+
+def _evidence(audit: dict, lang: str, src: list[dict], words: dict[str, str]) -> str:
+    """The folded section "Evidence the facts matter", from dataset/audit.json (fdebench2.audit): per target (in
+    en/targets.yaml's order, `src`) what misreading only it costs, the shortcuts (described in `words`, the page
+    language's locales/<lang>/explainer.yaml `shortcuts:`, else by their docstring), the value of asking per tier,
+    and how close the reference is to the best known solution and the bound."""
+    t = lambda key, **kw: _t(lang, key, **kw)  # noqa: E731
+    order, params = [x["id"] for x in src], {x["id"]: x.get("param", "") for x in src}
+    checked = {"param": lambda target: t("checked_param", param=f"<code>{_esc(params.get(target, ''))}</code>"),
+               "hook": lambda target: t("checked_hook")}
+    targets = [[f"<code>{_esc(x['target'])}</code>", _esc(", ".join(x["tiers"])),
+                "; ".join(checked[s](x["target"]) for s in x["sources"]) or t("checked_none"),
+                _pct(x["low"]) if x["low"] == x["high"] else f"{_pct(x['low'])}–{_pct(x['high'])}",
+                t("k_of_n", k=x["bites"], n=x["checked"]) if x["checked"] else "–",
+                t("answer_yes" if x["has_diagnostic"] else "answer_no")]
+               for x in sorted(target_summary(audit), key=lambda x: order.index(x["target"]) if x["target"] in order
+                               else len(order))]
+    shortcuts = [[f"<code>{_esc(s['name'])}</code>", _esc(words.get(s["name"]) or s["description"]),
+                  t("k_of_n", k=s["closed"], n=s["settings"]), _q(s["best_quality"])] for s in shortcut_summary(audit)]
+    voi = [[_esc(tier), _q(v["never_asks_params"]),
+            t("not_measured") if v["never_asks"] is None else _q(v["never_asks"]), "1.00"]
+           for tier, v in ((tier, audit["voi"][tier]) for tier in tier_order(audit["voi"]))]
+    bounds = [[_esc(b["setting"]), _q(b["best_known_quality"]), _q(b["bound_quality"]), _pct(b["gap_to_bound"])]
+              for b in audit["bounds"] if b["best_known_valid"] is not None or b["bound"] is not None]
+    th = audit["thresholds"]
+    n = sum(len(v) for v in audit["settings"].values())
+    return f"""<section id="evidence"><h2>{t("evidence_title")}</h2>
+<p class="muted">{t("evidence_intro", n=n)}</p>
+<h3>{t("ablation_title")}</h3><p class="muted">{t("ablation_intro", min=_pct(th["ablation_min_damage"]))}</p>
+{_table([t("target"), t("in_force_tiers"), t("checked_by"), t("score_lost"), t("matters_in"), t("diagnostic")], targets)}
+<h3>{t("shortcuts_title")}</h3><p class="muted">{t("shortcuts_intro", max=_q(th["shortcut_max_quality"]))}</p>
+{_table([t("shortcut"), t("what_it_does"), t("closed_in"), t("best_quality")], shortcuts) if shortcuts else f"<p class='muted'>{t('no_shortcuts')}</p>"}
+<h3>{t("voi_title")}</h3><p class="muted">{t("voi_intro")}</p>
+{_table([t("tier"), t("voi_params"), t("voi_robust"), t("voi_reference")], voi)}
+<h3>{t("bounds_title")}</h3><p class="muted">{t("bounds_intro")}</p>
+{_table([t("setting"), t("best_known"), t("bound"), t("gap_to_bound")], bounds) if bounds else f"<p class='muted'>{t('no_bounds')}</p>"}
+</section>"""
 
 
 def build_page(case_root: Path, lang: str = "en") -> str:
@@ -221,6 +270,7 @@ def build_page(case_root: Path, lang: str = "en") -> str:
 
     review_md, _ = localized_doc(root, "REVIEW.md", lang)
     summary = case_summary(root, lang)
+    audit = load_audit(root)
     parts: list[str] = []
 
     # header
@@ -266,7 +316,7 @@ def build_page(case_root: Path, lang: str = "en") -> str:
     parts.append(f"""<details class="more" id="details"{"" if summary else " open"}><summary>{t("details_title")}</summary>
 <p class="muted">{t("details_intro")}</p>
 <nav class="sub"><a href="#request">{t("nav_request")}</a><a href="#settings">{t("nav_settings")}</a><a href="#rules">{t("nav_rules")}</a>
-<a href="#requirements">{t("nav_requirements")}</a><a href="#targets">{t("nav_targets")}</a><a href="#data">{t("nav_data")}</a>
+<a href="#requirements">{t("nav_requirements")}</a><a href="#targets">{t("nav_targets")}</a>{f'<a href="#evidence">{t("nav_evidence")}</a>' if audit else ""}<a href="#data">{t("nav_data")}</a>
 <a href="#readme">{t("nav_readme")}</a>{f'<a href="#review">{t("nav_review")}</a>' if review_md else ""}</nav>""")
 
     # request, in the page's language only (the switcher at the top picks the language)
@@ -343,6 +393,8 @@ def build_page(case_root: Path, lang: str = "en") -> str:
     parts.append(f"""<section id="targets"><h2>{t("targets_title")}</h2>
 <p class="muted">{t("targets_intro_params" if has_settings else "targets_intro")}</p>
 {_table(cols, trows)}</section>""")
+    if audit:       # the ground truth audit, when audit-case has stored one
+        parts.append(_evidence(audit, lang, src, own.get("shortcuts") or {}))
 
     # data & answers
     ds = root / DATASET_DIR

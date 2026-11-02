@@ -31,12 +31,14 @@ time (cached in `.cache/`).
 ```
 cases/<field>/<role>/
   case.yaml                 id (= role dir), role (title), field (= parent dir), task_type, seed,
-                            objective (minimize|maximize), quality_cap (optional),
+                            objective (minimize|maximize), quality_cap (optional), audited (optional),
                             deliverables, deliverable_spec, rules [{id, class, description}]
   case.py                   build_world(seed) · write_data(world, dir, lang) · reference_solution(world, dir)
                             · baseline_solution(world, dir) · score(world, submission_dir)
-                            · violating_examples(world)
-                            (cases with settings: all but the first two also take the setting)
+                            · violating_examples(world); for the ground truth audit (optional):
+                            ablations · shortcuts · robust_solution · best_known_solution · objective_bound
+                            (cases with settings: all but build_world, write_data and robust_solution
+                            also take the setting)
   locales/<zh|en|ko|ja|es>/
     request.md              the client's short, under-specified request (what the agent sees)
     requirements.md         complete requirements (hidden; the simulated client answers from it)
@@ -50,6 +52,7 @@ cases/<field>/<role>/
                             parameters), reference/, score.json (with the baseline's objective) and
                             case extras
     MANIFEST.json           sha256 of every file; validate-case checks it against the generator
+    audit.json              the ground truth audit (fdebench2 audit-case), outside the manifest
 ```
 
 Design rules that keep scoring language-independent:
@@ -95,7 +98,8 @@ Design rules that keep scoring language-independent:
   for), shown at the top of its page, with the same number of items in every locale;
 - every rule has an example that breaks exactly that rule, and that becomes valid when a non-physical rule
   is relaxed;
-- the case still works on world seeds 1, 2 and 3 (`--world-seeds` chooses others, `--no-world-seeds` skips).
+- the case still works on world seeds 1, 2 and 3 (`--world-seeds` chooses others, `--no-world-seeds` skips);
+- a case with `audited: true` has a fresh ground truth audit that passes (Ground truth audit, below).
 
 Warnings, which do not fail validation: two tiers whose references are byte-identical or score as each
 other's reference; a parameter that varies in a tier where nothing in force uses it; a lower-tier binding
@@ -253,6 +257,103 @@ the entry file (without `data/` and `inbox/`) and are never reshaped by the extr
 code would mean re-solving the task. The validator requires the reference to write `program/`, checks that `ENTRYPOINT`
 matches `case.yaml`, and checks that scoring is deterministic.
 
+### Ground truth audit
+
+The ground truth (GT) of a setting describes acceptable behaviour, with the reference as supporting evidence, in
+five parts, and `fdebench2 audit-case` (`fdebench2/audit.py`) measures each:
+
+1. **Client facts** (the targets): each must matter. For every target in force, a deliverable that misreads only
+   that fact and is otherwise as good as the reference (an *ablation*) must lose credit.
+2. **Validity checks**: the rules and mandatory outputs (hard gates), checked as before.
+3. **Objective**: costs and benefits, including uncertainty.
+4. **Reference and bounds**: a reproducible solution plus evidence of how close it is to the best achievable.
+5. **Diagnostic cases**: inputs or checks that tell a correct implementation from a shortcut.
+
+**Hooks** (case.py, all optional; a case with settings gets the `Setting` as the last argument, except
+`robust_solution`, which gets the tier and its candidates instead and never the setting):
+
+- `ablations(world) -> {target_id: fn(out_dir)}`: for each target that is not a single drawn parameter, the
+  reference with one switch flipped: the most natural wrong reading of the agent-visible data, not sabotage. Only
+  targets in force in the setting.
+- `shortcuts(world) -> {name: fn(out_dir)}`: degenerate strategies that skip what the case tests (refer every
+  borderline application, leave a mandatory table empty, ignore the uncertainty, copy the data through); the
+  function's first docstring line describes it (in English; `shortcuts: {name: text}` in
+  `locales/<lang>/explainer.yaml` words it for that language's explainer page).
+- `robust_solution(world, out_dir, tier, candidates)`: the solver that never asks. It sees only what the agent
+  sees and the most natural reading of every fixed hidden fact, and writes the one deliverable that does best on
+  average over the tier's possible settings (`candidates` = the tier's pools), e.g. by planning for the strictest
+  candidate of each rule. A genuine, strong attempt.
+- `best_known_solution(world, out_dir)`: a stronger, possibly slow solver (local search, a MIP with a time limit,
+  oracle sizing); `objective_bound(world) -> float`: a proven bound (a lower bound on cost when minimizing, an
+  upper bound when maximizing), e.g. an LP relaxation or perfect-information sizing.
+- `score()` may add `"enforced": {target_id: True | False | None}` (and `"evidence": {target_id: str}`): does the
+  deliverable implement this fact (None: not applicable or not determinable)? It is computed for valid and invalid
+  deliverables alike whenever the deliverable can be read; a program case computes it from hidden diagnostic
+  inputs where only that fact decides the output, in the same program run as scoring. `evaluate()` passes it
+  through (not on a fatal deliverable).
+
+A target whose fact is exactly a drawn parameter's value carries `param: <name>` in `en/targets.yaml` (read from en
+only, like `kind` and `domain`; it must name a declared parameter): the generic parameter ablation then covers it.
+
+**What is measured.** Per tier: the public panel (a combination two seeds draw counted once) plus up to
+`AUDIT_COMBOS` (12) admissible combinations of the tier's candidates, built with `with_params` and taken in the
+order of sha256(case id | tier | values), so no private seed's draw is exposed. The public world is used unless a
+world seed is given. Credit = 0 if invalid, else the quality score clipped to [0, 1]; damage = 1 − credit.
+A combination whose reference or baseline raises or is not valid is skipped and reported (`invalid_reference`,
+`invalid_baseline`: a rule seed can draw it), and drawing goes on until `AUDIT_COMBOS` combinations are measured
+or as many have been skipped; another value of a `param:` target whose reference raises is reported the same way.
+
+- **Ablations.** A `param:` target's ablation in setting s is the reference of `s.with_params(p=v)` for each other
+  admissible candidate v, scored under s (worst, best guess = the least harmful v, mean); another target's is the
+  `ablations()` deliverable (also used for a `param:` target whose parameter has no other candidate in that tier).
+  A target **bites** in s when its ablation loses at least `ABLATION_MIN_DAMAGE` (0.10: a tenth of the way from
+  the client's own way to the reference), on the best guess for a `param:` target: an agent that guesses wrong but
+  sensibly. The diagnostic agrees when the reference's `enforced[t]` is True (or None) and every ablation
+  deliverable that bites (invalid, or losing at least `ABLATION_MIN_DAMAGE`) has it False (or None when the case
+  has no diagnostic for t). A setting where no ablation deliverable bites does not count: a harmless wrong value
+  may give the reference's own deliverable, which a correct diagnostic calls enforced.
+- **Shortcuts** are **closed** in s when invalid or at quality at most `SHORTCUT_MAX_QUALITY` (0.5).
+- **Value of information** per tier: every candidate deliverable (each measured setting's reference, "right for one
+  possible client"; the baseline of the tier's first setting; `robust_solution`) is scored in every setting of the
+  tier. `never_asks_params` is the best mean credit of the references and the baseline, which know every fixed
+  fact, so `voi_params` = 1 − it is the value of the drawn parameters; `never_asks` is `robust_solution`'s, so
+  `voi` = 1 − it is the value of everything the client knows (the reference, the oracle, has credit 1).
+- **Reference and bounds** per setting: the reference and baseline objectives and `quality_span`, the best known
+  objective and its quality, the bound and its normalized value (bound − base) / (ref − base), and
+  `gap_to_bound` = |bound − ref| / |ref|.
+
+**Stored audit.** `audit-case cases/<field>/<role> [--world-seed N] [--combos N] [--no-write]` prints a report and
+writes `dataset/audit.json` (public world only; with `--world-seed` it prints only) and the explainer pages, which
+then show the section "Evidence the facts matter". Its `fingerprint` is a sha256 over `AUDIT_VERSION`, `audit.py`
+and every file of the case except its docs (READMEs, REVIEWs and explainer pages in every language,
+`locales/*/summary.yaml` and `explainer.yaml`) and `dataset/`: case.py, case.yaml, every locale's `request.md`,
+`requirements.md` and `targets.yaml`, and the reference programs case.py copies or imports. case.yaml counts
+without `audited` and `quality_cap`, which change what validate-case enforces, not what the audit measures, so
+they can be set after the final audit run without running it again. `export-dataset` never runs the audit (too
+slow) and keeps a stored one; the dataset manifest leaves it out, and so does a run's fingerprint (with the docs),
+so `audit-case` never makes stored runs stale.
+
+**Audited cases.** A case opts into enforcement with `audited: true` in case.yaml; validate-case then fails it when
+`dataset/audit.json` is missing or stale, the reference or baseline fails in a measured combination, a target in
+force has no ablation, a target bites in no measured setting of a tier where it is in force, a diagnostic exists
+but does not separate the reference from an ablation that bites, a shortcut is open in some setting, `voi` <
+`VOI_MIN` (0.10) in a tier or `robust_solution` is missing, neither `best_known_solution` nor `objective_bound`
+exists, or `quality_cap` is unset or below the median best known quality. It warns when a target bites in fewer
+than half of the settings where it is in force (but at least once: never is a problem), when `voi` < 0.30 in a
+tier, and when a target has no diagnostic. `validate.OPEN_AUDIT_FINDINGS` (case, kind, key) turns a known problem
+into a warning, like `OPEN_BINDING_FINDINGS`; waiving a stale audit waives only that, as the stored audit's own
+findings still count. Every other case is measured on request only: the validator neither runs nor requires the
+audit, and reports a stored audit that has gone stale as a warning. No case is audited yet.
+
+**Three stages per target in a run.** With the client's answers, each clarification judge answers one question per
+target: was it **revealed** (a quote from the client's replies that states it, volunteered or asked for) and was it
+asked for (which specific questions)? A target is revealed when a majority quote a passage found verbatim
+(whitespace-normalized) in some reply, and **learned** (covered, as Ask-F1 counts it) when a majority also cite a
+specific question from a round whose answer holds the quote. result.json records `targets: {id: {revealed,
+learned, enforced}}` (enforced from the evaluator, None where a stage was not measured), and the report has a
+target funnel per case: the share of runs where each target was revealed, learned and enforced, and enforced given
+learned or not.
+
 ## 4. Architecture
 
 ```
@@ -386,7 +487,7 @@ final = 0                                          if a hard gate fails (validit
 | Component | Definition |
 |---|---|
 | quality | min(max(q, 0), cap) / cap with q the normalized quality (baseline 0, reference 1) and cap the case's or the policy's `quality_cap`; 0 if invalid |
-| clarification | Ask-F1 over case + noise targets (majority vote of a judge panel; a covered vote must quote the client's answer); only if the client was reachable |
+| clarification | Ask-F1 over case + noise targets (majority vote of a judge panel; a covered vote must quote the client's answer and cite the question that asked for it); only if the client was reachable |
 | communication | mean of language fidelity (questions, NOTES.md) and NOTES.md presence |
 | efficiency | per budget: 1 − ½·used/budget, 0 once over budget |
 
@@ -399,8 +500,10 @@ pass^k is the τ-bench estimator C(c, k) / C(n, k) over
 repeated trials. Every run has a status (ok, invalid, agent_error, timeout, extract_failed, harness_error,
 infra_error); harness and infrastructure errors are listed apart and never averaged in as zeros. Cost
 columns give tokens and dollars per run for the solver, client, extractor and judges (a CLI solver's own
-tokens are not parsed yet). A stored result is reused only under the same fingerprint (case files, policy,
-engagement, model configs, agent, sandbox, framework version).
+tokens are not parsed yet). A target funnel per case follows each client fact through the runs: revealed,
+learned, enforced (§3, Ground truth audit); a target no run measured any stage of is left out. A stored result
+is reused only under the same fingerprint (case files except the docs and the stored audit, policy, engagement,
+model configs, agent, sandbox, framework version).
 
 ## 7. Status
 
@@ -418,6 +521,8 @@ engagement, model configs, agent, sandbox, framework version).
 - Program deliverables: implemented and tested (state across calls, step-by-step sessions, input/output
   folders, per-call and total timeouts, crashes, non-JSON outputs, environment and network isolation,
   collection, an end-to-end run).
+- Ground truth audit (`audit-case`, `audited: true`, the target funnel): implemented and tested on a toy case;
+  no built case has the audit hooks or is audited yet.
 
 Not yet verified: a live model run (no API keys in the build environment), the vendor CLI command lines
 against installed versions, `DockerSandbox` and `docker/Dockerfile.agent` (no Docker daemon in the build

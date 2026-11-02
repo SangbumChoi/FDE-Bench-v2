@@ -34,7 +34,7 @@ def registry(agent_model, answer="OK") -> ModelRegistry:
     reg._cache["agent"] = agent_model
     reg._cache["client"] = ScriptedModel(lambda m: ChatResponse(content=answer))
     reg._cache["judge"] = ScriptedModel(lambda m: ChatResponse(content=json.dumps(
-        {"covered": True, "questions": [1], "quote": answer})))
+        {"revealed": True, "quote": answer, "asked": True, "questions": [1]})))
     return reg
 
 
@@ -59,6 +59,9 @@ def test_native_korean_run_scores_reference_as_one(cases_root, tmp_path):
     assert result["evaluator"]["validity_score"] == 1.0
     assert abs(result["evaluator"]["quality_score"] - 1.0) < 1e-9
     assert result["clarification"]["recall"] == 1.0
+    # every target revealed and learned (the judge quotes the answer); the case has no per-target diagnostic
+    assert result["targets"] and all(v == {"revealed": True, "learned": True, "enforced": None}
+                                     for v in result["targets"].values())
     assert abs(result["score"]["final"] - 1 / result["score"]["quality_cap"]) < 1e-6   # matching the reference
 
     run_dir = bench.run_dir(bench.resolve(spec), AgentSpec("reference", "agent"))
@@ -156,7 +159,7 @@ def test_clarification_judges_see_the_answers():
 
     def judge(messages):
         seen.append(messages[-1]["content"])
-        return ChatResponse(content='{"covered": true, "questions": [1], "quote": "40 trays per van"}')
+        return ChatResponse(content='{"revealed": true, "quote": "40 trays per van", "asked": true, "questions": [1]}')
     t = Target(id="cap", text="Each van carries 40 trays.", source_text="Each van carries 40 trays.")
     res = score_clarification([t], ["How many trays fit in a van?\nWhen do shifts start?"], [ScriptedModel(judge)],
                               answers=["40 trays per van; shifts start at 5:00."])
