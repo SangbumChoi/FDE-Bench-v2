@@ -37,6 +37,7 @@ cases/<field>/<role>/
                             · baseline_solution(world, dir) · score(world, submission_dir)
                             · violating_examples(world); for the ground truth audit (optional):
                             ablations · shortcuts · robust_solution · best_known_solution · objective_bound
+                            · diagnose (the per-target diagnostic, computed only when asked)
                             (cases with settings: all but build_world, write_data and robust_solution
                             also take the setting)
   locales/<zh|en|ko|ja|es>/
@@ -45,6 +46,8 @@ cases/<field>/<role>/
     targets.yaml            clarification targets: the facts a good FDE must ask for
   README.md                 the client, data, rules and situations; reference and baseline numbers
   REVIEW.md                 findings of a case review and their status (rendered in explainer.html)
+  GT.md, CLIENT_REVIEW.md   audited cases: the ground truth in five parts and what the client answers from,
+                            generated from dataset/audit.json (docs: outside the audit's and a run's hashes)
   dataset/                  the generated data and ground truth as files (fdebench2 export-dataset):
     agent_view/<lang>/      what the agent receives, per customer locale
     hidden/                 inputs the agent never sees (a program case's hidden period or corpus)
@@ -291,6 +294,18 @@ five parts, and `fdebench2 audit-case` (`fdebench2/audit.py`) measures each:
   deliverables alike whenever the deliverable can be read; a program case computes it from hidden diagnostic
   inputs where only that fact decides the output, in the same program run as scoring. `evaluate()` passes it
   through (not on a fatal deliverable).
+- `diagnose(world, submission_dir, scored) -> {"enforced": {...}, "evidence": {...}}` (with settings
+  `diagnose(world, submission_dir, setting, scored)`): the same maps, computed lazily, for a diagnostic too slow
+  to run on every evaluation (e.g. the regret of the deliverable's plan against the reference planner's plan for
+  each misreading). `scored` is `score()`'s raw result, so a program case can read what its run recorded: it may
+  put a private trace under a key such as `"trace"`, which `evaluate()` never copies to its output (only the
+  keys it names are copied). `evaluate(..., diagnose=True)` calls the hook on every readable deliverable, valid
+  or not (never on a fatal one), and merges its maps over `score()`'s (the hook's value wins for a target both
+  give); a hook that raises never stops scoring, the result's `diagnose_error` says why. Only a run's scoring
+  (`runner.Bench.score`, for the target funnel) and the audit ask for it. The validator never does, and the
+  audit diagnoses the reference, baseline, ablations, shortcuts and best known solution in their setting and
+  `robust_solution` in every setting of its tier, but none of the other cells of its value-of-information
+  matrix, which needs only credit.
 
 A target whose fact is exactly a drawn parameter's value carries `param: <name>` in `en/targets.yaml` (read from en
 only, like `kind` and `domain`; it must name a declared parameter): the generic parameter ablation then covers it.
@@ -319,40 +334,61 @@ or as many have been skipped; another value of a `param:` target whose reference
   fact, so `voi_params` = 1 − it is the value of the drawn parameters; `never_asks` is `robust_solution`'s, so
   `voi` = 1 − it is the value of everything the client knows (the reference, the oracle, has credit 1).
 - **Reference and bounds** per setting: the reference and baseline objectives and `quality_span`, the best known
-  objective and its quality, the bound and its normalized value (bound − base) / (ref − base), and
-  `gap_to_bound` = |bound − ref| / |ref|.
+  objective, its quality and its enforced map, the bound and its normalized value (bound − base) / (ref − base),
+  and `gap_to_bound` = |bound − ref| / |ref|.
+- **Diagnostic reliability.** A run's "enforced" stage comes from the diagnostic applied to the agent's
+  deliverable, which is neither the reference nor an ablation, so separating those two is not enough: a
+  diagnostic that compares against the reference within a tight tolerance calls most other good deliverables
+  wrong. Three checks look at other deliverables. The best known solution is built with full knowledge of the
+  setting, so a correct diagnostic calls it enforced (True or None) on every target in force: any False on a
+  valid best known solution is a false negative (`diagnostic_false_negative`, per target). Specificity: an
+  ablation misreads only its own target u, so for each deliverable of it that bites, the other targets in force
+  whose enforced is False on it are listed in the row's `cross_flags`; an ablation that flags other targets in
+  more than half of the settings where some deliverable of it bites is a `cross_flags` warning (only a warning,
+  since facts can interact). `diagnostic_profile` counts, per target, the settings where the baseline (each
+  setting's own) and `robust_solution` (its tier's) are called not enforced, of those where the target is in
+  force and diagnosed: informational, as neither is built with full knowledge. A `diagnose()` that raises is
+  recorded in `diagnose_errors`.
 
 **Stored audit.** `audit-case cases/<field>/<role> [--world-seed N] [--combos N] [--no-write]` prints a report and
 writes `dataset/audit.json` (public world only; with `--world-seed` it prints only) and the explainer pages, which
 then show the section "Evidence the facts matter". Its `fingerprint` is a sha256 over `AUDIT_VERSION`, `audit.py`
-and every file of the case except its docs (READMEs, REVIEWs and explainer pages in every language,
-`locales/*/summary.yaml` and `explainer.yaml`) and `dataset/`: case.py, case.yaml, every locale's `request.md`,
-`requirements.md` and `targets.yaml`, and the reference programs case.py copies or imports. case.yaml counts
-without `audited` and `quality_cap`, which change what validate-case enforces, not what the audit measures, so
-they can be set after the final audit run without running it again. `export-dataset` never runs the audit (too
-slow) and keeps a stored one; the dataset manifest leaves it out, and so does a run's fingerprint (with the docs),
-so `audit-case` never makes stored runs stale.
+and every file of the case except its docs (`cases.is_case_doc`: READMEs, REVIEWs and explainer pages in every
+language, `GT.md` and `CLIENT_REVIEW.md`, which are generated from `audit.json` and would otherwise make every
+audit stale the moment they are written, `locales/*/summary.yaml` and `explainer.yaml`) and `dataset/`: case.py,
+case.yaml, every locale's `request.md`, `requirements.md` and `targets.yaml`, and the reference programs case.py
+copies or imports. case.yaml counts without `audited` and `quality_cap`, which change what validate-case
+enforces, not what the audit measures, so they can be set after the final audit run without running it again.
+`export-dataset` never runs the audit (too slow) and keeps a stored one; the dataset manifest leaves it out, and so
+does a run's fingerprint (with the docs), so `audit-case` never makes stored runs stale.
 
 **Audited cases.** A case opts into enforcement with `audited: true` in case.yaml; validate-case then fails it when
 `dataset/audit.json` is missing or stale, the reference or baseline fails in a measured combination, a target in
 force has no ablation, a target bites in no measured setting of a tier where it is in force, a diagnostic exists
-but does not separate the reference from an ablation that bites, a shortcut is open in some setting, `voi` <
-`VOI_MIN` (0.10) in a tier or `robust_solution` is missing, neither `best_known_solution` nor `objective_bound`
-exists, or `quality_cap` is unset or below the median best known quality. It warns when a target bites in fewer
-than half of the settings where it is in force (but at least once: never is a problem), when `voi` < 0.30 in a
-tier, and when a target has no diagnostic. `validate.OPEN_AUDIT_FINDINGS` (case, kind, key) turns a known problem
-into a warning, like `OPEN_BINDING_FINDINGS`; waiving a stale audit waives only that, as the stored audit's own
-findings still count. Every other case is measured on request only: the validator neither runs nor requires the
-audit, and reports a stored audit that has gone stale as a warning. No case is audited yet.
+but does not separate the reference from an ablation that bites, a diagnostic calls a valid best known solution
+not enforced (`diagnostic_false_negative`, keyed by target), `diagnose()` raised in some evaluation, a shortcut is
+open in some setting, `voi` < `VOI_MIN` (0.10) in a tier or `robust_solution` is missing, neither
+`best_known_solution` nor `objective_bound` exists, or `quality_cap` is unset or below the median best known
+quality. It warns when a target bites in fewer than half of the settings where it is in force (but at least once:
+never is a problem), when an ablation flags other targets in more than half of the settings where it bites
+(`cross_flags`), when `voi` < 0.30 in a tier, and when a target has no diagnostic. `validate.OPEN_AUDIT_FINDINGS`
+(case, kind, key) turns a known problem into a warning, like `OPEN_BINDING_FINDINGS`; waiving a stale audit waives
+only that, as the stored audit's own findings still count. Every other case is measured on request only: the
+validator neither runs nor requires the audit, and reports a stored audit that has gone stale as a warning. Three
+cases are audited: procurement (`manufacturing/procurement_specialist`), loan underwriting
+(`finance/loan_underwriting_specialist`) and the multilingual corpus curator
+(`data_knowledge/multilingual_corpus_curator`).
 
 **Three stages per target in a run.** With the client's answers, each clarification judge answers one question per
 target: was it **revealed** (a quote from the client's replies that states it, volunteered or asked for) and was it
 asked for (which specific questions)? A target is revealed when a majority quote a passage found verbatim
 (whitespace-normalized) in some reply, and **learned** (covered, as Ask-F1 counts it) when a majority also cite a
 specific question from a round whose answer holds the quote. result.json records `targets: {id: {revealed,
-learned, enforced}}` (enforced from the evaluator, None where a stage was not measured), and the report has a
-target funnel per case: the share of runs where each target was revealed, learned and enforced, and enforced given
-learned or not.
+learned, enforced}}` (enforced from the evaluator, which scores a run with `diagnose=True`, so `diagnose()` runs
+too; None where a stage was not measured), and the report has a target funnel per case: the share of runs where
+each target was revealed, learned and enforced, and enforced given learned or not. The enforced column is only as
+good as the diagnostic is on arbitrary deliverables, which is what the audit's diagnostic reliability checks
+measure.
 
 ## 4. Architecture
 
@@ -521,8 +557,10 @@ model configs, agent, sandbox, framework version).
 - Program deliverables: implemented and tested (state across calls, step-by-step sessions, input/output
   folders, per-call and total timeouts, crashes, non-JSON outputs, environment and network isolation,
   collection, an end-to-end run).
-- Ground truth audit (`audit-case`, `audited: true`, the target funnel): implemented and tested on a toy case;
-  no built case has the audit hooks or is audited yet.
+- Ground truth audit (`audit-case`, `audited: true`, the target funnel, the lazy `diagnose()` hook and the
+  diagnostic reliability checks): implemented and tested on a toy case. Three cases are audited (procurement,
+  loan underwriting, multilingual corpus curator); their stored audits predate `AUDIT_VERSION` 3 and are stale
+  until audit-case runs on them again.
 
 Not yet verified: a live model run (no API keys in the build environment), the vendor CLI command lines
 against installed versions, `DockerSandbox` and `docker/Dockerfile.agent` (no Docker daemon in the build

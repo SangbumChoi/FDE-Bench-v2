@@ -170,6 +170,49 @@ def reference_solution(world, out_dir, setting):
 '''
 
 
+# A lazy diagnostic: score() reports only the premium week's (and None for the cap) and traces the order under a
+# private key; diagnose() reads the trace, records every call and raises on a negative order, which a shortcut
+# writes.
+LAZY_PY = HOOKS_PY + '''
+
+CALLS = []
+_hooked, _shortcuts = score, shortcuts
+
+
+def score(world, submission_dir, setting):
+    res = _hooked(world, submission_dir, setting)
+    if "fatal" not in res:
+        res["trace"] = {"q": res["metrics"]["q"]}
+        res["enforced"] = {"premium_week": res["enforced"]["premium_week"], "cap": None}
+        del res["evidence"]
+    return res
+
+
+def diagnose(world, submission_dir, setting, scored):
+    q = scored["trace"]["q"]
+    CALLS.append((str(submission_dir), setting.label, q))
+    if q < 0:
+        raise ValueError("a negative order")
+    return {"enforced": {"cap": q == setting["cap"], "min_order": q >= 2 if setting.at_least("medium") else None},
+            "evidence": {"cap": f"traced {q} of {setting['cap']}"}}
+
+
+def shortcuts(world, setting):
+    def negative(out_dir):
+        """Order a negative quantity."""
+        _write(out_dir, -1)
+    return {**_shortcuts(world, setting), "negative": negative}
+'''
+
+# A best known solution that keeps two units in reserve (valid, below the reference) and orders two units over the
+# cap at a price of 4 (not valid): the exact-cap diagnostic calls the reserve wrong, though it knows the cap.
+RESERVE_PY = HOOKS_PY + '''
+
+def best_known_solution(world, out_dir, setting):
+    _write(out_dir, setting["cap"] + (2 if setting["price"] == 4 else -2))
+'''
+
+
 def _with_params(root: Path) -> Path:
     """The toy's cap and premium-week targets marked as the cap and price parameters' values."""
     path = root / "locales" / "en" / "targets.yaml"
@@ -308,6 +351,8 @@ def test_bounds_and_diagnostics(full):
                                     "min_order": {"has_diagnostic": True, "separates": True},
                                     "premium_week": {"has_diagnostic": True, "separates": None}}
     assert {r["diag_ok"] for r in _rows(audit, "ablations", target="premium_week")} == {None}
+    # the best known solution's enforced map (premium_week and min_order not in force in easy/s1)
+    assert row["best_known_enforced"] == {"cap": True, "min_order": None, "premium_week": None}
     entry = audit["settings"]["medium"][0]
     assert entry["reference_enforced"] == {"cap": True, "min_order": True, "premium_week": entry["reference_enforced"]
                                            ["premium_week"]} and entry["baseline_enforced"]["cap"] is False
@@ -405,13 +450,125 @@ def test_evaluate_passes_the_diagnostic_through_unless_fatal(full, tmp_path):
     assert "enforced" not in case.evaluate(tmp_path / "empty", "en")
 
 
+# ── diagnostics on deliverables that are neither the reference nor an ablation ──
+
+def _order(tmp_path: Path, name: str, quantity: int | None = None) -> Path:
+    """A deliverable folder with answer.json ordering `quantity` (empty for None)."""
+    d = tmp_path / name
+    d.mkdir()
+    if quantity is not None:
+        (d / "answer.json").write_text(json.dumps({"quantity": quantity}))
+    return d
+
+
+def test_a_lazy_diagnostic_runs_only_when_asked_and_the_trace_stays_private(tmp_path):
+    case = NativeCase(toy(tmp_path, hooks=LAZY_PY)).at("medium", 1)
+    cap = case.setting["cap"]
+    ref = _order(tmp_path, "ref", cap)
+    plain = case.evaluate(ref, "en")
+    premium = plain["enforced"]["premium_week"]
+    assert plain["enforced"] == {"premium_week": premium, "cap": None} and "evidence" not in plain
+    assert case.module.CALLS == []              # never without diagnose: the validator does not pay for it
+    res = case.evaluate(ref, "en", diagnose=True)
+    # merged: score()'s premium week, diagnose()'s cap (over score()'s None) and minimum order
+    assert res["enforced"] == {"premium_week": premium, "cap": True, "min_order": True}
+    assert res["evidence"] == {"cap": f"traced {cap} of {cap}"} and res["quality_score"] == plain["quality_score"] == 1
+    assert case.module.CALLS == [(str(ref), "medium/s1", cap)]
+    # the order score() traced reaches diagnose(), never the result
+    assert "trace" not in plain and "trace" not in res
+    # an invalid deliverable is diagnosed, a fatal one is not
+    zero = case.evaluate(_order(tmp_path, "zero", 0), "en", diagnose=True)
+    assert zero["validity_score"] == 0.0 and zero["enforced"]["min_order"] is False and zero["enforced"]["cap"] is False
+    assert "enforced" not in case.evaluate(_order(tmp_path, "empty"), "en", diagnose=True)
+    assert len(case.module.CALLS) == 2
+    # a hook that raises never stops scoring: the result says why, and score()'s map stands
+    broken = case.evaluate(_order(tmp_path, "negative", -1), "en", diagnose=True)
+    assert broken["diagnose_error"] == "ValueError('a negative order')" and broken["enforced"]["cap"] is None
+
+
+def test_the_audit_diagnoses_every_deliverable_but_the_value_of_information_matrix(full, tmp_path):
+    case = NativeCase(toy(tmp_path, hooks=LAZY_PY, audited=True))
+    audit = audit_case(case)
+    _, eager = full
+    # the same diagnostics as with score() computing them itself
+    assert audit["diagnostics"] == eager["diagnostics"] and audit["diagnostic_profile"] == eager["diagnostic_profile"]
+    assert [r["cross_flags"] for r in audit["ablations"]] == [r["cross_flags"] for r in eager["ablations"]]
+    assert [b["best_known_enforced"] for b in audit["bounds"]] == [b["best_known_enforced"] for b in eager["bounds"]]
+    # the matrix scores each tier's references and first baseline in every setting of the tier without diagnose():
+    # robust_solution (the tier's smallest cap) is the only deliverable diagnosed in every setting of its tier (the
+    # hook sees the setting's own label: "easy/s1[cap=12,price=5]" for the audit's easy/c1)
+    seen: dict[str, tuple[set, int]] = {}
+    for path, label, q in case.module.CALLS:
+        seen.setdefault(path, (set(), q))[0].add(label)
+    for tier, entries in audit["settings"].items():
+        everywhere = [q for at, q in seen.values() if len({x for x in at if x.startswith(f"{tier}/")}) == len(entries)]
+        assert everywhere == [min(case.param_candidates["cap"][tier])], tier
+    # the shortcut that orders a negative quantity breaks diagnose() in every setting: a problem
+    error = "ValueError('a negative order')"
+    assert audit["diagnose_errors"]["count"] == 20
+    assert audit["diagnose_errors"]["examples"][0] == {"deliverable": "shortcut", "setting": "easy/s1", "error": error}
+    assert f"problem: case.py diagnose() raised in 20 evaluation(s) (e.g. the shortcut in easy/s1: {error})" \
+        in audit["summary"]
+
+
+def test_a_best_known_solution_the_diagnostic_calls_wrong_is_a_false_negative(tmp_path, monkeypatch):
+    root = toy(tmp_path, hooks=RESERVE_PY, audited=True)
+    audit = audit_case(NativeCase(root))
+    valid = [b["setting"] for b in audit["bounds"] if b["best_known_valid"]]
+    assert set(valid) == {b["setting"] for b in audit["bounds"]} - _labels(audit, price=4)
+    assert all(b["best_known_enforced"]["cap"] is False for b in audit["bounds"])
+    # two units in reserve still order at least two and an even number: only the cap's diagnostic is wrong, and
+    # only where the best known solution is valid counts
+    found = [f for f in findings(audit, 1.5) if f.kind == "diagnostic_false_negative"]
+    assert [(f.problem, f.key) for f in found] == [(True, "cap")]
+    assert found[0].text == (f"the diagnostic of target cap calls the best known solution, which knows every fact, not "
+                             f"enforced in {len(valid)} of the {len(valid)} settings where it is valid "
+                             f"(e.g. {valid[0]})")
+    assert f"| cap | {len(valid)}/{len(valid)} |" in report(audit)
+    write_audit(root, audit)
+    problems, _ = check_audit(NativeCase(root))
+    assert f"audit: {found[0].text}" in problems
+    monkeypatch.setitem(validate.OPEN_AUDIT_FINDINGS, (TOY, "diagnostic_false_negative", "cap"), "a regret check")
+    waived, warnings = check_audit(NativeCase(root))
+    assert waived == [p for p in problems if p != f"audit: {found[0].text}"]
+    assert f"audit: {found[0].text} (known and open: a regret check)" in warnings
+    # an audit stored before the reliability checks (no best known map, cross flags or profile) still reads
+    old = {k: v for k, v in audit.items() if k not in ("diagnostic_profile", "diagnose_errors")}
+    old["bounds"] = [{k: v for k, v in b.items() if k != "best_known_enforced"} for b in audit["bounds"]]
+    old["ablations"] = [{k: v for k, v in r.items() if k != "cross_flags"} for r in audit["ablations"]]
+    assert not {f.kind for f in findings(old, 1.5)} & {"diagnostic_false_negative", "cross_flags", "diagnose_error"}
+    assert "| cap | – | – | – | – |" in report(old)
+
+
+def test_cross_flags_name_the_other_targets_an_ablation_is_called_wrong_on(full):
+    _, audit = full
+    # min_order's ablation (an empty order) is not an order of the cap either, says the cap's exact diagnostic
+    rows = _rows(audit, "ablations", target="min_order")
+    assert rows and all(r["cross_flags"] == {"ablation": ["cap"]} for r in rows)
+    # the cap's ablations bite and flag nothing else; premium_week's never bite, so there is nothing to look at
+    assert all(r["cross_flags"] and not any(r["cross_flags"].values()) for r in _rows(audit, "ablations", target="cap"))
+    assert all(r["cross_flags"] == {} for r in _rows(audit, "ablations", target="premium_week"))
+    found = [f for f in findings(audit, 1.5) if f.kind == "cross_flags"]
+    assert [(f.problem, f.key) for f in found] == [(False, "min_order")]       # a warning: facts can interact
+
+    def warned(k: int) -> list[str]:
+        """The cross_flags warnings for a target whose ablation bites in 4 settings and flags another in k."""
+        rows = [{"target": "u", "setting": f"easy/s{i}", "cross_flags": {"ablation": ["t"] if i < k else []}}
+                for i in range(4)]
+        return [f.key for f in audit_module._reliability_findings({"ablations": rows, "bounds": []})]
+    assert warned(2) == [] and warned(3) == ["u"]       # more than half of the settings where it bites
+
+
 def test_the_audit_is_deterministic_and_reported(full):
     root, audit = full
     assert audit == audit_case(NativeCase(root)) and json.loads(json.dumps(audit)) == audit
     assert set(audit) == {"case", "world_seed", "fingerprint", "thresholds", "settings", "ablations", "shortcuts", "voi",
-                          "bounds", "diagnostics", "summary"}
+                          "bounds", "diagnostics", "diagnostic_profile", "diagnose_errors", "summary"}
     text = report(audit)
     assert "| cap | param | 0.100–1.000 | 1.000 | easy 6/6, medium 6/6, hard 8/8 | 0 | separates |" in text
+    # the diagnostic profile: the empty order of min_order's ablation is not the cap, says the cap's diagnostic
+    assert "## Diagnostic profile" in text and "| cap | 0/20 | 0/20 | 20/20 | 11/20 |" in text
+    assert "| min_order | 0/14 | 14/14 (cap) | 0/14 | 0/14 |" in text
     assert "| premium_week | param | 0.000 | 0.000 | easy 0/2, medium 0/2, hard 0/2 | 0 | untested |" in text
     assert "| one_short | Order one unit less than the cap, to be safe. | 6/20 | 0.950 |" in text
     assert "| easy | 0.900 | 0.100 | " in text and "## Reference and bounds" in text and "## Skipped" not in text
@@ -438,10 +595,13 @@ def test_the_fingerprint_covers_what_the_audit_measures(tmp_path, monkeypatch):
         after = fingerprint(root)
         path.write_bytes(old) if old is not None else path.unlink()
         return after != before
-    # the docs in every language, the stored dataset and the keys that decide only what validate-case enforces: no
+    # the docs in every language (GT.md and CLIENT_REVIEW.md too: they are written from audit.json), the stored
+    # dataset and the keys that decide only what validate-case enforces: no
     assert not any(changes(rel, "notes\n") for rel in ("README.md", "README.ko.md", "REVIEW.ja.md", "explainer.es.html",
-                                                       "locales/ko/summary.yaml", "locales/zh/explainer.yaml",
-                                                       "dataset/audit.json", "dataset/MANIFEST.json"))
+                                                       "GT.md", "CLIENT_REVIEW.md", "locales/ko/summary.yaml",
+                                                       "locales/zh/explainer.yaml", "dataset/audit.json",
+                                                       "dataset/MANIFEST.json"))
+    assert never_in_a_run("GT.md") and never_in_a_run("CLIENT_REVIEW.md")    # nor a run's fingerprint
     assert not changes("case.yaml", CASE_YAML + "audited: true\nquality_cap: 1.2\n")
     # everything else: the texts in any locale, case.yaml, a reference program case.py copies or imports
     assert changes("locales/ko/requirements.md", "# x\n") and changes("locales/es/targets.yaml", "[]\n")
@@ -499,12 +659,14 @@ def test_validator_with_every_hook_and_a_waiver(full, monkeypatch):
                                                   "safe.) is open in 14 of 20 settings")),
         "audit: asking is worth only 0.071 in tier medium (never asks earns 0.929; at least 0.1 is required)",
         "audit: asking is worth only 0.092 in tier hard (never asks earns 0.908; at least 0.1 is required)"]
-    assert warnings == ["audit: asking is worth only 0.100 in tier easy"]
+    assert warnings == ["audit: the ablation of target min_order also calls other targets not enforced in 14 of the 14 "
+                        "settings where it bites: cap (14) (e.g. medium/s1)",
+                        "audit: asking is worth only 0.100 in tier easy"]
     monkeypatch.setitem(validate.OPEN_AUDIT_FINDINGS, (TOY, "shortcut", "one_short"), "the owner decides")
     monkeypatch.setitem(validate.OPEN_AUDIT_FINDINGS, (TOY, "voi", "hard"), "a later change")
     problems, warnings = check_audit(NativeCase(root))
-    assert len(problems) == 4 and len(warnings) == 3 and warnings[0].endswith("(known and open: the owner decides)")
-    assert warnings[2].endswith("tier hard (never asks earns 0.908; at least 0.1 is required) (known and open: a later "
+    assert len(problems) == 4 and len(warnings) == 4 and warnings[1].endswith("(known and open: the owner decides)")
+    assert warnings[3].endswith("tier hard (never asks earns 0.908; at least 0.1 is required) (known and open: a later "
                                 "change)")
 
 
@@ -598,6 +760,27 @@ def test_clarify_tells_revealed_from_covered():
 
 def _stages(revealed, learned, enforced) -> dict:
     return {"revealed": revealed, "learned": learned, "enforced": enforced}
+
+
+def test_a_run_is_scored_with_the_lazy_diagnostic(tmp_path):
+    from fdebench2.llm import Endpoint, ModelRegistry, ScriptedModel, ToolCall
+    from fdebench2.runner import AgentSpec, Bench, Settings
+    root = toy(tmp_path, hooks=LAZY_PY)
+    cap = NativeCase(root).at("medium", 1).setting["cap"]
+    steps = [ChatResponse(content="", tool_calls=[ToolCall(id=f"c{i}", name=name, arguments=args)])
+             for i, (name, args) in enumerate([("write_file", {"path": "answer.json",
+                                                               "content": json.dumps({"quantity": cap})}),
+                                                ("finish", {"summary": "done"})])]
+    reg = ModelRegistry({"agent": Endpoint("agent", "scripted")}, {})
+    reg._cache["agent"] = ScriptedModel(steps)
+    bench = Bench(Settings(cases_root=tmp_path / "cases", models=tmp_path / "none.yaml", out=tmp_path / "runs"),
+                  registry=reg)
+    result = bench.run(VariantSpec(TOY, condition="full"), AgentSpec("reference", "agent"))
+    assert result["evaluator"]["validity_score"] == 1.0 and '"trace"' not in json.dumps(result)
+    # the cap and the minimum order are diagnosed only by diagnose(), which only an evaluation with diagnose=True runs
+    assert result["targets"]["cap"] == {"revealed": None, "learned": None, "enforced": True}
+    assert result["targets"]["min_order"]["enforced"] is True
+    assert result["evaluator"]["evidence"] == {"cap": f"traced {cap} of {cap}"}
 
 
 def test_run_result_targets_and_the_funnel_table():

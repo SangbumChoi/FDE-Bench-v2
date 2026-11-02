@@ -20,8 +20,8 @@ per public setting with the reference deliverable and its score). Regenerate wit
 **Ground truth audit:** `fdebench2 audit-case` measures whether each client fact matters (a deliverable that
 misreads only it loses credit), whether shortcuts are closed, what never asking is worth and how close the
 reference is to the best known solution, and stores it in `dataset/audit.json`. A case with `audited: true` in
-case.yaml must pass it in `validate-case`; no case is audited yet (see
-[DESIGN.md §3](../DESIGN.md#ground-truth-audit)).
+case.yaml must pass it in `validate-case`; three cases are audited: procurement, loan underwriting and the
+multilingual corpus curator (see [DESIGN.md §3](../DESIGN.md#ground-truth-audit)).
 
 Detailed, research-grounded specs for every unbuilt role are in [`docs/specs/`](../docs/specs/README.md).
 

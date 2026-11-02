@@ -154,8 +154,8 @@ def _names(role: Any) -> list[str]:
 
 def target_stages(targets: list[Target], clar: dict[str, Any] | None, raw: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """{target id: {revealed, learned, enforced}}: whether the client's replies stated the fact, whether a question
-    learned it (covered), and whether the deliverable implements it (the evaluator's enforced map); None where the
-    stage was not measured (no client, no answers, no diagnostic)."""
+    learned it (covered), and whether the deliverable implements it (the evaluator's enforced map, from an
+    evaluation with diagnose=True); None where the stage was not measured (no client, no answers, no diagnostic)."""
     revealed = (clar or {}).get("revealed") or {}
     covered = (clar or {}).get("covered") or {}
     enforced = raw.get("enforced") or {}
@@ -365,7 +365,8 @@ class Bench:
             except OSError as e:            # the agent's files could not be read: its own failure
                 extraction = {"method": "none", "error": repr(e)}
             ext_path.write_text(json.dumps(extraction, ensure_ascii=False, indent=2), encoding="utf-8")
-        raw = case.evaluate(sub_dir, variant.customer_locale)
+        # diagnose: the case's per-target diagnostic too (case.py diagnose(), possibly slow), for the target funnel
+        raw = case.evaluate(sub_dir, variant.customer_locale, diagnose=True)
 
         transcript = read_transcript(run_dir)
         asks = [r["questions"] for r in transcript if r["kind"] == "ask"]

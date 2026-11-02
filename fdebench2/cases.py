@@ -53,13 +53,16 @@ _WHEN = re.compile(r"<!-- when: ([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([^>]*?) -->\n?"
 PARAM = re.compile(r"\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}")
 MIN_QUALITY_SPAN = 0.05   # the validator's floor on a setting's quality scale, see quality_span()
 # Case files only people read, in every language: never part of a run (runner.Bench.fingerprint) or of what the
-# ground truth audit measures (audit.fingerprint). Paths relative to the case directory.
-CASE_DOCS = ("README*.md", "REVIEW*.md", "explainer*.html", "locales/*/summary.yaml", "locales/*/explainer.yaml")
+# ground truth audit measures (audit.fingerprint). Paths relative to the case directory. GT.md and CLIENT_REVIEW.md
+# are written from dataset/audit.json: hashing them would make every audit stale the moment they are regenerated.
+CASE_DOCS = ("README*.md", "REVIEW*.md", "GT*.md", "CLIENT_REVIEW*.md", "explainer*.html", "locales/*/summary.yaml",
+             "locales/*/explainer.yaml")
 
 
 def is_case_doc(rel: str) -> bool:
-    """Whether a case file (path relative to the case directory, with /) is one of its docs: the READMEs, REVIEWs
-    and explainer pages next to case.yaml and the page texts locales/<lang>/summary.yaml and explainer.yaml."""
+    """Whether a case file (path relative to the case directory, with /) is one of its docs: the READMEs, REVIEWs,
+    ground truth write-ups (GT.md, CLIENT_REVIEW.md) and explainer pages next to case.yaml and the page texts
+    locales/<lang>/summary.yaml and explainer.yaml."""
     return any(fnmatchcase(rel, pattern) for pattern in CASE_DOCS)
 
 
@@ -327,10 +330,12 @@ class Case:
     def materialize_data(self, lang: str, dest: Path) -> None:
         raise NotImplementedError
 
-    def evaluate(self, submission_dir: Path, lang: str, relaxed: frozenset[str] = frozenset()) -> dict[str, Any]:
+    def evaluate(self, submission_dir: Path, lang: str, relaxed: frozenset[str] = frozenset(),
+                 diagnose: bool = False) -> dict[str, Any]:
         """{validity_score, quality_score, violations: [{rule, message}], metrics, error_info}; a valid
         submission adds objective, reference_objective, baseline_objective and quality_fields(), and a readable
-        one the case's per-target diagnostic (enforced, evidence) when the case reports it."""
+        one the case's per-target diagnostic (enforced, evidence) when the case reports it. With diagnose, the
+        case's own diagnostic hook also runs (it may be slow, so only the runs and the audit ask for it)."""
         raise NotImplementedError
 
     def rules(self) -> CaseRules | None:
@@ -429,8 +434,15 @@ class NativeCase(Case):
                                                     tier's parameter pools {name: [values]}
       best_known_solution(world, out_dir)          a stronger, possibly slow solver
       objective_bound(world) -> float               a proven bound on the objective
-    and score() may add "enforced": {target_id: True | False | None} (and "evidence": {target_id: str}). With
-    settings, every one of them but robust_solution also gets the Setting as its last argument.
+    and score() may add "enforced": {target_id: True | False | None} (and "evidence": {target_id: str}), or the
+    case computes them lazily, only when evaluate(..., diagnose=True) asks (a run and the audit; never the
+    validator):
+      diagnose(world, submission_dir, scored) -> {"enforced": {...}, "evidence": {...}}
+                                                    scored: score()'s raw result, so a program case can read
+                                                    what its run recorded (e.g. a private "trace" key, which
+                                                    evaluate() never copies to its output)
+    With settings, every one of them but robust_solution also gets the Setting as an argument: the last one, or
+    for diagnose the one before scored (diagnose(world, submission_dir, setting, scored)).
     case.yaml declares objective direction, the deliverable (`deliverable_type: batch` with `deliverables`,
     or `deliverable_type: program` with `entrypoint`), its spec, rule classes and optionally `quality_cap`
     (the normalized quality of the best known solution, which then earns full quality credit).
@@ -722,15 +734,19 @@ class NativeCase(Case):
             raise ValueError(f"{self.id}: quality_cap must be in (0, {RATIO_CAP:g}], got {cap!r}")
         return float(cap)
 
-    def evaluate(self, submission_dir: Path, lang: str, relaxed: frozenset[str] = frozenset()) -> dict[str, Any]:
+    def evaluate(self, submission_dir: Path, lang: str, relaxed: frozenset[str] = frozenset(),
+                 diagnose: bool = False) -> dict[str, Any]:
         try:
             res = self.raw_score(Path(submission_dir))
         except Exception as e:  # a malformed submission must never crash scoring
             res = {"fatal": f"evaluator error: {e!r}"}
-        return self.judge(res, relaxed)
+        return self.judge(res, relaxed, Path(submission_dir) if diagnose else None)
 
-    def judge(self, res: dict, relaxed: frozenset[str] = frozenset()) -> dict[str, Any]:
-        """evaluate()'s result from a raw score (case.py score()), for a caller that already has one."""
+    def judge(self, res: dict, relaxed: frozenset[str] = frozenset(),
+              diagnose_dir: Path | None = None) -> dict[str, Any]:
+        """evaluate()'s result from a raw score (case.py score()), for a caller that already has one; with
+        diagnose_dir (the deliverable's folder), case.py diagnose() also runs on it. Only the keys named here are
+        copied from the raw score: a private one such as "trace" stays out of the result."""
         out: dict[str, Any] = {"validity_score": 0.0, "quality_score": 0.0, "violations": [], "metrics": {},
                                "error_info": {}}
         if "fatal" in res:
@@ -740,6 +756,8 @@ class NativeCase(Case):
         out["violations"] = [{"rule": r, "message": m} for r, m in res["violations"]]
         # The per-target diagnostic (does the deliverable implement each client fact?), valid or not.
         out.update({k: dict(res[k]) for k in ("enforced", "evidence") if k in res})
+        if diagnose_dir is not None:
+            self._diagnose(out, diagnose_dir, res)
         blocking = [v for v in out["violations"] if v["rule"] not in relaxed]
         if blocking:
             out["error_info"] = {"constraint": [f"{v['rule']}: {v['message']}" for v in blocking[:8]]}
@@ -756,6 +774,20 @@ class NativeCase(Case):
         if base_error:
             out["baseline_error"] = base_error
         return out
+
+    def _diagnose(self, out: dict[str, Any], submission_dir: Path, res: dict) -> None:
+        """Merge case.py diagnose()'s enforced and evidence maps into evaluate()'s result `out` (its values win
+        over score()'s for the same target). A hook that raises never stops scoring: `diagnose_error` says why."""
+        fn = self._hook("diagnose")
+        if fn is None:
+            return
+        try:
+            found = fn(self.world, Path(submission_dir), *self._args(), res) or {}
+            merged = {k: {**out.get(k, {}), **dict(found[k] or {})} for k in ("enforced", "evidence") if k in found}
+        except Exception as e:
+            out["diagnose_error"] = f"{e!r}"[:300]
+            return
+        out.update(merged)
 
     def rules(self) -> CaseRules:
         return CaseRules(self.id, [CaseRule(id=r["id"], rule_class=r["class"],

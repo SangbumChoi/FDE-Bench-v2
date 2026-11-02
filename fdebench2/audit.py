@@ -12,7 +12,14 @@ tier (combinations, not rule seeds, so no private seed's draw is exposed):
 2. shortcuts: case.py shortcuts(), each closed when invalid or scoring at most SHORTCUT_MAX_QUALITY;
 3. value of information: what a deliverable that never asks earns on average over the tier's settings;
 4. reference and bounds: the best known solution and a proven bound against the reference and the baseline;
-5. diagnostics: whether score()'s per-target "enforced" map tells the reference from each ablation that bites.
+5. diagnostics: whether the per-target "enforced" map (score()'s, merged with case.py diagnose()'s) tells the
+   reference from each ablation that bites, and whether it is reliable on deliverables that are neither: the best
+   known solution, built with full knowledge of the setting, must never be called not enforced on a target in
+   force (diagnostic_false_negative); an ablation of one target that also flags other targets is reported
+   (cross_flags); the baseline's and robust_solution's maps are profiled per target (diagnostic_profile).
+
+Every evaluation asks for the diagnostic (evaluate(..., diagnose=True)) except the value-of-information matrix,
+which needs only credit: there only robust_solution is diagnosed (for the profile).
 
 A combination whose reference or baseline fails (raises or is not valid) is skipped, does not count towards
 AUDIT_COMBOS, and is a finding: a rule seed can draw it.
@@ -40,7 +47,9 @@ import yaml
 from .cases import TIERS, NativeCase, is_case_doc, quality_span, value_text
 from .dataset import AUDIT_FILE, DATASET_DIR
 
-AUDIT_VERSION = 2              # 2: per-deliverable damage, unavailable values, failed settings, wider sources
+AUDIT_VERSION = 3              # 2: per-deliverable damage, unavailable values, failed settings, wider sources;
+                               # 3: lazy diagnose(), diagnostic reliability (false negatives, cross flags, profile),
+                               #    GT.md and CLIENT_REVIEW.md out of the sources
 AUDIT_COMBOS = 12              # admissible parameter combinations measured per tier besides the public panel
 ABLATION_MIN_DAMAGE = 0.10     # a target bites when misreading it loses a tenth of the way to the reference
 SHORTCUT_MAX_QUALITY = 0.5     # a valid shortcut that scores above this is open
@@ -175,12 +184,14 @@ def _r(x: float | None) -> float | None:
 
 
 def _summary(res: dict) -> dict:
-    """What the audit keeps of an evaluation: validity, quality, credit, broken rules and the diagnostic."""
+    """What the audit keeps of an evaluation: validity, quality, credit, broken rules and the diagnostic (and why
+    case.py diagnose() failed, when it raised)."""
     valid = res["validity_score"] == 1.0
     quality = _r(res["quality_score"]) if valid else None
-    return {"valid": valid, "quality": quality, "credit": min(quality, 1.0) if valid else 0.0,
-            "rules": sorted({v["rule"] for v in res["violations"]}),
-            "objective": _r(res.get("objective")) if valid else None, "enforced": dict(res.get("enforced") or {})}
+    out = {"valid": valid, "quality": quality, "credit": min(quality, 1.0) if valid else 0.0,
+           "rules": sorted({v["rule"] for v in res["violations"]}),
+           "objective": _r(res.get("objective")) if valid else None, "enforced": dict(res.get("enforced") or {})}
+    return {**out, "diagnose_error": res["diagnose_error"]} if res.get("diagnose_error") else out
 
 
 class WriteFailed(Exception):
@@ -188,13 +199,15 @@ class WriteFailed(Exception):
 
 
 class _Bench:
-    """Deliverables in a scratch folder, each written once and scored once per setting."""
+    """Deliverables in a scratch folder, each written once and scored once per setting (twice when it was first
+    scored without the diagnostic and is then asked for with it)."""
 
     def __init__(self, root: Path):
         self.root = root
         self.paths: dict[tuple, Path] = {}
         self.failed: dict[tuple, str] = {}
         self.scores: dict[tuple, dict] = {}
+        self.with_diagnostic: set[tuple] = set()        # (deliverable, setting) scored with diagnose=True
 
     def write(self, key: tuple, write: Callable[[Path], None]) -> tuple:
         """Write the deliverable `key` once; WriteFailed (every time it is asked for again) when the solver raises."""
@@ -211,13 +224,18 @@ class _Bench:
             self.paths[key] = out
         return key
 
-    def score(self, key: tuple, s: _Setting) -> dict:
-        if (key, s.key) not in self.scores:
-            self.record(key, s, s.case.evaluate(self.paths[key], "en"))
-        return self.scores[(key, s.key)]
+    def score(self, key: tuple, s: _Setting, diagnose: bool = True) -> dict:
+        """The summary of deliverable `key` under s; diagnose=False (the value-of-information matrix) skips case.py
+        diagnose(), which a later call with diagnose=True then runs."""
+        at = (key, s.key)
+        if at not in self.scores or (diagnose and at not in self.with_diagnostic):
+            self.record(key, s, s.case.evaluate(self.paths[key], "en", diagnose=diagnose), diagnose)
+        return self.scores[at]
 
-    def record(self, key: tuple, s: _Setting, evaluation: dict) -> None:
+    def record(self, key: tuple, s: _Setting, evaluation: dict, diagnosed: bool = True) -> None:
         self.scores[(key, s.key)] = _summary(evaluation)
+        if diagnosed:
+            self.with_diagnostic.add((key, s.key))
 
     def diagnosed(self) -> set[str]:
         """The targets some evaluation gave a True or False diagnostic for."""
@@ -252,7 +270,7 @@ def _prepare(bench: _Bench, s: _Setting) -> tuple[str, str] | None:
         setattr(s, which, _objective(res))
         s.case.__dict__[f"{which}_objective"] = getattr(s, which)
     for key, res in raw.items():
-        bench.record(key, s, s.case.judge(res))
+        bench.record(key, s, s.case.judge(res, diagnose_dir=bench.paths[key]))
     return None
 
 
@@ -292,15 +310,21 @@ def _ablation_rows(bench: _Bench, s: _Setting, params: dict[str, str]) -> list[d
     """One row per target in force in s. damage = 1 - credit, per deliverable in `damage`; for a param: target
     worst, best_guess and mean are over the wrong values (best_guess: the least harmful, a valid one on a tie), and
     it bites on best_guess: an agent that guesses wrong but sensibly. invalid is the best guess's validity; rules are
-    every rule some wrong value breaks."""
+    every rule some wrong value breaks. cross_flags: for each deliverable that bites, the other targets in force
+    whose enforced is False on it (it misreads only this target, so a correct diagnostic of the others passes it,
+    unless the facts interact)."""
     hooks, rows = s.case.ablations(), []
+    in_force = [t.id for t in s.case.targets("en")]
     for t in s.case.targets("en"):
         source, keys, unavailable = _ablation(bench, s, t.id, params.get(t.id), hooks)
         scores = {name: bench.score(key, s) for name, key in keys.items()}
+        damage = {name: _r(1.0 - x["credit"]) for name, x in scores.items()}
         row = {"target": t.id, "tier": s.tier, "setting": s.label, "source": source, "worst": None,
                "best_guess": None, "mean": None, "invalid": None, "rules": [], "bites": None, "diag_ok": None,
-               "damage": {name: _r(1.0 - x["credit"]) for name, x in scores.items()},
-               "enforced": {name: x["enforced"].get(t.id) for name, x in scores.items()}, "unavailable": unavailable}
+               "damage": damage, "enforced": {name: x["enforced"].get(t.id) for name, x in scores.items()},
+               "cross_flags": {name: [u for u in in_force if u != t.id and scores[name]["enforced"].get(u) is False]
+                               for name, d in damage.items() if d >= ABLATION_MIN_DAMAGE},
+               "unavailable": unavailable}
         if scores:
             damage = row["damage"]
             guess = min(scores, key=lambda n: (damage[n], not scores[n]["valid"]))
@@ -354,9 +378,10 @@ def _shortcut_rows(bench: _Bench, s: _Setting) -> list[dict]:
 
 # ── 3. value of information ──────────────────────────────────────────────────
 
-def _candidate(bench: _Bench, key: tuple, settings: list[_Setting]) -> dict:
-    """A fixed deliverable scored in every setting of a tier: validity rate, mean quality where valid, mean credit."""
-    scores = [bench.score(key, s) for s in settings]
+def _candidate(bench: _Bench, key: tuple, settings: list[_Setting], diagnose: bool = False) -> dict:
+    """A fixed deliverable scored in every setting of a tier: validity rate, mean quality where valid, mean credit
+    (without the diagnostic unless asked: the matrix needs only credit)."""
+    scores = [bench.score(key, s, diagnose) for s in settings]
     valid = [x["quality"] for x in scores if x["valid"]]
     return {"valid_rate": _r(len(valid) / len(scores)), "mean_quality": _r(mean(valid)) if valid else None,
             "mean_credit": _r(mean(x["credit"] for x in scores))}
@@ -365,7 +390,9 @@ def _candidate(bench: _Bench, key: tuple, settings: list[_Setting]) -> dict:
 def _voi(bench: _Bench, settings: list[_Setting]) -> dict:
     """Never asks vs the oracle (the reference, credit 1) in one tier. never_asks_params is the best of the
     deliverables that know every fixed fact (each setting's reference, the baseline of the tier's first setting):
-    the value of the drawn parameters only. never_asks is robust_solution's: the value of all the client knows."""
+    the value of the drawn parameters only. never_asks is robust_solution's: the value of all the client knows.
+    Only robust_solution is diagnosed here (for diagnostic_profile); each reference and baseline already is in its
+    own setting."""
     first = settings[0]
     fixed = {f"reference {s.label}": ("reference", s.key) for s in settings}
     if ("baseline", first.key) in bench.paths:
@@ -373,7 +400,8 @@ def _voi(bench: _Bench, settings: list[_Setting]) -> dict:
     candidates = dict(fixed)
     if hasattr(first.case.module, "robust_solution"):
         candidates["robust_solution"] = bench.write(("robust", first.tier), first.case.write_robust)
-    stats = {name: _candidate(bench, key, settings) for name, key in candidates.items()}
+    stats = {name: _candidate(bench, key, settings, diagnose=name == "robust_solution")
+             for name, key in candidates.items()}
     params = max(stats[name]["mean_credit"] for name in fixed)
     robust = stats["robust_solution"]["mean_credit"] if "robust_solution" in stats else None
     return {"never_asks_params": params, "voi_params": _r(1.0 - params), "never_asks": robust,
@@ -384,20 +412,57 @@ def _voi(bench: _Bench, settings: list[_Setting]) -> dict:
 # ── 4. reference and bounds ──────────────────────────────────────────────────
 
 def _bound_row(bench: _Bench, s: _Setting) -> dict:
-    """The reference and baseline objectives, the scale's width, and the best known solution and the proven bound
-    when the case has them (bound_quality on the quality scale; gap_to_bound relative to the reference)."""
+    """The reference and baseline objectives, the scale's width, and the best known solution (with its enforced
+    map) and the proven bound when the case has them (bound_quality on the quality scale; gap_to_bound relative to
+    the reference)."""
     ref, base = s.reference, s.baseline
     row = {"setting": s.label, "reference": _r(ref), "baseline": _r(base), "span": quality_span(ref, base),
-           "best_known": None, "best_known_valid": None, "best_known_quality": None, "bound": None,
-           "bound_quality": None, "gap_to_bound": None}
+           "best_known": None, "best_known_valid": None, "best_known_quality": None, "best_known_enforced": None,
+           "bound": None, "bound_quality": None, "gap_to_bound": None}
     if hasattr(s.case.module, "best_known_solution"):
         x = bench.score(bench.write(("best_known", s.key), s.case.write_best_known), s)
-        row.update(best_known=x["objective"], best_known_valid=x["valid"], best_known_quality=x["quality"])
+        row.update(best_known=x["objective"], best_known_valid=x["valid"], best_known_quality=x["quality"],
+                   best_known_enforced=x["enforced"])
     if hasattr(s.case.module, "objective_bound"):
         bound = s.case.objective_bound()
         row.update(bound=_r(bound), gap_to_bound=_r(abs(bound - ref) / abs(ref)) if ref else None,
                    bound_quality=_r((bound - base) / (ref - base)) if base not in (None, ref) else None)
     return row
+
+
+# ── 5. diagnostics on deliverables that are neither the reference nor an ablation ──
+
+PROFILED = {"baseline": lambda s: ("baseline", s.key), "robust_solution": lambda s: ("robust", s.tier)}
+
+
+def _profile(bench: _Bench, measured: list[_Setting]) -> dict:
+    """{deliverable: {target: {false, diagnosed, settings}}} for the baseline (each setting's own) and
+    robust_solution (its tier's): over the measured settings where the target is in force, how many there are,
+    how many gave the deliverable a True or False diagnostic, and how many False. Informational: neither is built
+    with full knowledge, so a False may well be right."""
+    out: dict[str, dict] = {}
+    for name, key_of in PROFILED.items():
+        counts: dict[str, dict] = {}
+        for s in measured:
+            if key_of(s) not in bench.paths:
+                continue
+            enforced = bench.score(key_of(s), s)["enforced"]
+            for t in s.case.targets("en"):
+                c = counts.setdefault(t.id, {"false": 0, "diagnosed": 0, "settings": 0})
+                value = enforced.get(t.id)
+                c["settings"] += 1
+                c["diagnosed"] += isinstance(value, bool)
+                c["false"] += value is False
+        if counts:
+            out[name] = counts
+    return out
+
+
+def _diagnose_errors(bench: _Bench, labels: dict[str, str], keep: int = 10) -> dict:
+    """{count, examples}: the evaluations where case.py diagnose() raised (examples: the first `keep`)."""
+    found = [{"deliverable": key[0], "setting": labels.get(at, at), "error": x["diagnose_error"]}
+             for (key, at), x in bench.scores.items() if x.get("diagnose_error")]
+    return {"count": len(found), "examples": found[:keep]}
 
 
 # ── the audit ────────────────────────────────────────────────────────────────
@@ -448,12 +513,14 @@ def audit_case(case: NativeCase, world_seed: int | None = None, combos: int = AU
         bounds = [_bound_row(bench, s) for s in measured]
         reference = {s.label: bench.score(("reference", s.key), s)["enforced"] for s in measured}
         diagnostics = _diagnose(ablations, reference, bench.diagnosed())
+        profile = _profile(bench, measured)
         listed = {tier: [_setting_entry(bench, s) for s in settings] for tier, settings in everything.items()}
+        errors = _diagnose_errors(bench, {s.key: s.label for settings in everything.values() for s in settings})
     audit = {"case": case.id, "world_seed": case.world_seed, "fingerprint": fingerprint(case.root),
              "thresholds": {"ablation_min_damage": ABLATION_MIN_DAMAGE, "shortcut_max_quality": SHORTCUT_MAX_QUALITY,
                             "voi_min": VOI_MIN, "voi_low": VOI_LOW, "combos": combos},
              "settings": listed, "ablations": ablations, "shortcuts": shortcuts, "voi": voi, "bounds": bounds,
-             "diagnostics": diagnostics}
+             "diagnostics": diagnostics, "diagnostic_profile": profile, "diagnose_errors": errors}
     try:
         cap = case.quality_cap
     except ValueError:              # validate-case reports it
@@ -567,6 +634,76 @@ def _target_findings(audit: dict) -> list[Finding]:
     return out
 
 
+def _in_force(audit: dict) -> dict[str, list[str]]:
+    """{setting: the targets in force there}, in the order of the ablation rows (one row per target in force)."""
+    out: dict[str, list[str]] = {}
+    for row in audit["ablations"]:
+        out.setdefault(row["setting"], []).append(row["target"])
+    return out
+
+
+def false_negatives(audit: dict) -> dict[str, dict]:
+    """Per target: over the settings where the best known solution is valid and the target in force, how many
+    (checked), how many gave it a True or False diagnostic (diagnosed), and those where it is False (false: the
+    settings). The best known solution knows every fact of its setting, so each False there is a false negative.
+    An audit stored before AUDIT_VERSION 3 has no best known enforced map and gives {}."""
+    in_force, out = _in_force(audit), {}
+    for b in audit["bounds"]:
+        enforced = b.get("best_known_enforced")
+        if not b.get("best_known_valid") or enforced is None:
+            continue
+        for t in in_force.get(b["setting"], []):
+            x = out.setdefault(t, {"checked": 0, "diagnosed": 0, "false": []})
+            x["checked"] += 1
+            x["diagnosed"] += isinstance(enforced.get(t), bool)
+            if enforced.get(t) is False:
+                x["false"].append(b["setting"])
+    return out
+
+
+def cross_flag_summary(audit: dict) -> dict[str, dict]:
+    """Per target: the settings where some deliverable of its ablation bites (biting), those where one of them also
+    has another target's enforced False (flagged), and how often each other target is flagged (others)."""
+    out: dict[str, dict] = {}
+    for row in audit["ablations"]:
+        flags = row.get("cross_flags") or {}
+        if not flags:                   # nothing bites here (or an audit stored before AUDIT_VERSION 3)
+            continue
+        x = out.setdefault(row["target"], {"biting": 0, "flagged": [], "others": {}})
+        x["biting"] += 1
+        hit = list(dict.fromkeys(u for us in flags.values() for u in us))
+        if hit:
+            x["flagged"].append(row["setting"])
+            for u in hit:
+                x["others"][u] = x["others"].get(u, 0) + 1
+    return out
+
+
+def _reliability_findings(audit: dict) -> list[Finding]:
+    """Diagnostics on deliverables that are neither the reference nor an ablation: false negatives on the best
+    known solution (problems), ablations that flag other targets in most settings where they bite (warnings: facts
+    can interact) and a diagnose() hook that raised (a problem: its targets were never diagnosed there)."""
+    out = []
+    for t, x in false_negatives(audit).items():
+        if x["false"]:
+            out.append(Finding(True, "diagnostic_false_negative", t, f"the diagnostic of target {t} calls the best "
+                               f"known solution, which knows every fact, not enforced in {len(x['false'])} of the "
+                               f"{x['checked']} settings where it is valid (e.g. {x['false'][0]})"))
+    for t, x in cross_flag_summary(audit).items():
+        if len(x["flagged"]) * 2 > x["biting"]:
+            others = ", ".join(f"{u} ({n})" for u, n in x["others"].items())
+            out.append(Finding(False, "cross_flags", t, f"the ablation of target {t} also calls other targets not "
+                               f"enforced in {len(x['flagged'])} of the {x['biting']} settings where it bites: "
+                               f"{others} (e.g. {x['flagged'][0]})"))
+    errors = audit.get("diagnose_errors") or {}
+    if errors.get("count"):
+        first = errors["examples"][0]
+        out.append(Finding(True, "diagnose_error", "", f"case.py diagnose() raised in {errors['count']} "
+                           f"evaluation(s) (e.g. the {first['deliverable']} in {first['setting']}: "
+                           f"{first['error']})"))
+    return out
+
+
 def _shortcut_findings(audit: dict) -> list[Finding]:
     return [Finding(True, "shortcut", s["name"], f"shortcut {s['name']} ({s['description'] or 'no description'}) is "
                     f"open in {len(s['open'])} of {s['settings']} settings (e.g. {s['open'][0]}; best quality "
@@ -624,8 +761,8 @@ def _failed_settings(audit: dict) -> list[Finding]:
 
 def findings(audit: dict, quality_cap: float | None) -> list[Finding]:
     """What a stored audit shows, as validate-case enforces it for a case with `audited: true`."""
-    return (_failed_settings(audit) + _target_findings(audit) + _shortcut_findings(audit) + _voi_findings(audit)
-            + _bound_findings(audit, quality_cap))
+    return (_failed_settings(audit) + _target_findings(audit) + _reliability_findings(audit)
+            + _shortcut_findings(audit) + _voi_findings(audit) + _bound_findings(audit, quality_cap))
 
 
 def summarize(found: list[Finding]) -> list[str]:
@@ -659,8 +796,8 @@ def _table(head: list[str], rows: list[list[str]]) -> list[str]:
 
 
 def report(audit: dict) -> str:
-    """The audit as markdown: settings, ablations per target (min/max over settings), shortcuts, value of
-    information per tier, reference and bounds, and the findings."""
+    """The audit as markdown: settings, ablations per target (min/max over settings), the diagnostic profile,
+    shortcuts, value of information per tier, reference and bounds, and the findings."""
     tiers = tier_order(audit["settings"])
     n = sum(len(audit["settings"][tier]) for tier in tiers)
     lines = [f"# Ground truth audit: {audit['case']} (world seed {audit['world_seed']})", "",
@@ -671,6 +808,11 @@ def report(audit: dict) -> str:
                       ", ".join(f"{tier} {k}/{n}" if n else f"{tier} –" for tier, (k, n) in t["per_tier"].items()),
                       str(len(t["unchecked"])),
                       _diagnostic_cell(t)] for t in target_summary(audit)])
+    lines += ["", "## Diagnostic profile", "",
+              "Settings where the diagnostic calls a deliverable not enforced, of those where it gives one: the best "
+              "known solution (valid; every one is a false negative), the ablation of the target that also flags "
+              "others (of the settings where it bites), and the baseline and robust_solution (informational).", ""]
+    lines += _table(["target", "best known", "cross flags", "baseline", "robust_solution"], _profile_rows(audit))
     lines += ["", "## Shortcuts", ""]
     lines += _table(["shortcut", "description", "closed", "best quality"],
                     [[s["name"], s["description"], f"{s['closed']}/{s['settings']}", _num(s["best_quality"])]
@@ -691,6 +833,23 @@ def report(audit: dict) -> str:
     lines += ["", "## Skipped settings", ""] + skipped if skipped else []
     lines += ["", "## Findings", ""] + [f"- {x}" for x in audit["summary"]]
     return "\n".join(lines) + "\n"
+
+
+def _profile_rows(audit: dict) -> list[list[str]]:
+    """The report's diagnostic profile: one row per target (k/n cells, "–" where nothing was diagnosed)."""
+    def cell(false: int, n: int) -> str:
+        return f"{false}/{n}" if n else "–"
+    negatives, cross, profile = false_negatives(audit), cross_flag_summary(audit), audit.get("diagnostic_profile") or {}
+    rows = []
+    for t in dict.fromkeys(row["target"] for row in audit["ablations"]):
+        fn, cf = negatives.get(t), cross.get(t)
+        flags = cell(len(cf["flagged"]), cf["biting"]) if cf else "–"
+        if cf and cf["others"]:
+            flags += " (" + ", ".join(cf["others"]) + ")"
+        rows.append([t, cell(len(fn["false"]), fn["diagnosed"]) if fn else "–", flags]
+                    + [cell(p[t]["false"], p[t]["diagnosed"]) if t in (p := profile.get(name) or {}) else "–"
+                       for name in PROFILED])
+    return rows
 
 
 def _diagnostic_cell(t: dict) -> str:

@@ -50,10 +50,11 @@ A case with `audited: true` in case.yaml also needs a fresh ground truth audit
 (dataset/audit.json, written by `fdebench2 audit-case`, fdebench2.audit) whose
 findings pass: the reference and baseline work in every measured combination;
 every target in force has an ablation that bites in each of its tiers and a
-diagnostic that, if it exists, tells the reference from the ablations that bite;
-every shortcut is closed; asking is worth at least VOI_MIN in every tier; a best
-known solution or a bound exists, and quality_cap is set and not below the best
-known quality. OPEN_AUDIT_FINDINGS turns a known finding into a warning (the
+diagnostic that, if it exists, tells the reference from the ablations that bite
+and calls a valid best known solution enforced (no diagnostic_false_negative),
+and case.py diagnose() never raised; every shortcut is closed; asking is worth
+at least VOI_MIN in every tier; a best known solution or a bound exists, and
+quality_cap is set and not below the best known quality. OPEN_AUDIT_FINDINGS turns a known finding into a warning (the
 stored findings count even when the audit is stale). For any other case a stored
 audit that is stale is only a warning.
 
