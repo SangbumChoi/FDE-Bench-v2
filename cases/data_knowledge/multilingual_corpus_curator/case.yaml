@@ -4,10 +4,13 @@ task_type: Data Engineering
 field: data_knowledge
 seed: 20261027
 objective: maximize          # 100 x mean per-book credit on the hidden corpus: 1 for the exact library path with the
-                             # right description (0.4 content + 0.2 each for year, title, author when the path is off;
-                             # 0.2 for the right path with another text), 1 when every manifest row naming a review
-                             # book's files gives its reason code (0.7 for NO_AUTHOR); x0.8 when the book's manifest
-                             # row is missing or wrong; medium+: -0.5 per library file that is no book
+                             # right description (0.4 when the description is at another path: misfiled; 0.2 for the
+                             # right path with another text), 1 when every manifest row naming a review book's files
+                             # gives its reason code (0.7 for NO_AUTHOR); x0.8 when the book's manifest row is missing
+                             # or wrong; medium+: -0.5 per library file that is no book
+audited: true                # ground truth audit enforced by validate-case (dataset/audit.json; GT.md, CLIENT_REVIEW.md)
+quality_cap: 1.0             # the best known deliverable is the reference itself: it reaches objective_bound in every
+                             # measured setting (best-known quality 1.0), so a program as good as it earns full credit
 deliverable_type: program
 entrypoint: organize.py:organize
 content_dirs: [corpus]       # the client's books: multilingual in every locale
@@ -162,12 +165,27 @@ rules:
   - id: review_reason
     class: contractual
     description: Every manifest row with status review gives one of the reason codes UNREADABLE, NO_TITLE, NO_AUTHOR, NO_YEAR, NO_DESCRIPTION, CONFLICT.
+  - id: manifest_rows
+    class: contractual
+    description: manifest.csv indexes the library — every library file is the path of exactly one placed row, every placed row's path is a library file and its source names at least one file of the drive (or a member of one of its archives or a row of one of its catalogs), and no source (file, archive member or catalog row) is named in more than one row.
+  - id: review_copies
+    class: contractual
+    description: Every file of the drive named in a review row is copied byte for byte under _review/ (archive members and catalog rows need not be).
   - id: no_fabrication
     class: contractual
     tiers: [hard]
     description: A book whose sources have no description is not placed in library/, and every library file holds a description taken from the sources (none is empty, invented or a placeholder).
+  - id: no_guessing
+    class: contractual
+    tiers: [hard]
+    description: A book whose title or year the sources do not settle is not placed in library/ — no title other than a generic file name (NO_TITLE), no year in any source (NO_YEAR; file dates are not publication years), or two sources of the same rank that disagree on its year (CONFLICT).
   - id: missing_author_review
     class: business_policy
     tiers: [hard]
     when: {no_author: [review]}
     description: A book with no author in any source goes to _review/ with NO_AUTHOR rather than being shelved under "{{fallback_author}}".
+  - id: missing_author_shelved
+    class: business_policy
+    tiers: [hard]
+    when: {no_author: [Unknown, Anonymous]}
+    description: A book with no author in any source is not sent to review, and is shelved under the author name "{{fallback_author}}" (spelled exactly so), never under another name.

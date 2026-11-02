@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-033463</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9797232033463</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>마지막 서점</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Majimak Seojeom</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>김하은</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Kim Ha-eun</PersonName></AlternativeName>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">이야기는 고원의 기상 관측소에서 시작된다. 사십 년 늦은 편지가 도착하자 그 이유를 기억하는 사람은 시계공 견습생뿐이다.
+
+한 겨울 동안의 이야기로, 시계공 견습생과 떠나기를 거부하는 사람들을 따라간다.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1962</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

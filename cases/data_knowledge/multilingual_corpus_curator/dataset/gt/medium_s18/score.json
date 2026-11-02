@@ -1,22 +1,22 @@
 {
-  "baseline_objective": 13.333333,
+  "baseline_objective": 13.030303,
   "baseline_quality": {
     "quality_anchor": "baseline",
-    "quality_ratio": 0.14379085,
+    "quality_ratio": 0.13030303,
     "quality_score": 0.0
   },
   "metrics": {
     "books_scored": 66,
-    "books_without_credit": 4,
-    "credit": 61.2,
+    "books_without_credit": 0,
+    "credit": 66.0,
     "extra_files": 0,
-    "library_files": 79,
+    "library_files": 88,
     "manifest_rows_wrong": 0,
-    "placed_exactly": 58,
+    "placed_exactly": 66,
     "program_error": "",
     "reviewed_correctly": 0
   },
-  "objective": 92.727273,
+  "objective": 100.0,
   "reference_quality": {
     "quality_anchor": "baseline",
     "quality_ratio": 1.0,

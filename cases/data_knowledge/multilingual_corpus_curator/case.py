@@ -26,11 +26,18 @@ script of names (original or Latin), how co-authors are written, the separator
 and the length limit of a name (tighter pools in harder tiers), and in hard the
 policy for books with no author (review, or shelved under a fallback name). Each
 draw gives a different library.
+
+The case is audited (fdebench2.audit, GT.md): score() reports per target whether
+the program implements the fact (`enforced`, from the same run on the hidden
+drive), ablations() misreads one fixed fact at a time, shortcuts() lists the
+degenerate programs, robust_solution() is the program that never asked, and the
+reference reaches objective_bound() (it is also best_known_solution()).
 """
 
 from __future__ import annotations
 
 import csv
+import functools
 import hashlib
 import io
 import json
@@ -40,8 +47,11 @@ import shutil
 import tempfile
 import unicodedata
 import zipfile
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
+
+import yaml
 
 from fdebench2.casekit import Fatal, run_program
 
@@ -54,9 +64,13 @@ REASONS = ("UNREADABLE", "NO_TITLE", "NO_AUTHOR", "NO_YEAR", "NO_DESCRIPTION", "
 NO_AUTHOR_REVIEW_CREDIT = 0.7          # a book without an author waiting in review: not on the shelf yet
 EXTRA_PENALTY = 0.5                    # medium+: a library file that is no book
 WRONG_DESC_CREDIT = 0.2                # the right library path holding something other than the book's description
+MISFILED_CREDIT = 0.4                  # the book's description at another path: misfiled, the team has to move it
 MANIFEST_SHARE = 0.2                   # share of a book's credit lost when its manifest row is missing or wrong
 CJK = ("zh", "ko", "ja")
 N_BOOKS = 100
+SUBTITLE_SHARE = 0.6                   # English and Spanish titles outside easy that carry a long subtitle
+CO_AUTHOR_SHARE = 0.3                  # books written by two authors
+SHORTEST_CUT = 24                      # the tightest name limit of any pool: titles stay distinct within it
 
 # ── vocabulary (all invented) ────────────────────────────────────────────────
 
@@ -302,7 +316,14 @@ REVIEW_OF = {"h_no_author": "NO_AUTHOR", "h_no_title": "NO_TITLE", "h_no_desc": 
 ERA_STYLE = {"ja": "japanese_era", "ko": "dangi", "en": "roman", "es": "roman"}
 
 
-def _title(rng: random.Random, lang: str) -> tuple[str, str]:
+def _subtitled(rng: random.Random, sub: bool | None) -> bool:
+    draw = rng.random()
+    return draw < SUBTITLE_SHARE if sub is None else sub
+
+
+def _title(rng: random.Random, lang: str, sub: bool | None = None) -> tuple[str, str]:
+    """A title in the book's language and its romanized form; English and Spanish titles carry a long subtitle
+    when `sub` says so (None: with probability SUBTITLE_SHARE)."""
     if lang == "zh":
         if rng.random() < 0.7:
             (a, al), (n, nl) = rng.choice(ZH_ADJ), rng.choice(ZH_NOUN)
@@ -331,7 +352,7 @@ def _title(rng: random.Random, lang: str) -> tuple[str, str]:
             t = f"A Map of {rng.choice(EN_PLACE)}"
         else:
             t = f"The {rng.choice(EN_NOUN)} at {rng.choice(EN_PLACE)}"
-        if rng.random() < 0.3:
+        if _subtitled(rng, sub):
             t += " — " + rng.choice(EN_SUB)
         return t, t
     p = rng.random()
@@ -345,7 +366,7 @@ def _title(rng: random.Random, lang: str) -> tuple[str, str]:
         t = f"Cartas desde {rng.choice(ES_PLACE)}"
     else:
         t = f"El {rng.choice(ES_NM)} de {rng.choice(ES_PLACE)}"
-    if rng.random() < 0.3:
+    if _subtitled(rng, sub):
         t += " — " + rng.choice(ES_SUB)
     return t, t
 
@@ -387,7 +408,9 @@ def _isbn(rng: random.Random) -> str:
     return "".join(map(str, digits + [check]))
 
 
-def build_corpus(seed: int) -> Corpus:
+def build_corpus(seed: int, hidden: bool = False) -> Corpus:
+    """One drive. The hidden drive also holds variants the sample need not show (F8): a Shōwa-era year, and zip
+    members one folder deeper."""
     rng = random.Random(seed)
     persons = {lang: _persons(rng, lang, 10) for lang in ("zh", "en", "ko", "ja", "es")}
     kinds = list(KINDS)
@@ -395,10 +418,15 @@ def build_corpus(seed: int) -> Corpus:
     titles: set = set()
     descs: set = set()
     used_by_easy: dict = {lang: [] for lang in persons}
+    easy_seen: dict = {lang: 0 for lang in persons}
     for i, (kind, lang) in enumerate(kinds):
         lang = lang or rng.choice(("zh", "en", "ko", "ja", "es"))
+        sub = None
+        if kind == "easy":                       # every second English and Spanish easy book has a subtitle
+            sub = easy_seen[lang] % 2 == 1
+            easy_seen[lang] += 1
         while True:
-            title, latin = _title(rng, lang)
+            title, latin = _title(rng, lang, sub)
             if kind == "m_forbidden":
                 title, latin = {
                     "en": (title.split(" — ")[0] + ": A Novel",) * 2,
@@ -407,7 +435,8 @@ def build_corpus(seed: int) -> Corpus:
                 }[lang]
             elif kind in ("h_scan_plus", "h_title_filename", "h_conflict") and lang in ("en", "es"):
                 title = latin = title.split(" — ")[0]
-            keys = {_title_key(title), _title_key(latin)}
+            keys = {_title_key(title), _title_key(latin), slug(title, " ", SHORTEST_CUT).casefold(),
+                    slug(latin, " ", SHORTEST_CUT).casefold()}
             if not keys & titles:
                 titles.update(keys)
                 break
@@ -427,7 +456,7 @@ def build_corpus(seed: int) -> Corpus:
         if rng.random() < 0.4 and first <= 2020:
             edition = min(2025, first + rng.randrange(2, 16))
         if kind == "m_era" and lang == "ja":
-            first, edition = rng.randrange(1975, 2012), rng.randrange(2019, 2025)
+            first, edition = rng.randrange(1975, 1989 if hidden else 2012), rng.randrange(2019, 2025)
         if kind == "m_encoding" and lang == "en":
             edition = min(2025, first + 5)          # the "·" of the edition line is a CP1252 byte
         if kind in ("h_year_copyright", "h_no_year", "h_conflict"):
@@ -439,7 +468,7 @@ def build_corpus(seed: int) -> Corpus:
             authors = []
         else:
             authors = [rng.choice(pool)]
-            if rng.random() < 0.18 and kind not in ("m_variant",):
+            if rng.random() < CO_AUTHOR_SHARE and kind not in ("m_variant",):
                 other = rng.choice([p for p in pool if p != authors[0]])
                 authors.append(other)
         if kind == "easy" and lang in CJK:
@@ -453,13 +482,14 @@ def build_corpus(seed: int) -> Corpus:
             b.desc = []
         if b.kind == "h_no_year":
             b.first = None
-    files = _render_corpus(books, rng)
+    files = _render_corpus(books, rng, hidden)
     return Corpus(books, files)
 
 
 def build_world(seed: int) -> World:
-    """The visible corpus (the agent's sample) and the hidden one the program is scored on: same recipe."""
-    return World(visible=build_corpus(seed), hidden=build_corpus(seed + 7919))
+    """The visible corpus (the agent's sample) and the hidden one the program is scored on: same recipe, other
+    books, other archive, catalog and file names."""
+    return World(visible=build_corpus(seed), hidden=build_corpus(seed + 7919, hidden=True))
 
 
 # ── rendering the corpus ─────────────────────────────────────────────────────
@@ -747,9 +777,9 @@ def _stream(body: bytes, extra: str = "") -> bytes:
 
 
 def render_pdf(m: dict, text: dict, lang: str) -> bytes:
-    lines = []
-    for line in title_page(text, lang):
-        lines += _wrap(line, lang, 70) if line else [""]
+    lines, desc = [], set(text.get("desc") or [])
+    for line in title_page(text, lang):          # description paragraphs wrap; title-page lines stay whole
+        lines += _wrap(line, lang, 70) if line in desc else [line]
     ops = ["BT", "/F1 11 Tf", "14 TL", "72 770 Td"]
     for line in lines:
         ops.append(f"{_pdf_str(line) if line else '()'} Tj T*")
@@ -1025,12 +1055,22 @@ JUNK = [(".DS_Store", b"\x00\x00\x00\x01Bud1" + bytes(range(64)) * 4),
         ("desktop.ini", b"[.ShellClassInfo]\r\nIconResource=C:\\Windows\\system32\\imageres.dll,-3\r\n")]
 
 
-def _render_corpus(books: list[Book], rng: random.Random) -> dict:
+ARCHIVES = [("old_drive_backup", "backup"), ("handover_2021", "handover"), ("backup_2019", "backup"),
+            ("office_move_2022", "office"), ("laptop_export_2018", "export"), ("inbox_archive_2020", "inbox")]
+CATALOGS = {"en": ["rights_catalog_export", "catalog_export_2023", "rights_desk_titles"],
+            "ja": ["東京_目録", "目録_2022", "版権目録_東京"]}
+
+
+def _render_corpus(books: list[Book], rng: random.Random, hidden: bool = False) -> dict:
     files: dict = {}
     names = _Names()
-    counter = [0]
-    zips: dict = {"archives/old_drive_backup.zip": [], "archives/handover_2021.zip": []}
-    catalogs: dict = {"catalogs/rights_catalog_export.csv": ("en", []), "catalogs/東京_目録.csv": ("ja", [])}
+    counter = [rng.randrange(0, 400)]            # numbered file names (doc_0042, scan_0107) differ per drive
+    archives = rng.sample(ARCHIVES, 2)
+    zips: dict = {f"archives/{name}.zip": [] for name, _ in archives}
+    inner_of = {f"archives/{name}.zip": inner + (f"/{rng.choice(('2019', 'old', 'misc'))}" if hidden else "")
+                for name, inner in archives}
+    catalogs: dict = {f"catalogs/{rng.choice(CATALOGS['en'])}.csv": ("en", []),
+                      f"catalogs/{rng.choice(CATALOGS['ja'])}.csv": ("ja", [])}
     for b in books:
         for s in _sources(b, rng, counter):
             if s.fmt == "csvrow":
@@ -1040,7 +1080,7 @@ def _render_corpus(books: list[Book], rng: random.Random) -> dict:
                 continue
             if s.folder == "zip":
                 z = sorted(zips, key=lambda c: (len(zips[c]), c))[0]
-                inner = "backup" if "old" in z else "handover"
+                inner = inner_of[z]
                 stem, dot, ext = s.name.rpartition(".")
                 member = f"{inner}/{_fit(inner, stem, dot + ext)}"
                 zips[z].append((member, _render_file(s, b.lang, rng)))
@@ -1128,6 +1168,14 @@ def content_of(b: Book) -> str:
     return "\n\n".join(unicodedata.normalize("NFC", p) for p in b.desc) + "\n"
 
 
+@functools.lru_cache(maxsize=None)
+def tier_pools(tier: str) -> dict:
+    """{parameter: its candidates in the tier}, from case.yaml."""
+    meta = yaml.safe_load((HERE / "case.yaml").read_text(encoding="utf-8"))
+    return {name: list(spec["values"][tier] if isinstance(spec["values"], dict) else spec["values"])
+            for name, spec in meta["params"].items()}
+
+
 class _View:
     """One setting: its tier (which books are scored, which rules apply) and the parameters its rule seed drew."""
 
@@ -1172,10 +1220,7 @@ class _View:
         return "library/" + LAYOUTS[self.layout].format(year=p[0], title=p[1], author=p[2])
 
     def parse(self, rel: str) -> tuple | None:
-        pat = re.escape(LAYOUTS[self.layout]).replace(r"\{year\}", r"(?P<year>[^/_]+)")
-        pat = pat.replace(r"\{title\}", r"(?P<title>[^/]+)").replace(r"\{author\}", r"(?P<author>[^/]+)")
-        m = re.fullmatch("library/" + pat, rel)
-        return (m.group("year"), m.group("title"), m.group("author")) if m else None
+        return parse_path(self.layout, rel)
 
 
 def _decode(body: bytes) -> tuple[str, bool]:
@@ -1213,7 +1258,16 @@ def _sourced(text: str, paras: set, descs: list) -> bool:
     return any(p in text for p in paras) or (len(text) >= 20 and any(text in d for d in descs))
 
 
-def evaluate(corpus: Corpus, files: dict, v: _View) -> tuple[list, float, dict]:
+def _path(s: str) -> str:
+    """A library path as the manifest or the output tree writes it, normalized."""
+    s = unicodedata.normalize("NFC", s.strip().replace("\\", "/"))
+    while s.startswith("./"):
+        s = s[2:]
+    return s
+
+
+def evaluate(corpus: Corpus, files: dict, v: _View) -> tuple[list, float, dict, dict]:
+    """(violations, objective, metrics, diagnostic) of an output tree; diagnostic = {"enforced", "evidence"}."""
     violations: list = []
     lib = {rel: body for rel, body in files.items() if rel.startswith("library/")}
     rows = _manifest(files)
@@ -1254,7 +1308,14 @@ def evaluate(corpus: Corpus, files: dict, v: _View) -> tuple[list, float, dict]:
         if st == "review" and r.get("reason", "").upper() not in REASONS:
             violations.append(("review_reason", f"review row {r.get('source', '')[:60]!r} has reason "
                                                 f"{r.get('reason', '')!r}, not one of {', '.join(REASONS)}"))
+    violations += _manifest_rows(lib, rows, status, row_refs, drive_sources(corpus))
     review_copies = {body for rel, body in files.items() if rel.startswith("_review/")}
+    drive = {_ref(rel): body for rel, body in corpus.files.items()}
+    missing = sorted({f for refs, st in zip(row_refs, status) if st == "review" for f in refs
+                      if f in drive and drive[f] not in review_copies})
+    if missing:
+        violations.append(("review_copies", f"{len(missing)} file(s) sent to review are not copied under _review/ "
+                                            f"(e.g. {missing[0]})"))
 
     def manifest_ok(b: Book, placed_at: list) -> bool:
         """The book's manifest row: the only row naming its files, naming all of them and nothing else, with
@@ -1269,7 +1330,7 @@ def evaluate(corpus: Corpus, files: dict, v: _View) -> tuple[list, float, dict]:
         if any(row_refs[j] & spare and status[j] != "skipped" for j in range(len(rows)) if j != k):
             return False
         if placed_at:
-            return status[k] == "placed" and _ref(rows[k].get("path", "")) in {_ref(p) for p in placed_at}
+            return status[k] == "placed" and _path(rows[k].get("path", "")) in {_path(p) for p in placed_at}
         return status[k] == "review" and all(corpus.files[f] in review_copies for f in b.own)
 
     credit, exact, review_ok, rows_wrong, lost = 0.0, 0, 0, 0, []
@@ -1281,17 +1342,11 @@ def evaluate(corpus: Corpus, files: dict, v: _View) -> tuple[list, float, dict]:
         shelved = review is None or (review == "NO_AUTHOR" and bool(mine))
         c = 0.0
         if shelved:
-            exp, (y, t, a) = v.path(b), v.parts(b)
+            exp = v.path(b)
             want = norm_text(content_of(b))
             for rel in mine:
                 ok = norm_text(texts[rel]) == want
-                if rel == exp:
-                    got_c = 1.0 if ok else WRONG_DESC_CREDIT
-                elif ok:
-                    got = v.parse(rel)
-                    got_c = 0.4 + (0.2 * ((got[0] == y) + (got[1] == t) + (got[2] == a)) if got else 0.0)
-                else:
-                    got_c = 0.0
+                got_c = (1.0 if ok else WRONG_DESC_CREDIT) if rel == exp else MISFILED_CREDIT if ok else 0.0
                 c = max(c, got_c)
             exact += c == 1.0 and review is None
         elif not mine:
@@ -1303,19 +1358,32 @@ def evaluate(corpus: Corpus, files: dict, v: _View) -> tuple[list, float, dict]:
             if named and len(codes) == 1 and None not in codes:
                 c = base if codes == {review} else 0.4 * base
             review_ok += c == base
-        if review and mine:
-            if v.hard and review == "NO_AUTHOR":
+        if v.hard and b.review == "NO_AUTHOR" and v.no_author != "review":
+            refs = {_ref(f) for f in b.files}
+            names = _fallbacks_read(mine, v)
+            if any(st == "review" and rr & refs for rr, st in zip(row_refs, status)):
+                violations.append(("missing_author_shelved", f"{b.title[:40]} has no author and was sent to review "
+                                                             f"instead of being shelved under {v.fallback!r}"))
+            elif names and v.fallback not in names:
+                violations.append(("missing_author_shelved", f"{b.title[:40]} has no author and is shelved under "
+                                                             f"{sorted(names)[0]!r}, not {v.fallback!r} ({mine[0]})"))
+        if review and mine and v.hard:
+            if review == "NO_AUTHOR":
                 violations.append(("missing_author_review", f"{b.title[:40]} has no author but was placed in the "
                                                             f"library ({mine[0]})"))
-            if v.hard and review == "NO_DESCRIPTION":
+            elif review == "NO_DESCRIPTION":
                 violations.append(("no_fabrication", f"{b.title[:40]} has no description in any source but has a "
                                                      f"library file ({mine[0]})"))
+            elif review in GUESSED:
+                violations.append(("no_guessing", f"{b.title[:40]}: {GUESSED[review]}, but it was placed in the "
+                                                  f"library ({mine[0]})"))
         if c > 0 and not manifest_ok(b, mine if shelved else []):
             c *= 1 - MANIFEST_SHARE
             rows_wrong += 1
         credit += c
         if c == 0:
             lost.append(b.bid)
+    fabricated = []
     if v.hard:
         paras = {norm_text(p) for b in corpus.books for p in b.desc}
         descs = [norm_text(content_of(b)) for b in corpus.books if b.desc]
@@ -1323,15 +1391,238 @@ def evaluate(corpus: Corpus, files: dict, v: _View) -> tuple[list, float, dict]:
             t = norm_text(texts[rel])
             if not t:
                 violations.append(("no_fabrication", f"{rel} is empty"))
+                fabricated.append(rel)
             elif rel in readable and not _sourced(t, paras, descs):
                 violations.append(("no_fabrication", f"{rel} holds text that is in none of the sources: "
                                                      f"{texts[rel].strip()[:40]!r}"))
+                fabricated.append(rel)
     penalty = EXTRA_PENALTY * len(extras) if v.medium else 0.0
     objective = 100.0 * max(0.0, credit - penalty) / len(scope)
     metrics = {"books_scored": len(scope), "placed_exactly": exact, "reviewed_correctly": review_ok,
                "manifest_rows_wrong": rows_wrong, "books_without_credit": len(lost), "extra_files": len(extras),
                "library_files": len(lib), "credit": round(credit, 3)}
-    return violations, round(objective, 6), metrics
+    diagnostic = diagnose(corpus, v, scope, attributed, texts, rows, status, row_refs, fabricated)
+    return violations, round(objective, 6), metrics, diagnostic
+
+
+GUESSED = {"NO_TITLE": "no source gives its title (a generic file name is not one)",
+           "NO_YEAR": "no source gives its year (file dates are not publication years)",
+           "CONFLICT": "two sources of the same rank disagree on its year"}
+
+
+SOURCE_MARKS = "!/:#|"            # how a source may point inside an archive or a catalog: `a.zip!m`, `a.zip/m`, ...
+
+
+def drive_sources(corpus: Corpus) -> set:
+    """Every source a manifest row can name on the drive, normalized like manifest sources (_ref): each file, each
+    member of a zip archive (`archive.zip!member`) and each row of a catalog CSV (`catalog.csv#<row>`, from 1 after
+    the header)."""
+    out = set()
+    for rel, body in corpus.files.items():
+        out.add(_ref(rel))
+        if rel.lower().endswith(".zip"):
+            try:
+                with zipfile.ZipFile(io.BytesIO(body)) as z:
+                    out |= {_ref(f"{rel}!{name}") for name in z.namelist()}
+            except (zipfile.BadZipFile, OSError):
+                pass
+        elif rel.lower().endswith(".csv"):
+            n = len(list(csv.reader(io.StringIO(body.decode("utf-8-sig", "replace"))))) - 1
+            out |= {_ref(f"{rel}#{k}") for k in range(1, n + 1)}
+    return out
+
+
+def on_drive(ref: str, sources: set) -> bool:
+    """Whether a normalized manifest source names a file of the drive, or a real member of one of its archives or a
+    real row of one of its catalogs (written `!`, `/`, `:`, `#` or `|` after the archive or catalog path)."""
+    if ref in sources:
+        return True
+    for container in (s for s in sources if s.lower().endswith((".zip", ".csv"))):
+        if ref.startswith(container) and len(ref) > len(container) + 1 and ref[len(container)] in SOURCE_MARKS:
+            mark = "#" if container.lower().endswith(".csv") else "!"
+            if _ref(container + mark + ref[len(container) + 1:]) in sources:
+                return True
+    return False
+
+
+def _manifest_rows(lib: dict, rows: list, status: list, row_refs: list, sources: set) -> list:
+    """manifest_rows: every library file is the path of exactly one placed row, every placed row's path is a
+    library file and its source names at least one source of the drive (a file, an archive member or a catalog
+    row: an index without sources tells the team nothing about where a book came from), and no source is named in
+    two rows."""
+    out = []
+    placed = Counter(_path(r.get("path", "")) for r, st in zip(rows, status) if st == "placed")
+    files = {_path(rel) for rel in lib}
+    unlisted = sorted(rel for rel in files if placed.get(rel, 0) != 1)
+    if unlisted:
+        out.append(("manifest_rows", f"{len(unlisted)} library file(s) are not the path of exactly one placed row "
+                                     f"(e.g. {unlisted[0]})"))
+    dangling = sorted(p for p in placed if p not in files)
+    if dangling:
+        out.append(("manifest_rows", f"{len(dangling)} placed row(s) name a path that is no library file "
+                                     f"(e.g. {dangling[0]!r})"))
+    unsourced = sorted(_path(r.get("path", "")) for r, st, refs in zip(rows, status, row_refs)
+                       if st == "placed" and not any(on_drive(ref, sources) for ref in refs))
+    if unsourced:
+        out.append(("manifest_rows", f"{len(unsourced)} placed row(s) name no source of the drive (e.g. the row of "
+                                     f"{unsourced[0]!r})"))
+    named = Counter(ref for refs in row_refs for ref in refs)
+    twice = sorted(ref for ref, n in named.items() if n > 1)
+    if twice:
+        out.append(("manifest_rows", f"{len(twice)} source(s) are named in more than one row (e.g. {twice[0]})"))
+    return out
+
+
+# ── diagnostics: does the output implement each client fact? ─────────────────
+# Every target in force gets enforced True / False / None and a line of evidence, computed from the same run of the
+# program on the hidden drive as the score. The diagnostic inputs are the hidden books where only that fact decides
+# the output (DIAGNOSTIC_BOOKS): for a library rule, the books whose path changes with it, read back from the
+# program's own paths; for the other facts, the books (or review rows) the fact is about. A book counts against a
+# fact when what the program wrote is consistent only with another reading of it; enforced is True when no book
+# counts against it and at least one counts for it.
+
+SEPS = ("_", "-", " ")
+CUTS = (24, 32, 40, 48, 50, 60, 10 ** 6)           # every pool's limits, and no cut at all
+FALLBACK_NAMES = ("Unknown", "Anonymous")
+LIBRARY_RULES = {"layout": "layout", "year_basis": "year_basis", "script": "script", "co_authors": "multi_author",
+                 "separator": "sep", "max_len": "max_len"}
+TARGETS_ALL = tuple(LIBRARY_RULES) + ("content", "review_codes")
+TARGETS_HARD = ("missing_author", "no_description", "conflict", "generic_titles")
+DIAGNOSTIC_BOOKS = {
+    "layout": "every placed book (the order of year, title and author in its path)",
+    "year_basis": "placed books whose first publication and this edition differ",
+    "script": "placed Chinese, Korean and Japanese books (original script or the paired romanization)",
+    "co_authors": "placed books with two authors",
+    "separator": "placed books whose title or author name has a space",
+    "max_len": "placed books whose title or author name is longer than the shortest limit of the pool",
+    "content": "every placed book (its library file holds the description and nothing else)",
+    "review_codes": "every review row of the manifest (its reason is one of the six codes)",
+    "missing_author": "the books with no author in any source",
+    "no_description": "the books with no description in any source, and every library file",
+    "conflict": "the books whose JSON and ONIX records disagree on the year",
+    "generic_titles": "the books whose only title would be a generic file name",
+}
+
+
+def parse_path(layout: str, rel: str) -> tuple | None:
+    """(year, title, author) of a library path under one layout, None when it does not fit."""
+    pat = re.escape(LAYOUTS[layout]).replace(r"\{year\}", r"(?P<year>[^/_]+)")
+    pat = pat.replace(r"\{title\}", r"(?P<title>[^/]+)").replace(r"\{author\}", r"(?P<author>[^/]+)")
+    m = re.fullmatch("library/" + pat, _path(rel))
+    return (m.group("year"), m.group("title"), m.group("author")) if m else None
+
+
+def _name_readings(b: Book) -> tuple[dict, dict]:
+    """How a book's title and author part can be written under any library rules: {slug: {(script, sep, cut)}}
+    for the title and {(script, sep, cut): {slug: {multi_author}}} for the author part."""
+    titles: dict = {}
+    authors: dict = {}
+    for script in ("original", "latin"):
+        title = b.title if script == "original" else b.title_latin
+        names = [p.orig if script == "original" else p.latin for p in b.authors]
+        for sep in SEPS:
+            for cut in CUTS:
+                titles.setdefault(slug(title, sep, cut), set()).add((script, sep, cut))
+                for multi in ("first", "all"):
+                    a = slug(names[0] if multi == "first" else " & ".join(names), sep, cut)
+                    authors.setdefault((script, sep, cut), {}).setdefault(a, set()).add(multi)
+    return titles, authors
+
+
+def _path_readings(b: Book, rel: str, readings: tuple) -> list[dict]:
+    """The library rules under which the program could have written `rel` for book b: one dict per reading
+    (layout, year basis, script, co-author rule, separator, cut)."""
+    titles, authors = readings
+    out = []
+    for layout in LAYOUTS:
+        got = parse_path(layout, rel)
+        if not got:
+            continue
+        year, title, author = got
+        bases = [k for k, y in (("first", b.first), ("edition", b.edition_year)) if str(y) == year]
+        for script, sep, cut in titles.get(title, ()):
+            for multi in authors.get((script, sep, cut), {}).get(author, ()):
+                out.append({"layout": layout, "year_basis": bases, "script": script, "multi_author": multi,
+                            "sep": sep, "max_len": cut})
+    return out
+
+
+def _fallbacks_read(mine: list, v: _View) -> set:
+    """The fallback author names (Unknown, Anonymous, the setting's) that a book's library paths are filed
+    under, read under any layout, separator and cut."""
+    names = {slug(n, sep, cut): n for n in FALLBACK_NAMES + (v.fallback,) for sep in SEPS for cut in CUTS}
+    return {names.get(got[2]) for rel in mine for layout in LAYOUTS if (got := parse_path(layout, rel))} - {None}
+
+
+def _tally(verdicts: list) -> tuple[bool | None, int, int]:
+    good, bad = verdicts.count(True), verdicts.count(False)
+    return (None if good + bad == 0 else bad == 0), good, bad
+
+
+def diagnose(corpus: Corpus, v: _View, scope: list, attributed: dict, texts: dict, rows: list, status: list,
+             row_refs: list, fabricated: list) -> dict:
+    """{"enforced": {target: bool | None}, "evidence": {target: str}} for every target in force in the setting."""
+    pools = tier_pools(v.tier)
+    value = {"layout": v.layout, "year_basis": v.year_basis, "script": v.script, "multi_author": v.multi_author,
+             "sep": v.sep, "max_len": v.max_len}
+    verdicts: dict = {t: [] for t in TARGETS_ALL + TARGETS_HARD}
+    descriptions = {norm_text(content_of(b)) for b in corpus.books if b.desc}
+    for b in scope:
+        if v.review_of(b) is not None or not b.authors:
+            continue
+        readings = _name_readings(b)
+        for rel in attributed.get(b.bid, []):
+            found = _path_readings(b, rel, readings)
+            if not found:
+                if parse_path(v.layout, rel) is None:
+                    verdicts["layout"].append(False)    # not even the client's folder shape (e.g. library/<title>.txt)
+                continue
+            for target, p in LIBRARY_RULES.items():
+                seen = set()
+                for r in found:
+                    seen |= set(r[p]) if isinstance(r[p], list) else {r[p]}
+                pool = set(pools.get(p) or []) or ({value[p]} | seen)
+                if not seen or pool <= seen:
+                    continue                    # nothing read back, or every candidate fits: not informative
+                verdicts[target].append(value[p] in seen)
+            want = norm_text(content_of(b))
+            got = norm_text(texts[rel])
+            if got == want:
+                verdicts["content"].append(True)
+            elif want and want in got:
+                verdicts["content"].append(False)       # the description and more (a card, a whole title page)
+            elif got not in descriptions:
+                verdicts["content"].append(False)       # no description at all (a placeholder, a title page alone)
+    for r, st in zip(rows, status):
+        if st == "review":
+            verdicts["review_codes"].append(r.get("reason", "").upper() in REASONS)
+    if v.hard:
+        for b in scope:
+            mine = attributed.get(b.bid, [])
+            refs = {_ref(f) for f in b.files}
+            in_review = any(st == "review" and rr & refs for rr, st in zip(row_refs, status))
+            if b.review == "NO_AUTHOR":
+                # neither shelved nor in review (left out, or listed as skipped) follows no policy either
+                if v.no_author == "review":
+                    verdicts["missing_author"].append(in_review and not mine)
+                elif mine:
+                    shelved = _fallbacks_read(mine, v)
+                    verdicts["missing_author"].append(v.fallback in shelved if shelved else None)
+                else:
+                    verdicts["missing_author"].append(False)
+            target = {"NO_DESCRIPTION": "no_description", "CONFLICT": "conflict", "NO_TITLE": "generic_titles"}.get(
+                b.review or "")
+            if target:
+                verdicts[target].append(not mine)
+        verdicts["no_description"] += [False] * len(fabricated)
+    targets = TARGETS_ALL + (TARGETS_HARD if v.hard else ())
+    enforced, evidence = {}, {}
+    for t in targets:
+        verdict = [x for x in verdicts[t] if x is not None]
+        enforced[t], good, bad = _tally(verdict)
+        evidence[t] = (f"{DIAGNOSTIC_BOOKS[t]}: none in this output" if good + bad == 0 else
+                       f"{DIAGNOSTIC_BOOKS[t]}: {good} follow the client's rule, {bad} another reading")
+    return {"enforced": enforced, "evidence": evidence}
 
 
 # ── running the delivered program ────────────────────────────────────────────
@@ -1378,11 +1669,11 @@ def score(world: World, submission_dir: Path, setting) -> dict:
         if "manifest.csv" not in run["files"]:
             why = f" (organize failed: {run['error'][:300]})" if run["error"] else ""
             raise Fatal("the program wrote no manifest.csv" + why)
-        violations, objective, metrics = evaluate(world.hidden, run["files"], _View(setting))
+        violations, objective, metrics, diagnostic = evaluate(world.hidden, run["files"], _View(setting))
     except Fatal as e:
         return {"fatal": str(e)}
     metrics["program_error"] = (run["error"] or "")[:300]
-    return {"violations": violations, "objective": objective, "metrics": metrics}
+    return {"violations": violations, "objective": objective, "metrics": metrics, **diagnostic}
 
 
 # ── reference solution and rule-breaking examples ────────────────────────────
@@ -1398,13 +1689,17 @@ def derive_params(params: dict, tier: str) -> dict:
     return {"fallback_author": EXCEPTION_AUTHOR if policy == "review" else policy}
 
 
-def write_program(out_dir: Path, setting, brk: str | None = None, source: Path = REFERENCE) -> None:
+def write_config(out_dir: Path, cfg: dict, source: Path = REFERENCE) -> None:
+    """program/: an organizer and its config.json (the library rules and the benchmark's switches)."""
     prog = Path(out_dir) / "program"
     prog.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source, prog / "organize.py")
-    cfg = {k: setting[k] for k in PARAMS}
-    cfg["break"] = brk
     (prog / "config.json").write_text(json.dumps(cfg, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
+
+
+def write_program(out_dir: Path, setting, brk: str | None = None, source: Path = REFERENCE, **switches) -> None:
+    """The reference (or baseline) program with the setting's rules; `switches`: misread, shortcut, robust."""
+    write_config(out_dir, {**{k: setting[k] for k in PARAMS}, "break": brk, **switches}, source)
 
 
 def reference_solution(world: World, out_dir: Path, setting) -> None:
@@ -1419,12 +1714,104 @@ def baseline_solution(world: World, out_dir: Path, setting) -> None:
 
 def violating_examples(world: World, setting) -> dict:
     """One program per rule of the setting that breaks exactly that rule (for the validator)."""
-    breaks = {"utf8_output": "utf8", "safe_names": "names", "one_file_per_book": "dup", "review_reason": "reason"}
+    breaks = {"utf8_output": "utf8", "safe_names": "names", "one_file_per_book": "dup", "review_reason": "reason",
+              "manifest_rows": "manifest", "review_copies": "copies"}
     if setting.at_least("hard"):
-        breaks.update(no_fabrication="fabricate")
-        if setting["no_author"] == "review":         # the rule applies only under the review policy
+        breaks.update(no_fabrication="fabricate", no_guessing="guess")
+        if setting["no_author"] == "review":         # each policy rule applies only under its policy
             breaks.update(missing_author_review="bend")
+        else:
+            breaks.update(missing_author_shelved="noshelve")
     return {rule: (lambda d, b=b: write_program(d, setting, b)) for rule, b in breaks.items()}
+
+
+# ── ground truth audit hooks (fdebench2.audit) ───────────────────────────────
+
+# The natural misreading of each client fact that is not a drawn parameter: the reference with one switch of
+# reference/organize.py flipped ("misread" in config.json).
+MISREADINGS = {
+    "content": ("card", "the library file is a catalogue card: title, author and year lines above the description"),
+    "review_codes": ("free_reasons", "review rows say why in plain words (\"year missing\", \"unreadable scan\") "
+                                     "instead of the six codes"),
+    "no_description": ("placeholder", "a book with no description is shelved with \"No description available.\""),
+    "conflict": ("first_source", "two exports of the same rank that disagree on the year: the first one read wins, "
+                                 "as between ranks"),
+    "generic_titles": ("filename_titles", "a book with no title is shelved under its file name, generic or not "
+                                          "(doc_0042)"),
+}
+
+
+def ablations(world: World, setting) -> dict:
+    """{target: fn(out_dir)}: the reference misreading only that fact, for the facts in force that are not a
+    drawn parameter (the drawn ones carry param: in targets.yaml)."""
+    hard = setting.at_least("hard")
+    return {t: (lambda d, f=flag: write_program(d, setting, misread=f)) for t, (flag, _) in MISREADINGS.items()
+            if hard or t not in TARGETS_HARD}
+
+
+SHORTCUTS = {
+    "review_all": "Send every book to review, so that nothing is ever misfiled",
+    "review_spam": "File the books, then add six review rows, one per reason code, for every file of the drive",
+    "placeholder_text": "File every book at its right path with a placeholder instead of its description",
+    "whole_text": "File every book at its right path with the whole text of its first file (title page, markup)",
+    "no_manifest": "Write the library and the review area but leave manifest.csv with its header only",
+    "no_review_copies": "Send books to review without copying their files under _review/",
+    "all_layouts": "Hedge the unknown layout: file every book under all three layouts",
+    "copy_through": "Copy every file of the drive into library/ as it is",
+    "flat_titles": "Skip the catalogue layout: library/<title>.txt for every book",
+    "sourceless_manifest": "Index the library with path-only placed rows: an empty source column, nothing traced "
+                           "back to the drive",
+    "path_as_source": "Fill each placed row's source with its own library path instead of the files it was read from",
+}
+
+
+def shortcuts(world: World, setting) -> dict:
+    """{name: fn(out_dir)}: degenerate strategies (reference/organize.py with "shortcut" in config.json); the
+    first docstring line of each is its description."""
+    out = {}
+    for name, text in SHORTCUTS.items():
+        mode = "header_only" if name == "no_manifest" else "spam" if name == "review_spam" else name
+
+        def write(out_dir, mode=mode):
+            write_program(out_dir, setting, shortcut=mode)
+        write.__doc__ = text
+        out[name] = write
+    return out
+
+
+def robust_solution(world: World, out_dir: Path, tier: str, candidates: dict) -> None:
+    """The program an engineer writes who never asked the client, from the sample and the request alone: every
+    format, encoding, year notation, copy and exception read as the data shows them, the description alone in
+    each file (the program interface says so), nothing guessed (the request says so: conflicting years, generic
+    file names, missing descriptions and missing authors are set aside). The library rules are planned over the
+    tier's candidates: each is a guess, and since a wrong layout, year basis, script, co-author rule or separator
+    misfiles every book it touches whichever wrong value it is, the first candidate of each pool is as good as any;
+    for the length limit the longest candidate is best on average: written whole up to it, a name is misfiled only
+    under a client limit it is longer than, so over the pool's three limits a < b < c the longest loses the names
+    longer than a or b, as many as the middle one and fewer than the shortest (which loses those longer than a
+    twice). Mixing the guesses book by book changes nothing on average, and the credit is linear here (never asking
+    stays above the baseline). It does not know the six reason codes, so it writes no review rows: a book it cannot
+    file is listed as skipped."""
+    cfg = {name: pool[0] for name, pool in candidates.items()}
+    cfg.update(max_len=max(candidates["max_len"]), no_author="review", fallback_author=EXCEPTION_AUTHOR,
+               robust=True, misread=None, shortcut=None)
+    cfg["break"] = None
+    write_config(out_dir, cfg)
+
+
+def best_known_solution(world: World, out_dir: Path, setting) -> None:
+    """The best deliverable known is the reference itself: on the hidden drive it reaches objective_bound."""
+    write_program(out_dir, setting)
+
+
+def objective_bound(world: World, setting) -> float:
+    """A proven upper bound on the objective of a valid deliverable: every scored book earns at most 1, and a book
+    with no author under the review policy at most NO_AUTHOR_REVIEW_CREDIT (shelving it breaks
+    missing_author_review); penalties only subtract. expected_output reaches it."""
+    v = _View(setting)
+    scope = [b for b in world.hidden.books if v.in_scope(b)]
+    best = sum(NO_AUTHOR_REVIEW_CREDIT if v.review_of(b) == "NO_AUTHOR" else 1.0 for b in scope)
+    return round(100.0 * best / len(scope), 6)
 
 
 # ── stored dataset (fdebench2 export-dataset) ────────────────────────────────
@@ -1504,7 +1891,7 @@ def write_ground_truth(world: World, gt_dir: Path, setting) -> None:
     w.writerow(BOOK_KEY_HEADER)
     w.writerows(key)
     (gt_dir / "books.csv").write_bytes(buf.getvalue().encode("utf-8-sig"))
-    violations, objective, metrics = evaluate(world.hidden, files, v)
+    violations, objective, metrics, _ = evaluate(world.hidden, files, v)
     score = {"objective": objective, "violations": violations, "metrics": metrics}
     (gt_dir / "expected_score.json").write_text(json.dumps(score, ensure_ascii=False, indent=2, sort_keys=True)
                                                 + "\n", encoding="utf-8")

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-826023</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9794532826023</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>¿Cartas desde Castrillo de la Vega?</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>Joaquín Olmedo</PersonName>
+        <PersonNameInverted>Olmedo, Joaquín</PersonNameInverted>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">Cuando llega una carta con cuarenta años de retraso, un bibliotecario del turno de noche de una vieja ciudad de canales debe decidir qué merece la pena conservar.
+
+Una novela serena sobre cómo el tiempo cambia un lugar.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1965</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-563435</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9793660563435</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>강의 정원?</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Gang-ui Jeongwon?</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>윤수아</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Yoon Su-ah</PersonName></AlternativeName>
+      </Contributor>
+      <Contributor><SequenceNumber>2</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>강수아</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Kang Su-ah</PersonName></AlternativeName>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">화재로 기록 보관소가 불타자, 운하가 흐르는 오래된 도시에 사는 은퇴한 지도 제작자는 무엇을 남길지 결정해야 한다.
+
+한 겨울 동안의 이야기로, 은퇴한 지도 제작자와 떠나기를 거부하는 사람들을 따라간다.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">2020</Date></PublishingDate>
+      <PublishingDate><PublishingDateRole>11</PublishingDateRole><Date dateformat="05">2009</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

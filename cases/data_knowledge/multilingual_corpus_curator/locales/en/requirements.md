@@ -70,7 +70,7 @@ We run the program on the full drive and compare the library with our own catalo
 <!-- tier: hard -->
 - Every book is counted.
 <!-- /tier -->
-- A book filed at exactly the right path with its description earns 1. A library file with the right description at a wrong path earns 0.4 plus 0.2 for each of year, title and author that is right; the right path with a wrong description earns 0.2.
+- A book filed at exactly the right path with its description earns 1. A library file with the right description at a wrong path is misfiled and earns 0.4 (our team has to find it and move it by hand); the right path with a wrong description earns 0.2.
 - A book that belongs in review earns 1 when every manifest row naming its files says `review` with the right reason code, 0.4 when they agree on another code, and nothing when the rows disagree or the book also has a library file.
 - Each book's manifest row is checked too: it must be the only row naming the book's files, list all of them, and say `placed` with the book's library path, or `review` with the files copied under `_review/`. A missing or wrong row costs a fifth of the book's credit.
 <!-- tier: hard -->
@@ -91,9 +91,15 @@ We run the program on the full drive and compare the library with our own catalo
 - Every library file and `manifest.csv` is valid UTF-8; no file or folder name contains `\ / : * ? " < > |` or a control character, is `.` or `..`, ends in a space or a dot, or is longer than 255 bytes.
 - One library file per book.
 - Every `review` row carries one of the six reason codes.
+- `manifest.csv` is the index of the library: every library file is the `path` of exactly one `placed` row, every `placed` row's `path` is a library file and its `source` names the files of the drive the book was read from, and no source (a file, an archive member or a catalog row) is named in two rows.
+- Every file of the drive named in a `review` row is copied under `_review/` (archive members and catalog rows need not be).
 <!-- tier: hard -->
 - No library file for a book without a description, and every library file holds a description taken from our files (nothing empty, made up or placeholder).
+- No book is placed under a title or a year that its files do not settle: no title other than a generic file name, no year anywhere (file dates are not publication years), or two sources of the same rank that disagree on the year.
 <!-- when: no_author=review -->
 - Books without an author go to review (our policy; an exception is possible).
+<!-- /when -->
+<!-- when: no_author=Unknown,Anonymous -->
+- Books without an author are shelved under "{{fallback_author}}" (our policy for this clean-up).
 <!-- /when -->
 <!-- /tier -->

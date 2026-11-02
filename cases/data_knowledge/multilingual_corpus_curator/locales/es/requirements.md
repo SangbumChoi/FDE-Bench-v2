@@ -70,7 +70,7 @@ Ejecutamos el programa sobre la unidad completa y comparamos la biblioteca con n
 <!-- tier: hard -->
 - Cuentan todos los libros.
 <!-- /tier -->
-- Un libro archivado exactamente en la ruta correcta con su sinopsis suma 1. Un archivo de la biblioteca con la sinopsis correcta en una ruta equivocada suma 0,4 más 0,2 por cada acierto entre año, título y autor; la ruta correcta con una sinopsis equivocada suma 0,2.
+- Un libro archivado exactamente en la ruta correcta con su sinopsis suma 1. Un archivo de la biblioteca con la sinopsis correcta en una ruta equivocada está mal archivado y suma 0,4 (nuestro equipo tiene que encontrarlo y moverlo a mano); la ruta correcta con una sinopsis equivocada suma 0,2.
 - Un libro que debe ir a revisión suma 1 cuando todas las filas del manifiesto que nombran sus archivos dicen `review` con el código de motivo correcto, 0,4 cuando coinciden en otro código, y nada cuando las filas se contradicen o el libro tiene además un archivo en la biblioteca.
 - También se revisa la fila de cada libro en el manifiesto: debe ser la única fila que nombra los archivos del libro, listarlos todos y decir `placed` con la ruta del libro en la biblioteca, o `review` con los archivos copiados bajo `_review/`. Una fila que falta o está mal cuesta una quinta parte del crédito del libro.
 <!-- tier: hard -->
@@ -91,9 +91,15 @@ Ejecutamos el programa sobre la unidad completa y comparamos la biblioteca con n
 - Todos los archivos de la biblioteca y `manifest.csv` son UTF-8 válido; ningún nombre de archivo o carpeta contiene `\ / : * ? " < > |` ni caracteres de control, es `.` o `..`, termina en espacio o punto, ni supera los 255 bytes.
 - Un solo archivo de biblioteca por libro.
 - Cada fila `review` lleva uno de los seis códigos de motivo.
+- `manifest.csv` es el índice de la biblioteca: cada archivo de la biblioteca es el `path` de exactamente una fila `placed`, el `path` de cada fila `placed` es un archivo de la biblioteca y su `source` nombra los archivos de la unidad de los que se leyó el libro, y ninguna fuente (un archivo, una entrada de un archivo comprimido o una fila de catálogo) aparece en dos filas.
+- Cada archivo de la unidad nombrado en una fila `review` se copia bajo `_review/` (las entradas de los archivos comprimidos y las filas de catálogo no hace falta).
 <!-- tier: hard -->
 - Ningún archivo de biblioteca para un libro sin sinopsis, y cada archivo de biblioteca contiene una sinopsis tomada de nuestros archivos (nada vacío, inventado ni de relleno).
+- Ningún libro se coloca con un título o un año que sus archivos no dejan claros: sin más título que un nombre de archivo genérico, sin año en ninguna parte (las fechas de archivo no son años de publicación) o con dos fuentes del mismo rango que no coinciden en el año.
 <!-- when: no_author=review -->
 - Los libros sin autor van a revisión (nuestra política; cabe una excepción).
+<!-- /when -->
+<!-- when: no_author=Unknown,Anonymous -->
+- Los libros sin autor se colocan como "{{fallback_author}}" (nuestra política para esta limpieza).
 <!-- /when -->
 <!-- /tier -->

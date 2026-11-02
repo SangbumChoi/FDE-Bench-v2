@@ -3,7 +3,9 @@
 What the client could script without an engineer: organize({"corpus_dir": ..., "out_dir": ...}) shelves only
 the books that have a complete JSON export (UTF-8, a title, an author, a plain four-digit year and a
 description), under the catalogue rules in config.json, and leaves every other file on the drive for the team.
-No other format, no legacy encodings or era years, no merging of copies, no review area and no reason codes.
+A JSON record whose ISBN also has an ONIX export is left for the team too: the script cannot tell which of the
+two exports is right. No other format, no legacy encodings or era years, no merging of copies, no review area
+and no reason codes.
 """
 
 import csv
@@ -33,6 +35,12 @@ def organize(task):
     sep, n = cfg["sep"], int(cfg["max_len"])
     os.makedirs(os.path.join(out, "library"), exist_ok=True)
     rows, taken = [], set()
+    onix = set()                                   # ISBNs that also have an ONIX export
+    for root, dirs, files in os.walk(corpus):
+        for name in files:
+            if name.lower().endswith(".xml"):
+                with open(os.path.join(root, name), "rb") as fh:
+                    onix |= set(re.findall(rb"<IDValue>(\d{13})</IDValue>", fh.read()))
     for root, dirs, files in os.walk(corpus):
         dirs.sort()
         for name in sorted(files):
@@ -54,6 +62,8 @@ def organize(task):
             year = first if cfg["year_basis"] == "first" else str(doc.get("edition_year") or first)
             desc = str(doc.get("description") or "").strip()
             if not (title and names and desc and re.fullmatch(r"\d{4}", year)):
+                continue
+            if str(doc.get("isbn") or "").encode() in onix:
                 continue
             author = names[0] if cfg["multi_author"] == "first" else " & ".join(names)
             rel = "library/" + LAYOUTS[cfg["layout"]].format(year=year, title=slug(title, sep, n),
