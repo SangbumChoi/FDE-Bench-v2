@@ -50,17 +50,26 @@ _BLOCK = {kind: re.compile(rf"<!-- {kind}: ([A-Za-z ]+) -->\n?(.*?)<!-- /{kind} 
 _WHEN = re.compile(r"<!-- when: ([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([^>]*?) -->\n?"
                    r"((?:(?!<!-- /?when).)*?)<!-- /when -->\n?", re.S)
 PARAM = re.compile(r"\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}")
-BASELINE_MIN_GAP = 0.05   # quality's zero point is at least this share of the reference away from it
+MIN_QUALITY_SPAN = 0.05   # the validator's floor on a setting's quality scale, see quality_span()
+
+
+def quality_span(ref: float, base: float | None) -> float | None:
+    """How wide a setting's quality scale is: |reference − baseline| / |reference|, None without a baseline (or
+    with a zero reference). On a narrow scale every small objective difference moves quality a lot (span 2%: a
+    1% better objective earns +0.5), so the validator requires at least MIN_QUALITY_SPAN on the cases it checks;
+    scoring never moves the zero point (quality_fields)."""
+    if base is None or not ref:
+        return None
+    return round(abs(ref - base) / abs(ref), 8)
 
 
 def quality_fields(obj: float, ref: float, base: float | None, maximize: bool) -> dict[str, Any]:
     """An objective's quality against the reference (and the baseline, when the case has one).
 
     quality_ratio is obj/ref (ref/obj when minimizing); quality_score is normalized so that the baseline
-    scores 0 and the reference 1, or is the ratio itself when there is no baseline strictly worse than the
-    reference (quality_anchor says which). The zero point is never closer to the reference than
-    BASELINE_MIN_GAP of it, so a baseline that is nearly as good as the reference cannot blow small
-    differences up. Both are capped at RATIO_CAP; the score is floored at 0.
+    scores exactly 0 and the reference exactly 1, or is the ratio itself when there is no baseline strictly
+    worse than the reference (quality_anchor says which). Both are capped at RATIO_CAP; the score is floored
+    at 0.
     """
     if obj == ref:
         ratio = 1.0
@@ -69,9 +78,7 @@ def quality_fields(obj: float, ref: float, base: float | None, maximize: bool) -
     else:  # no meaningful ratio (e.g. zero cost): beating the reference earns the cap, falling short 0
         ratio = RATIO_CAP if (obj > ref) == maximize else 0.0
     if base is not None and (base < ref if maximize else base > ref):
-        gap = BASELINE_MIN_GAP * abs(ref)
-        zero = min(base, ref - gap) if maximize else max(base, ref + gap)
-        score, anchor = (obj - zero) / (ref - zero), "baseline"
+        score, anchor = (obj - base) / (ref - base), "baseline"
     else:
         score, anchor = ratio, "ratio"
     return {"quality_ratio": round(ratio, 8), "quality_score": round(min(max(score, 0.0), RATIO_CAP), 8) + 0.0,
@@ -697,7 +704,8 @@ class NativeCase(Case):
         ref, (base, base_error) = self.reference_objective, self._scoring_baseline
         higher = self.meta.get("objective", "minimize") == "maximize"
         out.update(validity_score=1.0, **quality_fields(obj, ref, base, higher), objective=obj,
-                   reference_objective=ref, baseline_objective=base, relaxed_violations=len(out["violations"]))
+                   reference_objective=ref, baseline_objective=base, quality_span=quality_span(ref, base),
+                   relaxed_violations=len(out["violations"]))
         if base_error:
             out["baseline_error"] = base_error
         return out

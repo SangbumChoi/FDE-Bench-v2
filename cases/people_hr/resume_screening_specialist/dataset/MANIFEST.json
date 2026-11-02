@@ -36,7 +36,7 @@
  "gt/easy_s31/score.json": "231d3ef2132b5a40fbc5d96ea6d7e49912815e50a0e827565aba1c468501bc63",
  "gt/easy_s31/setting.json": "416365739d7804e176d7204d5280bc5824e4c656eee1b13730d9242b5160e62f",
  "gt/easy_s4/reference/shortlist.csv": "f49892e726b2ae455af2fb52922dfce3484112269a256ac362a266995b078d92",
- "gt/easy_s4/score.json": "fd698dbd2f02dea3ac5632988f687fc5af77e417ae2d11b4104c07df7b6a4ae9",
+ "gt/easy_s4/score.json": "bc23ca86ee644a314c6017bd3bd5e239779474b6f38daef81bc7366fe74a6716",
  "gt/easy_s4/setting.json": "7e97e1a0d68bd03a74e4fd7fcacbb4488cdaf66452658532b892e1dd4c6d7900",
  "gt/hard_s19/reference/shortlist.csv": "8df888785765b52e6823e9a5d773f6bad8fefbc0b16cddd5e2db5ce616948ab4",
  "gt/hard_s19/score.json": "562cf6a77d348de5dca5c310c2adbddc0175a54f7e363473a7236e0816a97604",
@@ -48,12 +48,12 @@
  "gt/hard_s4/score.json": "ea2645422d674376f8a26afef2d305338007e633693b93f8ad929926eb93be8e",
  "gt/hard_s4/setting.json": "c3b8da757568d3f34ac5f9bf2b6374ecbe5d1f789162b7e1b39387b5eb76fa0d",
  "gt/medium_s19/reference/shortlist.csv": "0e88fce5de0526718bb22fa6349c8c93643319131c2b3d956025b1d8aff8dd2b",
- "gt/medium_s19/score.json": "4382fa955a3c7ef87b28e885972a2c94a65ebdf46fa6d32c622f66b5f0c08a47",
+ "gt/medium_s19/score.json": "854422c9d2b15374260ef26eb51da0ba76cb09f9a84e39b27cb46b0a6971f08f",
  "gt/medium_s19/setting.json": "301c8dc1fec75bf9f37d5465e88922c2543c2a0e2f5bedbb9dec665f73c1b16f",
  "gt/medium_s31/reference/shortlist.csv": "96d2d0a16233d16b4ea5274e2d4b6472845cf1961ab9d0f6c8c60d27ab73a1ab",
  "gt/medium_s31/score.json": "d3ed5ce9d7e6aa91deaad1f23e315eb3bcc26fce42b3da354ba0ab06cdff256d",
  "gt/medium_s31/setting.json": "c73f389355e20d21441f680baf780fb3a997f1d059060e678ff13cae05eab463",
  "gt/medium_s4/reference/shortlist.csv": "54242f76947f135035f3cb3c726170ca0f7343dd1211aea7789dddc1e5bd0f11",
- "gt/medium_s4/score.json": "982ab720d5412685887f387cd7aa8a27c41d24081e9e07462578dee00327caee",
+ "gt/medium_s4/score.json": "5e89f946b3acfff9fcdce90157652bb420a1a9fadd23c77cc97e14b093a5dc8e",
  "gt/medium_s4/setting.json": "c967ac1b78bd1a61003f8975d4c2a208b0daaa35ac486a45e07b7a21a6c7f572"
 }

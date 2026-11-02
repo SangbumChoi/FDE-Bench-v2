@@ -68,8 +68,11 @@ Design rules that keep scoring language-independent:
   sensible valid deliverable (what the client gets without an engineer: do nothing, first fit, its own
   habit); `reference_solution` is a solid deterministic heuristic. With baseline objective b and reference
   objective r, quality q = (obj − b) / (r − b): the baseline scores 0, the reference 1, and a better
-  deliverable more than 1 (floored at 0, capped at 10). The zero point is never closer than 5% of r to the
-  reference, so a baseline that is nearly as good as the reference cannot blow small differences up. Without a
+  deliverable more than 1 (floored at 0, capped at 10). The baseline is exactly the zero point in every setting;
+  every evaluation also reports the scale's width, `quality_span` = |r − b| / |r|. A setting where the baseline
+  comes within 5% of the reference (span < 5%, `cases.MIN_QUALITY_SPAN`) is a case defect the validator reports,
+  because there a 1% objective difference moves quality by 0.2 or more: the fix is a stronger reference or a
+  baseline that is really the client's way, never a moved zero point. Without a
   usable baseline (none, or one that fails on a generated world) q is the plain ratio obj / r (r / obj when
   minimizing); `quality_anchor` says which, and `quality_ratio` is always reported. A non-finite objective is
   invalid. The reference is not the ceiling: the composite gives full credit at
@@ -98,8 +101,8 @@ Warnings, which do not fail validation: two tiers whose references are byte-iden
 other's reference; a parameter that varies in a tier where nothing in force uses it; a lower-tier binding
 finding listed in `validate.OPEN_BINDING_FINDINGS` (Settings, below); a number in a rule
 description that neither the requirements nor the data state; a `name (ID)` in a locale's texts whose ID's data
-rows never mention that name. Notes give each setting's baseline/reference objective ratio and the settings
-where the baseline is within 5% of the reference (quality's zero point is then held 5% away from it).
+rows never mention that name; a setting whose quality scale is narrower than 5% that `validate.OPEN_NARROW_SCALES`
+lists as known and open (otherwise it fails). Notes give each setting's baseline/reference objective ratio.
 
 ### Settings: one world, tiers × rule seeds
 

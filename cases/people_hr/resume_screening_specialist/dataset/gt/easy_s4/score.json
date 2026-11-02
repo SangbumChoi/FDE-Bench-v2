@@ -3,7 +3,7 @@
   "baseline_quality": {
     "quality_anchor": "baseline",
     "quality_ratio": 0.96043932,
-    "quality_score": 0.20878636
+    "quality_score": 0.0
   },
   "metrics": {
     "fit_by_role": {

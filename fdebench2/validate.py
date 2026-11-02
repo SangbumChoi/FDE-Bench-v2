@@ -10,7 +10,9 @@
    shape in every locale and no foreign-language labels.
 4. The reference solution is valid and scores quality 1.0; an empty submission
    is not valid; a baseline_solution, when the case has one, is valid and worse
-   than the reference.
+   than the reference, by at least MIN_QUALITY_SPAN (5%) of the reference in
+   every setting and world checked, so the quality scale is wide enough to
+   measure (OPEN_NARROW_SCALES turns a known narrow scale into a warning).
 5. Each declared violating example breaks exactly the rule it names; when the
    rule is not physical, relaxing it makes the example valid again.
 
@@ -72,8 +74,8 @@ from pathlib import Path
 
 import yaml
 
-from .cases import (BASELINE_MIN_GAP, LOCALES, PARAM, TIERS, NativeCase, derive_full, load_fields, value_text,
-                    when_values)
+from .cases import (LOCALES, MIN_QUALITY_SPAN, PARAM, TIERS, NativeCase, derive_full, load_fields, quality_span,
+                    value_text, when_values)
 from .transforms.language import detect_locale
 from .transforms.policy import RULE_CLASSES
 
@@ -104,6 +106,19 @@ OPEN_BINDING_FINDINGS: dict[tuple[str, str, str], tuple[tuple[int, ...] | None, 
     ("people_hr/resume_screening_specialist", "interview_date", "medium"): (
         (3,), "the reference of rule seed 31 stays valid with the same objective under every interview date "
               "(2026-11-02, 2026-11-16, 2026-11-30)"),
+}
+# Settings whose quality scale is narrower than MIN_QUALITY_SPAN (the baseline within 5% of the reference), known
+# and open: a warning instead of a problem on the worlds listed (None: every world) until the case is fixed.
+OPEN_NARROW_SCALES: dict[str, tuple[tuple[int, ...] | None, str]] = {
+    "finance/loan_underwriting_specialist": (
+        (1, 2, 3), "the reference leaves profit on the table (F1), so on some worlds the client's own way comes "
+                   "within 4-5% of it; the deep audit strengthens the reference"),
+    "manufacturing/procurement_specialist": (
+        (1, 2, 3), "plain MRP comes within 3.4-4.5% of the heuristic reference in some easy and medium settings; "
+                   "the deep audit strengthens the reference"),
+    "people_hr/resume_screening_specialist": (
+        None, "shortlisting by relevant years alone comes within 1-4% of the reference in most easy and medium "
+              "settings (the 30-point fit floor compresses the objective)"),
 }
 REQUIRED_META = ("id", "role", "field", "task_type", "objective", "seed", "deliverable_spec", "rules")
 HANGUL = re.compile(r"[가-힣]")
@@ -656,6 +671,19 @@ def check_binding(case: NativeCase, refs: dict[tuple, Path], prefix: str = "") -
     return problems, warnings
 
 
+def narrow_scale(case: NativeCase, close: list[tuple[str, float]]) -> str:
+    """The finding for settings whose quality scale is narrower than MIN_QUALITY_SPAN on this case's world:
+    "known and open: ..." when OPEN_NARROW_SCALES lists it (then a warning), else the problem."""
+    where = ", ".join(f"{label} ({span:.1%})" for label, span in close)
+    text = (f"quality scale narrower than {MIN_QUALITY_SPAN:.0%} in {where}: the baseline is that close to the "
+            f"reference, so a 1% objective difference moves quality by 0.2 or more; widen it with a stronger "
+            f"reference (or a baseline that is really the client's way)")
+    entry = OPEN_NARROW_SCALES.get(case.id)
+    if entry is not None and (entry[0] is None or case.world_seed in entry[0]):
+        return f"known and open: {text} ({entry[1]})"
+    return text
+
+
 def check_world_seed(case: NativeCase, seed: int) -> tuple[list[str], list[str]]:
     """(problems, warnings): the case also works on a world from another seed: every public setting's reference
     is valid at quality 1.0, every rule has a clean violating example, and every parameter still binds in every
@@ -665,6 +693,7 @@ def check_world_seed(case: NativeCase, seed: int) -> tuple[list[str], list[str]]
     problems: list[str] = []
     warnings: list[str] = []
     refs: dict[tuple, Path] = {}
+    close: list[tuple[str, float]] = []
     keep = tempfile.TemporaryDirectory()
     try:
         for c in other.settings():
@@ -681,6 +710,10 @@ def check_world_seed(case: NativeCase, seed: int) -> tuple[list[str], list[str]]
             refs[(c.tier, c.rule_seed)] = ref
             if res["validity_score"] != 1.0 or abs(res["quality_score"] - 1.0) > 1e-9:
                 problems.append(f"{at}reference scores {res.get('error_info') or res['quality_score']}")
+            elif res.get("baseline_error"):
+                problems.append(f"{at}the baseline is not valid: {res['baseline_error']}")
+            elif res.get("quality_span") is not None and res["quality_span"] < MIN_QUALITY_SPAN:
+                close.append((c.setting.label if c.tiers else "the case", res["quality_span"]))
             for rule_id in [r.id for r in c.rules().rules]:
                 if rule_id not in examples:
                     problems.append(f"{at}rule {rule_id}: no violating example")
@@ -691,6 +724,9 @@ def check_world_seed(case: NativeCase, seed: int) -> tuple[list[str], list[str]]
                 broken = {v["rule"] for v in c.evaluate(ex, "en")["violations"]}
                 if broken != {rule_id}:
                     problems.append(f"{at}rule {rule_id}: example breaks {sorted(broken)}")
+        if close:
+            found = f"[seed {seed}] " + narrow_scale(other, close)
+            (warnings if "known and open" in found else problems).append(found)
         found, notes = check_binding(other, refs, f"[seed {seed}] ")
         problems += found
         warnings += [n for n in notes if "(known and open" in n]
@@ -998,8 +1034,9 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                 else:
                     ratio = f"{base_obj / ref:.3f}" if ref else "n/a (reference 0)"
                     ratios.append(f"{c.setting.label} {ratio}" if c.tiers else ratio)
-                    if abs(ref - base_obj) < BASELINE_MIN_GAP * abs(ref):
-                        close.append(c.setting.label if c.tiers else "the case")
+                    span = quality_span(ref, base_obj)
+                    if span is not None and span < MIN_QUALITY_SPAN:
+                        close.append((c.setting.label if c.tiers else "the case", span))
             examples = c.violating_examples()
             for rule_id in [r.id for r in c.rules().rules]:
                 if rule_id not in examples:
@@ -1022,8 +1059,8 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
     if ratios:
         report.notes.append("baseline/reference objective: " + ", ".join(ratios))
     if close:
-        report.notes.append(f"baseline within {BASELINE_MIN_GAP:.0%} of the reference in {', '.join(close)}: "
-                            f"quality's zero point sits {BASELINE_MIN_GAP:.0%} from the reference there")
+        found = narrow_scale(case, close)
+        (warnings if found.startswith("known and open") else problems).append(found)
     for (rule_id, numbers), where in unstated.items():
         at = f"[{where[0].setting.label}{f' and {len(where) - 1} more' if len(where) > 1 else ''}] " if tiers else ""
         warnings.append(f"{at}rule {rule_id}: its description says {', '.join(numbers)}, "

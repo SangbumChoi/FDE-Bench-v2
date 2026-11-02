@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from fdebench2.cases import RATIO_CAP, NativeCase, quality_fields
+from fdebench2.cases import RATIO_CAP, NativeCase, quality_fields, quality_span
 from fdebench2.dataset import check_dataset, export_dataset
 from fdebench2.scoring.policy_score import RunFacts, apply_policy
 from fdebench2.transforms.policy import Policy, policy_brief_msgs
@@ -220,16 +220,20 @@ def test_dataset_stores_the_baseline_only_when_the_case_has_one(tmp_path):
                                                  "quality_score": 0.0}
 
 
-def test_a_baseline_close_to_the_reference_does_not_blow_up_quality():
-    # maximize: baseline 98, reference 100 -> zero point 95 (5% below the reference), not 98
+def test_the_baseline_is_exactly_the_zero_point_even_when_close_to_the_reference():
+    # minimize: reference 100, baseline 102 -> the baseline scores 0 (not 0.6) and 101 scores 0.5
+    assert quality_fields(102.0, 100.0, 102.0, maximize=False)["quality_score"] == 0.0
+    assert abs(quality_fields(101.0, 100.0, 102.0, maximize=False)["quality_score"] - 0.5) < 1e-9
+    assert abs(quality_fields(99.0, 100.0, 102.0, maximize=False)["quality_score"] - 1.5) < 1e-9
+    # maximize: reference 100, baseline 98
     q = quality_fields(101.0, 100.0, 98.0, maximize=True)
-    assert q["quality_anchor"] == "baseline" and abs(q["quality_score"] - 6 / 5) < 1e-9
-    assert quality_fields(98.0, 100.0, 98.0, maximize=True)["quality_score"] == 0.6
-    # minimize: baseline 102, reference 100 -> zero point 105
-    assert abs(quality_fields(99.0, 100.0, 102.0, maximize=False)["quality_score"] - 6 / 5) < 1e-9
-    # a baseline far from the reference is the zero point itself
+    assert q["quality_anchor"] == "baseline" and abs(q["quality_score"] - 1.5) < 1e-9
+    assert quality_fields(98.0, 100.0, 98.0, maximize=True)["quality_score"] == 0.0
     assert quality_fields(40.0, 80.0, 40.0, maximize=True)["quality_score"] == 0.0
     assert str(quality_fields(40.0, 80.0, 40.0, maximize=True)["quality_score"]) == "0.0"   # never -0.0
+    # the scale's width is reported instead: the validator requires MIN_QUALITY_SPAN of it
+    assert quality_span(100.0, 102.0) == 0.02 and quality_span(80.0, 40.0) == 0.5
+    assert quality_span(100.0, None) is None and quality_span(0.0, 5.0) is None
 
 
 def test_a_baseline_that_fails_on_a_world_falls_back_to_the_ratio(tmp_path):
