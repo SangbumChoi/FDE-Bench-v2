@@ -31,11 +31,13 @@ The case is audited (fdebench2.audit, GT.md): score() reports per target whether
 the program implements the fact (`enforced`, from the same run on the hidden
 drive), ablations() misreads one fixed fact at a time, shortcuts() lists the
 degenerate programs, robust_solution() is the program that never asked, and the
-reference reaches objective_bound() (it is also best_known_solution()).
+reference reaches objective_bound(), as does best_known_solution() (the answer
+key written by a program, a second deliverable with every fact of the setting).
 """
 
 from __future__ import annotations
 
+import base64
 import csv
 import functools
 import hashlib
@@ -1300,6 +1302,16 @@ def evaluate(corpus: Corpus, files: dict, v: _View) -> tuple[list, float, dict, 
             extras.append(rel)
         else:
             attributed.setdefault(b.bid, []).append(rel)
+    # The diagnostic also reads a stray file as the one book whose whole description it holds with more around it
+    # (a card or a title page at a path no rule gives the book): for the score it is no book's file, but its path
+    # still shows which rules the program applied, and the book was placed. Without it a program that misreads the
+    # content and a library rule gets None for both, and one that writes cards and also files a guessed book
+    # (conflicting years, a generic file name as its title) would be called enforced on that fact.
+    seen_as = {bid: list(rels) for bid, rels in attributed.items()}
+    for rel in extras:
+        held = [b for d, b in by_content.items() if d and d in norm_text(texts[rel])]
+        if len(held) == 1:
+            seen_as.setdefault(held[0].bid, []).append(rel)
 
     scope = [b for b in corpus.books if v.in_scope(b)]
     status = [r.get("status", "").lower() for r in rows]
@@ -1401,7 +1413,7 @@ def evaluate(corpus: Corpus, files: dict, v: _View) -> tuple[list, float, dict, 
     metrics = {"books_scored": len(scope), "placed_exactly": exact, "reviewed_correctly": review_ok,
                "manifest_rows_wrong": rows_wrong, "books_without_credit": len(lost), "extra_files": len(extras),
                "library_files": len(lib), "credit": round(credit, 3)}
-    diagnostic = diagnose(corpus, v, scope, attributed, texts, rows, status, row_refs, fabricated)
+    diagnostic = _diagnostic(corpus, v, scope, seen_as, texts, rows, status, row_refs, fabricated)
     return violations, round(objective, 6), metrics, diagnostic
 
 
@@ -1483,6 +1495,12 @@ def _manifest_rows(lib: dict, rows: list, status: list, row_refs: list, sources:
 
 SEPS = ("_", "-", " ")
 CUTS = (24, 32, 40, 48, 50, 60, 10 ** 6)           # every pool's limits, and no cut at all
+# The diagnostic also reads a path under separators and co-author forms that no pool has (a dot, the words run
+# together; the co-authors joined with "and" or a comma, the last author alone): a program that writes them misreads
+# the separator or the co-author rule, which the pools' readings alone cannot tell (they find no reading at all).
+READ_SEPS = SEPS + (".", "")
+AUTHOR_FORMS = {"first": lambda names: names[0], "all": " & ".join, "all, joined with and": " and ".join,
+                "all, joined with a comma": ", ".join, "the last": lambda names: names[-1]}
 FALLBACK_NAMES = ("Unknown", "Anonymous")
 LIBRARY_RULES = {"layout": "layout", "year_basis": "year_basis", "script": "script", "co_authors": "multi_author",
                  "separator": "sep", "max_len": "max_len"}
@@ -1492,11 +1510,13 @@ DIAGNOSTIC_BOOKS = {
     "layout": "every placed book (the order of year, title and author in its path)",
     "year_basis": "placed books whose first publication and this edition differ",
     "script": "placed Chinese, Korean and Japanese books (original script or the paired romanization)",
-    "co_authors": "placed books with two authors",
-    "separator": "placed books whose title or author name has a space",
+    "co_authors": "placed books with two authors (also read with the co-authors joined by \"and\" or a comma, or the "
+                  "last author alone)",
+    "separator": "placed books whose title or author name has a space (also read with a dot or no separator)",
     "max_len": "placed books whose title or author name is longer than the shortest limit of the pool",
     "content": "every placed book (its library file holds the description and nothing else)",
-    "review_codes": "every review row of the manifest (its reason is one of the six codes)",
+    "review_codes": "every review row of the manifest (its reason is one of the six codes); in hard, no review row "
+                    "at all counts against it",
     "missing_author": "the books with no author in any source",
     "no_description": "the books with no description in any source, and every library file",
     "conflict": "the books whose JSON and ONIX records disagree on the year",
@@ -1520,11 +1540,11 @@ def _name_readings(b: Book) -> tuple[dict, dict]:
     for script in ("original", "latin"):
         title = b.title if script == "original" else b.title_latin
         names = [p.orig if script == "original" else p.latin for p in b.authors]
-        for sep in SEPS:
+        for sep in READ_SEPS:
             for cut in CUTS:
                 titles.setdefault(slug(title, sep, cut), set()).add((script, sep, cut))
-                for multi in ("first", "all"):
-                    a = slug(names[0] if multi == "first" else " & ".join(names), sep, cut)
+                for multi, form in AUTHOR_FORMS.items():
+                    a = slug(form(names), sep, cut)
                     authors.setdefault((script, sep, cut), {}).setdefault(a, set()).add(multi)
     return titles, authors
 
@@ -1559,9 +1579,11 @@ def _tally(verdicts: list) -> tuple[bool | None, int, int]:
     return (None if good + bad == 0 else bad == 0), good, bad
 
 
-def diagnose(corpus: Corpus, v: _View, scope: list, attributed: dict, texts: dict, rows: list, status: list,
-             row_refs: list, fabricated: list) -> dict:
-    """{"enforced": {target: bool | None}, "evidence": {target: str}} for every target in force in the setting."""
+def _diagnostic(corpus: Corpus, v: _View, scope: list, attributed: dict, texts: dict, rows: list, status: list,
+                row_refs: list, fabricated: list) -> dict:
+    """{"enforced": {target: bool | None}, "evidence": {target: str}} for every target in force in the setting.
+    Computed in score() from the program's one run (cheap), so the case has no lazy diagnose() hook: this name
+    keeps the framework from taking it for one."""
     pools = tier_pools(v.tier)
     value = {"layout": v.layout, "year_basis": v.year_basis, "script": v.script, "multi_author": v.multi_author,
              "sep": v.sep, "max_len": v.max_len}
@@ -1593,9 +1615,13 @@ def diagnose(corpus: Corpus, v: _View, scope: list, attributed: dict, texts: dic
                 verdicts["content"].append(False)       # the description and more (a card, a whole title page)
             elif got not in descriptions:
                 verdicts["content"].append(False)       # no description at all (a placeholder, a title page alone)
-    for r, st in zip(rows, status):
-        if st == "review":
-            verdicts["review_codes"].append(r.get("reason", "").upper() in REASONS)
+    reviewed = [r.get("reason", "").upper() in REASONS for r, st in zip(rows, status) if st == "review"]
+    due = sum(v.review_of(b) is not None for b in scope)
+    # Every review row counts, also for a book the tier does not score (like the rules). No review row at all while
+    # books the tier scores belong in review (hard): the six codes were never used, as when such books are listed
+    # as skipped or left out. In easy and medium no scored book belongs in review, so the answer key itself has no
+    # review row there, and a program without one says nothing about the codes.
+    verdicts["review_codes"] += reviewed or ([False] if due else [])
     if v.hard:
         for b in scope:
             mine = attributed.get(b.bid, [])
@@ -1621,6 +1647,8 @@ def diagnose(corpus: Corpus, v: _View, scope: list, attributed: dict, texts: dic
         verdict = [x for x in verdicts[t] if x is not None]
         enforced[t], good, bad = _tally(verdict)
         evidence[t] = (f"{DIAGNOSTIC_BOOKS[t]}: none in this output" if good + bad == 0 else
+                       f"{DIAGNOSTIC_BOOKS[t]}: none in this output, though {due} book(s) of this tier belong in "
+                       f"review" if t == "review_codes" and not reviewed else
                        f"{DIAGNOSTIC_BOOKS[t]}: {good} follow the client's rule, {bad} another reading")
     return {"enforced": enforced, "evidence": evidence}
 
@@ -1799,9 +1827,36 @@ def robust_solution(world: World, out_dir: Path, tier: str, candidates: dict) ->
     write_config(out_dir, cfg)
 
 
+ORACLE = '''"""The answer key of the hidden drive as a program (the ground truth audit's best known solution)."""
+import base64
+import json
+import os
+
+
+def organize(task):
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "answer.json"), encoding="utf-8") as fh:
+        files = json.load(fh)
+    for rel, body in files.items():
+        path = os.path.join(task["out_dir"], *rel.split("/"))
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as fh:
+            fh.write(base64.b64decode(body))
+'''
+
+
 def best_known_solution(world: World, out_dir: Path, setting) -> None:
-    """The best deliverable known is the reference itself: on the hidden drive it reaches objective_bound."""
-    write_program(out_dir, setting)
+    """The best deliverable known: a program that writes the setting's answer key of the hidden drive
+    (expected_output), an oracle with every fact of the setting. It reaches objective_bound, as the reference does,
+    but it is another deliverable: it writes only the books the tier scores, so in easy and medium no review row
+    at all (no scored book belongs in review there) and no skipped row. The audit's false-negative check (a False
+    on a valid best known solution) then tries the diagnostic on a full-knowledge program besides the reference,
+    which the separation check already covers."""
+    files, _ = expected_output(world.hidden, _View(setting))
+    prog = Path(out_dir) / "program"
+    prog.mkdir(parents=True, exist_ok=True)
+    (prog / "organize.py").write_text(ORACLE, encoding="utf-8")
+    answer = {rel: base64.b64encode(body).decode("ascii") for rel, body in sorted(files.items())}
+    (prog / "answer.json").write_text(json.dumps(answer, sort_keys=True), encoding="utf-8")
 
 
 def objective_bound(world: World, setting) -> float:

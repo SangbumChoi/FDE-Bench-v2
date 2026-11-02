@@ -3,8 +3,8 @@
 Run from the repository root:  python cases/data_knowledge/multilingual_corpus_curator/gt_report.py [gt] [client]
 GT.md takes every number in its tables from dataset/audit.json (`fdebench2 audit-case`, public world) and the counts
 of the hidden drive from the case's generator; the prose around them is fixed here. Neither file quotes the audit's
-fingerprint, so writing them again after a fresh audit of the same sources gives the same files (both are audit
-sources themselves, so they must not change after the audit that validate-case checks).
+fingerprint, so writing them again after a fresh audit of the same sources gives the same files. Both are case docs
+(cases.CASE_DOCS), outside the audit's fingerprint, so writing them never makes the stored audit stale.
 """
 
 from __future__ import annotations
@@ -21,7 +21,8 @@ import yaml
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT.parents[2]))
 
-from fdebench2.audit import shortcut_summary, target_summary, tier_order  # noqa: E402
+from fdebench2.audit import (cross_flag_summary, false_negatives, shortcut_summary, target_summary,  # noqa: E402
+                             tier_order)
 from fdebench2.cases import NativeCase  # noqa: E402
 
 TIERS = ("easy", "medium", "hard")
@@ -235,7 +236,10 @@ def gt(case: NativeCase) -> str:
             "with a complete UTF-8 JSON record (title, author, plain four-digit year, description) under the "
             "catalogue rules, leaves a JSON record whose ISBN also has an ONIX export for the team (it cannot tell "
             "which is right) and leaves every other file alone.",
-            "- **Best known** (`best_known_solution`): the reference itself.",
+            "- **Best known** (`best_known_solution`): the answer key (`expected_output`) written by a program, an "
+            "oracle with every fact of the setting. It reaches the bound like the reference, but is another "
+            "deliverable (only the books the tier scores, so no review row in easy and medium), on which the "
+            "diagnostic is checked too (part 5).",
             "- **Bound** (`objective_bound`): a proven upper bound on a valid program's objective: every scored book "
             f"earns at most 1, a book with no author under the review policy at most {module.NO_AUTHOR_REVIEW_CREDIT} "
             "(shelving it breaks `missing_author_review`), and penalties only subtract. `expected_output` reaches it, "
@@ -273,16 +277,25 @@ def gt(case: NativeCase) -> str:
             "invalid programs alike, from the same run of the program on the hidden drive as the score (the "
             "program is run once). The diagnostic inputs are the hidden books where only that fact decides the "
             "output. For a drawn library rule the program's own path of each such book is read back under every "
-            "layout, year basis, script, co-author rule, separator and cut (`_path_readings`): the book counts for "
+            "layout, year basis, script, co-author rule, separator and cut (`_path_readings`; also with a dot or no "
+            "separator, and with the co-authors joined by \"and\" or a comma or the last author alone, which no "
+            "pool has, so that a program writing them is read as misreading that rule rather than giving no "
+            "reading at all): the book counts for "
             "the fact when the client's value is among the readings that reproduce the path and not every candidate "
             "of the tier is, and against it when the client's value is not among them; a path that does not even "
             "have the client's layout's shape (e.g. `library/<title>.txt`) counts against `layout`. `content` counts "
             "a file at a book's path against the fact when it holds the description and more (a card, a title page) "
             "or no description at all (a placeholder); `missing_author` counts an author-less book that is neither "
-            "shelved nor in review (left out, or listed as skipped) against it. For the other facts the "
-            "inputs are the books (or review rows) the fact is about. `enforced` is True when no input counts "
-            "against the fact and at least one counts for it. The audit checks that the reference is enforced "
-            "everywhere and that every ablation that bites is not.", ""]
+            "shelved nor in review (left out, or listed as skipped) against it; `review_codes` counts every review "
+            "row the program writes, and no review row at all against the fact where books the tier scores belong "
+            "in review (hard: the six codes were never used; in easy and medium no scored book belongs in review, "
+            "so the answer key itself has no review row). For the other facts the inputs are the books (or review "
+            "rows) the fact is about. A stray library file that holds one book's whole description with more "
+            "around it (a card at a path no rule gives) is no book's file for the score, but the diagnostic reads "
+            "it as that book's, so a program that misreads the content and a library rule is flagged on both, and "
+            "a book filed as a card under a guessed year or title counts as placed. `enforced` is True when no "
+            "input counts against the fact and at least one counts for it. The audit checks that the reference is "
+            "enforced everywhere and that every ablation that bites is not.", ""]
     rows = []
     for t in targets:
         s = summary.get(t["id"])
@@ -290,6 +303,34 @@ def gt(case: NativeCase) -> str:
             continue
         rows.append([f"`{t['id']}`", module.DIAGNOSTIC_BOOKS[t["id"]], _diag(s), ", ".join(s["undiagnosed"][:3]) or "–"])
     out += _table(["target", "diagnostic inputs (hidden drive)", "result", "settings where it fails"], rows)
+    out += ["", "**Reliability on other deliverables.** A run's \"enforced\" stage applies the diagnostic to the "
+            "agent's program, which is neither the reference nor an ablation. Per target, the settings where it "
+            "calls a deliverable not enforced, of those where it gives a verdict: the best known solution (valid "
+            "and built with every fact of its setting, so each False would be a false negative), the ablations of "
+            "the target that also flag another target (of the settings where the ablation bites; it misreads only "
+            "its own fact), and the baseline (each setting's own) and `robust_solution` (its tier's), which do not "
+            "know every fact, so a False there may be right.", ""]
+    negatives, cross = false_negatives(audit), cross_flag_summary(audit)
+    profile = audit.get("diagnostic_profile") or {}
+
+    def cell(k, n):
+        return f"{k}/{n}" if n else "–"
+    rows = []
+    for t in targets:
+        if t["id"] not in summary:
+            continue
+        fn, cf = negatives.get(t["id"]), cross.get(t["id"])
+        flags = cell(len(cf["flagged"]), cf["biting"]) if cf else "–"
+        if cf and cf["others"]:
+            flags += " (" + ", ".join(f"`{u}`" for u in cf["others"]) + ")"
+        rows.append([f"`{t['id']}`", cell(len(fn["false"]), fn["diagnosed"]) if fn else "–", flags]
+                    + [cell(p[t["id"]]["false"], p[t["id"]]["diagnosed"]) if t["id"] in (p := profile.get(name) or {})
+                       else "–" for name in ("baseline", "robust_solution")])
+    out += _table(["target", "best known", "ablation flags another target", "baseline", "robust_solution"], rows)
+    errors = (audit.get("diagnose_errors") or {}).get("count", 0)
+    out += ["", "The case has no lazy `diagnose()` hook: the diagnostic is cheap and computed in `score()` from the "
+            "program's one run, so the validator and every cell of the value-of-information matrix get it too"
+            + (f"; `diagnose()` raised in {errors} evaluation(s) of the audit." if errors else ".")]
     out += ["", "## Findings of the audit", ""] + [f"- {x}" for x in audit["summary"]] + (
         [] if audit["summary"] else ["- none: every check passes"])
     return "\n".join(out) + "\n"

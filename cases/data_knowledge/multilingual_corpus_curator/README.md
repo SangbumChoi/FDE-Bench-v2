@@ -210,11 +210,17 @@ right paths, a header-only manifest, a manifest whose placed rows have an empty 
 as the source, review without copies, every book under all three layouts, copying the drive through, and a flat
 `library/<title>.txt`. The diagnostic also tells these from a correct program: a flat path counts against
 `layout`, a placeholder at the right path against `content`, and an author-less book that is neither shelved nor
-in review against `missing_author`.
+in review against `missing_author`; in hard, a program that writes no review row at all is not enforced on
+`review_codes` (in easy and medium no scored book belongs in review, and it stays None). A stray library file that
+holds one book's whole description with more around it (a card at a path no rule gives) is still no book's file
+for the score, but the diagnostic reads it as that book's, so a program misreading two facts is flagged on both.
+The audit also tries the diagnostic on deliverables that are neither the reference nor an ablation (the answer
+key, the baseline, `robust_solution`; GT.md part 5, REVIEW.md "Diagnostics on other deliverables"). The case has
+no lazy `diagnose()` hook: the diagnostic is cheap and computed in `score()`.
 
 The program's output on the hidden corpus is cached by the program's digest, so the settings, the violating
 examples and the binding and cross-tier checks run each distinct program once (`validate-case` takes about three
-minutes with the default world seeds 1–3; `audit-case` about 7 to 8 minutes).
+minutes with the default world seeds 1–3; `audit-case` about 8 to 10 minutes).
 
 ## Reference and verified numbers (seed 20261027, hidden corpus)
 
@@ -229,8 +235,10 @@ zip member, legacy encodings via the corpus's own UTF-8 character statistics, ev
 Dangi, Chinese numerals, Roman numerals, `©` lines), NFKC slugs, grouping by normalized title, per-field
 precedence over all files of a book, the official name pair of every author from anywhere on the drive,
 same-rank year conflicts, scans, junk and catalogs, and the drawn no-author policy. It files every hidden book
-exactly as `expected_output` does: it reaches `objective_bound` in every setting, so it is also the best known
-solution and `quality_cap` is 1.0.
+exactly as `expected_output` does: it reaches `objective_bound` in every setting, and `quality_cap` is 1.0. The
+best known solution (`best_known_solution`, for the audit) is the answer key itself written by a program, an
+oracle that reaches the bound too: a second full-knowledge deliverable, besides the reference, that the
+diagnostic must never call not enforced.
 
 | Tier | Books scored | Baseline objective | Reference objective = bound |
 |---|---|---|---|

@@ -384,3 +384,83 @@ A second engineer tried to break the audit above by running code on it (public w
 Findings this resolves: F5 fully (the garbage-source probe of the first review is invalid now). Everything else
 in the list above keeps its status.
 
+### Diagnostics on other deliverables
+
+A run's "enforced" stage applies the per-target diagnostic to the agent's program, which is neither the reference
+nor an ablation, so separating those two is not enough. The framework's audit (version 3) now also tries it on
+other deliverables: a False on the valid best known solution is a false negative (a problem), an ablation that
+flags another target in most settings where it bites is a `cross_flags` warning, a `diagnose()` hook that raises is
+a problem, and the baseline's and `robust_solution`'s verdicts are profiled. Re-run on the public world (45
+settings), with these changes:
+
+- **The diagnostic raised in every diagnosed evaluation.** case.py's own `diagnose(corpus, view, ...)` had the name
+  of the framework's new lazy hook, so `evaluate(..., diagnose=True)` (a run's scoring and the audit) called it
+  with the hook's arguments and got a `TypeError` on every deliverable (the audit's `diagnose_error` problem).
+  Renamed `_diagnostic`. The case has no lazy hook: the diagnostic reads the program's one run and is cheap, so it stays in
+  `score()`, and the validator and the value-of-information matrix get it too.
+- **`review_codes` was None for a program that writes no review row.** It is now False in hard, where 10 to 12
+  scored books belong in review: such a program cannot have used the six codes (evidence: "none in this output,
+  though N book(s) of this tier belong in review"). In easy and medium it stays None: no scored book belongs in
+  review there, so the answer key itself has no review row (a count over the whole drive, tried first, called the
+  answer key not enforced in all 8 easy and medium views of the probe below). Every review row the program writes
+  still counts, also for a book the tier does not score, as the rules do. The baseline and `robust_solution`, which
+  write no review row, are now False in hard 15/15 (were None).
+- **Best known solution: the answer key, not the reference.** It was the reference, so the false-negative check only
+  repeated the separation check. It is now a program that writes `expected_output` (an oracle with every fact of
+  the setting, `best_known_solution`): valid and at the bound in all 45 settings like the reference, but another
+  deliverable (only the books the tier scores, so no review row in easy and medium). The diagnostic calls it
+  enforced, or None, on every target in force: no false negative.
+- **A card at a stray path hid the book from the diagnostic.** Deliverables that misread two facts (the outputs of
+  the reference and of the `placeholder`, `first_source` and `filename_titles` ablations turned into cards, moved
+  to another layout, or both; easy/s18, hard/s18, hard/s21) showed it: a card at a path no rule gives was no book's
+  file, so a program misreading the content and the layout got None for every library rule and `content`; one that
+  wrote cards and also filed a book with conflicting years or a generic file name as its title was called enforced
+  on `conflict` / `generic_titles` (the book looked unplaced); and under a shelving policy `missing_author` was
+  False for author-less books shelved correctly but as cards under another layout. The diagnostic now also reads a
+  stray library file as the one book whose whole description it holds with more around it; the score is unchanged
+  (it is still a stray file). Each of the 36 deliverables of that probe is now flagged on exactly the facts it
+  misreads.
+- **Cross flags among the naming rules: none.** No ablation, of a drawn rule or a switch, flags another target in
+  any setting where it bites; in particular a misread layout never flags the separator (0 of 45). Since the audit's
+  ablations misread one rule at a time, a probe went further: every combination of the six library rules (3
+  layouts × 2 year bases × 2 scripts × 2 co-author rules × 3 separators × 6 limits, 432 programs, each run once on
+  the hidden drive), scored under 12 client views sampled from the tiers' pools (4 per tier): in all 5,184
+  evaluations each library rule's diagnostic is False exactly when the program's value differs from the client's
+  and True when it is the same, whatever else the program misreads.
+
+Numbers (`dataset/audit.json`, GT.md part 5): no false negative on the best known solution, no cross flags, no
+`diagnose()` error, no finding open or waived. The baseline is called not enforced only on `review_codes` and
+`missing_author` (hard 15/15 each: it writes no review row and leaves author-less books alone), and
+`robust_solution` on the library rules it guesses wrong (14-32 of 45 settings per rule), on `review_codes` and on
+`missing_author` (hard 15/15). The other numbers of the audit are unchanged. `audit-case` took 592 s on a shared
+machine.
+
+### Adversarial check of the diagnostics (programs that are neither reference nor ablation)
+
+Programs built for the 9 public settings (patches of reference/organize.py) and diagnosed with
+`evaluate(..., diagnose=True)`:
+
+- **Correct but different**: the manifest rows reversed or sorted by status, review copies made in 64-byte chunks or
+  under flat names (`_review/<code>_<path>`), the drive walked in reverse order, library files without a final
+  newline or with CRLF line ends, sources joined with " ; " (72 programs, all valid at quality 1). None was called
+  not enforced, or not determinable, on any target.
+- **New misreadings**: the library file as `.md`, or flat at `library/<year>_<title>_<author>.txt`; a dot as the
+  separator, or each space replaced on its own; the co-authors joined with "and", or the last author alone; the
+  name cut at `max_len` bytes or one character later; the later of the two years; titles in the other script with
+  author names right; a source line, a heading, or the first paragraph only in the library file; review codes
+  renamed or lower-cased; a conflict resolved by the first year; the title as the description of a book without
+  one; an ISBN file name as a title; an author-less book shelved under another fallback name. Of the 104 that bite,
+  68 were called not enforced on their fact (65%), 30 not determinable (None) and 6 enforced. The None were the
+  separator and co-author forms that no pool has (18) and the half-converted script (9), whose paths match no reading
+  of the six library rules at all, and three byte cuts; the six enforced were the byte cut and the cut one character
+  later in settings where few names reach the limit.
+
+What changed (case.py `_name_readings`): a path is also read with a dot or no separator and with the co-authors joined
+by "and" or a comma or the last author alone (`READ_SEPS`, `AUTHOR_FORMS`), values no pool has, so a program that
+writes them is read as misreading the separator or the co-author rule rather than giving no reading. After (same
+programs): the 72 correct programs are still enforced on every target; of the 104 misreadings that bite, 86 are
+called not enforced (83%, was 65%), 12 not determinable (the half-converted script, 9, whose title and author
+are written in different scripts so that no single reading fits, and three byte cuts) and 6 enforced (the cut
+cases above). The audit's own deliverables (each setting's ablations, the other candidates of the six library
+rules, the reference, baseline and best known: 129 programs) flag no target besides their own, and the re-audit
+(630 s) gives the same numbers as before: no false negative, no cross flag, no finding.

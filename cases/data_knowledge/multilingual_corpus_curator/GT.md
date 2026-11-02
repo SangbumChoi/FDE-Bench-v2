@@ -86,7 +86,7 @@ A program that breaks any of these on the hidden drive is invalid and earns no c
 
 - **Reference** (`reference/organize.py` with the setting's `config.json`): reads every format (JSON, ONIX, EPUB, DOCX, PDF, HTML, Markdown, text, catalog rows, zip members), decodes legacy encodings by the corpus's own character statistics, converts every year notation (eras, Minguo, Dangi, Chinese numerals, Roman numerals, `©` lines), groups copies by normalized title, takes each field by rank from any file of the book, maps every author to the official pair the drive gives for that person, detects same-rank year conflicts, and applies the setting's library rules and no-author policy. It files every hidden book exactly as `expected_output` does.
 - **Baseline** (quality 0, `reference/baseline.py`): the client's own script, which shelves only books with a complete UTF-8 JSON record (title, author, plain four-digit year, description) under the catalogue rules, leaves a JSON record whose ISBN also has an ONIX export for the team (it cannot tell which is right) and leaves every other file alone.
-- **Best known** (`best_known_solution`): the reference itself.
+- **Best known** (`best_known_solution`): the answer key (`expected_output`) written by a program, an oracle with every fact of the setting. It reaches the bound like the reference, but is another deliverable (only the books the tier scores, so no review row in easy and medium), on which the diagnostic is checked too (part 5).
 - **Bound** (`objective_bound`): a proven upper bound on a valid program's objective: every scored book earns at most 1, a book with no author under the review policy at most 0.7 (shelving it breaks `missing_author_review`), and penalties only subtract. `expected_output` reaches it, and so does the reference: the gap is 0 in every measured setting.
 - **quality_cap** = 1.0: the best-known quality is 1.000 in every measured setting (median 1.000, range 1.000–1.000), so a program as good as the reference earns full credit and nothing scores above it.
 
@@ -148,22 +148,41 @@ A program that breaks any of these on the hidden drive is invalid and earns no c
 
 ## 5. Diagnostic cases
 
-`score()` reports `enforced[target]` and a line of evidence for every target in force, for valid and invalid programs alike, from the same run of the program on the hidden drive as the score (the program is run once). The diagnostic inputs are the hidden books where only that fact decides the output. For a drawn library rule the program's own path of each such book is read back under every layout, year basis, script, co-author rule, separator and cut (`_path_readings`): the book counts for the fact when the client's value is among the readings that reproduce the path and not every candidate of the tier is, and against it when the client's value is not among them; a path that does not even have the client's layout's shape (e.g. `library/<title>.txt`) counts against `layout`. `content` counts a file at a book's path against the fact when it holds the description and more (a card, a title page) or no description at all (a placeholder); `missing_author` counts an author-less book that is neither shelved nor in review (left out, or listed as skipped) against it. For the other facts the inputs are the books (or review rows) the fact is about. `enforced` is True when no input counts against the fact and at least one counts for it. The audit checks that the reference is enforced everywhere and that every ablation that bites is not.
+`score()` reports `enforced[target]` and a line of evidence for every target in force, for valid and invalid programs alike, from the same run of the program on the hidden drive as the score (the program is run once). The diagnostic inputs are the hidden books where only that fact decides the output. For a drawn library rule the program's own path of each such book is read back under every layout, year basis, script, co-author rule, separator and cut (`_path_readings`; also with a dot or no separator, and with the co-authors joined by "and" or a comma or the last author alone, which no pool has, so that a program writing them is read as misreading that rule rather than giving no reading at all): the book counts for the fact when the client's value is among the readings that reproduce the path and not every candidate of the tier is, and against it when the client's value is not among them; a path that does not even have the client's layout's shape (e.g. `library/<title>.txt`) counts against `layout`. `content` counts a file at a book's path against the fact when it holds the description and more (a card, a title page) or no description at all (a placeholder); `missing_author` counts an author-less book that is neither shelved nor in review (left out, or listed as skipped) against it; `review_codes` counts every review row the program writes, and no review row at all against the fact where books the tier scores belong in review (hard: the six codes were never used; in easy and medium no scored book belongs in review, so the answer key itself has no review row). For the other facts the inputs are the books (or review rows) the fact is about. A stray library file that holds one book's whole description with more around it (a card at a path no rule gives) is no book's file for the score, but the diagnostic reads it as that book's, so a program that misreads the content and a library rule is flagged on both, and a book filed as a card under a guessed year or title counts as placed. `enforced` is True when no input counts against the fact and at least one counts for it. The audit checks that the reference is enforced everywhere and that every ablation that bites is not.
 
 | target | diagnostic inputs (hidden drive) | result | settings where it fails |
 |---|---|---|---|
 | `layout` | every placed book (the order of year, title and author in its path) | separates | – |
 | `year_basis` | placed books whose first publication and this edition differ | separates | – |
 | `script` | placed Chinese, Korean and Japanese books (original script or the paired romanization) | separates | – |
-| `co_authors` | placed books with two authors | separates | – |
-| `separator` | placed books whose title or author name has a space | separates | – |
+| `co_authors` | placed books with two authors (also read with the co-authors joined by "and" or a comma, or the last author alone) | separates | – |
+| `separator` | placed books whose title or author name has a space (also read with a dot or no separator) | separates | – |
 | `max_len` | placed books whose title or author name is longer than the shortest limit of the pool | separates | – |
 | `content` | every placed book (its library file holds the description and nothing else) | separates | – |
-| `review_codes` | every review row of the manifest (its reason is one of the six codes) | separates | – |
+| `review_codes` | every review row of the manifest (its reason is one of the six codes); in hard, no review row at all counts against it | separates | – |
 | `missing_author` | the books with no author in any source | separates | – |
 | `no_description` | the books with no description in any source, and every library file | separates | – |
 | `conflict` | the books whose JSON and ONIX records disagree on the year | separates | – |
 | `generic_titles` | the books whose only title would be a generic file name | separates | – |
+
+**Reliability on other deliverables.** A run's "enforced" stage applies the diagnostic to the agent's program, which is neither the reference nor an ablation. Per target, the settings where it calls a deliverable not enforced, of those where it gives a verdict: the best known solution (valid and built with every fact of its setting, so each False would be a false negative), the ablations of the target that also flag another target (of the settings where the ablation bites; it misreads only its own fact), and the baseline (each setting's own) and `robust_solution` (its tier's), which do not know every fact, so a False there may be right.
+
+| target | best known | ablation flags another target | baseline | robust_solution |
+|---|---|---|---|---|
+| `layout` | 0/45 | 0/45 | 0/45 | 28/45 |
+| `year_basis` | 0/45 | 0/45 | 0/45 | 14/45 |
+| `script` | 0/45 | 0/45 | 0/45 | 25/45 |
+| `co_authors` | 0/45 | 0/45 | 0/45 | 28/45 |
+| `separator` | 0/45 | 0/45 | 0/45 | 29/45 |
+| `max_len` | 0/45 | 0/45 | 0/45 | 32/45 |
+| `content` | 0/45 | 0/45 | 0/45 | 0/45 |
+| `review_codes` | 0/15 | 0/45 | 15/15 | 15/15 |
+| `missing_author` | 0/15 | 0/15 | 15/15 | 15/15 |
+| `no_description` | 0/15 | 0/15 | 0/15 | 0/15 |
+| `conflict` | 0/15 | 0/15 | 0/15 | 0/15 |
+| `generic_titles` | 0/15 | 0/15 | 0/15 | 0/15 |
+
+The case has no lazy `diagnose()` hook: the diagnostic is cheap and computed in `score()` from the program's one run, so the validator and every cell of the value-of-information matrix get it too.
 
 ## Findings of the audit
 
