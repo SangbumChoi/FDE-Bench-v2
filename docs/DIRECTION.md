@@ -160,15 +160,16 @@ one realized future mixes skill with luck. Such cases follow four rules instead 
    client model need an audit and a small human-client calibration.
 3. **Statistical power.** 13 cases, all with settings. Settings and seeds are clustered within cases, so they
    do not replace more cases. The axis grid multiplies cells faster than evidence.
-4. **Headroom and bite are not yet measured per case.** The scale now credits beating the reference, but
-   whether each hidden fact and the bendable rule move the score by a meaningful amount is still a per-case
-   property (§10). Proposed: an `ablations()` hook checked by the validator.
+4. **Ten cases are not yet audited.** `fdebench2 audit-case` now measures, per case, whether each client fact
+   bites, whether shortcuts are closed, what asking is worth and how far the reference is from the best known
+   solution (§11). Procurement, loan and the multilingual corpus curator are audited (`audited: true`); the
+   other ten are measured on request only, and the bendable rules' payoff is still a per-case property.
 5. **No human baseline.** References are written with full knowledge of the ground truth.
 6. **Synthetic realism and language quality.** Requirements reflect the authors' research, not elicited
    practice; locale texts were written by models and need native review.
 7. **Open binding findings.** A parameter the client states changes no reference in some tiers: bi's reward
    for "don't know" in easy and medium, bakery's lateness cost in easy and its shift end in easy and medium on
-   world seeds 2 and 3, resume's interview date in medium on world seed 3. They are validator warnings
+   world seeds 2 and 3. They are validator warnings
    (`validate.OPEN_BINDING_FINDINGS`) until each owner decides. Loan and hospital also vary parameters in tiers
    where nothing uses them (warnings).
 8. **Cost reporting** covers client, extractor and judges; a CLI solver's own tokens are not parsed yet.
@@ -202,12 +203,12 @@ See §10 (from an independent review of every case with adversarial verification
 
 | Priority | Item |
 |---|---|
-| P0 | Calibrate every case before the first campaign: `quality_cap` from its best known solution, anchors that hold on 10+ private seeds (stock first), bending that pays in some settings and not others (§10) |
-| P0 | `ablations()` per case: every quality-relevant hidden fact must bite, checked by the validator |
+| P0 | Audit the other ten cases to the standard of §11 before adding cases: facts that bite, shortcuts closed, a genuine never-asks solver, best known and bound, `quality_cap` from the best known; anchors that hold on 10+ private seeds (stock first); bending that pays in some settings and not others (§10) |
+| P0 | Human review of the client's answers: each audited case's `CLIENT_REVIEW.md` awaits a reviewer's verdict per fact and locale |
 | P0 | First live campaign on a small grid with `trials: 3`; null and stub agents per case; signal-to-noise per case |
 | P0 | Client audit: leakage and fidelity per locale, sensitivity to the client model; consider a fact-ID knowledge boundary |
 | P0 | Private evaluation seeds (world and rule seeds) and a canary string; web tools off or logged in harness configs; an egress proxy for the agent container |
-| P1 | Settle the open binding findings (`validate.OPEN_BINDING_FINDINGS`: bi, bakery, resume) and give a parameter a single candidate in tiers where nothing uses it (loan, hospital); add a dated event and pressure to bi |
+| P1 | Settle the open binding findings (`validate.OPEN_BINDING_FINDINGS`: bi, bakery) and give a parameter a single candidate in tiers where nothing uses it (loan, hospital); add a dated event and pressure to bi |
 | P1 | Human-FDE baseline on a subset (time and quality); expert review of each case's requirements |
 | P1 | Native-speaker review of the five locales; difficulty parity across locales; declare or localize each scenario's country |
 | P1 | A `confirm` target kind for facts the data already settles; CLI solver token parsing; Pareto plots |
@@ -263,15 +264,15 @@ nine public settings (tier × public rule seed; above 1 for cases that minimize 
 |---|---|---|---|
 | callcenter_workforce_planner | Under-staffing weight explained as a business cost; neutral holiday framing; Korean wording; fixed-rota baseline; README. Then converted to 3 tiers × rule seeds (under-staffing weight, contract week, holiday share, rest, sick days), with a dated sick call and a team lead's pressure note in hard | The bendable buddy rule still pays little; the greedy reference is 0.5–8.1% above the exact MILP optimum (normalized 1.03–1.17), so one quality cap fits no setting | 1.16–1.63 (min) |
 | bi_data_analyst | A rule-compliant rounded answer now scores; refund cut-off stated; Korean wording. Then converted to 3 tiers × rule seeds: answers may be "don't know" (null), and the rule seed draws what a null earns (0.5, 1 or 1.5; wrong 0, right 2) along with the fiscal year, active window and rounding unit, so calibrated abstention is measured; the all-"don't know" sheet is the baseline | No dated event or pressure; one quality cap cannot fit both the tiers where the reference is perfect and hard; there (easy, medium) the reward for a null changes no reference (an open binding finding) | 0.25–0.77 |
-| multilingual_corpus_curator | Review-row spamming, placeholder descriptions and a header-only manifest no longer score; Korean labels; medium scope wording. With rule seeds, a length limit per tier and a no-author policy in hard, the three tiers' references now differ in every public seed | A perfect program's normalized quality is 1.00 / 1.09 / 1.18 by tier, so one quality cap fits no tier and easy has no headroom; one mis-decoded file invalidates the hard tier; era notations in implausible places | 0.10–0.14 |
+| multilingual_corpus_curator | Review-row spamming, placeholder descriptions and a header-only manifest no longer score; Korean labels; medium scope wording. With rule seeds, a length limit per tier and a no-author policy in hard. Then deeply audited (§11): the manifest and review copies are mandatory outputs, a misfiled book earns a flat 0.4 so every naming rule bites, the reference is the full organizer and meets the proven bound (quality_cap 1.0), eleven shortcuts closed, a never-asks program leaves 0.65–0.69 to asking | No dated event or pressure, and the bend stays dominated; era notations in implausible places; fixed counts per kind; four hard facts bite only through a hard gate | 0.09–0.17 |
 | battery_dispatch_operator | SOC tolerance no longer turns on rounding; no DST hint to the extractor; the site is in Spain in every locale. Then converted to 3 tiers × rule seeds, with three dated notices and trading-desk pressure in hard | The visible dispatch log reveals the hidden rules; a forecast LP reaches 1.18; a daily-bid program would be closer to practice | 0.00 |
-| loan_underwriting_specialist | A treasury cut no longer invalidates earlier approvals; unit economics are business facts; easy scope consistent with the regulator | Referring every hard decline is a cheap escape hatch and sizing alone reaches the reference; bending never pays; Korean regulatory provenance; four parameters vary in easy (the discrepancy threshold also in medium) where nothing uses them | 0.64–0.92 |
+| loan_underwriting_specialist | A treasury cut no longer invalidates earlier approvals; unit economics are business facts; easy scope consistent with the regulator. Then deeply audited (§11): referrals are scarce (3 discretionary a day), the limit table is mandatory and multiplies profit, so neither referring hard declines nor dropping the table pays; a price-based reference (+2–12%), a perfect-information bound (gap 3–11%), quality_cap 1.02 | Bending the tenure habit always adds objective; asking is all-or-nothing validity (every fact is a hard rule); Korean regulatory provenance; four parameters vary in easy (the discrepancy threshold also in medium) where nothing uses them | 0.47–0.85 |
 | stock_trading_strategist | Easy scope names the large-order rule; Korean terms consistent; do-nothing baseline | On many private worlds the reference ends below cash (the do-nothing baseline beats it on seeds 0, 3, 7, 42, ...): measure excess over max(index, cash) and average several hidden paths; bound the large-order exception | 0.23–0.57 (public world; above 1 on some private world seeds) |
 | hospital_appointment_scheduler | Waiting-list excuses only when capacity was really gone; notice after a release; a same-slot doctor swap needs no notice; client-voiced scope; Korean terms | Demand is about equal to capacity, so utilization barely varies (best known 1.01–1.06); overbooking economics do not reward risk selection; the lab cap varies in easy and the overbooking cap in easy and medium where nothing uses them | 0.56–0.81 |
 | contract_review_counsel | Obeying the fast-track rule is no longer penalized; target split into issue codes and decision rule; natural amounts in ko/ja/zh; README. Then converted to 3 tiers × rule seeds, with supplier paper, amendments and a business owner's e-mail in hard | The decision field carries no information of its own; contracts are templated; a perfect review is 1.15 | 0.00–0.09 |
 | bakery_delivery_dispatcher | The closed café is C11 = South Hill (the texts named C10); lateness cost is a business fact; Korean wording; README. Then converted to 3 tiers × rule seeds (the shift end and tray limit now bind in the headline settings), with V2 in the workshop and a premium manager's demand in hard | Where premium-first holds it costs about 28% of the reference's objective, so bending it pays clearly; whether a bend should pay that much is open; the one-visit rule never binds; the lateness cost changes no easy reference, nor the shift end an easy or medium one on world seeds 2 and 3 (open binding findings) | 2.19–3.83 (min) |
-| procurement_specialist | Reference deferral re-size bug; garbled easy sentence; Korean lines; the price e-mail paragraph placed consistently (content unchanged) | The plain-MRP baseline is within 2–3% of the greedy reference in easy/medium and a local search beats the reference by 3–11%; the price e-mail does not change the answer (owner's scenario) | 1.05–1.38 (min) |
-| resume_screening_specialist | The adverse-impact check no longer fails protected-blind shortlists by chance (85% passed, now 100%; biased learners still fail); past-hire instruction; Korean. Then converted to 3 tiers × rule seeds, with the biased past hires and the hiring manager's note in hard | The constant 30-point fit floor compresses quality; the requested ranking is not scored; on world seed 3 the interview date changes no medium reference (an open binding finding) | 0.84–0.97 |
+| procurement_specialist | Reference deferral re-size bug; garbled easy sentence; Korean lines. Then deeply audited (§11): the price e-mail is a supplier thread that raises the display maker by 12% from a mid-week date (the order week decides), backlog is priced per board, 19 bundled targets became 25 single facts, a local-search reference, an LP bound and quality_cap 1.11 | Five facts bite in under half their settings; the share and budget rules are decided by several facts together (cross-flag warnings); asking is worth only 0.34 in hard; the bound is loose in hard (18–20%) | 1.09–1.19 (min) |
+| resume_screening_specialist | The adverse-impact check no longer fails protected-blind shortlists by chance; past-hire instruction; Korean. Converted to 3 tiers × rule seeds. Then the quality scale: fit counts above the 30 points every qualified candidate starts from, and the easy and medium reference learns from the past hires; spans 7.5–37% on every world checked, and the interview date now binds | Not audited yet: no ablations, shortcuts, never-asks solver or bound; in hard a face-value learner nearly matches the debiased reference; the requested ranking is not scored | 0.63–0.79 |
 | benefits_eligibility_officer | Reason codes scored (RENEWAL vs APPROVED, precedence of refusals); business-goal target; Korean terms; README. Then converted to 3 tiers × rule seeds, with the heating circular, reported changes and two exception letters in hard | A fixed renewal error caps compliant answers at 1.03 and bending the renewal rule always pays | 1.46–3.00 (min) |
 | grocery_demand_forecaster | The display-floor rule says 6, as everything else does (it said 2); row-cardinality text; Korean wording; README. Then converted to 3 tiers × rule seeds (the floor is drawn), with a dated promotion cancellation in hard | A forecast from the true generator mean reaches only 1.07; censoring is uninformative; no pressure item | 1.64–3.20 (min) |
 
@@ -297,3 +298,134 @@ nine public settings (tier × public rule seed; above 1 for cases that minimize 
   many generated worlds; a case's anchors (baseline, reference) must hold on the private seeds it will be
   evaluated on, which the validator's seed panel now checks for three seeds and should check for more before a
   campaign.
+
+## 11. Ground truth before breadth
+
+The case owner's assessment after the first ten rounds:
+
+- Strengthen ground truth (GT) and scoring before adding cases, and keep the counterfactual core: one world with
+  identical data in every setting, where the client-only facts decide the right answer.
+- GT should describe acceptable behaviour, with the reference as supporting evidence, in five parts:
+  1. client facts;
+  2. validity checks;
+  3. the objective, including uncertainty;
+  4. the reference and how close it is to the best achievable;
+  5. diagnostic cases that tell a correct implementation from a shortcut.
+
+The priorities were:
+1. calibration;
+2. facts that measurably matter;
+3. shortcuts closed before the reference is improved;
+4. a test of whether asking is necessary;
+5. learning a fact kept apart from using it.
+
+The milestone was three deeply audited cases rather than more cases. This section records what was done and what
+it showed.
+
+### 11.1 Calibration
+
+The quality scale had a hidden inconsistency. A 5% floor moved the zero point whenever the baseline came within 5%
+of the reference: with reference 100 and baseline 102 (minimizing), the baseline scored 0.6, against the documented
+"baseline = 0".
+
+- The baseline is now the zero point exactly.
+- Every evaluation reports the scale's width, `quality_span` = |reference − baseline| / |reference|.
+- A setting narrower than 5% is a validator finding. On a scale that narrow, a 1% objective difference moves
+  quality by 0.2 or more.
+- The check found narrow scales in procurement (6 settings on worlds 1–3), loan (4) and resume (13, down to 0.8%).
+  All three are now at least 5% wide on the public world and world seeds 1–3, so the validator has no waivers
+  left.
+- Resume's fix changes what the objective counts: fit above the 30 points every qualified candidate starts from.
+  That widens the span without changing quality per fit point. The case README states this.
+
+### 11.2 The audit
+
+`fdebench2 audit-case` measures a case on its public panel plus up to 12 parameter combinations per tier.
+Combinations are used rather than rule seeds, so no private rule seed's draw is exposed. The results are stored in
+`dataset/audit.json` with a fingerprint of the case sources. A case with `audited: true` fails validation when its
+audit is missing or stale, or when any of the following holds.
+
+| Part of the GT | What the audit measures | Gate |
+|---|---|---|
+| Client facts | Per target, the reference planned on a misreading of only that fact (`param:` targets: the reference of each wrong candidate value, judged on the least harmful one) | Invalid or ≥ 0.10 normalized quality lost in some setting of each tier where it is in force; a warning below half the settings |
+| Validity checks | `shortcuts()`: strategies that skip what the case tests | Invalid or quality ≤ 0.5 in every setting |
+| Objective, value of asking | `robust_solution()`: the best single deliverable built from the agent's view alone, against the reference; also the best reference of another setting | Asking worth ≥ 0.10 per tier (warning below 0.30) |
+| Reference and bounds | `best_known_solution()`, `objective_bound()` | One of them exists; `quality_cap` at least the median best known quality |
+| Diagnostic cases | Per-target `enforced` from score() or the lazy `diagnose()` hook | Separates the reference from every ablation that bites; no false "not enforced" on the best known; cross-fact flags are warnings |
+
+Each run now records three stages per target:
+1. **revealed** by the client: a verbatim quote, asked or volunteered;
+2. **learned** through a specific question (Ask-F1, unchanged);
+3. **enforced** in the deliverable (the diagnostic).
+
+The report adds a funnel per case. It shows enforced-given-learned and enforced-given-not-learned, so inferring a
+fact from the data is visible as such. No live campaign has run yet, so there are no funnel numbers.
+
+### 11.3 Three audited cases
+
+| | procurement | loan | multilingual corpus curator |
+|---|---|---|---|
+| Targets | 19 bundled → 25 single facts | 26 → 31 | 16 → 12 |
+| Facts that bite | 25 of 25 (5 in under half their settings) | 31 of 31 | 12 of 12, in every setting |
+| Facts dropped as targets (kept as context) | Resistor reels, holding weight, expected-cost wording, planning rate in easy and hard: under 0.10 damage | Interface, evaluation period, profit metric | Data facts the sample shows, author variants, precedence |
+| Shortcuts | 10, closed everywhere | 10, closed everywhere | 11, closed everywhere |
+| Shortcuts open before the audit | None of the obvious ones. One mild deviation (no safety stock, 0.58 in one setting) was redefined | Refer every hard decline (0.94–0.98 of the objective); empty table (q 1.13); morning limits (0.71); jittered table (0.67–0.93) | Header-only manifest (0.78); no review copies (1.0); manifest rows without sources (0.76) |
+| How they were closed | (none needed) | A daily referral capacity; the limit table made mandatory, and the objective is profit × accuracy on the entries that change | Manifest and review copies made mandatory; no guessed titles or years |
+| Value of asking, easy / medium / hard | 1.00 / 1.00 / 0.34 | 1.00 / 1.00 / 1.00 | 0.69 / 0.66 / 0.65 |
+| Reference → best known → bound | Local search; best known median 1.11; LP bound gap 3.6–19.5% | Price allocation (+2–12%); best known median 1.02; perfect-information bound gap 3.4–10.6% | Full organizer = best known = proven bound |
+| quality_cap | 1.11 | 1.02 | 1.0 |
+| Diagnostics on other deliverables | False "not enforced": best known 125 → 0 and baseline 228 → 0 of 657; new misreadings caught 77% (was 53%) | 0 false calls on 84 correct-but-different programs; new misreadings 76% (was 53%) | 0 false calls on 72 correct programs; new misreadings 83% (was 65%) |
+
+Scenario changes the audit asked for, all in the client's own terms and with the agent view unchanged unless
+noted:
+- **Procurement price e-mail.** It used to change no plan. It is now a localized three-message thread in which
+  the display maker raises its main part by 12% for orders received from a mid-week date; the agent view gains
+  the thread.
+- **Procurement backlog** is priced per board waiting, not per piece.
+- **Loan hidden period.** Some branch notes and same-day repayments moved to applicants where they decide the
+  answer.
+- **Corpus scoring.** A misfiled book earns a flat 0.4, so every naming rule bites.
+
+### 11.4 What this showed
+
+- **Facts that change nothing are common.**
+  - Of 61 original targets in the three cases, several bundled three or four facts.
+  - About a dozen were dropped as scored facts and kept as context: misreading them cost less than a tenth of
+    the scale, or the agent's own data already settles them.
+  - Some of those were headline facts, such as procurement's resistor reels; the old price e-mail changed no
+    plan at all until its scenario was rewritten.
+- **Mandatory outputs must be rules.** The objective did not reliably punish a missing or stale output: loan's
+  table and corpus's manifest and review copies could be left out at 0.78 to 1.13 quality. Rules with violating
+  examples closed them where objective tweaks alone did not.
+- **Value of asking can be all-or-nothing.**
+  - In loan, and in procurement's easy and medium tiers, the never-asks solution is invalid everywhere: some rule
+    value is always wrong. That proves asking is necessary, but it does not grade how much.
+  - The corpus case grades it: a never-asks program keeps 0.31–0.36, and asking is worth the rest.
+  - Procurement's hard tier is the weak spot: asking is worth 0.34, because the natural reading of the data
+    already matches that tier's scope.
+- **A diagnostic that only separates the reference from its ablations is not enough.**
+  - An agent's deliverable is neither of those.
+  - Procurement's first diagnostic falsely called the client's own plan "not enforced" in a third of its fact
+    checks.
+  - The audit now requires no false calls on the best known solution, and the adversarial probes add
+    correct-but-different deliverables and misreadings the ablations never tried.
+  - Misreadings in a direction the natural one does not take remain undetected by design. Examples: one piece per
+    board, a lead time a week longer.
+- **Facts interact.** Procurement's budget and dual-sourcing rules are each decided by several facts together. A
+  per-fact diagnostic then also flags the facts that share the rule (eight cross-flag warnings). Attributing a
+  shared rule to one fact needs more than a per-target check.
+
+### 11.5 Still open
+
+- **Human review of the client's answers.**
+  - Each audited case has a `CLIENT_REVIEW.md`. For each fact it gives the question an engineer would ask, the
+    passage each locale's client answers from, and a machine pre-check: the same numbers, IDs and dates
+    everywhere.
+  - Every verdict line awaits a human reviewer; none has been given.
+- **Ten cases are not audited.** Resume's scale is fixed, but it has no ablations, shortcuts, never-asks solver
+  or bound.
+- **Thresholds were set on one world.** The 0.10 bite, 0.5 shortcut and 0.10 / 0.30 value-of-asking thresholds,
+  and the cases' diagnostic tolerances, are calibrated on the public world.
+- **Audits are slow.** An audit takes 10–40 minutes per case, and every source change makes the stored audit
+  stale.
+- **No live runs yet.** No live run has measured how real agents move through revealed → learned → enforced.
