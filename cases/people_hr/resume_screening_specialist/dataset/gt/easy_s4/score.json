@@ -1,26 +1,26 @@
 {
-  "baseline_objective": 1478.75,
+  "baseline_objective": 578.75,
   "baseline_quality": {
     "quality_anchor": "baseline",
-    "quality_ratio": 0.96043932,
+    "quality_ratio": 0.76071241,
     "quality_score": 0.0
   },
   "metrics": {
-    "fit_by_role": {
-      "R1": 508.46,
-      "R2": 529.92,
-      "R3": 501.28
+    "fit_above_base": 760.8,
+    "fit_above_base_by_role": {
+      "R1": 250.39,
+      "R2": 288.46,
+      "R3": 221.95
     },
-    "fit_sum": 1539.66,
-    "min_ai_p": 0.512,
-    "min_ai_ratio": 0.7788,
+    "min_ai_p": 0.1359,
+    "min_ai_ratio": 0.6004,
     "ndcg_by_role": {
-      "R1": 0.8516,
-      "R2": 0.8761,
-      "R3": 0.9022
+      "R1": 0.9673,
+      "R2": 0.9886,
+      "R3": 0.9298
     }
   },
-  "objective": 1539.66,
+  "objective": 760.8,
   "reference_quality": {
     "quality_anchor": "baseline",
     "quality_ratio": 1.0,

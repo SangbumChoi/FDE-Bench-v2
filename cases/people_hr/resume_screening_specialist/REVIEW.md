@@ -4,6 +4,95 @@ Findings F1–F9 of the case review with the verifier's verdicts. This change ad
 and F9; the other findings are design decisions and are left open as proposals. Numbers are for the public
 seed 20261103 unless stated; the world, the data and the reference are unchanged by this change.
 
+## Quality scale
+
+The validator listed the case in `OPEN_NARROW_SCALES`: shortlisting by relevant years alone (the baseline, the
+client's own way) came within 1–4% of the reference in most easy and medium settings. On the public world the span
+(reference − baseline) / reference was 4.0% in easy/s4, 3.7% in medium/s4 and 2.6% in medium/s19; on world seeds
+1–3 it went down to 0.8% (world seed 2, medium/s19), and hard/s19 on world seed 2 was narrow too (3.4%). On world
+seed 3 the plain-score reference even fell below the baseline in 2 of the 216 medium combinations (by up to 0.12%),
+which a private rule seed could draw. Two causes, both changed; the baseline is not.
+
+- **The objective carried a constant.** Every true fit is 30 + its job-related part. A shortlist always has
+  3 × `shortlist_size` rows, so the base added 540, 720 or 900 points to every valid shortlist. It changed no
+  decision and no normalized quality, but every relative difference (the ratio, the span, the validator's 1%
+  binding margin) was taken against a total that was mostly base. The objective is now the fit above 30, summed:
+  what a candidate brings beyond the level every qualified candidate starts from, which is the client's real
+  benefit from screening. The requirements say it in all five locales ("a fit of 52 counts 22"); the score's
+  metrics are renamed `fit_above_base` and `fit_above_base_by_role`. On its own this changes no quality score
+  (the baseline stays at 0 and the reference at 1), and it was not enough: on world seed 2 the baseline came within
+  5.6% of the fit oracle at medium/s19 with the base, and without the base it was still within 2.1–2.4% of the old
+  reference at medium/s4 and medium/s19.
+- **The easy and medium reference ignored the past hires.** It ranked by relevant years + 1.5 per nice-to-have
+  skill + 2 for a bonus certificate, although the client's data notes call the past scores "our best signal of
+  what makes someone strong in these roles". It now learns from them as hard's reference does, but at face value,
+  since the client in easy and medium says nothing of a bias: per role, least squares of the score on the job
+  columns only, with the experience cap (2 to 12 years in half years) whose regression fits that role's past
+  scores best (`_learned_model`). Hard's debiased regression is unchanged (with the protected controls a fitted
+  cap does not help: its spans stay within 0.6 points of the fixed cap of 6). This is what widens the scale in
+  absolute terms: the reference − baseline gap on the public panel grows from 28–101 to 99–191 points in easy and
+  medium. A shortlist made the old way (the plain score) now scores 0.28–0.58 there instead of 1.
+
+Results (validator and an analysis script on `case.py`):
+
+| | Before | After |
+|---|---|---|
+| Span on the public panel | 2.6–15.6% (easy and medium 2.6–9.6%) | 21–37% |
+| Span on world seeds 1–3, public settings | 0.8–13.1% | 7.5–34% |
+| Lowest span over every combination of every tier, four worlds | below 0 (world seed 3, medium) | 5.9% (world seed 2, medium); hard 8.0% |
+| Noise-free fit formula, normalized (public panel) | medium 1.7–3.9 (saturated) | easy 1.11–1.21, medium 0.95–1.11, hard 0.99–1.04 |
+| Fit oracle, normalized (public panel) | medium 1.8–4.1 | easy 1.25–1.30, medium 1.05–1.17, hard 1.05–1.18 |
+
+The case is removed from `validate.OPEN_NARROW_SCALES`; validate-case prints OK with no warnings.
+
+What did not change: the four worlds (the selection's design conditions keep the single-setting terms, the plain
+screening score and the whole fit, so the generator picks the same sub-seeds; the agent's data and request are
+byte-identical to before), hard's reference shortlists, the baseline, the rules, the targets and the parameters.
+
+**Check of this change.** Re-measured on the four worlds, every combination of every tier: the worlds are identical
+to the old generator's (applicants, true fits and past hires), the baseline is unchanged, and the numbers above
+hold. Two things the table does not show:
+
+- On world seed 2 the 5% floor rests on the new zero point. Hard's reference did not change, so hard's reference −
+  baseline gap in fit points is what it was, and its wider span comes from the zero point alone (world seed 2,
+  hard/s19: a gap of 42.50 points, 3.4% of the whole fit, 8.0% of the fit above 30). Measured on the whole fit, the
+  new easy and medium reference would still leave world seed 2's medium/s4 at 4.4% and medium/s19 at 3.2%. Over
+  every combination, the lowest whole-fit span is 2.5% (world seed 2, medium), 3.4% (world seed 2, hard) and
+  4.7–4.8% (world seed 3), and at least 6.1% on the public world and world seed 1 (easy at least 6.6% everywhere).
+  The zero point does not change how far one fit point moves quality (1 / gap): at world seed 2's hard/s19, a
+  shortlist with 4 more fit points in total still gains 0.09.
+- On world seed 2 the learned reference is far from the best possible in some settings. The noise-free fit formula
+  reaches 1.54–1.56 in normalized quality at medium/s4 and medium/s19 and 1.46 at hard/s19, and the fit oracle
+  1.70–1.83. Over every combination of that world the formula reaches up to 2.03 in medium and 1.57 in hard (public
+  world: up to 1.24 and 1.10). What a regression can learn there is limited by the past scores' noise (sd 4.5 on
+  120 hires per role) and the managers' bias. A debiased regression that shares the bias controls across the roles
+  is no consistent improvement: it scores 0.82–1.38 of the hard reference over the hard combinations of the four
+  worlds (mean 0.98–1.06 per world). A best-known solution and `quality_cap` are left to the case's deep audit.
+
+**Binding finding closed.** The interview day did not bind in medium on world seed 3 (`OPEN_BINDING_FINDINGS`): the
+plain-score medium/s31 reference stayed valid under every interview day. The learned reference lists an R3
+candidate whose only required certificate expires before 30 November, so the 30 November day now breaks it
+(`certificate_validity`), as it does in hard there; the entry is removed.
+
+Side effects, stated so nobody is surprised:
+
+- Relative numbers are larger. Dropping the referral habit now gains the reference 3.3–29.1% of the objective on
+  the public panel (F4); in normalized quality that is 1.15–1.80, and hard's values (1.30–1.73) are the same as
+  before, since the base cancels out of normalized quality.
+- The two learners are close. In medium the debiased regression scores 0.93–1.07 of medium's normalized scale;
+  in hard the face-value regression scores 0.94–1.07 of hard's and passes the adverse-impact check on the public
+  panel. So the past-hire bias fact moves the hard objective little; hard tests it mainly through the
+  adverse-impact check and the note. This was already so for a face-value learner before the change (it is a
+  question for the case's deep audit, not something this change created).
+- The easy minimums' reason changed. They were fixed in easy because the plain-score reference never listed
+  anyone between the candidate minimums. The learned easy reference does at 8 or 10 per role on some worlds (C019,
+  43 months for R1, on the public world), but at 6 per role, the binding check's easy setting, it lists nobody
+  between them on the public world and world seeds 1–4 (world seed 5: one R2 candidate with 34 months). Drawing
+  them in easy would still be reported as changing nothing there on the validated worlds, so they stay fixed;
+  README.md and case.yaml say why.
+- In some settings the face-value reference beats the debiased one on true fit (medium/s4 694.12 against 683.55
+  for hard/s4's reference). An agent that learns at face value in hard and passes the check scores above 1 there.
+
 ## Rule seeds
 
 The case was converted from one fixed problem to the rule-seed contract (DESIGN.md, Settings): three tiers on the
@@ -90,6 +179,13 @@ the noise-free formula still reaches 1.06–1.07 of it (normalized 1.7–2.5 in 
 good learner in those tiers. Open: whether easy and medium should learn too (then the tiers would differ only in
 rules), or `quality_cap` per tier.
 
+**Status (quality scale):** fixed — easy and medium learn too, at face value (the client there says nothing of a
+bias), so the tiers still differ in what the reference learns, not only in rules; and the objective counts fit
+above the constant 30-point base (section "Quality scale"). On the public panel the noise-free formula now reaches
+1.11–1.21 (easy), 0.95–1.11 (medium) and 0.99–1.04 (hard) in normalized quality, the fit oracle 1.05–1.30; the
+baseline is at 0.63–0.79 of the reference. `quality_cap` stays unset until the case's deep audit (which also
+needs a best-known solution or bound).
+
 ### F2 — The adverse-impact check was a lottery (high, confirmed)
 
 24 of 113 qualified candidates are shortlisted, in groups of about 56. The reference passed only through the
@@ -158,6 +254,11 @@ sanctioned bend is worth a known amount at every skill level.
 attributes pairwise, and one per role now sits between the candidate minimums, so the minimum decides whether the
 habit owes them a slot.
 
+**Status (quality scale):** open, numbers updated — on the objective above the 30-point base, dropping the habit
+gains the reference 3.3–29.1% on the public panel (hard/s31: 506.11 against 399.40). In normalized quality that
+is 1.15–1.80; hard's 1.30–1.73 are the same as before (the base cancels out of normalized quality), medium's are
+new with its learned reference. The decision on what the exception should measure is still open.
+
 ### F5 — Boundary details never bind, and some hidden facts leak (medium, partly)
 
 The generator drops candidates within one month of a minimum and certificates expiring 15 October to
@@ -204,6 +305,11 @@ the `past_hire_bias` target). Still open with F1: the debiased regression (q 3.6
 client does not mention the audit and nothing scores the bias (the adverse-impact statistics are out of scope
 there), so a naive learner is not penalized in those tiers. The hard reference is the debiased learner the note
 describes.
+
+**Status (quality scale):** the naive (face-value) learner is now the easy and medium reference, which matches what
+the client says there. In hard it scores 0.94–1.07 of the normalized scale and passes the adverse-impact check on
+the public panel, so debiasing earns little on the objective itself; hard tests the bias mainly through the check
+and the note (section "Quality scale", side effects). Open for the deep audit.
 
 ### F8 — Realism of the world, data and legal framing (medium, confirmed)
 

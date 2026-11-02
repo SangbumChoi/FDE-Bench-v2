@@ -114,22 +114,10 @@ OPEN_BINDING_FINDINGS: dict[tuple[str, str, str], tuple[tuple[int, ...] | None, 
     ("logistics/bakery_delivery_dispatcher", "shift_end", "medium"): (
         (2, 3), "the reference of rule seed 5 stays valid with the same objective under every shift end (10:00, "
                 "09:30, 09:00)"),
-    ("people_hr/resume_screening_specialist", "interview_date", "medium"): (
-        (3,), "the reference of rule seed 31 stays valid with the same objective under every interview date "
-              "(2026-11-02, 2026-11-16, 2026-11-30)"),
 }
 # Settings whose quality scale is narrower than MIN_QUALITY_SPAN (the baseline within 5% of the reference), known
 # and open: a warning instead of a problem on the worlds listed (None: every world) until the case is fixed.
 OPEN_NARROW_SCALES: dict[str, tuple[tuple[int, ...] | None, str]] = {
-    "finance/loan_underwriting_specialist": (
-        (1, 2, 3), "the reference leaves profit on the table (F1), so on some worlds the client's own way comes "
-                   "within 4-5% of it; the deep audit strengthens the reference"),
-    "manufacturing/procurement_specialist": (
-        (1, 2, 3), "plain MRP comes within 3.4-4.5% of the heuristic reference in some easy and medium settings; "
-                   "the deep audit strengthens the reference"),
-    "people_hr/resume_screening_specialist": (
-        None, "shortlisting by relevant years alone comes within 1-4% of the reference in most easy and medium "
-              "settings (the 30-point fit floor compresses the objective)"),
 }
 # Ground truth audit findings of cases with `audited: true` that their owners know about: (case id, kind, key) ->
 # why it is open (kinds and keys as fdebench2.audit.findings gives them, e.g. ("no_bite", "safety_stock@easy") or

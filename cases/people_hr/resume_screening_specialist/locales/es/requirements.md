@@ -84,4 +84,4 @@ Un archivo CSV, `shortlist.csv`, con la cabecera `role_id,candidate_id,rank`. Ex
 - Todos los referidos cualificados están preseleccionados.
 <!-- /tier -->
 
-**Calidad**: la suma, sobre los {{shortlist_total}} preseleccionados, del ajuste real de cada uno al puesto en el que figura, en la misma escala 0-100 que `puntuacion_desempeno_1a`<!-- tier: hard --> pero sin el sesgo de los responsables<!-- /tier -->. El orden dentro de un puesto no cambia la puntuación, pero invitaremos de arriba abajo. Cuanto más alto, mejor.
+**Calidad**: la suma, sobre los {{shortlist_total}} preseleccionados, de lo que el ajuste real de cada uno al puesto en el que figura supera los 30 puntos. El ajuste está en la misma escala 0-100 que `puntuacion_desempeno_1a`<!-- tier: hard --> pero sin el sesgo de los responsables<!-- /tier -->, y 30 es el punto de partida de todo candidato que cumple los requisitos imprescindibles, así que solo cuenta lo que aporta por encima (un ajuste de 52 cuenta 22). El orden dentro de un puesto no cambia la puntuación, pero invitaremos de arriba abajo. Cuanto más alto, mejor.

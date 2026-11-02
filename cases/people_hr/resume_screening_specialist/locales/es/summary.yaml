@@ -86,13 +86,14 @@ invalid_if:
     más personas se selecciona a menos de 0,8 veces la tasa del grupo más seleccionado, y una prueba estadística (la
     prueba exacta de Fisher, p < 0,05) indica que la diferencia no es casual.
 quality: >-
-  La suma del ajuste real de cada preseleccionado al puesto en el que figura: una puntuación por persona y puesto que
-  la IA no ve, en la escala 0-100 de las puntuaciones pasadas pero sin el sesgo de los responsables, que depende de la
-  experiencia en el área del puesto, las habilidades deseables, un certificado que suma y, en R2, un máster o doctorado
-  (el orden dentro de un puesto no la cambia). La forma de trabajar del cliente (vale 0) aplica las mismas reglas y
-  luego toma primero a quien tiene más meses de experiencia relevante; la solución de referencia (vale 1) pondera
-  también las habilidades deseables y los certificados, y en hard aprende esos pesos de las contrataciones previas
-  tras quitar el sesgo de los responsables.
+  La suma de lo que el ajuste real de cada preseleccionado al puesto en el que figura supera los 30 puntos de los que
+  parte todo candidato cualificado: una puntuación por persona y puesto que la IA no ve, en la escala 0-100 de las
+  puntuaciones pasadas pero sin el sesgo de los responsables, que depende de la experiencia en el área del puesto, las
+  habilidades deseables, un certificado que suma y, en R2, un máster o doctorado (el orden dentro de un puesto no la
+  cambia). La forma de trabajar del cliente (vale 0) aplica las mismas reglas y luego toma primero a quien tiene más
+  meses de experiencia relevante; la solución de referencia (vale 1) aprende de las contrataciones previas cuánto
+  pesan la experiencia, las habilidades, los certificados y los estudios: con las puntuaciones tal como constan en
+  easy y medium, y tras quitar el sesgo de los responsables en hard.
 tiers:
   easy: >-
     El cribado básico: cuántos por puesto, las habilidades imprescindibles, la experiencia en el área del puesto

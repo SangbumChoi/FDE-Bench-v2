@@ -84,4 +84,4 @@ One CSV file, `shortlist.csv`, with the header `role_id,candidate_id,rank`. Exac
 - Every qualified referred candidate is shortlisted.
 <!-- /tier -->
 
-**Quality**: the sum, over the {{shortlist_total}} shortlisted candidates, of each one's true job fit for the role they are listed under, on the same 0-100 scale as `performance_score_1y`<!-- tier: hard --> but without the managers' bias<!-- /tier -->. The order within a role does not change the score, but we will invite people from the top down. Higher is better.
+**Quality**: the sum, over the {{shortlist_total}} shortlisted candidates, of how far each one's true job fit for the role they are listed under lies above 30 points. Fit is on the same 0-100 scale as `performance_score_1y`<!-- tier: hard --> but without the managers' bias<!-- /tier -->, and 30 is where every candidate who meets the must-haves starts, so only what a candidate brings beyond that counts (a fit of 52 counts 22). The order within a role does not change the score, but we will invite people from the top down. Higher is better.

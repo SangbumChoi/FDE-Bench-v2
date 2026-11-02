@@ -4,7 +4,7 @@ task_type: Ranking
 field: people_hr
 seed: 20261103
 objective: maximize          # sum of the true job fit of the shortlisted candidates (fit for the role they are
-                             # listed under); shortlist_size per role
+                             # listed under) above the 30-point base every fit starts from; shortlist_size per role
 tiers:                       # one world: the same applicants, past hires and hiring manager's note in every setting
   easy: >-
     The core screening: shortlist_size candidates per role, the must-have skills, the minimum relevant experience
@@ -25,8 +25,10 @@ tiers:                       # one world: the same applicants, past hires and hi
 params:                      # the client's numbers a rule seed draws (DESIGN.md, Settings)
   shortlist_size:            # interview slots per role (derived: shortlist_total = 3 x shortlist_size)
     values: [6, 8, 10]
-  # The experience minimums are fixed in easy: there the reference never lists anyone between the candidate
-  # minimums (only the referral habit, from medium, reaches them), so a second candidate would change nothing.
+  # The experience minimums are fixed in easy: at 6 per role (the binding check's setting) the easy reference lists
+  # nobody between the candidate minimums on the validated worlds (only the referral habit, from medium, reaches
+  # them there), so a second candidate would be reported as changing nothing; at 8 or 10 per role the learned
+  # reference sometimes does.
   min_r1:                    # minimum relevant experience in months, R1 (software engineering)
     values: {easy: [36], medium: [36, 48], hard: [36, 48]}
   min_r2:                    # R2 (data analytics)
