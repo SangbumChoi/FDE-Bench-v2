@@ -34,7 +34,7 @@ One row per target (`locales/en/targets.yaml`). *Ablated as*: a parameter is rea
 | `near_prime_threshold` | Near-prime customers are those with {{policy_bureau}} below {{near_prime_below}}. | medium, hard | another candidate of `near_prime_a` | 0.022–1.000 | medium 9/15, hard 6/15 | separates |
 | `near_prime_quota` | At least {{quota_pct}}% of the total amount approved over the period (cumulative, checked at the end) must go to near-prime customers. | medium, hard | another candidate of `quota_pct` | 0.023–1.000 | medium 8/15, hard 7/15 | separates |
 | `reason_codes_hard` | Every decline carries the first that applies of DELINQUENCY, LOW_SCORE, SPLIT_APPLICATION (another application of the customer approved that day), LIMIT_EXCEEDED (less than 1,000 of customer limit left after the day's approvals), CREDIT_RISK. | hard | LIMIT_EXCEEDED read as "asked for more than is left" | 1.000 | hard 15/15 | separates |
-| `verified_income` | The salary used is the verified one, the lowest of the declared salary and every salary shown on the customer's documents; past loans already show verified salaries. | hard | the declared salary used | 1.000 | hard 15/15 | separates |
+| `verified_income` | The salary used is the verified one, the lowest of the declared salary and every salary shown on the customer's documents; past loans already show verified salaries. | hard | the declared salary used in the limits (the discrepancy check still reads the documents) | 1.000 | hard 15/15 | separates |
 | `income_discrepancy` | An application whose documents show a monthly base salary more than {{discrepancy_pct}}% below the declared one is referred to fraud prevention unless delinquent. | hard | another candidate of `discrepancy_pct` | 0.021–1.000 | hard 8/15 | separates |
 | `document_corrections` | A document_correction notice replaces a document from that day; a referred application it concerns must be decided again that same day (approved or declined ones are left alone). | hard | the corrected document applied, but the referral not decided again | 1.000 | hard 15/15 | separates |
 | `repayments` | A repayment notice takes the debt out of the DSR and total debt from that day, even when a same-day application still lists it, which raises the customer's limit. | hard | repayment notices not applied | 1.000 | hard 15/15 | separates |
@@ -138,7 +138,7 @@ The reference objective is 1 in every setting. The best known solution reaches 1
 
 ## 5. Diagnostic cases
 
-`score()` returns `enforced` and `evidence` per target, read from the deliverable's own run of the hidden days in the same program invocation (no added inputs): the places where only that fact decides the output, voted per alternative reading. *Separates*: the reference is enforced in every measured setting and every ablation that bites is not.
+`diagnose()` returns `enforced` and `evidence` per target, read from the trace `score()` records of the deliverable's own run of the hidden days (one program invocation per evaluation, no added inputs; a run's evaluation and the audit ask for it, the validator does not): the places where only that fact decides the output, voted per alternative reading. Two facts' misreadings can give the same output (a DSR cap 5 points higher gives, from the regulator's effective day on, the limits of its ignored 5-point cut; a budget 400,000 larger the figures of the ignored cut; the formula limit for an ineligible customer the limit under a lower cutoff), so a place where the misreading's value is also that of another fact's misreading the run follows (more of the places where the two differ are its) does not count against this fact (*competing readings*: the customer entries, unless the run follows this misreading on top of that one, the reason codes and the budget left): a deliverable that misreads one fact is then not also called not enforced on the other. *Separates*: the reference is enforced in every measured setting and every ablation that bites is not.
 
 | target | what tells a correct implementation from the misreading | reference enforced | ablations |
 |---|---|---|---|
@@ -148,12 +148,12 @@ The reference objective is 1 in every setting. The best known solution reaches 1
 | `income_cap` | the customer entries where another income cap candidate gives another limit, per candidate | yes | separates |
 | `dsr_cap` | the customer entries where another DSR cap candidate gives another limit, per candidate | yes | separates |
 | `our_lending` | the entries of customers we lent to: the limit after all our lending, or after today's only | yes | separates |
-| `daily_cap` | the daily capacity left against the other caps' figures, and any day above the cap | yes | separates |
+| `daily_cap` | the daily capacity left against the other caps' figures; any day approved above the cap is not enforced | yes | separates |
 | `limit_table` | every earlier customer's entry on later days: present or missing | yes | separates |
 | `closing_table` | approved customers' entries and the daily capacity: after the day's approvals or before them | yes | separates |
 | `ineligible_zero` | the customer entries scored that day where the misreading gives another limit: the true limit or the misreading's | yes | separates |
-| `reason_codes` | the declines whose code differs between the two readings of LIMIT_EXCEEDED | yes | separates |
-| `reason_codes_hard` | the declines whose code differs between the two readings of LIMIT_EXCEEDED | yes | separates |
+| `reason_codes` | the declines whose code differs from a misreading of LIMIT_EXCEEDED (asked for more than is left, or less than 1,000 left before the day's approvals) (competing readings: the codes each reading of the limits gives) | yes | separates |
+| `reason_codes_hard` | the declines whose code differs from a misreading of LIMIT_EXCEEDED (asked for more than is left, or less than 1,000 left before the day's approvals) (competing readings: the codes each reading of the limits gives) | yes | separates |
 | `protected_attributes` | the planted twin pairs: all decided alike or not | yes | separates |
 | `tenure_review` | the applicants whose referral differs between the true habit and each other candidate (a referral the rule does not ask for counts only beyond the program's own rate of referring applicants no candidate sends) | yes | separates |
 | `branch_notes` | the noted applications that are eligible and within their limit: approved in full or not | yes | separates |
@@ -163,16 +163,54 @@ The reference objective is 1 in every setting. The best known solution reaches 1
 | `repayments_unused` | the customer entries scored that day where the misreading gives another limit: the true limit or the misreading's | yes | separates |
 | `credit_line_amortization` | the customer entries scored that day where the misreading gives another limit: the true limit or the misreading's | yes | separates |
 | `stress_rate` | the customer entries scored that day where the misreading gives another limit: the true limit or the misreading's | yes | separates |
-| `period_budget` | the budget left against the other budgets' figures | yes | separates |
-| `budget_notice` | the budget left from the cut's day: with the cut or without it | yes | separates |
-| `regulatory_notice` | the customer entries scored that day where the misreading gives another limit: the true limit or the misreading's | yes | separates |
-| `near_prime_threshold` | the period's near-prime share: under the quota, or the share under a stricter threshold held at the quota (ending at most 3.5 points above it and never under it at a day's close) | yes | separates |
-| `near_prime_quota` | the period's near-prime share: under the quota, or held at a stricter candidate (ending at most 3.5 points above it and never under it at a day's close) | yes | separates |
+| `period_budget` | the budget left against the other budgets' figures (competing reading: the uncut budget); approvals over the budget in force are not enforced, unless only the cut was ignored | yes | separates |
+| `budget_notice` | the budget left from the cut's day: with the cut or without it (competing readings: the other budgets); approvals over the cut budget, within the uncut one and with its figures, are not enforced | yes | separates |
+| `regulatory_notice` | the customer entries where ignoring the regulator's cut, or applying it from the day its notice arrives, gives another limit: the true limit or that reading's | yes | separates |
+| `near_prime_threshold` | the period's near-prime share: under the quota (not told when the other bureau's share is held at the quota, or when the share is held at a lower quota candidate and every higher threshold's share closed some day under the quota), or the share under a stricter threshold held at the quota (*held at a level*: ending at most 4.5 points above it, never under it at a day's close, and closing the first day of lending at most 7 points above it; the first day is not counted under the quota) | yes | separates |
+| `near_prime_quota` | the period's near-prime share: under the quota (not told when the other bureau's share is held at the quota, or when a higher threshold's share is held at it and this one closed some day under every lower candidate), or held at a stricter candidate | yes | separates |
 | `verified_income` | the customer entries scored that day where the misreading gives another limit: the true limit or the misreading's | yes | separates |
 | `income_discrepancy` | the applicants whose discrepancy referral differs between the true threshold and each other candidate (as for the tenure habit) | yes | separates |
 | `document_corrections` | each referral whose corrected document arrived: decided again that day or not | yes | separates |
 | `repayments` | the customer entries scored that day where the misreading gives another limit: the true limit or the misreading's | yes | separates |
 | `split_applications` | each customer-day with several applications and an approval: one approval or more | yes | separates |
+
+**Reliability on other deliverables** (a run's deliverable is neither the reference nor an ablation). Settings where the diagnostic calls the deliverable not enforced, of those where it gives a True or False: the best known solution (valid, built with full knowledge of its setting, so every one would be a false negative), the ablation of the target that also calls other targets not enforced (of the settings where it bites; facts can interact), and the baseline (each setting's own) and `robust_solution` (its tier's), which are informational: neither is built with full knowledge.
+
+| target | best known | cross flags | baseline | robust_solution |
+|---|---|---|---|---|
+| `gross_income` | 0/45 | 0/45 | 0/45 | 0/45 |
+| `policy_bureau` | 0/45 | 0/45 | 0/45 | 26/45 |
+| `score_cutoff` | 0/45 | 0/45 | 0/45 | 35/45 |
+| `income_cap` | 0/45 | 0/45 | 0/45 | 29/45 |
+| `dsr_cap` | 0/45 | 0/45 | 0/45 | 29/45 |
+| `our_lending` | 0/45 | 0/45 | 0/45 | 0/39 |
+| `daily_cap` | 0/45 | 0/45 | 0/45 | 26/45 |
+| `limit_table` | 0/45 | 0/45 | 0/45 | 0/45 |
+| `closing_table` | 0/45 | 0/45 | 0/45 | 0/45 |
+| `ineligible_zero` | 0/45 | 0/45 | 0/45 | 0/45 |
+| `reason_codes` | 0/30 | 0/30 | 0/30 | 6/30 |
+| `reason_codes_hard` | 0/15 | 0/15 | 0/15 | 0/15 |
+| `protected_attributes` | 0/45 | 0/45 | 0/45 | 45/45 |
+| `tenure_review` | 0/45 | 0/45 | 0/45 | 31/45 |
+| `branch_notes` | 0/45 | 0/45 | 0/45 | 0/45 |
+| `credit_lines_easy` | 0/15 | 0/15 | 0/15 | 15/15 |
+| `regulator_notice_easy` | 0/15 | 0/15 | 0/15 | 15/15 |
+| `declared_income` | 0/30 | 0/30 | 0/30 | 30/30 |
+| `repayments_unused` | 0/30 | 0/30 | 0/30 | 16/30 |
+| `credit_line_amortization` | 0/30 | 0/30 | 0/30 | 12/30 |
+| `stress_rate` | 0/30 | 0/25 | 0/30 | 12/12 |
+| `period_budget` | 0/30 | 0/30 | 0/30 | 19/30 |
+| `budget_notice` | 0/30 | 0/30 | 0/30 | 0/11 |
+| `regulatory_notice` | 0/30 | 0/30 | 0/30 | 15/30 |
+| `near_prime_threshold` | 0/29 | 2/23 (`near_prime_quota`) | 0/4 | 1/6 |
+| `near_prime_quota` | 0/29 | 3/21 (`near_prime_threshold`) | 0/4 | 7/12 |
+| `verified_income` | 0/15 | 0/15 | 0/15 | 0/15 |
+| `income_discrepancy` | 0/15 | 0/15 | 0/15 | 11/15 |
+| `document_corrections` | 0/15 | 0/15 | 0/15 | 15/15 |
+| `repayments` | 0/15 | 0/15 | 0/15 | 0/9 |
+| `split_applications` | 0/15 | 0/15 | 0/15 | 15/15 |
+
+`diagnose()` raised in 0 evaluation(s) of the audit.
 
 **Shortcuts** (closed: invalid, or quality at most 0.5):
 

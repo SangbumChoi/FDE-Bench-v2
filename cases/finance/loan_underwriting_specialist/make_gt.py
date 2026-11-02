@@ -11,7 +11,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT.parents[2]))
-from fdebench2.audit import findings, shortcut_summary, summarize, target_summary, tier_order  # noqa: E402
+from fdebench2.audit import (cross_flag_summary, false_negatives, findings, shortcut_summary, summarize,  # noqa: E402
+                             target_summary, tier_order)
 
 # How each fact is misread (case.py SWITCHES; a param: target is read as another candidate of its parameter).
 MISREAD = {
@@ -34,7 +35,7 @@ MISREAD = {
     "stress_rate": "no stress rate above 60,000 of debt",
     "budget_notice": "the treasury's budget cut not applied",
     "regulatory_notice": "the supervisory DSR cut not applied",
-    "verified_income": "the declared salary used",
+    "verified_income": "the declared salary used in the limits (the discrepancy check still reads the documents)",
     "document_corrections": "the corrected document applied, but the referral not decided again",
     "repayments": "repayment notices not applied",
     "split_applications": "several approvals a day within the shared limit",
@@ -45,29 +46,43 @@ DIAGNOSTIC = {
              "misreading's",
     "gross_income": None, "ineligible_zero": None, "credit_lines_easy": None, "regulator_notice_easy": None,
     "declared_income": None, "repayments_unused": None, "credit_line_amortization": None, "stress_rate": None,
-    "regulatory_notice": None, "verified_income": None, "repayments": None,
+    "regulatory_notice": "the customer entries where ignoring the regulator's cut, or applying it from the day its "
+                         "notice arrives, gives another limit: the true limit or that reading's",
+    "verified_income": None, "repayments": None,
     "policy_bureau": "the customer entries where the other bureau (its cutoff) gives another limit",
     "score_cutoff": "the customer entries where another cutoff candidate gives another limit, per candidate",
     "income_cap": "the customer entries where another income cap candidate gives another limit, per candidate",
     "dsr_cap": "the customer entries where another DSR cap candidate gives another limit, per candidate",
     "our_lending": "the entries of customers we lent to: the limit after all our lending, or after today's only",
-    "daily_cap": "the daily capacity left against the other caps' figures, and any day above the cap",
+    "daily_cap": "the daily capacity left against the other caps' figures; any day approved above the cap is not "
+                 "enforced",
     "limit_table": "every earlier customer's entry on later days: present or missing",
     "closing_table": "approved customers' entries and the daily capacity: after the day's approvals or before them",
-    "reason_codes": "the declines whose code differs between the two readings of LIMIT_EXCEEDED",
-    "reason_codes_hard": "the declines whose code differs between the two readings of LIMIT_EXCEEDED",
+    "reason_codes": "the declines whose code differs from a misreading of LIMIT_EXCEEDED (asked for more than is "
+                    "left, or less than 1,000 left before the day's approvals) (competing readings: the codes each "
+                    "reading of the limits gives)",
+    "reason_codes_hard": "the declines whose code differs from a misreading of LIMIT_EXCEEDED (asked for more than "
+                         "is left, or less than 1,000 left before the day's approvals) (competing readings: the "
+                         "codes each reading of the limits gives)",
     "protected_attributes": "the planted twin pairs: all decided alike or not",
     "tenure_review": "the applicants whose referral differs between the true habit and each other candidate (a "
                      "referral the rule does not ask for counts only beyond the program's own rate of referring "
                      "applicants no candidate sends)",
     "branch_notes": "the noted applications that are eligible and within their limit: approved in full or not",
-    "period_budget": "the budget left against the other budgets' figures",
-    "budget_notice": "the budget left from the cut's day: with the cut or without it",
-    "near_prime_threshold": "the period's near-prime share: under the quota, or the share under a stricter "
-                            "threshold held at the quota (ending at most 3.5 points above it and never under it at "
-                            "a day's close)",
-    "near_prime_quota": "the period's near-prime share: under the quota, or held at a stricter candidate (ending "
-                        "at most 3.5 points above it and never under it at a day's close)",
+    "period_budget": "the budget left against the other budgets' figures (competing reading: the uncut budget); "
+                     "approvals over the budget in force are not enforced, unless only the cut was ignored",
+    "budget_notice": "the budget left from the cut's day: with the cut or without it (competing readings: the "
+                     "other budgets); approvals over the cut budget, within the uncut one and with its figures, "
+                     "are not enforced",
+    "near_prime_threshold": "the period's near-prime share: under the quota (not told when the other bureau's share "
+                            "is held at the quota, or when the share is held at a lower quota candidate and every "
+                            "higher threshold's share closed some day under the quota), or the share under a "
+                            "stricter threshold held at the quota (*held at a level*: ending at most 4.5 points "
+                            "above it, never under it at a day's close, and closing the first day of lending at "
+                            "most 7 points above it; the first day is not counted under the quota)",
+    "near_prime_quota": "the period's near-prime share: under the quota (not told when the other bureau's share is "
+                        "held at the quota, or when a higher threshold's share is held at it and this one closed "
+                        "some day under every lower candidate), or held at a stricter candidate",
     "income_discrepancy": "the applicants whose discrepancy referral differs between the true threshold and each "
                           "other candidate (as for the tenure habit)",
     "document_corrections": "each referral whose corrected document arrived: decided again that day or not",
@@ -229,10 +244,18 @@ def main() -> None:
     out += _table(["tier", "never asks (credit)", "its validity rate", "voi", "never asks (params)", "voi_params"],
                   rows)
     out += ["", "## 5. Diagnostic cases", "",
-            "`score()` returns `enforced` and `evidence` per target, read from the deliverable's own run of the "
-            "hidden days in the same program invocation (no added inputs): the places where only that fact decides "
-            "the output, voted per alternative reading. *Separates*: the reference is enforced in every measured "
-            "setting and every ablation that bites is not.", ""]
+            "`diagnose()` returns `enforced` and `evidence` per target, read from the trace `score()` records of the "
+            "deliverable's own run of the hidden days (one program invocation per evaluation, no added inputs; a "
+            "run's evaluation and the audit ask for it, the validator does not): the places where only that fact "
+            "decides the output, voted per alternative reading. Two facts' misreadings can give the same output (a "
+            "DSR cap 5 points higher gives, from the regulator's effective day on, the limits of its ignored 5-point "
+            "cut; a budget 400,000 larger the figures of the ignored cut; the formula limit for an ineligible "
+            "customer the limit under a lower cutoff), so a place where the misreading's value is also that of "
+            "another fact's misreading the run follows (more of the places where the two differ are its) does not "
+            "count against this fact (*competing readings*: the customer entries, unless the run follows this "
+            "misreading on top of that one, the reason codes and the budget left): a deliverable that misreads one "
+            "fact is then not also called not enforced on the other. *Separates*: the reference is enforced in "
+            "every measured setting and every ablation that bites is not.", ""]
     diag = audit["diagnostics"]
     ref_ok = {t: all(e.get("reference_enforced", {}).get(t) is not False for tier in tiers
                      for e in audit["settings"][tier] if not e.get("skipped")) for t in targets}
@@ -244,6 +267,29 @@ def main() -> None:
                      "separates" if d.get("separates") else "untested" if d.get("separates") is None else "no"])
     out += _table(["target", "what tells a correct implementation from the misreading", "reference enforced",
                    "ablations"], rows)
+    out += ["", "**Reliability on other deliverables** (a run's deliverable is neither the reference nor an "
+            "ablation). Settings where the diagnostic calls the deliverable not enforced, of those where it gives a "
+            "True or False: the best known solution (valid, built with full knowledge of its setting, so every one "
+            "would be a false negative), the ablation of the target that also calls other targets not enforced (of "
+            "the settings where it bites; facts can interact), and the baseline (each setting's own) and "
+            "`robust_solution` (its tier's), which are informational: neither is built with full knowledge.", ""]
+    negatives, cross = false_negatives(audit), cross_flag_summary(audit)
+    profile = audit.get("diagnostic_profile") or {}
+
+    def cell(false, n):
+        return f"{false}/{n}" if n else "–"
+    rows = []
+    for tid in targets:
+        fn, cf = negatives.get(tid), cross.get(tid)
+        flags = cell(len(cf["flagged"]), cf["biting"]) if cf else "–"
+        if cf and cf["others"]:
+            flags += " (" + ", ".join(f"`{u}`" for u in cf["others"]) + ")"
+        rows.append([f"`{tid}`", cell(len(fn["false"]), fn["diagnosed"]) if fn else "–", flags]
+                    + [cell(p[tid]["false"], p[tid]["diagnosed"]) if tid in (p := profile.get(name) or {}) else "–"
+                       for name in ("baseline", "robust_solution")])
+    out += _table(["target", "best known", "cross flags", "baseline", "robust_solution"], rows)
+    errors = (audit.get("diagnose_errors") or {}).get("count", 0)
+    out += ["", f"`diagnose()` raised in {errors} evaluation(s) of the audit."]
     out += ["", "**Shortcuts** (closed: invalid, or quality at most "
             f"{audit['thresholds']['shortcut_max_quality']:g}):", ""]
     out += _table(["shortcut", "what it does", "closed in", "best quality where valid"],

@@ -147,8 +147,10 @@ class Underwriter:
         return 12 * self.base(c, policy) + (c["annual_bonus"] if bonus else 0)
 
     def discrepant(self, c):
+        """The fraud-prevention check reads the documents whatever salary the limits use (declared_income misreads
+        only the latter)."""
         declared = c["monthly_base_salary"]
-        return self.hard and declared - self.base(c) > self.cfg["discrepancy_pct"] / 100 * declared + 1e-9
+        return self.hard and declared - self.base(c, policy=False) > self.cfg["discrepancy_pct"] / 100 * declared + 1e-9
 
     def dsr_cap_pct(self):
         return self.cfg["max_dsr_pct"] + (sum(p for d, p in self.cap_changes if d <= self.date) if self.use_reg else 0)
@@ -219,7 +221,8 @@ class Underwriter:
                 self.budget_changes.append((n["effective_date"], n["period_budget_change"]))
             elif n["type"] == "repayment" and self.use_repayments:
                 self.repaid.add((n["customer_id"], n["debt_id"]))
-            elif n["type"] == "document_correction" and self.verified and not cfg.get("ignore_corrections"):
+            elif (n["type"] == "document_correction" and (self.verified or self.hard)     # hard: the fraud check
+                  and not cfg.get("ignore_corrections")):                                  # reads the documents too
                 self.fixes.setdefault(n["customer_id"], {})[n["replaces_document_id"]] = n["document"]
                 if self.hard and cfg.get("redecide", True):
                     corrected.append(n["application_id"])

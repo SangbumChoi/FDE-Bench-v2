@@ -429,3 +429,115 @@ no valid deliverable passes it; `quality_cap` = 1.02 is at least the median best
 numbers match the stored dataset; `referral_capacity` is rightly not a target (a program that maximizes profit
 never refers by choice, since a referral costs 60 and earns nothing, so misreading the capacity changes nothing
 for it; the rule closes F2's shortcut).
+
+### Diagnostics
+
+A run's "enforced" stage comes from the per-target diagnostic applied to the agent's deliverable, which is neither
+the reference nor an ablation, so the framework now also checks the diagnostic on other deliverables (DESIGN.md,
+Ground truth audit; AUDIT_VERSION 3): a False on the valid best known solution is a problem
+(`diagnostic_false_negative`), an ablation that calls other targets not enforced in more than half of the settings
+where it bites is a `cross_flags` warning, and `diagnostic_profile` counts the baseline's and `robust_solution`'s
+False per target. Re-audited under it, with the diagnostic as it was (the near-prime part measured by an in-process
+mirror of the audit): no false negative, the best known solution enforced on every target in force in all 45
+settings; the valid baseline called not enforced on a near-prime fact in 4 of the 30 medium and hard settings; and
+eight cross-flag warnings, `policy_bureau` (37 of the 45 settings where it bites), `dsr_cap` (36/45),
+`ineligible_zero` (31/45), `regulator_notice_easy` (11/15), `regulatory_notice` (19/30), `verified_income` (8/15)
+and the two near-prime facts (each other's, in 15 of 24 and 16 of 29). What changed:
+
+1. **The diagnostic moved to `diagnose()`.** `score()` keeps what the run did each day under a private `trace` key
+   (which `evaluate()` never copies) and `diagnose(world, submission_dir, setting, scored)` reads it, so a
+   deliverable still runs once per evaluation; the validator and the value-of-information matrix skip it.
+2. **Near-prime facts on the baseline: 4 settings of 30 → 0.** "Held at a level" (the period's share ending a few
+   points above a stricter level and never closing a day under it) also read first come, first served as steering
+   where its share happened to settle there (`near_prime_quota` in medium/c8, hard/s30, hard/c10;
+   `near_prime_threshold` in medium/c1, hard/s30, hard/c10). It now also needs the first day of lending to close at
+   most 7 points above the level: a program that holds a commitment holds it from its first day, whose share is that
+   day's own mix (and a program after profit lends near-prime no more than asked, near-prime loans being the
+   riskier ones); the baseline's first day closed 11–35 points above the level in those settings, the stricter
+   misreadings' 0.2–4.6. With the first day in the test the end band went back from 3.5 to 4.5 points (the quota
+   diagnostic's own reading of a kept quota): on world seed 1 three biting ablations end 4.0–4.2 points above their
+   level and were missed with 3.5. The baseline is now called not enforced on no near-prime fact in the medium and
+   hard settings of the public world or of world seeds 1 and 2, and every near-prime ablation that bites still is.
+3. **Competing readings.** Two facts' misreadings can give the same output, and an ablation of one was called not
+   enforced on the other: a DSR cap 5 points higher gives, from the regulator's effective day on, the limits of its
+   ignored 5-point cut (`dsr_cap` with `regulatory_notice` and `regulator_notice_easy` both ways, and through the
+   same limits the credit-line and stress facts and the reason codes); the formula limit of an ineligible customer
+   is the limit under a lower cutoff (`ineligible_zero` → `score_cutoff`, `policy_bureau`); the other bureau moves
+   the cutoff and the near-prime definition; a budget 400,000 larger gives the figures of the ignored cut
+   (`period_budget` → `budget_notice`); a run under the quota counted against both near-prime facts. Each diagnostic
+   now reads every reading of its output in force (the customer entries under each table fact's misreading and each
+   other candidate of a table parameter, the codes each reading of the limits gives, the budget left with and
+   without the cut and under the other budgets). A place where a misreading's value is also that of another fact's
+   misreading the run follows (more of the places where the two differ are the other's) no longer counts against
+   the fact, unless, for the customer entries, the run follows the misreading on top of the reading it follows best.
+   Under the quota, the quota or the threshold is not told when the other's misreading holds and its own is not
+   possible (its share closed some day under its level), or when the other bureau's share is held at the quota. An
+   ablation reports its own fact's values wherever they differ from any other reading, so it follows no other
+   reading and keeps its separation; where the run cannot rule a reading out, its votes stand (a lost separation is
+   a problem, a cross flag only a warning).
+4. **The verified-income ablation misread three facts.** Reading the declared salary for the limits also switched off
+   the fraud check (the discrepancy referral read the same salary) and the document corrections. The reference
+   program's fraud check and corrections now read the documents whatever salary its limits use, so the ablation
+   misreads only the limits' salary; the reference reads the documents everywhere in hard, so its decisions, the
+   scale, the bound and `quality_cap` are unchanged.
+
+The audit now reports no finding: no false negative on the best known solution, the baseline called not enforced on
+no target in any of the 45 settings, every ablation that bites still called (31 targets separate), and the only
+cross flags left are the two near-prime facts' (2 of 23 and 3 of 21 settings, where both misreadings or neither
+explain a run that ends under the quota). `robust_solution`, which misreads many facts at once, is still called not
+enforced where its misreadings show (GT.md, part 5). The trade-off: a deliverable that misreads two facts of such a
+pair at once can now be called enforced (or not determinable) on one of them where the table cannot tell the two
+apart. Of 33 programs over the public panel misreading two facts at once (each pair above and three unrelated
+ones), both facts are called not enforced in 20 (25 before; 8 of the 13 misses were misses before too): the
+misses are pairs where the second misreading repeats or cancels the first's values in the output (another cutoff
+under the formula limit for ineligible customers, a DSR cap 5 points higher with the regulator's cut applied in
+easy, a larger budget with its cut ignored). The validity checks do not depend on the diagnostic (a looser cutoff's
+approvals still break `score_cutoff`). `audit-case` still takes about 40 minutes (the diagnostic is cheap next to the
+program runs); `OPEN_AUDIT_FINDINGS` waives nothing for this case.
+
+### Adversarial check of the diagnostics (programs that are neither reference nor ablation)
+
+Programs built for the 9 public settings and diagnosed with `evaluate(..., diagnose=True)`:
+
+- **Correct but different** (every fact read right): the reference with increments of 500 or 1,000 instead of 250, a
+  loss given default of 0.70 or a margin of 8% in its pricing, declining (with the right code) applicants up to 10
+  or 25 policy points above the cutoff, the older greedy allocation with sizing, a linear budget pace, a near-prime
+  buffer of 2 or 1 points, and in hard the earliest of a customer's same-day applications approved instead of the
+  largest (84 programs, quality 0.00–1.03, all valid). None was called not enforced on any target, before or after.
+- **New misreadings** (code or config changes no ablation makes: the stated monthly income as the income; a referral
+  at exactly the tenure; existing debts left out of the DSR; our same-day lending forgotten; LIMIT_EXCEEDED read on
+  the limit before the day's approvals; the protected scorecard with the twins still decided as one unit; the A-point
+  cutoff or near-prime threshold on the B scale; a daily cap 10% higher; the regulator's cut from the day its notice
+  arrives; the budget cut from its notice; the quota counted in loans or ignored; near-prime at or below the
+  threshold; a budget 10% higher). Of the 76 that bite, 40 were called not enforced on their fact (53%). Four kinds
+  that bite were called enforced or not determinable, three of them although they break the rule their fact states:
+  days above the daily cap (2 of 9: the capacities reported matched neither reading as often as the truth),
+  approvals over the period budget (6 of 6: the budget left reported is the program's own, no candidate's), the
+  reason codes read before the day's approvals (4 of 4: only the "asked for more than is left" reading was
+  compared), and the regulator's cut from its notice day (6 of 6: only the ignored cut was compared).
+
+What changed (case.py `_diagnose`, `_View.dsr_cap_pct`):
+
+1. **`daily_cap`**: any day approved above the cap is not enforced.
+2. **`period_budget` / `budget_notice`**: approvals made while the period is over the budget in force are not
+   enforced: on `budget_notice` when the run stays within the uncut budget and reports the uncut budget's figures
+   rather than another candidate's (the cut ignored), else on `period_budget`.
+3. **Reason codes**: a second misreading of LIMIT_EXCEEDED, the limit before the day's approvals, with the competing
+   readings as for the first; a reading of the limits that the run follows on the table (more of the entries where
+   it differs from the truth are its) also explains the codes it shares with a misreading where the codes alone
+   cannot tell the two apart (the gross-income ablation's one decline in medium/s30).
+4. **`regulatory_notice`**: the entries are also read with the cut from the day its notice arrives (misreading
+   `reg_on_notice`, `TABLE_MISREAD_MORE`), within the competing readings (a DSR cap 5 points lower gives those
+   entries from the notice's day to the effective day).
+
+After (same programs): the 84 correct programs are still enforced on every target; of the 76 misreadings that bite, 58 are
+called not enforced on their fact (76%, was 53%). Still called enforced: our same-day lending forgotten (9: its
+table is the morning table, so it is called not enforced on `closing_table` and, where the codes change, on the
+reason codes instead: the two facts give the same entries), a referral at exactly the tenure (4: those referrals
+are the program's own rate of referring applicants no candidate sends), existing debts left out of the DSR in the
+45% settings (3: where another candidate differs from the truth the limits are the income cap's, which the run
+reports right; it breaks `customer_limit`) and the A-point near-prime threshold on the B scale where its share
+still ends in the quota's band (2: no lower candidate to compare). The re-audit (2,236 s) finds no false negative
+(best known 0 of 1,003, baseline 0 of 953), every target separates, the same two near-prime cross flags below the
+warning line, and no finding; `robust_solution`, which applies the regulator's cut from its notice, is now also
+called not enforced on `regulatory_notice` (15 settings: 410 of 914, was 395).

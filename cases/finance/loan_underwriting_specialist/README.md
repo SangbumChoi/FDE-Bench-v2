@@ -334,6 +334,19 @@ the shortcuts in part 5.
 - **One process per replay**: `casekit.program_session` loads `underwriter.py` once and makes the 20 calls in
   the same isolated process. The case also replays the reference in-process (JSON round-tripped) to get the
   profit normalizer and to pick the validator's examples; the subprocess run gives the same numbers.
+- **Per-target diagnostic** (`diagnose()`): `score()` keeps what the run did each day under a private `trace` key
+  (never copied to the result) and `diagnose()` reads it for the `enforced` and `evidence` maps (GT.md, part 5),
+  so a deliverable runs once per evaluation; only a run's evaluation (the target funnel) and the audit ask for it,
+  never the validator. Where two facts' misreadings give the same output (a DSR cap 5 points higher and the
+  regulator's ignored 5-point cut, say), a reading's votes do not count when another fact's misreading explains
+  the run better, so a deliverable that misreads one fact is not also called not enforced on the other. The
+  near-prime facts are read from the period's share: a share held at a stricter level (ending at most 4.5 points
+  above it, never under it at a day's close, the first day of lending at most 7 points above it) is that
+  misreading, and a share under the quota counts against both facts unless the other one's misreading (or the
+  other bureau's) explains it and its own cannot. A day approved above the daily cap, or approvals while the period
+  is over the budget in force, are not enforced on that fact whatever figures the run reports; the reason codes are
+  also read with LIMIT_EXCEEDED judged before the day's approvals, and the limits with the regulator's cut from
+  the day its notice arrives.
 - **Validator examples** are the reference with one override (omit a decision, refer a delinquent applicant,
   approve a below-cutoff or short-tenure applicant at 1,000, approve one unit over a customer's limit, the
   wrong code on one decline, decline one twin, decline a discrepant application, refer one application more

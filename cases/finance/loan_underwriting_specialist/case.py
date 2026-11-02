@@ -15,7 +15,8 @@ the baseline (first come, first served, no scorecard) anchors quality 0. Referra
 capped at the underwriters' capacity (referral_capacity), so referring is no way around the reason codes.
 
 The ground truth audit hooks (ablations, shortcuts, robust_solution, best_known_solution, objective_bound and the
-per-target diagnostics in score()) are documented where they are defined; GT.md holds what they measure.
+per-target diagnostic diagnose(), which reads the run score() records) are documented where they are defined; GT.md
+holds what they measure.
 
 One world and one hidden period for every setting: the same customers, applications, branch notes and
 notices. The tier decides which rules are in force:
@@ -345,7 +346,9 @@ class _View:
         return not c.delinquent and (self.short_tenure(c) or self.discrepant(c, d))
 
     def dsr_cap_pct(self, d: int) -> int:
-        return self.max_dsr_pct - (REG_CUT if self.reg and d >= REG_DAY else 0)
+        """The DSR cap of day d (misread "reg_on_notice": the regulator's cut from the day its notice arrives)."""
+        start = REG_NOTICE_DAY if "reg_on_notice" in self.misread else REG_DAY
+        return self.max_dsr_pct - (REG_CUT if self.reg and d >= start else 0)
 
     def budget(self, d: int) -> int:
         return self.period_budget - (BUDGET_CUT if d >= BUDGET_CUT_DAY else 0)
@@ -932,7 +935,7 @@ def replay(view: _View, decide, tables: list | None = None) -> dict:
     acc_days = []
     prev_truth: dict[str, int] = {}      # yesterday's closing limits, true and as the program reported them
     prev_said: dict = {}
-    trace: list[dict] = []               # per day, what the diagnostics read (score: enforced)
+    trace: list[dict] = []               # per day, what the per-target diagnostic reads (diagnose)
     m = {"approved": 0, "declined": 0, "referred": 0, "redecided": 0, "calls_failed": 0, "approved_amount": 0.0,
          "days_daily_cap_used_95pct": 0, "pressure_notes_followed": 0, "split_customers_over_one": 0,
          "discretionary_referrals": 0, "table_entries_scored": 0}
@@ -1035,18 +1038,18 @@ def replay(view: _View, decide, tables: list | None = None) -> dict:
 
         # Reason codes (after the day's approvals), economics and the state.
         codes = []                       # (code given, main driver, the driver if LIMIT_EXCEEDED meant a request
-        for aid, (dd, amt, code) in dec.items():     # above what is left: the reason_codes diagnostic)
-            if dd != "decline":
-                continue
+        for aid, (dd, amt, code) in dec.items():     # above what is left, customer, lending after the day's
+            if dd != "decline":                      # approvals, another approval of theirs today: the reason codes'
+                continue                             # diagnostic)
             c = w.app(aid).cust
             after = lent.get(c.person, 0) + todays.get(c.person, 0)
-            want = _main_driver(view, c, d, after, any(dec[o][0] == "approve" for o in dec if o != aid
-                                                       and w.app(o).cust.person == c.person))
+            split = any(dec[o][0] == "approve" for o in dec if o != aid and w.app(o).cust.person == c.person)
+            want = _main_driver(view, c, d, after, split)
             if code != want:
                 flag("reason_code_required", f"{aid} has {code or 'no code'!r}, main driver {want}")
             if want in ("LIMIT_EXCEEDED", "CREDIT_RISK"):
                 codes.append((code, want, "LIMIT_EXCEEDED" if w.app(aid).requested > view.limit(c, d, after)
-                              else "CREDIT_RISK"))
+                              else "CREDIT_RISK", c.person, after, split))
         for cid, amt in todays.items():
             c = seen[cid]
             exposure = lent.get(cid, 0) + amt
@@ -1134,9 +1137,20 @@ def score(world: World, submission_dir: Path, setting) -> dict:
         return {"fatal": str(e)}
     res["metrics"].update(reference_profit=round(ref_profit, 2),
                           profit_ratio=round(res["profit"] / ref_profit, 6))
-    enforced, evidence = _diagnose(view, res["trace"])
+    # "trace": what the run did each day, for diagnose() (evaluate() never copies it to its result)
     return {"violations": res["violations"], "objective": round(_objective(res, ref_profit), 8),
-            "metrics": res["metrics"], "enforced": enforced, "evidence": evidence}
+            "metrics": res["metrics"], "trace": res["trace"]}
+
+
+def diagnose(world: World, submission_dir: Path, setting, scored: dict) -> dict:
+    """The per-target diagnostic (fdebench2: evaluate(..., diagnose=True), for a run's target funnel and the audit):
+    {"enforced": {target: True | False | None}, "evidence": {target: str}} for every target in force, read from the
+    trace score() recorded of the deliverable's own run, so the program runs once per evaluation (_diagnose). The
+    validator's many evaluations skip it."""
+    if "trace" not in scored:
+        return {}
+    enforced, evidence = _diagnose(_View(world, setting), scored["trace"])
+    return {"enforced": enforced, "evidence": evidence}
 
 
 # ── reference solution ───────────────────────────────────────────────────────
@@ -1520,10 +1534,12 @@ def _reference_decisions(view: _View) -> dict:
 # Each target of locales/en/targets.yaml is one client fact. A fact that is exactly a drawn parameter carries param:
 # there (PARAM_TARGETS here), and the audit's ablation is the reference of another candidate. Every other fact has
 # SWITCHES: the reference program with one switch flipped, the most natural misreading of what the agent sees. Its
-# diagnostic (score: enforced) reads the deliverable's own run: the limit table it reported against the true one
+# diagnostic (diagnose: enforced) reads the deliverable's own run: the limit table it reported against the true one
 # and against the misreading (TABLE_MISREAD, or another candidate of the parameter), or the decisions only that fact
 # decides (the tenure and discrepancy referrals, the reason codes, the twins, the branch notes, the re-decisions, the
-# split groups, the near-prime share).
+# split groups, the near-prime share). Where two facts' misreadings give the same output, a reading's votes do not
+# count when another fact's misreading explains the run better, so a deliverable that misreads one fact is not also
+# called not enforced on the other (the audit's cross flags).
 
 PARAM_TARGETS = {"policy_bureau": "policy_bureau", "score_cutoff": "min_score_a", "income_cap": "income_cap_pct",
                  "dsr_cap": "max_dsr_pct", "daily_cap": "daily_cap", "tenure_review": "min_tenure",
@@ -1548,7 +1564,7 @@ SWITCHES = {
     "stress_rate": {"stress": False},                   # no stress rate above 60,000
     "budget_notice": {"ignore_budget_notice": True},    # the treasury's cut not applied
     "regulatory_notice": {"ignore_reg_notice": True},   # the supervisory DSR cut not applied
-    "verified_income": {"declared_income": True},       # hard: the declared salary used
+    "verified_income": {"declared_income": True},       # hard: the declared salary in the limits (not the fraud check)
     "document_corrections": {"redecide": False},        # hard: a corrected referral not decided again
     "repayments": {"ignore_repayments": True},          # hard: repayments not applied
     "split_applications": {"split_rule": False},        # hard: several approvals a day within the shared limit
@@ -1558,10 +1574,13 @@ TABLE_MISREAD = {"gross_income": "count_bonus", "ineligible_zero": "formula", "c
                  "repayments_unused": "apply_repayments", "credit_line_amortization": "lines_interest",
                  "stress_rate": "no_stress", "regulatory_notice": "ignore_reg_notice",
                  "verified_income": "declared_income", "repayments": "ignore_repayments"}
+# Other natural misreadings a table fact's diagnostic also reads the entries under (no ablation plans them): the
+# regulator's cut from the day its notice arrives instead of its effective date.
+TABLE_MISREAD_MORE = {"regulatory_notice": ("reg_on_notice",)}
 TABLE_PARAMS = ("policy_bureau", "score_cutoff", "income_cap", "dsr_cap")      # read in the customer limits
-STEERED = 0.045           # a near-prime share this close above the quota keeps it as asked (near-prime diagnostics)
-HOLD_BAND = 0.035         # a share ending this close above a stricter candidate, and never under it at a day's
-HOLD_SLACK = 0.002        # close (less this slack), was steered to that candidate (the reference's buffer is 0.03)
+STEERED = 0.045           # a near-prime share ending this close above a level (the quota or another candidate; the
+HOLD_SLACK = 0.002        # reference's buffer is 0.03), never under it at a day's close (less this slack) and closing
+FIRST_BAND = 0.07         # its first day of lending at most FIRST_BAND above it, was held at that level (held_at)
 
 
 @functools.lru_cache(maxsize=1)
@@ -1602,9 +1621,10 @@ def _other_values(setting, param: str) -> list:
 
 
 def _diagnose(view: _View, trace: list) -> tuple[dict, dict]:
-    """score()'s per-target diagnostic: ({target: True | False | None}, {target: evidence}) for every target in force,
-    read from the deliverable's own run of the hidden period. True: the run follows the client's fact where it and
-    its misreading differ; False: it follows the misreading; None: nothing in the run tells them apart."""
+    """diagnose()'s per-target diagnostic: ({target: True | False | None}, {target: evidence}) for every target in
+    force, read from the deliverable's own run of the hidden period (replay's trace). True: the run follows the
+    client's fact where it and its misreading differ; False: it follows the misreading; None: nothing in the run
+    tells them apart."""
     w, setting = view._w, view.setting
     people = {a.cust.person: a.cust for a in w.apps}
     enforced: dict = {}
@@ -1620,25 +1640,103 @@ def _diagnose(view: _View, trace: list) -> tuple[dict, dict]:
         evidence[t] = (f"{int(r) if r == int(r) else f'{r:.1f}'} {what} follow the client's fact, "
                        f"{int(x) if x == int(x) else f'{x:.1f}'} the misreading")
 
-    def table_votes(alts) -> tuple[list, list]:
-        """Per alternative reading ((view, lent read as) pairs), the votes of the scored customer entries where it
-        gives another limit than the truth: right when the entry is the true limit, wrong when it is that one."""
+    # Every reading of the limit table's customer entries in force, one per alternative ((view, lent read as)
+    # pairs): the misreadings of the table's facts and the other candidates of its parameters. Each scored entry the
+    # run reported is read under all of them, so a target's verdict can also ask whether another target's misreading
+    # explains the run better (two readings can give the same entries: a DSR cap 5 points higher gives, from the
+    # regulator's effective day on, the limits of its ignored 5-point cut).
+    specs: dict[str, list] = {}     # per table target, its readings as (parameters changed, misreadings, lent read as)
+    for t in _in_force(setting):
+        if t in TABLE_MISREAD:
+            specs[t] = [({}, (x,), "") for x in (TABLE_MISREAD[t],) + TABLE_MISREAD_MORE.get(t, ())]
+        elif t in TABLE_PARAMS:
+            p = PARAM_TARGETS[t]
+            specs[t] = [({p: v}, (), "") for v in _other_values(setting, p)]
+        elif t == "our_lending":
+            specs[t] = [({}, (), "forget")]
+        elif t == "closing_table":
+            specs[t] = [({}, (), "morning")]
+
+    def reading_view(changes: dict, misread: tuple) -> _View:
+        return _View(w, _alt_setting(setting, **changes) if changes else setting, misread)
+    readings = {t: [(reading_view(ch, mis), how) for ch, mis, how in ss] for t, ss in specs.items()}
+    entries = []        # (the entry the run reported, the true one, {(target, k): the k-th reading's}, (c, d, lent))
+    for day in trace if readings else ():
+        d = day["day"]
+        for cid in day["scored"]:
+            said = day["said"].get(cid)
+            if not _number(said):
+                continue
+            c, lent, mine = people[cid], day["lent"].get(cid, 0), day["todays"].get(cid, 0)
+            entries.append((said, day["truth"][cid], {
+                (t, k): alt.table_limit(c, d, mine if how == "forget" else lent - mine if how == "morning" else lent)
+                for t, alts in readings.items() for k, (alt, how) in enumerate(alts)}, (c, d, lent)))
+
+    def followed_readings(t: str, k: int) -> list:
+        """The other targets' readings (u, j) the run follows rather than t's k-th reading where the two differ
+        (more of those entries are theirs than t's). An entry where t's misread value is also such a reading's does
+        not tell t: the run may have followed that other misreading there. A run that misreads t itself reports t's
+        values wherever they differ from any other reading, so it follows no other reading against t; a run that
+        misreads t and another fact still reports t's values where only t matters."""
+        out = []
+        for u, alts in readings.items():
+            for j in range(len(alts) if u != t else 0):
+                ours = theirs = 0
+                for said, _, vals, _ in entries:
+                    if not _close(vals[(t, k)], vals[(u, j)]):
+                        ours += _close(said, vals[(t, k)])
+                        theirs += _close(said, vals[(u, j)])
+                if theirs > ours:
+                    out.append((u, j))
+        return out
+
+    def on_top(t: str, k: int, o: tuple) -> int:
+        """The entries where the run follows t's k-th misreading on top of the reading o (both together give
+        another value than o alone, and the run reports it), when it does so more often than it reports o's value
+        there; else 0. A run that misreads only o's fact reports o's value on those entries."""
+        (ct, mt, ht), (cu, mu, hu) = specs[t][k], specs[o[0]][o[1]]
+        if ht or hu:
+            return 0
+        both = reading_view({**ct, **cu}, mt + mu)
+        ours = theirs = 0
+        for said, _, vals, (c, d, lent) in entries:
+            x = both.table_limit(c, d, lent)
+            if not _close(x, vals[o]):
+                ours += _close(said, x)
+                theirs += _close(said, vals[o])
+        return ours if ours > theirs else 0
+
+    def table_verdict(t: str, what: str, bank: tuple = (0, 0)) -> None:
+        """verdict() on the scored customer entries where a reading of t gives another limit than the truth (right:
+        the entry is the true limit; wrong: it is that reading's, unless another reading the run follows gives the
+        same value there and the run does not follow t's misreading on top of it); bank: votes on the bank figures
+        added to the first reading."""
+        alts = readings[t]
         right, wrong = [0] * len(alts), [0] * len(alts)
-        for day in trace:
-            d = day["day"]
-            for cid in day["scored"]:
-                said = day["said"].get(cid)
-                if not _number(said):
-                    continue
-                truth, c = day["truth"][cid], people[cid]
-                lent, mine = day["lent"].get(cid, 0), day["todays"].get(cid, 0)
-                ok = _close(said, truth)
-                for k, (alt, how) in enumerate(alts):
-                    v = alt.table_limit(c, d, mine if how == "forget" else lent - mine if how == "morning" else lent)
-                    if not _close(v, truth):
-                        right[k] += ok
-                        wrong[k] += not ok and _close(said, v)
-        return right, wrong
+        for said, truth, vals, _ in entries:
+            ok = _close(said, truth)
+            for k in range(len(alts)):
+                if not _close(vals[(t, k)], truth):
+                    right[k] += ok
+                    wrong[k] += not ok and _close(said, vals[(t, k)])
+        by = set()
+        for k in range(len(alts)):
+            others = followed_readings(t, k) if wrong[k] > right[k] else []
+            if not others:
+                continue
+            # The followed reading that matches the run best: when the run follows t's misreading on top of it, the
+            # shared entries stand and the entries only the two together explain count against t too.
+            best = max(others, key=lambda o: (sum(_close(said, vals[o]) for said, _, vals, _ in entries), o))
+            extra = on_top(t, k, best)
+            shared = 0 if extra else sum(not _close(said, truth) and _close(said, vals[(t, k)])
+                                         and any(_close(vals[(t, k)], vals[o]) for o in others)
+                                         for said, truth, vals, _ in entries)
+            wrong[k] += extra - shared
+            by |= {u for u, _ in others} if shared else set()
+        right[0], wrong[0] = right[0] + bank[0], wrong[0] + bank[1]
+        verdict(t, right, wrong, what)
+        if by:
+            evidence[t] += f" (not counting the entries that follow the misreading of {', '.join(sorted(by))})"
 
     def bank_votes(key: str, truth_of, alts_of) -> tuple[int, int]:
         right = wrong = 0
@@ -1651,49 +1749,79 @@ def _diagnose(view: _View, trace: list) -> tuple[dict, dict]:
                 wrong += not _close(said, truth) and any(_close(said, v) for v in other)
         return right, wrong
 
-    def shares(thresholds) -> tuple[float, list]:
-        total, near = 0.0, [0.0] * len(thresholds)
-        for day in trace:
-            for aid, (dd, amt, _) in day["dec"].items():
-                if dd == "approve":
-                    score = view.score(w.app(aid).cust)
-                    total += amt
-                    near = [n + (amt if score < th else 0.0) for n, th in zip(near, thresholds)]
-        return total, [n / total if total else 0.0 for n in near]
+    def other_score(c: App) -> int:
+        """The other bureau's score (the policy_bureau misreading's near-prime definition)."""
+        return c.score_b if view.bureau == "A" else c.score_a
 
-    def lowest_running(th) -> float:
-        """The lowest running share (at a day's close, from the first approval on) under the threshold th."""
+    def running(th, score=None) -> list[float]:
+        """The period's near-prime share under the threshold th (of the policy bureau's score, or of `score`) at
+        each day's close, from the first day with an approval on (the last one is the period's share)."""
+        score = score or view.score
         total = near = 0.0
-        low = 1.0
+        out = []
         for day in trace:
             for aid, (dd, amt, _) in day["dec"].items():
                 if dd == "approve":
                     total += amt
-                    near += amt if view.score(w.app(aid).cust) < th else 0.0
+                    near += amt if score(w.app(aid).cust) < th else 0.0
             if total:
-                low = min(low, near / total)
-        return low
+                out.append(near / total)
+        return out
 
-    def held_at(th, target, share) -> bool:
-        """Whether the run steered the share under th to target: it ends at most HOLD_BAND above it and never closed
-        a day below it. A share that only happens to end there (the baseline's first come, first served mix, say)
-        dips under the target on some day, while a program holding a commitment keeps it every day."""
-        return target - 1e-9 <= share <= target + HOLD_BAND and lowest_running(th) >= target - HOLD_SLACK
+    def held_at(th, target, first: bool = True, score=None) -> bool:
+        """Whether the run steered the share under th to target: it ends at most STEERED above it (as the quota's
+        own diagnostic reads a kept quota), never closed a day below it, and (first) closed its first day of
+        lending at most FIRST_BAND above it. A program that holds a commitment holds it from that first day, whose
+        share is the day's own mix with no earlier lending to lean on (and a program that maximizes profit lends
+        near-prime no more than the commitment asks: near-prime loans are the riskier ones), while first come,
+        first served starts wherever the first applicants fall and may only drift into the band later (the
+        baseline's first day closes 11-35 points above the level in the settings where its share ends in the band
+        and never closes a day under it)."""
+        run = running(th, score)
+        return (bool(run) and target - 1e-9 <= run[-1] <= target + STEERED + 1e-9
+                and min(run) >= target - HOLD_SLACK and (not first or run[0] <= target + FIRST_BAND))
+
+    def levels() -> tuple[float, int, list, list, list, list]:
+        """(quota, threshold, the lower and the higher other quota candidates, the lower and the higher other
+        thresholds), the thresholds on the policy bureau's scale."""
+        q, th = view.quota, view.near_prime_below
+        quotas = [int(v) / 100 for v in _other_values(setting, "quota_pct")]
+        ths = [policy_score(view.bureau, v) for v in _other_values(setting, "near_prime_a")]
+        return (q, th, [x for x in quotas if x < q], [x for x in quotas if x > q], [x for x in ths if x < th],
+                [x for x in ths if x > th])
+
+    def under_quota() -> tuple[bool, bool]:
+        """For a run that ends under the quota: (the quota is not told, the threshold is not told). The quota's
+        misreading: the share under the true threshold held at a lower candidate; the threshold's: the share under a
+        higher threshold held at the quota; the bureau's: the other bureau's share, under the threshold on its
+        scale, held at the quota (the first day not counted: a program steering to a lower level may well start
+        above it). The bureau's misreading tells neither near-prime fact (no misreading of the quota or the
+        threshold comes near it). Otherwise one fact is not told when the other's misreading holds and its own is
+        not even possible, its share having closed some day under its level. The run broke the commitment either
+        way, so when the run cannot rule either out both stay not enforced: calling an ablation enforced would lose
+        its separation, a cross flag is only a warning."""
+        q, th, lower_q, _, _, higher_th = levels()
+        if held_at(policy_score("B" if view.bureau == "A" else "A", int(setting["near_prime_a"])), q, False,
+                   other_score):
+            return True, True
+
+        def possible(t, level) -> bool:
+            run = running(t)
+            return bool(run) and min(run) >= level - HOLD_SLACK
+        quota_reading = any(held_at(th, x, first=False) for x in lower_q)
+        threshold_reading = any(held_at(x, q, first=False) for x in higher_th)
+        return (threshold_reading and not any(possible(th, x) for x in lower_q),
+                quota_reading and not any(possible(x, q) for x in higher_th))
 
     for t in _in_force(setting):
-        if t in TABLE_MISREAD:
-            verdict(t, *table_votes([(_View(w, setting, [TABLE_MISREAD[t]]), "")]), "changed limits")
-        elif t in TABLE_PARAMS:
-            p = PARAM_TARGETS[t]
-            alts = [(_View(w, _alt_setting(setting, **{p: v})), "") for v in _other_values(setting, p)]
-            verdict(t, *table_votes(alts), "changed limits")
+        if t in TABLE_MISREAD or t in TABLE_PARAMS:
+            table_verdict(t, "changed limits")
         elif t == "our_lending":
-            verdict(t, *table_votes([(view, "forget")]), "limits of customers we lent to")
+            table_verdict(t, "limits of customers we lent to")
         elif t == "closing_table":
-            (r1,), (w1,) = table_votes([(view, "morning")])
-            r2, w2 = bank_votes("daily_capacity_remaining", lambda day: max(0, view.daily_cap - day["day_total"]),
-                                lambda day: [view.daily_cap])
-            verdict(t, r1 + r2, w1 + w2, "limits and capacities after approvals")
+            bank = bank_votes("daily_capacity_remaining", lambda day: max(0, view.daily_cap - day["day_total"]),
+                              lambda day: [view.daily_cap])
+            table_verdict(t, "limits and capacities after approvals", bank)
         elif t == "daily_cap":
             right, wrong = bank_votes("daily_capacity_remaining",
                                       lambda day: max(0, view.daily_cap - day["day_total"]),
@@ -1701,14 +1829,45 @@ def _diagnose(view: _View, trace: list) -> tuple[dict, dict]:
                                                    for v in _other_values(setting, "daily_cap")])
             over = sum(day["day_total"] > view.daily_cap for day in trace)
             verdict(t, right, wrong + over, "daily capacities (and days within the cap)")
-        elif t == "period_budget":
-            verdict(t, *bank_votes("period_budget_remaining", lambda day: max(0, view.budget(day["day"]) - day["total"]),
-                                   lambda day: [max(0, int(v) - (BUDGET_CUT if day["day"] >= BUDGET_CUT_DAY else 0)
-                                                    - day["total"]) for v in _other_values(setting, "period_budget")]),
-                    "budgets left")
-        elif t == "budget_notice":
-            verdict(t, *bank_votes("period_budget_remaining", lambda day: max(0, view.budget(day["day"]) - day["total"]),
-                                   lambda day: [max(0, view.period_budget - day["total"])]), "budgets left")
+            if over:            # a day approved above the cap breaks the fact, whatever capacities the run reported
+                enforced[t] = False
+                evidence[t] += f"; {over} day(s) approved above the cap"
+        elif t in ("period_budget", "budget_notice"):
+            # The budget left against another budget candidate's (with the cut) or the uncut budget's. The two alias
+            # from the cut's day on when a candidate is the cut larger, so, as for the table's entries, a day does not
+            # tell this fact when the other target's reading, which the run follows rather than this one (more of
+            # the days where the two differ are its), gives the same figure.
+            budget_of = {"period_budget": lambda day: [max(0, int(v) - (BUDGET_CUT if day["day"] >= BUDGET_CUT_DAY else 0)
+                                                           - day["total"]) for v in _other_values(setting, "period_budget")],
+                         "budget_notice": lambda day: [max(0, view.period_budget - day["total"])]}
+            true_left = lambda day: max(0, view.budget(day["day"]) - day["total"])     # noqa: E731
+            right, wrong = bank_votes("period_budget_remaining", true_left, budget_of[t])
+            u = "budget_notice" if t == "period_budget" else "period_budget"
+            ours = theirs = shared = 0
+            for day in trace if wrong > right and u in _in_force(setting) else ():
+                said = (day["table"] or {}).get("period_budget_remaining")
+                mine, other = budget_of[t](day), budget_of[u](day)
+                if _number(said):
+                    is_mine, is_other = any(_close(said, v) for v in mine), any(_close(said, v) for v in other)
+                    ours, theirs = ours + (is_mine and not is_other), theirs + (is_other and not is_mine)
+                    shared += is_mine and is_other and not _close(said, true_left(day))
+            shared = shared if theirs > ours else 0
+            verdict(t, right, wrong - shared, "budgets left")
+            evidence[t] += f" (not counting {shared} that follow the misreading of {u})" if shared else ""
+            # Approvals made while the period is over the budget in force break the budget whatever figures the run
+            # reports (one that misreads the budget's amount reports neither the true figures nor a candidate's).
+            # Over the uncut budget, or with figures that do not follow the uncut budget rather than another
+            # candidate's, the budget itself was not kept; over the cut budget only, with the uncut budget's
+            # figures, the cut was not applied (budget_notice's misreading).
+            over = [day for day in trace if day["day_total"] > 0 and day["total"] > view.budget(day["day"])]
+            if over:
+                uncut = any(day["total"] > view.period_budget for day in over)
+                nb_right, nb_wrong = bank_votes("period_budget_remaining", true_left, budget_of["budget_notice"])
+                pb_right, pb_wrong = bank_votes("period_budget_remaining", true_left, budget_of["period_budget"])
+                cut_ignored = not uncut and nb_wrong > nb_right and pb_wrong <= pb_right
+                if t == ("budget_notice" if cut_ignored else "period_budget"):
+                    enforced[t] = False
+                    evidence[t] += f"; approvals over the budget in force on {len(over)} day(s)"
         elif t == "limit_table":
             right = wrong = 0
             earlier: set = set()
@@ -1719,9 +1878,51 @@ def _diagnose(view: _View, trace: list) -> tuple[dict, dict]:
                 earlier |= set(day["truth"])
             verdict(t, right, wrong, "entries of earlier customers")
         elif t in ("reason_codes", "reason_codes_hard"):
-            right = sum(code == want for day in trace for code, want, other in day["codes"] if want != other)
-            wrong = sum(code == other for day in trace for code, want, other in day["codes"] if want != other)
+            rows = [(day["day"], *x) for day in trace for x in day["codes"]]
+            todays = {day["day"]: day["todays"] for day in trace}
+            # The fact's two natural misreadings: LIMIT_EXCEEDED read as "asked for more than is left" (the
+            # ablation's), and LIMIT_EXCEEDED read on the limit before the day's approvals (the fact says after them),
+            # which differs where the customer's own approvals that day used up the limit.
+            alternatives = [[other for _, _, _, other, *_ in rows],
+                            [_main_driver(view, people[cid], d, after - todays[d].get(cid, 0), split)
+                             for d, _, _, _, cid, after, split in rows]]
+            # A run whose codes follow another target's reading of the limits (a wrong DSR cap, our earlier lending
+            # forgotten, say) gives many of these codes too: a decline does not tell this fact when a reading the run
+            # follows rather than this misreading (more of the codes where the two differ are its, or, where the two
+            # give the same codes, more of the limit table's entries where that reading differs from the truth)
+            # gives the same code, as for the table's entries.
+            competing, on_table = {}, set()
+            for key in (k for k in (entries[0][2] if entries else {})):
+                differ = [(said, truth, vals[key]) for said, truth, vals, _ in entries if not _close(vals[key], truth)]
+                if sum(_close(said, v) for said, _, v in differ) > sum(_close(said, truth) for said, truth, _ in differ):
+                    on_table.add(key)
+            for u, alts in readings.items():
+                for j, (alt, how) in enumerate(alts):
+                    if how == "forget":
+                        competing[(u, j)] = [_main_driver(view, people[cid], d, todays[d].get(cid, 0), split)
+                                             for d, _, _, _, cid, after, split in rows]
+                    elif not how:           # "morning" is a reading of the table only
+                        competing[(u, j)] = [_main_driver(alt, people[cid], d, after, split)
+                                             for d, _, _, _, cid, after, split in rows]
+            right, wrong, by, dropped = [], [], set(), 0
+            for alt_codes in alternatives:
+                pairs = [(code, want, x) for (_, code, want, *_), x in zip(rows, alt_codes)]
+                r = sum(code == want for code, want, x in pairs if want != x)
+                n = sum(code == x for code, want, x in pairs if want != x)
+                shared = [False] * len(rows)
+                for (u, j), codes in competing.items() if n > r else ():
+                    ours = sum(code == x for (code, _, x), y in zip(pairs, codes) if y != x)
+                    theirs = sum(code == y for (code, _, x), y in zip(pairs, codes) if y != x)
+                    if theirs > ours or (ours == theirs and (u, j) in on_table):
+                        shared = [s or y == x for s, (_, _, x), y in zip(shared, pairs, codes)]
+                        by.add(u)
+                drop = sum(s and code == x for s, (code, want, x) in zip(shared, pairs) if want != x)
+                right.append(r)
+                wrong.append(n - drop)
+                dropped += drop
             verdict(t, right, wrong, "declines")
+            evidence[t] += (f" (not counting {dropped} that follow the misreading of {', '.join(sorted(by))})"
+                            if dropped else "")
         elif t == "protected_attributes":
             pairs = [alike for day in trace for alike in day["pairs"]]
             enforced[t] = None if not pairs else all(pairs)
@@ -1786,30 +1987,43 @@ def _diagnose(view: _View, trace: list) -> tuple[dict, dict]:
             enforced[t] = None if not right + wrong else wrong == 0     # one double approval breaks the rule
             evidence[t] = f"{right} of {right + wrong} split groups with an approval have exactly one"
         elif t == "near_prime_quota":       # steered to a stricter candidate quota, or under the quota
-            q = view.quota
-            total, (share,) = shares([view.near_prime_below])
-            stricter = [int(v) / 100 for v in _other_values(setting, "quota_pct") if int(v) / 100 > q]
-            steered = [x for x in stricter if held_at(view.near_prime_below, x, share)]
-            if not total:
+            q, th, _, stricter, _, _ = levels()
+            run = running(th)
+            if not run:
                 enforced[t], evidence[t] = None, "nothing approved"
                 continue
-            enforced[t] = False if share < q - 1e-9 else True if share <= q + STEERED else (False if steered else None)
-            evidence[t] = f"near-prime share {share:.3f} against the quota {q:g}" + (
-                f" (steered to {steered[0]:g})" if steered and share > q + STEERED else "")
+            share = run[-1]
+            evidence[t] = f"near-prime share {share:.3f} against the quota {q:g}"
+            if share < q - 1e-9:
+                # Under the quota: the quota misread, unless the threshold's or the bureau's misreading explains it
+                # instead (which those targets' diagnostics call).
+                enforced[t] = None if under_quota()[0] else False
+                evidence[t] += " (another fact's misreading explains it)" if enforced[t] is None else ""
+            elif share <= q + STEERED:
+                enforced[t] = True
+            else:
+                steered = [x for x in stricter if held_at(th, x)]
+                enforced[t] = False if steered else None
+                evidence[t] += f" (steered to {steered[0]:g})" if steered else ""
         elif t == "near_prime_threshold":   # a lower threshold held at the quota too: steered to it
-            q, true = view.quota, view.near_prime_below
-            lower = [policy_score(view.bureau, v) for v in _other_values(setting, "near_prime_a")
-                     if policy_score(view.bureau, v) < true]
-            total, (share, *below) = shares([true] + lower)
-            if not total:
+            q, th, _, _, lower, _ = levels()
+            run = running(th)
+            if not run:
                 enforced[t], evidence[t] = None, "nothing approved"
+                continue
+            share = run[-1]
+            evidence[t] = f"near-prime share {share:.3f} against the quota {q:g}"
+            if share < q - 1e-9:
+                # Under the quota: the threshold misread, unless the quota's or the bureau's misreading explains it
+                # instead (which those targets' diagnostics call).
+                enforced[t] = None if under_quota()[1] else False
+                evidence[t] += " (another fact's misreading explains it)" if enforced[t] is None else ""
                 continue
             # A stricter threshold's share held just above the quota: the program steered to it, starving the
             # band between the two thresholds (steering to the true one leaves the stricter share well below).
-            held = [th for th, x in zip(lower, below) if held_at(th, q, x)]
-            enforced[t] = False if share < q - 1e-9 or held else True if share <= q + STEERED else None
-            evidence[t] = f"near-prime share {share:.3f} against the quota {q:g}" + (
-                f"; {below[lower.index(held[0])]:.3f} under the stricter threshold {held[0]}" if held else "")
+            held = [x for x in lower if held_at(x, q)]
+            enforced[t] = False if held else True if share <= q + STEERED else None
+            evidence[t] += f"; {running(held[0])[-1]:.3f} under the stricter threshold {held[0]}" if held else ""
     return enforced, evidence
 
 
