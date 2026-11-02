@@ -5,21 +5,22 @@ task: >-
   para que la producción nunca espere por piezas y el coste total sea bajo. La IA entrega un solo archivo, `orders.csv`,
   con una fila por línea de pedido (semana, componente, proveedor, cantidad en piezas).
 given:
-  - "La solicitud del cliente: dos modelos de placa, unos veinte componentes, y la pregunta de «qué debemos pedir y a qué proveedor durante los próximos dos meses, para que la producción no se detenga y no gastemos de más». También menciona el historial de entregas, un aviso de asignación, un cambio previsto de la memoria flash y un correo de precios del proveedor."
+  - "La solicitud del cliente: dos modelos de placa, unos veinte componentes, y la pregunta de «qué debemos pedir y a qué proveedor durante los próximos dos meses, para que la producción no se detenga y no gastemos de más». También menciona el historial de entregas, un aviso de asignación, un cambio previsto de la memoria flash y un intercambio de correos con Nara Display sobre el precio de la pantalla."
   - "`plan_produccion.csv` y `lista_materiales.csv`: placas fabricadas por semana de cada modelo (W1 a W10) y cuántas piezas de cada componente lleva una placa, con el cambio de la flash (C04 hasta W5, la nueva C25 desde W6)."
   - "`componentes.csv`, `inventario.csv` y `pedidos_abiertos.csv`: los 25 componentes con su marca de crítico y su coste estándar, el stock al inicio de W1 y los pedidos ya emitidos con su semana de llegada."
-  - "`cotizaciones_proveedores.xlsx` y `supplier_price_email.txt`: por componente y proveedor, el precio unitario (Pacific Parts cotiza en dólares, los demás en KRW), el pedido mínimo, dos tramos de precio y el plazo en días; el correo sube un 20 % el precio de C01 de Mirae Semicon (S03) para los pedidos desde W4."
-  - "`proveedores_homologados.csv` y `presupuesto.csv`: el estado de cada proveedor por componente (homologado, en evaluación o suspendido) y el presupuesto mensual de compras: 115 millones de KRW en noviembre, 475 millones en diciembre y 85 millones en enero."
+  - "`cotizaciones_proveedores.xlsx` y `mail/`: por componente y proveedor, el precio unitario (Pacific Parts cotiza en dólares, los demás en KRW), el pedido mínimo, dos tramos de precio y el plazo en días; en los correos se acuerda un aumento del 12 % del módulo de pantalla C06 de Nara Display para los pedidos que reciba desde el miércoles 9 de diciembre, y no se acepta un 8 % adicional desde enero."
+  - "`proveedores_homologados.csv` y `presupuesto.csv`: el estado de cada proveedor por componente (homologado, en evaluación o suspendido) y el presupuesto mensual de compras: 115 millones de KRW en noviembre, 480 millones en diciembre y 85 millones en enero."
   - "`historial_entregas.csv` y `asignaciones.csv`: 188 entregas pasadas con fecha prometida y fecha de recepción, y lo máximo que dos proveedores confirman al mes de tres componentes escasos."
 ask:
   - "El tipo de cambio de planificación para los precios en dólares de Pacific Parts: 1.320, 1.380, 1.450 o 1.500 KRW por USD según la versión (siempre 1.380 en hard)."
   - "Cuánto stock de seguridad mantener de los componentes críticos (microcontrolador, circuito de gestión de energía, DRAM, flash, placa de circuito, pantalla): 0,5, 1 o 1,5 semanas de necesidad media según la versión (para el microcontrolador, una semana son unas 2.500 piezas)."
   - "Que cada componente crítico se compre a al menos dos proveedores, sin que ninguno reciba más del 70 %, 80 % o 90 % de la cantidad según la versión (siempre 80 % en hard). Es una costumbre de la empresa: el cliente acepta una excepción si ahorra dinero de verdad."
   - "Qué proveedor está en retención de calidad y hasta qué semana (su mercancía con llegada prevista hasta entonces se rechaza): Kowon Passive hasta W3, Seoul PCB Tech hasta W4 o Hanbit Electronics hasta W4; en hard, Mirae Semicon, Seoul PCB Tech o Hanbit Electronics, todos hasta W5."
+  - "A qué semana de pedido afecta primero el aumento de Nara Display: los pedidos salen el lunes de su semana, así que W3 (7 de diciembre) mantiene el precio anterior y W4 es la primera con el nuevo."
   - "Que el presupuesto es un tope mensual que no se puede superar y que cada pedido cuenta en el mes del lunes de su semana: W1-W2 noviembre, W3-W6 diciembre, W7-W8 enero."
   - "Cómo leer los archivos: el stock de resistencias se cuenta en bobinas de 5.000 piezas; el pedido mínimo se aplica a cada línea de pedido (una semana, un componente y un proveedor), nunca a varias semanas sumadas; solo valen los proveedores «homologados» para ese componente."
   - "Qué se aplica en esta dificultad: plazos en semanas completas (easy) o en días hábiles, con solo 4 en las semanas de Navidad y Año Nuevo (medium y hard); precios de lista (easy) o tramos de precio (medium y hard); y, solo en hard, el cambio de la flash, los retrasos de entrega y los topes de asignación."
-  - "Cómo se calcula el coste del plan: el precio de los pedidos más penalizaciones por el stock almacenado, por las placas que esperan una pieza y por los componentes críticos por debajo de su stock de seguridad."
+  - "Cómo se calcula el coste del plan: el precio de los pedidos más penalizaciones por el stock almacenado, 10.000 KRW por cada placa que espera una semana una pieza y los componentes críticos por debajo de su stock de seguridad."
 invalid_if:
   - "Pide un componente a un proveedor que no está «homologado» para él («en evaluación» y «suspendido» no valen)."
   - "Tiene una línea de pedido por debajo del pedido mínimo del proveedor."
@@ -28,15 +29,17 @@ invalid_if:
   - "Solo en hard: pide en un mes más de lo que permite la asignación (Mirae Semicon: 6.500 microcontroladores y 9.000 DRAM; Nara Display: 3.500 pantallas)."
   - "Compra un componente crítico a un solo proveedor o da a uno más de la proporción acordada, salvo que la IA haya pedido una excepción al cliente."
 quality: >-
-  Cuanto menor sea el coste total en KRW, mejor: el precio de todos los pedidos más una simulación semana a semana de W1
-  a W10 que cobra el 0,5 % del coste estándar por pieza en stock cada semana, 5 veces el coste estándar por pieza que
-  las placas esperan cada semana y 1,5 veces por pieza por debajo del stock de seguridad de un componente crítico (en
-  hard, promediado sobre las probabilidades reales de retraso de los proveedores, más el coste estándar de cada C04 que
-  quede al final de W5). La forma de trabajar del cliente (vale 0) pide solo lo justo para cubrir la próxima falta de piezas al
-  proveedor más barato que llega a tiempo, reparte cada pedido de un componente crítico justo en el tope de proporción e
-  ignora tramos y retrasos; la solución de referencia (vale 1) se queda con la más barata de quince variantes de
-  planificación, que suben un pedido hasta un tramo cuando compensa, recortan el stock sobrante y, en hard, cuentan una
-  semana más de plazo con los proveedores que suelen retrasarse.
+  Cuanto menor sea el coste total en KRW, mejor: el precio de todos los pedidos más una simulación semana a semana de
+  W1 a W10 que cobra el 0,5 % del coste estándar por pieza en stock cada semana, 10.000 KRW por cada placa que espera
+  una semana una pieza que falta (contado por componente) y 1,5 veces el coste estándar por pieza por debajo del stock
+  de seguridad de un componente crítico (en hard, promediado sobre las probabilidades reales de retraso de los
+  proveedores, más el coste estándar de cada C04 que quede al final de W5). La forma de trabajar del cliente (vale 0)
+  pide solo lo justo para cubrir la próxima falta de piezas al proveedor más barato que llega a tiempo, reparte cada
+  pedido de un componente crítico justo en el tope de proporción e ignora los tramos (en hard suma una semana a cada
+  plazo); la solución de referencia (vale 1) se queda con la más barata de quince variantes de planificación, que
+  suben un pedido hasta un tramo cuando compensa y recortan el stock sobrante, la mejora con una búsqueda local (por
+  ejemplo, comprando pantallas en W3 antes del aumento de Nara Display) y, en hard, cuenta una semana más de plazo con
+  los proveedores que suelen retrasarse.
 tiers:
   easy: >-
     El plan básico: la necesidad a partir de placas por piezas por placa, el stock y los pedidos abiertos, plazos en

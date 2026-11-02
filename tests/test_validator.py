@@ -108,8 +108,8 @@ def test_target_missing_in_one_locale(tmp_path):
     root = _copy(tmp_path, SETTINGS)
     path = root / "locales/es/targets.yaml"
     text = path.read_text(encoding="utf-8")
-    path.write_text(text[:text.index("- id: expected_cost")], encoding="utf-8")
-    assert "es/targets.yaml: target ids differ from en (missing ['expected_cost'])" in validate_case(root)
+    path.write_text(text[:text.index("- id: eco_c04_exempt")], encoding="utf-8")
+    assert "es/targets.yaml: target ids differ from en (missing ['eco_c04_exempt'])" in validate_case(root)
 
 
 @pytest.mark.parametrize("baseline, problem", [(WORSE_BASELINE, None),

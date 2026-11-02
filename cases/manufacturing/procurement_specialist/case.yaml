@@ -3,15 +3,19 @@ role: Procurement Specialist
 task_type: Combinatorial Optimization
 field: manufacturing
 seed: 20261123
-objective: minimize          # purchases (KRW) + holding + 5x backlog per piece-week + 1.5x safety-stock shortfall
-                             # (hard: expected over the suppliers' true lateness, + scrap of the phased-out part)
+audited: true                # the ground truth audit is enforced (dataset/audit.json, GT.md)
+quality_cap: 1.11            # median best-known quality over the audit's 39 settings (1.106): the best plan known
+                             # earns full quality credit
+objective: minimize          # purchases (KRW) + holding + 10,000 KRW per board-week of backlog (per part) + 1.5x
+                             # safety-stock shortfall (hard: expected over the suppliers' true lateness, + C04 scrap)
 tiers:
   easy: >-
     The MRP core: component demand exploded from the board plan and the BOM, lead times as whole weeks, list
     prices with the USD quotes at a planning rate, MOQ per order line, the approved-vendor list, a hard monthly
-    budget, resistor stock counted in reels, safety stock for critical parts, a supplier on quality hold and the
-    dual-sourcing habit. The engineering change, price breaks, holiday calendar, delivery history and allocation
-    are out of scope this round.
+    budget, resistor stock counted in reels, safety stock for critical parts, a supplier on quality hold, the
+    dual-sourcing habit and Nara Display's 12% display price rise for orders from W4 (agreed in the e-mail thread,
+    in every tier). The engineering change, price breaks, holiday calendar, delivery history and allocation are
+    out of scope this round.
   medium: >-
     Easy plus all-units price breaks per order line and lead times in business days with two short holiday weeks.
   hard: >-

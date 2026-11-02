@@ -13,9 +13,10 @@ tiers:
     materiales, plazos en semanas completas, precios de lista con las cotizaciones en USD a un tipo de cambio de
     planificación, pedido mínimo por línea de pedido, la lista de proveedores homologados, un tope mensual de
     presupuesto que no se puede superar, el stock de resistencias contado en bobinas, stock de seguridad para los
-    componentes críticos, un proveedor en retención de calidad y la costumbre de pedir a dos proveedores. El cambio
-    de ingeniería, los tramos de precio, el calendario de festivos, el historial de entregas y la asignación quedan
-    fuera del alcance en esta ronda.
+    componentes críticos, un proveedor en retención de calidad, la costumbre de pedir a dos proveedores y el
+    aumento del 12% de la pantalla de Nara Display para los pedidos desde W4 (acordado en los correos, en todos
+    los niveles). El cambio de ingeniería, los tramos de precio, el calendario de festivos, el historial de
+    entregas y la asignación quedan fuera del alcance en esta ronda.
   medium: >-
     Lo de easy más tramos de precio sobre todas las unidades por línea de pedido y plazos en días hábiles con dos
     semanas cortas por festivos.
@@ -33,3 +34,14 @@ rules:
   quality_hold: "{{hold_supplier}} está en retención de calidad; su mercancía con llegada prevista de W1 a W{{hold_until}} se rechaza."
   allocation_cap: Los pedidos emitidos en un mes a un proveedor por un componente en asignación no superan la asignación mensual de ese proveedor.
   dual_source_critical: Cada componente crítico en uso se pide a al menos dos proveedores, y ningún proveedor recibe más del {{max_share}} % de la cantidad pedida de ese componente.
+shortcuts:
+  no_orders: "Un plan vacío: no se pide nada (solo el stock y los pedidos abiertos)."
+  express_only: "Cada componente pedido según la necesidad a Express Parts Korea (S09), el intermediario homologado para todo con los plazos más cortos y los pedidos mínimos más pequeños."
+  express_split: "Express Parts Korea (S09) según la necesidad, y cada componente crítico repartido con el otro proveedor homologado más barato al tope por proveedor."
+  ignore_budget: "El planificador de la solución de referencia sin el presupuesto mensual (leído como un objetivo, nunca como un tope)."
+  all_upfront: "Toda la necesidad de las diez semanas pedida en W1 al proveedor homologado más barato que no esté en retención; los críticos repartidos con el siguiente más barato al tope por proveedor."
+  no_buffers: "El planificador de la solución de referencia sin ningún colchón: sin stock de seguridad para los críticos y, en hard, sin la semana extra para los proveedores que suelen retrasarse (la incertidumbre ignorada)."
+  critical_only: "Solo se piden los componentes críticos (las líneas de la referencia para ellos); los baratos quedan fuera."
+  copy_demand: "Copiar la necesidad: la necesidad bruta de cada semana pedida con la antelación del plazo, sin descontar el stock ni los pedidos abiertos (al proveedor homologado más barato que llega a tiempo y no está en retención; los críticos repartidos al tope por proveedor)."
+  constant_orders: "Constantes: la necesidad neta semanal media de cada componente pedida igual en cada semana de W1 a W8 (al proveedor homologado más barato que no está en retención y llega antes de W10; los críticos repartidos al tope por proveedor)."
+  baseline_breaks: "El MRP del propio cliente con un solo cambio: cada línea redondeada al alza hasta un tramo de precio cuando así cuesta menos."
