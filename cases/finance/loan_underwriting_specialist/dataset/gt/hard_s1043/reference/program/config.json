@@ -1,4 +1,5 @@
 {
+ "alloc": "price",
  "beta": [
   -2.959745,
   -1.279487,
@@ -9,6 +10,7 @@
   11.461505,
   1.363303
  ],
+ "buffer_price": 0.05,
  "daily_cap": 300000,
  "discrepancy_pct": 15,
  "features": [
@@ -25,13 +27,14 @@
  "min_score": 815,
  "min_tenure": 6,
  "near_prime_below": 880,
- "pace": 1.25,
+ "pace": "price",
  "period_budget": 4400000,
  "policy_bureau": "B",
  "quota": true,
- "quota_margin": 0.015,
+ "quota_margin": 0.03,
  "quota_pct": 25,
  "sizing": true,
+ "step": 250,
  "tenure_review": true,
  "tier": "hard"
 }

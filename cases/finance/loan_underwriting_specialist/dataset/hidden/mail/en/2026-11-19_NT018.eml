@@ -1,7 +1,7 @@
-From: Treasury <treasury@lender.example>
+From: Loan servicing - Confirmations <confirmations@creditor.example>
 To: Personal loan desk <loans.desk@lender.example>
-Date: Thu, 19 Nov 2026 08:25:00 +0000
-Subject: Treasury NT018: personal-loan budget for this period
+Date: Thu, 19 Nov 2026 09:00:00 +0000
+Subject: Repayment confirmation NT018: debt BF3739655-D3
 Message-ID: <NT018.2026-11-19@lender.example>
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -9,7 +9,9 @@ MIME-Version: 1.0
 
 Hello,
 
-The personal-loan budget for this period is reduced by 400,000 from 2026-11-19, with immediate effect.
+We confirm that debt BF3739655-D3 of customer BF3739655 (bureau file number) was repaid in full on 2026-11-19.
+New outstanding balance: 0
+New monthly payment: 0
 
 Reference: NT018
-Treasury
+Loan servicing - Confirmations

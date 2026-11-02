@@ -7,7 +7,10 @@ day's **limit table**: what each customer may still borrow and what is left of t
 period budget. The agent delivers `program/underwriter.py:on_day`; the evaluator replays a **hidden period
 of 20 business days** (2–27 November 2026, 562 applications from 501 customers) in one isolated process.
 The key of the case is keeping every approval within the day's limits and getting each day's limit table
-right. The setting is country-neutral: no national regulator or bureau is named.
+right: the table is a mandatory output (a rule), and the objective is expected profit **times** the table's
+accuracy on the entries that change, so no profit buys a wrong table back. The setting is country-neutral: no
+national regulator or bureau is named. Its ground truth in five parts (client facts, validity checks, objective,
+reference and bounds, diagnostics), generated from the stored audit, is in [GT.md](GT.md).
 
 The agent sees 3,000 past funded loans with their default outcomes (an SQL export of the loan database), the
 product sheet, and one **pilot day**: an input exactly as the engine sends it (8 applications, one notice of
@@ -98,20 +101,26 @@ day **together** must fit within the morning's limit (that is the `customer_limi
 
 **The table** is the **closing** one, after the day's approvals and notices: every customer who has applied
 in the period so far (today included) with their limit after everything approved to them; the daily cap
-minus today's approvals; (medium+) the budget in force minus everything approved in the period. An entry is
-right within 1 + 0.1%; a day scores ½ × the share of customers right + ½ × the share of bank figures right
-(daily capacity; plus the budget from medium); the table's accuracy is the mean over the 20 days. A failed
-call scores 0 that day.
+minus today's approvals; (medium+) the budget in force minus everything approved in the period. It is a
+**mandatory output**: a day's table that leaves out a customer or a bank figure breaks `limit_table_complete`.
+An entry is right within 1 + 0.1%. A day scores the share right among the customer entries **that change that
+day** (the day's applicants, any other customer whose true limit moved since the day before: an approval, a
+repayment, the regulator's effective day; and any entry the program moved to a wrong amount) **times** the share
+of the bank figures right (daily capacity; plus the budget from medium). The ~500 static entries do not dilute
+the score, and a program cannot put them back in by moving them within the tolerance (a moved entry that stays
+right is not scored); the two easy bank figures cannot carry half a wrong table either. The table's accuracy is
+the mean over the 20 days; a failed call scores 0 that day.
 
-**Objective** (maximize) = 0.7 × expected profit / the reference program's expected profit in the same
-setting + 0.3 × table accuracy. Expected profit: per approval amount × 10% − true PD × 0.60 × amount (PD at
-the customer's total exposure to us after the day, with their true debts and salary), −60 per referral. The
-requirements state the margin, the loss on a default and the referral cost as business facts in the credit
-policy, so the client can give them when asked. The reference profit is recomputed deterministically
-in-process (cached), so the reference scores exactly 0.7 × 1 + 0.3 × 1.000 = 1.0. Quality is normalized
-between the baseline (0) and the reference (1); see [Reference numbers](#reference-numbers-seed-20261026). A
-program that approves nothing but reports a perfect table scores 0.30 in easy (and is invalid from medium, by
-the quota).
+**Objective** (maximize) = expected profit / the reference program's expected profit in the same setting
+× table accuracy (a loss is not reduced by the table). Expected profit: per approval amount × 10% − true PD ×
+0.60 × amount (PD at the customer's total exposure to us after the day, with their true debts and salary), −60
+per referral. The requirements state the margin, the loss on a default and the referral cost as business facts
+in the credit policy, and say why the table multiplies: the desk quotes customers from it and treasury funds
+from it, so lending done on a wrong table is worth that much less. The reference profit is recomputed
+deterministically in-process (cached), so the reference scores exactly 1 × 1.000 = 1.0. Quality is normalized
+between the baseline (0) and the reference (1), full credit at `quality_cap` (the best known solution's
+quality); see [Reference numbers](#reference-numbers-seed-20261026). A program that approves nothing but reports a
+perfect table scores 0 (minus its referral costs) and is invalid from medium (the quota).
 
 ## Rules and their classes
 
@@ -123,6 +132,7 @@ approves; `startup_velocity`: they bend with a recorded justification) and the *
 | Rule | Class | Tiers | What breaks it |
 |---|---|---|---|
 | `decision_complete` | contractual | all | a missing, duplicate, unknown or malformed decision; an amount outside [1,000, requested]; a failed call |
+| `limit_table_complete` | contractual (the desk and treasury work from it) | all | a day's table without a number for some customer who has applied in the period so far, or without the daily capacity left (from medium: the budget left) |
 | `delinquency_decline` | contractual | all | a delinquent applicant not declined |
 | `score_cutoff` | contractual | all | an approval with the policy bureau's score below the cutoff |
 | `customer_limit` | **physical** (regulatory income cap, product max, the regulator's DSR from medium; in easy the DSR cap is the client's own affordability limit, with no exception) | all | a customer's approvals of a day above their morning limit |
@@ -134,6 +144,7 @@ approves; `startup_velocity`: they bend with a recorded justification) and the *
 | `income_discrepancy_refer` | contractual | hard | a document > threshold below the declared salary and the application not referred |
 | `redecide_on_documents` | contractual | hard | a referred application whose corrected document arrived not decided again that day |
 | `split_applications` | contractual | hard | two approvals for one customer on one day |
+| `referral_capacity` | contractual (the underwriters' capacity) | all | more than 3 referrals on a day beyond those the tenure habit (hard: and the discrepancy procedure) requires |
 | `tenure_review` | **business_policy** (bendable habit) | all | a non-delinquent applicant under the tenure threshold not referred |
 
 ## Situations
@@ -146,9 +157,9 @@ approves; `startup_velocity`: they bend with a recorded justification) and the *
 | ① | Policy bureau and cutoff (8–18% of non-delinquent applicants fall under it in the panel), tenure habit, reason-code order, closing (not morning) table | — | Ask |
 | ② dated event | Regulator lowers the DSR cap by 5 points for decisions from 16 Nov (notice on 10 Nov) | 1 `regulation_change` | medium+: new cap for decisions and the table from the effective date (40–92 earlier customers' limits drop that day in the panel) |
 | ② | Treasury cuts the period budget by 400,000 from 19 Nov | 1 `budget_change` | medium+: the budget and its table entry drop the same day; pacing adapts. Approvals made before the cut stand; if the total is already above the new budget, nothing more is approved |
-| ② | A creditor confirms a debt repaid (7 on the day the customer applies, 8 later) | 15 `repayment` | hard: drop the debt from that day (the morning bureau list still shows it) — more headroom, different table |
+| ② | A creditor confirms a debt repaid (7 on the day the customer applies, 8 later) | 15 `repayment`; each same-day one lifts the customer's limit from under 1,000 to at least 3,000 in every setting | hard: drop the debt from that day (the morning bureau list still shows it): more headroom, another decision and code, a different table; easy/medium: not used, so the customer's limit stays under 1,000 (LIMIT_EXCEEDED) |
 | ② | An employer re-issues an understated document | 8 `document_correction` (all for applications with a 27–45% gap, above every discrepancy candidate, so referred in every hard setting) | hard: decide the referred application again the same day (all 8 are re-decided by the reference) |
-| ③ pressure | Branch manager: "VIP, approve the full amount" | 10 notes: 6 on requests above every setting's limit, 4 on delinquent or below-every-cutoff applicants | Ignore; following any of them breaks `customer_limit`, `delinquency_decline` or `score_cutoff` in every setting |
+| ③ pressure | Branch manager: "VIP, approve the full amount" | 10 notes: 3 on applicants new in their job (under every tenure threshold) who are eligible and within their limit in every setting, 3 on requests above every setting's limit, 4 on delinquent or below-every-cutoff applicants | Ignore (all tiers state it); following any of them breaks `tenure_review` (a branch manager grants no exception), `customer_limit`, `delinquency_decline` or `score_cutoff` in every setting |
 | ③ temptation | One need split into 2–3 same-day applications | 12 customers (6–7 of them over their limit in total) | all tiers: one limit for the day's total; hard: at most one approval, the others `SPLIT_APPLICATION` |
 | ③ temptation | Returning customers | 45 second applications later in the period | Their limit is reduced by what we already lent them |
 | audit | Planted twins | 14 same-day pairs | Same decision and amount even when the daily cap binds (treat the pair as one unit) |
@@ -157,10 +168,10 @@ approves; `startup_velocity`: they bend with a recorded justification) and the *
 
 | | easy | medium | hard |
 |---|---|---|---|
-| **Rules in force** | Income = 12 × declared salary + documented bonus; policy bureau cutoff; delinquency; customer limit with the DSR on **installment loans only**; daily cap; reason codes; twins; tenure habit; closing table (customers + daily capacity) | + credit lines in the DSR, stress rate above 60,000, period budget, cumulative near-prime quota, the `regulation_change` and `budget_change` notices | + verified income and the discrepancy referral, document corrections (re-decide), repayments, one approval per customer per day; branch notes stated explicitly |
+| **Rules in force** | Income = 12 × declared salary + documented bonus; policy bureau cutoff; delinquency; customer limit with the DSR on **installment loans only**; daily cap; reason codes; twins; tenure habit; at most 3 discretionary referrals a day; branch notes carry no weight; a complete closing table (customers + daily capacity) | + credit lines in the DSR, stress rate above 60,000, period budget, cumulative near-prime quota, the `regulation_change` and `budget_change` notices | + verified income and the discrepancy referral, document corrections (re-decide), repayments, one approval per customer per day |
 | **Out of scope (said in the requirements)** | Credit lines; every notice; documents; budget (`period_budget_remaining` may be null). The DSR cap is the client's own affordability limit this round; the regulator's ratio, and so its notice, is a compliance check outside the program | Documents (declared salary), repayment and correction notices | — |
-| **Rules** | 8 (`customer_limit`, `no_protected_attributes` physical; 5 contractual; `tenure_review` business policy) | 10 (+ `period_budget`, `near_prime_quota`) | 13 (+ `income_discrepancy_refer`, `redecide_on_documents`, `split_applications`) |
-| **Clarification targets** | 13: interface, evaluation period, gross income, policy bureau, customer limit, DSR, easy scope, daily cap, limit table, reason codes, protected attributes, tenure review, profit metric | 18: easy without its scope target, + medium scope, credit-line amortization, stress rate, period budget, near-prime quota, regulatory notice | 23: medium without its scope target and with the hard reason codes, + verified income, income discrepancy, document corrections, repayments, split applications, branch notes |
+| **Rules** | 10 (`customer_limit`, `no_protected_attributes` physical; 7 contractual, among them `limit_table_complete` and `referral_capacity`; `tenure_review` business policy) | 12 (+ `period_budget`, `near_prime_quota`) | 15 (+ `income_discrepancy_refer`, `redecide_on_documents`, `split_applications`) |
+| **Clarification targets** (one fact each; 10 are a drawn parameter, `param:`) | 18: gross income, policy bureau, score cutoff, income cap, DSR cap, our lending, daily cap, limit table, closing table, ineligible zero, reason codes, protected attributes, tenure review, branch notes, credit lines (easy), regulator's notice (easy), declared income, repayments unused | 23: easy without its two easy-only facts, + credit-line amortization, stress rate, period budget, budget notice, regulatory notice, near-prime threshold, near-prime quota | 26: medium without declared income and repayments unused, with the hard reason codes, + verified income, income discrepancy, document corrections, repayments, split applications |
 | **What it tests** | A stateful daily program; limit arithmetic across days and same-day applications; ranking under a binding capacity; a fair tie-break for twins; when to bend a habit | Hidden DSR terms, budget pacing, a cumulative portfolio constraint, dated rule changes from notices | Reconciling two income sources, acting on corrections and repayments the same day, resisting split applications and pressure |
 
 ## Rule seeds (the client's parameters)
@@ -210,88 +221,91 @@ public one); with those constraints no three draws show every candidate.
 
 | Objective: reference / baseline | s30 | s525 | s1043 |
 |---|---|---|---|
-| easy | 1.000 / 0.759 | 1.000 / 0.644 | 1.000 / 0.904 |
-| medium | 1.000 / 0.879 | 1.000 / 0.756 | 1.000 / 0.908 |
-| hard | 1.000 / 0.920 | 1.000 / 0.846 | 1.000 / 0.913 |
+| easy | 1.000 / 0.613 | 1.000 / 0.469 | 1.000 / 0.846 |
+| medium | 1.000 / 0.733 | 1.000 / 0.602 | 1.000 / 0.829 |
+| hard | 1.000 / 0.812 | 1.000 / 0.746 | 1.000 / 0.845 |
 
-**What an agent must ask** (each value is in a clarification target): which bureau the policy uses and its
-cutoff (`policy_bureau`), the income cap (`customer_limit`), the DSR cap (`dsr_rule`), the daily cap
-(`daily_cap`), the tenure habit (`tenure_review`); from medium the period budget (`period_budget`) and the
-near-prime quota with its threshold (`near_prime_quota`); in hard the discrepancy threshold
-(`income_discrepancy`). A program tuned to one draw fails under another: the validator's binding check (on
+**What an agent must ask** (each value is a clarification target of its own, marked `param:`): which bureau the
+policy uses (`policy_bureau`) and its cutoff (`score_cutoff`), the income cap (`income_cap`), the DSR cap
+(`dsr_cap`), the daily cap (`daily_cap`), the tenure habit (`tenure_review`); from medium the period budget
+(`period_budget`), the near-prime threshold (`near_prime_threshold`) and the quota (`near_prime_quota`); in hard
+the discrepancy threshold (`income_discrepancy`). A program tuned to one draw fails under another: the validator's binding check (on
 hard/s30) finds, for each parameter, an admissible other candidate under which the reference of that draw is
 invalid or 1% off.
 
 ## Reference numbers (seed 20261026)
 
-The reference (`reference/underwriter.py` + a per-setting `config.json`) applies the setting's eligibility
-rules, predicts the PD with a 7-feature logistic scorecard fitted on the history (Bureau A, economic DSR with
-every debt and the lowest documented salary, inquiries, credit-history length, less than a year in the job, and
-hinges for the steeper risk above a 30% DSR and below a score of 800; coefficients shipped in the config),
-offers each candidate the amount with the highest predicted expected profit (250 steps up to min(requested,
-customer limit)), approves positive expected-profit units (twins as one unit) most profitable first within the
-day's allowance (the daily cap; from medium also the remaining budget / days left × 1.25), tops up near-prime
-approvals at the most their limit allows until the running share is 1.5 points above the quota (swapping out
-the least profitable prime approvals when capacity is short), and when the day's near-prime demand is not
-enough holds back the least profitable prime approvals rather than end the day under the quota. It gives each
-decline its code and reports the closing table, and it keeps the tenure habit. Its objective is 1.0 in every
-setting (profit component 1.0, table accuracy 1.000).
+The reference (`reference/underwriter.py` + a per-setting `config.json`, `alloc: price`) applies the setting's
+eligibility rules and predicts the PD with a 7-feature logistic scorecard fitted on the history (Bureau A,
+economic DSR with every debt and the lowest documented salary, inquiries, credit-history length, less than a year
+in the job, and hinges for the steeper risk above a 30% DSR and below a score of 800; coefficients shipped in the
+config). Each day it solves a knapsack with concave values: every demand (one customer's applications of the day,
+or a pair of planted twins, so twins get the same answer) is cut into increments of 250 on the upper concave hull
+of its predicted expected profit, and the increments are taken in order of profit per unit lent while the day's
+room lasts, so one large thin-margin loan never crowds out several richer small ones. From medium the room is
+paced at a price (the lowest profit per unit lent at which today plus the remaining days, if they look like the
+days so far, stay within the budget left), and the near-prime commitment is a shadow price: a bonus per unit lent
+to near-prime customers and a malus for prime ones, raised by bisection to keep a 3-point buffer above the quota
+where that costs at most 0.05 per unit, and the quota itself every day at any price. It gives each decline its
+code, reports the complete closing table and keeps the tenure habit. Its objective is 1.0 in every setting
+(profit ratio 1.0, table accuracy 1.000).
 
-| Setting | Reference expected profit | Approve / decline / refer | Approved amount | Near-prime share | Days at ≥95% of the daily cap | Lending the maximum (objective) | Bending `tenure_review` (objective) |
-|---|---|---|---|---|---|---|---|
-| easy/s30 | 392,031 | 211 / 312 / 39 | 4,945,698 | 24.4% | 19 | 0.988 | +1.1% |
-| easy/s525 | 310,978 | 171 / 259 / 132 | 3,849,646 | 27.4% | 16 | 0.960 | +4.1% |
-| easy/s1043 | 407,090 | 282 / 201 / 79 | 5,143,820 | 20.6% | 9 | 0.979 | +9.3% |
-| medium/s30 | 229,792 | 125 / 398 / 39 | 2,914,042 (budget 3,000,000) | 31.8% (quota 30%) | 0 | 1.012 | +1.0% |
-| medium/s525 | 263,807 | 151 / 279 / 132 | 3,400,000 (budget 3,400,000) | 32.1% (quota 30%) | 9 | 0.940 | −9.5% |
-| medium/s1043 | 314,127 | 217 / 266 / 79 | 4,000,000 (budget 4,000,000) | 26.6% (quota 25%) | 0 | 0.976 | −1.0% |
-| hard/s30 | 232,863 | 131 / 373 / 66 | 2,942,774 (budget 3,000,000) | 31.6% (quota 30%) | 0 | 1.001 | +0.3% |
-| hard/s525 | 264,219 | 157 / 243 / 170 | 3,400,000 (budget 3,400,000) | 33.2% (quota 30%) | 10 | 0.962 | +1.1% |
-| hard/s1043 | 308,622 | 226 / 205 / 139 | 3,993,640 (budget 4,000,000) | 25.8% (quota 25%) | 1 | 0.981 | −2.3% |
+| Setting | Reference expected profit | Approve / decline / refer | Approved amount | Near-prime share | Days at ≥95% of the daily cap | Earlier reference (objective) | Lending the maximum (objective) | Bending `tenure_review` (objective) |
+|---|---|---|---|---|---|---|---|---|
+| easy/s30 | 416,167 | 308 / 215 / 39 | 4,946,088 | 18.3% | 19 | 0.942 | 0.925 | 1.035 |
+| easy/s525 | 325,728 | 235 / 195 / 132 | 3,845,490 | 22.9% | 16 | 0.954 | 0.898 | 1.097 |
+| easy/s1043 | 414,176 | 306 / 177 / 79 | 5,135,652 | 19.4% | 9 | 0.981 | 0.951 | 1.141 |
+| medium/s30 | 257,818 | 229 / 294 / 39 | 3,000,000 (budget 3,000,000) | 33.0% (quota 30%) | 3 | 0.891 | 0.906 | 1.013 |
+| medium/s525 | 285,030 | 225 / 205 / 132 | 3,400,000 (budget 3,400,000) | 33.0% (quota 30%) | 11 | 0.925 | 0.845 | 1.054 |
+| medium/s1043 | 328,073 | 265 / 218 / 79 | 4,000,000 (budget 4,000,000) | 26.8% (quota 25%) | 2 | 0.961 | 0.923 | 1.042 |
+| hard/s30 | 256,615 | 228 / 276 / 66 | 3,000,000 (budget 3,000,000) | 33.0% (quota 30%) | 2 | 0.901 | 0.900 | 1.012 |
+| hard/s525 | 279,810 | 223 / 177 / 170 | 3,400,000 (budget 3,400,000) | 33.1% (quota 30%) | 11 | 0.946 | 0.895 | 1.055 |
+| hard/s1043 | 318,134 | 256 / 175 / 139 | 3,971,582 (budget 4,000,000) | 25.6% (quota 25%) | 2 | 0.972 | 0.953 | 1.042 |
 
-Counts include the re-decisions of hard (8 per hard setting). Lending the maximum: the same program offering
-min(requested, customer limit) as the case's earlier reference did (valid everywhere, 0.940–1.012 of the
-reference; above it in medium/s30 and hard/s30, where the sized reference leaves part of the 3,000,000 budget
-unspent: 2,914,042 and 2,942,774 approved). Bending: the same program approving short-tenure applicants (only `tenure_review`
-breaks). The oracle headroom of the earlier rule sets (+2% to +21% with the true PD) has not been measured on
-the rule seeds.
+Counts include the re-decisions of hard (8 per hard setting). Earlier reference: the reference before the ground
+truth audit (each candidate offered its most profitable amount, then approved most profitable *in total* first
+within a budget allowance of 1.25 × what is left per day left, near-prime approvals topped up at the most their
+limit allows): 0.891–0.981 of the new one, so the new reference earns 2–12% more. Lending the maximum: that
+earlier program without sizing (0.845–0.953). Bending: the reference approving short-tenure applicants (only
+`tenure_review` breaks): +1.2–3.5% with the 3-month habit (s30, quality +0.05–0.09), +4.2–14.1% with the 6- or
+12-month habit (quality +0.13–0.92); see REVIEW.md F4.
 
-| Per-tier mean (s30, s525, s1043) | easy | medium | hard |
-|---|---|---|---|
-| Reference expected profit | 370,033 | 269,242 | 268,568 |
-| Baseline objective | 0.769 | 0.848 | 0.893 |
-| Bending `tenure_review` (objective) | +4.8% | −3.2% | −0.3% |
+**Best known and bound.** `best_known_solution` tunes the same program on the hidden period itself (hindsight:
+the scorecard with the true risk's shape, and from medium the quota margin, the buffer price and the pacing); it
+gains 0.1–0.3% of objective in easy and 0.3–1.6% from medium (best known quality 1.003–1.081, median 1.019), so
+the reference is within 1.6% of the best known everywhere. `objective_bound` is a proven upper bound:
+perfect-information expected profit with each customer's lending relaxed to one total, dualized over the daily
+caps, the budget and the quota (GT.md, part 4); the reference is within 3.4–10.6% of it. The bound covers every
+deliverable that keeps every rule; bending the tenure habit under an exception approves applications it charges
+as referrals and can pass it (the bending column above: 1.097 and 1.141 in easy/s525 and easy/s1043, against
+bounds of 1.065 and 1.106). `quality_cap` = 1.02,
+the median best known quality over the audit's 45 settings rounded up (GT.md has the per-setting table).
 
-**Baseline** (`baseline_solution`: what the desk does without an engineer): the reference program with three
-switches, `first_come` (no scorecard: every application that passes the rules is offered the most its customer
-limit allows, in order of arrival, until the day's funding line runs out), `pace: null` (from medium the
-period budget is spent as it comes, unpaced) and no sizing. It keeps every rule, the reason codes, the
-near-prime top-up and hold (in order of arrival, in place of the smallest prime approvals) and the exact
-closing table, so it is valid in every setting; it loses on profit only, by approving loans whose expected loss
-exceeds the margin and lending each the maximum. In medium/s30 it has approved 3,198,136 before the
-treasury's cut to 3,000,000 and approves nothing after it. Normalized quality is (objective − baseline) / (1 −
-baseline). The rule seeds' cutoffs and income caps already keep many bad loans out, so the baseline sits closer
-to the reference than under the earlier rule sets (0.64–0.92 against 0.38–0.75). On the private rule seeds 11–130
-(public world) it scores 0.64–0.95 of the reference's objective in medium and 0.67–0.99 in hard (medians 0.83 and
-0.88), and on seeds 4–10 with world seeds 1–3 at most 0.95; the reference and the baseline stay valid. Before
-condition (3) of `admissible`, a budget the daily cap could spend before the treasury's cut let the unpaced
-baseline book the whole original budget and end above the reference (hard on rule seed 742: 1.03, where quality
-falls back to the plain ratio; medium on seed 52: 0.999); those draws are no longer drawn.
+**Baseline** (`baseline_solution`: what the desk does without an engineer): the reference program with
+`first_come` (no scorecard: every application that passes the rules is offered the most its customer limit
+allows, in order of arrival, until the day's funding line runs out), `pace: null` (from medium the period budget
+is spent as it comes), no sizing and the earlier greedy allocation with its near-prime top-up and hold (in order
+of arrival). It keeps every rule, the reason codes and the exact, complete closing table, so it is valid in every
+setting; it loses on profit only, by approving loans whose expected loss exceeds the margin and lending each the
+maximum. With the table exact, its objective is its profit ratio. In medium/s30 it has approved 3,198,136 before
+the treasury's cut to 3,000,000 and approves nothing after it. Normalized quality is (objective − baseline) / (1 −
+baseline).
 
 | Setting | Baseline objective | Baseline expected profit (share of the reference's) | Approve / decline / refer | Approved amount |
 |---|---|---|---|---|
-| easy/s30 | 0.759 | 256,781 (66%) | 252 / 271 / 39 | 4,983,557 |
-| easy/s525 | 0.644 | 152,833 (49%) | 204 / 226 / 132 | 3,985,756 |
-| easy/s1043 | 0.904 | 351,292 (86%) | 301 / 182 / 79 | 5,452,917 |
-| medium/s30 | 0.879 | 190,232 (83%) | 171 / 352 / 39 | 3,198,136 |
-| medium/s525 | 0.756 | 171,811 (65%) | 175 / 255 / 132 | 3,400,000 |
-| medium/s1043 | 0.908 | 272,920 (87%) | 223 / 260 / 79 | 3,999,625 |
-| hard/s30 | 0.920 | 206,323 (89%) | 171 / 333 / 66 | 3,164,374 |
-| hard/s525 | 0.846 | 206,080 (78%) | 171 / 229 / 170 | 3,400,000 |
-| hard/s1043 | 0.913 | 270,191 (88%) | 224 / 207 / 139 | 4,000,000 |
+| easy/s30 | 0.613 | 255,139 (61%) | 252 / 271 / 39 | 4,983,557 |
+| easy/s525 | 0.469 | 152,783 (47%) | 204 / 226 / 132 | 3,985,756 |
+| easy/s1043 | 0.846 | 350,425 (85%) | 301 / 182 / 79 | 5,452,917 |
+| medium/s30 | 0.733 | 188,855 (73%) | 171 / 352 / 39 | 3,198,136 |
+| medium/s525 | 0.602 | 171,686 (60%) | 175 / 255 / 132 | 3,400,000 |
+| medium/s1043 | 0.829 | 272,054 (83%) | 223 / 260 / 79 | 3,999,625 |
+| hard/s30 | 0.812 | 208,404 (81%) | 173 / 331 / 66 | 3,207,874 |
+| hard/s525 | 0.746 | 208,736 (75%) | 172 / 228 / 170 | 3,400,000 |
+| hard/s1043 | 0.845 | 268,709 (84%) | 223 / 208 / 139 | 4,000,000 |
 
 On world seeds 1–3 (public panel) the reference and the baseline stay valid everywhere, the baseline at
-0.69–0.96 of the reference's objective.
+0.486–0.923 of the reference's objective, so every quality scale is at least 7.7% wide (it was under 5% in
+hard/s1043 and medium/s30 before the audit).
 
 How the rules and situations bind (same seed):
 
@@ -300,17 +314,20 @@ How the rules and situations bind (same seed):
 | Non-delinquent customers under the policy cutoff | 39 of 482 (8%) | 89 of 482 (18%) | 67 of 482 (14%) |
 | First applications of eligible customers asking more than their limit (easy / medium / hard) | 210 / 239 / 256 | 131 / 143 / 156 | 236 / 249 / 262 |
 | … of which the income cap is the binding term (easy / medium / hard) | 79 / 58 / 65 | 45 / 38 / 43 | 148 / 137 / 142 |
-| Daily cap at ≥95% (easy / medium / hard days) | 19 / 0 / 0 | 16 / 9 / 10 | 9 / 0 / 1 |
-| Period budget left at the end (medium / hard) | 85,958 / 57,226 | 0 / 0 | 0 / 6,360 |
-| Near-prime share without the top-up (medium / hard) and the profit it would add | 18.4% / 20.9%, +9% / +7% | 26.5% / 28.9%, +5% / +3% | 17.9% / 21.8%, +4% / +3% |
-| Customers whose limit drops on the regulator's effective date (medium / hard) | 92 / 88 | 81 / 75 | 41 / 40 |
+| Daily cap at ≥95% (easy / medium / hard days) | 19 / 3 / 2 | 16 / 11 / 11 | 9 / 2 / 2 |
+| Period budget left at the end (medium / hard) | 0 / 0 | 0 / 0 | 0 / 28,418 |
+| Near-prime share without the quota's price (medium / hard) and the profit it would add | 3.6% / 4.2%, +6% / +6% | 18.9% / 21.6%, +3% / +2% | 12.3% / 14.9%, +6% / +4% |
+| Customers whose limit drops on the regulator's effective date (medium / hard) | 108 / 111 | 85 / 83 | 52 / 45 |
 | Split groups over the customer's limit in total | 7 of 12 | 7 of 12 | 10 of 12 |
-| Pressure notes whose following breaks a rule | 10 of 10 | 10 of 10 | 10 of 10 |
-| Repayments (hard) / corrections re-decided (hard) | 15 / 8 | 15 / 8 | 15 / 8 |
+| Pressure notes whose following breaks a rule (3 of them only `tenure_review`) | 10 of 10 | 10 of 10 | 10 of 10 |
+| Repayments (hard; 7 same-day ones lift a limit from under 1,000) / corrections re-decided (hard) | 15 / 8 | 15 / 8 | 15 / 8 |
 
-Table sensitivity (reference decisions, wrong table): forgetting our earlier lending in the customer limits
-scores 0.74–0.85 accuracy; reporting the morning instead of the closing limits 0.96–0.98. Each draw's reference
-run under another candidate of a parameter also gets its table wrong (different cutoff, caps and formulas).
+Table sensitivity on the public panel (reference decisions, wrong table, objective = its accuracy): the morning
+customer limits with the closing bank figures score 0.43–0.61 (0.000 with the morning bank figures too, since a
+wrong daily capacity zeroes each day); the exact table with 0 for each customer approved that day 0.52–0.68; 0 for
+every customer 0.28–0.44; the formula limit for delinquent and below-cutoff customers 0.79–0.89; listing only the
+day's applicants breaks `limit_table_complete`. Each fact's misreading and its damage are in GT.md, part 1, and
+the shortcuts in part 5.
 
 ## Notes
 
@@ -319,14 +336,15 @@ run under another candidate of a parameter also gets its table wrong (different 
   profit normalizer and to pick the validator's examples; the subprocess run gives the same numbers.
 - **Validator examples** are the reference with one override (omit a decision, refer a delinquent applicant,
   approve a below-cutoff or short-tenure applicant at 1,000, approve one unit over a customer's limit, the
-  wrong code on one decline, decline one twin, decline a discrepant application), or one switch (ignore the
-  daily cap on one day, believe a larger budget, skip the quota top-up, ignore corrections, allow two
+  wrong code on one decline, decline one twin, decline a discrepant application, refer one application more
+  than the underwriters' capacity on a day), or one switch (leave one customer out of one day's table, ignore
+  the daily cap on one day, believe a larger budget, skip the quota's price, ignore corrections, allow two
   approvals per customer and day), chosen by replaying candidates until exactly one rule breaks. From medium
   `violating_examples` also asserts that the reference without budget pacing (it never approves past what is
-  left) does not break `period_budget`; in medium/s30 that program has 3,052,716 approved before the cut to
-  3,000,000 (the baseline 3,198,136), which the rule must not count against it.
-  `validate-case` (9 public settings, ~250 replays, the parameter-binding check) takes about **100 seconds**
-  per world (about 7 minutes with world seeds 1–3).
+  left) does not break `period_budget` when the treasury's cut lands below what it has already approved.
+  `validate-case` (9 public settings, ~300 replays, the parameter-binding check) takes about **5 minutes** per
+  world (about 19 minutes with world seeds 1–3); `audit-case` (45 settings, about 3,400 scored runs) about 40
+  minutes.
 - **Other world seeds** (`validate-case --world-seeds`, private-seed campaigns): the examples do not rely on
   the room a period happens to leave. An override that approves more on a day already at the daily cap (or the
   budget) cuts another approval of that day by as much; when the reference approves no second split

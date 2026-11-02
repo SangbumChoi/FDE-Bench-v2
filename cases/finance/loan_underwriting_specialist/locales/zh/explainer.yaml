@@ -38,3 +38,16 @@ rules:
   redecide_on_documents: 已转人工的申请，若其更正后的收入材料随通知送达，须当天重新决定（对客户的服务承诺）。
   split_applications: 每位客户每天最多批准一笔申请；把一笔资金需求拆成同一天的多笔申请不能绕过额度。
   tenure_review: 现职在职时间不满{{min_tenure}}个月的申请人转人工审批（因逾期拒绝的除外）；这是信贷主管可以批准例外的习惯。
+  limit_table_complete: 每次调用都要返回额度表：本期到目前为止（含当天）申请过的每位客户都有一个数值，另有剩余每日额度，medium 起还有剩余期间预算；柜台和资金部都按它工作。
+  referral_capacity: 除了规则要求的转人工（在职时间的习惯；hard 还有收入不符的程序），每天最多再转3笔申请（审批员的处理能力）。
+shortcuts:
+  refer_declines: 本该拒绝的申请（逾期的除外）一律转人工，这样就不需要拒绝原因代码
+  refer_everything: 所有申请都转人工（逾期的拒绝）
+  empty_table: 决定和参考答案一样，但额度表是空的
+  todays_table: 决定和参考答案一样，但额度表只列出当天的申请人
+  morning_table: 决定和参考答案一样，但额度表报的是当天批准之前的额度
+  morning_limits: 决定和参考答案一样；客户额度报当天批准之前的，银行数字报批准之后的
+  jitter_table: 同 morning_limits，并且每隔一天把每一项改动1，好让不变的项目也被计分
+  zero_table: 决定和参考答案一样；额度表里每位客户都报0，银行数字正确
+  approved_zero: 决定和参考答案一样；额度表准确，只是当天获批的客户都报0
+  approve_nothing: 一笔也不批：用正确的代码拒绝，额度表准确无误

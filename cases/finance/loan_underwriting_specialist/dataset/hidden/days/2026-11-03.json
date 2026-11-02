@@ -472,13 +472,7 @@
      "monthly_base_salary_shown": 6570
     }
    ],
-   "notes": [
-    {
-     "author_role": "branch_manager",
-     "request": "approve_full_amount",
-     "text": "Important payroll client of the branch. Please approve in full; the DSR is only temporary."
-    }
-   ]
+   "notes": []
   },
   {
    "application_id": "N0041",
@@ -866,7 +860,13 @@
      "monthly_base_salary_shown": 3880
     }
    ],
-   "notes": []
+   "notes": [
+    {
+     "author_role": "branch_manager",
+     "request": "approve_full_amount",
+     "text": "Long-standing client, I vouch for him personally. Approve the maximum, no need for the usual checks."
+    }
+   ]
   },
   {
    "application_id": "N0050",
@@ -1360,5 +1360,16 @@
    "notes": []
   }
  ],
- "notices": []
+ "notices": [
+  {
+   "notice_id": "NT001",
+   "date": "2026-11-03",
+   "type": "repayment",
+   "customer_id": "BF8214007",
+   "debt_id": "BF8214007-D2",
+   "new_outstanding_balance": 0,
+   "new_monthly_payment": 0,
+   "text": "The creditor confirms this debt was repaid in full today."
+  }
+ ]
 }

@@ -52,12 +52,9 @@ invalid_if:
     gender and nationality."
   - "On hard, does not refer a large salary gap, does not decide again on the same day a referred application
     whose corrected document arrived, or approves two applications of one customer on one day."
-quality: >-
-  Higher is better: 0.7 × the program's expected profit (10% of each approved amount, minus 60% of it times the
-  customer's true chance of default, minus 60 per referral) divided by the reference solution's on the same 20 days,
-  plus 0.3 × the accuracy of its daily limit tables. The client's own way (score 0) approves every application the
-  rules allow, in order of arrival, for the most its limit allows; the reference solution (score 1) predicts default
-  risk from the past loans, picks the most profitable loans and amounts, and spreads the budget over the period.
+  - "Leaves a customer or a bank figure out of a day's limit table (every customer who has applied so far must be in it, with the daily capacity left and, on medium and hard, the budget left)."
+  - "Refers more than 3 applications a day beyond those the rules send to an underwriter."
+quality: "Higher is better: the program's expected profit (10% of each approved amount, minus 60% of it times the customer's true chance of default, minus 60 per referral) divided by the reference solution's on the same 20 days, times the accuracy of its daily limit tables (each day, the share of right entries among those that change that day times the share of right bank figures), so no profit makes up for a wrong table. The client's own way (score 0) approves every application the rules allow, in order of arrival, for the most its limit allows; the reference solution (score 1) predicts default risk from the past loans, lends each day the amounts that earn most per unit lent, tops up the near-prime share where that costs least, and spreads the budget over the period."
 tiers:
   easy: >-
     One product over 20 business days: decide every application within the customer limit (the debt-service ratio

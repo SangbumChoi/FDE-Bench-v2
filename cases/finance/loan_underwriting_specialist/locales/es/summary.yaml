@@ -56,13 +56,9 @@ invalid_if:
     edad, género y nacionalidad."
   - "En hard, no deriva una discrepancia de salario grande, no vuelve a decidir el mismo día una solicitud
     derivada cuyo documento corregido llegó, o aprueba dos solicitudes de un mismo cliente en un día."
-quality: >-
-  Un programa válido se mide como 0,7 × su beneficio esperado (el 10 % de cada importe aprobado, menos el 60 % de
-  ese importe por la probabilidad real de impago del cliente, menos 60 por derivación) dividido por el de la
-  solución de referencia en los mismos 20 días, más 0,3 × la precisión de sus tablas de límites diarias. La forma
-  de trabajar del cliente (vale 0) aprueba por orden de llegada cada solicitud que permiten las reglas, por lo
-  máximo que permite su límite; la solución de referencia (vale 1) predice el riesgo de impago a partir de los
-  préstamos pasados, elige los préstamos e importes más rentables y reparte el presupuesto a lo largo del período.
+  - "Deja fuera de la tabla de límites de un día a un cliente o una cifra del banco (deben estar todos los clientes que han solicitado hasta entonces, la capacidad diaria restante y, en medium y hard, el presupuesto restante)."
+  - "Deriva más de 3 solicitudes al día además de las que las reglas mandan a un analista."
+quality: "Un programa válido se mide como su beneficio esperado (el 10 % de cada importe aprobado, menos el 60 % de ese importe por la probabilidad real de impago del cliente, menos 60 por derivación) dividido por el de la solución de referencia en los mismos 20 días, por la precisión de sus tablas de límites diarias (cada día, la proporción de valores correctos entre los que cambian ese día por la proporción de cifras del banco correctas), así que ningún beneficio compensa una tabla equivocada. La forma de trabajar del cliente (vale 0) aprueba por orden de llegada cada solicitud que permiten las reglas, por lo máximo que permite su límite; la solución de referencia (vale 1) predice el riesgo de impago a partir de los préstamos pasados, presta cada día los importes que más rinden por unidad prestada, completa la cuota near-prime donde menos cuesta y reparte el presupuesto a lo largo del período."
 tiers:
   easy: >-
     Un producto y 20 días hábiles: decidir cada solicitud dentro del límite del cliente (el ratio solo cuenta los

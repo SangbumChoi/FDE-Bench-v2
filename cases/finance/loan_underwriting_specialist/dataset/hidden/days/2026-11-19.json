@@ -1227,7 +1227,7 @@
  ],
  "notices": [
   {
-   "notice_id": "NT018",
+   "notice_id": "NT016",
    "date": "2026-11-19",
    "type": "budget_change",
    "effective_date": "2026-11-19",
@@ -1235,7 +1235,7 @@
    "text": "Treasury: the personal-loan budget for this period is reduced by 400,000 with immediate effect."
   },
   {
-   "notice_id": "NT019",
+   "notice_id": "NT017",
    "date": "2026-11-19",
    "type": "document_correction",
    "application_id": "N0279",
@@ -1247,6 +1247,16 @@
     "monthly_base_salary_shown": 5090
    },
    "text": "The employer re-issued this document: the earlier one showed the wrong salary."
+  },
+  {
+   "notice_id": "NT018",
+   "date": "2026-11-19",
+   "type": "repayment",
+   "customer_id": "BF3739655",
+   "debt_id": "BF3739655-D3",
+   "new_outstanding_balance": 0,
+   "new_monthly_payment": 0,
+   "text": "The creditor confirms this debt was repaid in full today."
   }
  ]
 }

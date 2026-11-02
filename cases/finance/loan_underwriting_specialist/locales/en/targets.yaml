@@ -1,11 +1,3 @@
-- id: interface
-  kind: missing
-  domain: data semantics
-  text: The deliverable is program/underwriter.py with on_day(day), called once per business day in order in one process (state can live in module variables), 10 s per call, standard library only, no data files at run time; it returns a decision per application of the day and the day's limit table.
-- id: evaluation_period
-  kind: missing
-  domain: scoring
-  text: The program is judged on the 20 business days from 2 to 27 November 2026, which are not in the data; every application in them is new.
 - id: gross_income
   kind: ambiguous
   domain: calculation
@@ -13,38 +5,54 @@
 - id: policy_bureau
   kind: ambiguous
   domain: data semantics
-  text: "{{policy_bureau}} is the policy score (minimum {{min_score}}); {{other_bureau}} is reference only and never used for a cutoff (Bureau B runs about 55 points higher)."
-- id: customer_limit
-  kind: missing
-  domain: calculation
-  text: A customer may borrow at most min(50,000, {{income_cap_pct}}% of annual income rounded down, DSR headroom) minus everything we approved to them earlier in the period; all their approvals of one day together must fit, so same-day applications share one limit and returning customers have less left.
-- id: dsr_rule
-  kind: missing
-  domain: calculation
-  text: DSR = (annual service of existing debts, installment loans at 12 x monthly_payment, + 12 x 33.17 per 1,000 of all our PL36 lending to the customer) / annual income, at most {{max_dsr_pct}}%.
-- id: easy_scope
+  param: policy_bureau
+  text: "The credit policy uses {{policy_bureau}} only; {{other_bureau}} is for reference and never used for a cutoff or the near-prime definition (Bureau B runs about 55 points higher)."
+- id: score_cutoff
   kind: missing
   domain: business rule
-  tiers: [easy]
-  text: This round the DSR cap is the client's own affordability limit (the regulator's ratio is a separate compliance check), credit lines are left out of it, income is the declared salary, debts are those on the customer's latest application, and none of the notices applies (no regulatory, budget, repayment or document change).
+  param: min_score_a
+  text: An application is approved only when {{policy_bureau}} is at least {{min_score}}.
+- id: income_cap
+  kind: missing
+  domain: calculation
+  param: income_cap_pct
+  text: A customer's limit is at most {{income_cap_pct}}% of annual gross income, rounded down (and at most the product's 50,000).
+- id: dsr_cap
+  kind: missing
+  domain: calculation
+  param: max_dsr_pct
+  text: The debt-service ratio, (annual service of the existing debts + 12 x 33.17 per 1,000 of all our PL36 lending to the customer) / annual gross income, may be at most {{max_dsr_pct}}%; an installment loan counts 12 x its monthly_payment.
+- id: our_lending
+  kind: missing
+  domain: calculation
+  text: The customer limit is reduced by everything we approved to the customer in the period, on earlier days and earlier the same day, so a returning customer has less left and same-day applications share one limit.
 - id: daily_cap
   kind: missing
   domain: business rule
+  param: daily_cap
   text: At most {{daily_cap}} may be approved per business day in total (our funding line).
 - id: limit_table
   kind: missing
   domain: scoring
-  text: Every day the program returns the closing limit table after the day's approvals and notices - each customer seen so far with what they may still borrow (0 if delinquent or below the cutoff), the daily capacity left and, when a period budget applies, the budget left.
+  text: Every day's limit table must list every customer who has applied in the period so far (today included), plus the daily capacity left and, when a period budget applies, the budget left; a missing entry breaks the rules.
+- id: closing_table
+  kind: missing
+  domain: scoring
+  text: The limit table is the one at the close of the day, after that day's approvals and notices (not the morning limits).
+- id: ineligible_zero
+  kind: missing
+  domain: scoring
+  text: In the limit table a customer who is delinquent or below the score cutoff has 0.
 - id: reason_codes
   kind: missing
   domain: business rule
   tiers: [easy, medium]
-  text: Every decline carries the first that applies of DELINQUENCY, LOW_SCORE, LIMIT_EXCEEDED (under 1,000 of customer limit left after the day's approvals), CREDIT_RISK (anything else, including capacity run out).
+  text: Every decline carries the first that applies of DELINQUENCY, LOW_SCORE, LIMIT_EXCEEDED (less than 1,000 of customer limit left after the day's approvals), CREDIT_RISK (anything else, including capacity run out).
 - id: reason_codes_hard
   kind: missing
   domain: business rule
   tiers: [hard]
-  text: Every decline carries the first that applies of DELINQUENCY, LOW_SCORE, SPLIT_APPLICATION (another application of the customer approved that day), LIMIT_EXCEEDED (under 1,000 of customer limit left), CREDIT_RISK.
+  text: Every decline carries the first that applies of DELINQUENCY, LOW_SCORE, SPLIT_APPLICATION (another application of the customer approved that day), LIMIT_EXCEEDED (less than 1,000 of customer limit left after the day's approvals), CREDIT_RISK.
 - id: protected_attributes
   kind: missing
   domain: business rule
@@ -52,11 +60,32 @@
 - id: tenure_review
   kind: missing
   domain: business rule
+  param: min_tenure
   text: Applicants with fewer than {{min_tenure}} months in their job are referred to a human underwriter unless delinquent; it is a habit, and the head of credit can grant an exception.
-- id: profit_metric
+- id: branch_notes
   kind: missing
   domain: business rule
-  text: The goal is the most expected profit after losses and referral costs - an approval earns 10% of its amount over the loan's life and loses 60% of it if the customer defaults, the default risk rising with the customer's debt burden (so with everything lent to them), and each referral costs 60 of underwriter time.
+  text: Branch managers' notes asking to approve the full amount carry no weight and grant no exception; decide those applications exactly like any other.
+- id: credit_lines_easy
+  kind: missing
+  domain: calculation
+  tiers: [easy]
+  text: This round credit lines are left out of the DSR (it counts installment loans only).
+- id: regulator_notice_easy
+  kind: missing
+  domain: business rule
+  tiers: [easy]
+  text: This round the DSR cap is our own affordability limit, so the regulator's notice does not change it (the regulator's ratio is a separate compliance check).
+- id: declared_income
+  kind: missing
+  domain: calculation
+  tiers: [easy, medium]
+  text: This round income is the declared monthly_base_salary; the income documents and document_correction notices are not used.
+- id: repayments_unused
+  kind: missing
+  domain: data semantics
+  tiers: [easy, medium]
+  text: This round repayment notices are not applied; the debts are those on the customer's latest application.
 - id: credit_line_amortization
   kind: missing
   domain: calculation
@@ -71,22 +100,30 @@
   kind: missing
   domain: business rule
   tiers: [medium, hard]
-  text: The amount approved over the whole period may not exceed the budget of {{period_budget}}, and a budget_change notice changes it from its effective date.
-- id: near_prime_quota
+  param: period_budget
+  text: The amount approved over the whole period may not exceed the budget of {{period_budget}}.
+- id: budget_notice
   kind: missing
   domain: business rule
   tiers: [medium, hard]
-  text: At least {{quota_pct}}% of the total amount approved over the period (cumulative, checked at the end) must go to near-prime customers with {{policy_bureau}} below {{near_prime_below}}.
+  text: A budget_change notice changes the period budget from its effective date; a cut below what is already approved stops further approvals but undoes nothing.
 - id: regulatory_notice
   kind: missing
   domain: business rule
   tiers: [medium, hard]
   text: A regulation_change notice moves the DSR cap by its points for every decision and limit from its effective date on.
-- id: medium_scope
+- id: near_prime_threshold
   kind: missing
   domain: business rule
-  tiers: [medium]
-  text: This round income is the declared salary and debts are those on the customer's latest application; repayment and document_correction notices are not used.
+  tiers: [medium, hard]
+  param: near_prime_a
+  text: Near-prime customers are those with {{policy_bureau}} below {{near_prime_below}}.
+- id: near_prime_quota
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  param: quota_pct
+  text: At least {{quota_pct}}% of the total amount approved over the period (cumulative, checked at the end) must go to near-prime customers.
 - id: verified_income
   kind: ambiguous
   domain: calculation
@@ -96,6 +133,7 @@
   kind: missing
   domain: business rule
   tiers: [hard]
+  param: discrepancy_pct
   text: An application whose documents show a monthly base salary more than {{discrepancy_pct}}% below the declared one is referred to fraud prevention unless delinquent.
 - id: document_corrections
   kind: missing
@@ -112,8 +150,3 @@
   domain: business rule
   tiers: [hard]
   text: Customers sometimes split one need into several same-day applications; at most one per customer per day may be approved, within the customer limit, and the others are declined with SPLIT_APPLICATION.
-- id: branch_notes
-  kind: missing
-  domain: business rule
-  tiers: [hard]
-  text: Branch managers' notes asking to approve the full amount carry no weight; decide those applications like any other, never above a limit.

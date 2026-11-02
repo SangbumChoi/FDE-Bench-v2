@@ -1120,7 +1120,7 @@
  ],
  "notices": [
   {
-   "notice_id": "NT023",
+   "notice_id": "NT022",
    "date": "2026-11-25",
    "type": "document_correction",
    "application_id": "N0457",
@@ -1132,6 +1132,16 @@
     "monthly_base_salary_shown": 2660
    },
    "text": "The employer re-issued this document: the earlier one showed the wrong salary."
+  },
+  {
+   "notice_id": "NT023",
+   "date": "2026-11-25",
+   "type": "repayment",
+   "customer_id": "BF1324133",
+   "debt_id": "BF1324133-D1",
+   "new_outstanding_balance": 0,
+   "new_monthly_payment": 0,
+   "text": "The creditor confirms this debt was repaid in full today."
   }
  ]
 }

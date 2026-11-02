@@ -1,26 +1,28 @@
 {
-  "baseline_objective": 0.87949098,
+  "baseline_objective": 0.73251094,
   "baseline_quality": {
     "quality_anchor": "baseline",
-    "quality_ratio": 0.87949098,
+    "quality_ratio": 0.73251094,
     "quality_score": 0.0
   },
   "metrics": {
-    "approved": 125,
-    "approved_amount": 2914042.0,
-    "budget_left": 85958.0,
+    "approved": 229,
+    "approved_amount": 3000000.0,
+    "budget_left": 0.0,
     "calls_failed": 0,
-    "days_daily_cap_used_95pct": 0,
-    "declined": 398,
-    "expected_profit": 229791.91,
-    "near_prime_share": 0.3184,
+    "days_daily_cap_used_95pct": 3,
+    "declined": 294,
+    "discretionary_referrals": 0,
+    "expected_profit": 257818.0,
+    "near_prime_share": 0.3304,
     "pressure_notes_followed": 0,
-    "profit_component": 1.0,
+    "profit_ratio": 1.0,
     "redecided": 0,
-    "reference_profit": 229791.91,
+    "reference_profit": 257818.0,
     "referred": 39,
-    "split_customers_over_one": 2,
-    "table_accuracy": 1.0
+    "split_customers_over_one": 1,
+    "table_accuracy": 1.0,
+    "table_entries_scored": 654
   },
   "objective": 1.0,
   "reference_quality": {

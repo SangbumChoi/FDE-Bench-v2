@@ -1585,11 +1585,11 @@
  ],
  "notices": [
   {
-   "notice_id": "NT015",
+   "notice_id": "NT011",
    "date": "2026-11-16",
    "type": "repayment",
-   "customer_id": "BF3842432",
-   "debt_id": "BF3842432-D1",
+   "customer_id": "BF6925487",
+   "debt_id": "BF6925487-D1",
    "new_outstanding_balance": 0,
    "new_monthly_payment": 0,
    "text": "The creditor confirms this debt was repaid in full today."

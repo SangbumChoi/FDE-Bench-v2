@@ -1,6 +1,6 @@
 From: 대출관리 상환확인 <confirmations@creditor.example>
 To: 개인대출 창구 <loans.desk@lender.example>
-Date: Wed, 04 Nov 2026 09:07:00 +0000
+Date: Wed, 04 Nov 2026 09:00:00 +0000
 Subject: 상환 확인 NT002: 부채 BF3837178-D1
 Message-ID: <NT002.2026-11-04@lender.example>
 Content-Type: text/plain; charset="utf-8"

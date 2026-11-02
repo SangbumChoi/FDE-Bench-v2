@@ -1184,22 +1184,12 @@
  ],
  "notices": [
   {
-   "notice_id": "NT008",
+   "notice_id": "NT004",
    "date": "2026-11-10",
    "type": "regulation_change",
    "effective_date": "2026-11-16",
    "dsr_cap_change_points": -5,
    "text": "Supervisory notice: the maximum debt-service ratio for unsecured consumer loans is lowered by 5 percentage points for every loan decided on or after 2026-11-16."
-  },
-  {
-   "notice_id": "NT009",
-   "date": "2026-11-10",
-   "type": "repayment",
-   "customer_id": "BF4310961",
-   "debt_id": "BF4310961-D1",
-   "new_outstanding_balance": 0,
-   "new_monthly_payment": 0,
-   "text": "The creditor confirms this debt was repaid in full today."
   }
  ]
 }

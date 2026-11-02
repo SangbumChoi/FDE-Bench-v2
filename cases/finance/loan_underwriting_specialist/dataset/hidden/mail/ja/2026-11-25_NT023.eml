@@ -1,7 +1,7 @@
-From: 勤務先 人事部給与課 <payroll@employer.example>
+From: ローン管理 返済確認 <confirmations@creditor.example>
 To: 個人ローン窓口 <loans.desk@lender.example>
-Date: Wed, 25 Nov 2026 10:00:00 +0000
-Subject: 収入書類の訂正 NT023：申込 N0457
+Date: Wed, 25 Nov 2026 09:00:00 +0000
+Subject: 完済確認 NT023：債務 BF1324133-D1
 Message-ID: <NT023.2026-11-25@lender.example>
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -9,8 +9,9 @@ MIME-Version: 1.0
 
 お世話になっております。
 
-当社従業員（顧客 BF6924554、申込 N0457）の給与明細を再発行しました。以前の書類 BF6924554-S1 の給与額に誤りがありました。
-新しい書類 BF6924554-S1R の月額基本給は 2,660 です。
+顧客 BF1324133（信用情報登録番号）の債務 BF1324133-D1 が 2026-11-25 に全額返済されたことを確認いたします。
+新しい残高：0
+新しい月返済額：0
 
 文書番号：NT023
-勤務先 人事部給与課
+ローン管理 返済確認

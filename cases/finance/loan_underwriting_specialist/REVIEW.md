@@ -3,7 +3,9 @@
 Findings of a case review, the verifier's verdicts, and what this change did about each. This change fixes F5,
 F6 and F7 and adds a baseline. The other findings are proposals for the case owner to decide on. The later
 conversion to rule seeds (see [Rule seeds](#rule-seeds) at the end) resolves F3, takes up part of F1 and changes
-the numbers of F4, F6 and F9; the findings below keep their original text, with an update under each.
+the numbers of F4, F6 and F9; the [ground truth audit](#ground-truth-audit) resolves F1, F2 and F8 and measures F4
+again, and its [adversarial check](#adversarial-check-of-the-audit) closes two more holes in F1's table score. The
+findings below keep their original text, with an update under each.
 
 ### F1 — The top of the scale is flat, and profit can buy back a missing table (high, confirmed)
 The reference always lends the most the limit allows, because its own sizing switch is off. Switching it on
@@ -28,6 +30,24 @@ in the public settings, above it only in medium/s30 and hard/s30, where the size
 cut budget unspent. Capping the profit ratio, scoring the table on the entries that change and `quality_cap` are
 still open, and the oracle headroom has not been measured on the rule seeds.
 
+**Update (ground truth audit): resolved.** The limit table is a mandatory output (`limit_table_complete`: a
+number for every customer seen so far and the bank figures, every day), scored on the entries that change that
+day, and the objective is expected profit × table accuracy, so profit cannot buy a table back: the reference's
+decisions with an empty table, or with only the day's applicants, are invalid; with the morning limits they score
+an objective of 0.31–0.36 (quality below 0). The reference is now a knapsack at a price (increments on the concave
+hull of each demand's predicted profit, taken by profit per unit lent; the budget paced at a price; the near-prime
+commitment as a shadow price, so top-ups are sized too): it earns 2–12% more than the earlier one, which now scores
+0.891–0.981 of it. `best_known_solution` (hindsight tuning) gains at most 1.4%; `objective_bound`
+(perfect-information profit, relaxed and dualized) is 4–11% above the reference; `quality_cap` is set from the
+best known quality. See GT.md, parts 3 and 4.
+
+**Update (adversarial check of the audit): resolved again.** The table score still had two holes: half of a day's
+table went to the two bank figures, so the morning customer limits with the closing bank figures stayed valid at a
+quality of up to 0.71 (the 0.31–0.36 above had the morning bank figures too); and every entry a program moved was
+scored, so moving the ~500 static entries by 1 every other day put them back into the score (up to 0.93). A day's
+table is now the share of right changed entries **times** the share of right bank figures, and a moved entry is
+scored only when it is wrong. See [Adversarial check of the audit](#adversarial-check-of-the-audit), A1.
+
 ### F2 — "refer" is a cheap way out of the reason codes (high, confirmed)
 Any application may be referred at a cost of 60, and only declines are checked for a code. A program that
 refers every LOW_SCORE / LIMIT_EXCEEDED / CREDIT_RISK / SPLIT_APPLICATION decline instead stays valid in all
@@ -40,6 +60,12 @@ for example at most N discretionary referrals a day on top of the mandated tenur
 contractual rule. Another is a rule that a clear decline (delinquent, below the cutoff, under 1,000 of limit
 left) must not be referred, with the referral cost raised to an underwriter-hour level (several hundred).
 Alternatively, require a reason code on referrals too.
+
+**Update (ground truth audit): resolved** with a business fact the client states: beyond the referrals the rules
+require (the tenure habit; in hard the discrepancy procedure), the underwriters take at most 3 applications a day
+(`referral_capacity`, contractual, in requirements.md in every locale). Referring every application the
+reference declines (bar delinquent ones) breaks it in every measured setting, and so does referring everything
+(shortcuts `refer_declines`, `refer_everything`).
 
 ### F3 — Several rule-set parameters barely bind (high, partly)
 Only 0.9% of applications score below 650. Of 482 non-delinquent customers, 3 (A), 13 (B) and 6 (C) fall under
@@ -82,6 +108,14 @@ hard (the reference's scorecard now prices short tenure, and the quota and budge
 clearly only in easy/s1043 and loses heavily in medium/s525 (a 12-month habit), so the answer already depends on
 the draw.
 
+**Update (ground truth audit):** measured again on the new reference and scale; the answer still depends on the draw.
+Bending now gains +1.2–3.5% of objective with the 3-month habit (s30: quality +0.05–0.09) and +4.2–14.1% with the
+6- or 12-month habit (quality +0.13–0.92): the new reference prices tenure in its knapsack, so an exception only
+adds options and saves referral costs; it can no longer lose objective. Whether it pays depends on the draw and on
+the agent: against a soft-rule penalty of 0.1 (escalate) it does not pay with the 3-month habit, and quality
+above `quality_cap` earns nothing, so a program already at the best known gains at most (cap − 1)/cap of quality
+credit by bending. `true_pd` is unchanged (changing it would change the agent's history).
+
 ### F5 — The unit economics sat only in the scoring paragraph, and the targets carried weights (medium, confirmed)
 The 10% lifetime margin, the 0.60 loss on a default and the referral cost of 60 appeared only under "How the
 program is judged". The simulated client is told never to describe scores or weights. The `profit_metric`
@@ -96,6 +130,12 @@ The judged paragraph now refers to that paragraph instead of restating the numbe
 the business goal and facts (domain `business rule`). `limit_table` drops the 30% weight, the half-and-half
 split, the tolerance and the tier name; it now says "when a period budget applies". Target ids and their order
 are unchanged.
+
+**Update (ground truth audit):** the targets were split into one fact each (GT.md, part 1). `profit_metric` (the
+margin, the loss on a default, the referral cost) is no longer a target: misreading the economics the most
+natural ways (the loan's interest, 19.4%, as the margin with a full or a 60% loss; or a full loss) moves the
+objective by under a tenth of the scale in most settings, because the limits, the caps and the budget decide
+most approvals. The facts stay in requirements.md as the business goal.
 
 ### F6 — A same-day budget cut turned earlier approvals into a breach (medium, confirmed)
 `period_budget` was flagged whenever the total plus the day's approvals exceeded the budget of the day, even
@@ -145,6 +185,15 @@ value (following the note costs profit), and on short-tenure applicants (followi
 branch manager cannot grant). Add an engagement-level pressure message to the agent itself, e.g. a sales head
 asking to drop the quota. Choose repayment customers whose request exceeds the limit before the repayment but
 fits the limit after it, so that only a program that applies repayments can approve them.
+
+**Update (ground truth audit): resolved** by changing the hidden period (the agent's view is byte-identical). Three of
+the six notes on over-limit requests moved to applicants new in their job (under every tenure threshold),
+eligible and within their limit in every setting: following such a note breaks `tenure_review` (a branch manager
+grants no exception, which every tier's requirements now say), and the misreading "honour notes within the
+limits" is invalid in every setting. The seven same-day repayments now go to customers whose limit the
+repayment lifts from under 1,000 to at least 3,000 in every setting, so missing a repayment in hard (or applying
+one in easy and medium) gets a decision or a reason code wrong: invalid in every setting. Both re-draws use their
+own random stream after the period is built, so nothing else in it moved.
 
 ### F9 — The rule bundle is Korean consumer-credit regulation (medium, confirmed)
 The README calls the case country-neutral, because no regulator or bureau is named. Yet rule set A reproduces
@@ -254,3 +303,129 @@ numbers are unchanged; about a quarter of the private seeds draw again. Afterwar
 0.95 of the reference in medium and 0.99 in hard on seeds 11–130 (public world), and at most 0.95 on seeds 4–10
 over world seeds 1–3. Still open: the panel cannot show `quota_pct` = 35 with three seeds (checked: no covering
 triple has a seed where every parameter has an admissible alternative); a fourth public seed would show it.
+
+## Ground truth audit
+
+The case is now `audited: true`. `dataset/audit.json` holds the audit of the public world (`fdebench2 audit-case`:
+per tier the public panel and 12 admissible combinations of the tier's candidates, 45 settings), [GT.md](GT.md) the
+ground truth in five parts generated from it by `make_gt.py`, and [CLIENT_REVIEW.md](CLIENT_REVIEW.md) the passage
+of requirements.md each locale answers each target from, with a machine pre-check (generated by
+`make_client_review.py`; awaiting human review). What changed, in the order it was done:
+
+1. **Shortcuts closed before the reference was touched** (`shortcuts()`, each closed in all 45 settings):
+   referring every application it would decline, or every application (`referral_capacity`, a new contractual rule:
+   at most 3 referrals a day beyond those the rules require, F2); an empty limit table or one with only the day's
+   applicants (`limit_table_complete`, a new contractual rule: a number for every customer seen so far and the bank
+   figures, every day, F1); the morning limits instead of the closing ones (valid, quality below 0); approving
+   nothing (quality below 0, invalid from medium by the quota). The mandatory outputs are rules with violating
+   examples: `decision_complete` as before and `limit_table_complete`.
+2. **Scoring (F1)**: objective = profit ratio × table accuracy (was 0.7 × profit ratio + 0.3 × accuracy), and a
+   day's customer half scores only the entries that change that day (the day's applicants and any customer whose
+   true or reported limit moved), so profit cannot buy a table back and the ~500 static entries no longer hide a
+   wrong formula. The requirements (five locales), the explainer texts and the summaries say so, with the client's
+   reason: the desk quotes customers from the table and treasury funds from it.
+3. **One fact per target.** The 26 targets became 31. Split: `policy_bureau` (into the bureau and `score_cutoff`),
+   `customer_limit` (`income_cap`, `our_lending`), `dsr_rule` (`dsr_cap`), `limit_table` (`limit_table`,
+   `closing_table`, `ineligible_zero`), `easy_scope` and `medium_scope` (`credit_lines_easy`,
+   `regulator_notice_easy`, `declared_income`, `repayments_unused`), `period_budget` (and `budget_notice`),
+   `near_prime_quota` (`near_prime_threshold`, `near_prime_quota`). Ten targets are exactly a drawn parameter
+   (`param:` in en/targets.yaml); every other one has an ablation in `ablations()`: the reference program with one
+   switch flipped, the most natural misreading of what the agent sees. `branch_notes` is in force in every tier
+   now, as its paragraph moved out of hard. Removed from the targets, kept in requirements.md as context:
+   `interface` and `evaluation_period` (the agent's view already states both) and `profit_metric` (F5's update:
+   misreading the economics moves less than a tenth of the scale in most settings). Every remaining target bites
+   in every tier where it is in force: 26 of them in every measured setting (most misreadings make the program
+   invalid: a wrong limit, code or table entry), `ineligible_zero` in 44 of 45 (damage 0.09–0.57), and the
+   parameters of the quota and the discrepancy threshold in about half (their least harmful wrong candidate costs
+   little where the quota or the gap does not bind). `stress_rate` bites in 9 of 30 settings (few customers pass
+   60,000 of debt): a warning, kept because it decides those customers' limits wherever it bites.
+4. **The hidden period (F8)**: three branch notes moved to applicants new in their job who are eligible and within
+   their limit in every setting, and the same-day repayments to customers whose limit the repayment lifts from
+   under 1,000 to at least 3,000 in every setting; both with their own random streams after the period is built.
+   The agent's view is byte-identical (the export changed only `hidden/`, `gt/` and the manifest).
+5. **Diagnostics**: `score()` returns `enforced` and `evidence` for every target in force, read from the
+   deliverable's own run in the same program invocation: the scored table entries where the misreading (or
+   another candidate of the parameter) gives another limit, voted per alternative, and for the other facts the
+   decisions only they decide (referrals, reason codes, twins, noted applications, re-decisions, split groups, the
+   near-prime share). The reference is enforced on every target in every measured setting, and every ablation that
+   bites is not (the audit's diagnostics separate for all 31 targets).
+6. **Never asks** (`robust_solution`): the reference program with the most natural reading of every fixed fact and
+   the strictest candidate of every parameter. It is invalid in every measured setting (a cutoff, a cap or a code
+   is always wrong somewhere without asking), so `voi` = 1.000 in every tier; the best single setting's reference,
+   which knows every fixed fact, earns 0.133 in easy and 0.067 from medium (`voi_params` 0.867 / 0.933 / 0.933):
+   it is valid only where the parameters its tier uses are all its own.
+7. **Reference, best known, bound (F1)**: the reference is a knapsack at a price (README, Reference numbers): 2–12%
+   more profit than the earlier one. `best_known_solution` tunes it on the hidden period (hindsight); `objective_bound`
+   is perfect-information profit, relaxed and dualized. Over the 45 settings the best known solution is 0.06–1.6%
+   above the reference (quality 1.003–1.081, median 1.019) and the bound 3.4–10.6% above it; `quality_cap` = 1.02
+   (the median best known quality, rounded up).
+8. **Narrow scales**: the baseline is now at 0.469–0.846 of the reference on the public world and 0.486–0.923 on world
+   seeds 1–3 (every scale at least 7.7% wide), so the case left `validate.OPEN_NARROW_SCALES`.
+
+Findings resolved: F1, F2 and F8 (above and under each), the narrow scales; F4 measured again (it depends on the
+draw: see its update); F5's targets split. Still open: F9 and F10 as before, and `quota_pct` = 35 is not on the
+public panel. `OPEN_AUDIT_FINDINGS` waives nothing for this case.
+
+### Adversarial check of the audit
+
+A second engineer tried to break the audit on its own branch (new shortcuts, every ablation and the never-asks
+solver read again, the diagnostics run on the baseline and the shortcuts, the bound's proof, the texts in five
+locales). Confirmed and fixed:
+
+- **A1 — The table score could be gamed (high).** Two holes, both measured on the reference's decisions:
+  - half of a day's table was the two bank figures, which any program gets right: the morning customer limits
+    with the closing bank figures stayed valid at a quality of up to 0.71 (easy/s525; 0.64 in medium/s525, 0.52
+    in easy/s30). The listed `morning_table` shortcut also reported the morning bank figures, which hid it;
+  - "or whose entry you moved" let a program put the ~500 static entries back into the score: moving every
+    entry by 1 (within the tolerance) every other day lifted the morning limits to 0.67–0.93 on the public
+    panel, and an exact table with the day's applicants left at 0 to 0.64–0.88.
+
+  Fixed in the scoring, with the client's wording in all five locales: a day's table is the share of right
+  entries among those that change that day **times** the share of right bank figures, and an entry the program
+  moved is scored only when it moved to a wrong amount. Four shortcuts were added (`morning_limits`,
+  `jitter_table`, `zero_table`, `approved_zero`), all closed in the 45 settings: best quality 0.32 for the
+  morning limits (the jitter adds nothing now), 0.35 with 0 for the day's approved customers, 0.000 for an
+  all-zero table; `morning_table` falls from 0.008 to 0.000. Every deliverable with an exact table (the
+  reference, the baseline, the best known) scores as before, so the scale, the bound and `quality_cap` stand.
+  Misread tables cost more, so more facts bite: `ineligible_zero` in 45 of 45 settings (was 44; damage
+  0.17–1.00), `stress_rate` in 25 of 30 (was 9, so its few-bites warning is gone), `daily_cap` and
+  `period_budget` at damage 1.000 everywhere; the audit reports no finding.
+- **A2 — The closing-table ablation inflated its damage (medium).** It also reported the morning bank figures,
+  which the product would score 0 on every day whatever the customer entries. It now keeps the closing bank
+  figures (the customer limits are what a program misreads; the bank figures are the day's own arithmetic):
+  damage 0.68–1.00 (was 0.992–1.000), biting in every setting.
+- **A3 — The near-prime diagnostics called the valid baseline not enforced (medium).** First come, first
+  served often ends 4.5 points or less above a stricter candidate quota (or holds the share under a stricter
+  threshold there), and the diagnostic read that as steering: `near_prime_quota` False for the baseline in 17 and
+  `near_prime_threshold` in 15 of the 30 medium and hard settings. Steering to a stricter level now also needs
+  the running share never to close a day under it and to end at most 3.5 points above it: the baseline is called
+  not enforced in 3 settings for each fact (medium/c8, hard/s30 and hard/c10 for the quota; medium/c1, hard/s30
+  and hard/c10 for the threshold), where its share did hold the stricter level every day and nothing in the run
+  tells it from steering; every ablation that bites is still called.
+- **A4 — The tenure and discrepancy diagnostics misread other referrals (low).** `refer_declines` (it refers what
+  it would decline) read as a longer tenure habit in 27 settings. A referral the rule does not ask for now counts
+  against the fact only beyond the program's own rate of referring applicants no candidate sends.
+- **A5 — The never-asks solver misread two facts against the agent's own evidence (low).** It read
+  LIMIT_EXCEEDED as a request above what is left, although the pilot answer codes a 46,500 request with 30,840
+  left CREDIT_RISK and a customer with 0 left LIMIT_EXCEEDED; and it gave ineligible customers their formula
+  limit, where "what they may still borrow" reads as 0. Both fixed. It stays invalid in every measured setting
+  (a cutoff, a cap or a notice is wrong in each), so `voi` stays 1.000. Trying to beat it: validity needs every
+  binding parameter right, and no measured setting has the strictest combination; the most common easy
+  combination appears in two settings, which is where `never_asks_params` (0.133) comes from, and a program
+  that also knows no fixed fact cannot do better than that reference.
+- **A6 — The bound's scope (low).** `objective_bound` holds for every deliverable that keeps every rule; a program
+  that bends the tenure habit under an exception (a relaxed rule in a run) can pass it (easy/s525: bending 1.097
+  against a bound of 1.065; easy/s1043: 1.141 against 1.106). The docstring and GT.md now state the scope.
+- **A7 — One target spoke of "the client's own affordability limit" (low).** zh (客户) and ja (顧客) rendered it as
+  the customer's own limit. `regulator_notice_easy` now says "our own affordability limit" in the client's voice
+  in all five locales.
+
+Checked without a finding: every other ablation is the reference with one switch and a natural misreading; the
+agent's view and the request are byte-identical (validate-case); CLIENT_REVIEW.md's quotes are the cited lines of
+each locale's requirements and the five locales agree on every number, identifier and date (re-checked by an
+independent script); nothing claims a human review; the bound's proof (left Riemann sums of a probability that
+grows with the amount, linear between grid points, weak duality, the two cases of the treasury's cut) holds and
+no valid deliverable passes it; `quality_cap` = 1.02 is at least the median best known quality; README's reference
+numbers match the stored dataset; `referral_capacity` is rightly not a target (a program that maximizes profit
+never refers by choice, since a referral costs 60 and earns nothing, so misreading the capacity changes nothing
+for it; the rule closes F2's shortcut).
