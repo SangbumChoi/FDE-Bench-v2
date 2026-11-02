@@ -48,9 +48,10 @@ backlog), see `_defer`.
 
 Ground truth audit (GT.md, fdebench2.audit): every client fact (target) has a natural misreading (MISREADINGS) that
 flips one switch of the setting's view, for the planner and for a scorer alike; ablations() plans the reference
-on it, score() reports per target whether a plan follows the client's reading (`_diagnostics`), robust_solution()
-plans on the natural reading of the request and the data (an agent that never asks), best_known_solution() is a
-wider local search and objective_bound() a linear relaxation solved exactly.
+on it, diagnose() reports per target whether a plan follows the client's reading (`_diagnostics`: regret against
+the reference planner's plan for each misreading, computed only when asked), robust_solution() plans on the
+natural reading of the request and the data (an agent that never asks), best_known_solution() is a wider local
+search and objective_bound() a linear relaxation solved exactly.
 """
 
 from __future__ import annotations
@@ -114,7 +115,7 @@ def month_of_week(w: int) -> str:
 # that changes how a planner sees the world AND how a scorer of that reading would judge a plan, so that
 # - ablations() plans the reference on the view with one switch flipped (the deliverable that misreads only that
 #   fact), scored under the true view;
-# - score() reports per target whether a deliverable fits the client's reading better than the misreading
+# - diagnose() reports per target whether a deliverable fits the client's reading better than the misreading
 #   ("enforced", see _diagnostics);
 # - robust_solution() plans on the readings a planner that never asks would take (ROBUST_READING).
 MISREADINGS = {
@@ -204,6 +205,7 @@ class World:
     est_late: dict                # the reference's estimates from the history
     budget: dict = field(default_factory=dict)    # month -> KRW cap
     alloc: dict = field(default_factory=dict)     # (component, supplier) -> max qty ordered per month
+    seed: int = 0                                 # the world seed it was built from (keys the plan cache)
 
 
 class _View:
@@ -557,7 +559,7 @@ def build_world(seed: int) -> World:
         history.append({"po": f"PO-{po}", "supplier": sid, "component": cid, "promised": promised,
                         "received": received})
 
-    world = World(comps, quotes, avl, open_orders, boards, bom, late, history, est_late)
+    world = World(comps, quotes, avl, open_orders, boards, bom, late, history, est_late, seed=seed)
     _calibrate(world)
     return world
 
@@ -1129,29 +1131,53 @@ def simulate(world: _View, lines: list[dict]) -> tuple[list[tuple[str, str]], fl
 def score(world: World, submission_dir: Path, setting: Setting) -> dict:
     view = _view(world, setting)
     try:
-        rows = read_csv(submission_dir, "orders.csv", ["order_week", "component_id", "supplier_id", "quantity"])
-        lines = _parse_orders(view, rows)
+        lines = _read_orders(view, submission_dir)
         violations, objective, metrics = simulate(view, lines)
     except Fatal as e:
         return {"fatal": str(e)}
-    out = {"violations": violations, "objective": objective, "metrics": metrics}
-    enforced, evidence = _diagnostics(world, setting, lines, violations, objective)
-    return {**out, "enforced": enforced, "evidence": evidence}
+    return {"violations": violations, "objective": objective, "metrics": metrics}
 
 
-# ── per-target diagnostics (score()'s "enforced") ───────────────────────────
-# Which reading of a client fact does a plan follow? For a target with a natural misreading (TARGET_MISREADING),
-# the plan D is scored under the client's view S and under the misread view S' and compared with the reference R:
-#   delta = [g_S(D) - g_S(R)] - [g_S'(D) - g_S'(R)],   g = objective + PENALTY x number of distinct rules broken,
-# and the target is enforced when delta <= DIAG_TOL x the reference's objective: the client's reading does not make
-# D look worse next to the reference than the misreading does. The reference is enforced by construction (delta 0);
-# the reference planned on S' (the ablation) is not, whenever it loses under S what it gains under S'. A plan that
-# breaks a rule only under the client's reading is not enforced, one that breaks it only under the misreading is.
-# Parameter targets compare the same way with every other candidate of the parameter (safety stock, planning rate),
-# or check the plan's shape (quality hold, share cap: also a plan made for a stricter candidate is not enforced).
+def _read_orders(view: _View, submission_dir: Path) -> list[dict]:
+    rows = read_csv(submission_dir, "orders.csv", ["order_week", "component_id", "supplier_id", "quantity"])
+    return _parse_orders(view, rows)
 
-PENALTY = 1e10
-DIAG_TOL = 1e-4
+
+# ── per-target diagnostics (diagnose(): "enforced") ─────────────────────────
+# Which reading of a client fact does a plan D follow? A target's misreadings are the views S' with its switch
+# flipped (TARGET_MISREADING) or, for a drawn parameter, the setting with each other admissible candidate. For each
+# S' the reference planner's own plan for it, A (the ablation plan, planned once per setting and cached in the
+# module), is the best plan known for that reading, as the reference R is for the client's reading S. D's regret
+# under a reading is its distance from the better of R and A there, first in distinct rules broken, then in the
+# objective, in units of the setting's quality scale (baseline - reference):
+#   r_S(D) = g_S(D) - min(g_S(R), g_S(A)),   r_S'(D) = g_S'(D) - min(g_S'(R), g_S'(A)).
+# The target is not enforced when D breaks more rules (beyond the best plan known) under the client's reading than
+# under the misreading, or, breaking as many, when D is materially worse than the best plan known for the fact
+# (r_S > DIAG_TOL) and the misreading explains at least DIAG_SHARE of that: r_S - r_S' > max(DIAG_TOL, DIAG_SHARE
+# x r_S). The reference passes (r_S = 0); an ablation that bites fails (r_S'(A) = 0, while r_S(A) is its damage, at
+# least a tenth of the scale, or it breaks a rule only the fact has); a plan that is weak for other reasons (the
+# client's MRP) carries most of its regret under both readings and is not drawn to the misreading; a plan better
+# than the reference (the best known) has no material regret under the fact. Where no plan known keeps every rule
+# of the misreading, its regret is measured against a plan that breaks one, so only DIAG_TOL is asked. A misreading
+# that only adds a restriction the plan keeps (another supplier on hold, a stricter share cap, the allocation outside
+# hard) scores the plan the same under both readings, so the difference of its regrets is that of the best plans
+# known, the same for every such plan: for another candidate's hold the plan must then also keep it at a cost
+# (`_held`, plan shape); and such a plan that beats A under the misreading (r_S' < 0, so it also beats A under the
+# client's reading) is not drawn to it either: a planner no better than the reference would not have made it for
+# the misreading. Elsewhere DIAG_SHARE decides (the reference planner's plans for a stricter cap sit anywhere below
+# it, so no share pattern marks them). Where A itself has no material regret under the client's reading (the
+# misreading costs a good planner nothing in this setting, e.g. A is R), a plan whose regret the misreading
+# explains only in part (less than DIAG_SHARE_IDLE) only fails to use what the reference uses the fact for, as a
+# weaker plan that knows the fact may: not determinable (None); one it explains almost wholly still follows it. A
+# target whose fact alone states a rule (TARGET_RULE) is not
+# enforced whenever the plan breaks that rule under the client's reading, also when the misreading forbids the same
+# plan (a suspended supplier, a supplier total below the MOQ, no hold at all). A parameter target is not enforced
+# when the plan follows any other candidate. diagnose() computes all this lazily (the audit and a run's scoring ask
+# for it, never the validator); score() itself reports no diagnostic.
+
+DIAG_TOL = 0.05                  # material regret, in quality scales: a plan must be this far from the best plan
+DIAG_SHARE = 0.5                 # known and fit a misreading this much better, explaining this share of its regret
+DIAG_SHARE_IDLE = 0.8            # the share to explain where the misreading costs the reference planner nothing
 _EN_TARGETS = yaml.safe_load((Path(__file__).parent / "locales" / "en" / "targets.yaml").read_text(encoding="utf-8"))
 TARGET_TIERS = {t["id"]: tuple(t.get("tiers", TIERS)) for t in _EN_TARGETS}
 TARGET_PARAM = {t["id"]: t["param"] for t in _EN_TARGETS if t.get("param")}
@@ -1180,6 +1206,14 @@ TARGET_MISREADING = {
     "eco_switch": "no_eco",
     "eco_c04_exempt": "c04_critical",
 }
+# target -> the rule of the setting that only this fact states: a plan that breaks it under the client's reading is
+# not enforced on the target, also when its natural misreading forbids the same plan (pending_ok still forbids a
+# suspended supplier, moq_total a supplier total below the MOQ, another candidate hold the hold's own supplier).
+TARGET_RULE = {"quality_hold": "quality_hold", "approved_status_only": "approved_vendor", "moq_per_line": "moq"}
+
+# Plans and views computed once per world and setting: the reference, the misread plans (the ablations), the
+# baseline's objective, the views. Keyed by the world's seed, then by the setting's tier and drawn parameters.
+_CACHE: dict = {}
 
 
 def _params_key(setting: Setting) -> tuple:
@@ -1187,7 +1221,7 @@ def _params_key(setting: Setting) -> tuple:
 
 
 def _cache(world: World) -> dict:
-    return world.__dict__.setdefault("_cache", {})
+    return _CACHE.setdefault(world.seed, {})
 
 
 def _view(world: World, setting: Setting, misread=frozenset()) -> _View:
@@ -1210,34 +1244,6 @@ def _in_force(setting: Setting) -> list[str]:
     return [t for t, tiers in TARGET_TIERS.items() if setting.tier in tiers]
 
 
-def _g(world: _View, lines: list[dict]) -> float:
-    violations, objective, _ = simulate(world, lines)
-    return objective + PENALTY * len({r for r, _ in violations})
-
-
-def _g_ref(world: World, setting: Setting, view: _View) -> float:
-    key = ("g_ref", _params_key(setting), _params_key(view.setting), view.misread)
-    cache = _cache(world)
-    if key not in cache:
-        cache[key] = _g(view, _reference_lines(world, setting))
-    return cache[key]
-
-
-def _compare(world: World, setting: Setting, lines: list[dict], g_s: float, other: _View, what: str
-             ) -> tuple[bool, str]:
-    g_r = _g_ref(world, setting, _view(world, setting))
-    g_t, g_rt = _g(other, lines), _g_ref(world, setting, other)
-    delta = (g_s - g_r) - (g_t - g_rt)
-    ok = delta <= DIAG_TOL * abs(g_r if g_r < PENALTY else _reference_objective(world, setting))
-
-    def rel(a, b):
-        if a >= PENALTY or b >= PENALTY:
-            n = int(a // PENALTY) - int(b // PENALTY)
-            return f"{n:+d} broken rule(s)" if n else "breaks the same rules"
-        return f"{a / b - 1:+.2%}"
-    return ok, f"vs the reference: {rel(g_s, g_r)} under the client's reading, {rel(g_t, g_rt)} if {what}"
-
-
 def _reference_lines(world: World, setting: Setting) -> list[dict]:
     key = ("ref", _params_key(setting))
     cache = _cache(world)
@@ -1250,96 +1256,183 @@ def _reference_objective(world: World, setting: Setting) -> float:
     return simulate(_view(world, setting), _reference_lines(world, setting))[1]
 
 
-def _arrivals(world: _View, lines: list[dict], sid: str, until: int) -> int:
-    return sum(ln["qty"] for ln in lines if ln["supplier"] == sid
-               and world.arrival(ln["week"], world.quotes[(ln["component"], ln["supplier"])]) <= until)
+def _baseline_objective(world: World, setting: Setting) -> float:
+    key = ("base", _params_key(setting))
+    cache = _cache(world)
+    if key not in cache:
+        cache[key] = simulate(_view(world, setting), _baseline(_baseline_view(world, setting)))[1]
+    return cache[key]
 
 
-def _top_shares(world: _View, lines: list[dict]) -> dict:
-    out = {}
-    for k in world.dual_parts():
-        per: dict = {}
-        for ln in lines:
-            if ln["component"] == k.id:
-                per[ln["supplier"]] = per.get(ln["supplier"], 0) + ln["qty"]
-        if per:
-            out[k.id] = (max(per.values()) / sum(per.values()), len(per))
+def _g(view: _View, lines: list[dict]) -> tuple[int, float]:
+    """(distinct rules broken, objective) of a plan under a view."""
+    violations, objective, _ = simulate(view, lines)
+    return len({r for r, _ in violations}), objective
+
+
+def _readings(world: World, setting: Setting, t: str) -> list[tuple[str, _View, list[dict]]]:
+    """[(what, view, plan)]: each misreading of target t with the reference planner's plan for it (the plan the
+    audit ablates t with), skipping a candidate whose reference cannot be planned."""
+    param = TARGET_PARAM.get(t)
+    candidates = list(dict.fromkeys(PARAM_POOLS[param][setting.tier])) if param else []
+    out = []
+    if param and len(candidates) > 1:
+        for v in candidates:
+            if str(v) == str(setting[param]):
+                continue
+            alt = _with(setting, **{param: v})
+            if not admissible(alt.params, alt.tier):
+                continue
+            try:
+                out.append((f"{param} were {v}", _view(world, alt), _reference_lines(world, alt)))
+            except AssertionError:
+                continue
+    elif t in TARGET_MISREADING:
+        flag = TARGET_MISREADING[t]
+        out.append((MISREADINGS[flag], _view(world, setting, {flag}), _misread_plan(world, setting, {flag})))
     return out
 
 
-def _hold_diag(world: World, setting: Setting, view: _View, lines: list[dict]) -> tuple[bool, str]:
-    """Quality hold: nothing from the held supplier arrives while the hold lasts, and the plan does not keep away
-    from a supplier that only another candidate puts on hold (where the reference uses it then)."""
-    held = _arrivals(view, lines, view.hold_supplier, view.hold_until)
-    if held:
-        return False, f"{held} pieces from {view.hold_supplier} arrive by W{view.hold_until}, during the hold"
-    ref = _reference_lines(world, setting)
-    for value in dict.fromkeys(PARAM_POOLS["quality_hold"][setting.tier]):
-        sid, until = _hold(value)
-        if sid == view.hold_supplier or not admissible({"quality_hold": value}, setting.tier):
+def _best_known_g(world: World, setting: Setting, view: _View, what: str, plan: list[dict]) -> tuple:
+    """_g under `view` of the reference and of the plan for the misreading `what` (the best plans known)."""
+    key = ("bench", _params_key(setting), what, _params_key(view.setting), view.misread)
+    cache = _cache(world)
+    if key not in cache:
+        cache[key] = (_g(view, _reference_lines(world, setting)), _g(view, plan))
+    return cache[key]
+
+
+def _switch_saving(view: _View, lines: list[dict], k: Component, to: str, pick) -> float:
+    """What a plan forgoes by not buying part k from supplier `to`: the lines that `pick` selects, each moved to
+    `to` in the latest order week whose delivery still arrives by that line's arrival week, at `to`'s price for the
+    merged line plus the holding of the earlier arrival, where that is cheaper. A first-order estimate (no
+    re-planning)."""
+    qt = view.quotes.get((k.id, to))
+    if qt is None or not view.approved(k.id, to):
+        return 0.0
+    mine = {ln["week"]: ln["qty"] for ln in lines if ln["component"] == k.id and ln["supplier"] == to}
+    saving = 0.0
+    for ln in lines:
+        if ln["component"] != k.id or ln["supplier"] == to or not pick(ln):
             continue
-        if _arrivals(view, ref, sid, until) and not _arrivals(view, lines, sid, until):
-            return False, (f"nothing from {sid} arrives by W{until}, as if {sid} were on hold (the reference "
-                           f"buys {_arrivals(view, ref, sid, until)} pieces from it by then)")
-    return True, f"nothing from {view.hold_supplier} arrives by W{view.hold_until}"
+        q = view.quotes[(k.id, ln["supplier"])]
+        arr = view.arrival(ln["week"], q)
+        weeks = [w for w in range(1, N_ORDER_WEEKS + 1) if view.arrival(w, qt) <= arr
+                 and not view.on_hold(to, view.arrival(w, qt))]
+        if not weeks:
+            continue
+        w2 = max(weeks)
+        p_to = view.unit_krw(qt, max(qt.moq, mine.get(w2, 0) + ln["qty"]), w2) \
+            + k.std_cost * view.holding_rate * (arr - view.arrival(w2, qt))
+        gain = view.unit_krw(q, ln["qty"], ln["week"]) - p_to
+        if gain > 0:
+            saving += gain * ln["qty"]
+    return saving
 
 
-def _share_diag(world: World, setting: Setting, view: _View, lines: list[dict]) -> tuple[bool, str]:
-    """Share cap: no critical part above the cap, and the plan uses the room between a stricter candidate and the
-    cap where the reference does (a plan made for a stricter cap is not enforced)."""
-    shares = _top_shares(view, lines)
-    over = {c: s for c, (s, n) in shares.items() if n >= 2 and s > view.max_share + 1e-9}
-    if over:
-        c = max(over, key=over.get)
-        return False, f"{c}: one supplier has {over[c]:.0%}, above {view.max_share:.0%}"
-    stricter = [float(v) / 100 for v in PARAM_POOLS["max_share"][setting.tier] if float(v) / 100 < view.max_share]
-    if stricter:
-        bar = max(stricter)
-        ref_top = max((s for s, n in _top_shares(view, _reference_lines(world, setting)).values()), default=0)
-        top = max((s for s, n in shares.values() if n >= 2), default=0)
-        if ref_top > bar + 1e-9 and top <= bar + 1e-9:
-            return False, (f"no critical part above {bar:.0%} (the reference goes to {ref_top:.0%}): planned for "
-                           f"a stricter cap than {view.max_share:.0%}")
-    return True, f"every critical part within {view.max_share:.0%}"
+HELD_MIN = 0.005                 # share of the quality scale a kept hold must cost the plan to count
 
 
-def _diagnostics(world: World, setting: Setting, lines: list[dict], violations: list, objective: float
-                 ) -> tuple[dict, dict]:
+def _held(world: World, setting: Setting, t: str, other: _View, lines: list[dict]) -> tuple[bool, str] | None:
+    """Plan-shape evidence where another candidate's quality hold scores the plan the same as the client's (it
+    gets nothing from either supplier on hold while its hold lasts), so that regret alone cannot tell the readings
+    apart: (does the plan keep the other hold at a cost, what it shows), or None for every other target. The other
+    candidate's supplier delivers nothing during its hold although switching a line that arrives then to it would
+    save at least HELD_MIN of the scale; otherwise the plan merely has no use for that supplier then."""
+    if t != "quality_hold":
+        return None
+    view = _view(world, setting)
+    span = abs(_baseline_objective(world, setting) - _reference_objective(world, setting)) or 1.0
+    sid, until = other.hold_supplier, other.hold_until
+    gain = sum(_switch_saving(view, lines, k, sid, lambda ln: view.arrival(
+        ln["week"], view.quotes[(ln["component"], ln["supplier"])]) <= until) for k in view.components)
+    held = gain >= HELD_MIN * span
+    return held, (f"{sid} unused for arrivals by W{until}" + (f", which would save {gain / span:.1%}" if held
+                                                                else ", at no cost"))
+
+
+def _follows(world: World, setting: Setting, t: str, lines: list[dict], g_s: tuple, what: str, other: _View,
+             plan: list[dict]) -> tuple[bool, str]:
+    """(enforced, evidence) of a plan against one misreading (see the section comment)."""
+    b_s = min(_best_known_g(world, setting, _view(world, setting), what, plan))
+    b_t = min(_best_known_g(world, setting, other, what, plan))
+    g_t = _g(other, lines)
+    e_s, e_t = g_s[0] - b_s[0], g_t[0] - b_t[0]
+    r_s, r_t = g_s[1] - b_s[1], g_t[1] - b_t[1]
+    span = abs(_baseline_objective(world, setting) - _reference_objective(world, setting)) or 1.0
+    if e_s != e_t:
+        return e_s < e_t, (f"breaks {g_s[0]} rule(s) under the client's reading ({e_s:+d} vs the best plan known), "
+                           f"{g_t[0]} if {what} ({e_t:+d})")[:300]
+    why = f"regret {r_s / span:+.1%} of the scale under the client's reading, {r_t / span:+.1%} if {what}"
+    explained = r_s - r_t
+    if g_s[0] == g_t[0] and abs(g_s[1] - g_t[1]) <= 1e-9 * abs(g_s[1]):
+        held = _held(world, setting, t, other, lines)
+        if held is not None:
+            why = f"{why}; {held[1]}"
+            if not held[0]:
+                explained = 0.0
+        if r_t < -1e-6 * span:
+            # The plan scores the same under both readings and beats, under the misreading, the reference planner's
+            # own plan for it: a plan made for the misreading by a planner no better than the reference would not.
+            why, explained = f"{why}; better than the misreading's own plan under it", 0.0
+    # The share is asked only where some plan keeps every rule of the misreading: otherwise its regret is measured
+    # against a plan that breaks one, and says nothing about how much of the plan's loss the misreading explains.
+    share = DIAG_SHARE if b_t[0] == 0 else 0.0
+    ok = not (r_s > DIAG_TOL * span and explained > max(DIAG_TOL * span, share * r_s))
+    ref_g, mis_g = _best_known_g(world, setting, _view(world, setting), what, plan)
+    if not ok and mis_g[0] <= ref_g[0] and mis_g[1] - b_s[1] <= DIAG_TOL * span \
+            and explained < DIAG_SHARE_IDLE * r_s:
+        # The reference planner's own plan for the misreading is as good as the reference under the client's
+        # reading (often the reference itself): the misreading costs a good planner nothing material here. A plan
+        # that it explains only in part shows that the plan does not use what the reference uses the fact for, as
+        # a weaker plan that knows the fact may not either: not determinable. One that it explains almost wholly
+        # (nearly the best plan known under the misreading) still follows it.
+        return None, (f"{why}; the misreading costs the reference planner only "
+                      f"{(mis_g[1] - b_s[1]) / span:+.1%} and explains part of the regret")[:300]
+    return ok, why[:300]
+
+
+def _diagnostics(world: World, setting: Setting, lines: list[dict]) -> tuple[dict, dict]:
     """{target: enforced} and {target: evidence} for the targets in force (see the section comment)."""
     view = _view(world, setting)
-    g_s = objective + PENALTY * len({r for r, _ in violations})
+    g_s = _g(view, lines)
+    broken: dict = {}
+    for rule, message in simulate(view, lines)[0]:
+        broken.setdefault(rule, message)
     enforced, evidence = {}, {}
     for t in _in_force(setting):
-        param = TARGET_PARAM.get(t)
-        candidates = [v for v in dict.fromkeys(PARAM_POOLS[param][setting.tier])] if param else []
+        if TARGET_RULE.get(t) in broken:
+            # The plan breaks, under the client's reading, the rule this fact alone states: not enforced, whatever
+            # the misreading (a plan that also breaks it under the misreading, e.g. a suspended supplier, a line
+            # whose supplier total is below the MOQ too, or no hold at all, is otherwise judged on its cost).
+            enforced[t], evidence[t] = False, f"breaks {TARGET_RULE[t]}: {broken[TARGET_RULE[t]]}"[:300]
+            continue
         try:
-            if t == "quality_hold":
-                ok, why = _hold_diag(world, setting, view, lines)
-            elif t == "max_share" and len(candidates) > 1:
-                ok, why = _share_diag(world, setting, view, lines)
-            elif param and len(candidates) > 1:
-                ok, why = True, ""
-                for v in candidates:
-                    if str(v) == str(setting[param]):
-                        continue
-                    alt = _with(setting, **{param: v})
-                    if not admissible(alt.params, alt.tier):
-                        continue
-                    ok_v, why_v = _compare(world, setting, lines, g_s, _view(world, alt), f"{param} were {v}")
-                    if not ok_v or not why:
-                        ok, why = ok_v, why_v
-                    if not ok:
-                        break
-            elif t in TARGET_MISREADING:
-                flag = TARGET_MISREADING[t]
-                ok, why = _compare(world, setting, lines, g_s, _view(world, setting, {flag}), MISREADINGS[flag])
-            else:
+            readings = _readings(world, setting, t)
+            if not readings:
                 continue
+            # Not enforced when the plan follows any misreading; not determinable when it follows none but one
+            # cannot tell (see _follows); else enforced (the first reading's evidence).
+            found = []
+            for what, other, plan in readings:
+                found.append(_follows(world, setting, t, lines, g_s, what, other, plan))
+                if found[-1][0] is False:
+                    break
+            ok, why = next((x for x in found if x[0] is False), None) or next(
+                (x for x in found if x[0] is None), None) or found[0]
         except Exception as e:      # the diagnostic must never break scoring
             enforced[t], evidence[t] = None, f"not determinable: {e!r}"[:200]
             continue
-        enforced[t], evidence[t] = bool(ok), why
+        enforced[t], evidence[t] = ok, why
     return enforced, evidence
+
+
+def diagnose(world: World, submission_dir: Path, setting: Setting, scored: dict) -> dict:
+    """The per-target diagnostic, computed only when evaluate() asks for it (the audit, a run's scoring): the
+    first call in a setting plans every misreading's reference (half a minute to a minute), later calls reuse them."""
+    lines = _read_orders(_view(world, setting), submission_dir)
+    enforced, evidence = _diagnostics(world, setting, lines)
+    return {"enforced": enforced, "evidence": evidence}
 
 
 # ── reference solution ───────────────────────────────────────────────────────
@@ -2091,7 +2184,8 @@ def _misread_plan(world: World, setting: Setting, misread=frozenset()) -> list[d
 
 def _plan_anyway(view: _View) -> list[dict]:
     """The reference planner on `view`; when no variant is valid by the view's own reading, the first planner variant
-    that runs at all (the plan such a planner would hand in)."""
+    that runs at all, improved by the same local search as the reference (the plan such a planner would hand in: it
+    breaks a rule of its own reading that no plan can keep, and is otherwise as good as the planner makes it)."""
     try:
         return _reference(view)
     except AssertionError:
@@ -2099,7 +2193,7 @@ def _plan_anyway(view: _View) -> list[dict]:
     for kw in (dict(), dict(trim="after"), dict(quota=True), dict(dual=False), dict(budget=False),
                dict(dual=False, budget=False)):
         try:
-            return _solve(view, **kw)
+            return _polish(view, _solve(view, **kw), REF_EVALS)
         except AssertionError:
             continue
     raise AssertionError(f"no plan under the misreading {sorted(view.misread)} ({view.setting.label})")

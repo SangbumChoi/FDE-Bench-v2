@@ -49,7 +49,8 @@ from in each locale (awaiting human review). `audited: true` makes validate-case
   every tier where it is in force; `score()` reports `enforced` per target and separates the reference from every
   ablation that bites (GT.md, parts 1 and 5). (Second pass: the `shortfall_cost` misreading measured the safety
   stock instead and was replaced; the diagnostic is unreliable for plans other than the reference and the
-  ablations, see below.)
+  ablations, see below. Diagnostics pass: replaced by `diagnose()`, regret against the planner's plan for each
+  misreading.)
 - **Shortcuts closed.** `no_orders`, `express_only`, `express_split`, `ignore_budget`, `all_upfront`, `no_buffers` and
   `critical_only` are invalid or score at most 0.5 in all 39 settings. An earlier `no_safety_stock` scored 0.58 in one
   hard combination (0.5 weeks of safety stock); the shortcut that really ignores the uncertainty drops both buffers
@@ -157,13 +158,133 @@ case's own scorer on the audit's 39 settings; the other numbers are the stored a
   every other plan a misreading; correcting it by the reference's own gain broke three ablations; the first formula
   with only the penalty asymmetry removed kept most of the false calls. The first-pass diagnostic is kept; GT.md
   part 5 states the limit. The fix needs the framework to compute diagnostics only where evaluate() asks for them
-  (not in raw_score for the binding and scale checks).
+  (not in raw_score for the binding and scale checks). (Fixed once the framework had that hook: see "Ground truth
+  audit, diagnostics" below.)
 - **Checked and holding.** The agent view is the same in every setting (validate-case), the request changed only in
   its e-mail line as the brief allowed, CLIENT_REVIEW.md is generated from the five requirements.md (quotes match by
   construction; regenerated for the shortfall tier change), its pre-check finds the same numbers, IDs and dates in
   every locale, its status is "awaiting human review", and the commit message carries no attribution lines. The
   split targets read naturally in all five locales. GT.md and README match `dataset/audit.json` (GT.md regenerated
   by `gt_report.py`).
+
+### Ground truth audit, diagnostics
+
+The framework now computes per-target diagnostics only where they are asked for (`diagnose()`, DESIGN.md "Ground
+truth audit"), and the audit checks them on deliverables that are neither the reference nor an ablation: a valid best
+known solution, which knows every fact, must never be called not enforced on a target in force. The second pass's
+diagnostic failed that check. On the same 39 settings and the same plans it called the best known solution not
+enforced in 125 of 657 target-settings and the client's MRP (baseline) in 228 of 657. What changed:
+
+- **Lazy.** score() no longer reports `enforced`; `diagnose(world, submission_dir, setting, scored)` does, when
+  evaluate() asks (the audit, a run's scoring). The reference planner's plan for each misreading (the ablation
+  plans, which `ablations()` hands the audit too) is planned once per setting and cached in the module, keyed by the
+  world seed and the drawn parameters: 24 s for the first plan diagnosed in an easy setting, 0.05 s for the next.
+  validate-case no longer computes diagnostics: 98 s against 174 s for this round's starting commit, run one after
+  the other on the same machine under the same load (the audit takes 1,529 s).
+- **Regret against the planner's plan for each misreading.** A plan's regret under a reading is its distance from
+  the better of the reference and the ablation plan there (rules broken first, then the objective, in quality
+  scales). A target is not enforced when the plan breaks more rules under the client's reading than under the
+  misreading, or when it is materially worse than the best plan known for the fact (regret above 0.05) and the
+  misreading explains at least half of that regret. The second pass's proposal, a regret difference above 5% of the
+  scale alone, still called the client's MRP not enforced in 72 of 657 target-settings and the best known solution
+  in 3: a weak plan's loss is priced differently under each reading (the hard baseline's blanket week of lead time
+  looks like a larger safety stock, a dearer backlog per piece or on-time suppliers; its lot-for-lot plan never buys
+  displays ahead into W3 or rounds a line up to a break), and the best known solution beats the planner by more
+  under some readings than others. Asking for material regret frees the best known solution; asking the misreading
+  to explain half the regret frees the baseline.
+- **Plan shapes (quality hold, share cap).** Both had plan-shape checks with the same flaw: a plan was not enforced
+  when it bought nothing from a supplier that only another candidate holds, or kept every critical part under a
+  stricter candidate cap, wherever the reference did otherwise, whether or not the plan needed that supplier or that
+  room (the baseline's hold in 18 of 39 settings, its share cap in 12). Regret alone cannot replace them: a plan that
+  keeps such a restriction scores the same under both readings, so the difference of its regrets is that of the best
+  plans known, the same for every plan that keeps it. For the hold the plan must now also keep it at a cost: the
+  other candidate's supplier delivers nothing during its hold although switching a line that arrives then to it
+  would save at least 0.5% of the scale. For the share cap no plan shape works: the planner's own plans for a 70% cap
+  have their top share anywhere from 61% to 70%, and a test for a supplier held within 2 points below the stricter
+  cap, at a cost, missed three of them that bite (medium/c5, c8, c9); there the half-of-the-regret rule decides.
+- **An infeasible misreading.** In hard/c2 and hard/c3 no plan can second-source C04 under the `c04_critical`
+  reading, so the misread planner fell back to its unpolished lot-for-lot variant, whose damage (0.31 and 0.71) was
+  mostly the missing local search: regret could attribute only 0.03 and 0.10 of the scale to the misreading. The
+  fallback (`_plan_anyway`) now gets the reference's local search too, as "otherwise as good as the reference" asks:
+  damage 0.06 and 0.35, so `eco_c04_exempt` bites in 8 of 9 hard settings (was 9). Where no plan known keeps every
+  rule of a misreading, its regret is measured against a plan that breaks one, so only the 0.05 is asked.
+- **Results (stored audit).** Every target separates the reference from every ablation that bites. Best known
+  solution 0 of 657, baseline 0 of 657, `robust_solution` 63 of 657 (it follows the flash change outside hard, so
+  `scope_no_flash_change` 30 of 30 and `dual_source_two` 30 of 39, and plans for the middle safety stock:
+  `safety_stock` 3 of 39). Also checked on plans that know every fact and are neither: the planner's fifteen
+  unpolished variants in every setting (386 valid plans, quality −0.65 to 0.86, median 0.50) are not enforced in 29
+  of 6,556 target-plans (earlier diagnostic: 2,189): `price_rise_week` 18 (no display bought ahead into W3: the old
+  price is not used), `scope_no_allocation` 9 (within an allocation that does not apply this round), `max_share`
+  and `usd_planning_rate` 1 each.
+- **Cross flags (8 warnings).** An ablation of one fact also calls others not enforced in most settings where it
+  bites when the facts share a rule: a plan over the monthly budget fits the soft-budget reading and, when W2 in
+  December would fit it, the month reading (the ablations of `budget_month`, `price_breaks`, `scope_list_prices` and
+  `usd_planning_rate`, which overspend by misreading the month, the prices or the rate); a plan that breaks the
+  dual-sourcing rule fits the single-source reading, which also lifts the share cap (`max_share`'s looser cap, the
+  flash-change ablations, which single-source C04 or never buy C25); and in hard a plan without lateness buffers
+  carries backlog that a per-piece price makes cheap (`supplier_lateness`). These are what the plan shows, whatever
+  made it break the rule, so a run's funnel can mark such a target not enforced on a plan that misread another fact.
+- **Limits.** A plan that keeps a restriction only a misreading has (a stricter share cap, the allocation in easy and
+  medium) and loses at most twice what the restriction costs the reference planner is called not enforced, whether
+  or not it needed the room. A plan that does not use an opportunity the fact gives (Nara Display's old price in W3,
+  the price breaks) is called not enforced when that explains half its regret: the diagnostic reads the plan, not the
+  planner's intent. The thresholds (0.05 of the scale, half the regret, 0.5% for the hold) were set on this world's
+  39 settings. (Narrowed by the adversarial check below.)
+
+### Adversarial check of the diagnostics (deliverables that are neither reference nor ablation)
+
+Plans built for the 9 public settings and diagnosed with `evaluate(..., diagnose=True)`:
+
+- **Correct but different** (every fact read right, valid): the reference with the cheapest one or three lines moved
+  to another approved supplier, half of one line ordered a week earlier (cheapest and dearest such split), the
+  dearest whole line a week earlier, the second and third cheapest planner variants polished like the reference, and
+  the reference planner with a tenth of its local search (72 plans, quality 0.79–1.15). Before: 3 called not
+  enforced on some target. `scope_no_allocation` twice (easy/s78 and medium/s78, the third variant, which keeps the
+  easy/medium allocation caps by chance while being 5–7% of the scale cheaper than the planner's own plan for them),
+  `price_rise_week` once (easy/s78, a plan without the W3 display purchase, where the W3 misreading costs the planner
+  nothing: its plan is the reference) and `price_breaks` once (medium/s78, the short search, which sizes fewer lines
+  to a break; the cumulative reading explains just over half its 11% regret).
+- **New misreadings** (the reference planner on a view no ablation plans: safety stock of 2 and of 0 weeks, the
+  quality hold one week short or ignored, lead times one week shorter or longer, suspended suppliers allowed, the
+  budget month by the week's last day or by the next week, the budget pooled over the three months, the MOQ ignored
+  or halved, Nara Display's rise from W5 or ignored, only Christmas short (medium, hard), one piece per board, every
+  supplier one week late for certain (hard)). Of the 126 that bite, 67 were called not enforced on their fact
+  (53%). Every plan that breaks the rule of a fact that alone states it was called enforced there whenever the
+  misreading forbids the same plan: a suspended supplier (9 of 9: `pending_ok` still forbids it), a line whose
+  supplier total is below the MOQ too (15 of 18: `moq_total` still flags it), no hold at all (4 of 9, where the
+  other candidates' holds also forbid the plan).
+
+What changed (case.py, `_diagnostics` and `_follows`):
+
+1. **A fact that alone states a rule** (`TARGET_RULE`: the quality hold, approved status only, the MOQ per line) is
+   not enforced whenever the plan breaks that rule under the client's reading.
+2. **A plan that keeps a misreading's restriction and beats the planner's own plan for it under it** (it scores the
+   same under both readings and r_S' < 0, so it also beats that plan under the client's reading) is not drawn to the
+   misreading: a planner no better than the reference would not have made it for the misreading. An ablation never
+   is (r_S'(A) = 0).
+3. **Where the misreading costs the planner nothing** (its plan's regret under the client's reading at most 0.05,
+   often the reference itself), a plan whose regret the misreading explains only in part (less than 0.8,
+   `DIAG_SHARE_IDLE`) is not determinable (None): it does not use what the reference uses the fact for, as a weaker
+   plan that knows the fact may not either. One it explains almost wholly still follows it (the misread plans above
+   that skip the W3 purchase: 85–99%; the third variant: 68%). No ablation that bites is affected (its own reading's
+   plan bites, by definition).
+
+After (same plans): 1 of the 72 correct plans is still called not enforced (medium/s78, the
+short search, on `price_breaks`: the limit below) and 1 is not determinable (easy/s78, the third variant, on
+`price_rise_week`); of the 126 misreadings that bite, 97 are called not enforced on their fact (77%, was 53%).
+Still called enforced: one piece per board (9; the natural misreading moves the demand a week, the quantity per
+board is not compared), lead times one week longer (9) and a safety stock outside the pool (7: 2 weeks where 1.5
+is the largest candidate, 0 where 0.5 is the smallest), each in a direction the natural misreading does not take,
+and in hard one lead time a week shorter and the suppliers one week late for certain (4). The planner's fifteen
+unpolished variants in the public settings (92 valid plans): 3 of 1,578 target-plans not enforced before and after,
+all `scope_no_allocation`, weak plans (regret 33–35% of the scale) that keep the allocation caps by chance and cost
+more than the planner's own plan for them. The audit (re-run: 1,396 s) still finds no false negative (best known 0
+of 657, baseline 0 of 657, `robust_solution` 63 of 657), every target separates, and the same eight cross-flag
+warnings, of which the ablations of `price_rise_week` and `max_share` no longer flag `scope_no_allocation`.
+Remaining limits: a plan that keeps a restriction only a misreading has and is worse than the planner's own plan
+for it, but loses less than twice what the restriction costs, is still called not enforced; so is a plan that does
+not use an opportunity the fact gives (the price breaks) when that explains half its regret; and a misreading in a
+direction the natural one does not take is not seen.
 
 ### Rule seeds (conversion from rule sets A/B/C)
 

@@ -167,10 +167,20 @@ the public world, each tier's panel plus 12 admissible parameter combinations (3
   most settings. A drawn parameter's misreading is the reference of another candidate, the least harmful one
   counted. The misreading planner also weighs the reference's own plan and keeps whichever is valid and cheaper by
   its reading, so a fact that does not change the best plan in a setting costs nothing there.
-- **Diagnostics.** `score()` reports `enforced` per target for every plan; the reference is enforced everywhere and
-  every ablation that bites is not (GT.md, part 5). For other plans the verdict is unreliable: it compares with the
-  reference under the misreading, so the client's own MRP, which knows every fact, is called "not enforced" on the
-  lead times in 28 of 39 settings (REVIEW.md, second pass).
+- **Diagnostics.** `diagnose()` reports `enforced` per target, computed only when the audit or a run's scoring asks
+  for it (validate-case never does). A plan is not enforced on a target when it breaks a rule only the client's
+  reading has, or when it is materially worse than the best plan known for the fact (regret above 0.05 of the
+  scale) and the misreading explains at least half of that, by regret against the reference planner's own plan for
+  each misreading (the ablation plans, planned once per setting and cached); another candidate's quality hold that
+  the plan keeps must also cost it something, a plan that keeps a misreading's restriction more cheaply than the
+  planner's own plan for it is not drawn to it, and where the misreading costs the planner nothing a plan it
+  explains only in part is not determinable (None). The quality hold, approved status only and the MOQ per line are
+  not enforced whenever the plan breaks their rule. The reference is enforced everywhere and every ablation that
+  bites is not. The best known solution and the client's own MRP, which know every fact, are called not enforced in 0 of 657
+  target-settings each (the earlier diagnostic, which compared with the reference under the misreading: 125 and
+  228), the planner's 386 unpolished variants in 29 of 6,556 (earlier 2,189). Ablations of facts that share a rule
+  with others (the monthly budget, the dual-sourcing rule) also flag those others (GT.md, part 5; REVIEW.md,
+  diagnostics).
 - **Shortcuts are closed.** An empty plan, Express Parts for everything, ignoring the budget, buying everything in
   W1, no buffers at all, ordering only the critical parts, copying the gross demand through, the same order every
   week and the client's own MRP rounded up to price breaks are each invalid or score at most 0.5 in every setting.

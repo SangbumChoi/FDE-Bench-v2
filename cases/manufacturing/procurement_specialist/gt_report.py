@@ -17,7 +17,8 @@ import yaml
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT.parents[2]))
 
-from fdebench2.audit import shortcut_summary, target_summary, tier_order  # noqa: E402
+from fdebench2.audit import (cross_flag_summary, false_negatives, shortcut_summary,  # noqa: E402
+                             target_summary, tier_order)
 from fdebench2.cases import NativeCase  # noqa: E402
 
 TIERS = ("easy", "medium", "hard")
@@ -228,28 +229,66 @@ def main() -> None:
                    "value of asking"], rows)
 
     # 5. diagnostics
+    negatives, cross = false_negatives(audit), cross_flag_summary(audit)
+    profile = audit.get("diagnostic_profile") or {}
+
+    def total(counts: dict) -> str:
+        return f"{sum(x['false'] for x in counts.values())} of {sum(x['diagnosed'] for x in counts.values())}"
+    bk_false = sum(len(x["false"]) for x in negatives.values())
+    bk_diag = sum(x["diagnosed"] for x in negatives.values())
+    flagged = [t for t, x in cross.items() if len(x["flagged"]) * 2 > x["biting"]]
     out += ["", "## 5. Diagnostic cases", "",
-            "`score()` reports `enforced[target]` for every target in force, for valid and invalid plans alike. For a "
-            "target with a natural misreading, the plan D is scored under the client's view S and under the misread "
-            "view S' and compared with the reference R: delta = [g_S(D) − g_S(R)] − [g_S'(D) − g_S'(R)], where g is the "
-            "objective plus 10^10 per distinct rule broken. The target is enforced when delta ≤ 0.01% of the "
-            "reference's objective: the client's reading does not make D look worse next to the reference than the "
-            "misreading does. A rule broken only under the client's reading fails it; one broken only under the "
-            "misreading passes it. The planning rate and the safety stock compare the same way with every other "
-            "candidate of their parameter. The quality hold checks that nothing from the held supplier arrives "
-            "during the hold and that the plan does not avoid a supplier only another candidate holds (where the "
-            "reference uses it); the share cap checks the cap and that the plan uses the room a stricter candidate "
-            "would not leave (where the reference does). The audit checks that the reference is enforced everywhere "
-            "and that every ablation that bites is not.",
-            "", "Limits (second pass, REVIEW.md). The comparison is with the reference R under S', so a plan that merely "
-            "differs from R can be called a misreading. The client's own MRP, which knows every fact, is 'not "
-            "enforced' on the lead times in 28 of 39 settings and on the planning rate in 13 of 15 (often R breaks a rule "
-            "under the misreading that the MRP keeps), and the tolerance (0.01% of the objective, about 0.1% of the "
-            "scale) lets any other difference decide. Comparing regrets with the reference planner's own plan for the "
-            "misreading, within 5% of the scale, frees the client's MRP of most of these and still separates every "
-            "ablation on the four settings checked, but scoring then plans the misreadings and validate-case takes "
-            "seven times as long; it waits for a framework change (diagnostics only where evaluate() is asked for "
-            "them). Read the enforced column of a run's funnel for plans far from the reference with this in mind.", ""]
+            "`diagnose()` reports `enforced[target]` for every target in force, for valid and invalid plans alike. It "
+            "is computed only when evaluate() asks for it (the audit and a run's scoring, never validate-case), "
+            "because it needs the reference planner's own plan for every misreading of the setting (planned once per "
+            "setting and cached, half a minute to a minute). A target's misreadings are its misread view S' (the "
+            "ablation's switch) or every other admissible candidate of its parameter; for each, the planner's plan A "
+            "for it (the ablation plan) is the best plan known for that reading, and the reference R for the "
+            "client's reading S. A plan D's regret under a reading is its distance from the better of R and A there, "
+            "first in rules broken, then in the objective, in units of the setting's quality scale. The target is "
+            "not enforced when D breaks more rules under S than under S' (each beyond the best plan known there), "
+            "or, breaking as many, when D is materially worse than the best plan known for the fact (regret above "
+            "0.05) and the misreading explains at least half of it: r_S(D) − r_S'(D) > max(0.05, r_S(D) / 2). The "
+            "reference passes (no regret); an ablation that bites fails (no regret under its own reading, at least "
+            "0.10 under the fact); a plan that is weak for other reasons carries most of its regret under both "
+            "readings, so it is not drawn to the misreading; a plan better than the reference has no material "
+            "regret under the fact. Where no plan known keeps every rule of a misreading (C04 cannot be "
+            "second-sourced in two hard settings), only the 0.05 is asked. A misreading that only adds a restriction "
+            "the plan keeps (another supplier on hold, a stricter share cap, the allocation outside hard) scores the "
+            "plan the same under both readings, so its regrets differ by what the restriction costs the best plans "
+            "known, the same for every such plan. For another candidate's hold the plan must then also keep it at a "
+            "cost: that supplier delivers nothing during its hold although switching a line that arrives then to it "
+            "would save at least 0.5% of the scale (the old plan-shape check called a plan that merely did not need "
+            "the supplier not enforced). For a stricter share cap no plan shape works (the planner's own plans for a "
+            "70% cap have their top share anywhere from 61% to 70%, and the old check, which asked for a share above "
+            "the stricter cap where the reference has one, called plans that did not need the room not enforced): "
+            "the cap's cost to the planner decides, under the half-of-the-regret rule. Such a plan that also beats A "
+            "under the misreading (so also under the fact) is not drawn to it: a planner no better than the "
+            "reference would not have made it for the misreading (a plan that happens to keep the allocation caps "
+            "outside hard, or a stricter share cap, while being cheaper than the planner's own plan for them). Where A "
+            "itself has no material regret under the fact (the misreading costs a good planner nothing in that "
+            "setting; often A is R), a plan whose regret the misreading explains only in part (less than 0.8) "
+            "merely does not use what the reference uses the fact for, as a weaker plan that knows the fact may "
+            "not: not determinable (None); one it explains almost wholly still follows it. Likewise a plan with no "
+            "Nara Display order in W3 does not use the old price, and a plan above the larger safety stock in every "
+            "week keeps it. The facts that alone state a rule (the quality hold, approved status only, the MOQ per "
+            "line) are not enforced whenever the plan breaks that rule under the client's reading, also when the "
+            "misreading forbids the same plan (a suspended supplier, a supplier total below the MOQ too, no hold at "
+            "all), which the regret test would otherwise judge on cost alone.",
+            "",
+            "Reliability on plans that are neither the reference nor an ablation (the audit's checks). The best "
+            f"known solution, which knows every fact, is called not enforced in {bk_false} of its {bk_diag} "
+            "diagnosed target-settings (the earlier diagnostic, which compared with the reference under the "
+            "misreading within 0.01% of the objective and ran in score(), called it so in 125 of 657 on the same "
+            f"plans). The client's MRP (baseline): {total(profile.get('baseline', {}))} (before: 228 of 657, e.g. the "
+            "lead times in 28 of 39 settings, the safety stock in 27, the planning rate in 13 of 15, the quality hold "
+            "in 18). The plan that never asks (robust_solution, which follows several misreadings by design: the "
+            "flash change outside hard, so C04 single-sourced from W6): "
+            f"{total(profile.get('robust_solution', {}))}. "
+            + (f"Ablations that also flag other targets in most settings where they bite: {', '.join(flagged)} "
+               "(rules several facts decide together, see REVIEW.md, diagnostics)." if flagged else
+               "No ablation flags other targets in most settings where it bites."),
+            ""]
     rows = []
     for t in targets:
         s = summary.get(t["id"])
@@ -257,19 +296,24 @@ def main() -> None:
             continue
         flag = module.TARGET_MISREADING.get(t["id"])
         param = t.get("param")
-        if t["id"] == "quality_hold":
-            kind = "plan shape: arrivals from the held supplier, and suppliers only another candidate holds"
-        elif t["id"] == "max_share":
-            kind = "plan shape: top share per critical part against the cap and the next stricter candidate" + (
-                f"; hard: delta against `{flag}`" if flag else "")
-        elif param:
-            kind = f"delta against every other candidate of `{param}`"
+        if param:
+            kind = f"regret against every other candidate of `{param}`" + (
+                f" (hard: against `{flag}`)" if flag else "")
+            if t["id"] == "quality_hold":
+                kind += "; a kept hold must cost the plan"
         else:
-            kind = f"delta against `{flag}`"
+            kind = f"regret against `{flag}`"
+        if t["id"] in module.TARGET_RULE:
+            kind += f"; breaking `{module.TARGET_RULE[t['id']]}` is not enforced"
         diag = "no" if not s["has_diagnostic"] else ("untested" if s["separates"] is None else
                                                     "separates" if s["separates"] else "does not separate")
-        rows.append([f"`{t['id']}`", kind, diag, ", ".join(s["undiagnosed"][:3]) or "–"])
-    out += _table(["target", "diagnostic", "result", "settings where it fails"], rows)
+        fn = negatives.get(t["id"])
+        prof = [profile.get(name, {}).get(t["id"]) for name in ("baseline", "robust_solution")]
+        rows.append([f"`{t['id']}`", kind, diag, ", ".join(s["undiagnosed"][:3]) or "–",
+                     f"{len(fn['false'])}/{fn['diagnosed']}" if fn else "–"]
+                    + [f"{p['false']}/{p['diagnosed']}" if p and p["diagnosed"] else "–" for p in prof])
+    out += _table(["target", "diagnostic", "result", "settings where it fails", "best known not enforced",
+                   "baseline not enforced", "never asks not enforced"], rows)
     out += ["", "## Findings of the audit", ""] + [f"- {x}" for x in audit["summary"]]
     (ROOT / "GT.md").write_text("\n".join(out) + "\n", encoding="utf-8")
     print("wrote", ROOT / "GT.md")

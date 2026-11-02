@@ -32,7 +32,7 @@ One row per target: the fact, the tiers where it is in force, how the audit misr
 | `supplier_lateness` | Suppliers deliver one or two weeks late with their own probabilities, shown by delivery_history.csv (received 1-7 days after the promised Monday = one week late, 8-14 days = two weeks); each delivery (one supplier, part and arrival week) is late independently; open orders arrive on time. | hard | `on_time`: suppliers deliver in the promised week | 1.000–1.000 | hard 9/9 | separates |
 | `allocation_caps` | S03 for C01 and C03 and S08 for C06 confirm at most the quantity in allocations.csv per calendar month of order weeks; anything above it is not delivered. | hard | `no_alloc`: the allocation notice does not bind | 1.000–1.000 | hard 9/9 | separates |
 | `eco_switch` | From W6 the flash C04 is replaced by C25 on both boards, as the bom.csv validity columns show; C04 left at the end of W5 is scrapped at standard cost and C04 arriving later is useless; C25 has no stock or open orders. | hard | `no_eco`: the flash change does not apply: C04 in all ten weeks, no C25 | 1.000–1.000 | hard 9/9 | separates |
-| `eco_c04_exempt` | C04, which is being phased out, needs no safety stock and no second source any more; C25 is critical and needs both. | hard | `c04_critical`: the phased-out C04 still needs its safety stock and a second source up to W5 | 0.114–0.710 | hard 9/9 | separates |
+| `eco_c04_exempt` | C04, which is being phased out, needs no safety stock and no second source any more; C25 is critical and needs both. | hard | `c04_critical`: the phased-out C04 still needs its safety stock and a second source up to W5 | 0.060–0.347 | hard 8/9 | separates |
 
 Removed or split targets (the facts stay in requirements.md where they are context):
 
@@ -147,38 +147,39 @@ Mandatory content. The plan has no separate report: what it must contain is enfo
 
 ## 5. Diagnostic cases
 
-`score()` reports `enforced[target]` for every target in force, for valid and invalid plans alike. For a target with a natural misreading, the plan D is scored under the client's view S and under the misread view S' and compared with the reference R: delta = [g_S(D) − g_S(R)] − [g_S'(D) − g_S'(R)], where g is the objective plus 10^10 per distinct rule broken. The target is enforced when delta ≤ 0.01% of the reference's objective: the client's reading does not make D look worse next to the reference than the misreading does. A rule broken only under the client's reading fails it; one broken only under the misreading passes it. The planning rate and the safety stock compare the same way with every other candidate of their parameter. The quality hold checks that nothing from the held supplier arrives during the hold and that the plan does not avoid a supplier only another candidate holds (where the reference uses it); the share cap checks the cap and that the plan uses the room a stricter candidate would not leave (where the reference does). The audit checks that the reference is enforced everywhere and that every ablation that bites is not.
+`diagnose()` reports `enforced[target]` for every target in force, for valid and invalid plans alike. It is computed only when evaluate() asks for it (the audit and a run's scoring, never validate-case), because it needs the reference planner's own plan for every misreading of the setting (planned once per setting and cached, half a minute to a minute). A target's misreadings are its misread view S' (the ablation's switch) or every other admissible candidate of its parameter; for each, the planner's plan A for it (the ablation plan) is the best plan known for that reading, and the reference R for the client's reading S. A plan D's regret under a reading is its distance from the better of R and A there, first in rules broken, then in the objective, in units of the setting's quality scale. The target is not enforced when D breaks more rules under S than under S' (each beyond the best plan known there), or, breaking as many, when D is materially worse than the best plan known for the fact (regret above 0.05) and the misreading explains at least half of it: r_S(D) − r_S'(D) > max(0.05, r_S(D) / 2). The reference passes (no regret); an ablation that bites fails (no regret under its own reading, at least 0.10 under the fact); a plan that is weak for other reasons carries most of its regret under both readings, so it is not drawn to the misreading; a plan better than the reference has no material regret under the fact. Where no plan known keeps every rule of a misreading (C04 cannot be second-sourced in two hard settings), only the 0.05 is asked. A misreading that only adds a restriction the plan keeps (another supplier on hold, a stricter share cap, the allocation outside hard) scores the plan the same under both readings, so its regrets differ by what the restriction costs the best plans known, the same for every such plan. For another candidate's hold the plan must then also keep it at a cost: that supplier delivers nothing during its hold although switching a line that arrives then to it would save at least 0.5% of the scale (the old plan-shape check called a plan that merely did not need the supplier not enforced). For a stricter share cap no plan shape works (the planner's own plans for a 70% cap have their top share anywhere from 61% to 70%, and the old check, which asked for a share above the stricter cap where the reference has one, called plans that did not need the room not enforced): the cap's cost to the planner decides, under the half-of-the-regret rule. Such a plan that also beats A under the misreading (so also under the fact) is not drawn to it: a planner no better than the reference would not have made it for the misreading (a plan that happens to keep the allocation caps outside hard, or a stricter share cap, while being cheaper than the planner's own plan for them). Where A itself has no material regret under the fact (the misreading costs a good planner nothing in that setting; often A is R), a plan whose regret the misreading explains only in part (less than 0.8) merely does not use what the reference uses the fact for, as a weaker plan that knows the fact may not: not determinable (None); one it explains almost wholly still follows it. Likewise a plan with no Nara Display order in W3 does not use the old price, and a plan above the larger safety stock in every week keeps it. The facts that alone state a rule (the quality hold, approved status only, the MOQ per line) are not enforced whenever the plan breaks that rule under the client's reading, also when the misreading forbids the same plan (a suspended supplier, a supplier total below the MOQ too, no hold at all), which the regret test would otherwise judge on cost alone.
 
-Limits (second pass, REVIEW.md). The comparison is with the reference R under S', so a plan that merely differs from R can be called a misreading. The client's own MRP, which knows every fact, is 'not enforced' on the lead times in 28 of 39 settings and on the planning rate in 13 of 15 (often R breaks a rule under the misreading that the MRP keeps), and the tolerance (0.01% of the objective, about 0.1% of the scale) lets any other difference decide. Comparing regrets with the reference planner's own plan for the misreading, within 5% of the scale, frees the client's MRP of most of these and still separates every ablation on the four settings checked, but scoring then plans the misreadings and validate-case takes seven times as long; it waits for a framework change (diagnostics only where evaluate() is asked for them). Read the enforced column of a run's funnel for plans far from the reference with this in mind.
+Reliability on plans that are neither the reference nor an ablation (the audit's checks). The best known solution, which knows every fact, is called not enforced in 0 of its 657 diagnosed target-settings (the earlier diagnostic, which compared with the reference under the misreading within 0.01% of the objective and ran in score(), called it so in 125 of 657 on the same plans). The client's MRP (baseline): 0 of 657 (before: 228 of 657, e.g. the lead times in 28 of 39 settings, the safety stock in 27, the planning rate in 13 of 15, the quality hold in 18). The plan that never asks (robust_solution, which follows several misreadings by design: the flash change outside hard, so C04 single-sourced from W6): 63 of 657. Ablations that also flag other targets in most settings where they bite: scope_list_prices, budget_month, scope_no_flash_change, max_share, price_breaks, usd_planning_rate, supplier_lateness, eco_switch (rules several facts decide together, see REVIEW.md, diagnostics).
 
-| target | diagnostic | result | settings where it fails |
-|---|---|---|---|
-| `bom_explosion` | delta against `offset` | separates | – |
-| `lead_time_business_days` | delta against `calendar_days` | separates | – |
-| `scope_whole_weeks` | delta against `holidays` | separates | – |
-| `holiday_weeks` | delta against `no_holidays` | separates | – |
-| `usd_planning_rate` | delta against every other candidate of `usd_krw` | separates | – |
-| `moq_per_line` | delta against `moq_total` | separates | – |
-| `price_breaks` | delta against `cumulative` | separates | – |
-| `scope_list_prices` | delta against `breaks_easy` | separates | – |
-| `price_rise_week` | delta against `price_w3` | separates | – |
-| `quality_hold` | plan shape: arrivals from the held supplier, and suppliers only another candidate holds | separates | – |
-| `budget_hard_cap` | delta against `budget_soft` | separates | – |
-| `budget_month` | delta against `budget_majority` | separates | – |
-| `approved_status_only` | delta against `pending_ok` | separates | – |
-| `safety_stock` | delta against every other candidate of `safety_weeks` | separates | – |
-| `shortfall_cost` | delta against `shortfall_floor` | separates | – |
-| `dual_source_two` | delta against `single_source` | separates | – |
-| `max_share` | plan shape: top share per critical part against the cap and the next stricter candidate; hard: delta against `share_any` | separates | – |
-| `backlog_cost` | delta against `backlog_piece` | separates | – |
-| `scope_no_flash_change` | delta against `eco` | separates | – |
-| `scope_on_time` | delta against `late` | separates | – |
-| `scope_no_allocation` | delta against `alloc` | separates | – |
-| `supplier_lateness` | delta against `on_time` | separates | – |
-| `allocation_caps` | delta against `no_alloc` | separates | – |
-| `eco_switch` | delta against `no_eco` | separates | – |
-| `eco_c04_exempt` | delta against `c04_critical` | separates | – |
+| target | diagnostic | result | settings where it fails | best known not enforced | baseline not enforced | never asks not enforced |
+|---|---|---|---|---|---|---|
+| `bom_explosion` | regret against `offset` | separates | – | 0/39 | 0/39 | 0/39 |
+| `lead_time_business_days` | regret against `calendar_days` | separates | – | 0/39 | 0/39 | 0/39 |
+| `scope_whole_weeks` | regret against `holidays` | separates | – | 0/15 | 0/15 | 0/15 |
+| `holiday_weeks` | regret against `no_holidays` | separates | – | 0/24 | 0/24 | 0/24 |
+| `usd_planning_rate` | regret against every other candidate of `usd_krw` | separates | – | 0/15 | 0/15 | 0/15 |
+| `moq_per_line` | regret against `moq_total`; breaking `moq` is not enforced | separates | – | 0/39 | 0/39 | 0/39 |
+| `price_breaks` | regret against `cumulative` | separates | – | 0/24 | 0/24 | 0/24 |
+| `scope_list_prices` | regret against `breaks_easy` | separates | – | 0/15 | 0/15 | 0/15 |
+| `price_rise_week` | regret against `price_w3` | separates | – | 0/30 | 0/30 | 0/30 |
+| `quality_hold` | regret against every other candidate of `quality_hold`; a kept hold must cost the plan; breaking `quality_hold` is not enforced | separates | – | 0/39 | 0/39 | 0/39 |
+| `budget_hard_cap` | regret against `budget_soft` | separates | – | 0/39 | 0/39 | 0/39 |
+| `budget_month` | regret against `budget_majority` | separates | – | 0/39 | 0/39 | 0/39 |
+| `approved_status_only` | regret against `pending_ok`; breaking `approved_vendor` is not enforced | separates | – | 0/39 | 0/39 | 0/39 |
+| `safety_stock` | regret against every other candidate of `safety_weeks` | separates | – | 0/39 | 0/39 | 3/39 |
+| `shortfall_cost` | regret against `shortfall_floor` | separates | – | 0/9 | 0/9 | 0/9 |
+| `dual_source_two` | regret against `single_source` | separates | – | 0/39 | 0/39 | 30/39 |
+| `max_share` | regret against every other candidate of `max_share` (hard: against `share_any`) | separates | – | 0/39 | 0/39 | 0/39 |
+| `backlog_cost` | regret against `backlog_piece` | separates | – | 0/9 | 0/9 | 0/9 |
+| `scope_no_flash_change` | regret against `eco` | separates | – | 0/30 | 0/30 | 30/30 |
+| `scope_on_time` | regret against `late` | separates | – | 0/30 | 0/30 | 0/30 |
+| `scope_no_allocation` | regret against `alloc` | separates | – | 0/30 | 0/30 | 0/30 |
+| `supplier_lateness` | regret against `on_time` | separates | – | 0/9 | 0/9 | 0/9 |
+| `allocation_caps` | regret against `no_alloc` | separates | – | 0/9 | 0/9 | 0/9 |
+| `eco_switch` | regret against `no_eco` | separates | – | 0/9 | 0/9 | 0/9 |
+| `eco_c04_exempt` | regret against `c04_critical` | separates | – | 0/9 | 0/9 | 0/9 |
 
 ## Findings of the audit
 
 - warning: few_bites (5): scope_whole_weeks, scope_list_prices, price_rise_week, max_share, usd_planning_rate
+- warning: cross_flags (8): scope_list_prices, budget_month, scope_no_flash_change, max_share, price_breaks, usd_planning_rate, supplier_lateness, eco_switch
