@@ -66,7 +66,7 @@ Lo escribe `python -m fdebench2.cli export-dataset cases/finance/loan_underwriti
   esa mañana, avisos) sin `book`, que el motor rellena a partir de las decisiones anteriores del propio programa.
 - `hidden/mail/<lang>/<date>_<ref>.eml`: los 25 avisos del período de evaluación (1 cambio regulatorio, 1 recorte de
   presupuesto, 15 amortizaciones, 8 correcciones de documentos) y 10 notas de sucursal como correos, por idioma.
-- `gt/<tier>_s<seed>/` (las 9 configuraciones públicas): `setting.json` (nivel, semilla de reglas, los parámetros sorteados y
+- `answer/<tier>/s<seed>/` (las 9 configuraciones públicas): `setting.json` (nivel, semilla de reglas, los parámetros sorteados y
   los derivados `min_score`, `near_prime_below`, `other_bureau`), `reference/program/` (la referencia con su configuración),
   `score.json` (objetivo 1.0, métricas), `decisions.csv` (las decisiones de la referencia por día: date, day_index,
   application_id, customer_id, decision, amount, reason_code, redecision = 1 para las nuevas decisiones de hard) y

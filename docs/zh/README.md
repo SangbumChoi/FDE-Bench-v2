@@ -25,7 +25,7 @@ cp configs/models.example.yaml configs/models.yaml   # set endpoints and API-key
 ```bash
 fdebench2 cases                                   # <field>/<role>, role title, task type, locales
 fdebench2 validate-case cases/*/*/                # contract checks for every case
-fdebench2 export-dataset cases/<field>/<role>     # store a case's data and ground truth in dataset/
+fdebench2 export-dataset cases/<field>/<role>     # store a case's data and answers in dataset/
 fdebench2 audit-case cases/<field>/<role>         # measure its ground truth, stored in dataset/audit.json
 fdebench2 policies
 # What an agent would get, without running one (Korean client, Japanese agent instructions, messy engagement):
@@ -59,9 +59,9 @@ fdebench2 report runs/
 
 ```
 cases/<field>/<role>/  case.yaml, case.py, locales/<lang>/{request.md, requirements.md, targets.yaml},
-                       dataset/ (data per locale, hidden inputs, ground truth per setting),
+                       dataset/ (data per locale, hidden inputs, answer/<tier>/s<seed>/ per setting),
                        docs/<lang>/{README.md (tiers, rule parameters, numbers per setting), REVIEW.md,
-                       explainer.html}, README.md (generated index of docs/), GT.md (audited cases)
+                       explainer.html}, README.md (generated index of docs/ and answer/), GT.md (audited cases)
 cases/README.md        catalog of cases by field   cases/fields.yaml  field names in 5 locales
 cases/docs/<lang>/     index.html: the catalog's page in each language (the site's home page)
 fdebench2/

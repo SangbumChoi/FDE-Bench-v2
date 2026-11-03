@@ -1,0 +1,67 @@
+- id: efficiency
+  kind: ambiguous
+  domain: calculation
+  text: Efficiency is modelled per direction, 95% on charge and 89% on discharge (not the 84.6% round-trip
+    applied once); charging P MW for a quarter adds 0.25*P*0.95 MWh and discharging P MW removes 0.25*P/0.89
+    MWh.
+- id: soc_window
+  kind: ambiguous
+  domain: business rule
+  text: The warranty requires state of charge between 5% and 95% (2-38 MWh) at all times, the same window
+    as the manufacturer's.
+- id: start_end_soc
+  kind: missing
+  domain: business rule
+  text: The battery starts the week at 50% (20 MWh) and must finish the week at 50% (20 MWh) or more.
+- id: export_cap
+  kind: ambiguous
+  domain: data semantics
+  text: The export limit is temporarily 15 MW (not the 30 MW in the agreement); solar + discharge - charge
+    must not exceed 15 MW while discharging, and solar above 15 MW is clipped unless the battery absorbs
+    it.
+- id: grid_charging
+  kind: missing
+  domain: business rule
+  text: Charging from solar is allowed any time, but drawing from the grid only in quarters starting 01:00-04:45
+    local time (max 20 MW); never charge and discharge in the same quarter.
+- id: quarter_settlement
+  kind: ambiguous
+  domain: data semantics
+  text: Settlement is in 15-minute intervals; the hourly price applies to all four quarters, MW values
+    are quarter averages and energy is MW x 0.25.
+- id: dst_clock
+  kind: missing
+  domain: data semantics
+  text: Timestamps are local time and clocks go forward on Sunday 28 March, so that day has 23 hours,
+    no 02:00-02:45 rows, and the plan has exactly 668 quarter rows.
+- id: evening_reserve
+  kind: missing
+  domain: business rule
+  text: Company policy keeps at least 20% (8 MWh) state of charge at every moment between 16:00 and 20:00
+    every day.
+- id: degradation
+  kind: missing
+  domain: calculation
+  text: Every MWh of charge plus discharge at the meter costs EUR 5 in degradation, which is subtracted
+    from the profit.
+- id: profit_scoring
+  kind: missing
+  domain: scoring
+  text: The plan is scored at actual prices as site export revenue minus grid import cost minus what solar
+    alone would earn (both clipped at the export limit), minus the degradation cost of the charge plus
+    discharge throughput.
+- id: works_end
+  kind: missing
+  domain: business rule
+  text: 'The substation works end early: the 15 MW limit holds until Wednesday 24 March 00:00, and from
+    then the agreement''s 30 MW applies again.'
+- id: dso_limit
+  kind: missing
+  domain: business rule
+  text: The DSO limits site export to 10 MW on Thursday 25 March from 18:00 to 21:00; while discharging
+    then, solar + discharge - charge must stay at or below 10 MW.
+- id: maintenance_outage
+  kind: missing
+  domain: business rule
+  text: 'The battery is offline for inverter maintenance on Monday 22 March from 08:00 to 20:00: no charging
+    or discharging in those quarters.'

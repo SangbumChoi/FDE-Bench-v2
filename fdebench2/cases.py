@@ -279,7 +279,12 @@ class Setting:
 
     @property
     def folder(self) -> str:
-        """The setting's folder in dataset/gt/: "easy_s1"."""
+        """The setting's folder in dataset/answer/: "easy/s1" (the tier's folder, then the rule seed's)."""
+        return f"{self.tier}/{self._seed_name}"
+
+    @property
+    def slug(self) -> str:
+        """The setting as one flat name, for a scratch folder or a key: "easy_s1"."""
         return f"{self.tier}_{self._seed_name}"
 
 

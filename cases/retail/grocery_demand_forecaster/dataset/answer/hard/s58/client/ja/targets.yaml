@@ -1,0 +1,44 @@
+- id: stockout_censoring
+  kind: ambiguous
+  domain: data semantics
+  text: 欠品日の販売数量は在庫分で頭打ちになっています。予測するのはお客様の需要なので、こうした日を通常の販売として扱ってはいけません。
+- id: returns
+  kind: ambiguous
+  domain: data semantics
+  text: 販売数量がマイナスの行は返品日に記録されたお客様の返品です。需要ではないため除外し、販売数量と相殺もしません。
+- id: s4_sunday_closed
+  kind: missing
+  domain: business rule
+  text: 旧市街店S4は毎週日曜日が定休日で、日曜日の予測は0にしなければなりません。
+- id: promo_plan
+  kind: missing
+  domain: data semantics
+  text: 販促計画.csvの販促（開始日・終了日を含む）は必ず反映します。伸びは割引率が大きいほど大きく、カテゴリによって異なり、履歴の販促割引率_%から推定します。
+- id: promo_flyer
+  kind: missing
+  domain: business rule
+  text: 11月の販促は紙のチラシにも載り、同じカテゴリ・同じ割引率の過去の販促に比べて上乗せ分の売上が約2倍になります。
+- id: promo_revision
+  kind: missing
+  domain: business rule
+  text: 10月30日（金）、販促計画.csvを書き出した後に、計画にある乳製品の販促はすべて中止になりました。これらは実施せず、計画のほかの部分は変わりません。
+- id: one_off_holiday
+  kind: missing
+  domain: business rule
+  text: 2026年11月13日（金）の一度限りの地域の祝日は祝日一覧.csvにありません。店舗は通常営業で、過去の祝日と同様に需要が増え、ベーカリーと飲料の伸びが最も大きくなります。
+- id: unit_change_i07
+  kind: missing
+  domain: data semantics
+  text: ロールパンI07は2026年5月31日までは1個単位、6月1日からは6個入りパック単位で記録されています。それ以前の履歴は6で割り、I07はパック単位で予測します。
+- id: min_display
+  kind: missing
+  domain: business rule
+  text: 主力商品（青果と乳製品、I01-I06）は、店舗の営業日には予測を4未満にしません。
+- id: wape_metric
+  kind: missing
+  domain: scoring
+  text: 品質は少なすぎた1個を多すぎた1個の3倍に数える店舗ごとの加重WAPE（実績の合計で割る）の5店舗平均で、低いほど良い評価です。実績は欠品による販売機会ロスを含むお客様の需要です。
+- id: submission_format
+  kind: ambiguous
+  domain: deliverable
+  text: forecast.csvを列store_id,item_id,date,forecastで提出し、2026-11-02から2026-11-15まで店舗・商品・日付ごとにちょうど1行（計840行）とします。

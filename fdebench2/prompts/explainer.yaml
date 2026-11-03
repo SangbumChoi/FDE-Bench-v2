@@ -25,7 +25,7 @@ en:
   spec_title: Deliverable spec ({label})
   spec_program: the program interface
   spec_batch: given to the converter that puts the AI's files into the scored format, not to the AI
-  settings_title: 'Settings: one dataset, {n} ground truths'
+  settings_title: 'Settings: one dataset, {n} answers'
   tiers: Tiers
   tier: Tier
   in_force: What is in force
@@ -57,11 +57,13 @@ en:
   all_tiers: all
   data_title: Data & answers
   data_intro: 'Everything is stored as files next to the case: <code>agent_view/</code> is exactly what the AI receives;
-    <code>hidden/</code> holds inputs used only for scoring (for a program, the days or files it is run on); <code>gt/</code>
-    holds the correct answer for each version of the case.'
+    <code>hidden/</code> holds inputs used only for scoring (for a program, the days or files it is run on); <code>answer/</code>
+    holds the answer for each version of the case, one folder per difficulty and rule seed ({example}):
+    the setting and its rules, what the client knows in that version in every language, the reference solution, the
+    client''s own way and their scores.'
   visible_data: Data the AI receives ({language})
   hidden_inputs: Scoring inputs (never given to the AI)
-  scores_title: Scores of the reference solution
+  scores_title: Answers by difficulty
   scores_intro: Quality is measured on a scale where the client's own way without an engineer is 0 and the reference
     solution is 1. Better than the reference goes above 1.
   reference_objective: Reference solution (scores 1)
@@ -227,10 +229,12 @@ ko:
   all_tiers: 전체
   data_title: 데이터와 정답
   data_intro: 모든 것이 케이스 옆에 파일로 저장되어 있습니다. <code>agent_view/</code>는 AI가 받는 그대로의 데이터, <code>hidden/</code>은 채점에만
-    쓰는 입력(프로그램이라면 실제로 돌려 보는 날짜나 파일), <code>gt/</code>는 케이스의 버전마다 하나씩 있는 정답입니다.
+    쓰는 입력(프로그램이라면 실제로 돌려 보는 날짜나 파일), <code>answer/</code>는 케이스의 버전마다 하나씩 있는 정답입니다. 난이도와
+    규칙 시드마다 폴더가 하나씩 있고({example}), 그 안에 설정과 그 규칙, 그 버전에서 고객이 아는 내용(모든 언어),
+    모범 답안, 기존 방식과 그 점수가 들어 있습니다.
   visible_data: AI가 받는 데이터 ({language})
   hidden_inputs: 채점용 입력 (AI에게는 주지 않음)
-  scores_title: 모범 답안의 점수
+  scores_title: 난이도별 정답
   scores_intro: 품질은 '엔지니어 없이 고객이 하던 방식 = 0점, 모범 답안 = 1점' 척도로 잽니다. 모범 답안보다 나으면 1을 넘습니다.
   reference_objective: 모범 답안 (1점 기준)
   baseline_objective: 기존 방식 (0점 기준)
@@ -382,11 +386,11 @@ ja:
   kind: 種類
   all_tiers: すべて
   data_title: データと正解
-  data_intro: すべてケースの隣にファイルとして保存されています。<code>agent_view/</code> はAIが受け取るそのままのデータ、<code>hidden/</code> は採点にだけ使う入力（プログラムなら実際に動かす日やファイル）、<code>gt/</code>
-    はケースのバージョンごとの正解です。
+  data_intro: すべてケースの隣にファイルとして保存されています。<code>agent_view/</code> はAIが受け取るそのままのデータ、<code>hidden/</code> は採点にだけ使う入力（プログラムなら実際に動かす日やファイル）、<code>answer/</code>
+    はケースのバージョンごとの正解です。難易度とルールシードごとにフォルダが一つあり（{example}）、設定とそのルール、そのバージョンで顧客が知っている内容（すべての言語）、模範解答、従来のやり方とそれぞれのスコアが入っています。
   visible_data: AIが受け取るデータ（{language}）
   hidden_inputs: 採点用の入力（AIには渡さない）
-  scores_title: 模範解答のスコア
+  scores_title: 難易度別の正解
   scores_intro: 品質は「エンジニアなしで顧客がしていたやり方 = 0点、模範解答 = 1点」の尺度で測ります。模範解答より良ければ1を超えます。
   reference_objective: 模範解答（1点の基準）
   baseline_objective: 従来のやり方（0点の基準）
@@ -502,7 +506,7 @@ zh:
   spec_title: 交付物规格（{label}）
   spec_program: 程序接口
   spec_batch: 不给 AI，只给把 AI 的文件转换成评分格式的转换器
-  settings_title: 设置：一份数据，{n} 套标准答案
+  settings_title: 设置：一份数据，{n} 套答案
   tiers: 层级
   tier: 层级
   in_force: 适用内容
@@ -530,11 +534,11 @@ zh:
   kind: 类型
   all_tiers: 全部
   data_title: 数据与答案
-  data_intro: 所有内容都以文件形式保存在案例旁边：<code>agent_view/</code> 是 AI 收到的原样数据；<code>hidden/</code> 是只用于评分的输入（对程序来说，就是实际运行时使用的日期或文件）；<code>gt/</code>
-    是案例每个版本的正确答案。
+  data_intro: 所有内容都以文件形式保存在案例旁边：<code>agent_view/</code> 是 AI 收到的原样数据；<code>hidden/</code> 是只用于评分的输入（对程序来说，就是实际运行时使用的日期或文件）；<code>answer/</code>
+    是案例每个版本的答案，每个难度和规则种子各一个文件夹（{example}），其中有设置及其规则、该版本中客户知道的内容（所有语言）、参考答案、客户原来的做法以及两者的得分。
   visible_data: AI 收到的数据（{language}）
   hidden_inputs: 评分用输入（不给 AI）
-  scores_title: 参考答案的得分
+  scores_title: 按难度列出的答案
   scores_intro: 质量按“客户在没有工程师时的做法 = 0 分，参考答案 = 1 分”的尺度衡量。比参考答案好就超过 1。
   reference_objective: 参考答案（记 1 分）
   baseline_objective: 客户原来的做法（记 0 分）
@@ -651,7 +655,7 @@ es:
   spec_title: Especificación del entregable ({label})
   spec_program: la interfaz del programa
   spec_batch: la recibe el conversor que pasa los archivos de la IA al formato evaluado, no la IA
-  settings_title: 'Configuraciones: un conjunto de datos, {n} soluciones correctas'
+  settings_title: 'Configuraciones: un conjunto de datos, {n} respuestas'
   tiers: Niveles
   tier: Nivel
   in_force: Qué se aplica
@@ -684,10 +688,12 @@ es:
   data_title: Datos y respuestas
   data_intro: 'Todo se guarda como archivos junto al caso: <code>agent_view/</code> es exactamente lo que recibe
     la IA; <code>hidden/</code>, las entradas que solo se usan para evaluar (en un programa, los días o archivos
-    con los que se ejecuta); <code>gt/</code>, la respuesta correcta de cada versión del caso.'
+    con los que se ejecuta); <code>answer/</code>, la respuesta de cada versión del caso: una carpeta por dificultad
+    y semilla de reglas ({example}) con la configuración y sus reglas, lo que sabe el cliente en
+    esa versión en todos los idiomas, la solución de referencia, la forma de trabajar del cliente y sus puntuaciones.'
   visible_data: Datos que recibe la IA ({language})
   hidden_inputs: Entradas de evaluación (la IA nunca las recibe)
-  scores_title: Puntuación de la solución de referencia
+  scores_title: Respuestas por dificultad
   scores_intro: La calidad se mide en una escala donde la forma de trabajar del cliente sin un ingeniero vale 0
     y la solución de referencia vale 1. Lo que la supera pasa de 1.
   reference_objective: Solución de referencia (vale 1)

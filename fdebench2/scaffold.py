@@ -134,8 +134,9 @@ def write_hidden(world: World, hidden_dir: Path) -> None:
     """Optional: inputs the agent never sees (a program's hidden period or corpus), stored in dataset/hidden/."""
 
 
-def write_ground_truth(world: World, gt_dir: Path, setting) -> None:
-    """Optional: answers beyond the reference deliverable (expected tables, expected outputs) in dataset/gt/."""
+def write_ground_truth(world: World, answer_dir: Path, setting) -> None:
+    """Optional: answers beyond the reference deliverable (expected tables, expected outputs), written into the
+    setting's answer folder dataset/answer/<tier>/s<seed>/."""
 '''
 
 README = """# {title} — `{case_id}`
@@ -161,7 +162,7 @@ TODO: files and formats the agent receives.
 | TODO | | | | |
 
 The public rule seeds (case.yaml `rule_seeds`) and the values they draw are in the explainer and in
-`dataset/gt/<tier>_s<seed>/setting.json`.
+`dataset/answer/<tier>/s<seed>/setting.json`.
 
 ## Situations
 

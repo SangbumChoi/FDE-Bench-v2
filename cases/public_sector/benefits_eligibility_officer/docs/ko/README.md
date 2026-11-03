@@ -103,7 +103,7 @@ hard/s31    {uprating: 3.2, earned_disregard: 150_30, asset_limit: 5000_2500, di
 hard/s78    {uprating: 2.5, earned_disregard: 200_0,  asset_limit: 6000_3000, disability_supplement: 120, cap: 1150, residency_days: 365}
 ```
 
-세 시드를 합치면 모든 티어에서 모든 풀의 모든 후보가 뽑힙니다. `dataset/gt/<tier>_s<seed>/`에는 각 설정의
+세 시드를 합치면 모든 티어에서 모든 풀의 모든 후보가 뽑힙니다. `dataset/answer/<tier>/s<seed>/`에는 각 설정의
 `setting.json`(뽑힌 값과 파생값), 참조 해답, 그 점수가 있습니다. "규칙을 지키는 최선의 답"은 규칙대로 갱신을 이월한
 정확한 답이고, "정확한 답, 갱신 재심사"는 `auto_approve_renewals`를 완화한 답입니다(F2 참조). 월드 시드 1, 2, 3에서 참조
 해답 / 기준선의 목표값은 다음과 같습니다. 시드 1에서는 19,415 / 49,517, 17,905 / 56,467, 24,657 / 44,067(easy/s2, s31,

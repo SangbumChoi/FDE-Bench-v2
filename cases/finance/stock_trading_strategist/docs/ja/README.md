@@ -146,7 +146,7 @@ hard は三つの上限について、より広いプールから抽選します
 | hard/s20 | NEXO, PYRO; 9; 3; 18; 35; notice_10; 15 | 27% | 1.000 | 0.254 |
 | hard/s134 | MEDQ, GLAC; 6; 2; 10; 25; capital_25; 10 | 12% | 1.000 | 0.566 |
 
-`dataset/gt/<tier>_s<seed>/setting.json` には、設定ごとに抽選された値の辞書（ティアが使わない値は `none`）と、算出された `withdrawal_basis` と `withdrawal_pct` が入っています。
+`dataset/answer/<tier>/s<seed>/setting.json` には、設定ごとに抽選された値の辞書（ティアが使わない値は `none`）と、算出された `withdrawal_basis` と `withdrawal_pct` が入っています。
 
 **パラメータの拘束**（validate-case、hard/s44 から）：どのパラメータも、最初に試す別の値で正解を変えます。`restricted` = MEDQ, GLAC、`liquidation_days` = 3（4%の基準では2は許容されない）、`stock_cap` = 10 または `sector_cap` = 25 では、hard/s44 の参照解は無効になります（売買制限銘柄を買う、期限の時点でまだ LUMO を持っている、買った銘柄や業種が上限を超える）。`large_order` = 5 では目的値が0.929に、`withdrawal` = capital_25 では0.821に、`max_drawdown` = 10 では1.208に動きます。このチェックはワールドシード 1、2、3 でも通ります。そこでは一部の違反が目的値の変化に置き換わり、最小のものは2.2%です（ワールドシード 1 の `withdrawal`：0.978）。
 
@@ -213,4 +213,4 @@ hard は三つの上限について、より広いプールから抽選します
 
 - `agent_view/<lang>/`：上記のデータを5つのロケールそれぞれで収めたもの（すべての設定で同じ）。
 - `hidden/`（`write_hidden`）：`days/<date>.json` は呼び出しごとに1つ（80個で、引けたばかりの営業日の名前）あり、呼び出し番号、エンジンが送る正確な `market`、その日の `notices` が入っています（`portfolio` はプログラム自身の注文によって変わるので含めていません。正解を参照）。隠れた80営業日の `daily_prices.csv` と `index_levels.csv`（最後の営業日の株価データはどの呼び出しにも入りません）。`mail/<lang>/*.eml` は6つの通知の元になったメールで、すべてのロケール分があります。
-- `gt/<tier>_s<seed>/` は公開設定ごとに1つ（`easy_s44` … `hard_s134`）：`setting.json`（ティア、ルールシード、抽選された値と、算出された `withdrawal_basis` / `withdrawal_pct`）、`reference/program/`（strategy.py + config.json）、`score.json`（目的値1.0と指標）、そして `write_ground_truth` による参照解の実行結果：`orders.csv`（執行される営業日ごとの正しい形式の注文）、`fills.csv`（約定と拒否、その理由）、`positions.csv`（大引けごとの株数）、`equity_curve.csv`（当初の大引けを含むすべての大引け時点の現金、未受渡代金、保有分の評価額、資産、支払額、資産 + 支払額の最高値、ドローダウン、指数）、`status_tables.json`（80回の呼び出しそれぞれが報告すべき正確な表）。
+- `answer/<tier>/s<seed>/` は公開設定ごとに1つ（`easy/s44` … `hard/s134`）：`setting.json`（ティア、ルールシード、抽選された値と、算出された `withdrawal_basis` / `withdrawal_pct`）、`reference/program/`（strategy.py + config.json）、`score.json`（目的値1.0と指標）、そして `write_ground_truth` による参照解の実行結果：`orders.csv`（執行される営業日ごとの正しい形式の注文）、`fills.csv`（約定と拒否、その理由）、`positions.csv`（大引けごとの株数）、`equity_curve.csv`（当初の大引けを含むすべての大引け時点の現金、未受渡代金、保有分の評価額、資産、支払額、資産 + 支払額の最高値、ドローダウン、指数）、`status_tables.json`（80回の呼び出しそれぞれが報告すべき正確な表）。

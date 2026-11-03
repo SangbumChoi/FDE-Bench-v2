@@ -211,7 +211,7 @@ el agente no cambió nada: un programa todavía tiene que preguntar por ellos.
 | 10 | ORTH | 2 | 3 | `urgency_earliest` | 5 | 3 |
 | 64 | DERM | 3 | 4 | `received` | 7 | 1 |
 
-Cada fila es el diccionario sorteado de `easy/sN`, `medium/sN` y `hard/sN` (`dataset/gt/<tier>_s<N>/setting.json`, con
+Cada fila es el diccionario sorteado de `easy/sN`, `medium/sN` y `hard/sN` (`dataset/answer/<tier>/s<N>/setting.json`, con
 `derived: {reserve_times}`). La semilla 1 es el hospital más ajustado (dos intérpretes); la 64, el más holgado en intérpretes y
 laboratorio, pero con una reserva de tres huecos y un hueco sobrecitado por sesión. Las semillas privadas sortean cualquiera de las
 486 combinaciones, p. ej. la semilla 2: DERM, 3, 3, `urgency_received`, 7, 3; la semilla 3: PED, 3, 4, `urgency_received`, 5, 2.
@@ -368,7 +368,7 @@ Lo escribe `python -m fdebench2.cli export-dataset cases/healthcare/hospital_app
   conocidos del director).
 - `hidden/requests.csv`: cada solicitud del inicio y del periodo con sus hechos ocultos (tasa de ausencia con antelación cero,
   los días laborables antes de la cita en que el paciente la anula, la solicitud a la que duplica).
-- `gt/<tier>_s<seed>/`: por configuración pública (semillas 1, 10 y 64), `setting.json` (los parámetros sorteados y el
+- `answer/<tier>/s<seed>/`: por configuración pública (semillas 1, 10 y 64), `setting.json` (los parámetros sorteados y el
   `reserve_times` derivado), el `program/` de referencia y su `score.json`, y de la reproducción de la referencia `actions.csv` (cada acción por llamada), `status_tables.csv` (la tabla esperada, 20 días × 5 especialidades),
   `cancellations.csv` (las anulaciones de pacientes con las que se encontró), `final_book.csv` (cada cita celebrada en el periodo,
   con la asistencia donde se informó, y las pendientes) y `final_waitlist.csv`.

@@ -9,3 +9,8 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 | 한국어 | 배터리 운전 담당자 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [explainer.html](docs/ko/explainer.html) |
 | 日本語 | 蓄電池運転オペレーター | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [explainer.html](docs/ja/explainer.html) |
 | Español | Operador de despacho de baterías | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [explainer.html](docs/es/explainer.html) |
+
+- [dataset/answer/](dataset/answer/): the answer of each public setting, one folder per tier and public rule seed (`<tier>/s<seed>/`), with the setting and its rules, what the client knows in that version in every language, the reference, the client's own way and their scores
+  - [easy/](dataset/answer/easy/): [s141](dataset/answer/easy/s141/), [s70](dataset/answer/easy/s70/), [s334](dataset/answer/easy/s334/)
+  - [medium/](dataset/answer/medium/): [s141](dataset/answer/medium/s141/), [s70](dataset/answer/medium/s70/), [s334](dataset/answer/medium/s334/)
+  - [hard/](dataset/answer/hard/): [s141](dataset/answer/hard/s141/), [s70](dataset/answer/hard/s70/), [s334](dataset/answer/hard/s334/)

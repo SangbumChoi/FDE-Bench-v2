@@ -1,0 +1,32 @@
+- id: layout
+  kind: missing
+  domain: business rule
+  text: 每本上架的书在 out_dir 下对应一个文件，路径为 `library/<年份>/<书名>/<作者>.txt`。
+- id: year_basis
+  kind: ambiguous
+  domain: business rule
+  text: 路径里的年份是首次出版的年份；只有一个年份的书两者都用它。
+- id: script
+  kind: ambiguous
+  domain: business rule
+  text: 路径里的书名和作者名用拉丁字母（中文、韩文、日文书使用资料中给出的罗马字写法）书写。
+- id: co_authors
+  kind: missing
+  domain: business rule
+  text: 多人合著的书，路径里的作者部分为第一作者（只写一位）。
+- id: separator
+  kind: missing
+  domain: data semantics
+  text: 书名和作者名里的每一段连续空白换成连字符 `-`。
+- id: max_len
+  kind: missing
+  domain: data semantics
+  text: 书名和作者名只保留前 40 个字符，然后去掉两端的空格、句点和分隔符。
+- id: content
+  kind: missing
+  domain: data semantics
+  text: 书库文件里只放这本书的简介（不要书名、作者、年份那几行），UTF-8，段落之间空一行。
+- id: review_codes
+  kind: missing
+  domain: business rule
+  text: 复核行给出一个原因代码：UNREADABLE、NO_TITLE、NO_AUTHOR、NO_YEAR、NO_DESCRIPTION 或 CONFLICT（按这个顺序取第一个符合的）。

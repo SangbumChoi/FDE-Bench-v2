@@ -1,0 +1,33 @@
+- id: layout
+  kind: missing
+  domain: business rule
+  text: 서고에 올리는 책은 out_dir 안의 `library/<저자>/<연도>_<제목>.txt` 경로에 파일을 하나씩 둡니다.
+- id: year_basis
+  kind: ambiguous
+  domain: business rule
+  text: 경로의 연도는 초판 발행 연도입니다. 연도가 하나뿐인 책은 그 연도를 씁니다.
+- id: script
+  kind: ambiguous
+  domain: business rule
+  text: 경로의 제목과 저자 이름은 로마자로 씁니다. 중국어·한국어·일본어 책은 메타데이터에 있는 로마자 표기를 씁니다.
+- id: co_authors
+  kind: missing
+  domain: business rule
+  text: 공저인 책은 경로의 저자 부분에 모든 저자를 순서대로 `" & "`로 이어 씁니다.
+- id: separator
+  kind: missing
+  domain: data semantics
+  text: 제목과 저자 이름에서 연속된 공백은 일반 공백 하나로(공백은 그대로 둠) 바꿉니다.
+- id: max_len
+  kind: missing
+  domain: data semantics
+  text: 제목과 저자 이름은 앞의 32자만 남기고, 양 끝의 공백·마침표·구분자를 없앱니다.
+- id: content
+  kind: missing
+  domain: data semantics
+  text: 서고 파일에는 책 소개글만 넣습니다(제목·저자·연도 줄은 넣지 않음). UTF-8이며 문단 사이에 빈 줄을 둡니다.
+- id: review_codes
+  kind: missing
+  domain: business rule
+  text: 검토 줄에는 사유 코드 UNREADABLE, NO_TITLE, NO_AUTHOR, NO_YEAR, NO_DESCRIPTION, CONFLICT 중 하나를 적습니다(이 순서로
+    해당하는 첫 번째).

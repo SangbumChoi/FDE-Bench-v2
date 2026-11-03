@@ -220,7 +220,7 @@ hard에서 값이 4개인 풀마다 세 값을 보여 줍니다(5% 기준, 20% �
 | hard/s20 | NEXO, PYRO; 9; 3; 18; 35; notice_10; 15 | 27% | 1.000 | 0.254 |
 | hard/s134 | MEDQ, GLAC; 6; 2; 10; 25; capital_25; 10 | 12% | 1.000 | 0.566 |
 
-`dataset/gt/<tier>_s<seed>/setting.json`에는 설정마다 뽑힌 값의 사전(티어가 쓰지 않는 값은 `none`)과 계산된
+`dataset/answer/<tier>/s<seed>/setting.json`에는 설정마다 뽑힌 값의 사전(티어가 쓰지 않는 값은 `none`)과 계산된
 `withdrawal_basis`, `withdrawal_pct`가 있습니다.
 
 **파라미터 구속**(validate-case, hard/s44에서 시작): 모든 파라미터는 처음 시도하는 다른 값에서 정답을 바꿉니다.
@@ -342,7 +342,7 @@ hard에서 값이 4개인 풀마다 세 값을 보여 줍니다(5% 기준, 20% �
   엔진이 보내는 정확한 `market`, 그날의 `notices`가 들어 있습니다(`portfolio`는 프로그램 자신의 주문에 따라 달라지므로
   빠져 있습니다. 정답 참고). 숨은 80거래일의 `daily_prices.csv`와 `index_levels.csv`(마지막 거래일의 시세는 어떤
   호출에도 들어가지 않음). `mail/<lang>/*.eml`은 6개 통지의 원본 메일을 모든 로캘로 담은 것입니다.
-- `gt/<tier>_s<seed>/`, 공개 설정마다 하나(`easy_s44` … `hard_s134`): `setting.json`(티어, 규칙 시드, 뽑힌 값과 계산된
+- `answer/<tier>/s<seed>/`, 공개 설정마다 하나(`easy/s44` … `hard/s134`): `setting.json`(티어, 규칙 시드, 뽑힌 값과 계산된
   `withdrawal_basis` / `withdrawal_pct`), `reference/program/`(strategy.py + config.json), `score.json`(목표값 1.0과
   지표), 그리고 `write_ground_truth`가 쓴 참조 해답의 실행 결과: `orders.csv`(체결되는 거래일별 형식에 맞는 주문),
   `fills.csv`(체결과 거부, 그 사유), `positions.csv`(마감별 주식 수), `equity_curve.csv`(시작 마감을 포함한 모든 마감

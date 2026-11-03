@@ -1,0 +1,49 @@
+- id: household_size
+  kind: ambiguous
+  domain: data semantics
+  text: 신청주소거주가 '예'인 가구원만 가구원수에 포함하며, 다른 곳에 사는 가구원은 소득과 장애 여부까지 전부 제외합니다.
+- id: earned_disregard
+  kind: missing
+  domain: calculation
+  text: 신청주소에 사는 근로자마다 월 근로소득 중 처음 100을 빼고 나머지의 20%도 빼며(100 초과분의 80%만 반영), 연금·실업급여·기타소득은 전액 반영합니다.
+- id: residency
+  kind: missing
+  domain: business rule
+  text: 신청일 기준으로 우리 시에 180일 이상 거주해야 하며, 데이터의 날짜는 '연. 월. 일.' 형식입니다.
+- id: uprating
+  kind: missing
+  domain: calculation
+  text: 데이터는 작년 지급액표이고, 올해 기준생계액과 주거비상한은 작년 값을 4.0% 인상한 뒤 10 단위로 내림합니다.
+- id: need_formula
+  kind: ambiguous
+  domain: calculation
+  text: 필요액은 가구원수별 기준생계액 + 주거비상한까지의 월세이며, 지급액은 필요액 − 인정소득을 내림한 금액이고 0 이하이면 대상이 아닙니다.
+- id: renewals
+  kind: missing
+  domain: business rule
+  text: 갱신 신청은 재심사 없이 작년 월 지급액 그대로 승인하고 사유 코드는 RENEWAL입니다.
+- id: scoring
+  kind: missing
+  domain: scoring
+  text: 목표는 모든 가구에 올해 기준으로 받아야 할 금액을 정확히 지급하고, 무엇보다 대상 여부 판단을 틀리지 않는 것이며, 탈락 시에는 거주, 재산, 소득 순으로 처음 충족하지
+    못한 요건을 사유로 씁니다.
+- id: asset_test
+  kind: missing
+  domain: business rule
+  text: 인정 재산에서 거주주택과 자동차 한 대(가장 비싼 차)는 제외하며, 8,000에 추가 가구원 1명당 2,000을 더한 금액을 넘으면 대상이 아닙니다.
+- id: disability_supplement
+  kind: missing
+  domain: calculation
+  text: 필요액에는 신청주소에 사는 장애 가구원 1명당 100이 포함됩니다.
+- id: child_support
+  kind: ambiguous
+  domain: calculation
+  text: 양육비는 가구 소득으로 전액 반영합니다. 소득이 아니라고 생각하는 시민도 있지만 포함됩니다.
+- id: amount_cap
+  kind: missing
+  domain: business rule
+  text: '월 지급액의 예산상 상한은 다음과 같습니다: 1인 980, 2인 1,350, 3인 1,680, 4인 1,960, 5인 2,200, 6인 이상 2,400.'
+- id: changes_and_letters_out_of_round
+  kind: missing
+  domain: business rule
+  text: 이번에는 변경 신고와 접수문서 폴더의 문서를 따로 처리하며, 모든 신청은 신청서에 적힌 대로 결정합니다.

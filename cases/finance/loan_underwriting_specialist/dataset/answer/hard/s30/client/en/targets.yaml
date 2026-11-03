@@ -1,0 +1,129 @@
+- id: gross_income
+  kind: ambiguous
+  domain: calculation
+  text: Annual gross income is 12 x monthly_base_salary plus annual_bonus only when bonus_documented is
+    true; stated_monthly_income is never used.
+- id: policy_bureau
+  kind: ambiguous
+  domain: data semantics
+  text: The credit policy uses bureau_a_score only; bureau_b_score is for reference and never used for
+    a cutoff or the near-prime definition (Bureau B runs about 55 points higher).
+- id: score_cutoff
+  kind: missing
+  domain: business rule
+  text: An application is approved only when bureau_a_score is at least 745.
+- id: income_cap
+  kind: missing
+  domain: calculation
+  text: A customer's limit is at most 65% of annual gross income, rounded down (and at most the product's
+    50,000).
+- id: dsr_cap
+  kind: missing
+  domain: calculation
+  text: The debt-service ratio, (annual service of the existing debts + 12 x 33.17 per 1,000 of all our
+    PL36 lending to the customer) / annual gross income, may be at most 35%; an installment loan counts
+    12 x its monthly_payment.
+- id: our_lending
+  kind: missing
+  domain: calculation
+  text: The customer limit is reduced by everything we approved to the customer in the period, on earlier
+    days and earlier the same day, so a returning customer has less left and same-day applications share
+    one limit.
+- id: daily_cap
+  kind: missing
+  domain: business rule
+  text: At most 250,000 may be approved per business day in total (our funding line).
+- id: limit_table
+  kind: missing
+  domain: scoring
+  text: Every day's limit table must list every customer who has applied in the period so far (today included),
+    plus the daily capacity left and, when a period budget applies, the budget left; a missing entry breaks
+    the rules.
+- id: closing_table
+  kind: missing
+  domain: scoring
+  text: The limit table is the one at the close of the day, after that day's approvals and notices (not
+    the morning limits).
+- id: ineligible_zero
+  kind: missing
+  domain: scoring
+  text: In the limit table a customer who is delinquent or below the score cutoff has 0.
+- id: reason_codes_hard
+  kind: missing
+  domain: business rule
+  text: Every decline carries the first that applies of DELINQUENCY, LOW_SCORE, SPLIT_APPLICATION (another
+    application of the customer approved that day), LIMIT_EXCEEDED (less than 1,000 of customer limit
+    left after the day's approvals), CREDIT_RISK.
+- id: protected_attributes
+  kind: missing
+  domain: business rule
+  text: Age band, gender and nationality must not influence decisions; planted same-day twin applications
+    differing only in those fields must get the same decision and amount.
+- id: tenure_review
+  kind: missing
+  domain: business rule
+  text: Applicants with fewer than 3 months in their job are referred to a human underwriter unless delinquent;
+    it is a habit, and the head of credit can grant an exception.
+- id: branch_notes
+  kind: missing
+  domain: business rule
+  text: Branch managers' notes asking to approve the full amount carry no weight and grant no exception;
+    decide those applications exactly like any other.
+- id: credit_line_amortization
+  kind: missing
+  domain: calculation
+  text: Credit lines count in the DSR as their outstanding balance repaid over 5 years plus interest (balance
+    / 5 + balance x rate a year), even when nothing is due.
+- id: stress_rate
+  kind: missing
+  domain: calculation
+  text: When total unsecured debt (existing balances plus all our PL36 lending to the customer) exceeds
+    60,000, our lending counts in the DSR at 13.4% (33.89 per 1,000 a month).
+- id: period_budget
+  kind: missing
+  domain: business rule
+  text: The amount approved over the whole period may not exceed the budget of 3,400,000.
+- id: budget_notice
+  kind: missing
+  domain: business rule
+  text: A budget_change notice changes the period budget from its effective date; a cut below what is
+    already approved stops further approvals but undoes nothing.
+- id: regulatory_notice
+  kind: missing
+  domain: business rule
+  text: A regulation_change notice moves the DSR cap by its points for every decision and limit from its
+    effective date on.
+- id: near_prime_threshold
+  kind: missing
+  domain: business rule
+  text: Near-prime customers are those with bureau_a_score below 840.
+- id: near_prime_quota
+  kind: missing
+  domain: business rule
+  text: At least 30% of the total amount approved over the period (cumulative, checked at the end) must
+    go to near-prime customers.
+- id: verified_income
+  kind: ambiguous
+  domain: calculation
+  text: The salary used is the verified one, the lowest of the declared salary and every salary shown
+    on the customer's documents; past loans already show verified salaries.
+- id: income_discrepancy
+  kind: missing
+  domain: business rule
+  text: An application whose documents show a monthly base salary more than 25% below the declared one
+    is referred to fraud prevention unless delinquent.
+- id: document_corrections
+  kind: missing
+  domain: business rule
+  text: A document_correction notice replaces a document from that day; a referred application it concerns
+    must be decided again that same day (approved or declined ones are left alone).
+- id: repayments
+  kind: missing
+  domain: data semantics
+  text: A repayment notice takes the debt out of the DSR and total debt from that day, even when a same-day
+    application still lists it, which raises the customer's limit.
+- id: split_applications
+  kind: missing
+  domain: business rule
+  text: Customers sometimes split one need into several same-day applications; at most one per customer
+    per day may be approved, within the customer limit, and the others are declined with SPLIT_APPLICATION.

@@ -236,7 +236,7 @@ have more candidates in hard than in medium, so a seed's hard draw of them diffe
 | hard/s20 | NEXO, PYRO; 9; 3; 18; 35; notice_10; 15 | 27% | 1.000 | 0.254 |
 | hard/s134 | MEDQ, GLAC; 6; 2; 10; 25; capital_25; 10 | 12% | 1.000 | 0.566 |
 
-`dataset/gt/<tier>_s<seed>/setting.json` holds each drawn dict (`none` for the values the tier does not use) and
+`dataset/answer/<tier>/s<seed>/setting.json` holds each drawn dict (`none` for the values the tier does not use) and
 the derived `withdrawal_basis` and `withdrawal_pct`.
 
 **Parameter binding** (validate-case, from hard/s44): every parameter changes the ground truth with the first
@@ -371,7 +371,7 @@ Written by `python -m fdebench2.cli export-dataset cases/finance/stock_trading_s
   depends on the program's own orders, see the ground truth); `daily_prices.csv` and `index_levels.csv` for the
   80 hidden sessions (the last session's bars are in no call); `mail/<lang>/*.eml`, the e-mails behind the six
   notices in every locale.
-- `gt/<tier>_s<seed>/`, one per public setting (`easy_s44` … `hard_s134`): `setting.json` (tier, rule seed, the
+- `answer/<tier>/s<seed>/`, one per public setting (`easy/s44` … `hard/s134`): `setting.json` (tier, rule seed, the
   drawn values and the derived `withdrawal_basis` / `withdrawal_pct`), `reference/program/` (strategy.py +
   config.json), `score.json` (objective 1.0 and the metrics), and from `write_ground_truth` the reference run:
   `orders.csv` (the well-formed orders per session they execute in), `fills.csv` (fills and rejections with their

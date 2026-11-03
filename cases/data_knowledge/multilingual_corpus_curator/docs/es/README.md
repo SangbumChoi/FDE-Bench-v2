@@ -14,7 +14,7 @@ El caso está **auditado** (`audited: true`): `dataset/audit.json` contiene su a
 
 ## Configuraciones: un corpus, niveles × semillas de reglas
 
-Una configuración es un nivel y una semilla de reglas. El mundo, el corpus visible, el corpus de evaluación y la solicitud son los mismos en todas las configuraciones (el validador comprueba que lo que ve el agente es idéntico byte a byte). El nivel decide qué libros puntúan, qué reglas se aplican y entre qué candidatos sortea la semilla de reglas; la semilla de reglas sortea las reglas de biblioteca del cliente, cada parámetro por separado, de modo que la biblioteca correcta cambia de una semilla a otra. Las semillas de reglas públicas son la **11, la 18 y la 21** (nueve configuraciones, guardadas en `dataset/gt/` y comprobadas por el validador); cualquier otra semilla es un sorteo privado cuyas respuestas no se publican en ningún sitio.
+Una configuración es un nivel y una semilla de reglas. El mundo, el corpus visible, el corpus de evaluación y la solicitud son los mismos en todas las configuraciones (el validador comprueba que lo que ve el agente es idéntico byte a byte). El nivel decide qué libros puntúan, qué reglas se aplican y entre qué candidatos sortea la semilla de reglas; la semilla de reglas sortea las reglas de biblioteca del cliente, cada parámetro por separado, de modo que la biblioteca correcta cambia de una semilla a otra. Las semillas de reglas públicas son la **11, la 18 y la 21** (nueve configuraciones, guardadas en `dataset/answer/` y comprobadas por el validador); cualquier otra semilla es un sorteo privado cuyas respuestas no se publican en ningún sitio.
 
 ### Niveles (mismo corpus; cambian el alcance, la exigencia y los candidatos)
 
@@ -153,7 +153,7 @@ dataset/
   hidden/corpus/...                  la unidad de evaluación tal como la recibe organize() (igual en todas las configuraciones)
   audit.json                         la auditoría de la respuesta correcta (mundo público): respuestas que malinterpretan un hecho, atajos, valor de
                                        preguntar, cotas, comprobaciones directas; GT.md se genera a partir de ella
-  gt/<tier>_s<seed>/                 easy_s11 ... hard_s21, las semillas de reglas públicas
+  answer/<tier>/s<seed>/             easy/s11 ... hard/s21, las semillas de reglas públicas
     setting.json, score.json         los parámetros sorteados (+ el fallback_author derivado) y la puntuación de la
                                        referencia sobre el corpus de evaluación (con el objetivo de la forma de trabajar
                                        del cliente y ambas calidades normalizadas)

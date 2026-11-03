@@ -9,3 +9,8 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 | 한국어 | 서류 심사 전문가 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [explainer.html](docs/ko/explainer.html) |
 | 日本語 | 書類選考スペシャリスト | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [explainer.html](docs/ja/explainer.html) |
 | Español | Especialista en cribado de currículos | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [explainer.html](docs/es/explainer.html) |
+
+- [dataset/answer/](dataset/answer/): the answer of each public setting, one folder per tier and public rule seed (`<tier>/s<seed>/`), with the setting and its rules, what the client knows in that version in every language, the reference, the client's own way and their scores
+  - [easy/](dataset/answer/easy/): [s31](dataset/answer/easy/s31/), [s4](dataset/answer/easy/s4/), [s19](dataset/answer/easy/s19/)
+  - [medium/](dataset/answer/medium/): [s31](dataset/answer/medium/s31/), [s4](dataset/answer/medium/s4/), [s19](dataset/answer/medium/s19/)
+  - [hard/](dataset/answer/hard/): [s31](dataset/answer/hard/s31/), [s4](dataset/answer/hard/s4/), [s19](dataset/answer/hard/s19/)

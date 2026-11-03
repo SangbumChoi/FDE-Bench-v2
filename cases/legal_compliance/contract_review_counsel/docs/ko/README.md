@@ -104,7 +104,7 @@ hard/s11   {cap_multiple: 1.5, governing_law: CH_SG_EW, payment_days: 45, reject
 hard/s49   {cap_multiple: 2,   governing_law: SG,       payment_days: 30, reject_at: 1, renewal_notice_days: 60, dp_categories: it_data_marketing, tfc_above: 100000, fast_track_below: 10000}
 ```
 
-세 시드를 합치면 모든 티어에서 모든 풀의 모든 후보가 뽑힙니다. `dataset/gt/<tier>_s<seed>/`에는 설정마다 `setting.json`,
+세 시드를 합치면 모든 티어에서 모든 풀의 모든 후보가 뽑힙니다. `dataset/answer/<tier>/s<seed>/`에는 설정마다 `setting.json`,
 참조 해답, 그 점수, `truth.json`(채점 대상 계약마다 플레이북상의 이슈와 결정. 패스트트랙은 유지)이 있습니다.
 
 ## 규칙

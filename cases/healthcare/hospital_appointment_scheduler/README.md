@@ -9,3 +9,8 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 | 한국어 | 병원 진료 예약 담당자 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [explainer.html](docs/ko/explainer.html) |
 | 日本語 | 病院の外来予約担当者 | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [explainer.html](docs/ja/explainer.html) |
 | Español | Gestor de citas hospitalarias | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [explainer.html](docs/es/explainer.html) |
+
+- [dataset/answer/](dataset/answer/): the answer of each public setting, one folder per tier and public rule seed (`<tier>/s<seed>/`), with the setting and its rules, what the client knows in that version in every language, the reference, the client's own way and their scores
+  - [easy/](dataset/answer/easy/): [s1](dataset/answer/easy/s1/), [s10](dataset/answer/easy/s10/), [s64](dataset/answer/easy/s64/)
+  - [medium/](dataset/answer/medium/): [s1](dataset/answer/medium/s1/), [s10](dataset/answer/medium/s10/), [s64](dataset/answer/medium/s64/)
+  - [hard/](dataset/answer/hard/): [s1](dataset/answer/hard/s1/), [s10](dataset/answer/hard/s10/), [s64](dataset/answer/hard/s64/)

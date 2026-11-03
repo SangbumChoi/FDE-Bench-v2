@@ -208,8 +208,13 @@ def test_dataset_stores_the_baseline_only_when_the_case_has_one(tmp_path):
     for base in (40.0, None):
         case = make_case(tmp_path, "maximize", ref=80.0, base=base)
         export_dataset(case.root)
-        score = json.loads((case.root / "dataset" / "gt" / "default" / "score.json").read_text())
+        answer = case.root / "dataset" / "answer" / "default"
+        score = json.loads((answer / "score.json").read_text())
         assert check_dataset(case.root) == []
+        assert (answer / "baseline").is_dir() == (base is not None) and (answer / "reference").is_dir()
+        assert json.loads((answer / "setting.json").read_text()) == {
+            "rules": [{"id": "habit", "class": "business_policy", "description": ""},
+                      {"id": "habit2", "class": "business_policy", "description": ""}], "targets": []}
         if base is None:
             assert set(score) == {"objective", "violations", "metrics"}
         else:

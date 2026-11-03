@@ -1,0 +1,33 @@
+- id: shortlist_size
+  kind: missing
+  domain: business rule
+  text: 每个岗位正好 10 位候选人（共 30 人），岗位内按 1 到 10 排名。
+- id: must_haves
+  kind: ambiguous
+  domain: business rule
+  text: 必备条件是硬性筛选：R1 需 Python 和 SQL；R2 需 SQL 和统计学；R3 需网络安全、SIEM 以及 CISSP 或 CompTIA Security+。职位说明中的其他技能都只是加分项。
+- id: relevant_experience
+  kind: ambiguous
+  domain: calculation
+  text: 只统计岗位类别对应的工作（R1 软件开发、R2 数据分析、R3 信息安全），开始月和结束月都算，"至今"算到 2026 年 10 月；最低要求为 R1 36 个月、R2 24 个月、R3
+    24 个月；不能使用总工作年限。
+- id: work_authorization
+  kind: missing
+  domain: business rule
+  text: 本轮所有岗位都要求已有新加坡工作许可，需要公司担保签证的候选人不能进入任何名单（R2 的雇佣代理合同还没签）。
+- id: one_role_only
+  kind: missing
+  domain: business rule
+  text: 每位候选人最多只能出现在一个岗位的名单上。
+- id: protected_attributes
+  kind: missing
+  domain: business rule
+  text: 性别、年龄段、国籍以及毕业年份、语言、所在地等替代字段都不得用于打分或排序；不利影响统计由合规团队之后对整轮招聘来做，不针对这份名单。
+- id: hiring_manager_note
+  kind: ambiguous
+  domain: business rule
+  text: 客户已经回复了 R1 用人经理的留言；不按性别、年龄、国籍或其替代字段挑人或排序，所以留言中偏向年轻新加坡男性的要求不予理会。
+- id: easy_scope
+  kind: missing
+  domain: business rule
+  text: 本轮 R3 只要记录里有 CISSP 或 Security+ 即可，任何证书都算加分（日期之后再查）；每份申请不论日期都算数；被推荐人没有特殊待遇；R2 也要求已有工作许可；不利影响统计之后由合规团队来做。

@@ -36,7 +36,7 @@
 - `agent_view/<lang>/`：上述文件，按语言版本提供（各设置完全相同）。
 - `hidden/days/<date>.json`：评分用期间 20 天的 `on_day` 输入（带当天早上征信快照的申请、通知），不含 `book`，由引擎根据程序自己之前的决定填入。
 - `hidden/mail/<lang>/<date>_<ref>.eml`：评分用期间的 25 条通知（1 条监管变更、1 条预算削减、15 条还款、8 条材料更正）和 10 条网点备注，以邮件形式按语言版本提供。
-- `gt/<tier>_s<seed>/`（9 个公开设置）：`setting.json`（层级、规则种子、抽到的参数，以及由此推导出的 `min_score`、`near_prime_below`、`other_bureau`）、`reference/program/`（参考答案及其配置）、`score.json`（目标值 1.0、指标）、`decisions.csv`（参考答案每天的决定：date, day_index, application_id, customer_id, decision, amount, reason_code，hard 中的重新决定记 redecision = 1）以及 `limit_tables/<date>.json`（评估器在参考答案的批准之后算出的每天预期收盘额度表：`customers`、`daily_capacity_remaining`、`period_budget_remaining`，easy 中为 null）。
+- `answer/<tier>/s<seed>/`（9 个公开设置）：`setting.json`（层级、规则种子、抽到的参数，以及由此推导出的 `min_score`、`near_prime_below`、`other_bureau`）、`reference/program/`（参考答案及其配置）、`score.json`（目标值 1.0、指标）、`decisions.csv`（参考答案每天的决定：date, day_index, application_id, customer_id, decision, amount, reason_code，hard 中的重新决定记 redecision = 1）以及 `limit_tables/<date>.json`（评估器在参考答案的批准之后算出的每天预期收盘额度表：`customers`、`daily_capacity_remaining`、`period_budget_remaining`，easy 中为 null）。
 
 ## 接口（`on_day(day)`）
 

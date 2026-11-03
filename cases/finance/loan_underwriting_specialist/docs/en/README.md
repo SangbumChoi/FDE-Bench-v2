@@ -64,7 +64,7 @@ Written by `python -m fdebench2.cli export-dataset cases/finance/loan_underwriti
   snapshot, notices) without `book`, which the engine fills from the program's own earlier decisions.
 - `hidden/mail/<lang>/<date>_<ref>.eml`: the hidden period's 25 notices (1 regulation change, 1 budget cut, 15
   repayments, 8 document corrections) and 10 branch notes as e-mails, per locale.
-- `gt/<tier>_s<seed>/` (the 9 public settings): `setting.json` (tier, rule seed, the drawn parameters and the
+- `answer/<tier>/s<seed>/` (the 9 public settings): `setting.json` (tier, rule seed, the drawn parameters and the
   derived `min_score`, `near_prime_below`, `other_bureau`), `reference/program/` (the reference with its config),
   `score.json` (objective 1.0, metrics), `decisions.csv` (the reference's decisions per day: date, day_index,
   application_id, customer_id, decision, amount, reason_code, redecision = 1 for hard's re-decisions) and

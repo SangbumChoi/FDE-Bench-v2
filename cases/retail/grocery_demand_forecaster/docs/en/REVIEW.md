@@ -5,7 +5,8 @@ below use the new scale (seasonal-naive baseline 0, reference 1) unless they are
 
 ### F1 — No settings: one fixed problem at every difficulty (high, partly)
 
-`case.yaml` declares no tiers, rule sets or `param_labels`; the only ground truth is `gt/default`. So the
+`case.yaml` declares no tiers, rule sets or `param_labels`; the only ground truth is `gt/default` (the layout before
+`dataset/answer/`). So the
 difficulty column says nothing about this case, and "which rules apply this time" is never tested. Settings-less
 cases are allowed by DESIGN.md (8 of the 13 built cases have none), so this is a coverage gap, not a contract
 breach.

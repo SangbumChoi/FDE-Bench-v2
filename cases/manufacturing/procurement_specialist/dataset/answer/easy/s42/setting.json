@@ -1,0 +1,65 @@
+{
+  "derived": {
+    "hold_supplier": {
+      "en": "Kowon Passive (S07)",
+      "es": "Kowon Passive (S07)",
+      "ja": "Kowon Passive（S07）",
+      "ko": "고원패시브(S07)",
+      "zh": "Kowon Passive（S07）"
+    },
+    "hold_until": 3
+  },
+  "params": {
+    "max_share": 90,
+    "quality_hold": "S07-W3",
+    "safety_weeks": 1,
+    "usd_krw": 1320
+  },
+  "rule_seed": 42,
+  "rules": [
+    {
+      "class": "contractual",
+      "description": "A part is ordered only from suppliers whose status for that part on the approved-vendor list is approved.",
+      "id": "approved_vendor"
+    },
+    {
+      "class": "physical",
+      "description": "Each order line (one week, part and supplier) is at least the supplier's minimum order quantity.",
+      "id": "moq"
+    },
+    {
+      "class": "contractual",
+      "description": "Purchases in each month (by the Monday of the order week) stay within that month's budget.",
+      "id": "budget_cap"
+    },
+    {
+      "class": "physical",
+      "description": "Kowon Passive (S07) is on quality hold; its goods due to arrive in weeks W1 to W3 are rejected.",
+      "id": "quality_hold"
+    },
+    {
+      "class": "business_policy",
+      "description": "Every critical part in use is ordered from at least two suppliers, and no supplier gets more than 90% of its ordered quantity.",
+      "id": "dual_source_critical"
+    }
+  ],
+  "targets": [
+    "bom_explosion",
+    "lead_time_business_days",
+    "scope_whole_weeks",
+    "moq_per_line",
+    "scope_list_prices",
+    "price_rise_week",
+    "quality_hold",
+    "budget_hard_cap",
+    "budget_month",
+    "approved_status_only",
+    "safety_stock",
+    "dual_source_two",
+    "max_share",
+    "scope_no_flash_change",
+    "scope_on_time",
+    "scope_no_allocation"
+  ],
+  "tier": "easy"
+}

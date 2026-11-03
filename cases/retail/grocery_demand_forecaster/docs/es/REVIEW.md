@@ -6,7 +6,8 @@ como cocientes.
 
 ### F1 — Sin configuraciones: un único problema fijo en todas las dificultades (alta, en parte)
 
-`case.yaml` no declara niveles, conjuntos de reglas ni `param_labels`; la única solución correcta es `gt/default`. Por
+`case.yaml` no declara niveles, conjuntos de reglas ni `param_labels`; la única solución correcta es `gt/default` (la estructura
+anterior a `dataset/answer/`). Por
 eso la columna de dificultad no dice nada de este caso, y nunca se pone a prueba "qué reglas se aplican esta vez".
 DESIGN.md admite casos sin configuraciones (8 de los 13 casos construidos no las tienen), así que se trata de un hueco
 de cobertura, no de un incumplimiento del contrato.

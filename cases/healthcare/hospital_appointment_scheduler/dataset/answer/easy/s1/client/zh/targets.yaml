@@ -1,0 +1,53 @@
+- id: interface
+  kind: missing
+  domain: data semantics
+  text: 交付物是定义了 on_day(day) 的 program/scheduler.py，每个工作日下班后按顺序在同一进程中调用一次（状态可放在模块变量里），每次10秒，只用标准库，运行时不能读数据文件；返回
+    book / move / release 动作（从明天起10个工作日以内）和当天的现况表。
+- id: evaluation_period
+  kind: missing
+  domain: scoring
+  text: 程序用数据里没有的2026年11月9日至12月4日共20个工作日评估，其中的申请全是新的。
+- id: visit_length
+  kind: missing
+  domain: calculation
+  text: 初诊占同一医生同一时段连续两个20分钟号源（开始时间为第一个号源），复诊占一个号源。
+- id: urgent_window
+  kind: missing
+  domain: business rule
+  text: 每条紧急（U）申请必须在受理当天预约，日期在最早可就诊日（最早可约日期或受理后下一个工作日）起2个工作日以内，调整后也要在此范围内。
+- id: urgent_reserve
+  kind: missing
+  domain: business rule
+  text: 每个上午时段的前两个号源（09:00 和 09:20）在两个及以上工作日之后只留给紧急申请，前一天（对明天的门诊）才放给所有人。
+- id: follow_up_doctor
+  kind: missing
+  domain: business rule
+  text: 复诊约给患者的上次接诊医生；这是惯例而非合同规定，门诊办公室主任可以批准例外。
+- id: interpreters
+  kind: missing
+  domain: business rule
+  text: 初诊若医生不会说患者的语言，需要全院每天2名现场翻译之一；复诊用电话翻译，不限数量。
+- id: holiday_clinic
+  kind: missing
+  domain: business rule
+  text: 11月23日（周一）市民日儿科停诊，但出诊表里仍列着它的时段；其他科室照常。
+- id: move_notice
+  kind: missing
+  domain: business rule
+  text: 医院更改患者预约的日期或时间时，新预约须在更改那天之后至少3个工作日，取消后重新预约的从取消那天算（同一时间只换医生不需要），每次更改都有成本。
+- id: waitlist_priority
+  kind: missing
+  domain: business rule
+  text: 候诊申请按优先顺序（先按紧急程度（U、S、R），同一紧急程度内按受理日期先后）预约；同一科室、就诊类型和上次接诊医生下有更高优先级的申请仍在候诊且本可以用那个号源时，不能约优先级更低的申请。
+- id: status_table
+  kind: missing
+  domain: scoring
+  text: 每天执行动作后，就接下来10个工作日按科室返回 free_slots（可约的空号源，不含预留号和停诊）、held_back（两个及以上工作日后的空紧急预留号）和 waitlist（候诊申请数）；每项须完全一致。
+- id: scoring
+  kind: missing
+  domain: scoring
+  text: 医生时间空着是最大的损失：最重要的是11月10日至12月7日门诊日里看诊的每个患者号源（初诊两个号源，复诊一个）；患者等候（越紧急损失越大）、始终没约上的申请，以及医院每次更改患者预约，也都是损失。
+- id: easy_scope
+  kind: missing
+  domain: business rule
+  text: 本轮缺勤和翻译通知由代诊医生和外部翻译公司顶上，转诊单和抽血由转诊窗口和检验科自己处理（test_date 为 null），不为爽约做安排（约上的患者都算会来）；同一患者的第二条申请也单独约，因为光看申请分不清是不是同一病情。

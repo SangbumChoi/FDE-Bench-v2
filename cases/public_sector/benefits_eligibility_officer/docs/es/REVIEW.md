@@ -55,8 +55,8 @@ las semillas privadas.
 
 ### F3 — Sin configuraciones (alta, en parte)
 
-`dataset/gt/default/setting.json` es `{}`, y case.yaml no tiene niveles ni conjuntos de reglas, de modo que easy, medium
-y hard son el mismo problema. El verificador señala que las configuraciones son opcionales ("may"; 5 de 13 casos las
+`dataset/gt/default/setting.json` (la estructura anterior a `dataset/answer/`) es `{}`, y case.yaml no tiene
+niveles ni conjuntos de reglas, de modo que easy, medium y hard son el mismo problema. El verificador señala que las configuraciones son opcionales ("may"; 5 de 13 casos las
 tienen). Los datos ya distinguen parámetros alternativos: una regla de residencia de 3 o 12 meses cambia 8 o 6
 decisiones nuevas, y unos límites de patrimonio de 5,000/2,500 u 8,000/2,000 cambian 11 o 6. Lo que falta son hogares
 cerca de los umbrales alternativos (ninguno a ±8 días).

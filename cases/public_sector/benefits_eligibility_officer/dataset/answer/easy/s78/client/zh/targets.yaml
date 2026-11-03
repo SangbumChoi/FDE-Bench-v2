@@ -1,0 +1,48 @@
+- id: household_size
+  kind: ambiguous
+  domain: data semantics
+  text: 只有“居住在申请地址”为“是”的成员计入家庭人数；住在别处的成员完全不考虑，包括其收入和残疾情况。
+- id: earned_disregard
+  kind: missing
+  domain: calculation
+  text: 申请地址的每位有工资的人，月工资前200不计，超过部分全额计入；养老金、失业金和其他收入全额计入。
+- id: residency
+  kind: missing
+  domain: business rule
+  text: 申请日期当天须已在本市居住满365天；数据中的日期为“年月日”格式。
+- id: uprating
+  kind: missing
+  domain: calculation
+  text: 数据里是去年的金额表；今年的基本生活金额和住房补贴上限为去年数值上调2.5%后向下取整到10的倍数。
+- id: need_formula
+  kind: ambiguous
+  domain: calculation
+  text: 所需金额 = 家庭人数对应的基本生活金额 + 不超过住房补贴上限的租金；发放额 = 所需金额 − 可计收入，向下取整，0或以下即不符合条件。
+- id: renewals
+  kind: missing
+  domain: business rule
+  text: 续期申请不重新审核，按上年度月发放额直接批准，原因代码为RENEWAL。
+- id: scoring
+  kind: missing
+  domain: scoring
+  text: 目标是让每个家庭按今年的规则准确拿到应得金额，最重要的是资格判定不出错；拒绝时按居住、资产、收入的顺序，写明第一个未满足的条件。
+- id: assets_out_of_round
+  kind: missing
+  domain: business rule
+  text: 本轮资产已由受理窗口审核过，所以每个家庭都视为满足资产条件，不使用DENY_ASSETS。
+- id: supplement_out_of_round
+  kind: missing
+  domain: calculation
+  text: 本轮金额中没有残疾补贴；残疾补贴由残疾人事务部门另行发放。
+- id: child_support_out_of_round
+  kind: missing
+  domain: calculation
+  text: 市议会重新审议子女抚养费的处理方式期间，本轮子女抚养费不计入收入。
+- id: cap_out_of_round
+  kind: missing
+  domain: business rule
+  text: 本轮金额不设上限；预算上限由财政局事后执行。
+- id: changes_and_letters_out_of_round
+  kind: missing
+  domain: business rule
+  text: 本轮变更申报和来函文件夹中的文件另行处理；每个申请都按申请时申报的情况判定。

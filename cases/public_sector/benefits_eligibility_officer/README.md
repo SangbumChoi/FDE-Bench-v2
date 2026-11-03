@@ -9,3 +9,8 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 | 한국어 | 복지급여 자격심사관 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [explainer.html](docs/ko/explainer.html) |
 | 日本語 | 給付資格審査担当者 | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [explainer.html](docs/ja/explainer.html) |
 | Español | Técnico de elegibilidad de prestaciones | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [explainer.html](docs/es/explainer.html) |
+
+- [dataset/answer/](dataset/answer/): the answer of each public setting, one folder per tier and public rule seed (`<tier>/s<seed>/`), with the setting and its rules, what the client knows in that version in every language, the reference, the client's own way and their scores
+  - [easy/](dataset/answer/easy/): [s2](dataset/answer/easy/s2/), [s31](dataset/answer/easy/s31/), [s78](dataset/answer/easy/s78/)
+  - [medium/](dataset/answer/medium/): [s2](dataset/answer/medium/s2/), [s31](dataset/answer/medium/s31/), [s78](dataset/answer/medium/s78/)
+  - [hard/](dataset/answer/hard/): [s2](dataset/answer/hard/s2/), [s31](dataset/answer/hard/s31/), [s78](dataset/answer/hard/s78/)

@@ -1,0 +1,58 @@
+{
+  "derived": {
+    "fallback_author": "Unknown"
+  },
+  "params": {
+    "layout": "year/title/author",
+    "max_len": 48,
+    "multi_author": "first",
+    "no_author": "review",
+    "script": "latin",
+    "sep": "-",
+    "year_basis": "first"
+  },
+  "rule_seed": 18,
+  "rules": [
+    {
+      "class": "physical",
+      "description": "Every file in library/ and manifest.csv is valid UTF-8.",
+      "id": "utf8_output"
+    },
+    {
+      "class": "physical",
+      "description": "No output file or folder name contains \\ / : * ? \" < > | or a control character, is . or .., ends in a space or a dot, or is longer than 255 bytes.",
+      "id": "safe_names"
+    },
+    {
+      "class": "contractual",
+      "description": "A book has at most one file in library/; copies of the same book in other formats or folders are merged into it.",
+      "id": "one_file_per_book"
+    },
+    {
+      "class": "contractual",
+      "description": "Every manifest row with status review gives one of the reason codes UNREADABLE, NO_TITLE, NO_AUTHOR, NO_YEAR, NO_DESCRIPTION, CONFLICT.",
+      "id": "review_reason"
+    },
+    {
+      "class": "contractual",
+      "description": "manifest.csv indexes the library — every library file is the path of exactly one placed row, every placed row's path is a library file and its source names at least one file of the drive (or a member of one of its archives or a row of one of its catalogs), and no source (file, archive member or catalog row) is named in more than one row.",
+      "id": "manifest_rows"
+    },
+    {
+      "class": "contractual",
+      "description": "Every file of the drive named in a review row is copied byte for byte under _review/ (archive members and catalog rows need not be).",
+      "id": "review_copies"
+    }
+  ],
+  "targets": [
+    "layout",
+    "year_basis",
+    "script",
+    "co_authors",
+    "separator",
+    "max_len",
+    "content",
+    "review_codes"
+  ],
+  "tier": "easy"
+}

@@ -1,0 +1,55 @@
+{
+  "params": {
+    "closed_cafe": "C11",
+    "late_cost": 3,
+    "premium_first": true,
+    "rush_start": "none",
+    "shift_end": "10:00",
+    "van_capacity": 120
+  },
+  "rule_seed": 5,
+  "rules": [
+    {
+      "class": "physical",
+      "description": "A van carries at most 120 trays this week (its racks hold 120).",
+      "id": "van_capacity"
+    },
+    {
+      "class": "physical",
+      "description": "Vans leave no earlier than 05:00 and are back at the kitchen by 10:00.",
+      "id": "shift_window"
+    },
+    {
+      "class": "physical",
+      "description": "No delivery to the café that is closed this week (South Hill café (C11)).",
+      "id": "closed_cafe"
+    },
+    {
+      "class": "contractual",
+      "description": "Every open café receives all its trays in exactly one visit.",
+      "id": "serve_each_once"
+    },
+    {
+      "class": "contractual",
+      "description": "Partner-brand cafés (chilled products) are served only by the refrigerated van.",
+      "id": "cold_chain"
+    },
+    {
+      "class": "business_policy",
+      "description": "On every route, premium cafés are visited before standard cafés.",
+      "id": "premium_first"
+    }
+  ],
+  "targets": [
+    "road_distance",
+    "speed",
+    "service_time",
+    "shift",
+    "closed_cafe",
+    "cold_chain",
+    "one_visit",
+    "premium_first",
+    "lateness"
+  ],
+  "tier": "medium"
+}

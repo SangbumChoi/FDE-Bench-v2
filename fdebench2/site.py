@@ -5,8 +5,8 @@ docs/en/explainer.html becomes <field>/<role>/index.html, and the other language
 docs/<lang>/explainer.html) the same paths under <lang>/. DESIGN.md, docs/DIRECTION.md and the catalog
 (cases/README.md) are rendered, in English, with the explainer's markdown renderer. Every relative link is resolved
 from the page's own folder in the repository; a static host lists no folders, so links into a case's files
-(dataset/gt/<setting>/, GT.md, docs/<lang>/README.md, ...) point to the same path in the GitHub repository at the
-published ref. Every page gets a small navigation bar in its language.
+(dataset/answer/<tier>/s<seed>/, GT.md, docs/<lang>/README.md, ...) point to the same path in the GitHub repository
+at the published ref. Every page gets a small navigation bar in its language.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ import subprocess
 from pathlib import Path
 
 from .cases import discover
-from .explain import LANGS, PAGE, _esc, _shell, _t, index_name, markdown, page_name
+from .explain import LANGS, PAGE, Anchors, _esc, _shell, _t, index_name, markdown, page_name
 
 DOCS = {"direction.html": ("site_direction", "docs/DIRECTION.md"), "design.html": ("site_design", "DESIGN.md"),
         "catalog.html": ("site_catalog", "cases/README.md")}
@@ -136,8 +136,9 @@ def build_site(repo: Path, out: Path, github: str | None = None, ref: str | None
             heading = text.splitlines()[0][2:].strip() if text.startswith("# ") else _t("en", key)
             if text.startswith("# "):
                 text = text.split("\n", 1)[1] if "\n" in text else ""
-            body = (f'<header><p class="eyebrow">FDE-Bench v2</p><h1>{_esc(heading)}</h1></header>'
-                    f'<div class="doc">{markdown(text)}</div>')
+            anchors = Anchors()           # GitHub's heading ids, the title's first: links to DESIGN.md#... land
+            body = (f'<header><p class="eyebrow">FDE-Bench v2</p><h1 id="{_esc(anchors.add(_esc(heading)))}">'
+                    f'{_esc(heading)}</h1></header><div class="doc">{markdown(text, anchors=anchors)}</div>')
             write(page, _publish(_shell(f"FDE-Bench v2 — {heading}", body, script=False),
                                  page_dir=str(Path(src).parent).replace(os.sep, "/"), depth=0, lang="en",
                                  github=github, ref=ref, local=local))

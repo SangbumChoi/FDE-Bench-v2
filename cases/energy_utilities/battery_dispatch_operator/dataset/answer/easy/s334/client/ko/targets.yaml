@@ -1,0 +1,34 @@
+- id: efficiency
+  kind: ambiguous
+  domain: calculation
+  text: 효율은 왕복 84.6%를 한 번 적용하는 것이 아니라 방향별로 충전 92%, 방전 92%로 계산합니다. P MW로 15분 충전하면 0.25*P*0.92 MWh가 늘고,
+    P MW로 방전하면 0.25*P/0.92 MWh가 줄어듭니다.
+- id: soc_window
+  kind: ambiguous
+  domain: business rule
+  text: 보증 조건상 충전상태는 언제나 15%~85%(6~34 MWh)여야 하며, 제조사의 5%~95%보다 좁습니다.
+- id: start_end_soc
+  kind: missing
+  domain: business rule
+  text: 배터리는 한 주를 50%(20 MWh)로 시작하고 30%(12 MWh) 이상으로 마쳐야 합니다.
+- id: export_cap
+  kind: ambiguous
+  domain: data semantics
+  text: 송전 한도는 계약서의 30 MW가 아니라 임시로 18 MW입니다. 방전 중에는 태양광 + 방전 − 충전이 18 MW를 넘으면 안 되고, 18 MW를 넘는 태양광은 배터리가
+    흡수하지 않으면 제한됩니다.
+- id: grid_charging
+  kind: missing
+  domain: business rule
+  text: 이번 주에는 사업장이 언제든 계통에서 충전할 수 있으며(최대 20 MW), 한 구간에서 충전과 방전을 동시에 하지 않습니다.
+- id: quarter_settlement
+  kind: ambiguous
+  domain: data semantics
+  text: 정산은 15분 단위이며 시간별 가격이 그 시간의 15분 구간 4개에 모두 적용되고, MW는 구간 평균, 전력량은 MW × 0.25입니다.
+- id: dst_clock
+  kind: missing
+  domain: data semantics
+  text: 시각은 현지 시각이고 3월 28일 일요일에 서머타임이 시작되어 그날은 23시간, 02:00~02:45 행이 없으며 계획은 정확히 668행입니다.
+- id: profit_scoring
+  kind: missing
+  domain: scoring
+  text: 실제 가격으로 사업장 송전 수입에서 수전 비용과 태양광 단독 수입(둘 다 송전 한도로 제한)을 빼고 평가합니다.

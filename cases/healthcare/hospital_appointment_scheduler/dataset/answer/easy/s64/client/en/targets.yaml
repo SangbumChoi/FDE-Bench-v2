@@ -1,0 +1,76 @@
+- id: interface
+  kind: missing
+  domain: data semantics
+  text: The deliverable is program/scheduler.py with on_day(day), called once per working day at the end
+    of the day, in order, in one process (state can live in module variables), 10 s per call, standard
+    library only, no data files at run time; it returns book / move / release actions (bookings from tomorrow,
+    within the next 10 working days) and the day's status table.
+- id: evaluation_period
+  kind: missing
+  domain: scoring
+  text: The program is judged on the 20 working days from 9 November to 4 December 2026, which are not
+    in the data; every request in them is new.
+- id: visit_length
+  kind: missing
+  domain: calculation
+  text: A new-patient visit takes two consecutive 20-minute slots of the same doctor in one session (start
+    = first slot); a follow-up takes one slot.
+- id: urgent_window
+  kind: missing
+  domain: business rule
+  text: Every urgent (U) request must be booked the day it arrives, within 2 working days of its first
+    possible day (earliest date or the next working day after receipt), and stay within that window if
+    moved.
+- id: urgent_reserve
+  kind: missing
+  domain: business rule
+  text: The first three slots of every morning session (09:00, 09:20 and 09:40) are held for urgent requests
+    two or more working days ahead; the day before (for tomorrow's clinics) they are released to anyone.
+- id: follow_up_doctor
+  kind: missing
+  domain: business rule
+  text: A follow-up is booked with the patient's previous doctor; this is a habit, not a contract rule,
+    and the head of the outpatient office can grant an exception.
+- id: interpreters
+  kind: missing
+  domain: business rule
+  text: A new-patient visit with a doctor who does not speak the patient's language needs one of the 4
+    in-person interpreters per day (hospital-wide); follow-ups use telephone interpreting without limit.
+- id: holiday_clinic
+  kind: missing
+  domain: business rule
+  text: The Dermatology clinic is closed on City Day, Monday 23 November, although the calendar still
+    lists its sessions; all other clinics work.
+- id: move_notice
+  kind: missing
+  domain: business rule
+  text: When the hospital changes the date or time of a patient's appointment, the new one must be at
+    least 3 working days after the day of the change (for a request released and booked again later, after
+    the day of the release; same date and time with another doctor needs no notice); every change costs.
+- id: waitlist_priority
+  kind: missing
+  domain: business rule
+  text: Waiting requests are booked in priority order, urgent (U) requests first, then everyone else (S
+    and R together) strictly by the date received, first come first served; a request may not be booked
+    while a higher-priority request of the same department, visit type and previous doctor still waits
+    and could have taken that slot.
+- id: status_table
+  kind: missing
+  domain: scoring
+  text: Every day the program returns per department, over the next 10 working days after its actions,
+    free_slots (empty bookable slots, not held back, closed clinics excluded), held_back (empty urgent-reserve
+    slots two or more days ahead) and waitlist (waiting requests); each entry must be exact.
+- id: scoring
+  kind: missing
+  domain: scoring
+  text: Empty doctor time is the biggest loss - what counts most is every patient-slot seen on the clinic
+    days from 10 November to 7 December (a new patient's two slots, a follow-up's one); patients kept
+    waiting (the more urgent, the worse), requests that never get an appointment and every change the
+    hospital makes to a patient's appointment are costs too.
+- id: easy_scope
+  kind: missing
+  domain: business rule
+  text: This round a locum and an agency interpreter cover absence and interpreter notices, the referral
+    desk and the lab handle referral letters and blood tests themselves (test_date stays null), no-shows
+    are not planned for (everyone booked counts as coming), and a patient's second request gets its own
+    appointment because a request does not show whether it is the same complaint.

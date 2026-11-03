@@ -1,0 +1,37 @@
+- id: layout
+  kind: missing
+  domain: business rule
+  text: Each placed book is one file at `library/<author>/<year>_<title>.txt` inside out_dir.
+- id: year_basis
+  kind: ambiguous
+  domain: business rule
+  text: The year in the path is the year of first publication; a book with only one year uses it for both.
+- id: script
+  kind: ambiguous
+  domain: business rule
+  text: Titles and author names in the path are written in the Latin script (Chinese, Korean and Japanese
+    books use the romanized form given in their metadata).
+- id: co_authors
+  kind: missing
+  domain: business rule
+  text: For a co-authored book the author part of the path is all authors in their order, joined with
+    `" & "`.
+- id: separator
+  kind: missing
+  domain: data semantics
+  text: In a title or author name, each run of whitespace becomes a single plain space (spaces are kept).
+- id: max_len
+  kind: missing
+  domain: data semantics
+  text: A title or author name keeps its first 32 characters, then spaces, dots and separators are removed
+    at both ends.
+- id: content
+  kind: missing
+  domain: data semantics
+  text: A library file holds the book's description only (no title, author or year lines), UTF-8, paragraphs
+    separated by a blank line.
+- id: review_codes
+  kind: missing
+  domain: business rule
+  text: A review row gives one reason code, UNREADABLE, NO_TITLE, NO_AUTHOR, NO_YEAR, NO_DESCRIPTION or
+    CONFLICT (the first in this order that applies).

@@ -51,7 +51,7 @@
 | hard/s13 | C14，迟到 5，09:00，110 个托盘，高峰 07:30，习惯关闭 | 472.58 | 1,269.31 | 2.69 |
 | hard/s58 | C03，迟到 2，09:30，110 个托盘，高峰 06:30，习惯关闭 | 537.35 | 1,177.53 | 2.19 |
 
-保存在 `dataset/gt/<tier>_s<seed>/setting.json` 中的字典（`rush_start` 和 `premium_first` 也按抽到的值保存）：
+保存在 `dataset/answer/<tier>/s<seed>/setting.json` 中的字典（`rush_start` 和 `premium_first` 也按抽到的值保存）：
 
 ```
 easy/s5    {closed_cafe: C11, late_cost: 3, shift_end: "10:00", van_capacity: 120, rush_start: none, premium_first: false}

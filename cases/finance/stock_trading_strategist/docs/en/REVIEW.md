@@ -191,7 +191,7 @@ the repository by design.
 
 **Status:** open — proposal: mark `fills`, `costs` and `settlement` as confirm-type targets, with credit for asking
 or for an explicit statement in NOTES.md, or remove the parameters from the pilot mail. Once private seeds work
-(F1), keep `dataset/hidden` and `dataset/gt` out of public releases, e.g. ship them as a release artifact or as
+(F1), keep `dataset/hidden` and `dataset/answer` out of public releases, e.g. ship them as a release artifact or as
 hashes only.
 
 **Baseline:** the book stays in cash, places no orders and reports a correct status table
@@ -229,7 +229,7 @@ hidden period, the notices' dates and the agent's view are the same in every set
   `max_drawdown` alone on world seeds 1 and 2: on world seed 2 even a static book of the stocks that fall most,
   chosen with hindsight at 9% each, loses only 10%–13%. The panel therefore avoids such hard draws (a 10% stock
   limit with a 12% or 15% mandate, a capacity of 15% or less with a 15% mandate). Settings are
-  `easy/s44` … `hard/s134`, stored in `dataset/gt/<tier>_s<seed>/` with the drawn and derived values in
+  `easy/s44` … `hard/s134`, stored in `dataset/answer/<tier>/s<seed>/` with the drawn and derived values in
   `setting.json`.
 - **Texts.** In all five locales the requirements say that the notice gives only the date and that the client
   takes out `{{withdrawal}}` (case.yaml words each clause per locale). A when-block for `payment_40` adds that the

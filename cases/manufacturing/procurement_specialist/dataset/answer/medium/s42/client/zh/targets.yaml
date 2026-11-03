@@ -1,0 +1,68 @@
+- id: bom_explosion
+  kind: ambiguous
+  domain: data semantics
+  text: 某周的物料需求等于当周各板型的计划产量（生产计划.csv）乘以物料清单.csv 中的单板用量，两个板型相加，并且就在当周需要；某周到货的物料可用于当周全部生产（没有装配提前期）。
+- id: lead_time_business_days
+  kind: ambiguous
+  domain: data semantics
+  text: 交期_天按工作日（周一至周五）计，不是自然日，从下单周的周一起算，货物从到货后开始的第一周起可用。
+- id: holiday_weeks
+  kind: missing
+  domain: calculation
+  text: W5（12月21日至25日，圣诞节）和 W6（12月28日至1月1日，元旦）只有 4 个工作日，其他每周 5 个。
+- id: usd_planning_rate
+  kind: missing
+  domain: calculation
+  text: Pacific Parts（S04）以美元报价；所有成本和预算均以韩元计，按固定计划汇率 1 美元 = 1,320 韩元换算。
+- id: moq_per_line
+  kind: ambiguous
+  domain: business rule
+  text: 最小起订量按订单行（一个供应商、一个物料、一个下单周）适用，不同周的数量不能合并来达到起订量。
+- id: price_breaks
+  kind: ambiguous
+  domain: calculation
+  text: 数量折扣按订单行适用于整行（全量折扣），不同周的数量不能合并来达到折扣档位。
+- id: price_rise_week
+  kind: missing
+  domain: business rule
+  text: 往来邮件中商定的 Nara Display 对 C06 上调 12%，自 W4 的订单起适用；每张订单都在下单周的周一发出，所以 W3 的订单（12月7日）在 12月9日生效日之前，仍按原价。
+- id: quality_hold
+  kind: missing
+  domain: business rule
+  text: Kowon Passive（S07） 处于质量冻结中；其在 W1 至 W3 到货的货物会被退回，因此它的交货只能在 W3 之后到货。
+- id: budget_hard_cap
+  kind: ambiguous
+  domain: business rule
+  text: 采购预算.csv 中的月度预算是母公司规定的硬性上限，不是目标；任何月份都不得超出。
+- id: budget_month
+  kind: ambiguous
+  domain: business rule
+  text: 订单计入下单周周一所在月份的预算，因此 W1-W2 属于 11月（W2 从 11月30日开始），W3-W6 属于 12月，W7-W8 属于 1月。
+- id: approved_status_only
+  kind: ambiguous
+  domain: business rule
+  text: 只能使用该物料认证状态为已认证的供应商；认证中和暂停的供应商即使报了价也不能用。
+- id: safety_stock
+  kind: missing
+  domain: business rule
+  text: 关键物料（关键物料 = 是）在使用的每一周周末都应保有其平均周需求 1 倍的安全库存（使用周的需求总和除以周数，乘以 1，向上取整）。
+- id: dual_source_two
+  kind: missing
+  domain: business rule
+  text: 每个在用的关键物料在本计划内必须向至少两家不同的供应商订购；这是公司惯例，如果确实能省钱，可以申请例外。
+- id: max_share
+  kind: missing
+  domain: business rule
+  text: 任何一家供应商都不得超过本计划中某关键物料订购数量（按件计）的 90%。
+- id: scope_no_flash_change
+  kind: missing
+  domain: business rule
+  text: 物料清单.csv 中的闪存变更本轮尚未发布；两个板型十周都继续使用 C04，不需要 C25，生效周次列不予考虑。
+- id: scope_on_time
+  kind: missing
+  domain: business rule
+  text: 本轮按所有供应商都在承诺周交货来计划，不使用交货记录.csv。
+- id: scope_no_allocation
+  kind: missing
+  domain: business rule
+  text: 本轮按所有供应商都确认我们订购的全部数量来计划，不使用供应商配额.csv。

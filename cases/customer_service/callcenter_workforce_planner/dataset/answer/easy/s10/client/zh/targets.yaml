@@ -1,0 +1,28 @@
+- id: one_language
+  kind: ambiguous
+  domain: data semantics
+  text: 一个班次内坐席只接一个语种（须是其语言技能之一），会两种语言的坐席不能同时算两个语种。
+- id: slot_coverage
+  kind: ambiguous
+  domain: calculation
+  text: 预测文件给的已经是每个语种每半小时所需的坐席人数，按半小时时段检查覆盖，坐席在班次内的每个时段都算在岗。
+- id: contract_limits
+  kind: missing
+  domain: business rule
+  text: 全职只上 8 小时班且每周最多 5 个，兼职只上 4 小时班且每周最多 3 个。
+- id: one_shift_a_day
+  kind: missing
+  domain: business rule
+  text: 每位坐席每天最多上一个班。
+- id: leave_dates
+  kind: ambiguous
+  domain: data semantics
+  text: 请假记录的日期是“日/月/年”格式，起止日期都包含在内；只有已批准的才算请假，被驳回的申请人可以排班。
+- id: understaffing_penalty
+  kind: missing
+  domain: scoring
+  text: 班表按每个时段每个语种每缺一名坐席记 40（客户用与时薪相同的单位估算的缺人损失），再加上所有班次的人工成本来评分，越低越好。
+- id: easy_scope
+  kind: missing
+  domain: business rule
+  text: 本轮每天都按预测原样安排，每个班按普通时薪计算成本，休息时间由现场核对（只要求每天最多一个班），新员工可以和其他人一样排班。

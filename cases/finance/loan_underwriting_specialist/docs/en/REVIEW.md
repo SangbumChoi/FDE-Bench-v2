@@ -242,8 +242,8 @@ setting. It is valid everywhere, and on world seeds 1–3 it stays at 0.43–0.8
 The case's three fixed rule sets (A / B / C) became **rule seeds**: case.yaml declares a candidate pool for each
 of the client's ten rule parameters, a rule seed draws each one on its own, and the public panel is rule seeds
 30, 525 and 1043 (nine public settings; any other int is a private seed). The tiers, the rules, the data and
-request.md are unchanged, and the agent's view is byte-identical to before (the export changed only `gt/` and the
-manifest).
+request.md are unchanged, and the agent's view is byte-identical to before (the export changed only `gt/`, now
+`answer/`, and the manifest).
 
 - **Pools** (one per parameter, shared by every tier): `policy_bureau` A / B; `min_score_a` 745 / 760 / 775 and
   `near_prime_a` 825 / 840 / 855 in Bureau A points, moved onto the policy bureau's scale by `derive_params`
@@ -342,7 +342,8 @@ of requirements.md each locale answers each target from, with a machine pre-chec
 4. **The hidden period (F8)**: three branch notes moved to applicants new in their job who are eligible and within
    their limit in every setting, and the same-day repayments to customers whose limit the repayment lifts from
    under 1,000 to at least 3,000 in every setting; both with their own random streams after the period is built.
-   The agent's view is byte-identical (the export changed only `hidden/`, `gt/` and the manifest).
+   The agent's view is byte-identical (the export changed only `hidden/`, `gt/` and the manifest;
+   `gt/` is now `answer/`).
 5. **Diagnostics**: `score()` returns `enforced` and `evidence` for every target in force, read from the
    deliverable's own run in the same program invocation: the scored table entries where the misreading (or
    another candidate of the parameter) gives another limit, voted per alternative, and for the other facts the

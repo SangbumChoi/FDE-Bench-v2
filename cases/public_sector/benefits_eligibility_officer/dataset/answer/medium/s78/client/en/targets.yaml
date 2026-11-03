@@ -1,0 +1,60 @@
+- id: household_size
+  kind: ambiguous
+  domain: data semantics
+  text: Only members with lives_at_address = yes count towards household size; members living elsewhere
+    are ignored entirely, including their income and disability.
+- id: earned_disregard
+  kind: missing
+  domain: calculation
+  text: For each earner at the address, the first 200 of monthly earned income is ignored and everything
+    above it counts in full; pensions, unemployment benefit and other income count in full.
+- id: residency
+  kind: missing
+  domain: business rule
+  text: The household must have lived in the city for at least 365 days on the application date; dates
+    in the data are written day/month/year.
+- id: uprating
+  kind: missing
+  domain: calculation
+  text: The data has last year's table; this year's standard amounts and housing maximums are last year's
+    plus 2.5%, rounded down to a multiple of 10.
+- id: need_formula
+  kind: ambiguous
+  domain: calculation
+  text: Need is the standard amount for the household size plus rent up to the housing maximum; the amount
+    is need minus countable income, rounded down, and 0 or less means not eligible.
+- id: renewals
+  kind: missing
+  domain: business rule
+  text: Renewal applications are approved at last year's monthly amount without re-assessment, with reason
+    code RENEWAL.
+- id: scoring
+  kind: missing
+  domain: scoring
+  text: The goal is to pay every household exactly its entitlement under this year's rules and above all
+    to get every yes/no decision right; a refusal gives the first condition the household fails, in the
+    order residency, assets, income.
+- id: asset_test
+  kind: missing
+  domain: business rule
+  text: Countable assets exclude the home the household lives in and one car (the most valuable); above
+    6,000 plus 3,000 per additional household member the household is not eligible.
+- id: disability_supplement
+  kind: missing
+  domain: calculation
+  text: The need includes 120 for each member at the address with a disability.
+- id: child_support
+  kind: ambiguous
+  domain: calculation
+  text: Child support counts in full as income of the household, even though some citizens think it is
+    not income.
+- id: amount_cap
+  kind: missing
+  domain: business rule
+  text: 'The monthly amount is capped by budget law at: 1,150 (1 person), 1,550 (2), 1,900 (3), 2,200
+    (4), 2,450 (5), 2,650 (6 or more).'
+- id: changes_and_letters_out_of_round
+  kind: missing
+  domain: business rule
+  text: The reported changes and the documents in the correspondence folder are handled separately this
+    round; every application is decided as filed.

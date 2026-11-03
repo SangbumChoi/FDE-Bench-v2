@@ -1,0 +1,40 @@
+- id: road_distance
+  kind: missing
+  domain: calculation
+  text: 道路距离按直线距离的 1.3 倍计算；坐标是相对厨房 (0, 0) 的公里数。
+- id: speed
+  kind: missing
+  domain: calculation
+  text: 整个早上车速都按平均 25 公里/小时计算；这个周一是学校假期，没有早高峰。
+- id: service_time
+  kind: missing
+  domain: calculation
+  text: 每家门店卸货 4 分钟，另加每托盘 0.2 分钟。
+- id: shift
+  kind: missing
+  domain: business rule
+  text: 车辆最早 05:00 出发，必须在 09:00 前回到厨房。
+- id: tray_limit
+  kind: ambiguous
+  domain: data semantics
+  text: 最大托盘数（120）是货架能放的数量，但这周用加深周转箱，每辆车最多装 100 个托盘。
+- id: closed_cafe
+  kind: missing
+  domain: business rule
+  text: 梧桐里店（C14）本周装修停业，不能送货。
+- id: partner_this_week
+  kind: ambiguous
+  domain: data semantics
+  text: 这周合作方自己配送冷藏商品，所以合作品牌门店哪辆车都可以送。
+- id: one_visit
+  kind: ambiguous
+  domain: business rule
+  text: 每家门店的托盘由一辆车一次送完，不能拆分配送。
+- id: premium_first
+  kind: missing
+  domain: business rule
+  text: 旗舰店优先的习惯这周暂停：路线上的门店可以按任意顺序配送。
+- id: lateness
+  kind: missing
+  domain: scoring
+  text: 晚于最晚到货时间到达是允许的，但每晚一分钟的损失相当于车辆多跑 5 分钟；早于开门时间到达需要等待。

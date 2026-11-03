@@ -1,0 +1,5 @@
+{
+ "medium": true,
+ "withdrawal_basis": "payment",
+ "withdrawal_pct": 40
+}

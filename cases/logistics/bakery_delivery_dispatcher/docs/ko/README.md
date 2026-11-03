@@ -54,7 +54,7 @@ V2(hard), 압박하는 매장(C07)은 고정입니다. `case.py`는 파생값을
 | hard/s13 | C14, 지각 5, 09:00, 트레이 110개, 정체 07:30, 관행 없음 | 472.58 | 1,269.31 | 2.69 |
 | hard/s58 | C03, 지각 2, 09:30, 트레이 110개, 정체 06:30, 관행 없음 | 537.35 | 1,177.53 | 2.19 |
 
-`dataset/gt/<tier>_s<seed>/setting.json`에 저장된 딕셔너리(`rush_start`와 `premium_first`도 뽑힌 그대로):
+`dataset/answer/<tier>/s<seed>/setting.json`에 저장된 딕셔너리(`rush_start`와 `premium_first`도 뽑힌 그대로):
 
 ```
 easy/s5    {closed_cafe: C11, late_cost: 3, shift_end: "10:00", van_capacity: 120, rush_start: none, premium_first: false}

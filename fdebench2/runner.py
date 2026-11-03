@@ -48,7 +48,10 @@ NOT_SCORED = ("harness_error", "infra_error")
 
 def never_in_a_run(rel: str) -> bool:
     """Case files that never reach a run, so editing them keeps every stored result: the docs in every language
-    (cases.is_case_doc) and the stored ground truth audit, which audit-case writes together with the pages."""
+    (cases.is_case_doc) and the stored ground truth audit, which audit-case writes together with the pages. The
+    rest of dataset/ stays in the hash on purpose: no run reads it, but it moves whenever the data or answers the
+    case generates do (framework changes without a version bump included), so a re-export that changes it, a new
+    answer layout as well, runs the case again."""
     return is_case_doc(rel) or rel == f"{DATASET_DIR}/{AUDIT_FILE}"
 
 

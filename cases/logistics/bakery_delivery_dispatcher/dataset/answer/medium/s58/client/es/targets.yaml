@@ -1,0 +1,47 @@
+- id: road_distance
+  kind: missing
+  domain: calculation
+  text: La distancia por carretera es 1,3 veces la distancia en línea recta; las coordenadas son kilómetros
+    desde la cocina en (0, 0).
+- id: speed
+  kind: missing
+  domain: calculation
+  text: Las furgonetas van a una media de 25 km/h durante toda la mañana; este lunes no hay hora punta
+    (no hay colegio).
+- id: service_time
+  kind: missing
+  domain: calculation
+  text: La descarga en una cafetería dura 4 minutos más 0,2 minutos por bandeja.
+- id: shift
+  kind: missing
+  domain: business rule
+  text: Las furgonetas pueden salir desde las 05:00 y deben volver a la cocina a las 09:30 como muy tarde.
+- id: tray_limit
+  kind: ambiguous
+  domain: data semantics
+  text: max_bandejas (120) es lo que caben en las estanterías, pero esta semana las cajas más hondas limitan
+    cada furgoneta a 110 bandejas.
+- id: closed_cafe
+  kind: missing
+  domain: business rule
+  text: La Cafetería Estación Norte (C03) está cerrada esta semana por reformas y no debe atenderse.
+- id: cold_chain
+  kind: ambiguous
+  domain: data semantics
+  text: Las cafeterías de marca asociada venden productos refrigerados y solo puede atenderlas la furgoneta
+    refrigerada V4.
+- id: one_visit
+  kind: ambiguous
+  domain: business rule
+  text: Cada cafetería recibe todas sus bandejas en una sola visita de una furgoneta; nunca se divide
+    la entrega.
+- id: premium_first
+  kind: missing
+  domain: business rule
+  text: 'Esta semana no se aplica la costumbre de atender primero las premium: las cafeterías de una ruta
+    pueden ir en cualquier orden.'
+- id: lateness
+  kind: missing
+  domain: scoring
+  text: Llegar después de entregar_antes está permitido, pero cada minuto de retraso cuesta lo mismo que
+    2 minutos de furgoneta; llegar antes de la apertura obliga a esperar.

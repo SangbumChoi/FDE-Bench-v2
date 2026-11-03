@@ -9,3 +9,8 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 | 한국어 | 주식 매매 전략가 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [explainer.html](docs/ko/explainer.html) |
 | 日本語 | 株式売買ストラテジスト | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [explainer.html](docs/ja/explainer.html) |
 | Español | Estratega de trading de acciones | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [explainer.html](docs/es/explainer.html) |
+
+- [dataset/answer/](dataset/answer/): the answer of each public setting, one folder per tier and public rule seed (`<tier>/s<seed>/`), with the setting and its rules, what the client knows in that version in every language, the reference, the client's own way and their scores
+  - [easy/](dataset/answer/easy/): [s44](dataset/answer/easy/s44/), [s20](dataset/answer/easy/s20/), [s134](dataset/answer/easy/s134/)
+  - [medium/](dataset/answer/medium/): [s44](dataset/answer/medium/s44/), [s20](dataset/answer/medium/s20/), [s134](dataset/answer/medium/s134/)
+  - [hard/](dataset/answer/hard/): [s44](dataset/answer/hard/s44/), [s20](dataset/answer/hard/s20/), [s134](dataset/answer/hard/s134/)

@@ -1,0 +1,85 @@
+{
+  "derived": {
+    "withdrawal_basis": "payment",
+    "withdrawal_pct": 40
+  },
+  "params": {
+    "large_order": 5,
+    "liquidation_days": 4,
+    "max_drawdown": "none",
+    "restricted": "TARK, VYTA",
+    "sector_cap": 35,
+    "stock_cap": 20,
+    "withdrawal": "payment_40"
+  },
+  "rule_seed": 44,
+  "rules": [
+    {
+      "class": "physical",
+      "description": "Every call returns well-formed orders (a listed ticker, side buy or sell, a positive integer quantity, at open or p10, one order per ticker); a call that fails or times out counts too.",
+      "id": "order_format"
+    },
+    {
+      "class": "physical",
+      "description": "Every order quantity is a multiple of the stock's board lot.",
+      "id": "lot_size"
+    },
+    {
+      "class": "physical",
+      "description": "A sell order never exceeds the shares the book holds (cash account, no short sales).",
+      "id": "no_short_selling"
+    },
+    {
+      "class": "contractual",
+      "description": "The book never places a buy order for a stock on the firm's restricted list (TARK, VYTA), nor for a stock compliance adds to it, from the addition's effective date.",
+      "id": "restricted_list"
+    },
+    {
+      "class": "contractual",
+      "description": "A holding in a stock compliance adds to the restricted list is sold out by the close of the 4th session from the addition's effective date (that session included).",
+      "id": "restricted_liquidation"
+    },
+    {
+      "class": "business_policy",
+      "description": "No order, buy or sell, exceeds 5% of the stock's average daily volume over its last 20 trading sessions in today's shares, unless the desk head approved it.",
+      "id": "large_order_approval"
+    },
+    {
+      "class": "contractual",
+      "description": "A stock bought in a session is at most 20% of the book's equity at that session's close (5 points less from the risk manager's effective date, when every holding must be within the new limit at that close).",
+      "id": "position_limit"
+    },
+    {
+      "class": "contractual",
+      "description": "A sector in which the book bought in a session is at most 35% of the book's equity at that session's close.",
+      "id": "sector_limit"
+    },
+    {
+      "class": "contractual",
+      "description": "At the close of the payment date the book's settled cash covers the client's withdrawal, 40% of the book's equity at the close of the session before the payment date.",
+      "id": "cash_withdrawal"
+    }
+  ],
+  "targets": [
+    "interface",
+    "evaluation_period",
+    "fills",
+    "costs",
+    "lots_and_cash",
+    "halts",
+    "upcoming_split",
+    "earnings",
+    "restricted_list",
+    "restricted_addition",
+    "large_order_approval",
+    "raw_volumes",
+    "status_table",
+    "objective",
+    "settlement",
+    "position_limits",
+    "risk_limit_change",
+    "cash_withdrawal",
+    "medium_scope"
+  ],
+  "tier": "medium"
+}

@@ -1,0 +1,64 @@
+- id: bom_explosion
+  kind: ambiguous
+  domain: data semantics
+  text: ある週の部品所要量は、その週の機種別の生産枚数（生産計画.csv）に部品表.csv の基板当たり員数を掛けて両機種を合計したもので、その週に必要です。ある週に入荷した部品はその週の生産全体に使えます（組立のリードタイムによる前倒しはありません）。
+- id: lead_time_business_days
+  kind: ambiguous
+  domain: data semantics
+  text: リードタイム_日は暦日ではなく営業日（月～金）です。今回は5で割って切り上げた週単位で扱い（12日 = 3週）、w週にリードタイムL週で出した発注はw+L週から使えます。
+- id: scope_whole_weeks
+  kind: missing
+  domain: business rule
+  text: 今回はリードタイムで祝日を考慮しません。クリスマスの週と元日の週も含め、どの週も営業日5日として扱います。
+- id: moq_per_line
+  kind: ambiguous
+  domain: business rule
+  text: 最小発注数量は発注明細（仕入先・部品・発注週の1組）ごとに適用され、別の週の数量を合算して満たすことはできません。
+- id: scope_list_prices
+  kind: missing
+  domain: business rule
+  text: 今回は定価で計画します。どの発注明細も大きさにかかわらず単価で計算し、数量割引の列は無視します。
+- id: price_rise_week
+  kind: missing
+  domain: business rule
+  text: メールで合意した Nara Display の C06 の12%値上げは、W4 の発注から適用されます。発注はすべて発注週の月曜日に出すので、W3 の発注（12月7日）は12月9日の適用日より前で、旧価格のままです。
+- id: quality_hold
+  kind: missing
+  domain: business rule
+  text: Kowon Passive（S07）は品質保留中で、W1～W3に入荷予定の品は返品されるため、同社の品はW3より後にしか入荷できません。
+- id: budget_hard_cap
+  kind: ambiguous
+  domain: business rule
+  text: 購買予算.csv の月次予算は親会社が定めた超えられない上限であり、目標ではありません。どの月もこれを超えてはいけません。
+- id: budget_month
+  kind: ambiguous
+  domain: business rule
+  text: 発注は発注週の月曜日が属する月の予算に計上されます。したがって W1～W2 は11月（W2 は11月30日開始）、W3～W6 は12月、W7～W8 は1月です。
+- id: approved_status_only
+  kind: ambiguous
+  domain: business rule
+  text: その部品の承認状況が承認済の仕入先しか使えません。審査中や取引停止の仕入先は、見積を出していても使えません。
+- id: safety_stock
+  kind: missing
+  domain: business rule
+  text: 重要部品（重要部品 = はい）は、使用する各週の週末に平均週間所要量の1倍（使用する週の所要量合計を週数で割り、1を掛けて切り上げ）の安全在庫を持つ必要があります。
+- id: dual_source_two
+  kind: missing
+  domain: business rule
+  text: 使用中の重要部品は、この計画の中で2社以上の異なる仕入先に発注しなければなりません。会社の慣行なので、実際にコストが下がるなら例外を申請できます。
+- id: max_share
+  kind: missing
+  domain: business rule
+  text: どの仕入先も、この計画での重要部品の発注数量（個数）の90%を超えて受け持ってはいけません。
+- id: scope_no_flash_change
+  kind: missing
+  domain: business rule
+  text: 部品表.csv のフラッシュの変更は今回はまだ確定していません。両機種とも10週間ずっと C04 を使い、C25 は不要で、適用週の列は無視します。
+- id: scope_on_time
+  kind: missing
+  domain: business rule
+  text: 今回はどの仕入先も約束した週に納入するものとして計画し、納入実績.csv は使いません。
+- id: scope_no_allocation
+  kind: missing
+  domain: business rule
+  text: 今回はどの仕入先も発注した数量をすべて確定してくれるものとして計画し、供給割当.csv は使いません。

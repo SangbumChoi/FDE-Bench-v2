@@ -48,7 +48,8 @@ need a `quality_cap` that holds in every setting, private seeds included.
 
 ### F3 — No settings (high, partly)
 
-`dataset/gt/default/setting.json` is `{}`, and case.yaml has no tiers or rule sets, so easy, medium and hard
+`dataset/gt/default/setting.json` (the layout before `dataset/answer/`) is `{}`, and case.yaml has no tiers or
+rule sets, so easy, medium and hard
 are the same problem. The verifier notes that settings are optional ("may", 5 of 13 cases have them). The data
 already separates alternative parameters: a 3- or 12-month residency rule flips 8 or 6 new decisions, and asset
 limits of 5,000/2,500 or 8,000/2,000 flip 11 or 6. What is missing are near-line households at the alternative

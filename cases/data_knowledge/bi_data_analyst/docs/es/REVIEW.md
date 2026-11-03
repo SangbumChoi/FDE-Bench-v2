@@ -294,7 +294,7 @@ no cambian y son idénticos byte a byte en todas las configuraciones.
   todas las combinaciones actuales lo cumplen.
 - **Semillas públicas.** `rule_seeds: [4, 12, 23]`, el primer trío de semillas en el que cada valor de cada lista
   aparece una vez: s4 = enero, 60 días, 100 KRW, 1; s12 = julio, 30 días, 10,000 KRW, 0.5; s23 = abril, 90 días, 1,000
-  KRW, 1.5. Las configuraciones son `easy/s4` … `hard/s23`, guardadas en `dataset/gt/<tier>_s<seed>/` con los valores
+  KRW, 1.5. Las configuraciones son `easy/s4` … `hard/s23`, guardadas en `dataset/answer/<tier>/s<seed>/` con los valores
   sorteados y derivados en `setting.json`. s23 es el conjunto de reglas A con un `null` que vale 1.5 en lugar de 1;
   los antiguos B y C ya no están como tales entre las semillas públicas (B es la semilla 21, y C no corresponde a
   ninguna semilla por debajo de 400).

@@ -9,3 +9,8 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 | 한국어 | 식료품 수요 예측 담당자 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [explainer.html](docs/ko/explainer.html) |
 | 日本語 | 食品スーパーの需要予測担当者 | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [explainer.html](docs/ja/explainer.html) |
 | Español | Analista de previsión de demanda en supermercados | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [explainer.html](docs/es/explainer.html) |
+
+- [dataset/answer/](dataset/answer/): the answer of each public setting, one folder per tier and public rule seed (`<tier>/s<seed>/`), with the setting and its rules, what the client knows in that version in every language, the reference, the client's own way and their scores
+  - [easy/](dataset/answer/easy/): [s3](dataset/answer/easy/s3/), [s25](dataset/answer/easy/s25/), [s58](dataset/answer/easy/s58/)
+  - [medium/](dataset/answer/medium/): [s3](dataset/answer/medium/s3/), [s25](dataset/answer/medium/s25/), [s58](dataset/answer/medium/s58/)
+  - [hard/](dataset/answer/hard/): [s3](dataset/answer/hard/s3/), [s25](dataset/answer/hard/s25/), [s58](dataset/answer/hard/s58/)

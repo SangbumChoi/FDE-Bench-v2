@@ -1,0 +1,127 @@
+- id: interface
+  kind: missing
+  domain: data semantics
+  text: El entregable es program/scheduler.py con on_day(day), llamado una vez por día laborable al final
+    de la jornada, en orden y en un solo proceso (el estado puede vivir en variables del módulo), 10 s
+    por llamada, solo biblioteca estándar y sin archivos de datos en ejecución; devuelve acciones book
+    / move / release (citas desde mañana y dentro de los 10 días laborables siguientes) y la tabla de
+    situación del día.
+- id: evaluation_period
+  kind: missing
+  domain: scoring
+  text: El programa se evalúa en los 20 días laborables del 9 de noviembre al 4 de diciembre de 2026,
+    que no están en los datos; todas las solicitudes de ese periodo son nuevas.
+- id: visit_length
+  kind: missing
+  domain: calculation
+  text: Una primera visita ocupa dos huecos consecutivos de 20 minutos del mismo médico en una sesión
+    (inicio = primer hueco); una revisión ocupa uno.
+- id: urgent_window
+  kind: missing
+  domain: business rule
+  text: Toda solicitud urgente (U) debe citarse el día en que llega, dentro de los 2 días laborables siguientes
+    a su primer día posible (fecha más temprana o el día laborable tras recibirla), y seguir dentro de
+    ese plazo si se cambia.
+- id: urgent_reserve
+  kind: missing
+  domain: business rule
+  text: Los dos primeros huecos de cada sesión de mañana (09:00 y 09:20) se reservan para urgentes a dos
+    o más días laborables vista; el día anterior (para las consultas de mañana) se liberan para cualquiera.
+- id: follow_up_doctor
+  kind: missing
+  domain: business rule
+  text: Una revisión se cita con el médico anterior del paciente; es una costumbre, no una regla del contrato,
+    y la jefa de la oficina de consultas externas puede autorizar una excepción.
+- id: interpreters
+  kind: missing
+  domain: business rule
+  text: Una primera visita con un médico que no habla el idioma del paciente necesita uno de los 3 intérpretes
+    presenciales diarios del hospital; las revisiones usan interpretación telefónica sin límite.
+- id: holiday_clinic
+  kind: missing
+  domain: business rule
+  text: La consulta de Traumatología cierra el Día de la Ciudad, lunes 23 de noviembre, aunque el calendario
+    aún muestra sus sesiones; las demás funcionan.
+- id: move_notice
+  kind: missing
+  domain: business rule
+  text: Cuando el hospital cambia la fecha o la hora de la cita de un paciente, la nueva debe ser al menos
+    3 días laborables después del día del cambio (si se anuló y se vuelve a citar, del día de la anulación;
+    misma fecha y hora con otro médico no necesita preaviso); cada cambio cuesta.
+- id: waitlist_priority
+  kind: missing
+  domain: business rule
+  text: Las solicitudes en espera se citan en orden de prioridad, primero por urgencia (U, luego S, luego
+    R) y, dentro de la misma urgencia, por earliest_date (primero quien puede venir antes); no se cita
+    una mientras otra de mayor prioridad de la misma especialidad, tipo de visita y médico anterior sigue
+    esperando y podría haber ocupado ese hueco.
+- id: status_table
+  kind: missing
+  domain: scoring
+  text: Cada día el programa devuelve por especialidad, para los 10 días laborables siguientes y tras
+    sus acciones, free_slots (huecos libres citables, sin reserva ni consultas cerradas), held_back (huecos
+    libres de la reserva de urgencias a dos o más días) y waitlist (solicitudes en espera); cada entrada
+    debe ser exacta.
+- id: scoring
+  kind: missing
+  domain: scoring
+  text: El tiempo de médico vacío es la mayor pérdida; lo que más cuenta es cada hueco de paciente atendido
+    en los días de consulta del 10 de noviembre al 7 de diciembre (dos huecos una primera visita, uno
+    una revisión), y también son costes los pacientes que esperan (más cuanto más urgentes), las solicitudes
+    que nunca consiguen cita y cada cambio que el hospital hace en la cita de un paciente.
+- id: referral_expiry
+  kind: missing
+  domain: business rule
+  text: Una primera visita debe hacerse en o antes de referral_valid_until; después ya no se puede citar
+    y no cuenta en la lista de espera.
+- id: blood_test
+  kind: missing
+  domain: business rule
+  text: El análisis en ayunas debe hacerse al menos un día laborable antes de la visita y no antes de
+    la fecha más temprana, anotado en test_date; el laboratorio admite como mucho 5 por día laborable,
+    contando los ya citados.
+- id: doctor_absence
+  kind: missing
+  domain: business rule
+  text: Desde el día en que llega un aviso doctor_absence no puede quedar ninguna cita con ese médico
+    en sus días de ausencia; se cambian en esa llamada (con preaviso, salvo otro médico a la misma hora)
+    o se devuelven a la lista de espera, y esos días salen de la tabla.
+- id: interpreter_absence
+  kind: missing
+  domain: business rule
+  text: Un aviso interpreter_absence significa un intérprete presencial menos en esa fecha desde el día
+    en que llega; las primeras visitas con intérprete que sobren ese día se cambian o se devuelven.
+- id: no_show_rates
+  kind: missing
+  domain: data semantics
+  text: Las tasas de ausencia varían por paciente (citas previas y perdidas en la solicitud; cerca del
+    22% perdidas en la asistencia del historial) y suben alrededor de un punto por día laborable de antelación;
+    el historial de los pacientes se midió con unos 5 días laborables de antelación.
+- id: overbooking
+  kind: missing
+  domain: business rule
+  text: Un hueco puede tener dos revisiones (nunca una primera visita), como mucho 3 huecos así sobrecitados
+    por médico y sesión de mañana o tarde.
+- id: duplicates
+  kind: missing
+  domain: business rule
+  text: Una segunda solicitud del mismo paciente para la misma especialidad es la misma necesidad; un
+    paciente tiene como mucho una cita por especialidad en el periodo y la tabla cuenta pacientes en espera,
+    no solicitudes.
+- id: several_departments
+  kind: missing
+  domain: scoring
+  text: Un paciente citado en varias especialidades debería venir un solo día si se puede; cada día de
+    hospital de más para ese paciente es un coste.
+- id: staff_notes
+  kind: missing
+  domain: business rule
+  text: Las notas no tienen peso - el conocido del director espera su turno como cualquiera y el deseo
+    de una jefatura de servicio de reservar sus tardes no es una regla; sus huecos se llenan con la lista
+    de espera.
+- id: scoring_hard
+  kind: missing
+  domain: scoring
+  text: Con ausencias, lo que cuenta son los pacientes que de verdad acuden (la probabilidad de que acuda
+    cada uno); si en un hueco sobrecitado acuden los dos, el médico se retrasa, y eso cuesta algo más
+    que un hueco vacío.

@@ -1,0 +1,56 @@
+- id: layout
+  kind: missing
+  domain: business rule
+  text: Each placed book is one file at `library/<year>/<title>/<author>.txt` inside out_dir.
+- id: year_basis
+  kind: ambiguous
+  domain: business rule
+  text: The year in the path is the year of first publication; a book with only one year uses it for both.
+- id: script
+  kind: ambiguous
+  domain: business rule
+  text: Titles and author names in the path are written in the Latin script (Chinese, Korean and Japanese
+    books use the romanized form given in their metadata).
+- id: co_authors
+  kind: missing
+  domain: business rule
+  text: For a co-authored book the author part of the path is only the first author.
+- id: separator
+  kind: missing
+  domain: data semantics
+  text: In a title or author name, each run of whitespace becomes a hyphen `-`.
+- id: max_len
+  kind: missing
+  domain: data semantics
+  text: A title or author name keeps its first 32 characters, then spaces, dots and separators are removed
+    at both ends.
+- id: content
+  kind: missing
+  domain: data semantics
+  text: A library file holds the book's description only (no title, author or year lines), UTF-8, paragraphs
+    separated by a blank line.
+- id: review_codes
+  kind: missing
+  domain: business rule
+  text: A review row gives one reason code, UNREADABLE, NO_TITLE, NO_AUTHOR, NO_YEAR, NO_DESCRIPTION or
+    CONFLICT (the first in this order that applies).
+- id: missing_author
+  kind: missing
+  domain: business rule
+  text: A book with no author goes to review as NO_AUTHOR; this is policy, and with an approved exception
+    it is shelved under "Unknown" instead.
+- id: no_description
+  kind: missing
+  domain: business rule
+  text: A book with no description in any source goes to review as NO_DESCRIPTION; a made-up or placeholder
+    description is never written.
+- id: conflict
+  kind: ambiguous
+  domain: business rule
+  text: Two sources of the same rank that disagree on a year (e.g. a JSON record and an ONIX record of
+    one book) send the book to review as CONFLICT; neither year is taken.
+- id: generic_titles
+  kind: ambiguous
+  domain: data semantics
+  text: A meaningful file name counts as a title (underscores stand for spaces), a generic one such as
+    doc_0042, scan_0007, book_0031 or an ISBN does not; a book with no other title goes to review as NO_TITLE.

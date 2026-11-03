@@ -2,7 +2,8 @@
 
 1. case.yaml is complete; every rule has a class; no TODO is left from the
    scaffold in case.yaml, case.py, docs/<lang>/README.md or the locales; no
-   document is left at the case root from the layout before docs/<lang>/.
+   document is left at the case root from the layout before docs/<lang>/, and
+   no dataset/gt/ from the layout before dataset/answer/<tier>/s<seed>/.
 2. All five locales have request.md, requirements.md and targets.yaml, with the
    same target ids, parameters and setting blocks (tier and when markers) as en,
    written in the right script.
@@ -44,8 +45,9 @@ and also:
    parameters, `tiers:` and `when:` only name declared tiers, parameters and
    candidates, and a target's `param:` (en) names a declared parameter.
 
-Every case also stores its data and ground truth in dataset/ (fdebench2.dataset);
-the stored files must match what the generator produces now.
+Every case also stores its data and answers in dataset/ (fdebench2.dataset: one
+folder per public setting in dataset/answer/<tier>/s<seed>/); the stored files
+must match what the generator produces now.
 
 A case with `audited: true` in case.yaml also needs a fresh ground truth audit
 (dataset/audit.json, written by `fdebench2 audit-case`, fdebench2.audit) whose
@@ -89,6 +91,7 @@ import yaml
 
 from .cases import (LOCALES, MIN_QUALITY_SPAN, PARAM, TIERS, NativeCase, derive_full, load_fields, quality_span,
                     value_text, when_values)
+from .dataset import legacy_answers
 from .transforms.language import detect_locale
 from .transforms.policy import RULE_CLASSES
 
@@ -733,7 +736,7 @@ def check_world_seed(case: NativeCase, seed: int) -> tuple[list[str], list[str]]
     try:
         for c in other.settings():
             at = f"[seed {seed}{' ' + c.setting.label if c.tiers else ''}] "
-            ref = Path(keep.name) / f"ref_{c.setting.folder if c.tiers else 'default'}"
+            ref = Path(keep.name) / f"ref_{c.setting.slug if c.tiers else 'default'}"
             ref.mkdir()
             try:
                 c.write_reference(ref)
@@ -753,7 +756,7 @@ def check_world_seed(case: NativeCase, seed: int) -> tuple[list[str], list[str]]
                 if rule_id not in examples:
                     problems.append(f"{at}rule {rule_id}: no violating example")
             for rule_id, make in examples.items():
-                ex = ref.parent / f"viol_{c.setting.folder if c.tiers else 'default'}_{rule_id}"
+                ex = ref.parent / f"viol_{c.setting.slug if c.tiers else 'default'}_{rule_id}"
                 ex.mkdir()
                 make(ex)
                 broken = {v["rule"] for v in c.evaluate(ex, "en")["violations"]}
@@ -839,6 +842,7 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
         problems.append(f"field {meta.get('field')!r} is not listed in cases/fields.yaml")
     problems += _todos(case.root)
     problems += _old_layout(case.root)
+    problems += legacy_answers(case.root)
     kind = meta.get("deliverable_type", "batch")
     if kind == "batch" and not meta.get("deliverables"):
         problems.append("case.yaml: batch cases need deliverables")
@@ -1080,7 +1084,7 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
             # The reference is written once and scored once here; that objective is the setting's
             # reference_objective for every later check (a slow program case is not run again for it). A second
             # write must give the same files, and a second scoring the same objective.
-            ref_dir = Path(keep.name) / f"ref_{c.setting.folder if c.tiers else 'default'}"
+            ref_dir = Path(keep.name) / f"ref_{c.setting.slug if c.tiers else 'default'}"
             ref_dir.mkdir()
             c.write_reference(ref_dir)
             again = Path(tmp) / "reference_again"

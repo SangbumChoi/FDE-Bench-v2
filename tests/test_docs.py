@@ -10,7 +10,8 @@ from urllib.parse import unquote
 import pytest
 
 from fdebench2.cli import main
-from fdebench2.explain import LANGS, PAGE, build_case_readme, check_page, index_name, page_name, write_index, write_page
+from fdebench2.explain import (LANGS, PAGE, Anchors, build_case_readme, check_page, index_name, markdown, page_name,
+                               write_index, write_page)
 from fdebench2.validate import check_case
 
 from conftest import REPO
@@ -76,9 +77,10 @@ def _toy_with_docs(tmp_path: Path) -> Path:
     (root / "GT.md").write_text("# Ground truth\n", encoding="utf-8")
     (root / "docs" / "en" / "README.md").write_text(
         "# Toy\n\nThe [catalog](../../../../README.md), the [review](REVIEW.md#findings), the stored "
-        "[answers](../../dataset/gt/easy_s1/) and the [ground truth](../../GT.md).\n", encoding="utf-8")
-    (root / "docs" / "en" / "REVIEW.md").write_text("# Findings\n\n- Back to the [README](README.md).\n",
-                                                    encoding="utf-8")
+        "[answers](../../dataset/answer/easy/s1/), the [ground truth](../../GT.md) and [the data](#the-data).\n\n"
+        "## The data\n", encoding="utf-8")
+    (root / "docs" / "en" / "REVIEW.md").write_text(
+        "# Findings\n\n- Back to the [README](README.md); [the data](#the-data).\n\n## The data\n", encoding="utf-8")
     (root / "docs" / "ko" / "README.md").write_text("# 장난감\n\n[정답](../../GT.md), [검토](../en/REVIEW.md)\n",
                                                     encoding="utf-8")
     write_page(root)
@@ -92,21 +94,33 @@ def test_every_link_of_the_generated_pages_resolves(tmp_path):
     assert check_page(root) == []
     pages = [root / page_name(lang) for lang in LANGS] + [cases / index_name(lang) for lang in LANGS]
     for page in pages:
-        links = HTML_LINK.findall(page.read_text(encoding="utf-8"))
+        text = page.read_text(encoding="utf-8")
+        links = HTML_LINK.findall(text)
         assert links and broken(page, links) == [], page
         # the language switcher: the same page in every language's folder
         assert all(f'../{lang}/{page.name}' in links for lang in LANGS)
+        # every in-page link lands on an id of the page: a document's links to its own headings included
+        ids = set(re.findall(r'\sid="([^"]*)"', text))
+        assert [h for h in links if h.startswith("#") and unquote(h[1:]) not in ids] == [], page
     index = root / "README.md"
     links = MD_LINK.findall(index.read_text(encoding="utf-8"))
     assert broken(index, links) == [] and "GT.md" in links and "CLIENT_REVIEW.md" not in links
     assert {page_name(lang) for lang in LANGS} | {"docs/en/README.md", "docs/ko/README.md", "docs/en/REVIEW.md"} \
         <= set(links)
+    # the stored answers: the folder, each tier's and each setting's (tier x public rule seed)
+    assert {"dataset/answer/"} | {f"dataset/answer/{tier}/" for tier in ("easy", "medium", "hard")} | {
+        f"dataset/answer/{tier}/s{seed}/" for tier in ("easy", "medium", "hard") for seed in (1, 2, 3)} <= set(links)
     assert "docs/ja/README.md" not in links and "docs/ko/REVIEW.md" not in links    # not translated yet: a dash
     # an English README shown on another language's page keeps its links working from there
     zh = (root / page_name("zh")).read_text(encoding="utf-8")
     assert 'href="../en/REVIEW.md#findings"' in zh and 'href="../../GT.md"' in zh
     en = (root / PAGE).read_text(encoding="utf-8")
-    assert 'href="REVIEW.md#findings"' in en and 'href="../../dataset/gt/easy_s1/"' in en
+    assert 'href="REVIEW.md#findings"' in en and 'href="../../dataset/answer/easy/s1/"' in en
+    # the README and the review on one page: the same heading, one id each, and each document's link finds its own
+    assert '<h4 id="readme-the-data">' in en and '<h4 id="review-the-data">' in en
+    assert 'href="#readme-the-data"' in en and 'href="#review-the-data"' in en
+    # the data section names the case's own first answer folder as its example
+    assert "(<code>answer/easy/s1/</code>)" in en and "s42" not in en
     assert f'href="../../logistics/toy_planner/{page_name("ja")}"' in (cases / index_name("ja")).read_text(encoding="utf-8")
     # a new translation makes the page that shows it stale, and the index that links it
     stale = "is out of date: run `fdebench2 explain-case` (or export-dataset)"
@@ -115,6 +129,17 @@ def test_every_link_of_the_generated_pages_resolves(tmp_path):
     write_page(root)
     (root / "docs" / "ja" / "REVIEW.md").write_text("# 指摘事項\n", encoding="utf-8")
     assert check_page(root) == [f"{page_name('ja')} {stale}", f"README.md {stale}"]
+
+
+def test_headings_get_githubs_ids():
+    text = ("# Rule seeds (the client's parameters)\n\nSee [the data](#data), [the next one](#data-1) and "
+            "[the review](REVIEW.md#data).\n\n## Data\n\n## Data\n\n## データ（規則）\n\n### F3 — `answer/` **moved**\n")
+    page = markdown(text, link=lambda href: "../en/" + href, anchors=Anchors("readme-"))
+    assert re.findall(r'<h\d id="([^"]*)"', page) == ["readme-rule-seeds-the-clients-parameters", "readme-data",
+                                                      "readme-data-1", "readme-データ規則", "readme-f3--answer-moved"]
+    assert 'href="#readme-data"' in page and 'href="#readme-data-1"' in page and 'href="../en/REVIEW.md#data"' in page
+    plain = markdown(text)                                    # without anchors: no ids, the links as written
+    assert " id=" not in plain and 'href="#data"' in plain and 'href="REVIEW.md#data"' in plain
 
 
 def test_documents_in_the_old_layout_are_a_problem(tmp_path):

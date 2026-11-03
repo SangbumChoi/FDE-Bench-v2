@@ -1,0 +1,79 @@
+- id: interface
+  kind: missing
+  domain: data semantics
+  text: El entregable es program/scheduler.py con on_day(day), llamado una vez por día laborable al final
+    de la jornada, en orden y en un solo proceso (el estado puede vivir en variables del módulo), 10 s
+    por llamada, solo biblioteca estándar y sin archivos de datos en ejecución; devuelve acciones book
+    / move / release (citas desde mañana y dentro de los 10 días laborables siguientes) y la tabla de
+    situación del día.
+- id: evaluation_period
+  kind: missing
+  domain: scoring
+  text: El programa se evalúa en los 20 días laborables del 9 de noviembre al 4 de diciembre de 2026,
+    que no están en los datos; todas las solicitudes de ese periodo son nuevas.
+- id: visit_length
+  kind: missing
+  domain: calculation
+  text: Una primera visita ocupa dos huecos consecutivos de 20 minutos del mismo médico en una sesión
+    (inicio = primer hueco); una revisión ocupa uno.
+- id: urgent_window
+  kind: missing
+  domain: business rule
+  text: Toda solicitud urgente (U) debe citarse el día en que llega, dentro de los 2 días laborables siguientes
+    a su primer día posible (fecha más temprana o el día laborable tras recibirla), y seguir dentro de
+    ese plazo si se cambia.
+- id: urgent_reserve
+  kind: missing
+  domain: business rule
+  text: Los tres primeros huecos de cada sesión de mañana (09:00, 09:20 y 09:40) se reservan para urgentes
+    a dos o más días laborables vista; el día anterior (para las consultas de mañana) se liberan para
+    cualquiera.
+- id: follow_up_doctor
+  kind: missing
+  domain: business rule
+  text: Una revisión se cita con el médico anterior del paciente; es una costumbre, no una regla del contrato,
+    y la jefa de la oficina de consultas externas puede autorizar una excepción.
+- id: interpreters
+  kind: missing
+  domain: business rule
+  text: Una primera visita con un médico que no habla el idioma del paciente necesita uno de los 4 intérpretes
+    presenciales diarios del hospital; las revisiones usan interpretación telefónica sin límite.
+- id: holiday_clinic
+  kind: missing
+  domain: business rule
+  text: La consulta de Dermatología cierra el Día de la Ciudad, lunes 23 de noviembre, aunque el calendario
+    aún muestra sus sesiones; las demás funcionan.
+- id: move_notice
+  kind: missing
+  domain: business rule
+  text: Cuando el hospital cambia la fecha o la hora de la cita de un paciente, la nueva debe ser al menos
+    3 días laborables después del día del cambio (si se anuló y se vuelve a citar, del día de la anulación;
+    misma fecha y hora con otro médico no necesita preaviso); cada cambio cuesta.
+- id: waitlist_priority
+  kind: missing
+  domain: business rule
+  text: Las solicitudes en espera se citan en orden de prioridad, primero las urgentes (U) y después todas
+    las demás (S y R juntas) estrictamente por fecha de recepción, por orden de llegada; no se cita una
+    mientras otra de mayor prioridad de la misma especialidad, tipo de visita y médico anterior sigue
+    esperando y podría haber ocupado ese hueco.
+- id: status_table
+  kind: missing
+  domain: scoring
+  text: Cada día el programa devuelve por especialidad, para los 10 días laborables siguientes y tras
+    sus acciones, free_slots (huecos libres citables, sin reserva ni consultas cerradas), held_back (huecos
+    libres de la reserva de urgencias a dos o más días) y waitlist (solicitudes en espera); cada entrada
+    debe ser exacta.
+- id: scoring
+  kind: missing
+  domain: scoring
+  text: El tiempo de médico vacío es la mayor pérdida; lo que más cuenta es cada hueco de paciente atendido
+    en los días de consulta del 10 de noviembre al 7 de diciembre (dos huecos una primera visita, uno
+    una revisión), y también son costes los pacientes que esperan (más cuanto más urgentes), las solicitudes
+    que nunca consiguen cita y cada cambio que el hospital hace en la cita de un paciente.
+- id: easy_scope
+  kind: missing
+  domain: business rule
+  text: En esta ronda un médico sustituto y una agencia cubren los avisos de ausencia e intérpretes, admisión
+    y el laboratorio se encargan de volantes y análisis (test_date en null), no se cuenta con ausencias
+    de pacientes (todo citado cuenta como que viene) y la segunda solicitud de un paciente lleva su propia
+    cita porque la solicitud no dice si es la misma dolencia.

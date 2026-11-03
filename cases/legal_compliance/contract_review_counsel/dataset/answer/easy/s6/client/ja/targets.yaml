@@ -1,0 +1,42 @@
+- id: liability_cap
+  kind: missing
+  domain: calculation
+  text: 責任上限は契約台帳の年間金額_USDの1倍以上が必要です（固定金額は年間金額の1倍と比較し、年間代金の倍数は1以上）。最低基準とちょうど同じなら問題なく、上限なしの契約も問題ありません。
+- id: period_caps_out_of_round
+  kind: missing
+  domain: business rule
+  text: 直近Nか月の代金による上限は別の取り組みで差し替え中のため、今回は論点として記録しません。
+- id: governing_law
+  kind: missing
+  domain: business rule
+  text: 準拠法はスイス法またはシンガポール法である必要があります。
+- id: law_not_forum
+  kind: ambiguous
+  domain: business rule
+  text: 今回は準拠法だけで判断し、裁判所や仲裁地は見ません。
+- id: payment_terms
+  kind: missing
+  domain: business rule
+  text: 支払期限は請求書の受領から60日以上必要です。
+- id: indemnity_mutual
+  kind: missing
+  domain: business rule
+  text: 補償は相互的である必要があり、当社だけが取引先を補償する条項は論点です。
+- id: issue_codes
+  kind: missing
+  domain: deliverable
+  text: 満たしていない基準ごとに該当するコードで論点を1つ記録し、コードは LIABILITY_CAP、GOVERNING_LAW、AUTO_RENEWAL、PAYMENT_TERMS、DATA_PROTECTION、TERMINATION_CONVENIENCE、INDEMNITY
+    です。
+- id: round_points
+  kind: missing
+  domain: deliverable
+  text: 今回は LIABILITY_CAP、GOVERNING_LAW、PAYMENT_TERMS、INDEMNITY だけを確認します。更新・データ保護・解約は購買部門が確認し、ほかのコードは反映しません。
+- id: round_contracts
+  kind: missing
+  domain: deliverable
+  text: 取引先の書式による契約、修正記録がある契約、メールが取り上げている契約は今回購買部門が扱います。項目は必要ですが結果は反映しません。それ以外の契約は少額のものも含めてすべてレビューします。
+- id: decision_rule
+  kind: missing
+  domain: business rule
+  text: 重大な論点は LIABILITY_CAP と INDEMNITY で、データ保護を確認する場合は DATA_PROTECTION も含みます。重大な論点が2つ以上あれば reject、論点が1つでもあれば
+    negotiate、なければ sign です。

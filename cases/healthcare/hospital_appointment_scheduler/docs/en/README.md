@@ -215,7 +215,7 @@ the text, and in the agent's view nothing changed: a program still has to ask fo
 | 10 | ORTH | 2 | 3 | `urgency_earliest` | 5 | 3 |
 | 64 | DERM | 3 | 4 | `received` | 7 | 1 |
 
-Each row is the drawn dict of `easy/sN`, `medium/sN` and `hard/sN` (`dataset/gt/<tier>_s<N>/setting.json`,
+Each row is the drawn dict of `easy/sN`, `medium/sN` and `hard/sN` (`dataset/answer/<tier>/s<N>/setting.json`,
 with `derived: {reserve_times}`). Seed 1 is the tightest hospital (two interpreters), seed 64 the loosest in
 interpreters and lab but with a three-slot reserve and one overbooked slot per session. Private seeds draw
 any of the 486 combinations, e.g. seed 2: DERM, 3, 3, `urgency_received`, 7, 3; seed 3: PED, 3, 4,
@@ -370,7 +370,7 @@ Written by `python -m fdebench2.cli export-dataset cases/healthcare/hospital_app
   D13 off sick 13 Nov, D05's conference 20 Nov, the interpreter 24 Nov, four director's-acquaintance requests).
 - `hidden/requests.csv`: every request of the start and the period with its hidden facts (no-show rate at zero
   lead, the working days before an appointment the patient cancels, the request it duplicates).
-- `gt/<tier>_s<seed>/`: per public setting (seeds 1, 10, 64), `setting.json` (the drawn parameters and the
+- `answer/<tier>/s<seed>/`: per public setting (seeds 1, 10, 64), `setting.json` (the drawn parameters and the
   derived `reserve_times`), the reference `program/` and its `score.json`, and from
   the reference's replay `actions.csv` (every action per call), `status_tables.csv` (the expected table, 20 days
   × 5 departments), `cancellations.csv` (the patients' cancellations it met), `final_book.csv` (every

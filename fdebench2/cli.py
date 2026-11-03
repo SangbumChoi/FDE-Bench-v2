@@ -1,7 +1,8 @@
 """fdebench2 command line.
 
   fdebench2 validate-case cases/<id> ...                  check native cases against the case contract
-  fdebench2 export-dataset cases/<id> ...                 write each case's data and ground truth to dataset/
+  fdebench2 export-dataset cases/<id> ...                 write each case's data and answers to dataset/
+                                                         (dataset/answer/<tier>/s<seed>/ per public setting)
   fdebench2 audit-case cases/<id> [--world-seed N]        the ground truth audit (dataset/audit.json)
   fdebench2 explain-case cases/<id> ...                   write each case's docs/<lang>/explainer.html, its index
                                                          README.md and the catalog's cases/docs/<lang>/index.html
@@ -98,7 +99,8 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
     p.add_argument("--world-seeds", default="1,2,3", help="also check the case on these world seeds ('' skips)")
     p.add_argument("--no-world-seeds", action="store_true", help="skip the other-world check")
-    p = sub.add_parser("export-dataset")
+    p = sub.add_parser("export-dataset", help="store each case's data and answers in dataset/ "
+                                              "(dataset/answer/<tier>/s<seed>/ per public setting)")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
     p = sub.add_parser("audit-case", help="measure a case's ground truth (ablations, shortcuts, value of asking)")
     p.add_argument("path", type=Path, help="a case directory under cases/")

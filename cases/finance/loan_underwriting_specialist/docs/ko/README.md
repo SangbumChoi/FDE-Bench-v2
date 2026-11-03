@@ -60,7 +60,7 @@
   빠져 있으며, 엔진이 프로그램 자신의 이전 결정으로 채웁니다.
 - `hidden/mail/<lang>/<date>_<ref>.eml`: 채점용 기간의 통지 25건(규제 변경 1건, 예산 삭감 1건, 상환 15건, 서류 정정
   8건)과 지점 메모 10건을 메일로 만든 것, 로캘별.
-- `gt/<tier>_s<seed>/`(공개 설정 9개): `setting.json`(티어, 규칙 시드, 뽑힌 파라미터와 거기서 계산되는 `min_score`,
+- `answer/<tier>/s<seed>/`(공개 설정 9개): `setting.json`(티어, 규칙 시드, 뽑힌 파라미터와 거기서 계산되는 `min_score`,
   `near_prime_below`, `other_bureau`), `reference/program/`(모범 답안과 그 설정 파일), `score.json`(목표값 1.0, 지표),
   `decisions.csv`(모범 답안의 일별 결정: date, day_index, application_id, customer_id, decision, amount, reason_code,
   hard의 재결정은 redecision = 1), `limit_tables/<date>.json`(모범 답안의 승인 뒤 평가기가 계산하는 날마다의 정답 마감

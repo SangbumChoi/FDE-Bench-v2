@@ -57,7 +57,7 @@ comprobación de influencia de los parámetros del validador parte de ella.
 | hard/s13 | C14, retraso 5, 09:00, 110 bandejas, hora punta 07:30, costumbre desactivada | 472.58 | 1,269.31 | 2.69 |
 | hard/s58 | C03, retraso 2, 09:30, 110 bandejas, hora punta 06:30, costumbre desactivada | 537.35 | 1,177.53 | 2.19 |
 
-Los diccionarios tal como se guardan en `dataset/gt/<tier>_s<seed>/setting.json` (`rush_start` y `premium_first` tal
+Los diccionarios tal como se guardan en `dataset/answer/<tier>/s<seed>/setting.json` (`rush_start` y `premium_first` tal
 como se sortearon):
 
 ```

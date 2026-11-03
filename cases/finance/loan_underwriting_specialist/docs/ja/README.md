@@ -36,7 +36,7 @@
 - `agent_view/<lang>/`：上記のファイル、ロケールごと（どの設定でも同一）。
 - `hidden/days/<date>.json`：採点用の20日分の `on_day` 入力（その日の朝の信用情報のスナップショット付きの申込、通知）。`book` は含まず、エンジンがプログラム自身のそれまでの判断から埋めます。
 - `hidden/mail/<lang>/<date>_<ref>.eml`：採点用の期間の通知25件（規制変更1件、予算削減1件、返済15件、書類の訂正8件）と支店のメモ10件をメールにしたもの、ロケールごと。
-- `gt/<tier>_s<seed>/`（9つの公開設定）：`setting.json`（ティア、ルールシード、抽選されたパラメータと、そこから算出される `min_score`、`near_prime_below`、`other_bureau`）、`reference/program/`（設定ファイル付きの模範解答）、`score.json`（目的値1.0、指標）、`decisions.csv`（模範解答の日ごとの判断：date, day_index, application_id, customer_id, decision, amount, reason_code、hard の再判断は redecision = 1）、`limit_tables/<date>.json`（模範解答の承認後に評価器が計算する、各日の期待される締め時点の枠一覧表：`customers`、`daily_capacity_remaining`、`period_budget_remaining`、easy では null）。
+- `answer/<tier>/s<seed>/`（9つの公開設定）：`setting.json`（ティア、ルールシード、抽選されたパラメータと、そこから算出される `min_score`、`near_prime_below`、`other_bureau`）、`reference/program/`（設定ファイル付きの模範解答）、`score.json`（目的値1.0、指標）、`decisions.csv`（模範解答の日ごとの判断：date, day_index, application_id, customer_id, decision, amount, reason_code、hard の再判断は redecision = 1）、`limit_tables/<date>.json`（模範解答の承認後に評価器が計算する、各日の期待される締め時点の枠一覧表：`customers`、`daily_capacity_remaining`、`period_budget_remaining`、easy では null）。
 
 ## インターフェース（`on_day(day)`）
 

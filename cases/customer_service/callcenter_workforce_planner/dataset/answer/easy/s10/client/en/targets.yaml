@@ -1,0 +1,36 @@
+- id: one_language
+  kind: ambiguous
+  domain: data semantics
+  text: An agent takes calls in only one language for the whole shift (one of their skills); a bilingual
+    agent never counts for two languages at once.
+- id: slot_coverage
+  kind: ambiguous
+  domain: calculation
+  text: The forecast already gives the number of agents needed per language and half-hour slot; coverage
+    is checked per 30-minute slot, and an agent counts in every slot inside the shift.
+- id: contract_limits
+  kind: missing
+  domain: business rule
+  text: Full-timers work only 8-hour shifts and at most 5 a week; part-timers work only 4-hour shifts
+    and at most 3 a week.
+- id: one_shift_a_day
+  kind: missing
+  domain: business rule
+  text: An agent works at most one shift a day.
+- id: leave_dates
+  kind: ambiguous
+  domain: data semantics
+  text: The leave list writes dates as day/month/year with both ends included, and only approved entries
+    are leave; rejected requests mean the agent is available.
+- id: understaffing_penalty
+  kind: missing
+  domain: scoring
+  text: The roster is scored as 40 for every missing agent per half-hour slot and language (the client's
+    estimate, in the units of the hourly rates, of what a missing agent costs) plus the labor cost of
+    all shifts; lower is better.
+- id: easy_scope
+  kind: missing
+  domain: business rule
+  text: This round the forecast is used as it is on every day, every shift is costed at its plain hourly
+    rate, rest times are checked on the floor (only one shift a day matters), and new hires can be rostered
+    like anyone else.

@@ -2057,7 +2057,7 @@ def write_hidden(world: World, out: Path) -> None:
 
     days/<date>.json: each call's input. Day 0 is complete (nothing has been decided yet); for days 1-19 the
     fields that depend on the program's earlier decisions (attendance, book, waitlist and the patients'
-    cancellation notices) are left out: gt/<setting>/ has them for the reference program.
+    cancellation notices) are left out: answer/<tier>/s<seed>/ has them for the reference program.
     mail/<lang>/*.eml: the period's e-mails behind the notices and notes. requests.csv: every request of the
     period and the start with its hidden facts (no-show rate, cancellation intent, duplicate)."""
     w = world

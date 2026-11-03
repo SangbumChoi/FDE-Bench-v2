@@ -1,0 +1,26 @@
+- id: base_forecast
+  kind: missing
+  domain: business rule
+  text: This round only the base forecast is wanted; the promotions in promo_plan.csv and the one-off
+    regional holiday are added by the category team, so they are left out and the forecast is judged against
+    base sales without them.
+- id: s4_sunday_closed
+  kind: missing
+  domain: business rule
+  text: The Old Town store S4 is closed on Sundays and must be forecast 0 on those days.
+- id: min_display
+  kind: missing
+  domain: business rule
+  text: Core items (fresh produce and dairy, I01-I06) are never forecast below 8 units on a day the store
+    is open.
+- id: wape_metric
+  kind: missing
+  domain: scoring
+  text: Quality is a weighted WAPE per store in which a unit forecast too low counts 2 times a unit forecast
+    too high, over the sum of actuals, averaged over the five stores; lower is better. This round the
+    actuals are till sales net of returns, stockout days as recorded, and bread rolls I07 are not judged.
+- id: submission_format
+  kind: ambiguous
+  domain: deliverable
+  text: Deliver forecast.csv with columns store_id,item_id,date,forecast and exactly one row per store,
+    item and day from 2026-11-02 to 2026-11-15 (840 rows).

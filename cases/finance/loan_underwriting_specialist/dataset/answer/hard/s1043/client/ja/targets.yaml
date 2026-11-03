@@ -1,0 +1,107 @@
+- id: gross_income
+  kind: ambiguous
+  domain: calculation
+  text: 年間総収入は 12 × monthly_base_salary に、bonus_documented が true のときだけ annual_bonus を加えたもので、stated_monthly_income
+    は使いません。
+- id: policy_bureau
+  kind: ambiguous
+  domain: data semantics
+  text: 与信ポリシーは bureau_b_score（B社スコア） だけを使い、bureau_a_score（A社スコア） は参考用で、基準点にもニアプライム層の定義にも使いません（B社は55点ほど高く出ます）。
+- id: score_cutoff
+  kind: missing
+  domain: business rule
+  text: bureau_b_score（B社スコア） が815点以上のときだけ承認します。
+- id: income_cap
+  kind: missing
+  domain: calculation
+  text: 顧客枠は年間総収入の50%（切り捨て）以下です（商品の上限50,000以下でもあります）。
+- id: dsr_cap
+  kind: missing
+  domain: calculation
+  text: 返済負担率（DSR）、つまり（既存債務の年間元利返済額 + その顧客への当社PL36貸出全額の1,000あたり33.17 × 12）/ 年間総収入は40%以下でなければならず、分割返済ローンは
+    12 × monthly_payment で数えます。
+- id: our_lending
+  kind: missing
+  domain: calculation
+  text: 顧客枠からは、当期間にその顧客に承認した額を、前の営業日の分もその日の先の承認分もすべて差し引くので、再来店の顧客は残りが減っており、同じ日の複数申込は1つの枠を分け合います。
+- id: daily_cap
+  kind: missing
+  domain: business rule
+  text: 1営業日の承認合計は 300,000 までです（当社の資金調達枠）。
+- id: limit_table
+  kind: missing
+  domain: scoring
+  text: 毎日の枠一覧表には、当期間にこれまで（当日を含む）申し込んだすべての顧客と、残りの1日枠、そして期間予算があるときは残りの予算が必要で、抜けがあればルール違反です。
+- id: closing_table
+  kind: missing
+  domain: scoring
+  text: 枠一覧表はその日の承認と通知を反映した、その日の締め時点のものです（朝の時点の枠ではない）。
+- id: ineligible_zero
+  kind: missing
+  domain: scoring
+  text: 枠一覧表では、延滞中の顧客やスコアが基準に届かない顧客は0です。
+- id: reason_codes_hard
+  kind: missing
+  domain: business rule
+  text: 否決ごとに DELINQUENCY、LOW_SCORE、SPLIT_APPLICATION（同じ顧客の別の申込がその日に承認された）、LIMIT_EXCEEDED（その日の承認後の残り顧客枠が1,000未満）、CREDIT_RISK
+    のうち最初に当てはまるコードを付けます。
+- id: protected_attributes
+  kind: missing
+  domain: business rule
+  text: 年齢層、性別、国籍は判断に影響させてはならず、同じ日にこれらだけが異なる監査用のペアは同じ判断・同じ金額でなければなりません。
+- id: tenure_review
+  kind: missing
+  domain: business rule
+  text: 勤続6か月未満の申込者は、延滞中でなければ人の審査担当者に回します。慣行なので与信担当役員が例外を承認できます。
+- id: branch_notes
+  kind: missing
+  domain: business rule
+  text: 全額承認を求める支店長のメモには何の効力もなく例外の承認でもないので、その申込はほかの申込とまったく同じように判断します。
+- id: credit_line_amortization
+  kind: missing
+  domain: calculation
+  text: カードローン枠は利用残高を5年で返済するものとして利息を加え（残高 / 5 + 残高 × 金利、年間）DSRに入れます。現在返済額がなくても同じです。
+- id: stress_rate
+  kind: missing
+  domain: calculation
+  text: 無担保債務総額（既存残高 + その顧客への当社PL36貸出全額）が60,000を超える場合、当社の貸出はDSRで13.4%（月1,000あたり33.89）として計算します。
+- id: period_budget
+  kind: missing
+  domain: business rule
+  text: 期間全体の承認額は予算 4,400,000 を超えられません。
+- id: budget_notice
+  kind: missing
+  domain: business rule
+  text: budget_change の通知は効力日から期間予算を変え、承認済みの額を下回るまで減ればその後の承認は止まりますが、それまでの承認は取り消されません。
+- id: regulatory_notice
+  kind: missing
+  domain: business rule
+  text: regulation_change の通知は、効力日以降のすべての判断と枠についてDSRの上限をそのポイント分変えます。
+- id: near_prime_threshold
+  kind: missing
+  domain: business rule
+  text: ニアプライム層の顧客とは、bureau_b_score（B社スコア） が880点未満の顧客です。
+- id: near_prime_quota
+  kind: missing
+  domain: business rule
+  text: 期間全体（累計、期間末に確認）の承認額の25%以上をニアプライム層の顧客に回さなければなりません。
+- id: verified_income
+  kind: ambiguous
+  domain: calculation
+  text: ルールに使う給与は確認済みの給与、つまり記入額とその顧客の書類に書かれた給与のうち最も低い額で、過去の貸付の給与はすでに確認済みの値です。
+- id: income_discrepancy
+  kind: missing
+  domain: business rule
+  text: 書類上の月額基本給が記入額より15%を超えて低い申込は、延滞中でなければ不正防止チームの審査に回します。
+- id: document_corrections
+  kind: missing
+  domain: business rule
+  text: document_correction の通知はその日から書類を差し替え、対象の申込が人の審査中ならその日のうちに判断し直さなければなりません（承認・否決済みはそのまま）。
+- id: repayments
+  kind: missing
+  domain: data semantics
+  text: repayment の通知が届くと、その日からその債務はDSRと債務総額から外れ（同じ日の申込の一覧に残っていても）、顧客枠が増えます。
+- id: split_applications
+  kind: missing
+  domain: business rule
+  text: 1つの資金需要を同じ日の複数の申込に分ける顧客がおり、顧客1人1日1件だけを顧客枠内で承認し、残りは SPLIT_APPLICATION で否決します。

@@ -1,0 +1,87 @@
+- id: bom_explosion
+  kind: ambiguous
+  domain: data semantics
+  text: Component demand in a week is the boards of each model built that week (production_plan.csv) times
+    qty_per_board in bom.csv, added over both models, and it is needed in that same week; goods that arrive
+    in a week can be used for that whole week's builds (no assembly offset).
+- id: lead_time_business_days
+  kind: ambiguous
+  domain: data semantics
+  text: lead_time_days counts business days (Monday to Friday), not calendar days, counted from the Monday
+    of the order week; the goods can be used from the first week that starts after they arrive.
+- id: holiday_weeks
+  kind: missing
+  domain: calculation
+  text: W5 (21-25 December, Christmas) and W6 (28 December - 1 January, New Year's Day) have only four
+    business days; every other week has five.
+- id: usd_planning_rate
+  kind: missing
+  domain: calculation
+  text: Pacific Parts (S04) quotes in US dollars; all costs and the budget are in KRW, converted at the
+    fixed planning rate of 1,380 KRW per USD.
+- id: moq_per_line
+  kind: ambiguous
+  domain: business rule
+  text: The MOQ applies per order line (one supplier, component and order week); quantities ordered in
+    different weeks are never added up to reach it.
+- id: price_breaks
+  kind: ambiguous
+  domain: calculation
+  text: Price breaks apply per order line and to the whole line (all-units discount); quantities from
+    different weeks are never combined to reach a break.
+- id: price_rise_week
+  kind: missing
+  domain: business rule
+  text: Nara Display's 12% increase on C06, agreed in the e-mail thread, applies to orders placed from
+    W4 on; every order is sent on the Monday of its order week, so W3's orders (7 December) come before
+    the 9 December effective date and keep the old price.
+- id: quality_hold
+  kind: missing
+  domain: business rule
+  text: Seoul PCB Tech (S05) is on quality hold; its goods due to arrive in W1 to W4 are rejected, so
+    its deliveries may only arrive after W4.
+- id: budget_hard_cap
+  kind: ambiguous
+  domain: business rule
+  text: The monthly budget in budget.csv is a hard cap from the parent company, not a target; no month
+    may go over it.
+- id: budget_month
+  kind: ambiguous
+  domain: business rule
+  text: An order counts against the budget of the month of its order week's Monday, so W1-W2 are November
+    (W2 starts on 30 November), W3-W6 December and W7-W8 January.
+- id: approved_status_only
+  kind: ambiguous
+  domain: business rule
+  text: Only suppliers whose status for that component is approved may be used; pending and suspended
+    suppliers are not allowed even if they quoted.
+- id: safety_stock
+  kind: missing
+  domain: business rule
+  text: Critical parts (critical = yes) should keep a safety stock of 0.5 times their average weekly demand
+    (total demand over the weeks they are used divided by the number of those weeks, rounded up) at the
+    end of every week they are used.
+- id: dual_source_two
+  kind: missing
+  domain: business rule
+  text: Every critical component in use must be ordered from at least two different suppliers within this
+    plan; it is a company habit, so an exception can be asked for if it saves real money.
+- id: max_share
+  kind: missing
+  domain: business rule
+  text: No single supplier may get more than 70% of a critical component's quantity ordered in this plan,
+    counted in pieces.
+- id: scope_no_flash_change
+  kind: missing
+  domain: business rule
+  text: The flash change in bom.csv has not been released for this round; both boards keep C04 in all
+    ten weeks, C25 is not needed and the validity columns are ignored.
+- id: scope_on_time
+  kind: missing
+  domain: business rule
+  text: This round plans as if every supplier delivers in the promised week; delivery_history.csv is not
+    used.
+- id: scope_no_allocation
+  kind: missing
+  domain: business rule
+  text: This round plans as if every supplier confirms everything we order; allocations.csv is not used.

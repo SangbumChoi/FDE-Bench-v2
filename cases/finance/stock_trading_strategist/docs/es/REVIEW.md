@@ -225,7 +225,7 @@ referencia de cada configuración están en el repositorio por diseño.
 
 **Estado:** abierto — propuesta: marcar `fills`, `costs` y `settlement` como preguntas de confirmación, con puntos
 por preguntar o por una indicación explícita en NOTES.md, o quitar los parámetros del correo del piloto. Cuando
-funcionen las semillas privadas (F1), dejar `dataset/hidden` y `dataset/gt` fuera de las publicaciones públicas, p.
+funcionen las semillas privadas (F1), dejar `dataset/hidden` y `dataset/answer` fuera de las publicaciones públicas, p.
 ej. distribuyéndolos como artefacto de la versión o solo como hashes.
 
 **Línea base:** la cartera se queda en efectivo, no da órdenes y presenta una tabla de estado correcta
@@ -267,7 +267,7 @@ son los mismos en todas las configuraciones.
   valores que más caen, elegidos a posteriori con un 9% cada uno, pierde solo un 10%–13%. Por eso las semillas públicas
   evitan esos sorteos de hard (un límite por valor del 10% con un mandato del 12% o del 15%, una capacidad del 15% o
   menos con un mandato del 15%). Las configuraciones son `easy/s44` … `hard/s134`, guardadas en
-  `dataset/gt/<tier>_s<seed>/` con los valores sorteados y derivados en `setting.json`.
+  `dataset/answer/<tier>/s<seed>/` con los valores sorteados y derivados en `setting.json`.
 - **Textos.** En los cinco idiomas, los requisitos dicen que el aviso solo da la fecha y que el cliente retira
   `{{withdrawal}}` (case.yaml redacta cada cláusula por idioma). Un bloque when para `payment_40` añade que el importe
   solo se conoce la víspera del pago. La pregunta clave `cash_withdrawal` y las descripciones de las reglas (case.yaml y

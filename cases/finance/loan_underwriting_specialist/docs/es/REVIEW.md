@@ -256,7 +256,8 @@ Los tres conjuntos de reglas fijos del caso (A / B / C) se convirtieron en **sem
 de candidatos para cada uno de los diez parámetros de las reglas del cliente, una semilla de reglas sortea cada uno por
 separado, y las semillas de reglas públicas son 30, 525 y 1043 (nueve configuraciones públicas; cualquier otro entero es una
 semilla privada). Los niveles, las reglas, los datos y request.md no cambian, y lo que ve el agente es idéntico byte a byte al
-de antes (la exportación solo cambió `gt/` y el manifiesto).
+de antes (la exportación solo cambió `gt/`, hoy `answer/`, y el
+manifiesto).
 
 - **Conjuntos de candidatos** (uno por parámetro, compartido por todos los niveles): `policy_bureau` A / B; `min_score_a`
   745 / 760 / 775 y `near_prime_a` 825 / 840 / 855 en puntos del buró A, trasladados a la escala del buró de la política por
@@ -368,7 +369,7 @@ en que se hizo:
    admisibles y están dentro de su límite en todas las configuraciones, y las amortizaciones del mismo día, a clientes cuyo
    límite la amortización sube de menos de 1,000 a al menos 3,000 en todas las configuraciones; ambos cambios con sus propios
    flujos aleatorios después de construir el período. Lo que ve el agente es idéntico byte a byte (la exportación solo cambió
-   `hidden/`, `gt/` y el manifiesto).
+   `hidden/`, `gt/` y el manifiesto; `gt/` es hoy `answer/`).
 5. **Comprobaciones directas**: `score()` devuelve `enforced` y `evidence` para cada hecho en vigor, leídos de la propia
    ejecución del entregable en la misma invocación del programa: los valores puntuados de la tabla donde la mala lectura (u
    otro candidato del parámetro) da otro límite, votados por alternativa, y para los demás hechos las decisiones que solo ellos

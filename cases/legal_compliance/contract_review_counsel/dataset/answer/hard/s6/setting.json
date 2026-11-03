@@ -1,0 +1,48 @@
+{
+  "params": {
+    "cap_multiple": 1,
+    "dp_categories": "it_data_marketing",
+    "fast_track_below": 25000,
+    "governing_law": "CH_SG",
+    "payment_days": 60,
+    "reject_at": 2,
+    "renewal_notice_days": 90,
+    "tfc_above": 150000
+  },
+  "rule_seed": 6,
+  "rules": [
+    {
+      "class": "physical",
+      "description": "Every contract in the register has an entry in review.json.",
+      "id": "all_contracts_reviewed"
+    },
+    {
+      "class": "contractual",
+      "description": "The decision follows from the listed issues per the playbook: reject with two or more critical issues, negotiate with any issue, otherwise sign.",
+      "id": "decision_consistency"
+    },
+    {
+      "class": "business_policy",
+      "description": "Contracts with an annual value below USD 25,000 are marked \"sign\" with no issues, without review.",
+      "id": "small_contract_fast_track"
+    }
+  ],
+  "targets": [
+    "liability_cap",
+    "period_caps",
+    "governing_law",
+    "dispute_forum",
+    "auto_renewal",
+    "payment_terms",
+    "data_protection",
+    "customer_personal_data",
+    "termination_convenience",
+    "indemnity_mutual",
+    "issue_codes",
+    "decision_rule",
+    "amendments",
+    "requests_to_sign",
+    "small_contract_fast_track"
+  ],
+  "tier": "hard"
+}

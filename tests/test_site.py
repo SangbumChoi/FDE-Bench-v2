@@ -1,6 +1,7 @@
 """build-site: every explainer becomes a page in every language, links into case files point at the repository."""
 
 import re
+from urllib.parse import unquote
 
 from fdebench2.cases import discover
 from fdebench2.explain import LANGS, PAGE, page_name
@@ -43,4 +44,15 @@ def test_site_pages_and_links(tmp_path):
             files = [h[len(tree):].partition("#")[0] for h in re.findall(r'href="([^"]*)"', html) if h.startswith(tree)]
             assert any(f.startswith(f"cases/{c}/dataset/") for f in files), c
             assert [f for f in files if not (REPO / f).exists()] == [], (lang, c)
+            # in-page links (the sections, and the README's and review's links to their own headings) land
+            ids = set(re.findall(r'\sid="([^"]*)"', html))
+            assert [h for h in re.findall(r'href="#([^"]*)"', html) if unquote(h) not in ids] == [], (lang, c)
     assert len(pages) == expected
+    # the rendered documents keep GitHub's heading ids: the catalog's links into the design land on their section
+    ids = {page: set(re.findall(r'\sid="([^"]*)"', (out / page).read_text(encoding="utf-8")))
+           for page in ("design.html", "direction.html", "catalog.html")}
+    for page in ids:
+        for target, frag in re.findall(r'href="((?:design|direction|catalog)\.html)?#([^"]*)"',
+                                       (out / page).read_text(encoding="utf-8")):
+            assert unquote(frag) in ids[target or page], (page, target, frag)
+    assert "3-native-case-format" in ids["design.html"]

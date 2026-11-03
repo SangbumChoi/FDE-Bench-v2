@@ -259,7 +259,7 @@ request, the questions file and the agent's view are unchanged and byte-identica
   FY2026 has started by the reference date) plus a window inside the data; every current combination passes.
 - **Panel.** `rule_seeds: [4, 12, 23]`, the first triple of seeds in which every value of every pool appears once:
   s4 = January, 60 days, 100 KRW, 1; s12 = July, 30 days, 10,000 KRW, 0.5; s23 = April, 90 days, 1,000 KRW, 1.5.
-  Settings are `easy/s4` … `hard/s23`, stored in `dataset/gt/<tier>_s<seed>/` with the drawn and derived values in
+  Settings are `easy/s4` … `hard/s23`, stored in `dataset/answer/<tier>/s<seed>/` with the drawn and derived values in
   `setting.json`. s23 is rule set A with a `null` worth 1.5 instead of 1; the old sets B and C are no longer on the
   panel as such (B is seed 21, C is no seed below 400).
 - **Texts.** Placeholders as before; the old per-rule-set labels of the periods are now derived values. Three

@@ -63,7 +63,7 @@ propia referencia de esa configuración la supere en al menos un 3%.
 | hard/s58 | mínimo 4, festivo vie. 13 nov., folleto 2, lácteos cancelados, peso 3 | 0.2108 | 0.6753 | 3.20 |
 
 El objetivo es la media sobre las cinco tiendas del WAPE ponderado (cuanto más bajo, mejor). Los diccionarios tal como
-se guardan en `dataset/gt/<tier>_s<seed>/setting.json`:
+se guardan en `dataset/answer/<tier>/s<seed>/setting.json`:
 
 ```
 easy/s3    {min_display: 6, holiday_date: none,         promo_uplift: 1,   promo_cancelled: none,      short_weight: 1}

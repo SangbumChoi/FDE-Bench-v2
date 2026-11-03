@@ -1,0 +1,95 @@
+- id: bom_explosion
+  kind: ambiguous
+  domain: data semantics
+  text: Component demand in a week is the boards of each model built that week (production_plan.csv) times
+    qty_per_board in bom.csv, added over both models, and it is needed in that same week; goods that arrive
+    in a week can be used for that whole week's builds (no assembly offset).
+- id: lead_time_business_days
+  kind: ambiguous
+  domain: data semantics
+  text: lead_time_days counts business days (Monday to Friday), not calendar days, counted from the Monday
+    of the order week; the goods can be used from the first week that starts after they arrive.
+- id: holiday_weeks
+  kind: missing
+  domain: calculation
+  text: W5 (21-25 December, Christmas) and W6 (28 December - 1 January, New Year's Day) have only four
+    business days; every other week has five.
+- id: moq_per_line
+  kind: ambiguous
+  domain: business rule
+  text: The MOQ applies per order line (one supplier, component and order week); quantities ordered in
+    different weeks are never added up to reach it.
+- id: price_breaks
+  kind: ambiguous
+  domain: calculation
+  text: Price breaks apply per order line and to the whole line (all-units discount); quantities from
+    different weeks are never combined to reach a break.
+- id: quality_hold
+  kind: missing
+  domain: business rule
+  text: Hanbit Electronics (S01) is on quality hold; its goods due to arrive in W1 to W5 are rejected,
+    so its deliveries may only arrive after W5.
+- id: budget_hard_cap
+  kind: ambiguous
+  domain: business rule
+  text: The monthly budget in budget.csv is a hard cap from the parent company, not a target; no month
+    may go over it.
+- id: budget_month
+  kind: ambiguous
+  domain: business rule
+  text: An order counts against the budget of the month of its order week's Monday, so W1-W2 are November
+    (W2 starts on 30 November), W3-W6 December and W7-W8 January.
+- id: approved_status_only
+  kind: ambiguous
+  domain: business rule
+  text: Only suppliers whose status for that component is approved may be used; pending and suspended
+    suppliers are not allowed even if they quoted.
+- id: safety_stock
+  kind: missing
+  domain: business rule
+  text: Critical parts (critical = yes) should keep a safety stock of 1.5 times their average weekly demand
+    (total demand over the weeks they are used divided by the number of those weeks, rounded up) at the
+    end of every week they are used.
+- id: shortfall_cost
+  kind: missing
+  domain: scoring
+  text: Each piece that a critical part is below its safety stock at the end of a week in which it is
+    used costs 1.5 times its standard cost.
+- id: dual_source_two
+  kind: missing
+  domain: business rule
+  text: Every critical component in use must be ordered from at least two different suppliers within this
+    plan; it is a company habit, so an exception can be asked for if it saves real money.
+- id: max_share
+  kind: missing
+  domain: business rule
+  text: No single supplier may get more than 80% of a critical component's quantity ordered in this plan,
+    counted in pieces.
+- id: backlog_cost
+  kind: missing
+  domain: scoring
+  text: Boards that cannot be built for lack of a part wait for it, and each board waiting a week costs
+    10,000 KRW; a piece missing at the end of a week therefore costs 10,000 KRW divided by the part's
+    pieces per board, counted per part.
+- id: supplier_lateness
+  kind: missing
+  domain: data semantics
+  text: Suppliers deliver one or two weeks late with their own probabilities, shown by delivery_history.csv
+    (received 1-7 days after the promised Monday = one week late, 8-14 days = two weeks); each delivery
+    (one supplier, part and arrival week) is late independently; open orders arrive on time.
+- id: allocation_caps
+  kind: missing
+  domain: business rule
+  text: S03 for C01 and C03 and S08 for C06 confirm at most the quantity in allocations.csv per calendar
+    month of order weeks; anything above it is not delivered.
+- id: eco_switch
+  kind: missing
+  domain: business rule
+  text: From W6 the flash C04 is replaced by C25 on both boards, as the bom.csv validity columns show;
+    C04 left at the end of W5 is scrapped at standard cost and C04 arriving later is useless; C25 has
+    no stock or open orders.
+- id: eco_c04_exempt
+  kind: missing
+  domain: business rule
+  text: C04, which is being phased out, needs no safety stock and no second source any more; C25 is critical
+    and needs both.

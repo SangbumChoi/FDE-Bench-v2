@@ -9,3 +9,8 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 | 한국어 | 콜센터 인력 운영 플래너 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [explainer.html](docs/ko/explainer.html) |
 | 日本語 | コールセンター要員計画担当 | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [explainer.html](docs/ja/explainer.html) |
 | Español | Planificador de personal del centro de llamadas | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [explainer.html](docs/es/explainer.html) |
+
+- [dataset/answer/](dataset/answer/): the answer of each public setting, one folder per tier and public rule seed (`<tier>/s<seed>/`), with the setting and its rules, what the client knows in that version in every language, the reference, the client's own way and their scores
+  - [easy/](dataset/answer/easy/): [s10](dataset/answer/easy/s10/), [s2](dataset/answer/easy/s2/), [s3](dataset/answer/easy/s3/)
+  - [medium/](dataset/answer/medium/): [s10](dataset/answer/medium/s10/), [s2](dataset/answer/medium/s2/), [s3](dataset/answer/medium/s3/)
+  - [hard/](dataset/answer/hard/): [s10](dataset/answer/hard/s10/), [s2](dataset/answer/hard/s2/), [s3](dataset/answer/hard/s3/)

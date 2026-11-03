@@ -1,0 +1,49 @@
+- id: layout
+  kind: missing
+  domain: business rule
+  text: ライブラリに並べる本は、out_dir の中の `library/<年>/<著者>/<書名>.txt` というパスのファイル1つです。
+- id: year_basis
+  kind: ambiguous
+  domain: business rule
+  text: パスの年はこの版（手元の版）の刊行年です。年が1つしかない本はその年を使います。
+- id: script
+  kind: ambiguous
+  domain: business rule
+  text: パスの書名と著者名は原語の文字（中国語・韓国語・日本語の本は原語の文字のまま）で書きます。
+- id: co_authors
+  kind: missing
+  domain: business rule
+  text: 共著の本では、パスの著者の部分は筆頭著者のみです。
+- id: separator
+  kind: missing
+  domain: data semantics
+  text: 書名と著者名の中の連続する空白はアンダースコア `_`にします。
+- id: max_len
+  kind: missing
+  domain: data semantics
+  text: 書名と著者名は先頭の 40 文字だけ残し、両端の空白・ピリオド・区切り文字を除きます。
+- id: content
+  kind: missing
+  domain: data semantics
+  text: ライブラリのファイルにはその本の紹介文だけを入れます（書名・著者・年の行は入れない）。UTF-8 で、段落の間に空行を入れます。
+- id: review_codes
+  kind: missing
+  domain: business rule
+  text: 確認の行には理由コード UNREADABLE、NO_TITLE、NO_AUTHOR、NO_YEAR、NO_DESCRIPTION、CONFLICT のうち1つを付けます（この順で最初に当てはまるもの）。
+- id: missing_author
+  kind: missing
+  domain: business rule
+  text: 著者のない本は著者名「Anonymous」でほかの本と同じようにライブラリに並べ、確認には回しません（NO_AUTHOR は使わない）。
+- id: no_description
+  kind: missing
+  domain: business rule
+  text: どの情報源にも紹介文がない本は NO_DESCRIPTION として確認に回します。作った紹介文や仮の文言は決して書きません。
+- id: conflict
+  kind: ambiguous
+  domain: business rule
+  text: 同じ段階の2つの情報源で年が食い違う本（たとえば1冊の JSON レコードと ONIX レコード）は CONFLICT として確認に回します。どちらの年も採りません。
+- id: generic_titles
+  kind: ambiguous
+  domain: data semantics
+  text: 意味のあるファイル名は書名になります（アンダースコアは空白）が、doc_0042、scan_0007、book_0031 や ISBN のような汎用的な名前はなりません。ほかに書名のない本は
+    NO_TITLE として確認に回します。

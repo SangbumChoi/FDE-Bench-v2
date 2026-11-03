@@ -253,7 +253,7 @@ sorteo de medium.
 | hard/s20 | NEXO, PYRO; 9; 3; 18; 35; notice_10; 15 | 27% | 1.000 | 0.254 |
 | hard/s134 | MEDQ, GLAC; 6; 2; 10; 25; capital_25; 10 | 12% | 1.000 | 0.566 |
 
-`dataset/gt/<tier>_s<seed>/setting.json` guarda el diccionario sorteado de cada configuración (`none` para los valores
+`dataset/answer/<tier>/s<seed>/setting.json` guarda el diccionario sorteado de cada configuración (`none` para los valores
 que el nivel no usa) y los valores derivados `withdrawal_basis` y `withdrawal_pct`.
 
 **Parámetros que aprietan** (validate-case, desde hard/s44): cada parámetro cambia la solución correcta con el primer
@@ -395,7 +395,7 @@ Lo escribe `python -m fdebench2.cli export-dataset cases/finance/stock_trading_s
   depende de las propias órdenes del programa, véase la solución correcta); `daily_prices.csv` e `index_levels.csv` de
   las 80 sesiones ocultas (las barras de la última sesión no están en ninguna llamada); `mail/<lang>/*.eml`, los correos
   detrás de los seis avisos en todos los idiomas.
-- `gt/<tier>_s<seed>/`, uno por configuración pública (`easy_s44` … `hard_s134`): `setting.json` (nivel, semilla de
+- `answer/<tier>/s<seed>/`, uno por configuración pública (`easy/s44` … `hard/s134`): `setting.json` (nivel, semilla de
   reglas, los valores sorteados y los derivados `withdrawal_basis` / `withdrawal_pct`), `reference/program/`
   (strategy.py + config.json), `score.json` (objetivo 1.0 y las métricas) y, de `write_ground_truth`, la ejecución de la
   referencia: `orders.csv` (las órdenes bien formadas por sesión en que se ejecutan), `fills.csv` (ejecuciones y

@@ -1,0 +1,98 @@
+- id: bom_explosion
+  kind: ambiguous
+  domain: data semantics
+  text: La demanda de un componente en una semana son las placas de cada modelo fabricadas esa semana
+    (plan_produccion.csv) por su cantidad_por_placa en lista_materiales.csv, sumadas para los dos modelos,
+    y se necesita esa misma semana; lo que llega en una semana sirve para toda la producción de esa semana
+    (no hay desfase de montaje).
+- id: lead_time_business_days
+  kind: ambiguous
+  domain: data semantics
+  text: plazo_entrega_dias cuenta días hábiles (de lunes a viernes), no días naturales, contados desde
+    el lunes de la semana del pedido; la mercancía se puede usar desde la primera semana que empieza después
+    de su llegada.
+- id: holiday_weeks
+  kind: missing
+  domain: calculation
+  text: W5 (21-25 de diciembre, Navidad) y W6 (28 de diciembre - 1 de enero, Año Nuevo) solo tienen cuatro
+    días hábiles; las demás semanas tienen cinco.
+- id: moq_per_line
+  kind: ambiguous
+  domain: business rule
+  text: El pedido mínimo se aplica por línea de pedido (un proveedor, un componente y una semana de pedido);
+    nunca se suman cantidades de semanas distintas para alcanzarlo.
+- id: price_breaks
+  kind: ambiguous
+  domain: calculation
+  text: Los descuentos por cantidad se aplican por línea de pedido y a toda la línea (descuento sobre
+    todas las unidades); nunca se combinan cantidades de semanas distintas para alcanzar un tramo.
+- id: quality_hold
+  kind: missing
+  domain: business rule
+  text: Mirae Semicon (S03) está en bloqueo de calidad; su mercancía con llegada prevista de W1 a W5 se
+    rechaza, así que sus entregas solo pueden llegar después de W5.
+- id: budget_hard_cap
+  kind: ambiguous
+  domain: business rule
+  text: El presupuesto mensual de presupuesto.csv es un límite estricto de la empresa matriz, no un objetivo;
+    ningún mes puede superarlo.
+- id: budget_month
+  kind: ambiguous
+  domain: business rule
+  text: Un pedido cuenta en el presupuesto del mes del lunes de su semana de pedido, así que W1-W2 son
+    noviembre (W2 empieza el 30 de noviembre), W3-W6 diciembre y W7-W8 enero.
+- id: approved_status_only
+  kind: ambiguous
+  domain: business rule
+  text: Solo se pueden usar proveedores cuyo estado para ese componente sea homologado; los que están
+    en evaluación o suspendidos no se permiten aunque hayan cotizado.
+- id: safety_stock
+  kind: missing
+  domain: business rule
+  text: Los componentes críticos (critico = sí) deben mantener un stock de seguridad de 1 veces su demanda
+    semanal media (la demanda total de las semanas en que se usan dividida entre el número de esas semanas,
+    por 1, redondeado hacia arriba) al final de cada semana en que se usan.
+- id: shortfall_cost
+  kind: missing
+  domain: scoring
+  text: Cada pieza que a un componente crítico le falta para su stock de seguridad al final de una semana
+    en que se usa cuesta 1,5 veces su coste estándar.
+- id: dual_source_two
+  kind: missing
+  domain: business rule
+  text: Cada componente crítico en uso debe pedirse a al menos dos proveedores distintos dentro de este
+    plan; es una costumbre de la empresa, así que se puede pedir una excepción si ahorra dinero de verdad.
+- id: max_share
+  kind: missing
+  domain: business rule
+  text: Ningún proveedor puede recibir más del 80% de la cantidad pedida de un componente crítico en este
+    plan, contada en piezas.
+- id: backlog_cost
+  kind: missing
+  domain: scoring
+  text: Las placas que no se pueden fabricar por falta de una pieza la esperan, y cada placa que espera
+    una semana cuesta 10.000 KRW; por eso cada pieza que falta al final de una semana cuesta 10.000 KRW
+    divididos entre las piezas de ese componente por placa, contadas por componente.
+- id: supplier_lateness
+  kind: missing
+  domain: data semantics
+  text: Los proveedores entregan con una o dos semanas de retraso con sus propias probabilidades, que
+    muestra historial_entregas.csv (recibido de 1 a 7 días después del lunes prometido = una semana de
+    retraso, de 8 a 14 días = dos semanas); cada entrega (un proveedor, un componente y una semana de
+    llegada) se retrasa de forma independiente; los pedidos abiertos llegan a tiempo.
+- id: allocation_caps
+  kind: missing
+  domain: business rule
+  text: S03 para C01 y C03 y S08 para C06 confirman como máximo la cantidad de asignaciones.csv por mes
+    natural de las semanas de pedido; lo que la supere no se entrega.
+- id: eco_switch
+  kind: missing
+  domain: business rule
+  text: Desde W6 la memoria flash C04 se sustituye por C25 en las dos placas, como indican las columnas
+    de vigencia de lista_materiales.csv; el C04 que quede al final de W5 se desecha a su coste estándar
+    y el C04 que llegue después no sirve; C25 no tiene stock ni pedidos abiertos.
+- id: eco_c04_exempt
+  kind: missing
+  domain: business rule
+  text: C04, que se está retirando, ya no necesita stock de seguridad ni segundo proveedor; C25 es crítico
+    y necesita ambos.

@@ -29,7 +29,7 @@ A setting is a tier and a rule seed. The world, the visible corpus, the hidden c
 same in every setting (the validator checks that the agent's view is byte-identical). The tier decides which
 books are scored, which rules apply and which candidate pools the rule seed draws from; the rule seed draws the
 client's library rules, each parameter on its own, so the correct library differs from seed to seed. The public
-panel is rule seeds **11, 18 and 21** (nine settings, stored in `dataset/gt/` and checked by the validator); any
+panel is rule seeds **11, 18 and 21** (nine settings, stored in `dataset/answer/` and checked by the validator); any
 other seed is a private draw whose answers are published nowhere.
 
 ### Tiers (same corpus; scope, strictness and pools differ)
@@ -272,7 +272,7 @@ dataset/
   hidden/corpus/...                  the hidden drive exactly as organize() receives it (same in every setting)
   audit.json                         the ground truth audit (public world): ablations, shortcuts, value of asking,
                                        bounds, diagnostics; GT.md is generated from it
-  gt/<tier>_s<seed>/                 easy_s11 ... hard_s21, the public panel
+  answer/<tier>/s<seed>/             easy/s11 ... hard/s21, the public panel
     setting.json, score.json         the drawn parameters (+ derived fallback_author) and the reference's score on
                                        the hidden corpus (with the baseline's objective and both normalized qualities)
     reference/program/               the reference deliverable (organize.py + config.json of the setting)

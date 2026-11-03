@@ -13,7 +13,7 @@ A setting is a tier and a rule seed. The tier decides which questions the board 
 seed draws four of the client's rules, each on its own, from a pool of three values: the first month of the
 fiscal year, the active-customer window, the unit money is rounded to, and what a "don't know" is worth against a
 right and a wrong answer. That makes 81 combinations per tier. The public panel is rule seeds 4, 12 and 23 (nine
-settings, stored in `dataset/gt/` and checked by the validator); any other seed is a private draw whose answers
+settings, stored in `dataset/answer/` and checked by the validator); any other seed is a private draw whose answers
 are published nowhere. **The agent sees the same request and the same data in every setting** (the validator
 checks that its prompt and workspace are byte-identical). The simulated client answers from the hidden
 requirements of the setting, and the evaluator scores under it. So the case measures two things: whether the agent
@@ -180,7 +180,7 @@ note on the first half, and the client's remark for a `null` worth 0.5 or 1.5 (a
 | 23 | 4 (April) | 90 | 1,000 | 1.5 | 2025-04-01–2026-03-31 / 2026-04-01–06-30 / 2026-04-01–09-30; active from 2026-07-03 |
 
 The draw is the same in every tier, so each row is the drawn dict of `easy/sN`, `medium/sN` and `hard/sN`
-(`dataset/gt/<tier>_s<N>/setting.json`). Seed 23 is the old rule set A apart from its `null` reward (1.5 instead
+(`dataset/answer/<tier>/s<N>/setting.json`). Seed 23 is the old rule set A apart from its `null` reward (1.5 instead
 of 1); seeds 4 and 12 mix values that no old rule set combined. Private seeds draw any of the 81 combinations
 (e.g. seed 101: April, 60 days, 1,000 KRW, 1; seed 102: July, 90 days, 100 KRW, 0.5).
 

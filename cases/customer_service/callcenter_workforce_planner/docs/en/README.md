@@ -59,7 +59,7 @@ the setting of the validator's binding check. Objectives at the public world see
 | hard/s2 | weight 25, 40 h, holiday 60%, rest 13 h, sick to Thu 12 | 29,678 | 22,297 | 21,066 | 193, 17,472, 116 | 1.167 |
 | hard/s3 | weight 15, 32 h, holiday 75%, rest 11 h, sick to Tue 10 | 23,722 | 20,458 | 19,919 | 422, 14,128, 98 | 1.165 |
 
-The drawn values of each public setting are stored in `dataset/gt/<tier>_s<seed>/setting.json` (with the
+The drawn values of each public setting are stored in `dataset/answer/<tier>/s<seed>/setting.json` (with the
 derived `ft_regular_shifts` and `ft_max_shifts`). Any other rule seed is a private seed: a fresh draw of the
 same pools.
 

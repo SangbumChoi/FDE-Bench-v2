@@ -1,0 +1,90 @@
+{
+  "derived": {
+    "end_soc_mwh": 16,
+    "eta_charge": {
+      "en": "0.90",
+      "es": "0,90",
+      "ja": "0.90",
+      "ko": "0.90",
+      "zh": "0.90"
+    },
+    "eta_charge_pct": 90,
+    "eta_discharge": {
+      "en": "0.94",
+      "es": "0,94",
+      "ja": "0.94",
+      "ko": "0.94",
+      "zh": "0.94"
+    },
+    "eta_discharge_pct": 94,
+    "import_from": "00:00",
+    "import_last": "05:45",
+    "reserve_from": "18:00",
+    "reserve_mwh": 6,
+    "reserve_to": "22:00",
+    "soc_max": 90,
+    "soc_max_mwh": 36,
+    "soc_min": 10,
+    "soc_min_mwh": 4
+  },
+  "params": {
+    "degradation": 15,
+    "dso_day": "none",
+    "dso_mw": "none",
+    "efficiency": "90/94",
+    "end_soc": 40,
+    "export_cap": 12,
+    "import_window": "00-06",
+    "outage_day": "none",
+    "reserve_pct": 15,
+    "reserve_window": "18-22",
+    "soc_window": "10-90",
+    "works_end": "none"
+  },
+  "rule_seed": 70,
+  "rules": [
+    {
+      "class": "physical",
+      "description": "State of charge stays between 10% and 90% of 40 MWh at all times (90% efficiency on charge, 94% on discharge).",
+      "id": "soc_limits"
+    },
+    {
+      "class": "physical",
+      "description": "Charge and discharge are each between 0 and 20 MW, never both in the same interval; grid import at most 20 MW.",
+      "id": "power_limits"
+    },
+    {
+      "class": "contractual",
+      "description": "While the substation works last, site export (solar + discharge - charge) must not exceed the amended 12 MW cap whenever the battery discharges.",
+      "id": "export_cap"
+    },
+    {
+      "class": "contractual",
+      "description": "The site may import from the grid (charging beyond solar output) only in intervals starting 00:00-05:45 local time.",
+      "id": "grid_charging_window"
+    },
+    {
+      "class": "contractual",
+      "description": "The week starts at 50% state of charge and must end at no less than 40%.",
+      "id": "end_soc"
+    },
+    {
+      "class": "business_policy",
+      "description": "State of charge is at least 15% at every moment between 18:00 and 22:00 local time each day.",
+      "id": "evening_reserve"
+    }
+  ],
+  "targets": [
+    "efficiency",
+    "soc_window",
+    "start_end_soc",
+    "export_cap",
+    "grid_charging",
+    "quarter_settlement",
+    "dst_clock",
+    "evening_reserve",
+    "degradation",
+    "profit_scoring"
+  ],
+  "tier": "medium"
+}

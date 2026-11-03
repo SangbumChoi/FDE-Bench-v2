@@ -54,7 +54,7 @@ every other pool (`case.py` `_headline`); the validator's binding check starts f
 | hard/s13 | C14, late 5, 09:00, 110 trays, rush 07:30, habit off | 472.58 | 1,269.31 | 2.69 |
 | hard/s58 | C03, late 2, 09:30, 110 trays, rush 06:30, habit off | 537.35 | 1,177.53 | 2.19 |
 
-The dicts as stored in `dataset/gt/<tier>_s<seed>/setting.json` (`rush_start` and `premium_first` as drawn):
+The dicts as stored in `dataset/answer/<tier>/s<seed>/setting.json` (`rush_start` and `premium_first` as drawn):
 
 ```
 easy/s5    {closed_cafe: C11, late_cost: 3, shift_end: "10:00", van_capacity: 120, rush_start: none, premium_first: false}

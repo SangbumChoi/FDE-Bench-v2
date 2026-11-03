@@ -1,0 +1,62 @@
+- id: fiscal_year
+  kind: missing
+  domain: business rule
+  text: El año fiscal empieza el 1 de enero y lleva el nombre del año en que empieza (el FY2025 va del
+    2025-01-01 al 2025-12-31); el primer trimestre del FY2026 es del 2026-01-01 al 2026-03-31 y su primer
+    semestre, del 2026-01-01 al 2026-06-30, y un periodo aún en curso en la fecha de referencia se cuenta
+    hasta ella.
+- id: local_day
+  kind: ambiguous
+  domain: data semantics
+  text: Las marcas de tiempo están en UTC, pero los días, meses, trimestres y años fiscales se deciden
+    en hora de Corea (UTC+9); hay que sumar 9 horas antes de tomar la fecha.
+- id: test_accounts
+  kind: missing
+  domain: business rule
+  text: Los clientes con account_type «prueba» en accounts_meta son cuentas de QA y se excluyen de todas
+    las cifras; las cuentas «empleado» se mantienen.
+- id: counted_orders
+  kind: ambiguous
+  domain: data semantics
+  text: Solo cuentan los pedidos «completado»; los «cancelado» y «pago_fallido» no cuentan nunca, aunque
+    payments.csv tenga una fila de pago para ellos.
+- id: net_revenue
+  kind: ambiguous
+  domain: calculation
+  text: Ingreso neto = subtotal del pedido (sin impuestos) menos los reembolsos sin impuesto (importe
+    × subtotal / total), imputados al periodo de la fecha del pedido, no al del reembolso.
+- id: late_refunds
+  kind: ambiguous
+  domain: data semantics
+  text: La exportación se hizo el 2026-10-31 con todos los reembolsos registrados hasta entonces; los
+    reembolsos posteriores a la fecha de referencia (octubre de 2026) también cuentan, en el periodo de
+    su pedido.
+- id: fx_order_date
+  kind: missing
+  domain: calculation
+  text: Los importes están en la moneda del pedido y se convierten a KRW con el krw_per_unit de fx_rates
+    de la fecha del pedido (hora de Corea); los reembolsos usan el mismo tipo que su pedido.
+- id: active_customer
+  kind: ambiguous
+  domain: business rule
+  text: Un cliente activo tiene al menos un pedido completado con fecha dentro de los 60 días que terminan
+    en la fecha de referencia (del 2026-08-02 al 2026-09-30).
+- id: category_rename
+  kind: missing
+  domain: data semantics
+  text: La categoría snacks se renombró como despensa el 2025-10-01 y los productos antiguos conservan
+    la etiqueta vieja; las preguntas sobre despensa incluyen ambas etiquetas, con los reembolsos de cada
+    pedido repartidos entre sus líneas en proporción a su importe.
+- id: report_rounding
+  kind: missing
+  domain: scoring
+  text: Finanzas exige redondear toda respuesta monetaria al múltiplo de 100 KRW más cercano; las respuestas
+    se comparan con las cifras exactas (recuentos e identificadores exactos, importes dentro del 0,5 %
+    o de media unidad de redondeo, la variación mensual dentro de 0,05 puntos porcentuales, el resto dentro
+    del 0,5 %).
+- id: answer_rewards
+  kind: missing
+  domain: business rule
+  text: Las respuestas van al dosier del consejo del consejero delegado y null («aún no disponible») es
+    una respuesta admitida; finanzas valora una cifra correcta en 2, un null en 1 y una cifra errónea
+    en 0.

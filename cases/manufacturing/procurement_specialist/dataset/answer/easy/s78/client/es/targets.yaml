@@ -1,0 +1,85 @@
+- id: bom_explosion
+  kind: ambiguous
+  domain: data semantics
+  text: La demanda de un componente en una semana son las placas de cada modelo fabricadas esa semana
+    (plan_produccion.csv) por su cantidad_por_placa en lista_materiales.csv, sumadas para los dos modelos,
+    y se necesita esa misma semana; lo que llega en una semana sirve para toda la producción de esa semana
+    (no hay desfase de montaje).
+- id: lead_time_business_days
+  kind: ambiguous
+  domain: data semantics
+  text: plazo_entrega_dias cuenta días hábiles (de lunes a viernes), no días naturales; en esta ronda
+    se divide entre 5 y se redondea hacia arriba para obtener semanas completas (12 días = 3 semanas),
+    y un pedido hecho en la semana w con L semanas se puede usar desde la semana w+L.
+- id: scope_whole_weeks
+  kind: missing
+  domain: business rule
+  text: En esta ronda los plazos de entrega no tienen en cuenta los festivos; todas las semanas cuentan
+    como cinco días hábiles, también las de Navidad y Año Nuevo.
+- id: moq_per_line
+  kind: ambiguous
+  domain: business rule
+  text: El pedido mínimo se aplica por línea de pedido (un proveedor, un componente y una semana de pedido);
+    nunca se suman cantidades de semanas distintas para alcanzarlo.
+- id: scope_list_prices
+  kind: missing
+  domain: business rule
+  text: En esta ronda se planifica a precio de lista; cada línea de pedido se valora a precio_unitario
+    sea cual sea su tamaño, y se ignoran las columnas de tramos.
+- id: price_rise_week
+  kind: missing
+  domain: business rule
+  text: El aumento del 12% de Nara Display sobre C06, acordado en los correos, se aplica a los pedidos
+    desde W4; todos los pedidos se envían el lunes de su semana, así que los de W3 (7 de diciembre) son
+    anteriores a la fecha de entrada en vigor del 9 de diciembre y mantienen el precio anterior.
+- id: quality_hold
+  kind: missing
+  domain: business rule
+  text: Seoul PCB Tech (S05) está en bloqueo de calidad; su mercancía con llegada prevista de W1 a W4
+    se rechaza, así que sus entregas solo pueden llegar después de W4.
+- id: budget_hard_cap
+  kind: ambiguous
+  domain: business rule
+  text: El presupuesto mensual de presupuesto.csv es un límite estricto de la empresa matriz, no un objetivo;
+    ningún mes puede superarlo.
+- id: budget_month
+  kind: ambiguous
+  domain: business rule
+  text: Un pedido cuenta en el presupuesto del mes del lunes de su semana de pedido, así que W1-W2 son
+    noviembre (W2 empieza el 30 de noviembre), W3-W6 diciembre y W7-W8 enero.
+- id: approved_status_only
+  kind: ambiguous
+  domain: business rule
+  text: Solo se pueden usar proveedores cuyo estado para ese componente sea homologado; los que están
+    en evaluación o suspendidos no se permiten aunque hayan cotizado.
+- id: safety_stock
+  kind: missing
+  domain: business rule
+  text: Los componentes críticos (critico = sí) deben mantener un stock de seguridad de 0,5 veces su demanda
+    semanal media (la demanda total de las semanas en que se usan dividida entre el número de esas semanas,
+    por 0,5, redondeado hacia arriba) al final de cada semana en que se usan.
+- id: dual_source_two
+  kind: missing
+  domain: business rule
+  text: Cada componente crítico en uso debe pedirse a al menos dos proveedores distintos dentro de este
+    plan; es una costumbre de la empresa, así que se puede pedir una excepción si ahorra dinero de verdad.
+- id: max_share
+  kind: missing
+  domain: business rule
+  text: Ningún proveedor puede recibir más del 70% de la cantidad pedida de un componente crítico en este
+    plan, contada en piezas.
+- id: scope_no_flash_change
+  kind: missing
+  domain: business rule
+  text: El cambio de la memoria flash de lista_materiales.csv no está liberado en esta ronda; las dos
+    placas siguen usando C04 las diez semanas, C25 no hace falta y se ignoran las columnas de vigencia.
+- id: scope_on_time
+  kind: missing
+  domain: business rule
+  text: En esta ronda se planifica como si todos los proveedores entregaran en la semana prometida; no
+    se usa historial_entregas.csv.
+- id: scope_no_allocation
+  kind: missing
+  domain: business rule
+  text: En esta ronda se planifica como si todos los proveedores confirmaran todo lo que pedimos; no se
+    usa asignaciones.csv.

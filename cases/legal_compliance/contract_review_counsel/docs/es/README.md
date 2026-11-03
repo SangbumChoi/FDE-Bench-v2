@@ -121,7 +121,7 @@ hard/s49   {cap_multiple: 2,   governing_law: SG,       payment_days: 30, reject
 ```
 
 Entre las tres semillas sortean todos los candidatos de todos los conjuntos en todos los niveles.
-`dataset/gt/<tier>_s<seed>/` contiene, para cada configuración, `setting.json`, la referencia, su puntuación y
+`dataset/answer/<tier>/s<seed>/` contiene, para cada configuración, `setting.json`, la referencia, su puntuación y
 `truth.json` (las incidencias según los criterios y la decisión de cada contrato puntuado, con la vía rápida
 mantenida).
 

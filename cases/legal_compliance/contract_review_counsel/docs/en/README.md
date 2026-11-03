@@ -112,7 +112,7 @@ hard/s49   {cap_multiple: 2,   governing_law: SG,       payment_days: 30, reject
 ```
 
 Together the three seeds draw every candidate of every pool in every tier.
-`dataset/gt/<tier>_s<seed>/` holds each setting's `setting.json`, the reference, its score and `truth.json` (the
+`dataset/answer/<tier>/s<seed>/` holds each setting's `setting.json`, the reference, its score and `truth.json` (the
 playbook's issues and decision of every scored contract, fast track kept).
 
 ## Rules

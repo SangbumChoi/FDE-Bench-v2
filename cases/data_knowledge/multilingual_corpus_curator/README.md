@@ -10,5 +10,9 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 | 日本語 | 多言語コーパスキュレーター | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [explainer.html](docs/ja/explainer.html) |
 | Español | Curador de corpus multilingüe | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [explainer.html](docs/es/explainer.html) |
 
+- [dataset/answer/](dataset/answer/): the answer of each public setting, one folder per tier and public rule seed (`<tier>/s<seed>/`), with the setting and its rules, what the client knows in that version in every language, the reference, the client's own way and their scores
+  - [easy/](dataset/answer/easy/): [s11](dataset/answer/easy/s11/), [s18](dataset/answer/easy/s18/), [s21](dataset/answer/easy/s21/)
+  - [medium/](dataset/answer/medium/): [s11](dataset/answer/medium/s11/), [s18](dataset/answer/medium/s18/), [s21](dataset/answer/medium/s21/)
+  - [hard/](dataset/answer/hard/): [s11](dataset/answer/hard/s11/), [s18](dataset/answer/hard/s18/), [s21](dataset/answer/hard/s21/)
 - [GT.md](GT.md): the ground truth in five parts, generated from `dataset/audit.json`
 - [CLIENT_REVIEW.md](CLIENT_REVIEW.md): what the simulated client answers each target from

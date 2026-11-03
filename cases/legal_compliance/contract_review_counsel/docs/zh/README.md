@@ -68,7 +68,7 @@ hard/s11   {cap_multiple: 1.5, governing_law: CH_SG_EW, payment_days: 45, reject
 hard/s49   {cap_multiple: 2,   governing_law: SG,       payment_days: 30, reject_at: 1, renewal_notice_days: 60, dp_categories: it_data_marketing, tfc_above: 100000, fast_track_below: 10000}
 ```
 
-这三个种子合起来在每个层级都抽到了每个候选值池的每个候选值。`dataset/gt/<tier>_s<seed>/` 中保存每个设置的 `setting.json`、参考解、其得分以及 `truth.json`（每份计分合同按手册的问题和结论，保留快速通道）。
+这三个种子合起来在每个层级都抽到了每个候选值池的每个候选值。`dataset/answer/<tier>/s<seed>/` 中保存每个设置的 `setting.json`、参考解、其得分以及 `truth.json`（每份计分合同按手册的问题和结论，保留快速通道）。
 
 ## 规则
 

@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from fdebench2.cases import (MAX_REDRAWS, NativeCase, Setting, condition_holds, draw_params, fill_params,
+from fdebench2.cases import (LOCALES, MAX_REDRAWS, NativeCase, Setting, condition_holds, draw_params, fill_params,
                              filter_when)
 from fdebench2.dataset import check_dataset, export_dataset
 from fdebench2.explain import build_page, write_page
@@ -272,7 +272,8 @@ def test_draw_follows_the_contract_and_is_deterministic(tmp_path):
                             if w["cap"] * w["price"] <= 100)
             assert c.drawn_params == want and c.setting.params == {**want, "budget": want["cap"] * want["price"]}
             assert isinstance(c.setting, Setting) and c.setting.label == f"{tier}/s{seed}"
-            assert c.setting.folder == f"{tier}_s{seed}" and c.setting["cap"] == want["cap"]
+            assert c.setting.folder == f"{tier}/s{seed}" and c.setting.slug == f"{tier}_s{seed}"
+            assert c.setting["cap"] == want["cap"]
             drawn[f"{tier}/{seed}"] = c.drawn_params
     assert NativeCase(root).at("hard", 977).drawn_params == drawn["hard/977"]      # a fresh case draws the same
     # ... and so does a fresh process with another hash seed
@@ -356,7 +357,7 @@ def test_binding_check_catches_a_parameter_that_changes_nothing(tmp_path):
     case = NativeCase(make_toy(tmp_path, unused, dataset=False))
     refs = {}
     for c in case.settings():
-        refs[(c.tier, c.rule_seed)] = ref = tmp_path / "refs" / c.setting.folder
+        refs[(c.tier, c.rule_seed)] = ref = tmp_path / "refs" / c.setting.slug
         c.write_reference(ref)
     problems, warnings = check_binding(case, refs)
     assert len(problems) == 1 and problems[0].startswith("parameter colour changes nothing: in easy/s1 (colour = ")
@@ -369,7 +370,7 @@ def test_binding_check_catches_a_parameter_that_changes_nothing(tmp_path):
 def _refs(case: NativeCase, where: Path) -> dict:
     refs = {}
     for c in case.settings():
-        refs[(c.tier, c.rule_seed)] = ref = where / c.setting.folder
+        refs[(c.tier, c.rule_seed)] = ref = where / c.setting.slug
         c.write_reference(ref)
     return refs
 
@@ -498,14 +499,43 @@ def test_panel_that_shows_one_candidate_is_warned(tmp_path):
 
 def test_dataset_folders_and_setting_json(tmp_path):
     root = make_toy(tmp_path)
-    gt = root / "dataset" / "gt"
-    assert sorted(p.name for p in gt.iterdir()) == sorted(f"{t}_s{s}" for t in ("easy", "medium", "hard")
-                                                          for s in (1, 2, 3))
+    answer = root / "dataset" / "answer"
+    assert sorted(p.name for p in answer.iterdir()) == ["easy", "hard", "medium"]
+    assert all(sorted(p.name for p in (answer / t).iterdir()) == ["s1", "s2", "s3"] for t in ("easy", "medium", "hard"))
     case = NativeCase(root).at("hard", 2)
-    doc = json.loads((gt / "hard_s2" / "setting.json").read_text())
+    folder = answer / "hard" / "s2"
+    doc = json.loads((folder / "setting.json").read_text())
     assert doc == {"tier": "hard", "rule_seed": 2, "params": case.drawn_params,
-                   "derived": {"budget": case.setting["budget"]}}
+                   "derived": {"budget": case.setting["budget"]},
+                   "rules": [{"id": r.id, "class": r.rule_class, "description": r.description}
+                             for r in case.rules().rules],
+                   "targets": [t.id for t in case.targets("en")]}
     assert list(doc["params"]) == ["cap", "price"] and check_dataset(root) == []
+    assert doc["rules"] and all("{{" not in r["description"] for r in doc["rules"])     # rendered for the setting
+    # what the client knows in this version, in every locale: the rendered requirements and the targets in force
+    for lang in LOCALES:
+        client = folder / "client" / lang
+        assert (client / "requirements.md").read_text(encoding="utf-8") == case.requirements(lang) + "\n"
+        targets = yaml.safe_load((client / "targets.yaml").read_text(encoding="utf-8"))
+        assert [(t["id"], t["text"]) for t in targets] == [(t.id, t.text) for t in case.targets(lang)]
+        assert [t["id"] for t in targets] == doc["targets"]
+    # the reference and the baseline, the two ends of the quality scale, with their scores
+    score = json.loads((folder / "score.json").read_text())
+    assert (folder / "reference" / "answer.json").is_file() and (folder / "baseline" / "answer.json").is_file()
+    assert score["reference_quality"]["quality_score"] == 1.0 and score["baseline_quality"]["quality_score"] == 0.0
+    manifest = json.loads((root / "dataset" / "MANIFEST.json").read_text())
+    assert {f"answer/hard/s2/{name}" for name in ("setting.json", "score.json", "baseline/answer.json")} | {
+        f"answer/hard/s2/client/{lang}/{name}" for lang in LOCALES for name in ("requirements.md", "targets.yaml")
+    } <= set(manifest)
+    # a dataset/gt/ left from the old layout is a problem that names the new one
+    (root / "dataset" / "gt" / "hard_s2").mkdir(parents=True)
+    (root / "dataset" / "gt" / "hard_s2" / "score.json").write_text("{}")
+    found = check_dataset(root)
+    assert len(found) == 1 and found[0].startswith("dataset/gt/: the stored answers are in "
+                                                   "dataset/answer/<tier>/s<seed>/ now")
+    assert found[0] in check_case(root).problems
+    export_dataset(root)
+    assert not (root / "dataset" / "gt").exists() and check_dataset(root) == []
 
 
 def test_explainer_shows_candidates_panel_and_seed_selector(tmp_path):
@@ -515,7 +545,13 @@ def test_explainer_shows_candidates_panel_and_seed_selector(tmp_path):
     assert "Parameter candidates" in en and "Public rule seeds" in en and "3 difficulties × 3 published versions" in en
     assert "<code>5</code> five euros" in en and "<code>budget</code>" in en
     assert json.dumps(case.at("easy", 2).drawn_params).replace('"', "&quot;") in en
-    assert '<option value="easy_s2">easy / Rule seed 2</option>' in en
+    assert '<option value="easy/s2">easy / Rule seed 2</option>' in en
+    # the stored answers: a table per tier, three rule seeds each, linking dataset/answer/<tier>/s<seed>/
+    groups = [en.index(f"<h4>{tier} · <code>answer/{tier}/</code></h4>") for tier in ("easy", "medium", "hard")]
+    assert groups == sorted(groups)
+    links = [f'href="../../dataset/answer/{tier}/s{seed}/"' for tier in ("easy", "medium", "hard") for seed in (1, 2, 3)]
+    assert all(link in en for link in links) and "dataset/gt" not in en and "gt/" not in en
+    assert "<code>answer/easy/s1/</code></h3>" in en
     assert "only when price = 5" in en and "규칙 시드" in ko and "<code>5</code> 오 유로" in ko
     assert "rule set" not in en.replace("rule seed", "").lower().replace("rule sets", "")
 

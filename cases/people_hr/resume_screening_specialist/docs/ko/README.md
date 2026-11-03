@@ -73,7 +73,7 @@ easy 모범 답안은 일부 월드에서 직무별 8명이나 10명일 때 그�
 척도는 예전과 같고, 월드 시드 2에는 여전히 폭이 5%보다 좁은 medium과 hard 설정이 있습니다(medium/s19 3.2%, hard/s19
 3.4%).
 
-각 공개 설정에서 뽑힌 값은 `dataset/gt/<tier>_s<seed>/setting.json`에 저장되어 있습니다(파생값 `shortlist_total` 포함).
+각 공개 설정에서 뽑힌 값은 `dataset/answer/<tier>/s<seed>/setting.json`에 저장되어 있습니다(파생값 `shortlist_total` 포함).
 그 밖의 규칙 시드는 모두 비공개 시드이며, 같은 풀에서 새로 뽑습니다. 월드 생성기는 모든 티어의 풀에서 나올 수 있는 모든
 조합에서 모범 답안과 기존 방식이 유효하도록 보장합니다.
 

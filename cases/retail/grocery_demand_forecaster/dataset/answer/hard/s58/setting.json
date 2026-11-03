@@ -1,0 +1,46 @@
+{
+  "params": {
+    "holiday_date": "2026-11-13",
+    "min_display": 4,
+    "promo_cancelled": "dairy",
+    "promo_uplift": 2,
+    "short_weight": 3
+  },
+  "rule_seed": 58,
+  "rules": [
+    {
+      "class": "contractual",
+      "description": "forecast.csv has exactly one row for every store x item x date in the horizon.",
+      "id": "complete_grid"
+    },
+    {
+      "class": "physical",
+      "description": "No forecast is negative.",
+      "id": "non_negative"
+    },
+    {
+      "class": "physical",
+      "description": "Store S4 is closed on Sundays; its Sunday forecasts are 0.",
+      "id": "closed_day_zero"
+    },
+    {
+      "class": "business_policy",
+      "description": "Core items (fresh produce and dairy) are never forecast below 4 units on a day the store is open.",
+      "id": "min_display_stock"
+    }
+  ],
+  "targets": [
+    "stockout_censoring",
+    "returns",
+    "s4_sunday_closed",
+    "promo_plan",
+    "promo_flyer",
+    "promo_revision",
+    "one_off_holiday",
+    "unit_change_i07",
+    "min_display",
+    "wape_metric",
+    "submission_format"
+  ],
+  "tier": "hard"
+}

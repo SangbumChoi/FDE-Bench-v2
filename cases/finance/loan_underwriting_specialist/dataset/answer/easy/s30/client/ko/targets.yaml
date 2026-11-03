@@ -1,0 +1,77 @@
+- id: gross_income
+  kind: ambiguous
+  domain: calculation
+  text: 연간 총소득은 12 × monthly_base_salary에 bonus_documented가 true일 때만 annual_bonus를 더한 값이며, stated_monthly_income은
+    쓰지 않습니다.
+- id: policy_bureau
+  kind: ambiguous
+  domain: data semantics
+  text: 여신 정책은 bureau_a_score(A평가사 점수)만 쓰고, bureau_b_score(B평가사 점수)는 참고용이라 기준 점수에도 중저신용 정의에도 쓰지 않습니다(B평가사
+    점수가 55점가량 높게 나옴).
+- id: score_cutoff
+  kind: missing
+  domain: business rule
+  text: bureau_a_score(A평가사 점수)가 745점 이상일 때만 승인합니다.
+- id: income_cap
+  kind: missing
+  domain: calculation
+  text: 고객 한도는 연간 총소득의 65%(버림) 이하입니다(상품 최대 50,000 이하이기도 합니다).
+- id: dsr_cap
+  kind: missing
+  domain: calculation
+  text: DSR, 즉 (기존 부채의 연간 원리금 + 그 고객에 대한 저희 PL36 대출 전액의 1,000당 33.17 × 12) / 연간 총소득은 35% 이하여야 하며, 분할상환대출은
+    12 × monthly_payment로 계산합니다.
+- id: our_lending
+  kind: missing
+  domain: calculation
+  text: 고객 한도에서는 이번 기간에 그 고객에게 승인한 금액을 이전 영업일분과 당일 앞선 승인분까지 모두 빼므로, 다시 온 고객은 남은 한도가 줄어 있고 같은 날 여러 건은 한도
+    하나를 나눠 씁니다.
+- id: daily_cap
+  kind: missing
+  domain: business rule
+  text: 영업일마다 승인 합계는 250,000 이하여야 합니다(자금 조달 한도).
+- id: limit_table
+  kind: missing
+  domain: scoring
+  text: 날마다 한도표에는 이번 기간에 지금까지(오늘 포함) 신청한 모든 고객과 남은 일일 한도, 그리고 기간 예산이 있을 때는 남은 예산이 있어야 하며, 항목이 빠지면 규칙 위반입니다.
+- id: closing_table
+  kind: missing
+  domain: scoring
+  text: 한도표는 그날 승인과 통지를 반영한 그날 마감 시점의 것입니다(아침 기준 한도가 아님).
+- id: ineligible_zero
+  kind: missing
+  domain: scoring
+  text: 한도표에서 연체자나 점수 기준 미달 고객은 0입니다.
+- id: reason_codes
+  kind: missing
+  domain: business rule
+  text: 거절 건마다 DELINQUENCY, LOW_SCORE, LIMIT_EXCEEDED(그날 승인 후 남은 고객 한도 1,000 미만), CREDIT_RISK(그 밖의 경우,
+    한도 소진 포함) 중 처음 해당하는 코드를 붙입니다.
+- id: protected_attributes
+  kind: missing
+  domain: business rule
+  text: 연령대, 성별, 국적은 판단에 영향을 주면 안 되며, 같은 날 이 항목만 다른 감사용 쌍은 같은 결정과 같은 금액을 받아야 합니다.
+- id: tenure_review
+  kind: missing
+  domain: business rule
+  text: 근속 3개월 미만 신청자는 연체자가 아니면 사람 심사역에게 넘기며, 관행이라서 여신 담당 임원이 예외를 승인할 수 있습니다.
+- id: branch_notes
+  kind: missing
+  domain: business rule
+  text: 전액 승인을 부탁하는 지점장 메모는 아무 의미가 없고 예외 승인도 아니므로, 그 신청은 다른 신청과 똑같이 판단합니다.
+- id: credit_lines_easy
+  kind: missing
+  domain: calculation
+  text: 이번 회차에는 마이너스통장을 DSR에 넣지 않습니다(분할상환대출만 넣습니다).
+- id: regulator_notice_easy
+  kind: missing
+  domain: business rule
+  text: 이번 회차에는 DSR 상한이 저희 자체 상환능력 기준이므로 감독당국의 통지로 바뀌지 않습니다(감독당국 기준 DSR은 준법감시팀이 따로 확인).
+- id: declared_income
+  kind: missing
+  domain: calculation
+  text: 이번 회차에는 소득으로 기재한 monthly_base_salary를 쓰며, 소득 서류와 document_correction 통지는 쓰지 않습니다.
+- id: repayments_unused
+  kind: missing
+  domain: data semantics
+  text: 이번 회차에는 repayment 통지를 반영하지 않으며, 부채는 그 고객의 최근 신청서 목록을 씁니다.

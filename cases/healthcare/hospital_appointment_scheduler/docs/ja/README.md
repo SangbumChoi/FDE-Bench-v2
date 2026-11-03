@@ -203,7 +203,7 @@
 | 10 | ORTH | 2 | 3 | `urgency_earliest` | 5 | 3 |
 | 64 | DERM | 3 | 4 | `received` | 7 | 1 |
 
-各行は `easy/sN`、`medium/sN`、`hard/sN` で抽選された値の辞書です（`dataset/gt/<tier>_s<N>/setting.json`、
+各行は `easy/sN`、`medium/sN`、`hard/sN` で抽選された値の辞書です（`dataset/answer/<tier>/s<N>/setting.json`、
 `derived: {reserve_times}` 付き）。シード1は最も厳しい病院（通訳者2名）で、シード64は通訳者と検査室が最も緩い一方、確保枠が3枠で
 セッションあたりのオーバーブッキング枠が1枠です。非公開シードは486通りの組み合わせのどれでも引きます。たとえばシード2は DERM、
 3、3、`urgency_received`、7、3、シード3は PED、3、4、`urgency_received`、5、2 です。設定ごとの参照解の目的値は構成上1.000で、
@@ -349,7 +349,7 @@
   メモ、11月13日の D13 の病欠、11月20日の D05 の学会、11月24日の通訳者、院長の知人の依頼4件）。
 - `hidden/requests.csv`: 開始時点と期間中のすべての依頼とその隠れた事実（リードタイム0での無断欠席率、患者さんが予約の何営業日
   前にキャンセルするか、重複元の依頼）。
-- `gt/<tier>_s<seed>/`: 公開設定（シード1、10、64）ごとに `setting.json`（抽選されたパラメータと、そこから算出した
+- `answer/<tier>/s<seed>/`: 公開設定（シード1、10、64）ごとに `setting.json`（抽選されたパラメータと、そこから算出した
   `reserve_times`）、参照解の `program/` とその `score.json`、そして参照解の再生から得た `actions.csv`（呼び出しごとのすべてのアクション）、`status_tables.csv`（期待される状況表、20日 × 5診療科）、`cancellations.csv`
   （再生中に起きた患者さんのキャンセル）、`final_book.csv`（期間中に行われたすべての受診 — 報告があれば来院の有無付き — と
   これからの予約）、`final_waitlist.csv`。

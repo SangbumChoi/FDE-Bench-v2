@@ -1,0 +1,73 @@
+- id: bom_explosion
+  kind: ambiguous
+  domain: data semantics
+  text: ある週の部品所要量は、その週の機種別の生産枚数（生産計画.csv）に部品表.csv の基板当たり員数を掛けて両機種を合計したもので、その週に必要です。ある週に入荷した部品はその週の生産全体に使えます（組立のリードタイムによる前倒しはありません）。
+- id: lead_time_business_days
+  kind: ambiguous
+  domain: data semantics
+  text: リードタイム_日は暦日ではなく営業日（月～金）です。発注週の月曜日から数え、部品は到着後に始まる最初の週から使えます。
+- id: holiday_weeks
+  kind: missing
+  domain: calculation
+  text: W5（12月21～25日、クリスマス）とW6（12月28日～1月1日、元日）は営業日が4日しかなく、ほかの週は5日です。
+- id: moq_per_line
+  kind: ambiguous
+  domain: business rule
+  text: 最小発注数量は発注明細（仕入先・部品・発注週の1組）ごとに適用され、別の週の数量を合算して満たすことはできません。
+- id: price_breaks
+  kind: ambiguous
+  domain: calculation
+  text: 数量割引は発注明細ごとに明細全体に適用され（全数割引）、別の週の数量を合算して割引の区分に届かせることはできません。
+- id: quality_hold
+  kind: missing
+  domain: business rule
+  text: Mirae Semicon（S03）は品質保留中で、W1～W5に入荷予定の品は返品されるため、同社の品はW5より後にしか入荷できません。
+- id: budget_hard_cap
+  kind: ambiguous
+  domain: business rule
+  text: 購買予算.csv の月次予算は親会社が定めた超えられない上限であり、目標ではありません。どの月もこれを超えてはいけません。
+- id: budget_month
+  kind: ambiguous
+  domain: business rule
+  text: 発注は発注週の月曜日が属する月の予算に計上されます。したがって W1～W2 は11月（W2 は11月30日開始）、W3～W6 は12月、W7～W8 は1月です。
+- id: approved_status_only
+  kind: ambiguous
+  domain: business rule
+  text: その部品の承認状況が承認済の仕入先しか使えません。審査中や取引停止の仕入先は、見積を出していても使えません。
+- id: safety_stock
+  kind: missing
+  domain: business rule
+  text: 重要部品（重要部品 = はい）は、使用する各週の週末に平均週間所要量の1倍（使用する週の所要量合計を週数で割り、1を掛けて切り上げ）の安全在庫を持つ必要があります。
+- id: shortfall_cost
+  kind: missing
+  domain: scoring
+  text: 重要部品が使用される週の週末に安全在庫を1個下回るごとに、標準原価の1.5倍のコストがかかります。
+- id: dual_source_two
+  kind: missing
+  domain: business rule
+  text: 使用中の重要部品は、この計画の中で2社以上の異なる仕入先に発注しなければなりません。会社の慣行なので、実際にコストが下がるなら例外を申請できます。
+- id: max_share
+  kind: missing
+  domain: business rule
+  text: どの仕入先も、この計画での重要部品の発注数量（個数）の80%を超えて受け持ってはいけません。
+- id: backlog_cost
+  kind: missing
+  domain: scoring
+  text: 部品が足りずに作れない基板は部品を待ち、基板1枚が1週待つごとに10,000ウォンかかります。したがって週末に足りない部品1個のコストは、10,000ウォンをその部品の基板当たり個数で割った額で、部品ごとに数えます。
+- id: supplier_lateness
+  kind: missing
+  domain: data semantics
+  text: 仕入先はそれぞれ固有の確率で1週または2週遅れて納入し、それは納入実績.csv に表れています（約束の月曜日より1～7日遅れれば1週遅れ、8～14日なら2週遅れ）。納入1件（仕入先・部品・入荷週の1組）ごとに独立に遅れ、未入荷の発注は予定どおり届きます。
+- id: allocation_caps
+  kind: missing
+  domain: business rule
+  text: S03 の C01・C03 と S08 の C06 は、発注週の暦月ごとに供給割当.csv の数量までしか確定されず、それを超える分は納入されません。
+- id: eco_switch
+  kind: missing
+  domain: business rule
+  text: 部品表.csv の適用週の列のとおり、W6 から両機種のフラッシュ C04 は C25 に置き換わります。W5 末に残った C04 は標準原価で廃棄され、その後に届く C04 は使い道がなく、C25
+    には在庫も未入荷の発注もありません。
+- id: eco_c04_exempt
+  kind: missing
+  domain: business rule
+  text: 生産終了となる C04 は、もう安全在庫も2社目の仕入先も必要ありません。C25 は重要部品なので両方必要です。

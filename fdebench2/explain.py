@@ -12,7 +12,8 @@ validate-case checks that it is up to date.
 
 Each language's documents sit in their own folder next to case.yaml:
 
-    README.md                       the generated index: one row per language, links to GT.md and CLIENT_REVIEW.md
+    README.md                       the generated index: one row per language, links to the stored answers
+                                    (dataset/answer/<tier>/s<seed>/), GT.md and CLIENT_REVIEW.md
     docs/<lang>/README.md           the case notes (en: the original, the others its translations)
     docs/<lang>/REVIEW.md           the findings of a review, when the case has one
     docs/<lang>/explainer.html      this page, generated
@@ -27,13 +28,14 @@ import html
 import json
 import posixpath
 import re
+import unicodedata
 from pathlib import Path
 
 import yaml
 
 from .audit import load_audit, shortcut_summary, target_summary, tier_order
 from .cases import LOCALES, NativeCase, load_fields, value_label, value_text
-from .dataset import DATASET_DIR
+from .dataset import ANSWER_DIR, DATASET_DIR, answer_folder
 
 LANG_NAMES = {"en": "English", "ko": "한국어", "zh": "中文", "ja": "日本語", "es": "Español"}
 LANGS = tuple(LANG_NAMES)                        # the order of the language switcher
@@ -113,9 +115,46 @@ def _join(lines: list[str]) -> str:
     return out
 
 
-def markdown(text: str, link=None) -> str:
+def heading_id(rendered: str) -> str:
+    """GitHub's anchor for a heading (github-slugger), from the heading as rendered: its text lowercased, without
+    punctuation and symbols (letters, marks, digits, connector punctuation, hyphens and spaces stay), each space a
+    hyphen. "Rule seeds (the client's parameters)" -> rule-seeds-the-clients-parameters, "規則（依頼元）" -> 規則依頼元."""
+    text = html.unescape(re.sub(r"<[^>]+>", "", rendered)).lower()
+    return "".join(c for c in text if c in "-_ " or unicodedata.category(c)[0] in "LM"
+                   or unicodedata.category(c) in ("Nd", "Nl", "Pc")).replace(" ", "-")
+
+
+class Anchors:
+    """The ids of one document's headings, as GitHub gives them (heading_id; a repeated one gets -1, -2, ...), so
+    that the document's own links (#rule-seeds) work wherever it is rendered. `prefix` goes in front of every id and
+    of every such link: two documents on one page (the explainer's README and REVIEW) never share an id."""
+
+    def __init__(self, prefix: str = ""):
+        self.prefix, self._seen = prefix, {}
+
+    def add(self, rendered: str) -> str:
+        """The id of the next heading (rendered as HTML)."""
+        slug = base = heading_id(rendered)
+        while slug in self._seen:
+            self._seen[base] += 1
+            slug = f"{base}-{self._seen[base]}"
+        self._seen[slug] = 0
+        return self.prefix + slug
+
+    def href(self, fragment: str) -> str:
+        """Where the document's link #fragment points on the page."""
+        return "#" + self.prefix + fragment
+
+
+def markdown(text: str, link=None, anchors: Anchors | None = None) -> str:
     """Markdown as HTML. `link`, when given, rewrites every link target: a document shown on a page in another
-    folder (an English README on a translation's page) keeps its relative links working."""
+    folder (an English README on a translation's page) keeps its relative links working. `anchors`, when given,
+    gives every heading its id and points the document's links to its own headings (#...) at them."""
+    if anchors is not None:
+        outer = link
+
+        def link(href: str) -> str:
+            return anchors.href(href[1:]) if href.startswith("#") else outer(href) if outer else href
     lines, out, i = text.splitlines(), [], 0
     while i < len(lines):
         line = lines[i]
@@ -128,8 +167,9 @@ def markdown(text: str, link=None) -> str:
             continue
         m = re.match(r"(#{1,6})\s+(.*)", line)
         if m:
-            level = min(len(m.group(1)) + 2, 6)
-            out.append(f"<h{level}>{_inline(m.group(2), link)}</h{level}>")
+            level, rendered = min(len(m.group(1)) + 2, 6), _inline(m.group(2), link)
+            ident = f' id="{_esc(anchors.add(rendered))}"' if anchors is not None else ""
+            out.append(f"<h{level}{ident}>{rendered}</h{level}>")
             i += 1
             continue
         if line.startswith("|") and i + 1 < len(lines) and re.match(r"^\|[\s:|-]+\|?\s*$", lines[i + 1]):
@@ -426,7 +466,7 @@ def build_page(case_root: Path, lang: str = "en") -> str:
     # hidden requirements per setting (tier x public rule seed), in the page's language (JS switcher)
     texts, names = {}, {}
     for c in settings:
-        key = c.setting.folder if has_settings else "default"
+        key = answer_folder(c)
         texts[key] = markdown(c.requirements(lang))
         names[key] = f"{c.tier} / {UI[lang]['rule_seed']} {c.rule_seed}" if has_settings else key
     keys = list(texts)
@@ -453,28 +493,38 @@ def build_page(case_root: Path, lang: str = "en") -> str:
     if audit:       # the ground truth audit, when audit-case has stored one
         parts.append(_evidence(audit, lang, src, own.get("shortcuts") or {}))
 
-    # data & answers
+    # data & answers: one folder per public setting, dataset/answer/<tier>/s<seed>/, the table grouped by tier
     ds = root / DATASET_DIR
-    score_rows = []
-    for gt in sorted((ds / "gt").glob("*")) if (ds / "gt").is_dir() else []:
-        sc = json.loads((gt / "score.json").read_text(encoding="utf-8")) if (gt / "score.json").is_file() else {}
-        metrics = sc.get("metrics", {})
-        top = ", ".join(f"{k}={v}" for k, v in list(metrics.items())[:4])
-        score_rows.append([f"<code>{_esc(gt.name)}</code>", _esc(sc.get("objective")),
-                           _esc(sc.get("baseline_objective", "–")), _esc(top),
-                           f'<a href="{UP}{DATASET_DIR}/gt/{_esc(gt.name)}/">{t("open")}</a>'])
-    gt_example = next(iter(sorted((ds / "gt").glob("*"))), None) if (ds / "gt").is_dir() else None
+    head = [t("rule_seed") if has_settings else t("setting"), t("reference_objective"), t("baseline_objective"),
+            t("metrics"), t("folder")]
+    groups: dict[str, list[list[str]]] = {}
+    stored = []
+    for c in settings:
+        folder = answer_folder(c)
+        path = ds / ANSWER_DIR / folder
+        if not path.is_dir():
+            continue
+        stored.append((folder, path))
+        sc = json.loads((path / "score.json").read_text(encoding="utf-8")) if (path / "score.json").is_file() else {}
+        top = ", ".join(f"{k}={v}" for k, v in list(sc.get("metrics", {}).items())[:4])
+        rel = f"{ANSWER_DIR}/{folder}/"
+        groups.setdefault(c.tier or "", []).append([
+            f"<code>{_esc(c.rule_seed if has_settings else folder)}</code>", _esc(sc.get("objective")),
+            _esc(sc.get("baseline_objective", "–")), _esc(top),
+            f'<a href="{UP}{DATASET_DIR}/{_esc(rel)}"><code>{_esc(rel)}</code></a>'])
+    answers = "".join((f"<h4>{_esc(tier)} · <code>{ANSWER_DIR}/{_esc(tier)}/</code></h4>" if tier else "")
+                      + _table(head, rows) for tier, rows in groups.items())
+    example = stored[0] if stored else None
+    shown = f"{ANSWER_DIR}/{example[0]}/" if example else f"{ANSWER_DIR}/<tier>/s<seed>/"     # the case's own first
     visible = ds / "agent_view" / lang if (ds / "agent_view" / lang).is_dir() else ds / "agent_view" / "en"
-    score_head = [t("setting"), t("reference_objective"), t("baseline_objective"), t("metrics"), t("folder")]
     parts.append(f"""<section id="data"><h2>{t("data_title")} (<code>dataset/</code>)</h2>
-<p>{t("data_intro")}</p>
+<p>{t("data_intro", example=f"<code>{_esc(shown)}</code>")}</p>
 <h3>{t("visible_data", language=LANG_NAMES[lang])}</h3>{_tree(visible)}
 <h3>{t("hidden_inputs")}</h3>{_tree(ds / "hidden", limit=30)}
 <h3>{t("scores_title")}</h3>
 <p class="muted">{t("scores_intro")}</p>
-{_table(score_head, score_rows) if score_rows else f"<p class='muted'>{t('no_dataset')}</p>"}
-<h3>{t("answer_folder", folder=f"<code>gt/{_esc(gt_example.name if gt_example else '')}</code>")}</h3>
-{_tree(gt_example, limit=40) if gt_example else ""}</section>""")
+{answers or f"<p class='muted'>{t('no_dataset')}</p>"}
+{f'<h3>{t("answer_folder", folder=f"<code>{ANSWER_DIR}/{_esc(example[0])}/</code>")}</h3>' + _tree(example[1], limit=40) if example else ""}</section>""")
 
     # README and REVIEW.md, in the page's language when translated; the English one's links still resolve from here
     here = posixpath.dirname(page_name(lang))
@@ -485,8 +535,8 @@ def build_page(case_root: Path, lang: str = "en") -> str:
             continue
         note = "" if translated or text is None else f"<p class='muted'>{t('untranslated')}</p>"
         src = posixpath.dirname(doc_path(lang if translated else "en", doc))
-        body = (markdown(text, link=lambda href, src=src: _rebase(href, src, here)) if text is not None
-                else f"<p class='muted'>{t(empty)}</p>")
+        body = (markdown(text, link=lambda href, src=src: _rebase(href, src, here), anchors=Anchors(f"{anchor}-"))
+                if text is not None else f"<p class='muted'>{t(empty)}</p>")
         parts.append(f"""<section id="{anchor}"><h2>{t(title)}</h2>{note}
 <div class="doc">{body}</div>
 </section>""")
@@ -567,11 +617,39 @@ def _shell(title: str, body: str, script: bool = True, lang: str = "en") -> str:
             f"<body><main>{body}</main>{js}</body></html>\n")
 
 
+def _answer_index(root: Path, meta: dict) -> list[str]:
+    """The index's lines for dataset/answer/: the folder, then one line per tier with a link to each public rule
+    seed's folder (in case.yaml's order), or the default/ folder of a case without settings. None before export."""
+    base = root / DATASET_DIR / ANSWER_DIR
+    if not base.is_dir():
+        return []
+    tiers, seeds = list(meta.get("tiers") or {}), [f"s{s}" for s in meta.get("rule_seeds") or []]
+
+    def order(names: list[str], known: list[str]) -> list[str]:
+        return sorted(names, key=lambda n: (known.index(n) if n in known else len(known),
+                                            int(n[1:]) if re.fullmatch(r"s\d+", n) else 0, n))
+
+    rel = f"{DATASET_DIR}/{ANSWER_DIR}"
+    where = ("one folder per tier and public rule seed (`<tier>/s<seed>/`)" if tiers
+             else "in `default/`, as the case has no settings")
+    lines = [f"- [{rel}/]({rel}/): the answer of each public setting, {where}, with the setting and its rules, what "
+             "the client knows in that version in every language, the reference, the client's own way and their scores"]
+    for tier in order([d.name for d in base.iterdir() if d.is_dir()], tiers):
+        folder = base / tier
+        if (folder / "setting.json").is_file():          # default/: itself a setting's folder
+            lines.append(f"  - [{tier}/]({rel}/{tier}/)")
+            continue
+        found = order([d.name for d in folder.iterdir() if d.is_dir()], seeds)
+        lines.append(f"  - [{tier}/]({rel}/{tier}/): " + ", ".join(f"[{s}]({rel}/{tier}/{s}/)" for s in found))
+    return lines
+
+
 def build_case_readme(case_root: Path) -> str:
     """The case's README.md: a generated index of its documents, so the case folder shows something on GitHub. The
     role and id, one row per language (the role in that language, its README, REVIEW when the case has one, and
-    explainer page in docs/<lang>/), then GT.md and CLIENT_REVIEW.md when they exist. Read from case.yaml and the
-    locales only, so a new case's index can be written before its case.py works."""
+    explainer page in docs/<lang>/), then the stored answers (dataset/answer/<tier>/s<seed>/), GT.md and
+    CLIENT_REVIEW.md when they exist. Read from case.yaml, the locales and the folders of dataset/answer/ only, so a
+    new case's index can be written before its case.py works."""
     root = Path(case_root)
     meta = yaml.safe_load((root / "case.yaml").read_text(encoding="utf-8")) or {}
     role = str(meta.get("role") or root.name)
@@ -586,7 +664,7 @@ def build_case_readme(case_root: Path) -> str:
             for lang in README_LANGS]
     table = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     table += ["| " + " | ".join(c.replace("|", "\\|") for c in r) + " |" for r in rows]
-    extra = [f"- [{name}]({name}): {what}" for name, what in (
+    extra = _answer_index(root, meta) + [f"- [{name}]({name}): {what}" for name, what in (
         ("GT.md", "the ground truth in five parts, generated from `dataset/audit.json`"),
         ("CLIENT_REVIEW.md", "what the simulated client answers each target from")) if (root / name).is_file()]
     return "\n".join([
