@@ -5,11 +5,13 @@ data and the answers without running anything. `fdebench2 export-dataset`
 writes, next to case.yaml:
 
     dataset/
-      visible/<lang>/...      what the agent receives, per customer locale (identical in every setting)
+      agent_view/<lang>/...   what the agent receives, per customer locale (identical in every setting)
       hidden/...              inputs the agent never sees: a program case's hidden period or corpus
                               (case.py `write_hidden(world, dir)`, optional)
-      gt/<tier>_<ruleset>/    one folder per setting (gt/default/ for a case without settings):
-        setting.json          tier, rule set and its parameters
+      gt/<tier>_s<seed>/      one folder per public setting, tier x public rule seed (gt/default/ for a case
+                              without settings):
+        setting.json          {tier, rule_seed, params: the drawn values}, plus derived: the derive_params
+                              values when the case has that hook
         reference/            the reference deliverable (files, or program/)
         score.json            the reference's objective and metrics under this setting; with a case.py
                               `baseline_solution`, also the baseline's objective and both solutions'
@@ -17,6 +19,9 @@ writes, next to case.yaml:
         ...                   anything case.py `write_ground_truth(world, dir, setting)` adds
                               (e.g. the expected daily tables or the expected library)
       MANIFEST.json           sha256 of every file above
+      audit.json              the ground truth audit (`fdebench2 audit-case`, fdebench2.audit): not part of the
+                              manifest, kept when the dataset is exported again, and checked by its own
+                              fingerprint
 
 `validate-case` regenerates the dataset and compares it with MANIFEST.json, so
 the stored files can never drift from the generator. The dataset is part of
@@ -34,25 +39,36 @@ from pathlib import Path
 from .cases import LOCALES, NativeCase, quality_fields
 
 DATASET_DIR = "dataset"
+AUDIT_FILE = "audit.json"       # dataset/audit.json: written by audit-case, never by export-dataset
+
+
+def setting_record(case: NativeCase) -> dict:
+    """setting.json: {tier, rule_seed, params} with params the drawn values, and derived (the derive_params
+    keys) when there are any; {} without settings."""
+    s = case.setting
+    if s is None:
+        return {}
+    drawn = case.drawn_params
+    derived = {k: v for k, v in s.params.items() if k not in drawn}
+    return {"tier": s.tier, "rule_seed": s.rule_seed, "params": drawn, **({"derived": derived} if derived else {})}
 
 
 def _write(case: NativeCase, out: Path) -> None:
     for lang in LOCALES:
-        case.materialize_data(lang, out / "visible" / lang)
+        case.materialize_data(lang, out / "agent_view" / lang)
     hidden = getattr(case.module, "write_hidden", None)
     if hidden is not None:
         (out / "hidden").mkdir(parents=True, exist_ok=True)
         hidden(case.world, out / "hidden")
     extra = getattr(case.module, "write_ground_truth", None)
     for c in case.settings():
-        label = f"{c.tier}_{c.ruleset}" if c.tiers else "default"
-        gt = out / "gt" / label
+        gt = out / "gt" / (c.setting.folder if c.tiers else "default")
         (gt / "reference").mkdir(parents=True)
         c.write_reference(gt / "reference")
         res = c.raw_score(gt / "reference")
-        setting = ({"tier": c.tier, "ruleset": c.ruleset, "params": c.setting.params} if c.tiers else {})
-        (gt / "setting.json").write_text(json.dumps(setting, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-                                         encoding="utf-8")
+        setting = setting_record(c)
+        (gt / "setting.json").write_text(json.dumps(setting, ensure_ascii=False, indent=2, sort_keys=True,
+                                                    default=str) + "\n", encoding="utf-8")
         score = {"objective": res.get("objective"), "violations": res.get("violations"),
                  "metrics": res.get("metrics", {})}
         if c.baseline_objective is not None:
@@ -69,12 +85,13 @@ def _write(case: NativeCase, out: Path) -> None:
 
 
 def _manifest(root: Path) -> dict[str, str]:
-    return {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in sorted(root.rglob("*")) if p.is_file() and p.name != "MANIFEST.json"}
+    """sha256 of every generated file (not MANIFEST.json itself, nor the audit, which has its own fingerprint)."""
+    return {rel: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob("*"))
+            if p.is_file() and (rel := p.relative_to(root).as_posix()) not in ("MANIFEST.json", AUDIT_FILE)}
 
 
 def export_dataset(case_root: Path) -> Path:
-    """(Re)write case_root/dataset/ from the generator."""
+    """(Re)write case_root/dataset/ from the generator, keeping a stored audit (too slow to run here)."""
     case = NativeCase(Path(case_root))
     dest = case.root / DATASET_DIR
     with tempfile.TemporaryDirectory() as tmp:
@@ -82,6 +99,8 @@ def export_dataset(case_root: Path) -> Path:
         _write(case, out)
         (out / "MANIFEST.json").write_text(json.dumps(_manifest(out), indent=1, sort_keys=True) + "\n",
                                            encoding="utf-8")
+        if (dest / AUDIT_FILE).is_file():
+            shutil.copy2(dest / AUDIT_FILE, out / AUDIT_FILE)
         if dest.exists():
             shutil.rmtree(dest)
         shutil.copytree(out, dest)

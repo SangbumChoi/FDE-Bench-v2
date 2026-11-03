@@ -1,0 +1,51 @@
+# The case in plain words, shown at the top of its page.
+task: >-
+  El operador de la batería de un parque solar con almacenamiento en España (40 MWh y 20 MW, que comparte un único punto
+  de conexión y un único contador con una planta solar de 30 MWp) quiere un plan para la semana que viene, del lunes 22
+  al domingo 28 de marzo de 2027: cuándo cargar y cuándo descargar para ganar el máximo dinero posible. La IA entrega un
+  solo archivo, `dispatch.csv`, con la potencia de carga y de descarga en MW de cada uno de los 668 cuartos de hora de la
+  semana, en hora local.
+given:
+  - "La solicitud del cliente: planificar cuándo debe cargar y descargar la batería la semana que viene «para ganar el máximo dinero posible». Nombra los cinco archivos adjuntos y no dice nada de límites ni de reglas."
+  - "`prevision_precios.csv`: el precio de mercado previsto para cada hora de la semana en EUR/MWh (167 horas, porque el 28 de marzo solo tiene 23). El plan se liquida a los precios reales de la semana, que difieren de la previsión."
+  - "`prevision_solar.csv`: la producción media de la planta solar en MW por cuarto de hora de la semana (668 filas), hasta 30 MW a mediodía en los días soleados."
+  - "`ficha_bateria.csv`: 40 MWh, 20 MW de carga y 20 MW de descarga, eficiencia de ida y vuelta del 84,6 %, el margen de estado de carga del fabricante (5 %-95 %) y los 30 MWp de solar en el mismo emplazamiento."
+  - "`contrato_conexion.md`: resumen del contrato de conexión de 2024: el emplazamiento puede verter hasta 30 MW a la red y tomar hasta 20 MW, la solar y la batería se miden juntas, la solar que supera el límite se recorta automáticamente y todas las horas son locales. Los 30 MW están desactualizados."
+  - "`registro_despacho_semana_pasada.csv`: el plan de la semana pasada (del 15 al 21 de marzo, 672 cuartos de hora) con carga, descarga y estado de carga. Se hizo con los valores de la semana pasada, y algunos han cambiado."
+ask:
+  - "Cómo se reparte la eficiencia del 84,6 % entre carga y descarga: 92 % y 92 %, 95 % y 89 %, o 90 % y 94 %, según la versión. Decide cuánta energía se almacena o se gasta en cada cuarto de hora."
+  - "El margen de estado de carga que la garantía permite en todo momento: del 10 % al 90 %, del 15 % al 85 % o del 5 % al 95 % de 40 MWh (la ficha solo da el del fabricante, 5 %-95 %). Y que la semana empieza al 50 % y debe terminar como mínimo al 50 %, al 40 % o al 30 %, según la versión."
+  - "El límite de vertido actual: las obras de la subestación han rebajado los 30 MW del contrato a 18, 15 o 12 MW. Mientras la batería descarga, solar + descarga − carga no puede superarlo; la solar que lo supera se recorta y se pierde salvo que la batería la absorba."
+  - "Que se liquida por cuartos de hora (cada precio horario vale para sus cuatro cuartos), que todas las horas son locales y que el domingo 28 de marzo se adelanta el reloj: ese día no existen las 02:00-02:45, así que el plan tiene exactamente 668 filas."
+  - "Qué significa «ganar el máximo dinero»: los ingresos por vertido del emplazamiento menos el coste de la energía tomada de la red, menos lo que habría ganado la planta solar sola, contando el vertido solo hasta el límite de vertido."
+  - "En medium y hard: cuándo puede el emplazamiento tomar energía de la red (cargar más que la producción solar): solo en los cuartos de hora que empiezan entre las 00:00 y las 05:45, las 01:00 y las 04:45 o las 02:00 y las 07:45 (la franja valle), según la versión. En easy puede hacerlo a cualquier hora, hasta 20 MW."
+  - "En medium y hard: la reserva de emergencia de la tarde (un 15 %, 20 % o 30 % de carga como mínimo cada día de 16:00 a 20:00, de 17:00 a 21:00 o de 18:00 a 22:00) y el coste de degradación (5, 15 o 25 EUR por MWh cargado más descargado)."
+  - "En hard: tres avisos que no están en los archivos. Las obras de la subestación terminan antes y vuelven a valer los 30 MW desde el miércoles 24, el viernes 26 o el sábado 27 de marzo; la distribuidora (DSO) limita el vertido a 10, 8 o 5 MW de 18:00 a 21:00 el martes 23, el jueves 25 o el sábado 27 de marzo; la batería está fuera de servicio de 08:00 a 20:00 el lunes 22, el miércoles 24 o el viernes 26 de marzo. La presión de la mesa de trading para vender la reserva en el pico de la tarde necesita una excepción aprobada."
+invalid_if:
+  - "No tiene exactamente una fila por cada uno de los 668 cuartos de hora de la semana: por ejemplo, una fila a las 02:00-02:45 del 28 de marzo, que el cambio de hora se salta, o una hora que falta o se repite."
+  - "Deja que el estado de carga salga del margen de la garantía en algún momento (calculado con las eficiencias por sentido del cliente) o termina la semana por debajo del nivel exigido."
+  - "Tiene una potencia negativa o superior a 20 MW, carga y descarga en el mismo cuarto de hora, toma más de 20 MW de la red o, en medium y hard, toma energía de la red fuera de la franja valle."
+  - "Vierte a la red más que el límite de vertido mientras la batería descarga: 12, 15 o 18 MW; en hard, 30 MW cuando terminan las obras y 5, 8 o 10 MW en las horas de la distribuidora."
+  - "En medium y hard, deja que el estado de carga baje de la reserva de emergencia de la tarde en sus horas, salvo que la política de la empresa permita excepciones y la IA haya pedido una al cliente antes."
+  - "En hard, carga o descarga durante el mantenimiento del inversor, de 08:00 a 20:00."
+quality: >-
+  Cuanto mayor, mejor: el beneficio de la batería en euros durante la semana, liquidado a los precios reales de la
+  semana (la IA solo ve la previsión): los ingresos por vertido del emplazamiento, contados hasta el límite de vertido,
+  menos el coste de la energía tomada de la red, menos lo que habría ganado la planta solar sola y, en medium y hard,
+  menos el coste de degradación por MWh cargado y descargado. La forma de trabajar del cliente (vale 0) deja la batería
+  parada al 50 % toda la semana y gana 0 EUR, así que un plan que gana la mitad que la referencia vale 0,5; la solución
+  de referencia (vale 1) sigue una regla diaria sencilla sobre la previsión (cargar en las horas nocturnas más baratas y
+  vender en el pico de la mañana, recargar en las horas soleadas más baratas absorbiendo siempre la solar recortada, y
+  vender en el pico de la tarde) y gana entre unos 6.000 y 26.000 EUR, según la versión.
+tiers:
+  easy: >-
+    El plan básico: la eficiencia por sentido, el margen de la garantía, el nivel al final de la semana, el límite de
+    vertido rebajado y el cambio de hora. Se puede tomar energía de la red a cualquier hora, no hay reserva de la tarde ni
+    coste de degradación.
+  medium: >-
+    Añade las reglas de operación del cliente: energía de la red solo en la franja valle, la reserva de emergencia de la
+    tarde y un coste de degradación de 5, 15 o 25 EUR por MWh.
+  hard: >-
+    Añade tres avisos con fecha (el límite de vertido vuelve a 30 MW desde un día dado, el límite más bajo de la
+    distribuidora una tarde, la batería fuera de servicio de 08:00 a 20:00 un día) y la presión de la mesa de trading para
+    vender la reserva en el pico de la tarde, algo que solo permite una excepción aprobada.

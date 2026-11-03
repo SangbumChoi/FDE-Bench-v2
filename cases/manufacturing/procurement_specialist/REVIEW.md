@@ -1,8 +1,347 @@
 # Review: manufacturing/procurement_specialist
 
-What a case review found (F1–F10) and what this change did about each finding. Numbers are for seed 20261123 after
-this change unless a finding says otherwise. The supplier price e-mail and its rule are the owner's and were not
-changed.
+What a case review found (F1–F10) and what each change did about each finding. Numbers are for seed 20261123 after
+the change that reports them unless a finding says otherwise. Until the ground truth audit the supplier price e-mail
+and its rule were the owner's and were not changed; the audit replaced it at the owner's request (below).
+
+### Ground truth audit
+
+The case owner asked to strengthen the ground truth and the scoring, keeping one world with the same data and request
+in every setting and the hidden requirements deciding the answer. GT.md (generated from `dataset/audit.json` by
+`gt_report.py`) gives the five parts per tier; CLIENT_REVIEW.md lists, per target, what the simulated client answers
+from in each locale (awaiting human review). `audited: true` makes validate-case enforce the audit. What changed:
+
+- **The price e-mail now matters (F3, F8 in part).** The C01/S03 notice (`supplier_price_email.txt`, the buyer's own
+  address, the week code W4, one English file name) is replaced by `mail/`, a localized thread of three `.eml` files
+  from the supplier's domain: Nara Display (S08) raises the display module C06, the costliest part and about a third of
+  the purchases, by 12% for orders it receives on or after Wednesday 9 December and proposes 8% more from January;
+  the client accepts the 12% and holds back the 8%; the supplier confirms. Approved versus pending is in the thread.
+  The client fact is that orders go out on Mondays, so W3 (7 December) keeps the old price and W4 is the first order
+  week at the new one (new target `price_rise_week`). The reference now brings S08's later C06 orders forward into W3;
+  reading the date as W3 loses 10–23% of the quality scale in 9 of 15 easy and 3 of 15 medium measured settings. In
+  hard the allocation (3,500 displays a month) leaves no room to bring orders forward, so misreading the week loses
+  less than 10% in every hard setting and the fact is not a hard target (it stays in the hard requirements). The
+  request's e-mail line and the requirements' e-mail paragraph changed in all five locales.
+- **Backlog per board (F4).** A board that waits a week for a part costs 10,000 KRW (late-delivery penalties and
+  overtime), counted per part: a missing piece costs 10,000 KRW / the part's pieces per board. The client's economics:
+  a missing 6 KRW capacitor stops a board as surely as a missing display. The count per part overstates weeks with
+  several parts short; it keeps the exact expectation in hard. Because a missing cheap part is now expensive, the
+  client's own plan on the promised dates lost 60–90% against the reference in hard (a quality scale too wide to
+  measure anything); the hard baseline is now what a buyer does once supply is shaky: one week added to every lead
+  time (README, baseline). Hard spans on the panel: 8.6–19.2%.
+- **Targets split, each one fact (F6).** 19 bundled targets became 25: `round_scope_easy` and `round_scope_medium` into
+  `scope_list_prices`, `scope_no_flash_change`, `scope_on_time`, `scope_no_allocation`; the lead-time targets into
+  `lead_time_business_days`, `scope_whole_weeks`, `holiday_weeks`; `monthly_budget_cap` into `budget_hard_cap` and
+  `budget_month`; `dual_source_critical` into `dual_source_two` and `max_share`; `cost_model` into `shortfall_cost` and
+  `backlog_cost` (hard); `engineering_change` into `eco_switch` and `eco_c04_exempt`; `bom_explosion` now states that
+  parts are needed in the build week (no assembly offset). `param:` links: `usd_planning_rate`, `quality_hold`,
+  `safety_stock`, `max_share`. Removed (context only, misreading them costs less than a tenth of the scale):
+  `resistor_reels` (damage 0.01–0.13 on the panel), the holding weight (0–0.04), `expected_cost` (its only misreading is
+  the one `supplier_lateness` already ablates), `usd_planning_rate` in easy (no wrong rate bites in any of 15 measured
+  easy settings; it bites in 2 of 15 medium settings and stays a medium target). All five locales' targets.yaml carry
+  the same ids. The scope cuts now have reasons in the story (the price breaks need an unsigned frame agreement,
+  engineering is still qualifying C25, management wants a plan on the confirmed dates first).
+- **Every target bites, with a diagnostic.** Each non-parameter target has a natural misreading (`MISREADINGS` in
+  case.py: lead times in calendar days, W2 in December, pending suppliers allowed, the flash change applied in easy,
+  the price rise from W3, ...) that switches the setting's view for the planner and for a scorer alike. Its ablation is
+  the reference planned on that view, keeping the reference's own plan when that is valid and cheaper by the
+  misreading (so heuristic noise is not counted as a bite). Every target bites in at least one measured setting of
+  every tier where it is in force; `score()` reports `enforced` per target and separates the reference from every
+  ablation that bites (GT.md, parts 1 and 5). (Second pass: the `shortfall_cost` misreading measured the safety
+  stock instead and was replaced; the diagnostic is unreliable for plans other than the reference and the
+  ablations, see below. Diagnostics pass: replaced by `diagnose()`, regret against the planner's plan for each
+  misreading.)
+- **Shortcuts closed.** `no_orders`, `express_only`, `express_split`, `ignore_budget`, `all_upfront`, `no_buffers` and
+  `critical_only` are invalid or score at most 0.5 in all 39 settings. An earlier `no_safety_stock` scored 0.58 in one
+  hard combination (0.5 weeks of safety stock); the shortcut that really ignores the uncertainty drops both buffers
+  (safety stock and the safety lead time) and is closed everywhere. Mandatory content needs no new rule: dual sourcing
+  makes an empty or partial plan invalid and the backlog cost punishes a part left out. (Second pass: three more
+  shortcuts, all closed; `no_safety_stock` re-measured, still 0.582 in hard/c4.)
+- **Never asks.** `robust_solution` hedges the flash change, uses the history and the allocation, reads the rise from
+  W3 and the resistor stock in pieces, and plans for the strictest candidate of every drawn rule (1.5 weeks of safety
+  stock, the 70% cap, 1,500 KRW/USD, every candidate hold avoided). It is valid in every setting but earns almost no
+  credit: value of asking 0.99 (easy), 1.00 (medium), 0.96 (hard). The safety-stock level alone decides most of it:
+  planning for less than the client's level is ruinous (1.5x the standard cost per missing piece-week), planning for
+  more costs about a week of critical-part demand. (Second pass: superseded. A planner on the request's natural
+  reading earns much more in hard; see below.)
+- **Reference, bounds and cap (F2).** After the fifteen variants the reference runs a local search with a fixed
+  budget of 6,000 evaluations (deterministic): 2.2–5.4% cheaper on the panel than the best variant, and it is what
+  buys the displays before the rise. `best_known_solution` (the wider search from four starts, 60,000 evaluations)
+  is 0.3–3.2% cheaper again (quality 1.03–1.31, median 1.106); `objective_bound`, a linear relaxation solved with
+  HiGHS, is 4–7% below the reference in easy, 9–12% in medium, 18–20% in hard (MOQs and price tiers relaxed; a
+  mixed-integer version was too slow in medium and hard). `quality_cap: 1.11`. (Second pass: the bound now has
+  columns for orders due after a part's last week, which a valid plan may place.)
+- **Narrow scales resolved.** Over all 225 combinations the baseline is worse than the reference by at least 6.0%
+  (easy), 7.8% (medium), 8.6% (hard) on this world and by at least 5.0% on world seeds 1, 2 and 3 (lowest 5.02%,
+  world 3, hard, 1.5 weeks with Hanbit Electronics on hold); every reference and baseline is valid. The case is no
+  longer in `validate.OPEN_NARROW_SCALES`.
+- **Data and tests.** The budget is recalibrated by the same rule (December 475 → 480 M). `tests/test_procurement_
+  price_email.py` now checks the C06/S08 rise (1.12 from W4, price and budget, and that it makes S04 the cheaper
+  display source at 1,320 from W4); `tests/test_validator.py` truncates es/targets.yaml at the last target id,
+  `eco_c04_exempt`, instead of the removed `expected_cost`.
+
+### Ground truth audit, second pass (adversarial check)
+
+A second engineer re-ran the first pass's claims with code on its branch, assuming the report was optimistic. Status
+of each first-pass point, then what changed. The never-asks alternatives and the shortcut trials were scored with the
+case's own scorer on the audit's 39 settings; the other numbers are the stored audit's.
+
+- **Never asks: overstated in hard (fixed).** The first `robust_solution` was not the strongest plan that never asks.
+  It hedged the flash change (C04 for all ten weeks and C25 from W6), read Nara Display's rise from W3 and planned for
+  1.5 weeks of safety stock, and earned 0.009 / 0.000 / 0.043 (easy / medium / hard). Yet the request itself says the
+  BOM already includes engineering's flash change and that the delivery history and the allocation notice were sent
+  because supply is shaky. Mean credit of tier-independent never-asks readings on the same 39 settings (easy /
+  medium / hard; all plan for the tightest share cap, the dearest dollar and every candidate hold):
+  - the natural reading (change applied, history and allocation used) with 0.5 / 1 / 1.5 weeks of safety stock:
+    0 / 0 / 0.628, 0 / 0 / 0.656, 0 / 0 / 0.518 (invalid in every easy and medium setting, where C04 is used in
+    all ten weeks: it runs out from W6 and is single-sourced);
+  - the best hedge found (both flashes, no short weeks or breaks in easy) with 0.5 weeks: 0.058 / 0.001 / 0.346;
+    with 1 week 0.055 / 0.015 / 0.308;
+  - ignoring the change, against the request, with 0.5 weeks: 0.315 / 0.095 / 0 (invalid in every hard setting:
+    C25 is never bought); with 1 week 0.263 / 0.126 / 0;
+  - the natural reading with the rise from W3 instead of W4: 0.611 in hard; with the resistor stock read in reels:
+    0.534 in hard (the reference under-buys resistors against late deliveries, which a planner that over-orders
+    them by misreading the reels escapes).
+  Planning for the strictest safety stock is not the best on average: over-buying a week of every critical part
+  costs more than the shortfall it saves where the client wants more. `robust_solution` is now the natural reading
+  with the middle safety-stock candidate (1 week), the same in every tier, as the request reads. Ignoring the change
+  does about as well over all 39 settings (mean credit 0.158 against 0.151) but contradicts the request. Value of
+  asking: 1.00 (easy), 1.00 (medium), 0.34 (hard), against the first pass's 0.99, 1.00, 0.96; the value of the drawn
+  parameters alone is unchanged (0.72, 0.76, 0.46). The claim that asking is necessary stands in every tier, but in
+  hard it is about a third, not 0.96. A planner that guessed the round's scope right (ignoring the change in easy
+  and medium) would still leave 0.68 (easy) and 0.87 (medium).
+- **The shortfall-cost ablation measured another fact (fixed).** Its misreading "a shortfall costs nothing" made the
+  planner trim the safety stock away, which is the `safety_stock` fact, not the price of a shortfall: damage 1.0 in
+  every easy and medium setting. An agent told the level but not the price would keep the safety stock as a floor.
+  With that misreading (`shortfall_floor`, a shortfall priced at 20x the part's cost) no easy or medium setting loses
+  a tenth of the scale (at most 0.09), and 8 of 9 hard settings do (damage 0.05–0.33), where late deliveries make
+  a floor dear. `shortfall_cost` is now a hard-only target (en targets.yaml `tiers: [hard]`); the 1.5x stays in the
+  easy and medium requirements as context. Targets: easy 16,
+  medium 17, hard 18 (25 ids). A shortfall priced at the part's own cost (1x) was also measured: it bites in 10 of
+  15 easy settings but in only 1 of 15 medium and 1 of 9 hard, and it is no more natural than a floor.
+- **The bound left out orders a valid plan may place (fixed).** The LP had no column for an order due after the
+  part's last week, but such an order counts in the budget, the allocation and the share cap of a real plan (a second
+  source bought only to meet the share rule). Without it the share rows could be stricter than the rule, so the LP
+  was not a proven relaxation. Those orders are now columns with no stock effect, and the docstring states the
+  argument (every valid plan is feasible for the LP at no more than its objective). The values did not move in any
+  of the 39 settings (no such order helps the relaxation), so the gaps stay 3.6–7.4% (easy), 8.9–12.2% (medium) and
+  17.9–19.5% (hard), and no plan built in this pass beats a bound.
+- **Shortcuts (checked; three added).** New degenerate plans tried, all closed: `copy_demand` (each week's gross need
+  ordered lead-time ahead, stock and open orders not netted: invalid in 39/39, budget), `constant_orders` (every
+  part's average weekly net need in each of W1-W8: invalid in 39/39), `baseline_breaks` (the client's MRP with every
+  line rounded up to a break when that pays: quality at most 0.002, the baseline's lines almost never reach a break
+  cheaply); all three are now in `shortcuts()`. Also tried, not kept: every approved quote at its MOQ
+  in W1 (invalid in 39/39, budget) and the reference planner without dual sourcing patched with the least
+  second-source quantity the cap needs (valid in 8/15 easy, 8/15 medium, 9/9 hard, quality up to 1.0 in hard). The
+  latter keeps every rule and is a cheap plan, not a shortcut: in hard the allocation and the hold already spread
+  the volume, so the share rule costs little there (`dual_source_two` bites in 4 of 9 hard settings). Still open as
+  the first pass judged it: the reference planner with no safety stock but with the safety lead time scores 0.582 in
+  hard/c4 (0.5 weeks of safety stock, Mirae Semicon on hold); `no_buffers`, which drops both, stays the shortcut.
+- **Ablations (checked).** Each flips one switch of the view and keeps the reference where it is valid and cheaper
+  by the misreading. Besides the shortfall cost they read as natural misreadings of what the agent sees (calendar
+  days, an assembly offset, W2 in December, the price rise from W3, pending suppliers, the MOQ over the plan,
+  cumulative breaks, the round's scope as the data shows it). `backlog_piece` (5x the part's cost per piece-week) is
+  the first version's own price and arbitrary in its factor; it is kept because what the fact decides is per board
+  versus per piece.
+- **Diagnostics: correct for the reference and the ablations, unreliable for other plans (open, documented).**
+  `score()`'s `enforced` compares a plan with the reference under the misreading: delta = [g_S(D) − g_S(R)] −
+  [g_S'(D) − g_S'(R)], within 0.01% of the objective (about 0.1% of the scale). On the client's own MRP, which knows
+  every fact, it says "not enforced" for the lead times in 28 of 39 settings, the safety stock in 27 of 39, the
+  planning rate in 13 of 15 and the quality hold in 18 of 39: when R breaks a rule under the misreading that the MRP
+  keeps, the penalty decides, and otherwise any difference larger than 0.1% of the scale does. Comparing regrets
+  with the best plan known for each reading (the reference planner's plan for the misreading) within 5% of the scale
+  freed the MRP of almost all of them on the four settings checked (easy/s42, medium/s3, hard/s42, hard/c4; left:
+  the W3 display purchase it does not make, the breaks and the history it ignores in hard) and still separated every
+  ablation that bites there. But every scoring then plans up to twenty misreadings: validate-case went
+  from 67 s to 493 s, and tests/test_validator.py validates this case six times. Cheaper benchmarks failed: the
+  planner's default variant without its local search sits 20–50% of the scale above the reference and calls nearly
+  every other plan a misreading; correcting it by the reference's own gain broke three ablations; the first formula
+  with only the penalty asymmetry removed kept most of the false calls. The first-pass diagnostic is kept; GT.md
+  part 5 states the limit. The fix needs the framework to compute diagnostics only where evaluate() asks for them
+  (not in raw_score for the binding and scale checks). (Fixed once the framework had that hook: see "Ground truth
+  audit, diagnostics" below.)
+- **Checked and holding.** The agent view is the same in every setting (validate-case), the request changed only in
+  its e-mail line as the brief allowed, CLIENT_REVIEW.md is generated from the five requirements.md (quotes match by
+  construction; regenerated for the shortfall tier change), its pre-check finds the same numbers, IDs and dates in
+  every locale, its status is "awaiting human review", and the commit message carries no attribution lines. The
+  split targets read naturally in all five locales. GT.md and README match `dataset/audit.json` (GT.md regenerated
+  by `gt_report.py`).
+
+### Ground truth audit, diagnostics
+
+The framework now computes per-target diagnostics only where they are asked for (`diagnose()`, DESIGN.md "Ground
+truth audit"), and the audit checks them on deliverables that are neither the reference nor an ablation: a valid best
+known solution, which knows every fact, must never be called not enforced on a target in force. The second pass's
+diagnostic failed that check. On the same 39 settings and the same plans it called the best known solution not
+enforced in 125 of 657 target-settings and the client's MRP (baseline) in 228 of 657. What changed:
+
+- **Lazy.** score() no longer reports `enforced`; `diagnose(world, submission_dir, setting, scored)` does, when
+  evaluate() asks (the audit, a run's scoring). The reference planner's plan for each misreading (the ablation
+  plans, which `ablations()` hands the audit too) is planned once per setting and cached in the module, keyed by the
+  world seed and the drawn parameters: 24 s for the first plan diagnosed in an easy setting, 0.05 s for the next.
+  validate-case no longer computes diagnostics: 98 s against 174 s for this round's starting commit, run one after
+  the other on the same machine under the same load (the audit takes 1,529 s).
+- **Regret against the planner's plan for each misreading.** A plan's regret under a reading is its distance from
+  the better of the reference and the ablation plan there (rules broken first, then the objective, in quality
+  scales). A target is not enforced when the plan breaks more rules under the client's reading than under the
+  misreading, or when it is materially worse than the best plan known for the fact (regret above 0.05) and the
+  misreading explains at least half of that regret. The second pass's proposal, a regret difference above 5% of the
+  scale alone, still called the client's MRP not enforced in 72 of 657 target-settings and the best known solution
+  in 3: a weak plan's loss is priced differently under each reading (the hard baseline's blanket week of lead time
+  looks like a larger safety stock, a dearer backlog per piece or on-time suppliers; its lot-for-lot plan never buys
+  displays ahead into W3 or rounds a line up to a break), and the best known solution beats the planner by more
+  under some readings than others. Asking for material regret frees the best known solution; asking the misreading
+  to explain half the regret frees the baseline.
+- **Plan shapes (quality hold, share cap).** Both had plan-shape checks with the same flaw: a plan was not enforced
+  when it bought nothing from a supplier that only another candidate holds, or kept every critical part under a
+  stricter candidate cap, wherever the reference did otherwise, whether or not the plan needed that supplier or that
+  room (the baseline's hold in 18 of 39 settings, its share cap in 12). Regret alone cannot replace them: a plan that
+  keeps such a restriction scores the same under both readings, so the difference of its regrets is that of the best
+  plans known, the same for every plan that keeps it. For the hold the plan must now also keep it at a cost: the
+  other candidate's supplier delivers nothing during its hold although switching a line that arrives then to it
+  would save at least 0.5% of the scale. For the share cap no plan shape works: the planner's own plans for a 70% cap
+  have their top share anywhere from 61% to 70%, and a test for a supplier held within 2 points below the stricter
+  cap, at a cost, missed three of them that bite (medium/c5, c8, c9); there the half-of-the-regret rule decides.
+- **An infeasible misreading.** In hard/c2 and hard/c3 no plan can second-source C04 under the `c04_critical`
+  reading, so the misread planner fell back to its unpolished lot-for-lot variant, whose damage (0.31 and 0.71) was
+  mostly the missing local search: regret could attribute only 0.03 and 0.10 of the scale to the misreading. The
+  fallback (`_plan_anyway`) now gets the reference's local search too, as "otherwise as good as the reference" asks:
+  damage 0.06 and 0.35, so `eco_c04_exempt` bites in 8 of 9 hard settings (was 9). Where no plan known keeps every
+  rule of a misreading, its regret is measured against a plan that breaks one, so only the 0.05 is asked.
+- **Results (stored audit).** Every target separates the reference from every ablation that bites. Best known
+  solution 0 of 657, baseline 0 of 657, `robust_solution` 63 of 657 (it follows the flash change outside hard, so
+  `scope_no_flash_change` 30 of 30 and `dual_source_two` 30 of 39, and plans for the middle safety stock:
+  `safety_stock` 3 of 39). Also checked on plans that know every fact and are neither: the planner's fifteen
+  unpolished variants in every setting (386 valid plans, quality −0.65 to 0.86, median 0.50) are not enforced in 29
+  of 6,556 target-plans (earlier diagnostic: 2,189): `price_rise_week` 18 (no display bought ahead into W3: the old
+  price is not used), `scope_no_allocation` 9 (within an allocation that does not apply this round), `max_share`
+  and `usd_planning_rate` 1 each.
+- **Cross flags (8 warnings).** An ablation of one fact also calls others not enforced in most settings where it
+  bites when the facts share a rule: a plan over the monthly budget fits the soft-budget reading and, when W2 in
+  December would fit it, the month reading (the ablations of `budget_month`, `price_breaks`, `scope_list_prices` and
+  `usd_planning_rate`, which overspend by misreading the month, the prices or the rate); a plan that breaks the
+  dual-sourcing rule fits the single-source reading, which also lifts the share cap (`max_share`'s looser cap, the
+  flash-change ablations, which single-source C04 or never buy C25); and in hard a plan without lateness buffers
+  carries backlog that a per-piece price makes cheap (`supplier_lateness`). These are what the plan shows, whatever
+  made it break the rule, so a run's funnel can mark such a target not enforced on a plan that misread another fact.
+- **Limits.** A plan that keeps a restriction only a misreading has (a stricter share cap, the allocation in easy and
+  medium) and loses at most twice what the restriction costs the reference planner is called not enforced, whether
+  or not it needed the room. A plan that does not use an opportunity the fact gives (Nara Display's old price in W3,
+  the price breaks) is called not enforced when that explains half its regret: the diagnostic reads the plan, not the
+  planner's intent. The thresholds (0.05 of the scale, half the regret, 0.5% for the hold) were set on this world's
+  39 settings. (Narrowed by the adversarial check below.)
+
+### Adversarial check of the diagnostics (deliverables that are neither reference nor ablation)
+
+Plans built for the 9 public settings and diagnosed with `evaluate(..., diagnose=True)`:
+
+- **Correct but different** (every fact read right, valid): the reference with the cheapest one or three lines moved
+  to another approved supplier, half of one line ordered a week earlier (cheapest and dearest such split), the
+  dearest whole line a week earlier, the second and third cheapest planner variants polished like the reference, and
+  the reference planner with a tenth of its local search (72 plans, quality 0.79–1.15). Before: 3 called not
+  enforced on some target. `scope_no_allocation` twice (easy/s78 and medium/s78, the third variant, which keeps the
+  easy/medium allocation caps by chance while being 5–7% of the scale cheaper than the planner's own plan for them),
+  `price_rise_week` once (easy/s78, a plan without the W3 display purchase, where the W3 misreading costs the planner
+  nothing: its plan is the reference) and `price_breaks` once (medium/s78, the short search, which sizes fewer lines
+  to a break; the cumulative reading explains just over half its 11% regret).
+- **New misreadings** (the reference planner on a view no ablation plans: safety stock of 2 and of 0 weeks, the
+  quality hold one week short or ignored, lead times one week shorter or longer, suspended suppliers allowed, the
+  budget month by the week's last day or by the next week, the budget pooled over the three months, the MOQ ignored
+  or halved, Nara Display's rise from W5 or ignored, only Christmas short (medium, hard), one piece per board, every
+  supplier one week late for certain (hard)). Of the 126 that bite, 67 were called not enforced on their fact
+  (53%). Every plan that breaks the rule of a fact that alone states it was called enforced there whenever the
+  misreading forbids the same plan: a suspended supplier (9 of 9: `pending_ok` still forbids it), a line whose
+  supplier total is below the MOQ too (15 of 18: `moq_total` still flags it), no hold at all (4 of 9, where the
+  other candidates' holds also forbid the plan).
+
+What changed (case.py, `_diagnostics` and `_follows`):
+
+1. **A fact that alone states a rule** (`TARGET_RULE`: the quality hold, approved status only, the MOQ per line) is
+   not enforced whenever the plan breaks that rule under the client's reading.
+2. **A plan that keeps a misreading's restriction and beats the planner's own plan for it under it** (it scores the
+   same under both readings and r_S' < 0, so it also beats that plan under the client's reading) is not drawn to the
+   misreading: a planner no better than the reference would not have made it for the misreading. An ablation never
+   is (r_S'(A) = 0).
+3. **Where the misreading costs the planner nothing** (its plan's regret under the client's reading at most 0.05,
+   often the reference itself), a plan whose regret the misreading explains only in part (less than 0.8,
+   `DIAG_SHARE_IDLE`) is not determinable (None): it does not use what the reference uses the fact for, as a weaker
+   plan that knows the fact may not either. One it explains almost wholly still follows it (the misread plans above
+   that skip the W3 purchase: 85–99%; the third variant: 68%). No ablation that bites is affected (its own reading's
+   plan bites, by definition).
+
+After (same plans): 1 of the 72 correct plans is still called not enforced (medium/s78, the
+short search, on `price_breaks`: the limit below) and 1 is not determinable (easy/s78, the third variant, on
+`price_rise_week`); of the 126 misreadings that bite, 97 are called not enforced on their fact (77%, was 53%).
+Still called enforced: one piece per board (9; the natural misreading moves the demand a week, the quantity per
+board is not compared), lead times one week longer (9) and a safety stock outside the pool (7: 2 weeks where 1.5
+is the largest candidate, 0 where 0.5 is the smallest), each in a direction the natural misreading does not take,
+and in hard one lead time a week shorter and the suppliers one week late for certain (4). The planner's fifteen
+unpolished variants in the public settings (92 valid plans): 3 of 1,578 target-plans not enforced before and after,
+all `scope_no_allocation`, weak plans (regret 33–35% of the scale) that keep the allocation caps by chance and cost
+more than the planner's own plan for them. The audit (re-run: 1,396 s) still finds no false negative (best known 0
+of 657, baseline 0 of 657, `robust_solution` 63 of 657), every target separates, and the same eight cross-flag
+warnings, of which the ablations of `price_rise_week` and `max_share` no longer flag `scope_no_allocation`.
+Remaining limits: a plan that keeps a restriction only a misreading has and is worse than the planner's own plan
+for it, but loses less than twice what the restriction costs, is still called not enforced; so is a plan that does
+not use an opportunity the fact gives (the price breaks) when that explains half its regret; and a misreading in a
+direction the natural one does not take is not seen.
+
+### Rule seeds (conversion from rule sets A/B/C)
+
+The three fixed rule sets became candidate pools that a rule seed draws from, one parameter at a time (README,
+"Rule parameters"). The data, the request and the price e-mail (C01 from S03 +20% for orders from W4, scored by order
+week) are unchanged apart from the November budget, which the calibration below moves from 125 M to 115 M.
+
+- **Pools.** `usd_krw` 1,380 · 1,450 · 1,320 · 1,500 in easy and medium, 1,380 in hard; `safety_weeks` 1 · 1.5 · 0.5
+  in every tier; `max_share` 80 · 70 · 90% in easy and medium, 80% in hard; `quality_hold` (supplier and last week
+  as one value) S07 to W3 · S05 to W4 · S01 to W4 in easy and medium, the old A/B/C pairs, and S03 to W5 · S05 to
+  W5 · S01 to W5 in hard. Public panel `rule_seeds: [42, 3, 78]`; every candidate appears in it except one planning
+  rate (three seeds, four rates).
+- **Binding (validator, worlds 20261123, 1, 2, 3).** From the first public seed: in medium, planning rate 1,320 →
+  1,500 moves the reference +1.17 / +2.22 / +1.79% and breaks the budget on world 3; share cap 90% → 80% makes it
+  invalid on all four; in hard, safety stock 1 → 1.5 weeks moves it +10.3 to +11.9%, and the hold S03 to W5 →
+  S01 to W5 makes it invalid on all four.
+- **Dropped or merged because they did not bind.** The hold week alone (S03, W4 → W5 changed nothing in hard: the
+  November budget already pushes S03's orders to W3), so it is drawn with the supplier. The planning rate and the
+  share cap in hard (1,320 → 1,550 moved the hard reference 0.6–1.4% by world; a 90% cap left it valid under 70% on
+  two of four worlds), so hard keeps 1,380 and 80%. A finance reserve on the monthly budget (0 / 5 / 10%), tried as
+  the budget parameter, moved the hard reference 0–1.3%. A 60% share cap for hard was left out: the reference's
+  whole-line second sourcing cannot reach it for C02 and C25.
+- **admissible()** rejects a hold that ends before the supplier's goods could arrive at all (S03 and S05 quote 11–13
+  business days: nothing arrives before W4, so "S05 to W3" would change nothing and has no violating example). The
+  pools hold no such value; the hook guards edits.
+- **Budget calibrated over the pools.** November's cap is 95% of the least unconstrained November spend over all 225
+  admissible combinations of all tiers, so it binds whatever a rule seed draws (before, easy/C spent 125.1 M against
+  125 M). December and January keep headroom over every combination.
+- **Reference and baseline valid in every combination.** A private seed may draw any combination, so the budget step
+  no longer raises when no line can be deferred in time: it moves a line late, pulls January's excess into W6, or
+  cuts a line, cheapest extra cost per KRW first. The baseline uses the same fallback. On this world all 225
+  combinations have a valid reference and a valid, worse baseline.
+- **Stronger reference.** It now also tries one-week lots and a leftover trim (a line cut to what the part still
+  needs, or replaced in the same week by a small-MOQ supplier), eight variants in all. The trim was needed: without
+  it the baseline beat the reference in 30 of 162 sampled easy settings of this world, all with 0.5 weeks of safety
+  stock (end-of-horizon overbuying at the second source's MOQ). Panel ratios baseline/reference: 1.054–1.091 easy,
+  1.046–1.065 medium, 1.156–1.377 hard.
+- **Still open.** On other worlds the baseline still matches or beats the reference in a few easy and medium
+  combinations, all with Kowon Passive (S07) on hold to W3 and mostly 0.5 weeks of safety stock: none on world 1, 9
+  of 108 medium combinations on world 2 (by up to 1.6%), 2 easy and 3 medium on world 3 (by up to 0.2%). The
+  reference's two-week lots front-load November, and its deferrals to faster, dearer suppliers cost more than the
+  baseline's small lot-for-lot lines. Quality then falls back to the plain ratio. This belongs to F2.
+- **Checker's follow-up (resolved).** A check of private rule seeds 4–10 on world seeds 1–3 hit these combinations:
+  rule seeds 6 and 8 (S07 to W3, 0.5 weeks) had the baseline 0.1–1.6% below the reference in easy and medium on worlds
+  2 and 3. The reference now keeps the cheapest of fifteen variants: the eight above, the same with the trim only
+  after the budget step (trimming first can leave the budget step only dearer deferrals), and a lot-for-lot planner
+  that splits each order of a critical part at the share cap, with the three trim options. In those combinations the
+  quota planner trimmed after the budget step wins, 1.0–1.4% below the baseline (the trim cuts the end-of-horizon
+  lots the baseline keeps). All 225 combinations on each of worlds 20261123, 1, 2 and 3 now have a valid reference
+  and a valid baseline that is worse by at least 1.0% (min baseline/reference ratio 1.0098, world 2 medium; hard at
+  least 1.128). Panel references: easy/s42 505.86 → 503.68, easy/s3 573.41 → 564.63, medium/s42 513.61 → 504.47,
+  medium/s3 558.17 → 556.57, medium/s78 482.66 → 479.39, hard/s3 609.07 → 608.79, hard/s78 514.40 → 514.19 M KRW;
+  baseline/reference ratios 1.054–1.100 in easy, 1.053–1.085 in medium, 1.156–1.378 in hard. The data and the
+  budget calibration are unchanged (the calibration uses the default planner without trim).
+- **Tests.** `tests/test_procurement_price_email.py` read the settings from the removed `all_settings()`; it now takes
+  them from the case. `tests/test_rule_seeds.py` used this case as its example of the deprecated `rulesets:`; it now
+  builds a legacy copy of its own toy case.
 
 ### F1 — Bending the dual-sourcing habit is not worth it for a strong plan (high, partly)
 
@@ -19,6 +358,18 @@ source structurally dearer or slower for the high-value critical parts (C05 PCB,
 cheap alternative for C01 and C03. Then measure the gain on an optimised plan: it should be at least 3–5% in easy and
 medium, and worth more than the penalty after the cap. In hard, give the habit a real cost, for example second sources
 only from late-prone suppliers. Recheck after F2's calibration, because where the cap sits decides who gains.
+
+**Status (rule seeds):** open, remeasured on the panel: the best plan without the second-source step saves 2.6–4.0%
+in easy and medium (0.2% in medium/s3) and nothing in hard, where the hard reference already is such a plan.
+After the fifteen-variant reference (Rule seeds, checker's follow-up): 1.4–3.6% in easy, 0.2–3.3% in medium, at most
+0.3% in hard.
+
+**Status (ground truth audit):** measured, pays in some settings and loses in others. With `quality_cap` 1.11 and the
+bent plan scored with the rule switched off: at reference level the bend is worth 0.06–0.10 of quality credit in the
+easy and medium panel settings with a 90% or 70% cap (−0.8% to −2.7% objective), nothing where the cap is 80% (the plan
+without it is no cheaper) and at most 0.02 in hard. So it pays under a 0.05 penalty in four of nine panel settings
+and loses in the rest, and it never quite pays under a 0.1 penalty (at most 0.099, the cap binds). A plan near the
+best known is already at the cap, so bending gains it nothing.
 
 ### F2 — Weak greedy reference, and a deferred line kept its old MOQ (high, confirmed)
 
@@ -41,6 +392,22 @@ reference near-optimal, either by shipping a local search or a MILP with a fixed
 expected-cost search on the history estimates. Make the safety-lead-time rule meaningful, for example by weighing a
 supplier's estimated late rate against one week of holding. Then set `quality_cap` in case.yaml from the best known
 normalized quality, or widen the baseline gap, so that a generic optimiser does not saturate.
+
+**Status (rule seeds):** partly improved. The reference now keeps the cheapest of eight planner variants (second
+source or not, two- or one-week lots, with or without a leftover trim that cuts or re-sources the last lines), and
+its budget step falls back to late moves, pulls and cuts so that it is valid in every combination. The baseline gap
+on the panel is wider: 1.046–1.091 in easy and medium (was 1.021–1.113), 1.156–1.377 in hard. Still open: the
+local-search headroom was not re-measured, the safety-lead-time threshold still decides nothing, and on world seeds
+2 and 3 the baseline matches or beats the reference in 14 of 432 easy and medium combinations (see "Rule seeds").
+That last point is resolved: with the quota planner and the trim after the budget step among its variants, the
+reference beats the baseline by at least 1.0% in every combination on worlds 20261123, 1, 2 and 3. The local search
+and the safety-lead-time rule stay open.
+
+**Status (ground truth audit):** mostly resolved. The reference ends with a local search (6,000 evaluations, 2.2–5.4%
+better than the best variant on the panel); a wider search gives the best-known plans (0.3–3.2% better, quality
+1.03–1.31) and `quality_cap` is set from them (1.11, the median); a linear relaxation bounds the objective (gap 4–7%
+easy, 9–12% medium, 18–20% hard). Still open: the 5% safety-lead-time threshold still decides nothing (the lowest
+smoothed late rate is S09's 8.3%, so every supplier gets the extra week).
 
 ### F3 — The price e-mail does not change the answer, and the documentation was stale (high, confirmed)
 
@@ -71,6 +438,12 @@ approved versus pending from a thread. Deliver it as a localized `.eml` from a s
 target. Resolve the provenance statements: cite or drop the ReflectionAI and Apex lineage after a licensing and
 contamination check.
 
+**Status (ground truth audit):** resolved as proposed: a localized `.eml` thread from the supplier's domain raises a
+part the plan depends on (Nara Display's C06), with a mid-week effective date and approved versus pending visible in
+the thread, and a clarification target (`price_rise_week`, easy and medium). Provenance: the README keeps the owner's
+attribution of the approved-versus-pending idea to the ReflectionAI procurement scenarios; the licensing and
+contamination check it asks for has not been done (open).
+
 ### F4 — Backlog is priced per piece of the part, not per board (high, partly)
 
 Backlog costs 5× the part's standard cost per piece-week, separately for each part, so a shortage of a cheap part
@@ -82,6 +455,10 @@ shortage costs about 890 KRW against 74,000 for the display, roughly 83×; the r
 piece, with `board_penalty` set to 5× the board's material cost or a stated margin. This stays separable per part, so
 the exact expectation still works. The alternative is to simulate builds as the minimum over parts. Either way,
 re-calibrate the budget and the references, and state the per-board stoppage cost in the `cost_model` target.
+
+**Status (ground truth audit):** resolved: backlog is priced per board-week (10,000 KRW), counted per part as 10,000 /
+pieces per board for each missing piece; the target `backlog_cost` (hard, where backlog occurs) states it. The hard
+baseline now adds a week to every lead time (otherwise its line stops made the hard scale 60–90% wide).
 
 ### F5 — Rule sets are nested, and the budget binds mostly in November and under B (medium, confirmed)
 
@@ -96,6 +473,18 @@ plans spend 269–435 M in December.
 safety and a loose share; C: mid FX and a strict share. Make at least one more parameter non-nested: which month is
 tight, or which parts are critical or on allocation. Calibrate the caps per rule set so that compliance costs at least
 2% in every setting, and let December bind in one rule set.
+
+**Status (rule seeds):** mostly fixed. Each parameter is drawn on its own, so the strict values no longer come
+together: the panel has, for example, 1,320 with 1 week and a 90% cap, and 1,380 with 0.5 weeks and a 70% cap. The
+non-nested hold stays and gains a harder hard pool (S03, S05 or S01 to W5). Every parameter binds on four worlds
+(see "Rule seeds" above). November's cap is now calibrated over every combination of the pools, at 95% of the least
+unconstrained November spend, so it binds in every combination (115 M; the unconstrained November spend on the panel
+is 132–346 M) instead of barely in easy/C. December binds only in a few hard combinations where deferrals pile up;
+compliance does not cost 2% everywhere (a budget parameter was tried and did not bind). Open: the month that is tight
+is still always November.
+
+**Status (ground truth audit):** unchanged: November is still the month that binds (115 M); December (480 M after
+recalibration) and January keep headroom.
 
 ### F6 — Lower-tier scope cuts read as switches, and the easy price line was garbled (medium, confirmed)
 
@@ -115,6 +504,10 @@ example:
 - the ERP plans in weekly buckets.
 Also split the round-scope targets into one target per fact.
 
+**Status (ground truth audit):** resolved: every scope cut has a reason in the story in all five locales, and the
+round-scope targets are split into one target per fact (`scope_list_prices`, `scope_no_flash_change`, `scope_on_time`,
+`scope_no_allocation`, `scope_whole_weeks`).
+
 ### F7 — The "country-neutral" scenario is a Korean plant (medium, confirmed)
 
 The README calls the case country-neutral apart from one fact. Yet eight of the nine suppliers are Korean, the ja and
@@ -129,6 +522,8 @@ rule, for example 0.9 × the standard cost of the demand each month's orders cov
 terminal requirement, such as N weeks of W11–W12 demand on hand at the end of W10, or value ending stock at standard
 cost.
 
+**Status (ground truth audit):** unchanged (open).
+
 ### F8 — No dated event and no pressure that works (medium, confirmed)
 
 The e-mail is dated 2026-11-20, before W1, and is a static file. The client receives no later e-mails, and the only
@@ -141,6 +536,9 @@ program would receive the realised arrivals, and dated events would arrive mid-r
 January allocation cut, the S05 hold lifted early. Add a pressure situation scored through the existing exception
 process, for example a plant manager asking to take S05's held lots "just this once", or to buy everything from S09.
 
+**Status (ground truth audit):** partly: the dated e-mail now changes the plan (orders brought forward before the
+rise). There is still no event during a run and no pressure situation.
+
 ### F9 — Data realism slips (low, confirmed)
 
 74 of the 188 history receipts (39%) fall on a Saturday or Sunday, because on-time lots arrive 0–4 days before the
@@ -152,6 +550,8 @@ maker. The allocated MCU and DRAM have 13 business days of lead time at S03.
 **Status:** open — proposal: move received dates to business days. Draw history only from approved pairs, or label
 the others as qualification samples. Move S03's connector quotes to a distributor. Give the allocated parts longer
 lead times, for example 30–60 business days with an S09 premium, so that allocation and lateness interact.
+
+**Status (ground truth audit):** unchanged (open).
 
 ### F10 — Korean wording and where the e-mail rule sits in each locale (low, confirmed)
 
@@ -173,6 +573,10 @@ lead times, for example 30–60 business days with an S09 premium, so that alloc
 Open — proposal: use the supplier names exactly as they appear in the data, and add a validator check that block
 positions and supplier names match across locales.
 
+**Status (ground truth audit):** the e-mail paragraph is replaced in all five locales by the Nara Display bullet,
+placed after the quotes bullet; supplier names in the new texts follow the data (나라디스플레이 in Korean, Nara Display
+elsewhere). The validator check for block positions and names stays a proposal.
+
 **Baseline:** what the client does today without an engineer, an ERP-style MRP run. Each part is ordered lot for lot
 from the cheapest approved supplier that delivers in time, at list prices and on the promised dates. Critical parts
 are split by a quota, and the buyer fixes the budget afterwards. Objectives in M KRW, baseline against reference:
@@ -183,4 +587,5 @@ are split by a quota, and the buyer fixes the budget afterwards. Objectives in M
 | medium | 532.54 vs. 521.76 | 615.89 vs. 582.57 | 502.76 vs. 492.37 |
 | hard | 670.53 vs. 579.75 | 745.39 vs. 612.78 | 647.75 vs. 537.11 |
 
-The baseline is between 1.021× and 1.216× the reference.
+The baseline is between 1.021× and 1.216× the reference. (These are the rule sets A/B/C of the first version; after the
+rule-seed conversion the public panel's baseline is 1.046–1.377× the reference, see the README's "Public panel".)

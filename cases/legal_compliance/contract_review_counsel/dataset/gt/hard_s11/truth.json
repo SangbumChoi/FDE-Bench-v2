@@ -1,0 +1,272 @@
+{
+  "C001": {
+    "issues": [],
+    "decision": "sign",
+    "fast_tracked": true
+  },
+  "C002": {
+    "issues": [
+      "LIABILITY_CAP",
+      "GOVERNING_LAW"
+    ],
+    "decision": "negotiate"
+  },
+  "C003": {
+    "issues": [
+      "GOVERNING_LAW"
+    ],
+    "decision": "negotiate"
+  },
+  "C004": {
+    "issues": [
+      "PAYMENT_TERMS",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C005": {
+    "issues": [
+      "LIABILITY_CAP",
+      "GOVERNING_LAW",
+      "DATA_PROTECTION"
+    ],
+    "decision": "reject"
+  },
+  "C006": {
+    "issues": [
+      "GOVERNING_LAW"
+    ],
+    "decision": "negotiate"
+  },
+  "C007": {
+    "issues": [
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C008": {
+    "issues": [
+      "PAYMENT_TERMS",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C009": {
+    "issues": [
+      "LIABILITY_CAP",
+      "PAYMENT_TERMS"
+    ],
+    "decision": "negotiate"
+  },
+  "C010": {
+    "issues": [
+      "GOVERNING_LAW"
+    ],
+    "decision": "negotiate"
+  },
+  "C011": {
+    "issues": [
+      "LIABILITY_CAP",
+      "GOVERNING_LAW",
+      "PAYMENT_TERMS",
+      "TERMINATION_CONVENIENCE"
+    ],
+    "decision": "negotiate"
+  },
+  "C012": {
+    "issues": [],
+    "decision": "sign",
+    "fast_tracked": true
+  },
+  "C013": {
+    "issues": [
+      "LIABILITY_CAP",
+      "GOVERNING_LAW"
+    ],
+    "decision": "negotiate"
+  },
+  "C014": {
+    "issues": [
+      "LIABILITY_CAP",
+      "GOVERNING_LAW",
+      "DATA_PROTECTION"
+    ],
+    "decision": "reject"
+  },
+  "C015": {
+    "issues": [
+      "TERMINATION_CONVENIENCE"
+    ],
+    "decision": "negotiate"
+  },
+  "C016": {
+    "issues": [],
+    "decision": "sign",
+    "fast_tracked": true
+  },
+  "C017": {
+    "issues": [
+      "LIABILITY_CAP",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  },
+  "C018": {
+    "issues": [
+      "GOVERNING_LAW",
+      "TERMINATION_CONVENIENCE"
+    ],
+    "decision": "negotiate"
+  },
+  "C019": {
+    "issues": [
+      "GOVERNING_LAW"
+    ],
+    "decision": "negotiate"
+  },
+  "C020": {
+    "issues": [
+      "LIABILITY_CAP",
+      "DATA_PROTECTION"
+    ],
+    "decision": "reject"
+  },
+  "C021": {
+    "issues": [
+      "PAYMENT_TERMS"
+    ],
+    "decision": "negotiate"
+  },
+  "C022": {
+    "issues": [],
+    "decision": "sign",
+    "fast_tracked": true
+  },
+  "C023": {
+    "issues": [
+      "LIABILITY_CAP",
+      "DATA_PROTECTION",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  },
+  "C024": {
+    "issues": [
+      "GOVERNING_LAW",
+      "PAYMENT_TERMS",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C025": {
+    "issues": [],
+    "decision": "sign",
+    "fast_tracked": true
+  },
+  "C026": {
+    "issues": [
+      "LIABILITY_CAP",
+      "PAYMENT_TERMS",
+      "DATA_PROTECTION"
+    ],
+    "decision": "reject"
+  },
+  "C027": {
+    "issues": [
+      "GOVERNING_LAW"
+    ],
+    "decision": "negotiate"
+  },
+  "C028": {
+    "issues": [
+      "LIABILITY_CAP",
+      "AUTO_RENEWAL",
+      "TERMINATION_CONVENIENCE"
+    ],
+    "decision": "negotiate"
+  },
+  "C029": {
+    "issues": [
+      "LIABILITY_CAP",
+      "AUTO_RENEWAL",
+      "PAYMENT_TERMS",
+      "TERMINATION_CONVENIENCE"
+    ],
+    "decision": "negotiate"
+  },
+  "C030": {
+    "issues": [],
+    "decision": "sign",
+    "fast_tracked": true
+  },
+  "C031": {
+    "issues": [
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C032": {
+    "issues": [],
+    "decision": "sign",
+    "fast_tracked": true
+  },
+  "C033": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C034": {
+    "issues": [
+      "PAYMENT_TERMS",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C035": {
+    "issues": [
+      "AUTO_RENEWAL",
+      "PAYMENT_TERMS",
+      "DATA_PROTECTION"
+    ],
+    "decision": "negotiate"
+  },
+  "C036": {
+    "issues": [
+      "LIABILITY_CAP",
+      "GOVERNING_LAW",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  },
+  "C037": {
+    "issues": [
+      "LIABILITY_CAP"
+    ],
+    "decision": "negotiate"
+  },
+  "C038": {
+    "issues": [
+      "LIABILITY_CAP",
+      "AUTO_RENEWAL",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  },
+  "C039": {
+    "issues": [
+      "LIABILITY_CAP",
+      "GOVERNING_LAW",
+      "AUTO_RENEWAL",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  },
+  "C040": {
+    "issues": [
+      "LIABILITY_CAP",
+      "PAYMENT_TERMS",
+      "DATA_PROTECTION",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  }
+}

@@ -1,9 +1,13 @@
 # A campaign is a list of experiments; each expands to a grid of runs.
 # One axis at a time against a fixed baseline keeps the grid affordable:
 # baseline = customer en, agent en, baseline policy, medium difficulty, standard engagement,
-# and every rule set (ruleset: all), so each difficulty cell is the mean over rule sets A/B/C.
+# and every public rule seed of each case (rule_seeds: public), so each difficulty cell is the mean over
+# rule seeds. A list of ints instead (rule_seeds: [101, 102, 103]) runs private seeds: fresh draws of the
+# same rule-parameter candidates, whose answers are not in the stored dataset/. Report results on private
+# rule seeds, the same for every system (docs/DIRECTION.md §7); the public panel is for development.
 defaults:
   cases_root: cases
+  rule_seeds: public
   models: configs/models.yaml
   out: runs
   noise_seeds: [0]               # engagement noise and events; each seed is a different messy hand-over
@@ -39,7 +43,7 @@ experiments:
     agent_locale: [en, ko, zh]
   policy:
     policy: [baseline, enterprise_balanced, regulated_strict, startup_velocity]
-  difficulty:            # three columns, each the mean over rule sets A/B/C
+  difficulty:            # three columns, each the mean over the rule seeds, then the cases
     difficulty: [easy, medium, hard]
   engagement:            # how the work is handed over (configs/engagement.yaml)
     engagement: [full_spec, standard, messy]

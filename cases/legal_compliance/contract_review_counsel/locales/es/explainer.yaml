@@ -1,0 +1,32 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Asesor jurídico de revisión de contratos
+task_type: Extracción de información
+deliverable_spec: |
+  review.json = {"C001": {"issues": ["LIABILITY_CAP", ...], "decision": "sign" | "negotiate" | "reject"}, ...}
+  Una entrada por cada contrato del registro, cuya clave es el identificador del contrato tal como aparece en los datos.
+  Códigos de incidencia (ASCII, exactamente estos): LIABILITY_CAP, GOVERNING_LAW, AUTO_RENEWAL, PAYMENT_TERMS,
+  DATA_PROTECTION, TERMINATION_CONVENIENCE, INDEMNITY. Una lista vacía significa que no se ha detectado ninguna incidencia.
+tiers:
+  easy: >-
+    Cuatro puntos de los criterios que se leen directamente en la cláusula: el límite de responsabilidad (múltiplos e
+    importes fijos; los límites de lo pagado en N meses no se marcan en esta ronda), la ley aplicable (solo la ley, no el
+    foro), el plazo de pago y la indemnidad recíproca. La renovación, la protección de datos y la resolución las revisa
+    compras, y no se puntúan los contratos en el modelo del proveedor, los que tienen un registro de modificación ni el
+    del correo. Sin vía rápida: todos los demás contratos se revisan, también los pequeños.
+  medium: >-
+    Los siete puntos: easy más el preaviso de renovación (meses convertidos a 30 días), los límites de lo pagado en N
+    meses (N/12 del importe anual), la protección de datos por categoría, el desistimiento por conveniencia por encima de
+    un importe y el foro (tribunales o sede del arbitraje en una jurisdicción aceptada). Los contratos en el modelo del
+    proveedor, los modificados y el del correo siguen sin puntuarse; sin vía rápida.
+  hard: >-
+    Medium más las partes inciertas y adversas: los seis contratos en el modelo del propio proveedor, los registros de
+    modificación (solo cuenta un cambio acordado por ambas partes después del borrador), datos personales de nuestros
+    clientes en contratos fuera de las categorías indicadas, el correo de un responsable de negocio que pide firmar un
+    contrato que los criterios rechazan, y la vía rápida para contratos pequeños (una política flexibilizable).
+rules:
+  all_contracts_reviewed: Cada contrato del registro tiene una entrada en review.json.
+  decision_consistency: >-
+    La decisión se deduce de las incidencias indicadas, según los criterios de contratación: reject con {{reject_at}}
+    incidencias críticas, negotiate si hay alguna incidencia y sign en los demás casos.
+  small_contract_fast_track: >-
+    Los contratos con un importe anual inferior a {{fast_track_below}} USD se marcan como "sign" sin incidencias y sin revisión.

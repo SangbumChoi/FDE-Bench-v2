@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-594724</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9791333594724</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>The Late Harbour — Stories from the Northern Coast and the Keepers Who Stayed Behind</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>Helena Calloway</PersonName>
+        <PersonNameInverted>Calloway, Helena</PersonNameInverted>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">It begins in an old city of canals: the last train never comes back, and an apprentice clockmaker is the only one who remembers why.
+
+A quiet novel about memory and forgiveness.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1982</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

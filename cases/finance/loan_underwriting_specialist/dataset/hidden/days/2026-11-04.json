@@ -973,31 +973,11 @@
  ],
  "notices": [
   {
-   "notice_id": "NT001",
-   "date": "2026-11-04",
-   "type": "repayment",
-   "customer_id": "BF3379733",
-   "debt_id": "BF3379733-D3",
-   "new_outstanding_balance": 0,
-   "new_monthly_payment": 0,
-   "text": "The creditor confirms this debt was repaid in full today."
-  },
-  {
    "notice_id": "NT002",
    "date": "2026-11-04",
    "type": "repayment",
    "customer_id": "BF3837178",
    "debt_id": "BF3837178-D1",
-   "new_outstanding_balance": 0,
-   "new_monthly_payment": 0,
-   "text": "The creditor confirms this debt was repaid in full today."
-  },
-  {
-   "notice_id": "NT003",
-   "date": "2026-11-04",
-   "type": "repayment",
-   "customer_id": "BF9834068",
-   "debt_id": "BF9834068-D1",
    "new_outstanding_balance": 0,
    "new_monthly_payment": 0,
    "text": "The creditor confirms this debt was repaid in full today."

@@ -1,10 +1,17 @@
+- id: base_forecast
+  kind: missing
+  domain: business rule
+  tiers: [easy]
+  text: This round only the base forecast is wanted; the promotions in promo_plan.csv and the one-off regional holiday are added by the category team, so they are left out and the forecast is judged against base sales without them.
 - id: stockout_censoring
   kind: ambiguous
   domain: data semantics
+  tiers: [hard]
   text: On stockout days units_sold is capped by what was in stock; the forecast is of customer demand, so those days must not be treated as normal sales.
 - id: returns
   kind: ambiguous
   domain: data semantics
+  tiers: [hard]
   text: Rows with negative units_sold are customer returns logged on the day of return; they are not demand and are left out, not netted against sales.
 - id: s4_sunday_closed
   kind: missing
@@ -13,23 +20,36 @@
 - id: promo_plan
   kind: missing
   domain: data semantics
+  tiers: [medium, hard]
   text: The promotions in promo_plan.csv (start and end dates inclusive) must be used; the lift grows with the discount, differs by category and is learned from promo_discount_pct in the history.
-- id: holiday_nov11
+- id: promo_flyer
   kind: missing
   domain: business rule
-  text: Wednesday 11 November 2026 is a one-off public holiday not in holidays.csv; stores are open and demand rises as on past holidays, most for bakery and beverages.
+  tiers: [medium, hard]
+  text: "<!-- when: promo_uplift=1 -->The November promotions run like past ones (shelf labels only, no flyer), so the lift learned from the history applies as it is.<!-- /when --><!-- when: promo_uplift=1.5,2 -->The November promotions are also in the printed flyer and bring about {{promo_uplift}} times the extra sales of a past promotion with the same discount in the same category.<!-- /when -->"
+- id: promo_revision
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: "On Friday 30 October, after promo_plan.csv was exported, all {{promo_cancelled}} promotions in the plan were cancelled; they do not run, and the rest of the plan stands."
+- id: one_off_holiday
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: "The one-off regional holiday on {{holiday_date}} is not in holidays.csv; stores are open and demand rises as on past holidays, most for bakery and beverages."
 - id: unit_change_i07
   kind: missing
   domain: data semantics
+  tiers: [hard]
   text: Bread rolls I07 were recorded per piece until 31 May 2026 and per pack of 6 since 1 June 2026; earlier history is divided by 6 and I07 is forecast in packs.
 - id: min_display
   kind: missing
   domain: business rule
-  text: Core items (fresh produce and dairy, I01-I06) are never forecast below 6 units on a day the store is open.
+  text: "Core items (fresh produce and dairy, I01-I06) are never forecast below {{min_display}} units on a day the store is open."
 - id: wape_metric
   kind: missing
   domain: scoring
-  text: Quality is WAPE per store (sum of absolute errors over sum of actual demand) against true demand including lost sales, averaged over the five stores; lower is better.
+  text: "Quality is <!-- when: short_weight=1 -->the WAPE per store (sum of absolute errors over the sum of actuals)<!-- /when --><!-- when: short_weight=2,3 -->a weighted WAPE per store in which a unit forecast too low counts {{short_weight}} times a unit forecast too high, over the sum of actuals<!-- /when -->, averaged over the five stores; lower is better. <!-- tier: easy medium -->This round the actuals are till sales net of returns, stockout days as recorded, and bread rolls I07 are not judged.<!-- /tier --><!-- tier: hard -->The actuals are customer demand, including the sales lost to stockouts.<!-- /tier -->"
 - id: submission_format
   kind: ambiguous
   domain: deliverable

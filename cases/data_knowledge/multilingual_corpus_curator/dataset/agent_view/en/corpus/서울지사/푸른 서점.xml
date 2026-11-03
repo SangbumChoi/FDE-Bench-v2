@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-622625</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9794372622625</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>푸른 서점</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Pureun Seojeom</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>정하은</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Jung Ha-eun</PersonName></AlternativeName>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">이야기는 운하가 흐르는 오래된 도시에서 시작된다. 사십 년 늦은 편지가 도착하자 그 이유를 기억하는 사람은 은퇴한 지도 제작자뿐이다.
+
+고향과 먼 곳에 관한 조용한 소설.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">2000</Date></PublishingDate>
+      <PublishingDate><PublishingDateRole>11</PublishingDateRole><Date dateformat="05">1985</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

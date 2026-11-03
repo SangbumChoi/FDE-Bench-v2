@@ -1,18 +1,26 @@
 - id: efficiency
-  text: 효율은 왕복 84.6%를 한 번 적용하는 것이 아니라 충전 92%, 방전 92%로 각각 계산합니다. P MW로 15분 충전하면 0.25*P*0.92 MWh가 늘고, P MW로 방전하면 0.25*P/0.92 MWh가 줄어듭니다.
+  text: 효율은 왕복 84.6%를 한 번 적용하는 것이 아니라 방향별로 충전 {{eta_charge_pct}}%, 방전 {{eta_discharge_pct}}%로 계산합니다. P MW로 15분 충전하면 0.25*P*{{eta_charge}} MWh가 늘고, P MW로 방전하면 0.25*P/{{eta_discharge}} MWh가 줄어듭니다.
 - id: soc_window
-  text: 보증 조건상 충전상태는 언제나 10%~90%(4~36 MWh)여야 하며, 제조사의 5%~95%보다 좁습니다.
+  text: '보증 조건상 충전상태는 언제나 {{soc_min}}%~{{soc_max}}%({{soc_min_mwh}}~{{soc_max_mwh}} MWh)여야 하며<!-- when: soc_window=10-90,15-85 -->, 제조사의 5%~95%보다 좁습니다<!-- /when --><!-- when: soc_window=5-95 -->, 제조사의 범위와 같습니다<!-- /when -->.'
 - id: start_end_soc
-  text: 배터리는 한 주를 50%(20 MWh)로 시작하고 50% 이상으로 마쳐야 합니다.
+  text: 배터리는 한 주를 50%(20 MWh)로 시작하고 {{end_soc}}%({{end_soc_mwh}} MWh) 이상으로 마쳐야 합니다.
 - id: export_cap
-  text: 송전 한도는 계약서의 30 MW가 아니라 임시로 25 MW입니다. 방전 중에는 태양광 + 방전 − 충전이 25 MW를 넘으면 안 되고, 25 MW를 넘는 태양광은 배터리가 흡수하지 않으면 제한됩니다.
+  text: 송전 한도는 계약서의 30 MW가 아니라 임시로 {{export_cap}} MW입니다. 방전 중에는 태양광 + 방전 − 충전이 {{export_cap}} MW를 넘으면 안 되고, {{export_cap}} MW를 넘는 태양광은 배터리가 흡수하지 않으면 제한됩니다.
 - id: grid_charging
-  text: 태양광 충전은 언제든 가능하지만 계통 수전은 현지 시각 00:00~05:45에 시작하는 구간에서만 가능하며(최대 20 MW), 한 구간에서 충전과 방전을 동시에 하지 않습니다.
+  text: '<!-- tier: easy -->이번 주에는 사업장이 언제든 계통에서 충전할 수 있으며(최대 20 MW)<!-- /tier --><!-- tier: medium hard -->태양광 충전은 언제든 가능하지만 계통 수전은 현지 시각 {{import_from}}~{{import_last}}에 시작하는 구간에서만 가능하며(최대 20 MW)<!-- /tier -->, 한 구간에서 충전과 방전을 동시에 하지 않습니다.'
 - id: quarter_settlement
   text: 정산은 15분 단위이며 시간별 가격이 그 시간의 15분 구간 4개에 모두 적용되고, MW는 구간 평균, 전력량은 MW × 0.25입니다.
 - id: dst_clock
   text: 시각은 현지 시각이고 3월 28일 일요일에 서머타임이 시작되어 그날은 23시간, 02:00~02:45 행이 없으며 계획은 정확히 668행입니다.
 - id: evening_reserve
-  text: 회사 방침상 매일 17:00~21:00 사이에는 언제나 충전상태를 20% 이상으로 유지합니다.
+  text: 회사 방침상 매일 {{reserve_from}}~{{reserve_to}} 사이에는 언제나 충전상태를 {{reserve_pct}}%({{reserve_mwh}} MWh) 이상으로 유지합니다.
+- id: degradation
+  text: 계량점 기준 충전량과 방전량 1 MWh마다 열화 비용 {{degradation}}유로가 들며, 이 비용은 이익에서 뺍니다.
 - id: profit_scoring
-  text: 실제 가격으로 사업장 송전 수입에서 수전 비용과 태양광 단독 수입(25 MW 상한)을 빼고, 충전량과 방전량 합계 1 MWh당 5유로를 빼서 평가합니다.
+  text: '실제 가격으로 사업장 송전 수입에서 수전 비용과 태양광 단독 수입(둘 다 송전 한도로 제한)을 빼고<!-- tier: medium hard -->, 충전량과 방전량 합계에 대한 열화 비용도 빼서<!-- /tier --> 평가합니다.'
+- id: works_end
+  text: 변전소 공사가 일찍 끝납니다. {{export_cap}} MW 한도는 {{works_end}} 00:00까지만 적용되고, 그 뒤로는 계약서의 30 MW가 다시 적용됩니다.
+- id: dso_limit
+  text: 배전사업자가 {{dso_day}} 18:00~21:00 사업장 송전을 {{dso_mw}} MW로 제한합니다. 이 시간에 방전할 때는 태양광 + 방전 − 충전이 {{dso_mw}} MW 이하여야 합니다.
+- id: maintenance_outage
+  text: '{{outage_day}} 08:00~20:00에는 인버터 점검으로 배터리가 정지되므로, 이 구간에는 충전도 방전도 하지 않습니다.'

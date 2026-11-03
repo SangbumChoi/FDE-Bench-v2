@@ -1,0 +1,17 @@
+{
+  "derived": {
+    "withdrawal_basis": "notice",
+    "withdrawal_pct": 10
+  },
+  "params": {
+    "large_order": 9,
+    "liquidation_days": 3,
+    "max_drawdown": "none",
+    "restricted": "NEXO, PYRO",
+    "sector_cap": 35,
+    "stock_cap": 18,
+    "withdrawal": "notice_10"
+  },
+  "rule_seed": 20,
+  "tier": "medium"
+}

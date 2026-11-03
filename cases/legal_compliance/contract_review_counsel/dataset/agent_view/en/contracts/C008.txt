@@ -1,0 +1,33 @@
+SUPPLY AGREEMENT No. C008
+Draft of 2026-10-03
+
+This Agreement is made between Brightvale Holdings (the "Customer") and Hartwell Materials Ltd (the "Supplier").
+
+Article 1. Scope and Term
+1.1 The Supplier provides the Customer with packaging materials and industrial components.
+1.2 This Agreement starts on the date of signature and runs for an initial term of one year. It then renews automatically for successive one-year periods unless either party gives written notice of non-renewal at least 60 days before the end of the current term.
+
+Article 2. Fees and Payment
+2.1 The fees are set out in the order forms agreed between the parties.
+2.2 Undisputed invoices are payable net 30 from the date of receipt.
+
+Article 3. Confidentiality
+Each party shall keep confidential all business information received from the other party and use it only for the purposes of this Agreement. This obligation survives the end of the Agreement for three years.
+
+Article 4. Personal Information
+Any information about identifiable individuals that the Supplier receives in performing this Agreement may be used solely as the Customer directs. The Supplier shall keep it secure, report any loss or unauthorised access to the Customer without delay and, when the Agreement ends, erase it or hand it back.
+
+Article 5. Indemnity
+The Customer shall indemnify and hold harmless the Supplier against all third-party claims, losses and costs arising out of or in connection with this Agreement.
+
+Article 6. Limitation of Liability
+Except for liability for death, personal injury or fraud, the total liability of either party under this Agreement shall not exceed USD 321,000.
+
+Article 7. Termination
+Either party may terminate this Agreement with immediate effect by written notice if the other party commits a material breach and fails to remedy it within 30 days of being notified.
+
+Article 8. Governing Law and Disputes
+This Agreement is governed by the laws of Switzerland. Any dispute arising from it shall be finally resolved by arbitration seated in Zurich.
+
+Signed for and on behalf of the Customer: ______________________
+Signed for and on behalf of the Supplier: ______________________

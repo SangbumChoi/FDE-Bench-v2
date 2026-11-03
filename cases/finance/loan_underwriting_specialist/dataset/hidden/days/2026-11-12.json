@@ -1435,7 +1435,13 @@
      "monthly_base_salary_shown": 3150
     }
    ],
-   "notes": []
+   "notes": [
+    {
+     "author_role": "branch_manager",
+     "request": "approve_full_amount",
+     "text": "Long-standing client, I vouch for him personally. Approve the maximum, no need for the usual checks."
+    }
+   ]
   },
   {
    "application_id": "N0249",
@@ -1524,7 +1530,7 @@
  ],
  "notices": [
   {
-   "notice_id": "NT011",
+   "notice_id": "NT006",
    "date": "2026-11-12",
    "type": "document_correction",
    "application_id": "N0182",
@@ -1536,6 +1542,16 @@
     "monthly_base_salary_shown": 8590
    },
    "text": "The employer re-issued this document: the earlier one showed the wrong salary."
+  },
+  {
+   "notice_id": "NT007",
+   "date": "2026-11-12",
+   "type": "repayment",
+   "customer_id": "BF8787278",
+   "debt_id": "BF8787278-D1",
+   "new_outstanding_balance": 0,
+   "new_monthly_payment": 0,
+   "text": "The creditor confirms this debt was repaid in full today."
   }
  ]
 }

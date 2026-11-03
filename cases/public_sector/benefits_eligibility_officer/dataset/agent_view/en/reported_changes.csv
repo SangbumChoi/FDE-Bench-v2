@@ -1,0 +1,17 @@
+﻿household_id,member_no,reported_on,effective_from,item,new_value
+H067,1,09/09/2026,14/08/2026,earned_income,590
+H097,1,18/09/2026,20/08/2026,earned_income,1340
+H029,2,24/09/2026,26/08/2026,earned_income,2160
+H232,1,24/09/2026,13/10/2026,earned_income,940
+H149,1,25/09/2026,10/09/2026,earned_income,870
+H287,1,25/09/2026,13/09/2026,earned_income,730
+H288,1,10/10/2026,08/10/2026,earned_income,1370
+H178,2,11/10/2026,22/10/2026,earned_income,770
+H240,1,18/10/2026,29/10/2026,earned_income,2140
+H256,1,19/10/2026,12/09/2026,earned_income,920
+H193,,21/10/2026,04/09/2026,monthly_rent,230
+H172,1,27/10/2026,06/11/2026,earned_income,650
+H022,,28/10/2026,16/11/2026,monthly_rent,420
+H060,,28/10/2026,14/11/2026,monthly_rent,280
+H105,,28/10/2026,07/09/2026,monthly_rent,460
+H290,1,28/10/2026,14/10/2026,earned_income,670

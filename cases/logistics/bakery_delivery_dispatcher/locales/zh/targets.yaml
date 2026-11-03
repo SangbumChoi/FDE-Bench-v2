@@ -1,18 +1,28 @@
 - id: road_distance
   text: 道路距离按直线距离的 1.3 倍计算；坐标是相对厨房 (0, 0) 的公里数。
-- id: speeds
-  text: 07:00 之前出发的路段按 30 公里/小时，07:00 及之后出发的路段按 20 公里/小时。
+- id: speed
+  text: 整个早上车速都按平均 25 公里/小时计算；这个周一是学校假期，没有早高峰。
+- id: rush_hour
+  text: "{{rush_start}} 之前车速 30 公里/小时，从 {{rush_start}} 起 20 公里/小时（早高峰）；到 {{rush_start}} 时仍在路上的车从那一刻起减速。"
 - id: service_time
   text: 每家门店卸货 4 分钟，另加每托盘 0.2 分钟。
 - id: shift
-  text: 车辆最早 05:00 出发，必须在 09:30 前回到厨房。
-- id: closed_c11
-  text: 南山店（C11）本周装修停业，不能送货。
+  text: "车辆最早 05:00 出发，必须在 {{shift_end}} 前回到厨房。"
+- id: tray_limit
+  text: "最大托盘数（120）是货架能放的数量，但这周用加深周转箱，每辆车最多装 {{van_capacity}} 个托盘。"
+- id: closed_cafe
+  text: "{{closed_cafe}}本周装修停业，不能送货。"
 - id: cold_chain
   text: 合作品牌门店销售冷藏商品，只能由冷藏车 V4 配送。
+- id: partner_this_week
+  text: 这周合作方自己配送冷藏商品，所以合作品牌门店哪辆车都可以送。
 - id: one_visit
   text: 每家门店的托盘由一辆车一次送完，不能拆分配送。
 - id: premium_first
-  text: 每条路线上旗舰店必须排在标准店之前。
+  text: "<!-- when: premium_first=true -->每条路线上旗舰店必须排在标准店之前。<!-- /when --><!-- when: premium_first=false -->旗舰店优先的习惯这周暂停：路线上的门店可以按任意顺序配送。<!-- /when -->"
 - id: lateness
-  text: 晚于最晚到货时间到达是允许的，但每晚一分钟按三分钟计入总路线时间；早于开门时间到达需要等待。
+  text: "晚于最晚到货时间到达是允许的，但每晚一分钟的损失相当于车辆多跑 {{late_cost}} 分钟；早于开门时间到达需要等待。"
+- id: workshop
+  text: 周一 V2 在修理厂做刹车检查，要到 06:40 才好，06:40 之前不能从厨房出发。
+- id: manager_pressure
+  text: 东湖店（C07）店长要求 06:30 前做第一站，这不是规定；她和其他门店一样，在开门时间和最晚到货之间收到托盘即可。

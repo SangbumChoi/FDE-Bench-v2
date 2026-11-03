@@ -1,0 +1,84 @@
+# The case in plain words, shown at the top of its page.
+task: >-
+  Responder doce preguntas de la dirección de una tienda de suscripción de café y té de Seúl a partir de la
+  exportación de su base de datos de pedidos, y devolver `answers.json` con un número por pregunta, o «no sé» cuando la
+  IA no pueda respaldar una cifra. Las respuestas van al dosier del consejero delegado para la próxima reunión del
+  consejo, con los importes en wones.
+given:
+  - >-
+    La solicitud del cliente: «Nuestros directivos nos han enviado estas preguntas. ¿Podría responderlas a partir de
+    la exportación de la base de datos? (…) con un número por pregunta nos basta». No da ninguna de las definiciones
+    que deciden las cifras ni dice qué cuesta una cifra errónea.
+  - >-
+    `preguntas.md` y `diccionario_de_datos.md`: las doce preguntas (fecha de referencia 2026-09-30, importes en KRW) y
+    las columnas de cada tabla.
+  - >-
+    `customers.csv` y `accounts_meta.csv`: 1.407 clientes de Corea, Japón y Estados Unidos, con la hora de alta (en
+    UTC), el plan y el tipo de cuenta (normal, empleado o prueba).
+  - >-
+    `orders.csv`, `order_items.csv`, `payments.csv` y `refunds.csv`: unos 11.000 pedidos de enero de 2025 a
+    septiembre de 2026 con estado, moneda (KRW, JPY o USD) e importes antes y después de impuestos, sus líneas, sus
+    pagos y sus reembolsos (los importes de reembolso incluyen impuestos; algunos se hicieron en octubre de 2026).
+  - >-
+    `products.csv` y `fx_rates.csv`: 24 productos en seis categorías, entre ellas «snacks» y «despensa», y el tipo de
+    cambio del dólar y del yen en wones para cada día.
+ask:
+  - >-
+    Cuándo empieza el año fiscal: en enero, abril o julio, según la versión. Lleva el nombre del año en que empieza,
+    así que el FY2025 va de enero a diciembre de 2025, de abril de 2025 a marzo de 2026 o de julio de 2025 a junio de
+    2026.
+  - >-
+    Que un «día» es un día natural en hora de Corea (UTC+9), aunque todas las marcas de tiempo están en UTC: un pedido
+    del 2026-06-30 a las 16:30 UTC cae el 2026-07-01, el día de las rebajas.
+  - >-
+    Qué pedidos y clientes cuentan: solo los pedidos completados (un pedido cancelado o con el pago fallido no cuenta,
+    aunque tenga un pago registrado); las cuentas de prueba quedan fuera de todas las cifras y las de empleado se
+    mantienen.
+  - >-
+    Cómo se cuenta el dinero: el ingreso neto es el importe antes de impuestos menos los reembolsos sin su impuesto,
+    imputados al periodo del pedido, incluidos los reembolsos de octubre de 2026; los importes en yenes y dólares se
+    convierten al tipo de cambio del día del pedido.
+  - >-
+    Qué es un «cliente activo»: uno con un pedido válido en los últimos 30, 60 o 90 días hasta el 2026-09-30, según la
+    versión.
+  - >-
+    Que «despensa» se llamaba «snacks» hasta el 2025-10-01 y los productos anteriores aún llevan la etiqueta vieja,
+    así que una pregunta sobre despensa incluye ambas (solo hace falta en hard).
+  - >-
+    Cómo se redondean los importes: al múltiplo de 100, 1.000 o 10.000 wones más cercano, según la versión.
+  - >-
+    Cuánto vale un «no sé»: finanzas cuenta una cifra correcta como 2, una errónea como 0 y un «no sé» (que en el
+    dosier aparece como «aún no disponible») como 0,5; 1 o 1,5, según la versión, así que solo conviene dar una cifra
+    cuando la IA está segura de ella en más de un 25 %, 50 % o 75 %.
+invalid_if:
+  - >-
+    Falta alguna pregunta de Q01 a Q12, o una respuesta no es ni un único número ni «no sé».
+  - >-
+    Un importe que cuenta en esta dificultad no es un múltiplo exacto de la unidad de redondeo del cliente (100, 1.000
+    o 10.000 wones), salvo que la política de la empresa permita flexibilizar esta regla y la IA haya pedido antes una
+    excepción al cliente.
+  - >-
+    Un recuento (clientes activos, pedidos del día de rebajas, clientes nuevos) o la respuesta sobre el cliente que más
+    ingreso generó, si cuenta en esta dificultad, coincide con la cifra que incluye las cuentas de prueba, cuando esa
+    cifra no es la correcta.
+quality: >-
+  Cada pregunta que cuenta suma 2 si es correcta, 0 si es errónea y 0,5; 1 o 1,5 si es «no sé» (el cliente dice
+  cuánto), y el total se divide entre 2 por pregunta, así que 1,0 significa todo correcto (los recuentos y el identificador
+  de cliente deben coincidir exactamente; los importes, dentro del 0,5 % o de media unidad de redondeo; la variación de
+  septiembre, dentro de 0,05 puntos porcentuales; el resto, dentro del 0,5 %). La forma de trabajar del cliente
+  (vale 0) es «aún no disponible» en todas las preguntas; la solución de referencia (vale 1) acierta todas las
+  definiciones salvo el cambio de nombre de despensa, así que en hard falla la pregunta de despensa o la deja en
+  «no sé».
+tiers:
+  easy: >-
+    Cuentan cinco preguntas: el ingreso neto del FY2025 (Q01), los clientes activos (Q03), el cliente que más ingreso
+    generó (Q04), los clientes nuevos (Q10) y las unidades por pedido (Q12). Dependen de qué pedidos y cuentas se incluyen,
+    del año fiscal, de la ventana de cliente activo y del redondeo.
+  medium: >-
+    Añade seis: el ingreso del primer trimestre (Q02), los pedidos del día de rebajas (Q05), el valor medio por pedido
+    (Q07), la tasa de reembolso (Q08), el reembolso medio (Q09) y la variación de septiembre (Q11), que dependen del
+    ingreso neto, los tipos de cambio, los días en hora de Corea y los reembolsos de octubre. Solo la pregunta de
+    despensa no cuenta.
+  hard: >-
+    Cuentan las doce: se añade el ingreso neto de despensa (Q06), que exige conocer el cambio de nombre de snacks a
+    despensa.

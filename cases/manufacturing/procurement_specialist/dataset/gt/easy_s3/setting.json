@@ -1,0 +1,20 @@
+{
+  "derived": {
+    "hold_supplier": {
+      "en": "Hanbit Electronics (S01)",
+      "es": "Hanbit Electronics (S01)",
+      "ja": "Hanbit Electronics（S01）",
+      "ko": "한빛전자(S01)",
+      "zh": "Hanbit Electronics（S01）"
+    },
+    "hold_until": 4
+  },
+  "params": {
+    "max_share": 80,
+    "quality_hold": "S01-W4",
+    "safety_weeks": 1.5,
+    "usd_krw": 1450
+  },
+  "rule_seed": 3,
+  "tier": "easy"
+}

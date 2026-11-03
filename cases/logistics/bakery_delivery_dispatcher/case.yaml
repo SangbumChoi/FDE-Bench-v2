@@ -3,7 +3,38 @@ role: Bakery Delivery Dispatcher
 task_type: Combinatorial Optimization
 field: logistics
 seed: 20261025
-objective: minimize          # total route minutes + 3 x late minutes
+objective: minimize          # total route minutes + late_cost x late minutes
+tiers:                       # one world and the same data in every setting
+  easy: >-
+    The routing core: this week's tray limit per van, the drivers' shift (out from 05:00, back by the shift end),
+    one visit per café, the café that is closed this week, a constant 25 km/h (no rush hour this Monday) and the
+    lateness cost. The partner's chilled range travels with the partner this week, so any van may serve the
+    partner-brand cafés, and the premium-first habit is suspended.
+  medium: >-
+    Easy plus the partner cold chain (partner-brand cafés by the refrigerated V4 only) and the premium-first habit
+    (premium cafés before standard ones on every route), when the rule seed draws it.
+  hard: >-
+    Medium plus the morning rush (30 km/h before a drawn time, 20 km/h from it, also on a leg already under way), a
+    dated event (V2 is in the workshop until 06:40 on Monday) and pressure from a premium café manager who insists
+    on being the first stop of the morning (not a rule).
+params:                      # the client's rule values; a rule seed draws each one
+  closed_cafe:               # the café closed this week for renovation (names as the data gives them)
+    values: [C11, C03, C14]
+    labels:
+      C11: {zh: 南山店（C11）, en: South Hill café (C11), ko: 남산점(C11), ja: 南山店（C11）, es: Cafetería Colina Sur (C11)}
+      C03: {zh: 北站店（C03）, en: North Station café (C03), ko: 북역점(C03), ja: 北駅店（C03）, es: Cafetería Estación Norte (C03)}
+      C14: {zh: 梧桐里店（C14）, en: Maple Row café (C14), ko: 단풍길점(C14), ja: 楓並木店（C14）, es: Cafetería Paseo de los Arces (C14)}
+  late_cost:                 # one minute late at a café costs as much as this many minutes of van time
+    values: [3, 2, 5]
+  shift_end:                 # every van back at the kitchen by then
+    values: ["09:30", "09:00", "10:00"]
+  van_capacity:              # trays per van this week (max_trays in the data is 120); fixed in hard
+    values: {easy: [100, 110, 120], medium: [100, 110, 120], hard: [110]}
+  rush_start:                # hard: 30 km/h before it, 20 km/h from it; easy and medium: 25 km/h all morning
+    values: {easy: [none], medium: [none], hard: ["07:00", "06:30", "07:30"]}
+  premium_first:             # whether the premium-first habit holds this week (medium and hard)
+    values: {easy: [false], medium: [true, false], hard: [true, false]}
+rule_seeds: [5, 13, 58]      # the first one draws the medium and hard headline (case.py _headline)
 deliverables: [routes.json]
 deliverable_spec: |
   routes.json = {"routes": [{"van": "<van id, e.g. V1>", "depart": "HH:MM (optional, default 05:00)",
@@ -12,19 +43,26 @@ deliverable_spec: |
 rules:
   - id: van_capacity
     class: physical
-    description: A van carries at most 120 trays.
+    description: A van carries at most {{van_capacity}} trays this week (its racks hold 120).
   - id: shift_window
     class: physical
-    description: Vans leave no earlier than 05:00 and are back at the kitchen by 09:30.
+    description: Vans leave no earlier than 05:00 and are back at the kitchen by {{shift_end}}.
+  - id: van_ready
+    class: physical
+    tiers: [hard]
+    description: V2 is in the workshop on Monday until 06:40 and leaves the kitchen no earlier than that.
   - id: closed_cafe
     class: physical
-    description: No delivery to a café that is closed this week.
+    description: No delivery to the café that is closed this week ({{closed_cafe}}).
   - id: serve_each_once
     class: contractual
     description: Every open café receives all its trays in exactly one visit.
   - id: cold_chain
     class: contractual
+    tiers: [medium, hard]
     description: Partner-brand cafés (chilled products) are served only by the refrigerated van.
   - id: premium_first
     class: business_policy
+    tiers: [medium, hard]
+    when: {premium_first: [true]}
     description: On every route, premium cafés are visited before standard cafés.

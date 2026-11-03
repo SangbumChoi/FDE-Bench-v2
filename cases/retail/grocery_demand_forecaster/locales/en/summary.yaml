@@ -1,0 +1,47 @@
+# The case in plain words, shown at the top of its page.
+task: >-
+  A grocery chain with five stores places its orders from a daily sales forecast. The AI forecasts how much of each
+  of its 12 products each store will sell on every day from Monday 2 to Sunday 15 November 2026, and delivers
+  `forecast.csv`: one row per store, product and day (840 rows), in each product's current sales unit.
+given:
+  - "The client's request: three sentences asking how much of each product each of the five stores will sell every day for the two weeks from Monday 2 November, because \"we place our orders from these numbers\". It says nothing about promotions, holidays, stockouts or how the forecast is judged."
+  - "`sales_history.csv`: two years of daily sales (4 November 2024 to 1 November 2026): units sold per store, product and trading day, that day's promotion discount (0 = none) and a stockout flag (yes on 4,390 rows), plus 1,286 customer-return rows with negative units; 43,718 rows in all. Bread rolls (I07) are counted per roll until 31 May 2026 and per pack of 6 from 1 June, which the file does not say."
+  - "`promo_plan.csv`: the 14 promotions planned for the two weeks (store, product, start and end date, 10, 20 or 30% off): 7 on beverages, 3 on bakery, 2 on dairy and 2 on fresh produce."
+  - "`holidays.csv`: the 12 public holidays of the past two years (Christmas Day, New Year's Day, Labour Day and a spring, summer and autumn holiday, each twice). None falls in the two weeks, and the one-off regional holiday in November is not listed."
+  - "`stores.csv` and `items.csv`: the five stores (four supermarkets and the small Old Town store, S4) and the 12 products in four categories (fresh produce I01–I03, dairy I04–I06, bakery I07–I09, beverages I10–I12), each with its sales unit, such as kg, bottle or pack of 6."
+ask:
+  - "What the forecast is judged against. On easy and medium: what the tills record, with customer returns (the rows with negative units) subtracted from that day's sales and stockout days taken as recorded; on easy, also without the effect of the promotions and the holiday. On hard: customer demand. On a stockout day the shelf ran empty and demand was higher than sales, so those days are not normal sales; returns are not demand, so their rows are left out."
+  - "What to do with the promotions in `promo_plan.csv`. On easy, leave them out: the category team adds them later, so those days are forecast as normal days. On medium and hard, include them (start and end dates both count), with the extra sales learned from past promotions by category and discount. Depending on the version, the November promotions are also in the printed flyer and bring 1.5 or 2 times the extra sales of a past promotion, or there is no flyer and the past effect applies as it is."
+  - "A one-off regional holiday that is not in `holidays.csv`. On easy it is left out like the promotions: that day is forecast as a normal day of its weekday. On medium and hard it falls on Monday 9, Wednesday 11 or Friday 13 November, depending on the version (the city's anniversary); all stores open, and sales rise as on past holidays, most for bakery and beverages."
+  - "On hard only: on Friday 30 October, after `promo_plan.csv` was exported, all promotions of one category were cancelled and will not run: beverages, dairy or bakery, depending on the version."
+  - "Bread rolls (I07): not judged on easy and medium, though their rows must still be in the file. On hard they are judged, and the history before 1 June 2026 must be divided by 6 so that it counts packs."
+  - "The Old Town store (S4) is closed on Sundays, which is why the history has no Sunday rows for it; its Sunday forecasts must be 0."
+  - "The client's habit for fresh produce and dairy (I01–I06): never forecast fewer than 4, 6 or 8 units on a day the store is open, depending on the version, so the shelves never look empty."
+  - "What a shortfall costs: a unit forecast too low counts 1, 2 or 3 times as much as a unit forecast too high, depending on the version (at 1 both count the same)."
+invalid_if:
+  - "Cannot be read: no `forecast.csv`, a store or product that is not in the data, a date outside 2–15 November 2026, or a forecast that is not a number."
+  - "Misses a row or has one twice: every store, product and day needs exactly one row, 840 in all, bread rolls (I07) included even where they are not judged."
+  - "Has a negative forecast."
+  - "Forecasts anything but 0 for the Old Town store (S4) on a Sunday (8 and 15 November)."
+  - "Forecasts a fresh produce or dairy product (I01–I06) below 4, 6 or 8 units (depending on the version) on a day the store is open, unless the company policy lets this rule bend and the AI asked the client for an exception first."
+quality: >-
+  Lower is better: for each store, the units forecast too many plus 1, 2 or 3 times (depending on the version) the
+  units forecast too few, as a share of the actual total over its products and days, averaged over the five stores.
+  The client's own way (score 0) repeats last week's sales of the same weekday (26 October to 1 November) for both
+  weeks, with S4's Sundays at 0 and the minimum for fresh produce and dairy, and ignores promotions, the holiday,
+  stockouts and the cost of a shortfall (an error of about 27% to 68% in the versions on this page); the reference solution (score
+  1) learns each store and product's recent level, weekday pattern and season and the effect of past promotions and
+  holidays from the history, then aims higher when a shortfall costs more (about 14% to 27%).
+tiers:
+  easy: >-
+    The base forecast only: a normal day per store and product, judged against till sales net of returns without the
+    effect of the promotions and the holiday. The S4 Sunday closure, the minimum for fresh produce and dairy and the
+    cost of a shortfall apply; bread rolls (I07) are not judged.
+  medium: >-
+    Adds the promotions in `promo_plan.csv` (in some versions with the flyer's 1.5 or 2 times the past extra sales)
+    and the one-off regional holiday on 9, 11 or 13 November. Still judged against till sales net of returns, without
+    bread rolls.
+  hard: >-
+    Judged against customer demand instead of till sales: stockout days understate demand and returns are not demand.
+    Bread rolls are judged, so their switch from single rolls to packs of 6 on 1 June 2026 matters, and one category's
+    promotions (beverages, dairy or bakery) were cancelled on 30 October, after `promo_plan.csv` was exported.

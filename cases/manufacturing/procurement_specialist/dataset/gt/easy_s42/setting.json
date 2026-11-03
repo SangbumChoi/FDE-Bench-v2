@@ -1,0 +1,20 @@
+{
+  "derived": {
+    "hold_supplier": {
+      "en": "Kowon Passive (S07)",
+      "es": "Kowon Passive (S07)",
+      "ja": "Kowon Passive（S07）",
+      "ko": "고원패시브(S07)",
+      "zh": "Kowon Passive（S07）"
+    },
+    "hold_until": 3
+  },
+  "params": {
+    "max_share": 90,
+    "quality_hold": "S07-W3",
+    "safety_weeks": 1,
+    "usd_krw": 1320
+  },
+  "rule_seed": 42,
+  "tier": "easy"
+}

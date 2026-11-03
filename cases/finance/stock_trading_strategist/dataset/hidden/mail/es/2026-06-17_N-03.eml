@@ -1,7 +1,7 @@
 From: Oficina del cliente <office@client.example>
 To: Mesa de negociación <trading.desk@desk.example>
 Date: Wed, 17 Jun 2026 17:40:00 +0000
-Subject: Retirada del 25 % de la cuenta
+Subject: Retirada de la cuenta
 Message-ID: <N-03@desk.example>
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -9,7 +9,7 @@ MIME-Version: 1.0
 
 Estimada mesa:
 
-Retiraremos el 25 % de la cuenta, según lo previsto en nuestro contrato. El pago sale al cierre del 2026-06-30. Por favor, asegúrense de que el efectivo esté disponible para entonces.
+Haremos nuestra retirada de la cuenta, según lo previsto en nuestro contrato. El pago sale al cierre del 2026-06-30. Por favor, asegúrense de que el efectivo esté disponible para entonces.
 
 Saludos cordiales,
 Oficina del cliente

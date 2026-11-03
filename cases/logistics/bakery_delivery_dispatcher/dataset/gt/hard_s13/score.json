@@ -1,0 +1,19 @@
+{
+  "baseline_objective": 1269.3079695565386,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.37231044,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "late_minutes": 0.0,
+    "route_minutes": 472.58
+  },
+  "objective": 472.57661374823317,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

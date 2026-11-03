@@ -1176,12 +1176,6 @@
      "monthly_payment": 528
     },
     {
-     "debt_id": "BF6957116-D2",
-     "type": "installment",
-     "outstanding_balance": 20510,
-     "monthly_payment": 1794
-    },
-    {
      "debt_id": "BF6957116-D3",
      "type": "credit_line",
      "outstanding_balance": 6110,
@@ -1245,7 +1239,7 @@
  ],
  "notices": [
   {
-   "notice_id": "NT021",
+   "notice_id": "NT020",
    "date": "2026-11-24",
    "type": "document_correction",
    "application_id": "N0426",
@@ -1259,11 +1253,11 @@
    "text": "The employer re-issued this document: the earlier one showed the wrong salary."
   },
   {
-   "notice_id": "NT022",
+   "notice_id": "NT021",
    "date": "2026-11-24",
    "type": "repayment",
-   "customer_id": "BF1211669",
-   "debt_id": "BF1211669-D1",
+   "customer_id": "BF4539110",
+   "debt_id": "BF4539110-D1",
    "new_outstanding_balance": 0,
    "new_monthly_payment": 0,
    "text": "The creditor confirms this debt was repaid in full today."

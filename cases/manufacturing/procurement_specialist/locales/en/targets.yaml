@@ -1,30 +1,26 @@
 - id: bom_explosion
   kind: ambiguous
   domain: data semantics
-  text: Component demand per week is the boards of each model built that week (production_plan.csv) times qty_per_board in bom.csv, added over both models; all quantities are pieces.
-- id: round_scope_easy
+  text: Component demand in a week is the boards of each model built that week (production_plan.csv) times qty_per_board in bom.csv, added over both models, and it is needed in that same week; goods that arrive in a week can be used for that whole week's builds (no assembly offset).
+- id: lead_time_business_days
+  kind: ambiguous
+  domain: data semantics
+  text: "lead_time_days counts business days (Monday to Friday), not calendar days<!-- tier: easy -->; this round divide it by 5 and round up to get whole weeks (12 days = 3 weeks), and an order placed in week w with L weeks can be used from week w+L<!-- /tier --><!-- tier: medium hard -->, counted from the Monday of the order week; the goods can be used from the first week that starts after they arrive<!-- /tier -->."
+- id: scope_whole_weeks
   kind: missing
   domain: business rule
   tiers: [easy]
-  text: This round plans at list prices (unit_price, no price breaks), without the flash change (C04 in all ten weeks, no C25, validity columns ignored), and as if suppliers deliver on the promised week and confirm everything (delivery history and allocations are not used).
-- id: round_scope_medium
+  text: This round ignores holidays in the lead times; every week counts as five business days, the Christmas and New Year weeks included.
+- id: holiday_weeks
   kind: missing
-  domain: business rule
-  tiers: [medium]
-  text: This round plans without the flash change (C04 in all ten weeks, no C25, validity columns ignored) and as if suppliers deliver on the promised week and confirm everything (delivery history and allocations are not used).
-- id: lead_time_weeks
-  kind: ambiguous
-  domain: data semantics
-  tiers: [easy]
-  text: Lead times count as whole weeks this round (lead_time_days / 5 rounded up, no holiday calendar); an order placed on the Monday of week w with L weeks can be used from week w+L for that whole week's demand.
-- id: business_day_lead_times
-  kind: ambiguous
-  domain: data semantics
+  domain: calculation
   tiers: [medium, hard]
-  text: Lead times are in business days counted from the Monday of the order week; W5 and W6 (Christmas and New Year) have only 4 business days, the other weeks 5, and goods are usable from the first week starting after delivery.
+  text: W5 (21-25 December, Christmas) and W6 (28 December - 1 January, New Year's Day) have only four business days; every other week has five.
 - id: usd_planning_rate
   kind: missing
   domain: calculation
+  tiers: [medium]
+  param: usd_krw
   text: "Pacific Parts (S04) quotes in US dollars; all costs and the budget are in KRW, converted at the fixed planning rate of {{usd_krw}} KRW per USD."
 - id: moq_per_line
   kind: ambiguous
@@ -35,34 +31,72 @@
   domain: calculation
   tiers: [medium, hard]
   text: Price breaks apply per order line and to the whole line (all-units discount); quantities from different weeks are never combined to reach a break.
+- id: scope_list_prices
+  kind: missing
+  domain: business rule
+  tiers: [easy]
+  text: This round plans at list prices; every order line is priced at unit_price whatever its size, and the price-break columns are ignored.
+- id: price_rise_week
+  kind: missing
+  domain: business rule
+  tiers: [easy, medium]
+  text: Nara Display's 12% increase on C06, agreed in the e-mail thread, applies to orders placed from W4 on; every order is sent on the Monday of its order week, so W3's orders (7 December) come before the 9 December effective date and keep the old price.
 - id: quality_hold
   kind: missing
   domain: business rule
+  param: quality_hold
   text: "{{hold_supplier}} is on quality hold; its goods due to arrive in W1 to W{{hold_until}} are rejected, so its deliveries may only arrive after W{{hold_until}}."
-- id: monthly_budget_cap
+- id: budget_hard_cap
   kind: ambiguous
   domain: business rule
-  text: The monthly budget is a hard cap, not a target; an order counts in the month of its order week's Monday (W1-W2 November, W3-W6 December, W7-W8 January).
+  text: The monthly budget in budget.csv is a hard cap from the parent company, not a target; no month may go over it.
+- id: budget_month
+  kind: ambiguous
+  domain: business rule
+  text: An order counts against the budget of the month of its order week's Monday, so W1-W2 are November (W2 starts on 30 November), W3-W6 December and W7-W8 January.
 - id: approved_status_only
   kind: ambiguous
   domain: business rule
   text: Only suppliers whose status for that component is approved may be used; pending and suspended suppliers are not allowed even if they quoted.
-- id: resistor_reels
-  kind: missing
-  domain: data semantics
-  text: In the inventory file the SMD resistors (C07, C08, C09) are counted in reels of 5,000 pieces; all other parts and all order quantities are in pieces.
 - id: safety_stock
   kind: missing
   domain: business rule
-  text: Critical parts (critical = yes) should keep a safety stock of {{safety_weeks}} times their average weekly demand (total demand over the weeks they are used divided by the number of those weeks, times {{safety_weeks}}, rounded up) at the end of every week they are used.
-- id: dual_source_critical
-  kind: missing
-  domain: business rule
-  text: Every critical component in use must be ordered from at least two different suppliers within this plan, with no supplier above {{max_share}}% of the component's ordered quantity; it is a company habit, so an exception can be asked for.
-- id: cost_model
+  param: safety_weeks
+  text: Critical parts (critical = yes) should keep a safety stock of {{safety_weeks}} times their average weekly demand (total demand over the weeks they are used divided by the number of those weeks, rounded up) at the end of every week they are used.
+- id: shortfall_cost
   kind: missing
   domain: scoring
-  text: The plan is simulated week by week over W1-W10 with backlog (boards wait for missing parts); cost = purchases + 0.5% of standard cost per piece held per week + 5x standard cost per piece-week of backlog + 1.5x standard cost per piece-week below the safety stock for critical parts.
+  tiers: [hard]
+  text: Each piece that a critical part is below its safety stock at the end of a week in which it is used costs 1.5 times its standard cost.
+- id: dual_source_two
+  kind: missing
+  domain: business rule
+  text: Every critical component in use must be ordered from at least two different suppliers within this plan; it is a company habit, so an exception can be asked for if it saves real money.
+- id: max_share
+  kind: missing
+  domain: business rule
+  param: max_share
+  text: "No single supplier may get more than {{max_share}}% of a critical component's quantity ordered in this plan, counted in pieces."
+- id: backlog_cost
+  kind: missing
+  domain: scoring
+  tiers: [hard]
+  text: Boards that cannot be built for lack of a part wait for it, and each board waiting a week costs 10,000 KRW; a piece missing at the end of a week therefore costs 10,000 KRW divided by the part's pieces per board, counted per part.
+- id: scope_no_flash_change
+  kind: missing
+  domain: business rule
+  tiers: [easy, medium]
+  text: The flash change in bom.csv has not been released for this round; both boards keep C04 in all ten weeks, C25 is not needed and the validity columns are ignored.
+- id: scope_on_time
+  kind: missing
+  domain: business rule
+  tiers: [easy, medium]
+  text: This round plans as if every supplier delivers in the promised week; delivery_history.csv is not used.
+- id: scope_no_allocation
+  kind: missing
+  domain: business rule
+  tiers: [easy, medium]
+  text: This round plans as if every supplier confirms everything we order; allocations.csv is not used.
 - id: supplier_lateness
   kind: missing
   domain: data semantics
@@ -73,13 +107,13 @@
   domain: business rule
   tiers: [hard]
   text: S03 for C01 and C03 and S08 for C06 confirm at most the quantity in allocations.csv per calendar month of order weeks; anything above it is not delivered.
-- id: engineering_change
+- id: eco_switch
   kind: missing
   domain: business rule
   tiers: [hard]
-  text: From W6 the flash C04 is replaced by C25 on both boards; C04 left at the end of W5 is scrapped at standard cost and C04 arriving later is useless; C25 has no stock, is critical and must be dual-sourced, while C04 needs neither safety stock nor a second source.
-- id: expected_cost
+  text: From W6 the flash C04 is replaced by C25 on both boards, as the bom.csv validity columns show; C04 left at the end of W5 is scrapped at standard cost and C04 arriving later is useless; C25 has no stock or open orders.
+- id: eco_c04_exempt
   kind: missing
-  domain: scoring
+  domain: business rule
   tiers: [hard]
-  text: Because deliveries can be late, quality counts holding, backlog, shortfall and C04 scrap as expected values over the suppliers' true lateness rates (the history is only a sample); purchases are paid in full either way.
+  text: C04, which is being phased out, needs no safety stock and no second source any more; C25 is critical and needs both.

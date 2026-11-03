@@ -1,0 +1,21 @@
+{
+  "derived": {
+    "reserve_times": {
+      "en": "09:00 and 09:20",
+      "es": "09:00 y 09:20",
+      "ja": "09:00と09:20",
+      "ko": "09:00, 09:20",
+      "zh": "09:00 和 09:20"
+    }
+  },
+  "params": {
+    "closed_dept": "PED",
+    "interpreters_per_day": 2,
+    "lab_cap": 6,
+    "overbooked_per_session": 2,
+    "reserve_slots": 2,
+    "waitlist_order": "urgency_received"
+  },
+  "rule_seed": 1,
+  "tier": "medium"
+}

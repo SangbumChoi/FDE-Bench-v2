@@ -1,0 +1,46 @@
+{
+  "derived": {
+    "end_soc_mwh": 12,
+    "eta_charge": {
+      "en": "0.92",
+      "es": "0,92",
+      "ja": "0.92",
+      "ko": "0.92",
+      "zh": "0.92"
+    },
+    "eta_charge_pct": 92,
+    "eta_discharge": {
+      "en": "0.92",
+      "es": "0,92",
+      "ja": "0.92",
+      "ko": "0.92",
+      "zh": "0.92"
+    },
+    "eta_discharge_pct": 92,
+    "import_from": "02:00",
+    "import_last": "07:45",
+    "reserve_from": "17:00",
+    "reserve_mwh": 12,
+    "reserve_to": "21:00",
+    "soc_max": 85,
+    "soc_max_mwh": 34,
+    "soc_min": 15,
+    "soc_min_mwh": 6
+  },
+  "params": {
+    "degradation": 25,
+    "dso_day": "2027-03-27",
+    "dso_mw": 8,
+    "efficiency": "92/92",
+    "end_soc": 30,
+    "export_cap": 18,
+    "import_window": "02-08",
+    "outage_day": "2027-03-26",
+    "reserve_pct": 30,
+    "reserve_window": "17-21",
+    "soc_window": "15-85",
+    "works_end": "2027-03-27"
+  },
+  "rule_seed": 334,
+  "tier": "hard"
+}

@@ -1,0 +1,1347 @@
+[
+ {
+  "call": 0,
+  "date": "2026-05-15",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 10000000.0,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 1,
+  "date": "2026-05-18",
+  "stock_weights": {
+   "BRAX": 4.63879,
+   "CURA": 7.662401,
+   "DUNE": 11.378582,
+   "LUMO": 5.384632,
+   "MEDQ": 3.15751,
+   "QRVL": 10.028364,
+   "XIPH": 2.944009,
+   "ZENT": 5.276913
+  },
+  "sector_weights": {
+   "CONS": 16.763214,
+   "ENER": 4.63879,
+   "HLTH": 10.819911,
+   "TECH": 18.249286
+  },
+  "buying_power": 4974435.48,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 2,
+  "date": "2026-05-19",
+  "stock_weights": {
+   "BRAX": 9.516555,
+   "CURA": 15.152225,
+   "DUNE": 15.88336,
+   "LUMO": 10.780312,
+   "MEDQ": 6.220813,
+   "QRVL": 9.834695,
+   "XIPH": 6.19528,
+   "ZENT": 10.337334
+  },
+  "sector_weights": {
+   "CONS": 26.663672,
+   "ENER": 9.516555,
+   "HLTH": 21.373038,
+   "TECH": 26.36731
+  },
+  "buying_power": 1602627.49,
+  "drawdown_pct": 0.762443
+ },
+ {
+  "call": 3,
+  "date": "2026-05-20",
+  "stock_weights": {
+   "BRAX": 9.392603,
+   "CURA": 15.015949,
+   "DUNE": 15.766331,
+   "LUMO": 10.760214,
+   "MEDQ": 6.103538,
+   "QRVL": 9.699667,
+   "XIPH": 6.271607,
+   "ZENT": 11.028976
+  },
+  "sector_weights": {
+   "CONS": 26.526544,
+   "ENER": 9.392603,
+   "HLTH": 21.119487,
+   "TECH": 27.00025
+  },
+  "buying_power": 1602627.49,
+  "drawdown_pct": 0.026858
+ },
+ {
+  "call": 4,
+  "date": "2026-05-21",
+  "stock_weights": {
+   "BRAX": 9.408692,
+   "CURA": 15.259414,
+   "DUNE": 15.701361,
+   "LUMO": 10.873012,
+   "MEDQ": 6.138899,
+   "QRVL": 9.530724,
+   "XIPH": 6.221961,
+   "ZENT": 10.866309
+  },
+  "sector_weights": {
+   "CONS": 26.574373,
+   "ENER": 9.408692,
+   "HLTH": 21.398312,
+   "TECH": 26.618994
+  },
+  "buying_power": 1602627.49,
+  "drawdown_pct": 0.267502
+ },
+ {
+  "call": 5,
+  "date": "2026-05-22",
+  "stock_weights": {
+   "BRAX": 9.423686,
+   "CURA": 15.600092,
+   "DUNE": 15.68574,
+   "LUMO": 10.830688,
+   "MEDQ": 6.048576,
+   "QRVL": 9.308971,
+   "XIPH": 6.381514,
+   "ZENT": 10.892237
+  },
+  "sector_weights": {
+   "CONS": 26.516428,
+   "ENER": 9.423686,
+   "HLTH": 21.648668,
+   "TECH": 26.582722
+  },
+  "buying_power": 1602627.49,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 6,
+  "date": "2026-05-25",
+  "stock_weights": {
+   "BRAX": 9.451063,
+   "CURA": 16.066785,
+   "DUNE": 15.457202,
+   "GLAC": 2.065762,
+   "LUMO": 10.876834,
+   "MEDQ": 5.935331,
+   "QRVL": 8.948621,
+   "XIPH": 6.244466,
+   "ZENT": 11.171229
+  },
+  "sector_weights": {
+   "CONS": 26.334036,
+   "ENER": 11.516825,
+   "HLTH": 22.002116,
+   "TECH": 26.364316
+  },
+  "buying_power": 1393633.11,
+  "drawdown_pct": 0.133242
+ },
+ {
+  "call": 7,
+  "date": "2026-05-26",
+  "stock_weights": {
+   "BRAX": 9.609055,
+   "CURA": 16.02318,
+   "DUNE": 15.297121,
+   "GLAC": 4.223914,
+   "LUMO": 10.855104,
+   "MEDQ": 5.920099,
+   "QRVL": 8.934953,
+   "XIPH": 6.300702,
+   "ZENT": 11.166881
+  },
+  "sector_weights": {
+   "CONS": 26.152225,
+   "ENER": 13.832969,
+   "HLTH": 21.943279,
+   "TECH": 26.402536
+  },
+  "buying_power": 1184774.18,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 8,
+  "date": "2026-05-27",
+  "stock_weights": {
+   "BRAX": 9.745248,
+   "CURA": 16.012082,
+   "DUNE": 15.585427,
+   "GLAC": 4.240769,
+   "LUMO": 10.828318,
+   "MEDQ": 5.909016,
+   "QRVL": 8.947457,
+   "XIPH": 6.202113,
+   "ZENT": 10.880213
+  },
+  "sector_weights": {
+   "CONS": 26.413744,
+   "ENER": 13.986017,
+   "HLTH": 21.921098,
+   "TECH": 26.029784
+  },
+  "buying_power": 1184774.18,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 9,
+  "date": "2026-05-28",
+  "stock_weights": {
+   "BRAX": 9.623482,
+   "CURA": 16.086352,
+   "DUNE": 15.65114,
+   "GLAC": 4.213094,
+   "LUMO": 10.905839,
+   "MEDQ": 5.857571,
+   "QRVL": 8.774103,
+   "XIPH": 6.291717,
+   "ZENT": 10.844608
+  },
+  "sector_weights": {
+   "CONS": 26.556979,
+   "ENER": 13.836576,
+   "HLTH": 21.943923,
+   "TECH": 25.910428
+  },
+  "buying_power": 1184774.18,
+  "drawdown_pct": 0.874201
+ },
+ {
+  "call": 10,
+  "date": "2026-05-29",
+  "stock_weights": {
+   "BRAX": 9.566863,
+   "CURA": 16.122453,
+   "DUNE": 15.863437,
+   "GLAC": 4.071042,
+   "LUMO": 11.043362,
+   "MEDQ": 5.82034,
+   "QRVL": 8.64257,
+   "XIPH": 6.29493,
+   "ZENT": 10.934426
+  },
+  "sector_weights": {
+   "CONS": 26.906799,
+   "ENER": 13.637905,
+   "HLTH": 21.942793,
+   "TECH": 25.871926
+  },
+  "buying_power": 1184774.18,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 11,
+  "date": "2026-06-01",
+  "stock_weights": {
+   "BRAX": 9.723623,
+   "CURA": 16.24041,
+   "DUNE": 15.760389,
+   "GLAC": 4.092274,
+   "LUMO": 10.983475,
+   "MEDQ": 5.934605,
+   "QRVL": 8.288011,
+   "XIPH": 6.21496,
+   "ZENT": 11.099048
+  },
+  "sector_weights": {
+   "CONS": 26.743864,
+   "ENER": 13.815896,
+   "HLTH": 22.175015,
+   "TECH": 25.602019
+  },
+  "buying_power": 1184774.18,
+  "drawdown_pct": 0.194012
+ },
+ {
+  "call": 12,
+  "date": "2026-06-02",
+  "stock_weights": {
+   "BRAX": 9.949368,
+   "CURA": 16.231984,
+   "DUNE": 15.831934,
+   "GLAC": 4.04487,
+   "LUMO": 11.011302,
+   "MEDQ": 5.914924,
+   "QRVL": 8.106346,
+   "XIPH": 6.075989,
+   "ZENT": 11.199606
+  },
+  "sector_weights": {
+   "CONS": 26.843235,
+   "ENER": 13.994239,
+   "HLTH": 22.146909,
+   "TECH": 25.381942
+  },
+  "buying_power": 1184774.18,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 13,
+  "date": "2026-06-03",
+  "stock_weights": {
+   "BRAX": 9.984683,
+   "CURA": 16.103318,
+   "DUNE": 15.845284,
+   "GLAC": 3.927999,
+   "LUMO": 6.766504,
+   "MEDQ": 5.991648,
+   "QRVL": 8.144259,
+   "XIPH": 6.130483,
+   "ZENT": 11.219725
+  },
+  "sector_weights": {
+   "CONS": 22.611788,
+   "ENER": 13.912682,
+   "HLTH": 22.094966,
+   "TECH": 25.494468
+  },
+  "buying_power": 1184774.18,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 14,
+  "date": "2026-06-04",
+  "stock_weights": {
+   "BRAX": 10.076979,
+   "CURA": 16.079991,
+   "DUNE": 15.799309,
+   "GLAC": 3.888802,
+   "LUMO": 1.834712,
+   "MEDQ": 6.067013,
+   "QRVL": 8.176013,
+   "XIPH": 6.163694,
+   "ZENT": 11.206547
+  },
+  "sector_weights": {
+   "CONS": 17.63402,
+   "ENER": 13.965781,
+   "HLTH": 22.147005,
+   "TECH": 25.546254
+  },
+  "buying_power": 1641346.68,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 15,
+  "date": "2026-06-05",
+  "stock_weights": {
+   "BRAX": 10.208532,
+   "CURA": 16.579962,
+   "DUNE": 15.390518,
+   "GLAC": 3.872812,
+   "MEDQ": 6.069401,
+   "QRVL": 8.262617,
+   "XIPH": 6.095333,
+   "ZENT": 11.275093
+  },
+  "sector_weights": {
+   "CONS": 15.390518,
+   "ENER": 14.081344,
+   "HLTH": 22.649363,
+   "TECH": 25.633043
+  },
+  "buying_power": 2140292.1,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 16,
+  "date": "2026-06-08",
+  "stock_weights": {
+   "BRAX": 10.186359,
+   "CURA": 16.879482,
+   "DUNE": 15.523071,
+   "GLAC": 3.778862,
+   "KOVA": 4.077386,
+   "MEDQ": 8.498823,
+   "QRVL": 8.018114,
+   "XIPH": 5.915807,
+   "ZENT": 11.394801
+  },
+  "sector_weights": {
+   "CONS": 15.523071,
+   "ENER": 18.042608,
+   "HLTH": 25.378305,
+   "TECH": 25.328723
+  },
+  "buying_power": 1649226.1,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 17,
+  "date": "2026-06-09",
+  "stock_weights": {
+   "BRAX": 10.349643,
+   "CURA": 16.96683,
+   "DUNE": 15.300582,
+   "GLAC": 3.755459,
+   "KOVA": 8.505655,
+   "MEDQ": 8.419751,
+   "QRVL": 7.85502,
+   "XIPH": 6.115366,
+   "ZENT": 11.41075
+  },
+  "sector_weights": {
+   "CONS": 15.300582,
+   "ENER": 22.610757,
+   "HLTH": 25.386581,
+   "TECH": 25.381136
+  },
+  "buying_power": 1204008.32,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 18,
+  "date": "2026-06-10",
+  "stock_weights": {
+   "BRAX": 10.319795,
+   "CURA": 17.13945,
+   "DUNE": 15.181057,
+   "GLAC": 3.751638,
+   "KOVA": 8.601003,
+   "MEDQ": 8.635953,
+   "QRVL": 10.176516,
+   "XIPH": 5.884674,
+   "ZENT": 11.570113
+  },
+  "sector_weights": {
+   "CONS": 15.181057,
+   "ENER": 22.672436,
+   "HLTH": 25.775403,
+   "TECH": 27.631303
+  },
+  "buying_power": 933608.44,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 19,
+  "date": "2026-06-11",
+  "stock_weights": {
+   "BRAX": 10.359968,
+   "CURA": 16.923293,
+   "DUNE": 15.223643,
+   "GLAC": 3.644871,
+   "KOVA": 8.532211,
+   "MEDQ": 8.658521,
+   "QRVL": 10.579985,
+   "XIPH": 5.803337,
+   "ZENT": 11.564926
+  },
+  "sector_weights": {
+   "CONS": 15.223643,
+   "ENER": 22.53705,
+   "HLTH": 25.581814,
+   "TECH": 27.948247
+  },
+  "buying_power": 933608.44,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 20,
+  "date": "2026-06-12",
+  "stock_weights": {
+   "BRAX": 10.293944,
+   "CURA": 16.979276,
+   "DUNE": 15.610169,
+   "GLAC": 3.508381,
+   "KOVA": 8.662845,
+   "MEDQ": 8.60807,
+   "QRVL": 10.269332,
+   "XIPH": 5.597547,
+   "ZENT": 11.684643
+  },
+  "sector_weights": {
+   "CONS": 15.610169,
+   "ENER": 22.46517,
+   "HLTH": 25.587345,
+   "TECH": 27.551522
+  },
+  "buying_power": 933608.44,
+  "drawdown_pct": 0.871279
+ },
+ {
+  "call": 21,
+  "date": "2026-06-15",
+  "stock_weights": {
+   "BRAX": 14.052875,
+   "CURA": 16.71699,
+   "DUNE": 15.653493,
+   "GLAC": 3.364139,
+   "KOVA": 8.730538,
+   "MEDQ": 8.890542,
+   "QRVL": 5.322519,
+   "XIPH": 7.863039,
+   "ZENT": 11.625416
+  },
+  "sector_weights": {
+   "CONS": 15.653493,
+   "ENER": 26.147552,
+   "HLTH": 25.607532,
+   "TECH": 24.810974
+  },
+  "buying_power": 305275.81,
+  "drawdown_pct": 1.547494
+ },
+ {
+  "call": 22,
+  "date": "2026-06-16",
+  "stock_weights": {
+   "BRAX": 13.937315,
+   "CURA": 16.517419,
+   "DUNE": 15.894595,
+   "GLAC": 3.499803,
+   "KOVA": 8.829286,
+   "MEDQ": 8.815226,
+   "QRVL": 5.069871,
+   "XIPH": 8.21186,
+   "ZENT": 11.302199
+  },
+  "sector_weights": {
+   "CONS": 15.894595,
+   "ENER": 26.266404,
+   "HLTH": 25.332645,
+   "TECH": 24.583929
+  },
+  "buying_power": 821137.09,
+  "drawdown_pct": 3.311854
+ },
+ {
+  "call": 23,
+  "date": "2026-06-17",
+  "stock_weights": {
+   "BRAX": 13.635613,
+   "CURA": 16.582043,
+   "DUNE": 16.282263,
+   "GLAC": 3.465842,
+   "KOVA": 8.748895,
+   "MEDQ": 8.688334,
+   "QRVL": 5.191368,
+   "XIPH": 8.411961,
+   "ZENT": 11.140506
+  },
+  "sector_weights": {
+   "CONS": 16.282263,
+   "ENER": 25.85035,
+   "HLTH": 25.270377,
+   "TECH": 24.743836
+  },
+  "buying_power": 0.0,
+  "drawdown_pct": 2.459219
+ },
+ {
+  "call": 24,
+  "date": "2026-06-18",
+  "stock_weights": {
+   "BRAX": 13.028884,
+   "CURA": 16.171071,
+   "DUNE": 15.4104,
+   "GLAC": 3.374222,
+   "KOVA": 8.327172,
+   "MEDQ": 8.632097,
+   "QRVL": 5.107738,
+   "XIPH": 8.704463,
+   "ZENT": 10.961844
+  },
+  "sector_weights": {
+   "CONS": 15.4104,
+   "ENER": 24.730277,
+   "HLTH": 24.803168,
+   "TECH": 24.774045
+  },
+  "buying_power": 0.0,
+  "drawdown_pct": 1.307947
+ },
+ {
+  "call": 25,
+  "date": "2026-06-19",
+  "stock_weights": {
+   "BRAX": 12.923124,
+   "CURA": 16.490068,
+   "DUNE": 15.559879,
+   "GLAC": 3.337148,
+   "KOVA": 8.438953,
+   "MEDQ": 8.715033,
+   "QRVL": 4.943401,
+   "XIPH": 8.679827,
+   "ZENT": 10.84448
+  },
+  "sector_weights": {
+   "CONS": 15.559879,
+   "ENER": 24.699225,
+   "HLTH": 25.205101,
+   "TECH": 24.467708
+  },
+  "buying_power": 42187.3,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 26,
+  "date": "2026-06-22",
+  "stock_weights": {
+   "BRAX": 12.97513,
+   "CURA": 16.761601,
+   "DUNE": 15.412615,
+   "GLAC": 1.863082,
+   "KOVA": 8.474542,
+   "MEDQ": 8.650623,
+   "XIPH": 8.606656,
+   "ZENT": 10.981768
+  },
+  "sector_weights": {
+   "CONS": 15.412615,
+   "ENER": 23.312754,
+   "HLTH": 25.412224,
+   "TECH": 19.588424
+  },
+  "buying_power": 42187.3,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 27,
+  "date": "2026-06-23",
+  "stock_weights": {
+   "BRAX": 13.284577,
+   "CURA": 16.690347,
+   "DUNE": 15.242423,
+   "GLAC": 0.391605,
+   "KOVA": 8.622694,
+   "MEDQ": 8.483261,
+   "XIPH": 8.71064,
+   "ZENT": 11.134026
+  },
+  "sector_weights": {
+   "CONS": 15.242423,
+   "ENER": 22.298876,
+   "HLTH": 25.173608,
+   "TECH": 19.844665
+  },
+  "buying_power": 721681.28,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 28,
+  "date": "2026-06-24",
+  "stock_weights": {
+   "BRAX": 13.096701,
+   "CURA": 17.05632,
+   "DUNE": 15.315053,
+   "KOVA": 12.434002,
+   "MEDQ": 8.359791,
+   "XIPH": 8.555963,
+   "ZENT": 10.983447
+  },
+  "sector_weights": {
+   "CONS": 15.315053,
+   "ENER": 25.530704,
+   "HLTH": 25.41611,
+   "TECH": 19.53941
+  },
+  "buying_power": 491328.32,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 29,
+  "date": "2026-06-25",
+  "stock_weights": {
+   "BRAX": 13.38591,
+   "CURA": 16.872864,
+   "DUNE": 15.173715,
+   "KOVA": 12.218691,
+   "MEDQ": 8.246774,
+   "XIPH": 8.478986,
+   "ZENT": 11.590484
+  },
+  "sector_weights": {
+   "CONS": 15.173715,
+   "ENER": 25.604601,
+   "HLTH": 25.119638,
+   "TECH": 20.06947
+  },
+  "buying_power": 534146.67,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 30,
+  "date": "2026-06-26",
+  "stock_weights": {
+   "BRAX": 13.521501,
+   "CURA": 17.076585,
+   "DUNE": 15.260493,
+   "KOVA": 11.971931,
+   "MEDQ": 8.408991,
+   "XIPH": 8.183395,
+   "ZENT": 11.032073
+  },
+  "sector_weights": {
+   "CONS": 15.260493,
+   "ENER": 25.493432,
+   "HLTH": 25.485576,
+   "TECH": 19.215468
+  },
+  "buying_power": 534146.67,
+  "drawdown_pct": 3.523232
+ },
+ {
+  "call": 31,
+  "date": "2026-06-29",
+  "stock_weights": {
+   "BRAX": 13.345818,
+   "CURA": 16.79007,
+   "DUNE": 15.70717,
+   "KOVA": 7.889765,
+   "MEDQ": 10.884677,
+   "XIPH": 8.316419,
+   "ZENT": 10.881115
+  },
+  "sector_weights": {
+   "CONS": 15.70717,
+   "ENER": 21.235582,
+   "HLTH": 27.674747,
+   "TECH": 19.197533
+  },
+  "buying_power": 265666.97,
+  "drawdown_pct": 3.936253
+ },
+ {
+  "call": 32,
+  "date": "2026-06-30",
+  "stock_weights": {
+   "BRAX": 14.975339,
+   "CURA": 18.800252,
+   "DUNE": 17.31912,
+   "KOVA": 8.642032,
+   "MEDQ": 12.149137,
+   "XIPH": 9.029158,
+   "ZENT": 11.815561
+  },
+  "sector_weights": {
+   "CONS": 17.31912,
+   "ENER": 23.61737,
+   "HLTH": 30.949389,
+   "TECH": 20.844719
+  },
+  "buying_power": 704737.18,
+  "drawdown_pct": 4.597807
+ },
+ {
+  "call": 33,
+  "date": "2026-07-01",
+  "stock_weights": {
+   "BRAX": 8.014916,
+   "CURA": 9.922214,
+   "DUNE": 4.933219,
+   "KOVA": 0.115525,
+   "MEDQ": 6.975953,
+   "XIPH": 4.504841,
+   "ZENT": 2.918515
+  },
+  "sector_weights": {
+   "CONS": 4.933219,
+   "ENER": 8.130441,
+   "HLTH": 16.898168,
+   "TECH": 7.423356
+  },
+  "buying_power": 704737.18,
+  "drawdown_pct": 4.981667
+ },
+ {
+  "call": 34,
+  "date": "2026-07-02",
+  "stock_weights": {
+   "BRAX": 0.757361,
+   "CURA": 1.139419,
+   "MEDQ": 1.971282,
+   "XIPH": 0.058124
+  },
+  "sector_weights": {
+   "ENER": 0.757361,
+   "HLTH": 3.110701,
+   "TECH": 0.058124
+  },
+  "buying_power": 6043178.95,
+  "drawdown_pct": 5.243424
+ },
+ {
+  "call": 35,
+  "date": "2026-07-03",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9244114.77,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 36,
+  "date": "2026-07-06",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 37,
+  "date": "2026-07-07",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 38,
+  "date": "2026-07-08",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 39,
+  "date": "2026-07-09",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 40,
+  "date": "2026-07-10",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 41,
+  "date": "2026-07-13",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 42,
+  "date": "2026-07-14",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 43,
+  "date": "2026-07-15",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 44,
+  "date": "2026-07-16",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 45,
+  "date": "2026-07-17",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 46,
+  "date": "2026-07-20",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 47,
+  "date": "2026-07-21",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 48,
+  "date": "2026-07-22",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 49,
+  "date": "2026-07-23",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 50,
+  "date": "2026-07-24",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 51,
+  "date": "2026-07-27",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 52,
+  "date": "2026-07-28",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 53,
+  "date": "2026-07-29",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 54,
+  "date": "2026-07-30",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 55,
+  "date": "2026-07-31",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 56,
+  "date": "2026-08-03",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 57,
+  "date": "2026-08-04",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 58,
+  "date": "2026-08-05",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 59,
+  "date": "2026-08-06",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 60,
+  "date": "2026-08-07",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 61,
+  "date": "2026-08-10",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 62,
+  "date": "2026-08-11",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 63,
+  "date": "2026-08-12",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 64,
+  "date": "2026-08-13",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 65,
+  "date": "2026-08-14",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 66,
+  "date": "2026-08-17",
+  "stock_weights": {},
+  "sector_weights": {},
+  "buying_power": 9621917.37,
+  "drawdown_pct": 5.243163
+ },
+ {
+  "call": 67,
+  "date": "2026-08-18",
+  "stock_weights": {
+   "BRAX": 5.59851,
+   "CURA": 7.08124,
+   "DUNE": 10.914427,
+   "GLAC": 1.673733,
+   "KOVA": 4.497672,
+   "MEDQ": 4.5312,
+   "OMNY": 1.859125,
+   "TARK": 6.062474,
+   "VYTA": 1.594286,
+   "XIPH": 3.661566,
+   "ZENT": 5.390287
+  },
+  "sector_weights": {
+   "CONS": 16.976901,
+   "ENER": 11.769915,
+   "HLTH": 13.206726,
+   "TECH": 10.910978
+  },
+  "buying_power": 4547444.6,
+  "drawdown_pct": 5.014993
+ },
+ {
+  "call": 68,
+  "date": "2026-08-19",
+  "stock_weights": {
+   "BRAX": 10.837579,
+   "CURA": 10.838509,
+   "DUNE": 11.056065,
+   "GLAC": 3.183535,
+   "KOVA": 9.065208,
+   "MEDQ": 9.176908,
+   "OMNY": 3.657734,
+   "TARK": 10.834897,
+   "VYTA": 3.235577,
+   "XIPH": 7.872607,
+   "ZENT": 10.793781
+  },
+  "sector_weights": {
+   "CONS": 21.890962,
+   "ENER": 23.086322,
+   "HLTH": 23.250994,
+   "TECH": 22.324121
+  },
+  "buying_power": 926201.07,
+  "drawdown_pct": 3.629701
+ },
+ {
+  "call": 69,
+  "date": "2026-08-20",
+  "stock_weights": {
+   "BRAX": 10.951577,
+   "CURA": 10.705798,
+   "DUNE": 11.017908,
+   "GLAC": 3.232779,
+   "KOVA": 9.020417,
+   "MEDQ": 9.188534,
+   "OMNY": 3.568483,
+   "TARK": 11.011726,
+   "VYTA": 3.210606,
+   "XIPH": 7.892364,
+   "ZENT": 10.669589
+  },
+  "sector_weights": {
+   "CONS": 22.029634,
+   "ENER": 23.204773,
+   "HLTH": 23.104938,
+   "TECH": 22.130436
+  },
+  "buying_power": 926201.07,
+  "drawdown_pct": 3.712005
+ },
+ {
+  "call": 70,
+  "date": "2026-08-21",
+  "stock_weights": {
+   "BRAX": 10.836688,
+   "CURA": 10.366146,
+   "DUNE": 11.232362,
+   "GLAC": 3.14909,
+   "KOVA": 9.036932,
+   "MEDQ": 9.222659,
+   "OMNY": 3.602623,
+   "TARK": 11.214977,
+   "VYTA": 3.038467,
+   "XIPH": 7.925422,
+   "ZENT": 10.969553
+  },
+  "sector_weights": {
+   "CONS": 22.447339,
+   "ENER": 23.02271,
+   "HLTH": 22.627272,
+   "TECH": 22.497598
+  },
+  "buying_power": 933417.51,
+  "drawdown_pct": 2.249367
+ },
+ {
+  "call": 71,
+  "date": "2026-08-24",
+  "stock_weights": {
+   "BRAX": 10.776617,
+   "CURA": 10.26878,
+   "DUNE": 11.447942,
+   "GLAC": 3.126856,
+   "KOVA": 9.075508,
+   "MEDQ": 9.144702,
+   "OMNY": 3.660389,
+   "TARK": 8.664202,
+   "VYTA": 3.117735,
+   "XIPH": 7.748217,
+   "ZENT": 10.681956
+  },
+  "sector_weights": {
+   "CONS": 20.112143,
+   "ENER": 22.978981,
+   "HLTH": 22.531217,
+   "TECH": 22.090562
+  },
+  "buying_power": 936647.59,
+  "drawdown_pct": 3.140921
+ },
+ {
+  "call": 72,
+  "date": "2026-08-25",
+  "stock_weights": {
+   "BRAX": 11.031797,
+   "CURA": 10.131399,
+   "DUNE": 11.028171,
+   "GLAC": 3.121158,
+   "KOVA": 8.913457,
+   "MEDQ": 9.005632,
+   "OMNY": 3.662825,
+   "TARK": 8.643036,
+   "VYTA": 3.04385,
+   "XIPH": 7.953545,
+   "ZENT": 10.827921
+  },
+  "sector_weights": {
+   "CONS": 19.671207,
+   "ENER": 23.066412,
+   "HLTH": 22.18088,
+   "TECH": 22.444292
+  },
+  "buying_power": 1211333.66,
+  "drawdown_pct": 2.264484
+ },
+ {
+  "call": 73,
+  "date": "2026-08-26",
+  "stock_weights": {
+   "BRAX": 11.310442,
+   "CURA": 10.301141,
+   "DUNE": 11.059596,
+   "GLAC": 3.123291,
+   "KOVA": 8.841195,
+   "MEDQ": 9.012628,
+   "OMNY": 3.755497,
+   "TARK": 8.492631,
+   "VYTA": 3.040724,
+   "XIPH": 7.532777,
+   "ZENT": 10.933629
+  },
+  "sector_weights": {
+   "CONS": 19.552227,
+   "ENER": 23.274928,
+   "HLTH": 22.354493,
+   "TECH": 22.221903
+  },
+  "buying_power": 1258318.62,
+  "drawdown_pct": 1.582432
+ },
+ {
+  "call": 74,
+  "date": "2026-08-27",
+  "stock_weights": {
+   "BRAX": 11.397501,
+   "CURA": 10.143387,
+   "DUNE": 11.094391,
+   "GLAC": 3.017281,
+   "KOVA": 8.828595,
+   "MEDQ": 9.185651,
+   "OMNY": 3.724448,
+   "TARK": 8.414173,
+   "VYTA": 3.008088,
+   "XIPH": 7.527952,
+   "ZENT": 10.775232
+  },
+  "sector_weights": {
+   "CONS": 19.508564,
+   "ENER": 23.243376,
+   "HLTH": 22.337126,
+   "TECH": 22.027632
+  },
+  "buying_power": 1263932.06,
+  "drawdown_pct": 0.828949
+ },
+ {
+  "call": 75,
+  "date": "2026-08-28",
+  "stock_weights": {
+   "BRAX": 10.787011,
+   "CURA": 10.339897,
+   "DUNE": 11.212111,
+   "GLAC": 2.968797,
+   "KOVA": 8.679222,
+   "MEDQ": 9.252944,
+   "OMNY": 3.698139,
+   "TARK": 8.259269,
+   "VYTA": 3.011816,
+   "XIPH": 7.413663,
+   "ZENT": 11.039846
+  },
+  "sector_weights": {
+   "CONS": 19.47138,
+   "ENER": 22.43503,
+   "HLTH": 22.604657,
+   "TECH": 22.151647
+  },
+  "buying_power": 1303643.42,
+  "drawdown_pct": 0.259999
+ },
+ {
+  "call": 76,
+  "date": "2026-08-31",
+  "stock_weights": {
+   "BRAX": 10.889536,
+   "CURA": 10.627413,
+   "DUNE": 10.707628,
+   "GLAC": 2.885858,
+   "KOVA": 8.433034,
+   "MEDQ": 9.289323,
+   "OMNY": 3.745255,
+   "TARK": 8.231395,
+   "VYTA": 3.012765,
+   "XIPH": 7.653715,
+   "ZENT": 11.079881
+  },
+  "sector_weights": {
+   "CONS": 18.939024,
+   "ENER": 22.208428,
+   "HLTH": 22.929501,
+   "TECH": 22.478851
+  },
+  "buying_power": 1358124.05,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 77,
+  "date": "2026-09-01",
+  "stock_weights": {
+   "BRAX": 10.476217,
+   "CURA": 10.937089,
+   "DUNE": 10.561868,
+   "GLAC": 2.874572,
+   "KOVA": 8.082883,
+   "MEDQ": 9.245221,
+   "OMNY": 3.802381,
+   "TARK": 10.960613,
+   "VYTA": 2.942545,
+   "XIPH": 7.836938,
+   "ZENT": 11.478871
+  },
+  "sector_weights": {
+   "CONS": 21.522481,
+   "ENER": 21.433673,
+   "HLTH": 23.124855,
+   "TECH": 23.11819
+  },
+  "buying_power": 1105042.61,
+  "drawdown_pct": 0.0
+ },
+ {
+  "call": 78,
+  "date": "2026-09-02",
+  "stock_weights": {
+   "BRAX": 10.527627,
+   "CURA": 11.145498,
+   "DUNE": 10.326028,
+   "GLAC": 2.883921,
+   "KOVA": 8.18327,
+   "MEDQ": 9.414923,
+   "OMNY": 3.733561,
+   "TARK": 10.747238,
+   "VYTA": 3.013804,
+   "XIPH": 7.753841,
+   "ZENT": 10.822288
+  },
+  "sector_weights": {
+   "CONS": 21.073267,
+   "ENER": 21.594818,
+   "HLTH": 23.574225,
+   "TECH": 22.30969
+  },
+  "buying_power": 1118771.29,
+  "drawdown_pct": 1.077563
+ },
+ {
+  "call": 79,
+  "date": "2026-09-03",
+  "stock_weights": {
+   "BRAX": 10.705301,
+   "CURA": 10.784578,
+   "DUNE": 10.149282,
+   "GLAC": 2.787745,
+   "KOVA": 8.117905,
+   "MEDQ": 9.607331,
+   "OMNY": 3.611572,
+   "TARK": 10.652742,
+   "VYTA": 2.973031,
+   "XIPH": 7.905462,
+   "ZENT": 11.131148
+  },
+  "sector_weights": {
+   "CONS": 20.802023,
+   "ENER": 21.610951,
+   "HLTH": 23.36494,
+   "TECH": 22.648182
+  },
+  "buying_power": 1171741.98,
+  "drawdown_pct": 0.095052
+ }
+]

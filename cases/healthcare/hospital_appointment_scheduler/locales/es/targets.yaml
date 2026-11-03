@@ -5,9 +5,9 @@
 - id: visit_length
   text: Una primera visita ocupa dos huecos consecutivos de 20 minutos del mismo médico en una sesión (inicio = primer hueco); una revisión ocupa uno.
 - id: urgent_window
-  text: Toda solicitud urgente (U) debe citarse el día en que llega, dentro de los {{urgent_days}} días laborables siguientes a su primer día posible (fecha más temprana o el día laborable tras recibirla), y seguir dentro de ese plazo si se cambia.
+  text: Toda solicitud urgente (U) debe citarse el día en que llega, dentro de los 2 días laborables siguientes a su primer día posible (fecha más temprana o el día laborable tras recibirla), y seguir dentro de ese plazo si se cambia.
 - id: urgent_reserve
-  text: Los dos primeros huecos de cada sesión de mañana (09:00 y 09:20) se reservan para urgentes a dos o más días laborables vista; el día anterior (para las consultas de mañana) se liberan para cualquiera.
+  text: Los {{reserve_slots}} primeros huecos de cada sesión de mañana ({{reserve_times}}) se reservan para urgentes a dos o más días laborables vista; el día anterior (para las consultas de mañana) se liberan para cualquiera.
 - id: follow_up_doctor
   text: Una revisión se cita con el médico anterior del paciente; es una costumbre, no una regla del contrato, y la jefa de la oficina de consultas externas puede autorizar una excepción.
 - id: interpreters
@@ -15,7 +15,7 @@
 - id: holiday_clinic
   text: La consulta de {{closed_dept}} cierra el Día de la Ciudad, lunes 23 de noviembre, aunque el calendario aún muestra sus sesiones; las demás funcionan.
 - id: move_notice
-  text: Cuando el hospital cambia la fecha o la hora de la cita de un paciente, la nueva debe ser al menos {{move_notice_days}} días laborables después del día del cambio (si se anuló y se vuelve a citar, del día de la anulación; misma fecha y hora con otro médico no necesita preaviso); cada cambio cuesta.
+  text: Cuando el hospital cambia la fecha o la hora de la cita de un paciente, la nueva debe ser al menos 3 días laborables después del día del cambio (si se anuló y se vuelve a citar, del día de la anulación; misma fecha y hora con otro médico no necesita preaviso); cada cambio cuesta.
 - id: waitlist_priority
   text: Las solicitudes en espera se citan en orden de prioridad, {{waitlist_order}}; no se cita una mientras otra de mayor prioridad de la misma especialidad, tipo de visita y médico anterior sigue esperando y podría haber ocupado ese hueco.
 - id: status_table

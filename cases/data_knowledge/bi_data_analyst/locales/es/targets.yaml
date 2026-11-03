@@ -1,5 +1,5 @@
 - id: fiscal_year
-  text: El año fiscal empieza el 1 de abril y lleva el nombre del año en que empieza (FY2025 = del 2025-04-01 al 2026-03-31); el primer trimestre es abril–junio y el primer semestre, abril–septiembre.
+  text: El año fiscal empieza el 1 de {{fy_start}} y lleva el nombre del año en que empieza (el FY2025 va {{fy2025}}); el primer trimestre del FY2026 es {{fy2026_q1}} y su primer semestre, {{fy2026_h1}}, y un periodo aún en curso en la fecha de referencia se cuenta hasta ella.
 - id: local_day
   text: Las marcas de tiempo están en UTC, pero los días, meses, trimestres y años fiscales se deciden en hora de Corea (UTC+9); hay que sumar 9 horas antes de tomar la fecha.
 - id: test_accounts
@@ -7,12 +7,16 @@
 - id: counted_orders
   text: Solo cuentan los pedidos «completado»; los «cancelado» y «pago_fallido» no cuentan nunca, aunque payments.csv tenga una fila de pago para ellos.
 - id: net_revenue
-  text: Ingreso neto = subtotal del pedido (sin impuestos) menos los reembolsos sin impuesto (importe × subtotal / total), imputados al periodo de la fecha del pedido, también los reembolsos posteriores a la fecha de referencia (la exportación llega al 2026-10-31); por categoría, los reembolsos se reparten entre las líneas en proporción a su importe.
+  text: Ingreso neto = subtotal del pedido (sin impuestos) menos los reembolsos sin impuesto (importe × subtotal / total), imputados al periodo de la fecha del pedido, no al del reembolso.
+- id: late_refunds
+  text: La exportación se hizo el 2026-10-31 con todos los reembolsos registrados hasta entonces; los reembolsos posteriores a la fecha de referencia (octubre de 2026) también cuentan, en el periodo de su pedido.
 - id: fx_order_date
   text: Los importes están en la moneda del pedido y se convierten a KRW con el krw_per_unit de fx_rates de la fecha del pedido (hora de Corea); los reembolsos usan el mismo tipo que su pedido.
 - id: active_customer
-  text: Un cliente activo tiene al menos un pedido completado con fecha dentro de los 90 días que terminan en la fecha de referencia (del 2026-07-03 al 2026-09-30).
+  text: Un cliente activo tiene al menos un pedido completado con fecha dentro de los {{active_days}} días que terminan en la fecha de referencia (del {{active_from}} al 2026-09-30).
 - id: category_rename
-  text: La categoría snacks se renombró como despensa el 2025-10-01 y los productos antiguos conservan la etiqueta vieja; las preguntas sobre despensa incluyen ambas etiquetas.
+  text: La categoría snacks se renombró como despensa el 2025-10-01 y los productos antiguos conservan la etiqueta vieja; las preguntas sobre despensa incluyen ambas etiquetas, con los reembolsos de cada pedido repartidos entre sus líneas en proporción a su importe.
 - id: report_rounding
-  text: Finanzas exige redondear toda respuesta monetaria al millar de KRW más cercano; las respuestas se comparan con las cifras exactas (recuentos e identificadores exactos, importes dentro del 0,5 % o de 500 KRW, la variación mensual dentro de 0,05 puntos porcentuales, el resto dentro del 0,5 %).
+  text: Finanzas exige redondear toda respuesta monetaria al múltiplo de {{rounding_unit}} KRW más cercano; las respuestas se comparan con las cifras exactas (recuentos e identificadores exactos, importes dentro del 0,5 % o de media unidad de redondeo, la variación mensual dentro de 0,05 puntos porcentuales, el resto dentro del 0,5 %).
+- id: answer_rewards
+  text: Las respuestas van al dosier del consejo del consejero delegado y null («aún no disponible») es una respuesta admitida; finanzas valora una cifra correcta en {{right_reward}}, un null en {{dont_know_reward}} y una cifra errónea en {{wrong_reward}}.

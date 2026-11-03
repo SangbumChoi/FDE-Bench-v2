@@ -1,3 +1,5 @@
+- id: base_forecast
+  text: 这一轮只要基础预测；促销计划.csv 中的促销和那个一次性地方假日由品类团队另外加，所以不算进去，预测按去掉这些影响后的基础销量来评估。
 - id: stockout_censoring
   text: 缺货日的销量受库存上限限制；要预测的是顾客需求，这些日子不能当作正常销售。
 - id: returns
@@ -6,13 +8,17 @@
   text: 老城店 S4 每周日休息，周日的预测必须为 0。
 - id: promo_plan
   text: 必须使用促销计划.csv 中的促销（开始和结束日期都包含在内）；提升幅度随折扣增加、因品类而异，需从历史的促销折扣_% 中估计。
-- id: holiday_nov11
-  text: 2026 年 11 月 11 日（周三）是不在节假日.csv 里的一次性公共假日；门店照常营业，需求会像以往假日一样上升，烘焙和饮料涨幅最大。
+- id: promo_flyer
+  text: "<!-- when: promo_uplift=1 -->11 月的促销和以往一样（只有货架价签，没有宣传单），从历史中估计出的提升照原样用。<!-- /when --><!-- when: promo_uplift=1.5,2 -->11 月的促销还会登上纸质宣传单，带来的额外销量约为历史上同品类、同折扣促销的 {{promo_uplift}} 倍。<!-- /when -->"
+- id: promo_revision
+  text: "10 月 30 日（周五），在促销计划.csv 导出之后，计划里所有{{promo_cancelled}}类促销都已取消，不会执行；计划的其余部分不变。"
+- id: one_off_holiday
+  text: "{{holiday_date}}的一次性地方假日不在节假日.csv 里；门店照常营业，需求会像以往假日一样上升，烘焙和饮料涨幅最大。"
 - id: unit_change_i07
   text: 小餐包 I07 在 2026 年 5 月 31 日之前按个记录，6 月 1 日起按 6 个装一包记录；之前的历史要除以 6，I07 按包预测。
 - id: min_display
-  text: 核心商品（果蔬和乳制品，I01-I06）在门店营业日的预测量不得低于 6。
+  text: "核心商品（果蔬和乳制品，I01-I06）在门店营业日的预测量不得低于 {{min_display}}。"
 - id: wape_metric
-  text: 质量按每家门店的 WAPE（绝对误差之和 ÷ 实际需求之和）计算，实际需求包括缺货损失的销量，再对 5 家门店取平均，越低越好。
+  text: "质量按<!-- when: short_weight=1 -->每家门店的 WAPE（绝对误差之和 ÷ 实际之和）<!-- /when --><!-- when: short_weight=2,3 -->每家门店的加权 WAPE（少预测的每一件按多预测一件的 {{short_weight}} 倍计，再除以实际之和）<!-- /when -->计算，再对 5 家门店取平均，越低越好。<!-- tier: easy medium -->这一轮的实际是扣除退货后的收银销量，缺货日按记录算，小餐包 I07 不评估。<!-- /tier --><!-- tier: hard -->实际是顾客需求，包括缺货损失的销量。<!-- /tier -->"
 - id: submission_format
   text: 提交 forecast.csv，列为 store_id,item_id,date,forecast，2026-11-02 至 2026-11-15 每个门店、商品、日期恰好一行（共 840 行）。

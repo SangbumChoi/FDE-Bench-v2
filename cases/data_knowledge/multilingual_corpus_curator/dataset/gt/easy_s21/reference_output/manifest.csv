@@ -1,0 +1,109 @@
+source,status,path,reason
+archives/backup_2019.zip!__MACOSX/._最后的书店.md,skipped,,JUNK
+archives/old_drive_backup.zip!__MACOSX/._9791382418958.md,skipped,,JUNK
+inbox/.DS_Store,skipped,,JUNK
+inbox/untitled.txt,skipped,,JUNK
+london/~$draft notes.docx,skipped,,JUNK
+misc/Thumbs.db,skipped,,JUNK
+北京办公室/新建文本文档.txt,skipped,,JUNK
+東京オフィス/.DS_Store,skipped,,JUNK
+archives/backup_2019.zip!backup/2019/最后的书店.md,placed,library/1996/王浩然/最后的书店.txt,
+archives/backup_2019.zip!backup/2019/9796874409773.json,placed,library/1974/이서연/하얀_기차.txt,
+archives/old_drive_backup.zip!backup/old/9791382418958.md,placed,library/2005/최하은/오래된_지도.txt,
+archives/old_drive_backup.zip!backup/old/book_0425.md,placed,"library/1970/Eleanor_Calloway/The_Lighthouse_at_Cape_Halloway_—_Three_Generations,_One_Hou.txt",
+catalogs/rights_desk_titles.csv#1,placed,library/1980/李若曦/漫长的信使.txt,
+catalogs/rights_desk_titles.csv#2,placed,library/2002/정예린/푸른_서점.txt,
+catalogs/rights_desk_titles.csv#3,placed,library/2006/최현우/먼_강.txt,
+catalogs/目録_2022.csv#1,placed,library/1995/최현우/먼_서점.txt,
+catalogs/目録_2022.csv#2,placed,library/2016/윤민준/작은_정원.txt,
+catalogs/目録_2022.csv#3,placed,library/2022/鈴木湊/最後の港.txt,
+inbox/9790759822718.txt;北京办公室/book_0387.xml,placed,library/1978/吴嘉怡/安静的群岛.txt,
+inbox/9790926629553.docx,placed,library/1973/Clara_Calloway/The_Clock_Tower_at_Westerley_A_Novel.txt,
+inbox/9792663883342.md,placed,library/2011/吴子涵/透明的书店.txt,
+inbox/9792966171993.json;inbox/book_0411.xml,review,,CONFLICT
+inbox/9794262444634.docx,placed,library/2012/高橋湊/冬の夏.txt,
+inbox/9794532826023.xml,placed,library/1965/Joaquín_Olmedo/¿Cartas_desde_Castrillo_de_la_Vega.txt,
+inbox/9797797809237.json,review,,NO_AUTHOR
+inbox/9798186097433.docx;北京办公室/钟楼与地图.epub,placed,library/1996/李若曦/钟楼与地图.txt,
+inbox/A Map of Aldermoor.xml,placed,library/1997/Eleanor_Whitlock/A_Map_of_Aldermoor.txt,
+inbox/Cartas desde Valdemora.docx,placed,library/2010/Carmen_Barrachina/Cartas_desde_Valdemora.txt,
+inbox/Cartas_desde_San_Telmo_del_Mar_—_Relatos_de_la_costa_norte_y_de_quienes_se_quedaron.json;misc/Cartas desde San Telmo del Mar — Relatos de la costa norte y de quienes se quedaron.txt,placed,library/2005/Tomás_Ribera/Cartas_desde_San_Telmo_del_Mar_—_Relatos_de_la_costa_norte_y.txt,
+inbox/Chidao_de_Lieche.epub,placed,library/1989/李雨桐/迟到的列车.txt,
+inbox/Dengta_yu_Huayuan.txt,placed,library/1979/王浩然/灯塔与花园.txt,
+inbox/El jardín de Puerto Albéniz — Una novela en treinta y un capítulos breves.xml,placed,library/1991/Mateo_Quiroga/El_jardín_de_Puerto_Albéniz_—_Una_novela_en_treinta_y_un_cap.txt,
+inbox/El puerto perdido — Relatos de la costa norte y de quienes se quedaron.json,placed,library/1966/Inés_Ribera/El_puerto_perdido_—_Relatos_de_la_costa_norte_y_de_quienes_s.txt,
+inbox/El río dormido.epub;madrid/El río dormido.pdf,placed,library/1973/Joaquín_Olmedo/El_río_dormido.txt,
+inbox/The_Lost_Islands.epub;inbox/book_0380.docx,placed,library/1993/Marcus_Ashdown/The_Lost_Islands.txt,
+inbox/The_Silent_Garden.md,placed,library/2022/Clara_Calloway/The_Silent_Garden.txt,
+inbox/book_0317.md,placed,library/2002/Tobias_Thorne/The_Late_Harbour.txt,
+inbox/book_0320.pdf,placed,"library/2012/Marcus_Elsworth/The_Late_Clock_Tower_—_Notes_on_Memory,_Weather_and_the_Fami.txt",
+inbox/book_0322.txt,placed,library/2013/이서연/마지막_편지.txt,
+inbox/book_0330.pdf,placed,library/2011/佐藤大翔/青い時計.txt,
+inbox/book_0332.json,placed,library/2025/田中葵/庭の図書館.txt,
+inbox/book_0345.md,placed,library/1989/鈴木湊/遠い月.txt,
+inbox/book_0373.pdf;london/book_0372.md,placed,library/2003/Eleanor_Fairbairn/The_Long_Harbour_—_Stories_from_the_Northern_Coast_and_the_K.txt,
+inbox/book_0385.json;inbox/坂道の旅人.txt,placed,library/2003/佐藤大翔/坂道の旅人.txt,
+inbox/book_0421.epub;scans/The Northern Map (scan).pdf,placed,library/2018/Tobias_Thorne/The_Northern_Map.txt,
+inbox/冬の旅人.json,placed,library/2011/佐藤湊/冬の旅人.txt,
+inbox/列车与花园.txt;北京办公室/列车与花园.json,placed,library/2019/李嘉怡/列车与花园.txt,
+inbox/旅人の港.json,placed,library/2024/田中大翔/旅人の港.txt,
+inbox/最后的列车.txt,placed,library/2005/李若曦/最后的列车.txt,
+inbox/沉默的群岛.docx,placed,library/2006/吴子涵/沉默的群岛.txt,
+inbox/漫长的夏天.json,placed,library/2002/李雨桐/漫长的夏天.txt,
+inbox/灯台の旅人.html,placed,library/2007/田中葵/灯台の旅人.txt,
+inbox/硝子の鳥.docx;inbox/硝子の鳥.xml;東京オフィス/book_0378.html,placed,library/2004/佐藤湊/硝子の鳥.txt,
+inbox/遥远的列车.json;北京办公室/遥远的列车.txt,placed,library/2020/李嘉怡/遥远的列车.txt,
+inbox/마지막_지도.html,placed,library/1987/한서연/마지막_지도.txt,
+inbox/조용한_골목.txt,placed,library/2008/최현우/조용한_골목.txt,
+inbox/하얀 바다.txt,placed,library/1991/박하은/하얀_바다.txt,
+"london/A_Map_of_Marrow_Bay_—_Notes_on_Memory,_Weather_and_the_Families_We_Leave.epub",placed,"library/2016/Eleanor_Whitlock/A_Map_of_Marrow_Bay_—_Notes_on_Memory,_Weather_and_the_Famil.txt",
+london/A_Map_of_Westerley_—_Stories_from_the_Northern_Coast_and_the_Keepers_Who_Stayed_Behind.html,placed,library/1966/Eleanor_Whitlock/A_Map_of_Westerley_—_Stories_from_the_Northern_Coast_and_the.txt,
+"london/Letters from Marrow Bay — Notes on Memory, Weather and the Families We Leave.docx",review,,NO_YEAR
+london/The_Clock_Tower_at_Marrow_Bay.txt,placed,library/2002/Marcus_Elsworth/The_Clock_Tower_at_Marrow_Bay.txt,
+london/book_0316.html,placed,"library/2000/Tobias_Thorne/The_Quiet_Harbour_—_Notes_on_Memory,_Weather_and_the_Familie.txt",
+london/doc_0397.docx,review,,NO_TITLE
+london/Ｌｅｔｔｅｒｓ　ｆｒｏｍ　Ｆｅｎｗｉｃｋ　Ｈｏｌｌｏｗ.md,placed,library/2008/Marcus_Ashdown/Letters_from_Fenwick_Hollow.txt,
+london/Ｔｈｅ　Ｌｉｇｈｔｈｏｕｓｅ　ａｔ　Ｓａｉｎｔ　Ｂｒｅｎｎｏｃｋ.json,placed,library/2024/Priya_Ashdown/The_Lighthouse_at_Saint_Brennock.txt,
+madrid/9790631541874.md,placed,library/1976/Marina_Quiroga/Cartas_desde_Almenara.txt,
+madrid/9798340116949.txt,placed,library/1999/Tomás_Ribera/La_isla_olvidada.txt,
+madrid/Cartas desde Puerto Albéniz — Una novela en treinta y un capítulos breves.html,placed,library/1999/Mateo_Quiroga/Cartas_desde_Puerto_Albéniz_—_Una_novela_en_treinta_y_un_cap.txt,
+madrid/El jardín callado — Relatos de la costa norte y de quienes se quedaron.json,placed,library/2017/Mateo_Saldaña/El_jardín_callado_—_Relatos_de_la_costa_norte_y_de_quienes_s.txt,
+madrid/El_río_pequeño_—_Una_novela_en_treinta_y_un_capítulos_breves.html,placed,library/1971/Marina_Echeverría/El_río_pequeño_—_Una_novela_en_treinta_y_un_capítulos_breves.txt,
+"madrid/La_casa_perdida_—_Notas_sobre_la_memoria,_el_tiempo_y_las_familias_que_dejamos.json;madrid/La_casa_perdida_—_Notas_sobre_la_memoria,_el_tiempo_y_las_familias_que_dejamos.txt",placed,"library/1996/Mateo_Quiroga/La_casa_perdida_—_Notas_sobre_la_memoria,_el_tiempo_y_las_fa.txt",
+madrid/La_memoria_lejana.json;madrid/book_0413.xml,review,,CONFLICT
+madrid/La_playa_pequeña.txt,placed,library/2002/Carmen_Barrachina/La_playa_pequeña.txt,
+madrid/book_0342.txt,placed,library/1972/Marina_Echeverría/La_memoria_callada_—_Una_novela_en_treinta_y_un_capítulos_br.txt,
+misc/9790179670302.txt,placed,library/2021/Marcus_Elsworth/The_Long_Map.txt,
+misc/9792877476095.txt,placed,library/1994/이서연/먼_시계탑.txt,
+misc/9795315986194.xml,placed,library/1975/赵明哲/透明的灯塔.txt,
+misc/9796897984332.pdf;서울지사/9796897984332.epub,placed,library/1996/최현우/등대의_기차.txt,
+misc/9799723257082.html,placed,library/2021/정예린/하얀_골목.txt,
+misc/El_mapa_de_Castrillo_de_la_Vega.epub,placed,library/2018/Joaquín_Olmedo/El_mapa_de_Castrillo_de_la_Vega.txt,
+misc/Seojeom-ui_Sigyetap.epub;scans/서점의 시계탑 (scan).pdf,placed,library/1991/이수아/서점의_시계탑.txt,
+misc/The Harbour at Marrow Bay — A Novel in Thirty-One Short Chapters.txt,placed,library/1990/Priya_Ashdown/The_Harbour_at_Marrow_Bay_—_A_Novel_in_Thirty-One_Short_Chap.txt,
+misc/book_0407.txt,placed,library/1999/高橋大翔/青い庭.txt,
+misc/기차의_서점.txt,review,,NO_DESCRIPTION
+misc/먼 정원.txt,review,,NO_YEAR
+misc/조용한 지도.md,placed,library/1994/최하은/조용한_지도.txt,
+scans/scan_0414.pdf,review,,UNREADABLE
+scans/scan_0416.pdf,review,,UNREADABLE
+北京办公室/Shiluo_de_Xiatian.json,placed,library/2022/陈子涵/失落的夏天.txt,
+北京办公室/book_0312.txt,placed,library/2021/李雨桐/沉默的灯塔.txt,
+北京办公室/安静的列车.json,placed,library/2002/吴嘉怡/安静的列车.txt,
+北京办公室/迟到的港口.txt,placed,library/1993/赵明哲/迟到的港口.txt,
+北京办公室/迟到的群岛.html,placed,library/2021/吴嘉怡/迟到的群岛.txt,
+東京オフィス/9796322395863.xml,placed,library/1991/佐藤大翔/最後の図書館.txt,
+東京オフィス/9799052908921.pdf,placed,library/2019/田中大翔/庭の手紙.txt,
+東京オフィス/Toi_Ame.pdf;東京オフィス/遠い雨.epub,placed,library/2009/鈴木湊/遠い雨.txt,
+東京オフィス/book_0328.pdf,placed,library/1993/鈴木湊/夏の港.txt,
+東京オフィス/book_0391.docx,review,,NO_AUTHOR
+東京オフィス/坂道の月.epub,review,,NO_DESCRIPTION
+東京オフィス/最後の坂道.txt,placed,library/2017/佐藤大翔/最後の坂道.txt,
+東京オフィス/青い月.docx,placed,library/2003/高橋湊/青い月.txt,
+서울지사/9795333258495.epub,placed,library/1971/최현우/푸른_바다.txt,
+서울지사/9796694065364.epub,placed,library/1976/최하은/마지막_기차.txt,
+서울지사/9799740466276.epub,placed,library/1987/한서연/편지의_여름.txt,
+서울지사/Bada-ui_Jido.xml;서울지사/바다의 지도.pdf,placed,library/1967/윤하은/바다의_지도.txt,
+서울지사/book_0326.html,placed,library/1966/정예린/시계탑의_골목.txt,
+서울지사/doc_0395.txt,review,,NO_TITLE
+서울지사/오래된 강.txt,placed,library/1976/이서연/오래된_강.txt,

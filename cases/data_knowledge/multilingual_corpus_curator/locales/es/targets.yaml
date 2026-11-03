@@ -3,30 +3,22 @@
 - id: year_basis
   text: El año de la ruta es {{year_basis}}; un libro con un solo año usa ese año.
 - id: script
-  text: Los títulos y los nombres de autor de la ruta se escriben en {{script}}; la forma romanizada es la que los metadatos emparejan con el original.
+  text: Los títulos y los nombres de autor de la ruta se escriben en {{script}}.
 - id: co_authors
   text: En los libros con varios autores, la parte del autor en la ruta es {{multi_author}}.
-- id: name_rules
-  text: 'Títulos y nombres de autor: NFKC, cada \ / : * ? " < > | o carácter de control pasa a ser un espacio, cada tramo de espacios se convierte en {{sep}}, se conservan los primeros {{max_len}} caracteres y se quitan espacios, puntos y separadores en los extremos.'
+- id: separator
+  text: En los títulos y los nombres de autor, cada tramo de espacios se convierte en {{sep}}.
+- id: max_len
+  text: Un título o un nombre de autor conserva sus primeros {{max_len}} caracteres y después se quitan los espacios, puntos y separadores de los extremos.
 - id: content
-  text: Un archivo de la biblioteca contiene solo la sinopsis del libro, en UTF-8, con los párrafos separados por una línea en blanco.
-- id: manifest_review
-  text: manifest.csv enumera todos los libros (archivos de origen separados por ;, estado placed o review); los libros en revisión copian sus archivos bajo _review/ y llevan un código de motivo UNREADABLE, NO_TITLE, NO_AUTHOR, NO_YEAR, NO_DESCRIPTION o CONFLICT (el primero que se aplique).
-- id: precedence
-  text: Cada dato sale primero de los metadatos incrustados, luego del texto de la portadilla y por último del nombre del archivo; las fechas de creación y modificación de los archivos no son años de publicación.
-- id: encodings
-  text: Algunos archivos están en GB18030, CP949, Shift_JIS o CP1252 sin ninguna marca (el HTML declara su charset).
-- id: year_notations
-  text: Los años aparecen también como eras japonesas, años Minguo y Dangi, numerales chinos y números romanos; todos pasan a años de cuatro cifras.
-- id: author_variants
-  text: Un mismo autor aparece con varias romanizaciones o como Apellido, Nombre; use siempre la pareja oficial, que dan los demás libros del autor en la unidad cuando faltan en los archivos del libro.
-- id: duplicates
-  text: Las copias del mismo libro en varios archivos o formatos se funden en un solo archivo de biblioteca, y su fila del manifiesto las enumera todas.
-- id: exceptions
-  text: Los datos que faltan se toman de los otros archivos del libro; un nombre de archivo con sentido es un título (los genéricos no); una línea de copyright da el año; sin sinopsis es NO_DESCRIPTION y nunca se inventa; dos fuentes del mismo rango con años distintos son CONFLICT.
-- id: containers
-  text: Los archivos zip y los CSV de catálogo (un libro por fila, cabeceras en inglés o japonés) también contienen libros; los escaneos de solo imagen se ignoran si hay una copia legible y si no son UNREADABLE; la basura no genera nada.
+  text: Un archivo de la biblioteca contiene solo la sinopsis del libro (sin líneas de título, autor ni año), en UTF-8, con los párrafos separados por una línea en blanco.
+- id: review_codes
+  text: Una fila de revisión lleva un código de motivo, UNREADABLE, NO_TITLE, NO_AUTHOR, NO_YEAR, NO_DESCRIPTION o CONFLICT (el primero de este orden que se aplique).
 - id: missing_author
-  text: Un libro sin autor va a revisión como NO_AUTHOR; es una política y, con una excepción aprobada, se coloca como "{{fallback_author}}".
-- id: scoring
-  text: Por libro, 1 por la ruta exacta con la sinopsis (si no, 0,4 por la sinopsis más 0,2 por cada acierto de año, título y autor; 0,2 por la ruta correcta con otra sinopsis), 1 por el código de revisión correcto cuando todas las filas que nombran sus archivos coinciden (0,4 si coinciden en otro código, 0 si se contradicen); una fila del manifiesto que falta o está mal cuesta una quinta parte del crédito del libro; en medium y hard se resta 0,5 por cada archivo de la biblioteca que no es un libro.
+  text: '<!-- when: no_author=review -->Un libro sin autor va a revisión como NO_AUTHOR; es una política y, con una excepción aprobada, se coloca como "{{fallback_author}}".<!-- /when --><!-- when: no_author=Unknown,Anonymous -->Un libro sin autor se coloca con el nombre de autor "{{fallback_author}}" como cualquier otro libro y no va a revisión (no se usa NO_AUTHOR).<!-- /when -->'
+- id: no_description
+  text: Un libro sin sinopsis en ninguna fuente va a revisión como NO_DESCRIPTION; nunca se escribe una sinopsis inventada ni un texto de relleno.
+- id: conflict
+  text: Dos fuentes del mismo rango que no coinciden en un año (por ejemplo, un registro JSON y un registro ONIX del mismo libro) mandan el libro a revisión como CONFLICT; no se toma ninguno de los dos años.
+- id: generic_titles
+  text: Un nombre de archivo con sentido cuenta como título y los guiones bajos son espacios; uno genérico como doc_0042, scan_0007, book_0031 o un ISBN no cuenta, y un libro sin otro título va a revisión como NO_TITLE.

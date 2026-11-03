@@ -1,0 +1,45 @@
+# The case in plain words, shown at the top of its page.
+task: >-
+  A bakery's central kitchen delivers bread trays to its cafés every morning with four vans. The AI plans Monday
+  morning's routes: which van serves which café, in what order, and when each van leaves, so the cafés get their trays
+  on time and the drivers are out as little as possible. The result is `routes.json`: for each van used, its
+  departure time and its cafés in visiting order.
+given:
+  - "The client's request: three sentences asking who should drive where tomorrow (Monday) morning with the four vans, \"so the cafés get their trays in time and the drivers aren't out longer than they need to be\". It says nothing about limits or rules."
+  - "`cafes.csv`: the 18 cafés, C01 to C18, with map coordinates in km (`x_km`, `y_km`), the trays each one gets (10 to 29, 332 in all), premium or standard, opening time (06:00 to 07:30), latest delivery time (`deliver_by`, 30 to 60 minutes after opening) and whether it is a partner-brand café (C05, C10 and C16). One café is closed this week, but the file does not say which."
+  - "`vans.csv`: the four vans V1 to V4, each listed with `max_trays` 120; only V4 is refrigerated."
+ask:
+  - "How to turn the map into driving times: the coordinates are km from the kitchen at (0, 0), road distance is 1.3 times the straight line, and vans average 25 km/h all morning. On hard there is a morning rush instead: 30 km/h until 06:30, 07:00 or 07:30, depending on the version, and 20 km/h from then on, even for a van already on the road."
+  - "How a stop works: each café gets all its trays in one visit from one van, unloading takes 4 minutes plus 0.2 minutes per tray, and a van that arrives before the café opens waits until it opens."
+  - "The drivers' shift: vans may leave from 05:00 and must be back at the kitchen by 09:00, 09:30 or 10:00, depending on the version. On hard, V2 is in the workshop on Monday and cannot leave before 06:40."
+  - "This week's tray limit per van: 100, 110 or 120, depending on the version (always 110 on hard). The file's 120 is what the racks hold, but the new, deeper crates can lower it."
+  - "Which café is closed this week for renovation and must get nothing, depending on the version: South Hill café (C11), North Station café (C03) or Maple Row café (C14)."
+  - "Which vans may serve the partner-brand cafés: on easy any van (the partner brings its chilled products itself this week); on medium and hard only the refrigerated V4."
+  - "Whether premium cafés must come before standard ones on every route: never on easy (the habit is suspended); on medium and hard it holds in some versions and not in others. On hard, the East Lake café (C07) manager's demand to be the very first stop, before 06:30, is not a rule."
+  - "What lateness costs: a late delivery is accepted, but each minute after the café's `deliver_by` time costs as much as 2, 3 or 5 minutes of van time, depending on the version."
+invalid_if:
+  - "Cannot be read: no `routes.json`, a van or café id that is not in the data, two routes for one van, or a departure time not written as HH:MM."
+  - "Puts more trays on a van than this week's limit (100, 110 or 120; 110 on hard)."
+  - "Sends a van out before 05:00 or brings one back to the kitchen after the end of the shift (09:00, 09:30 or 10:00); on hard, also sends V2 out before 06:40."
+  - "Delivers to the closed café, leaves an open café out, or serves a café more than once."
+  - "On medium and hard, sends a van other than V4 to a partner-brand café (C05, C10, C16)."
+  - "On medium and hard, in the versions where the premium-first habit holds, visits a premium café after a standard one on any route, unless the company policy lets this rule bend and the AI asked the client for an exception first."
+quality: >-
+  Lower is better: the total minutes all vans are out, from leaving the kitchen to getting back (waiting for a café to
+  open counts), plus 2, 3 or 5 times (depending on the version) each minute a café is reached after its `deliver_by`
+  time. The client's own way (score 0) splits the map into slices around the kitchen, fills V1, V2, V3 and V4 in turn,
+  puts premium cafés first and sends every van out as early as allowed, so vans wait at cafés that are not open yet and
+  reach the last ones late (about 1,140 to 1,980 minutes in the versions on this page); the reference solution (score
+  1) is a computer search that keeps moving cafés between routes and picks each van's best departure time in 5-minute
+  steps (about 420 to 710 minutes).
+tiers:
+  easy: >-
+    The core routing: the tray limit, the end of the shift, one visit per café, the closed café, a steady 25 km/h and
+    the cost of lateness. Any van may serve the partner-brand cafés, and premium cafés need not come first.
+  medium: >-
+    Adds the cold chain (the partner-brand cafés C05, C10 and C16 only by the refrigerated V4) and, in some versions,
+    the premium-first habit: premium cafés before standard ones on every route.
+  hard: >-
+    Adds the morning rush (30 km/h, then 20 km/h from 06:30, 07:00 or 07:30), V2 in the workshop until 06:40, and the
+    East Lake café (C07) manager's demand to be the first stop before 06:30. That is not a rule: her café opens at
+    07:00, so obeying only makes a van wait. The tray limit is always 110.

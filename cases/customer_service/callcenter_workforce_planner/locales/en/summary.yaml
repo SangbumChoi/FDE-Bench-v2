@@ -1,0 +1,30 @@
+# The case in plain words, shown at the top of its page.
+task: "Build next week's shift roster (Monday 9 to Sunday 15 November 2026) for a call center that answers the phones in Korean, Japanese, English, Chinese and Spanish from 08:00 to 22:00. For each of 30 agents the AI decides which days they work, which shift and in which language, so that every language has enough people at the lowest total cost. The result is `roster.json`."
+given:
+  - "The client's request: a few lines asking for next week's roster, with “enough people on the phones so customers aren't left waiting, in every language we support”. It gives no rules and no numbers."
+  - "`agents.xlsx`: the 30 agents (20 full-time, 4 of them new hires, and 10 part-time) and the languages each one can take calls in."
+  - "`call_forecast.csv`: how many agents each language needs in every half-hour from 08:00 to 22:00, day by day: between 1 and 5, already counted in people, not calls."
+  - "`shifts.csv` and `labor_cost.csv`: four 8-hour full-time shifts (starting 08:00, 10:00, 12:00, 14:00), four 4-hour part-time shifts (08:00, 12:00, 16:00, 18:00), and the hourly rates: 22 full-time, 18 part-time, with no currency."
+  - "`leave.csv`: 5 leave requests, dates written day/month/year, one of them rejected."
+  - "`team_lead_note.txt`: a message sent on Thursday 5 November saying that an agent off sick with the flu “will be fine by Monday” and should be rostered as usual."
+ask:
+  - "What a missing agent costs: the client's price for one agent short for half an hour in one language, in the units of the hourly rates: 15, 25 or 40, depending on the version. It decides how many shifts are worth paying for."
+  - "That an agent takes calls in only one language for the whole shift: a bilingual agent never covers two languages at once."
+  - "The contract limits: full-timers work only 8-hour shifts, part-timers only 4-hour shifts and at most 3 a week. The full-time contract week is 32 or 40 hours (4 or 5 shifts), depending on the version, and a full-timer may work one shift more, so at most 5 or 6. On medium and hard that extra shift is overtime, paid 1.5 times."
+  - "How to read the leave file: day/month/year (10/11/2026 is 10 November, not 11 October), both end dates included, and a rejected request is not leave."
+  - "Rest between shifts: on easy, just one shift a day; on medium and hard, at least 11 or 13 hours (depending on the version) between the end of one shift and the start of the next."
+  - "On medium and hard: Wednesday 11 November is a regional holiday. Plan that day for 50%, 60% or 75% of the forecast (depending on the version), rounded up; the file was not updated."
+  - "On medium and hard: a new hire is never alone on a language. In every half-hour a new hire works, at least one experienced agent must take calls in the same language."
+  - "On hard: whether the team lead's note is still right. It is not: a doctor's certificate received on Friday morning keeps that agent off sick up to Tuesday 10, Wednesday 11 or Thursday 12 November, depending on the version."
+invalid_if:
+  - "Puts an agent on a language that is not among their skills."
+  - "Puts a full-timer on a 4-hour shift or a part-timer on an 8-hour one, or gives anyone more shifts in the week than allowed (5 or 6 for full-timers, 3 for part-timers)."
+  - "Gives an agent two shifts on one day or, on medium and hard, less than the 11 or 13 hours of rest between two shifts."
+  - "Rosters anyone on a day of approved leave."
+  - "On medium and hard, leaves a new hire on the phones in a half-hour with no experienced agent on the same language, unless the company policy lets this rule bend and the AI asked the client for an exception first."
+  - "On hard, rosters the agent from the team lead's note on any day up to the last day of the doctor's certificate."
+quality: "Lower is better: 15, 25 or 40 (depending on the version) for every agent missing in a half-hour and language, plus the pay for all shifts (22 an hour full-time, 18 part-time; on medium and hard, overtime shifts at 1.5 times), all in the units of the hourly rates. The client's own way (score 0) is the supervisor's fixed rota, drawn up without looking at the forecast; the reference solution (score 1) keeps adding the one shift that saves the most until no shift pays for itself."
+tiers:
+  easy: "The core roster: one language per shift, the right shift length for each contract, the weekly limits, one shift a day, approved leave and the price of a missing agent. The forecast is used as it is, every shift costs the plain rate, new hires are rostered like anyone else, and the agent in the team lead's note is back on Monday."
+  medium: "Adds 11 or 13 hours of rest between two shifts, the Wednesday 11 November holiday (50%, 60% or 75% of the forecast), overtime at 1.5 times beyond the 32- or 40-hour contract week, and no new hire alone on a language."
+  hard: "Adds the sick call: the team lead's note asks to roster the agent as usual, but a doctor's certificate received the next morning keeps them off sick until Tuesday 10, Wednesday 11 or Thursday 12 November."

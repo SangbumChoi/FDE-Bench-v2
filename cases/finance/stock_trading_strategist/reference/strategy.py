@@ -4,8 +4,8 @@ Cross-sectional momentum inside the client's instructions and limits, standard l
 
   * read the day's notices that the round's rules use: a stock added to the restricted list (never buy it
     again; sell it out as fast as the large-order threshold allows), and from medium a client cash withdrawal
-    (reserve the amount, raise it pro rata as soon as it is announced, early enough for T+2, and size the
-    weights on equity after the payout) and a cut of the single-stock limit (trade down to the new limit from
+    (the amount is the agreement's percentage of its basis; reserve it, raise it pro rata as soon as it is
+    announced, early enough for T+2, and size the weights on equity after the payout) and a cut of the single-stock limit (trade down to the new limit from
     the notice on); in hard a note passing on an inside tip makes its stock untouchable for buying, and a note
     asking for more risk is ignored;
   * report the status table at the close that just happened: stock and sector weights, buying power for the
@@ -75,15 +75,16 @@ class Strategy:
                 self.restricted.add(n["ticker"])
                 self.closing_out.add(n["ticker"])
             elif kind == "cash_withdrawal" and cfg["medium"] and not cfg.get("ignore_withdrawal"):
-                self.withdrawal = {"pct": n["percent"] / 100, "pay": n["payment_date"], "notice_equity": equity}
+                self.withdrawal = {"pct": cfg["withdrawal_pct"] / 100, "pay": n["payment_date"], "notice_equity": equity}
             elif kind == "risk_limit_change" and cfg["medium"] and not cfg.get("ignore_cut"):
                 self.cap_cut = (n["effective_date"], n["stock_limit_change_points"] / 100)
             elif kind == "note" and cfg["hard"] and n.get("request") == "buy" and n.get("ticker"):
                 self.no_buy.add(n["ticker"])
 
     def _withdrawal_amount(self, equity):
-        """The payout as it stands at this close (basis: capital, the notice day's equity, or the equity at the
-        close before the payment date: today's until then)."""
+        """The payout as it stands at this close: the agreement's percentage (the notice gives only the date) of
+        its basis: capital, the notice day's equity, or the equity at the close before the payment date (today's
+        until then)."""
         w = self.withdrawal
         basis = self.cfg["withdrawal_basis"]
         base = CAPITAL if basis == "capital" else w["notice_equity"] if basis == "notice" else equity

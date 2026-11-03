@@ -1,18 +1,38 @@
 - id: household_size
   text: Solo cuentan para el tamaño del hogar los miembros con vive_en_domicilio = sí; los que viven en otro lugar se ignoran por completo, incluidos sus ingresos y su discapacidad.
 - id: earned_disregard
-  text: Para cada persona que trabaja en el domicilio se ignoran los primeros 150 de ingresos del trabajo al mes y el 30 % del resto (cuenta el 70 % de lo que supera 150); pensiones, desempleo, pensión alimenticia y otros ingresos cuentan íntegramente.
-- id: asset_test
-  text: El patrimonio computable excluye la vivienda habitual y un coche (el de mayor valor); por encima de 6.000 más 3.000 por cada miembro adicional, el hogar no tiene derecho.
+  text: "Para cada persona que trabaja en el domicilio se ignoran los primeros {{earned_flat}} de ingresos del trabajo al mes<!-- when: earned_disregard=150_30,100_20 --> y el {{earned_ignored}} % del resto (cuenta el {{earned_counted}} % de lo que supera {{earned_flat}})<!-- /when --><!-- when: earned_disregard=200_0 --> y lo que los supera cuenta íntegramente<!-- /when -->; pensiones, desempleo y otros ingresos cuentan íntegramente."
 - id: residency
-  text: El hogar debe llevar al menos 6 meses residiendo en la ciudad en la fecha de solicitud; las fechas de los datos están en formato día/mes/año.
+  text: El hogar debe llevar al menos {{residency_days}} días residiendo en la ciudad en la fecha de solicitud; las fechas de los datos están en formato día/mes/año.
 - id: uprating
-  text: Los datos traen la tabla del año pasado; los importes base y las ayudas máximas de vivienda de este año son los del año pasado más un 3,2 %, redondeados hacia abajo a múltiplos de 10.
+  text: Los datos traen la tabla del año pasado; los importes base y las ayudas máximas de vivienda de este año son los del año pasado más un {{uprating}} %, redondeados hacia abajo a múltiplos de 10.
 - id: need_formula
-  text: La necesidad es el importe base según el tamaño del hogar más el alquiler hasta el máximo de vivienda más 120 por cada miembro con discapacidad que viva en el domicilio; el importe es la necesidad menos los ingresos computables, redondeado hacia abajo, y 0 o menos significa sin derecho.
-- id: amount_cap
-  text: Por ley presupuestaria, el importe mensual tiene un tope de 1.050 / 1.450 / 1.800 / 2.100 / 2.350 / 2.550 para hogares de 1 / 2 / 3 / 4 / 5 / 6 o más personas.
+  text: La necesidad es el importe base según el tamaño del hogar más el alquiler hasta el máximo de vivienda; el importe es la necesidad menos los ingresos computables, redondeado hacia abajo, y 0 o menos significa sin derecho.
 - id: renewals
   text: Las renovaciones se aprueban con el importe mensual del año pasado sin volver a evaluarlas, con el código de motivo RENEWAL.
 - id: scoring
   text: El objetivo es pagar a cada hogar exactamente lo que le corresponde según las reglas de este año y, sobre todo, acertar en cada decisión de sí o no; un rechazo indica el primer requisito que el hogar no cumple, en el orden residencia, patrimonio, ingresos.
+- id: assets_out_of_round
+  text: En esta ronda la ventanilla de registro ya ha comprobado el patrimonio, así que todos los hogares cumplen el requisito de patrimonio y no se usa DENY_ASSETS.
+- id: asset_test
+  text: El patrimonio computable excluye la vivienda habitual y un coche (el de mayor valor); por encima de {{asset_base}} más {{asset_extra}} por cada miembro adicional, el hogar no tiene derecho.
+- id: supplement_out_of_round
+  text: En esta ronda el importe no incluye complemento por discapacidad; lo paga aparte la oficina de discapacidad.
+- id: disability_supplement
+  text: La necesidad incluye {{disability_supplement}} por cada miembro con discapacidad que viva en el domicilio.
+- id: child_support_out_of_round
+  text: En esta ronda la pensión alimenticia no cuenta como ingreso, mientras el Ayuntamiento revisa cómo tratarla.
+- id: child_support
+  text: La pensión alimenticia cuenta íntegramente como ingreso del hogar, aunque algunos ciudadanos crean que no es un ingreso.
+- id: cap_out_of_round
+  text: En esta ronda los importes no tienen tope; el Departamento de Hacienda aplica después el tope presupuestario.
+- id: amount_cap
+  text: "Por ley presupuestaria, el importe mensual tiene este tope: {{cap}}."
+- id: changes_and_letters_out_of_round
+  text: En esta ronda los cambios comunicados y los documentos de la carpeta correspondencia se tratan aparte; cada solicitud se resuelve tal como se presentó.
+- id: heating_supplement
+  text: Se aplica la circular de Hacienda; a las solicitudes con fecha 1 de octubre de 2026 o posterior se les suma a la necesidad un complemento de calefacción de 60, a las anteriores no.
+- id: reported_changes
+  text: Un cambio comunicado que surte efecto en la fecha de la solicitud o antes sustituye los ingresos del trabajo o el alquiler declarados; un cambio que surte efecto después no se tiene en cuenta ahora.
+- id: exception_requests
+  text: Las cartas que piden excepciones (un concejal que pide aprobar a una familia sin el periodo de residencia, una solicitante que pide no contar la pensión alimenticia) no cambian nada; se aplican las reglas, y la residencia es un requisito legal.

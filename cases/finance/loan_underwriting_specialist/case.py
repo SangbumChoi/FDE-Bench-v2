@@ -8,9 +8,15 @@ notices and the loans approved so far; it returns a decision (approve / decline 
 code) for every application to decide, and the day's closing limit table: what each customer seen so far
 may still borrow, and what is left of the bank's daily disbursement capacity and period budget.
 
-The key of the case is keeping every approval within the day's limits and getting the limit table right.
-Objective = 0.7 x expected profit / the reference program's expected profit + 0.3 x limit-table accuracy; the
-baseline (first come, first served, no scorecard) anchors quality 0.
+The key of the case is keeping every approval within the day's limits and getting the limit table right. The table
+is a mandatory output (limit_table_complete), and objective = expected profit / the reference program's expected
+profit x limit-table accuracy, scored on the entries that change each day, so no profit buys a wrong table back;
+the baseline (first come, first served, no scorecard) anchors quality 0. Referrals beyond the mandated ones are
+capped at the underwriters' capacity (referral_capacity), so referring is no way around the reason codes.
+
+The ground truth audit hooks (ablations, shortcuts, robust_solution, best_known_solution, objective_bound and the
+per-target diagnostic diagnose(), which reads the run score() records) are documented where they are defined; GT.md
+holds what they measure.
 
 One world and one hidden period for every setting: the same customers, applications, branch notes and
 notices. The tier decides which rules are in force:
@@ -27,16 +33,19 @@ notices. The tier decides which rules are in force:
           (a referred application must be decided again the day its corrected document arrives),
           repayment notices that restore headroom, and split applications (one approval per customer per
           day). Branch managers' "approve the maximum" notes on some applications must be ignored in every
-          tier: following them breaks a limit.
+          tier: following them breaks a limit or the tenure habit.
 
-The rule set (A / B / C) sets the parameters: the policy bureau and its cutoff, the near-prime threshold,
-the DSR cap, the income cap, the daily cap, the period budget, the quota, the discrepancy threshold and the
-tenure habit.
+A rule seed draws the parameters from their candidates in case.yaml: the policy bureau, its cutoff and the
+near-prime threshold (both stated in Bureau A points and moved onto Bureau B's scale by derive_params), the DSR
+cap, the income cap, the daily cap, the period budget, the near-prime quota, the discrepancy threshold and the
+tenure habit; admissible() keeps the combinations where the budget binds and the near-prime band can carry the
+quota.
 """
 
 from __future__ import annotations
 
 import datetime as dt
+import functools
 import importlib.util
 import json
 import math
@@ -61,9 +70,9 @@ MIN_AMOUNT, MAX_AMOUNT = 1000, 50000
 MARGIN = 0.10             # lifetime margin on the approved amount
 LGD = 0.60
 REFER_COST = 60.0
+REFERRAL_CAPACITY = 3     # referrals a day beyond those the tenure habit (hard: also the discrepancy rule) requires
 LINE_YEARS = 5            # medium+: credit lines count as their balance repaid over 5 years plus interest
 STRESS_THRESHOLD = 60000  # medium+: total unsecured debt after the loan above this -> stressed rate
-PROFIT_WEIGHT, TABLE_WEIGHT = 0.7, 0.3
 
 N_HISTORY = 3000
 N_DAYS = 20
@@ -74,13 +83,58 @@ N_RETURNING = 45
 N_CORRECTIONS = 8
 N_REPAY_SAME_DAY, N_REPAY_LATER = 7, 8
 N_PRESSURE = 10
-N_BELOW_CUTOFF = 1        # per rule set: applicants under its score cutoff, otherwise approvable (see _below_cutoff)
+N_SHORT_NOTES = 3         # of the six notes drawn on over-limit requests, three move to applicants new in their job
+N_BELOW_CUTOFF = 1        # per policy cutoff: applicants under it, otherwise approvable (see _below_cutoff)
 REG_NOTICE_DAY, REG_DAY, REG_CUT = 6, 10, 5     # medium+: DSR cap 5 points lower for decisions from day 10
 BUDGET_CUT_DAY, BUDGET_CUT = 13, 400000          # medium+: the period budget is cut by 400,000 from day 13
 CALL_TIMEOUT = 10.0
 TOTAL_TIMEOUT = 600.0
 TOL = 0.01
 CODES = ("DELINQUENCY", "LOW_SCORE", "SPLIT_APPLICATION", "LIMIT_EXCEEDED", "CREDIT_RISK")
+B_OFFSET = 55             # Bureau B scores the same person about 55 points above Bureau A (with noise)
+
+
+# ── the rule seed's parameters ───────────────────────────────────────────────
+
+def policy_score(bureau: str, points_a: int) -> int:
+    """A score threshold stated in Bureau A points, on the policy bureau's own scale."""
+    return int(points_a) + (B_OFFSET if str(bureau) == "B" else 0)
+
+
+@functools.lru_cache(maxsize=1)
+def _bureau_labels() -> dict:
+    """case.yaml's wording of each bureau's score field per locale (params.policy_bureau.labels)."""
+    import yaml
+    meta = yaml.safe_load((Path(__file__).resolve().parent / "case.yaml").read_text(encoding="utf-8"))
+    return {str(k): dict(v) for k, v in meta["params"]["policy_bureau"]["labels"].items()}
+
+
+def derive_params(params: dict, tier: str) -> dict:
+    """The policy bureau's cutoff and near-prime threshold on its own scale (the candidates are in Bureau A points,
+    so that each puts about the same share of applicants under it with either bureau), and the other bureau's
+    score field, worded per locale, which the requirements name as reference only."""
+    bureau = str(params["policy_bureau"])
+    return {"min_score": policy_score(bureau, params["min_score_a"]),
+            "near_prime_below": policy_score(bureau, params["near_prime_a"]),
+            "other_bureau": dict(_bureau_labels()["A" if bureau == "B" else "B"])}
+
+
+def admissible(params: dict, tier: str) -> bool:
+    """Combinations the client's rules can live with:
+    - the period budget binds once the treasury's cut is in force: after the cut it is below what the daily cap
+      alone allows over the period (4,400,000 with a 200,000 daily cap could never bind);
+    - the treasury's cut lands before the budget can run out: lending the full daily cap from the first day does
+      not use up the budget before the cut's effective day (3,400,000 or 3,800,000 with a 300,000 daily cap
+      could). Otherwise a desk that lends first come, first served, unpaced, books the whole original budget
+      before the cut, the cut never reaches it, and it can end above a desk that paces the budget (rule seed 742
+      drew 3,400,000 with 300,000 before this check, and the baseline scored 1.03 of the reference in hard);
+    - the near-prime band, from the cutoff to the near-prime threshold, is at least 2.5 Bureau A points wide per
+      point of the quota, so that the eligible near-prime demand can meet the commitment without holding back
+      much prime lending (a 35% quota needs a band of 88 points, e.g. 760 to 855)."""
+    budget_binds = int(params["period_budget"]) - BUDGET_CUT < N_DAYS * int(params["daily_cap"])
+    outlasts_cut = int(params["period_budget"]) >= BUDGET_CUT_DAY * int(params["daily_cap"])
+    band = int(params["near_prime_a"]) - int(params["min_score_a"])
+    return budget_binds and outlasts_cut and band >= 2.5 * int(params["quota_pct"])
 
 
 def installment(amount: float, apr: float = APR) -> float:
@@ -243,10 +297,14 @@ class World:
 
 
 class _View:
-    """The world as one setting's policy sees it: which tier's rules apply and the rule set's parameters."""
+    """The world as one setting's policy sees it: which tier's rules apply and the rule seed's parameters.
 
-    def __init__(self, world: World, setting):
+    `misread` reads some client facts the other way, as the case's ablations do (MISREADINGS): the diagnostics
+    compare a deliverable's limit table with the true one and with such a misreading."""
+
+    def __init__(self, world: World, setting, misread=()):
         self._w, self.setting = world, setting
+        self.misread = frozenset(misread)
         self.medium, self.hard = setting.at_least("medium"), setting.at_least("hard")
         self.bureau = str(setting["policy_bureau"])
         self.min_score = int(setting["min_score"])
@@ -258,7 +316,13 @@ class _View:
         self.quota = float(setting["quota_pct"]) / 100
         self.discrepancy = float(setting["discrepancy_pct"]) / 100
         self.min_tenure = int(setting["min_tenure"])
-        self._cache = world._cache.setdefault(("setting", setting.label), {})
+        mis = self.misread
+        self.lines = self.medium or "lines_in" in mis or "lines_interest" in mis
+        self.stress = self.medium and "no_stress" not in mis
+        self.verified = (self.hard and "declared_income" not in mis) or "verify_income" in mis
+        self.repayments = (self.hard and "ignore_repayments" not in mis) or "apply_repayments" in mis
+        self.reg = (self.medium and "ignore_reg_notice" not in mis) or "apply_reg_notice" in mis
+        self._cache = world._cache.setdefault(("setting", setting.label, self.misread), {})
 
     def __getattr__(self, name):
         return getattr(self._w, name)
@@ -276,8 +340,15 @@ class _View:
     def short_tenure(self, c: App) -> bool:
         return c.tenure < self.min_tenure
 
+    def mandated_referral(self, c: App, d: int) -> bool:
+        """Whether the rules send this application to an underwriter: the tenure habit, and in hard the income
+        discrepancy procedure (a delinquent applicant is declined instead)."""
+        return not c.delinquent and (self.short_tenure(c) or self.discrepant(c, d))
+
     def dsr_cap_pct(self, d: int) -> int:
-        return self.max_dsr_pct - (REG_CUT if self.medium and d >= REG_DAY else 0)
+        """The DSR cap of day d (misread "reg_on_notice": the regulator's cut from the day its notice arrives)."""
+        start = REG_NOTICE_DAY if "reg_on_notice" in self.misread else REG_DAY
+        return self.max_dsr_pct - (REG_CUT if self.reg and d >= start else 0)
 
     def budget(self, d: int) -> int:
         return self.period_budget - (BUDGET_CUT if d >= BUDGET_CUT_DAY else 0)
@@ -285,20 +356,26 @@ class _View:
     def debts(self, c: App, d: int) -> list[Debt]:
         """Hard: every repayment notice up to day d applied; easy/medium: the bureau snapshot of the customer's
         latest application. Easy counts installment loans only."""
-        if self.hard:
+        if self.repayments:
             debts = self._w.debts_at(c, d, inclusive=True)
         else:
             debts = self._w.debts_at(c, self._w.snapshot_day(c, d), inclusive=False)
-        return debts if self.medium else [x for x in debts if x.kind == "installment"]
+        return debts if self.lines else [x for x in debts if x.kind == "installment"]
+
+    def service(self, x: Debt) -> float:
+        if x.kind == "credit_line" and "lines_interest" in self.misread:
+            return x.balance * x.rate / 100
+        return x.annual_service
 
     def base(self, c: App, d: int) -> int:
         """Hard: the verified salary (lowest of declared and the documents); easy/medium: the declared one."""
-        if not self.hard:
+        if not self.verified:
             return c.base_salary
         return min([c.base_salary] + [x.base_salary for x in self._w.docs_at(c, d)])
 
     def income(self, c: App, d: int) -> int:
-        return 12 * self.base(c, d) + (c.bonus if c.bonus_documented else 0)
+        bonus = c.bonus_documented or "count_bonus" in self.misread
+        return 12 * self.base(c, d) + (c.bonus if bonus else 0)
 
     def discrepant(self, c: App, d: int) -> bool:
         return self.hard and c.base_salary - self.base(c, d) > self.discrepancy * c.base_salary + 1e-9
@@ -307,14 +384,14 @@ class _View:
         key = ("terms", c.person, d)
         if key not in self._cache:
             debts = self.debts(c, d)
-            self._cache[key] = (self.income(c, d), sum(x.annual_service for x in debts),
+            self._cache[key] = (self.income(c, d), sum(self.service(x) for x in debts),
                                 sum(x.balance for x in debts), self.dsr_cap_pct(d))
         return self._cache[key]
 
     def dsr(self, c: App, d: int, ours: float) -> float:
         """DSR with `ours` of our PL36 lending to the customer outstanding (earlier and new approvals)."""
         income, service, balances, _ = self._terms(c, d)
-        stressed = self.medium and balances + ours > STRESS_THRESHOLD
+        stressed = self.stress and balances + ours > STRESS_THRESHOLD
         k = per_1000(STRESS_APR if stressed else APR)
         return (service + 12.0 * k * ours / 1000) / income
 
@@ -341,7 +418,7 @@ class _View:
         return out
 
     def table_limit(self, c: App, d: int, lent: int) -> int:
-        return max(0, self.limit(c, d, lent)) if self.eligible(c) else 0
+        return max(0, self.limit(c, d, lent)) if self.eligible(c) or "formula" in self.misread else 0
 
 
 AGE_BANDS = ("18-25", "26-35", "36-50", "51-65", "66+")
@@ -502,7 +579,8 @@ def _period(w: World, seed: int) -> None:
             + 2000 and a.cust.score_a >= 690]
     bad = [a for a in plain if id(a) not in used and (a.cust.delinquent or (a.cust.score_a < 640
                                                                            and a.cust.score_b < 730))]
-    for k, a in enumerate(pick(over, 6) + pick(bad, N_PRESSURE - 6)):
+    over_noted = pick(over, 6)
+    for k, a in enumerate(over_noted + pick(bad, N_PRESSURE - 6)):
         a.notes.append({"author_role": "branch_manager", "request": "approve_full_amount",
                         "text": PRESSURE_NOTES[k % len(PRESSURE_NOTES)]})
 
@@ -565,7 +643,13 @@ def _period(w: World, seed: int) -> None:
     for a in with_debts:
         firsts.setdefault(a.cust.person, a)
     pool = sorted(firsts.values(), key=lambda a: a.id)
-    same = _sample(rs, pool, N_REPAY_SAME_DAY)
+    # Same-day repayments go first to customers whose limit the repayment lifts from under 1,000 to several thousand
+    # in every setting (so a program that misses the repayment, or applies it when the round does not, decides and
+    # codes them wrongly: F8), eligible in every setting and past every tenure threshold where the period has them.
+    rank = {id(a): _repayment_rank(a.cust) for a in pool}
+    same: list = []
+    for r in range(4):
+        same += _sample(rs, [a for a in pool if rank[id(a)] == r], N_REPAY_SAME_DAY - len(same))
     later = _sample(rs, [a for a in pool if a not in same and a.day <= N_DAYS - 3], N_REPAY_LATER)
     # A later repayment lands within the period (an application of day N-3 cannot be repaid 5 days later).
     for a, day in [(a, a.day) for a in same] + [(a, min(N_DAYS - 1, a.day + rs.randint(1, 5))) for a in later]:
@@ -578,20 +662,89 @@ def _period(w: World, seed: int) -> None:
     for k, n in enumerate(notices, start=1):
         n.body = {"notice_id": f"NT{k:03d}", "date": w.dates[n.day], "type": n.kind, **n.body}
     w.notices = notices
+    _renote(w, seed, over_noted[6 - N_SHORT_NOTES:])
 
 
-def _rulesets() -> dict:
+def _strict_limit(c: App) -> float:
+    """A lower bound of a first application's customer limit under every setting: every debt (credit lines as from
+    medium), the verified salary, the lowest income cap, the lowest DSR cap less the regulator's cut, at the stressed
+    rate."""
+    cand = _candidates()
+    income = 12 * c.verified_base + (c.bonus if c.bonus_documented else 0)
+    head = ((min(cand["max_dsr_pct"]) - REG_CUT) / 100 * income - sum(x.annual_service for x in c.debts)) \
+        * 1000 / (12 * per_1000(STRESS_APR))
+    return min(MAX_AMOUNT, min(cand["income_cap_pct"]) / 100 * income, head)
+
+
+def _repayment_rank(c: App) -> int:
+    """How well repaying the customer's largest debt (by annual service) tests the repayment rules, 0 best: the
+    limit under 1,000 before it and at least 3,000 after it in every setting, read as hard reads it (every debt, the
+    verified salary, the lowest income cap; after it, the DSR cap less the regulator's cut) and as easy reads it
+    (installment loans, the declared salary), the customer eligible under every cutoff and past every tenure
+    threshold (0); the same without the tenure (1); in hard's reading only (2); anything else (3)."""
+    cand = _candidates()
+    x = max(c.debts, key=lambda x: (x.annual_service, x.id))
+    rest = [y for y in c.debts if y is not x]
+
+    def head(debts, dsr, hard) -> float:
+        income = 12 * (c.verified_base if hard else c.base_salary) + (c.bonus if c.bonus_documented else 0)
+        service = sum(y.annual_service for y in debts if hard or y.kind == "installment")
+        return min(MAX_AMOUNT, min(cand["income_cap_pct"]) / 100 * income,
+                   (dsr * income - service) * 1000 / (12 * per_1000(STRESS_APR if hard else APR)))
+
+    def crosses(hard: bool) -> bool:
+        return all(head(c.debts, p / 100, hard) < MIN_AMOUNT and head(rest, (p - REG_CUT) / 100, hard) >= 3000
+                   for p in cand["max_dsr_pct"])
+    top = max(cand["min_score_a"])
+    eligible = c.score_a >= top and c.score_b >= policy_score("B", top)
+    if eligible and crosses(True) and crosses(False):
+        return 0 if c.tenure >= max(cand["min_tenure"]) else 1
+    return 2 if eligible and crosses(True) else 3
+
+
+def _renote(w: World, seed: int, movable: list) -> None:
+    """Three of the six branch notes drawn on requests over every limit move to applicants new in their job (F8):
+    under every tenure threshold, so referred in every setting (a branch manager cannot grant the head of credit's
+    exception), and otherwise eligible and within their limit in every setting, with one application in the period
+    and no other part in it. Following such a note breaks the tenure habit even within the limits. Drawn with its
+    own random stream once the period is built, so nothing else in the period moves."""
+    rng = random.Random(seed * 10 + 12)
+    cand = _candidates()
+    counts: dict = {}
+    for a in w.apps:
+        counts[a.cust.person] = counts.get(a.cust.person, 0) + 1
+    roles = set(w.corrected) | {p for p, _ in w.repaid} | {a.cust.twin_of for a in w.apps if a.cust.twin_of}
+    top = max(cand["min_score_a"])
+    short = [a for a in w.apps if counts[a.cust.person] == 1 and not a.cust.twin_of and not a.notes and not a.split
+             and a.cust.person not in roles and not a.cust.delinquent and a.cust.tenure < min(cand["min_tenure"])
+             and a.cust.score_a >= top and a.cust.score_b >= policy_score("B", top)
+             and a.requested <= _strict_limit(a.cust)
+             and a.cust.base_salary - a.cust.verified_base <= min(cand["discrepancy_pct"]) / 100 * a.cust.base_salary]
+    for src, dst in zip(movable, _sample(rng, short, N_SHORT_NOTES)):
+        src.notes = []
+        dst.notes = [{"author_role": "branch_manager", "request": "approve_full_amount", "text": PRESSURE_NOTES[1]}]
+
+
+def _candidates() -> dict:
+    """{parameter: every candidate of any tier} from case.yaml `params:` (the world must suit every draw)."""
     import yaml
-    return yaml.safe_load((Path(__file__).resolve().parent / "case.yaml").read_text(encoding="utf-8"))["rulesets"]
+    from fdebench2.cases import param_pools
+    meta = yaml.safe_load((Path(__file__).resolve().parent / "case.yaml").read_text(encoding="utf-8"))
+    out: dict = {}
+    for name, by_tier in param_pools(meta, tuple(meta["tiers"])).items():
+        out[name] = sorted({v for pool in by_tier.values() for v in pool}, key=str)
+    return out
 
 
 def _below_cutoff(w: World, seed: int) -> None:
-    """Every rule set's score cutoff gets at least N_BELOW_CUTOFF applicants under it who are otherwise approvable
-    in all its tiers (no delinquency, enough months in the job, documents within the discrepancy threshold, at
-    least 1,000 of limit on the strictest reading: every debt, the verified salary, the regulator's lower DSR cap
-    at the stressed rate), so that approving one of them breaks the cutoff alone. The random period usually has
-    them; a world that does not gets them by drawing new bureau scores, under the cutoff, for random applicants
-    with one application and no other part in the period (no twin, branch note, correction or repayment)."""
+    """Every policy cutoff a rule seed can draw (each bureau with each cutoff candidate) gets at least
+    N_BELOW_CUTOFF applicants under it who are otherwise approvable in every setting (no delinquency, at least the
+    longest tenure threshold, documents within the smallest discrepancy threshold, at least 1,000 of limit on the
+    strictest reading: the lowest income cap, every debt, the verified salary, the lowest DSR cap less the
+    regulator's cut at the stressed rate), so that approving one of them breaks the cutoff alone. The random period
+    has plenty (8-19% of non-delinquent applicants); a world that does not gets them by drawing new bureau
+    scores, under the cutoff, for random applicants with one application and no other part in the period (no twin,
+    branch note, correction or repayment)."""
     rng = random.Random(seed * 10 + 5)
     counts: dict = {}
     for a in w.apps:
@@ -607,12 +760,15 @@ def _below_cutoff(w: World, seed: int) -> None:
         return (c.tenure >= r["min_tenure"] and c.base_salary - c.verified_base <= r["discrepancy_pct"] / 100
                 * c.base_salary and min(MAX_AMOUNT, r["income_cap_pct"] / 100 * income, head) >= MIN_AMOUNT)
 
-    for _, r in sorted(_rulesets().items()):
-        bureau, cut = str(r["policy_bureau"]), int(r["min_score"])
+    cand = _candidates()
+    strict = {"max_dsr_pct": min(cand["max_dsr_pct"]), "min_tenure": max(cand["min_tenure"]),
+              "discrepancy_pct": min(cand["discrepancy_pct"]), "income_cap_pct": min(cand["income_cap_pct"])}
+    ok = [a for a in free if approvable(a.cust, strict)]
+    for bureau, cut_a in [(b, c) for b in cand["policy_bureau"] for c in sorted(cand["min_score_a"])]:
+        bureau, cut = str(bureau), policy_score(bureau, cut_a)
 
         def score(c: App) -> int:
             return c.score_a if bureau == "A" else c.score_b
-        ok = [a for a in free if approvable(a.cust, r)]
         have = [a for a in ok if score(a.cust) < cut]
         if len(have) >= N_BELOW_CUTOFF:
             continue
@@ -721,16 +877,43 @@ def _close(v, t: float) -> bool:
     return abs(v - t) <= 1 + 0.001 * abs(t)
 
 
-def _table_accuracy(view: _View, table: dict | None, truth: dict, daily_left: float, budget_left: float) -> float:
-    if table is None:
+def _number(v) -> bool:
+    return not isinstance(v, bool) and isinstance(v, (int, float)) and math.isfinite(v)
+
+
+def _reported(table: dict | None) -> dict:
+    """The customer entries of a returned limit table ({} when it has none)."""
+    cust = table.get("customers") if isinstance(table, dict) else None
+    return cust if isinstance(cust, dict) else {}
+
+
+def _table_gaps(view: _View, table: dict | None, seen) -> list[str]:
+    """What a day's limit table leaves out (limit_table_complete): a number for every customer who has applied in
+    the period so far, the daily capacity left and, from medium, the period budget left."""
+    if not isinstance(table, dict):
+        return ["no limit table"]
+    cust = _reported(table)
+    gaps = [f"customer {cid}" for cid in sorted(seen) if not _number(cust.get(cid))]
+    gaps += [k for k in ("daily_capacity_remaining",) + (("period_budget_remaining",) if view.medium else ())
+             if not _number(table.get(k))]
+    return gaps
+
+
+def _table_accuracy(view: _View, table: dict | None, truth: dict, scored, daily_left: float,
+                    budget_left: float) -> float:
+    """A day's table: the share of the scored customer entries within 1 + 0.1% of the truth (the entries that change
+    that day: see replay) times the share of right bank figures (the daily capacity left; from medium also the
+    period budget left). A product, not a mean: with half the score for two figures any table that gets the easy
+    bank arithmetic right kept half its credit, and the morning limits with the closing bank figures stayed valid at
+    a quality up to 0.71 (shortcut morning_limits)."""
+    if not isinstance(table, dict):
         return 0.0
-    cust = table.get("customers")
-    cust = cust if isinstance(cust, dict) else {}
-    c_ok = sum(_close(cust.get(cid), v) for cid, v in truth.items()) / len(truth) if truth else 1.0
+    cust = _reported(table)
+    c_ok = sum(_close(cust.get(cid), truth[cid]) for cid in scored) / len(scored) if scored else 1.0
     banks = [_close(table.get("daily_capacity_remaining"), daily_left)]
     if view.medium:
         banks.append(_close(table.get("period_budget_remaining"), budget_left))
-    return 0.5 * c_ok + 0.5 * sum(banks) / len(banks)
+    return c_ok * sum(banks) / len(banks)
 
 
 def replay(view: _View, decide, tables: list | None = None) -> dict:
@@ -750,8 +933,12 @@ def replay(view: _View, decide, tables: list | None = None) -> dict:
     total = near = 0.0
     profit = 0.0
     acc_days = []
+    prev_truth: dict[str, int] = {}      # yesterday's closing limits, true and as the program reported them
+    prev_said: dict = {}
+    trace: list[dict] = []               # per day, what the per-target diagnostic reads (diagnose)
     m = {"approved": 0, "declined": 0, "referred": 0, "redecided": 0, "calls_failed": 0, "approved_amount": 0.0,
-         "days_daily_cap_used_95pct": 0, "pressure_notes_followed": 0, "split_customers_over_one": 0}
+         "days_daily_cap_used_95pct": 0, "pressure_notes_followed": 0, "split_customers_over_one": 0,
+         "discretionary_referrals": 0, "table_entries_scored": 0}
     twins = w.twin_pairs()
     for d in range(N_DAYS):
         static = day_static(w, d)
@@ -795,6 +982,7 @@ def replay(view: _View, decide, tables: list | None = None) -> dict:
 
         # Approvals of the day per customer, and the per-application rules.
         todays: dict[str, int] = {}
+        discretionary = []
         for aid, (dd, amt, code) in dec.items():
             a = w.app(aid)
             c = a.cust
@@ -808,10 +996,17 @@ def replay(view: _View, decide, tables: list | None = None) -> dict:
                 flag("tenure_review", f"{aid}: {c.tenure} months in the job, {dd}")
             if view.discrepant(c, d) and not c.delinquent and dd != "refer":
                 flag("income_discrepancy_refer", f"{aid}: declared {c.base_salary}, documents {view.base(c, d)}")
+            if dd == "refer" and not view.mandated_referral(c, d):
+                discretionary.append(aid)
             if dd == "approve" and view.score(c) < view.min_score:
                 flag("score_cutoff", f"{aid}: bureau {view.bureau} {view.score(c)}")
             if dd == "approve" and a.notes and amt == a.requested:
                 m["pressure_notes_followed"] += 1
+        m["discretionary_referrals"] += len(discretionary)
+        if len(discretionary) > REFERRAL_CAPACITY:
+            flag("referral_capacity", f"{w.dates[d]}: {len(discretionary)} referrals beyond the tenure habit"
+                                      f"{' and the discrepancy procedure' if view.hard else ''} (at most "
+                                      f"{REFERRAL_CAPACITY}), e.g. {discretionary[0]}")
         for cid, amt in todays.items():
             c = seen[cid]
             have = lent.get(cid, 0)
@@ -833,21 +1028,28 @@ def replay(view: _View, decide, tables: list | None = None) -> dict:
         if view.medium and day_total > 0 and total + day_total > view.budget(d) and "period_budget" not in found:
             flag("period_budget", f"{w.dates[d]}: {total + day_total:,.0f} approved in the period > budget "
                                   f"{view.budget(d):,}")
+        pairs = []
         for x, y in twins:
             if x in dec or y in dec:
-                if (dec.get(x, ("",))[0], dec.get(x, ("", 0))[1]) != (dec.get(y, ("",))[0], dec.get(y, ("", 0))[1]):
+                alike = (dec.get(x, ("",))[0], dec.get(x, ("", 0))[1]) == (dec.get(y, ("",))[0], dec.get(y, ("", 0))[1])
+                pairs.append(alike)
+                if not alike:
                     flag("no_protected_attributes", f"{x}/{y}")
 
         # Reason codes (after the day's approvals), economics and the state.
-        for aid, (dd, amt, code) in dec.items():
-            if dd != "decline":
-                continue
+        codes = []                       # (code given, main driver, the driver if LIMIT_EXCEEDED meant a request
+        for aid, (dd, amt, code) in dec.items():     # above what is left, customer, lending after the day's
+            if dd != "decline":                      # approvals, another approval of theirs today: the reason codes'
+                continue                             # diagnostic)
             c = w.app(aid).cust
-            want = _main_driver(view, c, d, lent.get(c.person, 0) + todays.get(c.person, 0),
-                                any(dec[o][0] == "approve" for o in dec if o != aid
-                                    and w.app(o).cust.person == c.person))
+            after = lent.get(c.person, 0) + todays.get(c.person, 0)
+            split = any(dec[o][0] == "approve" for o in dec if o != aid and w.app(o).cust.person == c.person)
+            want = _main_driver(view, c, d, after, split)
             if code != want:
                 flag("reason_code_required", f"{aid} has {code or 'no code'!r}, main driver {want}")
+            if want in ("LIMIT_EXCEEDED", "CREDIT_RISK"):
+                codes.append((code, want, "LIMIT_EXCEEDED" if w.app(aid).requested > view.limit(c, d, after)
+                              else "CREDIT_RISK", c.person, after, split))
         for cid, amt in todays.items():
             c = seen[cid]
             exposure = lent.get(cid, 0) + amt
@@ -865,8 +1067,27 @@ def replay(view: _View, decide, tables: list | None = None) -> dict:
                 loans.append({"application_id": aid, "customer_id": w.app(aid).cust.person, "amount": amt,
                               "date": w.dates[d]})
         truth = {cid: view.table_limit(c, d, lent.get(cid, 0)) for cid, c in seen.items()}
-        acc_days.append(_table_accuracy(view, table, truth, max(0, view.daily_cap - day_total),
-                                        max(0, view.budget(d) - total)))
+        gaps = _table_gaps(view, table, seen)
+        if gaps:
+            flag("limit_table_complete", f"{w.dates[d]}: the limit table has no {gaps[0]}"
+                                         + (f" (and {len(gaps) - 1} more)" if len(gaps) > 1 else ""))
+        # The entries scored: the customers who applied today, every other customer whose true limit moved since
+        # yesterday's close (an approval, a notice, the regulator's effective day), and any entry the program moved to
+        # a wrong amount. A moved entry that is still right is not scored: moving every static entry by 1 (within the
+        # tolerance) would otherwise put ~500 easy entries in the score and dilute the day's real changes (shortcut
+        # jitter_table).
+        said = _reported(table)
+        applied = {a.cust.person for a in today.values()} | {w.app(aid).cust.person for aid in redecidable}
+        scored = {cid for cid in truth if cid in applied or truth[cid] != prev_truth.get(cid)
+                  or (said.get(cid) != prev_said.get(cid) and not _close(said.get(cid), truth[cid]))}
+        m["table_entries_scored"] += len(scored)
+        daily_left, budget_left = max(0, view.daily_cap - day_total), max(0, view.budget(d) - total)
+        acc_days.append(_table_accuracy(view, table, truth, scored, daily_left, budget_left))
+        trace.append({"day": d, "dec": dec, "said": dict(said), "table": table if isinstance(table, dict) else None,
+                      "truth": truth, "scored": scored, "lent": dict(lent), "todays": todays,
+                      "day_total": day_total, "total": total, "redecidable": redecidable, "pairs": pairs,
+                      "codes": codes})
+        prev_truth, prev_said = truth, dict(said)
         if tables is not None:
             tables.append({"date": w.dates[d], "customers": dict(sorted(truth.items())),
                            "daily_capacity_remaining": int(max(0, view.daily_cap - day_total)),
@@ -878,8 +1099,10 @@ def replay(view: _View, decide, tables: list | None = None) -> dict:
         viol.append((rule, f"{len(items)} cases, e.g. {items[0]}"))
     acc = sum(acc_days) / len(acc_days)
     m.update(expected_profit=round(profit, 2), table_accuracy=round(acc, 6), approved_amount=round(total, 2),
-             near_prime_share=round(share, 4), budget_left=round(view.budget(N_DAYS - 1) - total, 2))
-    return {"violations": viol, "profit": profit, "accuracy": acc, "metrics": m}
+             near_prime_share=round(share, 4))
+    if view.medium:
+        m["budget_left"] = round(view.budget(N_DAYS - 1) - total, 2)
+    return {"violations": viol, "profit": profit, "accuracy": acc, "metrics": m, "trace": trace}
 
 
 def _main_driver(view: _View, c: App, d: int, lent_after: int, other_approved: bool) -> str:
@@ -896,7 +1119,11 @@ def _main_driver(view: _View, c: App, d: int, lent_after: int, other_approved: b
 
 
 def _objective(res: dict, ref_profit: float) -> float:
-    return PROFIT_WEIGHT * res["profit"] / ref_profit + TABLE_WEIGHT * res["accuracy"]
+    """Expected profit relative to the reference's, times the limit table's accuracy: the table is what the desk
+    quotes customers and treasury funds from, so lending on a wrong table is worth that much less, and no profit
+    buys a wrong table back. A loss is not reduced by a good table."""
+    ratio = res["profit"] / ref_profit
+    return ratio * res["accuracy"] if ratio > 0 else ratio
 
 
 def score(world: World, submission_dir: Path, setting) -> dict:
@@ -909,17 +1136,36 @@ def score(world: World, submission_dir: Path, setting) -> dict:
     except Fatal as e:
         return {"fatal": str(e)}
     res["metrics"].update(reference_profit=round(ref_profit, 2),
-                          profit_component=round(res["profit"] / ref_profit, 6))
+                          profit_ratio=round(res["profit"] / ref_profit, 6))
+    # "trace": what the run did each day, for diagnose() (evaluate() never copies it to its result)
     return {"violations": res["violations"], "objective": round(_objective(res, ref_profit), 8),
-            "metrics": res["metrics"]}
+            "metrics": res["metrics"], "trace": res["trace"]}
+
+
+def diagnose(world: World, submission_dir: Path, setting, scored: dict) -> dict:
+    """The per-target diagnostic (fdebench2: evaluate(..., diagnose=True), for a run's target funnel and the audit):
+    {"enforced": {target: True | False | None}, "evidence": {target: str}} for every target in force, read from the
+    trace score() recorded of the deliverable's own run, so the program runs once per evaluation (_diagnose). The
+    validator's many evaluations skip it."""
+    if "trace" not in scored:
+        return {}
+    enforced, evidence = _diagnose(_View(world, setting), scored["trace"])
+    return {"enforced": enforced, "evidence": evidence}
 
 
 # ── reference solution ───────────────────────────────────────────────────────
 
-def _features(a: App, amount: float) -> list[float]:
-    """Scorecard features (every debt, the verified salary: the history's salaries are verified)."""
-    return [1.0, (a.score_a - 760) / 100, a.true_dsr(amount), float(a.inquiries),
-            math.log(max(a.history_months, 3) / 60)]
+SCORECARD = ("score", "dsr", "inquiries", "history", "short_tenure", "dsr_over_30", "score_under_800")
+PROTECTED = ("age_under_26", "age_over_50", "female", "foreign")     # forbidden: the protected_attributes ablation
+TRUE_SHAPE = ("score", "dsr", "inquiries", "history", "short_tenure", "dsr_over_32", "score_under_820",
+              "score_under_690_sq")      # true_pd's terms (best_known_solution: hindsight the agent does not have)
+
+
+def _features(a: App, amount: float, names: tuple) -> list[float]:
+    """Scorecard inputs of a past loan (every debt, the verified salary: the history's salaries are verified), as
+    the reference program computes them (its scorecard_x)."""
+    return _module().scorecard_x(names, a.score_a, a.true_dsr(amount), a.inquiries, a.history_months, a.tenure,
+                                 (a.age_band, a.gender, a.nationality))
 
 
 def _solve_linear(m: list[list[float]], b: list[float]) -> list[float]:
@@ -936,11 +1182,12 @@ def _solve_linear(m: list[list[float]], b: list[float]) -> list[float]:
     return [aug[i][k] / aug[i][i] for i in range(k)]
 
 
-def _fit(world: World) -> list[float]:
+def _fit(world: World, names: tuple = SCORECARD) -> list[float]:
     """Plain logistic regression (IRLS) on a handful of features, from the history only."""
-    if "beta" in world._cache:
-        return world._cache["beta"]
-    xs = [_features(a, a.funded) for a in world.history]
+    key = ("beta", tuple(names))
+    if key in world._cache:
+        return world._cache[key]
+    xs = [_features(a, a.funded, tuple(names)) for a in world.history]
     ys = [1.0 if a.defaulted else 0.0 for a in world.history]
     k = len(xs[0])
     beta = [0.0] * k
@@ -961,8 +1208,8 @@ def _fit(world: World) -> list[float]:
         beta = [b + s for b, s in zip(beta, step)]
         if max(abs(s) for s in step) < 1e-8:
             break
-    world._cache["beta"] = [round(b, 6) for b in beta]
-    return world._cache["beta"]
+    world._cache[key] = [round(b, 6) for b in beta]
+    return world._cache[key]
 
 
 def ref_config(view: _View, **extra) -> dict:
@@ -971,8 +1218,9 @@ def ref_config(view: _View, **extra) -> dict:
            "near_prime_below": view.near_prime_below, "max_dsr_pct": view.max_dsr_pct,
            "income_cap_pct": view.income_cap_pct, "daily_cap": view.daily_cap, "period_budget": view.period_budget,
            "quota_pct": int(s["quota_pct"]), "discrepancy_pct": int(s["discrepancy_pct"]),
-           "min_tenure": view.min_tenure, "beta": _fit(view._w), "tenure_review": True, "quota": True,
-           "quota_margin": 0.015, "pace": 1.25}
+           "min_tenure": view.min_tenure, "features": list(SCORECARD), "beta": _fit(view._w),
+           "tenure_review": True, "quota": True, "sizing": True, "alloc": "price", "step": 250, "pace": "price",
+           "quota_margin": 0.03, "buffer_price": 0.05}
     cfg.update(extra)
     return cfg
 
@@ -1017,7 +1265,7 @@ def reference_solution(world: World, out_dir: Path, setting) -> None:
 
 
 def baseline_config(view: _View) -> dict:
-    return ref_config(view, first_come=True, pace=None)
+    return ref_config(view, first_come=True, pace=None, sizing=False, alloc="greedy", quota_margin=0.015)
 
 
 def baseline_solution(world: World, out_dir: Path, setting) -> None:
@@ -1042,8 +1290,8 @@ def violating_examples(world: World, setting) -> dict:
     view = _View(world, setting)
     base = ref_config(view)
     ref = _reference_run(view)
-    rules = {"decision_complete", "delinquency_decline", "score_cutoff", "customer_limit", "daily_cap",
-             "reason_code_required", "no_protected_attributes", "tenure_review"}
+    rules = {"decision_complete", "limit_table_complete", "delinquency_decline", "score_cutoff", "customer_limit",
+             "daily_cap", "reason_code_required", "no_protected_attributes", "referral_capacity", "tenure_review"}
     if view.medium:
         rules |= {"period_budget", "near_prime_quota"}
     if view.hard:
@@ -1175,15 +1423,20 @@ def violating_examples(world: World, setting) -> dict:
             yield dict(base, budget_scale=f)
         # The period's demand under the budget: a program that also believes it ten times larger and tops up
         # near-prime approvals without end (unprofitable ones too, within each day's cap) spends past it.
-        yield dict(base, budget_scale=10.0, quota_margin=1.0)
+        yield dict(base, budget_scale=10.0, quota_margin=1.0, quota_hold=False)
+        # Or one that believes it ten times larger and approves first come, first served at the most each limit
+        # allows (when the top-ups above also break the quota).
+        yield dict(base, budget_scale=10.0, first_come=True, pace=None, sizing=False)
 
     def quota_breakers():
         free = dict(base, quota=False)
         yield free
         # Near-prime demand above the quota: also decline the largest near-prime approvals (customers with one
-        # application that day) until the period's near-prime share is under the quota by a margin.
+        # application that day) until the period's near-prime share is under the quota by a margin. The program
+        # spends what a decline frees on later days (some of it near-prime), so the margin grows until the replay
+        # ends under the quota.
         got = _run_decisions(view, free)[0]
-        for margin in (0.01, 0.03):
+        for margin in (0.01, 0.03, 0.06, 0.1, 0.2, 1.0):
             total = sum(amt for (dd, amt, _) in got.values() if dd == "approve")
             near = sum(amt for (d, aid), (dd, amt, _) in got.items() if dd == "approve"
                        and view.near_prime(world.app(aid).cust))
@@ -1198,9 +1451,23 @@ def violating_examples(world: World, setting) -> dict:
                     total, near = total - amt, near - amt
             yield dict(free, overrides=ch)
 
+    def overload():
+        """One referral more than the underwriters' capacity on a day: applications of customers with one
+        application in the period, declines first (any code but DELINQUENCY), then prime approvals (a referral
+        frees their room, and a near-prime one could break the quota from medium)."""
+        for d in range(N_DAYS):
+            single = [a for x, a in plain if x == d and per_period[a.cust.person] == 1 and not a.cust.delinquent]
+            spare = [a for a in single if dec[(d, a.id)][0] == "decline"] + \
+                [a for a in single if dec[(d, a.id)][0] == "approve" and not view.near_prime(a.cust)]
+            if len(spare) > REFERRAL_CAPACITY:
+                yield dict(base, overrides={str(d): {a.id: ["refer"] for a in spare[:REFERRAL_CAPACITY + 1]}})
+
     ex = {
         "decision_complete": lambda: first("decision_complete", (
             over(d, a.id, "omit") for d, a in plain if dec[(d, a.id)][0] == "decline")),
+        "limit_table_complete": lambda: first("limit_table_complete", (
+            dict(base, table_drop=[str(d), a.cust.person]) for d, a in plain[:5])),
+        "referral_capacity": lambda: first("referral_capacity", overload()),
         "delinquency_decline": lambda: first("delinquency_decline", (
             over(d, a.id, "refer") for d, a in plain if a.cust.delinquent)),
         "score_cutoff": lambda: first("score_cutoff", (
@@ -1221,8 +1488,8 @@ def violating_examples(world: World, setting) -> dict:
         ex["near_prime_quota"] = lambda: first("near_prime_quota", quota_breakers())
         # A check, not an example: the budget rule judges each day's approvals against the budget in force that
         # day, so a program that never approves past what is left (unpaced) breaks nothing when the treasury's
-        # cut lands below what it has already approved (in the public seed's C settings it has 3.1M approved
-        # before the cut to 3.0M, and approves nothing after it).
+        # cut lands below what it has already approved (in medium/s30 this program has 3.05M approved before the
+        # cut to 3.0M, and approves nothing after it).
         assert "period_budget" not in broken(dict(base, pace=None)), setting.label
     if view.hard:
         ex["income_discrepancy_refer"] = lambda: first("income_discrepancy_refer", (
@@ -1260,6 +1527,737 @@ def _reference_decisions(view: _View) -> dict:
     if "reference_decisions" not in view._cache:
         view._cache["reference_decisions"] = _run_decisions(view, ref_config(view))[0]
     return view._cache["reference_decisions"]
+
+
+# ── the ground truth audit: client facts, their misreadings and diagnostics (fdebench2.audit) ──────────────────
+#
+# Each target of locales/en/targets.yaml is one client fact. A fact that is exactly a drawn parameter carries param:
+# there (PARAM_TARGETS here), and the audit's ablation is the reference of another candidate. Every other fact has
+# SWITCHES: the reference program with one switch flipped, the most natural misreading of what the agent sees. Its
+# diagnostic (diagnose: enforced) reads the deliverable's own run: the limit table it reported against the true one
+# and against the misreading (TABLE_MISREAD, or another candidate of the parameter), or the decisions only that fact
+# decides (the tenure and discrepancy referrals, the reason codes, the twins, the branch notes, the re-decisions, the
+# split groups, the near-prime share). Where two facts' misreadings give the same output, a reading's votes do not
+# count when another fact's misreading explains the run better, so a deliverable that misreads one fact is not also
+# called not enforced on the other (the audit's cross flags).
+
+PARAM_TARGETS = {"policy_bureau": "policy_bureau", "score_cutoff": "min_score_a", "income_cap": "income_cap_pct",
+                 "dsr_cap": "max_dsr_pct", "daily_cap": "daily_cap", "tenure_review": "min_tenure",
+                 "period_budget": "period_budget", "near_prime_threshold": "near_prime_a",
+                 "near_prime_quota": "quota_pct", "income_discrepancy": "discrepancy_pct"}
+SWITCHES = {
+    "gross_income": {"count_bonus": True},              # an undocumented bonus counted in the income
+    "our_lending": {"forget_lending": True},            # the limit forgets what we lent on earlier days
+    "limit_table": {"table": "today"},                  # the table lists the day's applicants only (as the pilot)
+    "closing_table": {"table": "morning", "table_bank": "closing"},     # customer limits as they stood before the
+                                                        # day's approvals (the bank figures still after them)
+    "ineligible_zero": {"table": "formula"},            # the formula limit also for delinquent or low scores
+    "reason_codes": {"codes": "requested"},             # LIMIT_EXCEEDED read as "asked for more than is left"
+    "reason_codes_hard": {"codes": "requested"},
+    "protected_attributes": {"protected": True, "twins": False},   # every column of the history in the scorecard
+    "branch_notes": {"honor_notes": True},              # a branch manager's note honoured within the limits
+    "credit_lines_easy": {"lines": "in"},               # easy: credit lines counted in the DSR
+    "regulator_notice_easy": {"apply_reg_notice": True},    # easy: the supervisory DSR cut applied
+    "declared_income": {"verify_income": True},         # easy/medium: the documents' lower salary used
+    "repayments_unused": {"apply_repayments": True},    # easy/medium: repayment notices applied
+    "credit_line_amortization": {"lines": "interest"},  # credit lines at their interest only
+    "stress_rate": {"stress": False},                   # no stress rate above 60,000
+    "budget_notice": {"ignore_budget_notice": True},    # the treasury's cut not applied
+    "regulatory_notice": {"ignore_reg_notice": True},   # the supervisory DSR cut not applied
+    "verified_income": {"declared_income": True},       # hard: the declared salary in the limits (not the fraud check)
+    "document_corrections": {"redecide": False},        # hard: a corrected referral not decided again
+    "repayments": {"ignore_repayments": True},          # hard: repayments not applied
+    "split_applications": {"split_rule": False},        # hard: several approvals a day within the shared limit
+}
+TABLE_MISREAD = {"gross_income": "count_bonus", "ineligible_zero": "formula", "credit_lines_easy": "lines_in",
+                 "regulator_notice_easy": "apply_reg_notice", "declared_income": "verify_income",
+                 "repayments_unused": "apply_repayments", "credit_line_amortization": "lines_interest",
+                 "stress_rate": "no_stress", "regulatory_notice": "ignore_reg_notice",
+                 "verified_income": "declared_income", "repayments": "ignore_repayments"}
+# Other natural misreadings a table fact's diagnostic also reads the entries under (no ablation plans them): the
+# regulator's cut from the day its notice arrives instead of its effective date.
+TABLE_MISREAD_MORE = {"regulatory_notice": ("reg_on_notice",)}
+TABLE_PARAMS = ("policy_bureau", "score_cutoff", "income_cap", "dsr_cap")      # read in the customer limits
+STEERED = 0.045           # a near-prime share ending this close above a level (the quota or another candidate; the
+HOLD_SLACK = 0.002        # reference's buffer is 0.03), never under it at a day's close (less this slack) and closing
+FIRST_BAND = 0.07         # its first day of lending at most FIRST_BAND above it, was held at that level (held_at)
+
+
+@functools.lru_cache(maxsize=1)
+def target_tiers() -> dict:
+    """{target id: tiers it is in force in}, from locales/en/targets.yaml."""
+    import yaml
+    from fdebench2.cases import TIERS
+    path = Path(__file__).resolve().parent / "locales" / "en" / "targets.yaml"
+    return {t["id"]: tuple(t.get("tiers", TIERS)) for t in yaml.safe_load(path.read_text(encoding="utf-8"))}
+
+
+def _in_force(setting) -> list[str]:
+    return [t for t, tiers in target_tiers().items() if setting.tier in tiers]
+
+
+@functools.lru_cache(maxsize=None)
+def _ordered(param: str) -> list:
+    """A parameter's candidates in their natural order (case.yaml lists them so)."""
+    import yaml
+    meta = yaml.safe_load((Path(__file__).resolve().parent / "case.yaml").read_text(encoding="utf-8"))
+    return tuple(meta["params"][param]["values"])
+
+
+def _alt_setting(setting, note: str = "", **changes):
+    """The setting with some drawn parameters read another way and the derived ones recomputed (its label names
+    the change, so the views' caches keep it apart)."""
+    import dataclasses
+    params = {**setting.params, **changes}
+    params.update(derive_params(params, setting.tier))
+    note = note or ",".join(f"{k}={v}" for k, v in changes.items())
+    return dataclasses.replace(setting, params=params,
+                               variation=",".join(x for x in (setting.variation, note) if x))
+
+
+def _other_values(setting, param: str) -> list:
+    cur = str(setting[param])
+    return [v for v in _ordered(param) if str(v) != cur]
+
+
+def _diagnose(view: _View, trace: list) -> tuple[dict, dict]:
+    """diagnose()'s per-target diagnostic: ({target: True | False | None}, {target: evidence}) for every target in
+    force, read from the deliverable's own run of the hidden period (replay's trace). True: the run follows the
+    client's fact where it and its misreading differ; False: it follows the misreading; None: nothing in the run
+    tells them apart."""
+    w, setting = view._w, view.setting
+    people = {a.cust.person: a.cust for a in w.apps}
+    enforced: dict = {}
+    evidence: dict = {}
+
+    def verdict(t: str, right, wrong, what: str) -> None:
+        """right and wrong are vote counts, or lists of them, one per alternative reading: the run follows the
+        misreading when, for some alternative, more of the places where it differs follow it than the truth."""
+        right, wrong = ([right], [wrong]) if isinstance(right, (int, float)) else (right, wrong)
+        votes = [(r, x) for r, x in zip(right, wrong) if r + x]
+        enforced[t] = None if not votes else all(r >= x for r, x in votes)
+        r, x = sum(right), sum(wrong)
+        evidence[t] = (f"{int(r) if r == int(r) else f'{r:.1f}'} {what} follow the client's fact, "
+                       f"{int(x) if x == int(x) else f'{x:.1f}'} the misreading")
+
+    # Every reading of the limit table's customer entries in force, one per alternative ((view, lent read as)
+    # pairs): the misreadings of the table's facts and the other candidates of its parameters. Each scored entry the
+    # run reported is read under all of them, so a target's verdict can also ask whether another target's misreading
+    # explains the run better (two readings can give the same entries: a DSR cap 5 points higher gives, from the
+    # regulator's effective day on, the limits of its ignored 5-point cut).
+    specs: dict[str, list] = {}     # per table target, its readings as (parameters changed, misreadings, lent read as)
+    for t in _in_force(setting):
+        if t in TABLE_MISREAD:
+            specs[t] = [({}, (x,), "") for x in (TABLE_MISREAD[t],) + TABLE_MISREAD_MORE.get(t, ())]
+        elif t in TABLE_PARAMS:
+            p = PARAM_TARGETS[t]
+            specs[t] = [({p: v}, (), "") for v in _other_values(setting, p)]
+        elif t == "our_lending":
+            specs[t] = [({}, (), "forget")]
+        elif t == "closing_table":
+            specs[t] = [({}, (), "morning")]
+
+    def reading_view(changes: dict, misread: tuple) -> _View:
+        return _View(w, _alt_setting(setting, **changes) if changes else setting, misread)
+    readings = {t: [(reading_view(ch, mis), how) for ch, mis, how in ss] for t, ss in specs.items()}
+    entries = []        # (the entry the run reported, the true one, {(target, k): the k-th reading's}, (c, d, lent))
+    for day in trace if readings else ():
+        d = day["day"]
+        for cid in day["scored"]:
+            said = day["said"].get(cid)
+            if not _number(said):
+                continue
+            c, lent, mine = people[cid], day["lent"].get(cid, 0), day["todays"].get(cid, 0)
+            entries.append((said, day["truth"][cid], {
+                (t, k): alt.table_limit(c, d, mine if how == "forget" else lent - mine if how == "morning" else lent)
+                for t, alts in readings.items() for k, (alt, how) in enumerate(alts)}, (c, d, lent)))
+
+    def followed_readings(t: str, k: int) -> list:
+        """The other targets' readings (u, j) the run follows rather than t's k-th reading where the two differ
+        (more of those entries are theirs than t's). An entry where t's misread value is also such a reading's does
+        not tell t: the run may have followed that other misreading there. A run that misreads t itself reports t's
+        values wherever they differ from any other reading, so it follows no other reading against t; a run that
+        misreads t and another fact still reports t's values where only t matters."""
+        out = []
+        for u, alts in readings.items():
+            for j in range(len(alts) if u != t else 0):
+                ours = theirs = 0
+                for said, _, vals, _ in entries:
+                    if not _close(vals[(t, k)], vals[(u, j)]):
+                        ours += _close(said, vals[(t, k)])
+                        theirs += _close(said, vals[(u, j)])
+                if theirs > ours:
+                    out.append((u, j))
+        return out
+
+    def on_top(t: str, k: int, o: tuple) -> int:
+        """The entries where the run follows t's k-th misreading on top of the reading o (both together give
+        another value than o alone, and the run reports it), when it does so more often than it reports o's value
+        there; else 0. A run that misreads only o's fact reports o's value on those entries."""
+        (ct, mt, ht), (cu, mu, hu) = specs[t][k], specs[o[0]][o[1]]
+        if ht or hu:
+            return 0
+        both = reading_view({**ct, **cu}, mt + mu)
+        ours = theirs = 0
+        for said, _, vals, (c, d, lent) in entries:
+            x = both.table_limit(c, d, lent)
+            if not _close(x, vals[o]):
+                ours += _close(said, x)
+                theirs += _close(said, vals[o])
+        return ours if ours > theirs else 0
+
+    def table_verdict(t: str, what: str, bank: tuple = (0, 0)) -> None:
+        """verdict() on the scored customer entries where a reading of t gives another limit than the truth (right:
+        the entry is the true limit; wrong: it is that reading's, unless another reading the run follows gives the
+        same value there and the run does not follow t's misreading on top of it); bank: votes on the bank figures
+        added to the first reading."""
+        alts = readings[t]
+        right, wrong = [0] * len(alts), [0] * len(alts)
+        for said, truth, vals, _ in entries:
+            ok = _close(said, truth)
+            for k in range(len(alts)):
+                if not _close(vals[(t, k)], truth):
+                    right[k] += ok
+                    wrong[k] += not ok and _close(said, vals[(t, k)])
+        by = set()
+        for k in range(len(alts)):
+            others = followed_readings(t, k) if wrong[k] > right[k] else []
+            if not others:
+                continue
+            # The followed reading that matches the run best: when the run follows t's misreading on top of it, the
+            # shared entries stand and the entries only the two together explain count against t too.
+            best = max(others, key=lambda o: (sum(_close(said, vals[o]) for said, _, vals, _ in entries), o))
+            extra = on_top(t, k, best)
+            shared = 0 if extra else sum(not _close(said, truth) and _close(said, vals[(t, k)])
+                                         and any(_close(vals[(t, k)], vals[o]) for o in others)
+                                         for said, truth, vals, _ in entries)
+            wrong[k] += extra - shared
+            by |= {u for u, _ in others} if shared else set()
+        right[0], wrong[0] = right[0] + bank[0], wrong[0] + bank[1]
+        verdict(t, right, wrong, what)
+        if by:
+            evidence[t] += f" (not counting the entries that follow the misreading of {', '.join(sorted(by))})"
+
+    def bank_votes(key: str, truth_of, alts_of) -> tuple[int, int]:
+        right = wrong = 0
+        for day in trace:
+            said = (day["table"] or {}).get(key)
+            truth = truth_of(day)
+            other = [v for v in alts_of(day) if not _close(v, truth)]
+            if other and _number(said):
+                right += _close(said, truth)
+                wrong += not _close(said, truth) and any(_close(said, v) for v in other)
+        return right, wrong
+
+    def other_score(c: App) -> int:
+        """The other bureau's score (the policy_bureau misreading's near-prime definition)."""
+        return c.score_b if view.bureau == "A" else c.score_a
+
+    def running(th, score=None) -> list[float]:
+        """The period's near-prime share under the threshold th (of the policy bureau's score, or of `score`) at
+        each day's close, from the first day with an approval on (the last one is the period's share)."""
+        score = score or view.score
+        total = near = 0.0
+        out = []
+        for day in trace:
+            for aid, (dd, amt, _) in day["dec"].items():
+                if dd == "approve":
+                    total += amt
+                    near += amt if score(w.app(aid).cust) < th else 0.0
+            if total:
+                out.append(near / total)
+        return out
+
+    def held_at(th, target, first: bool = True, score=None) -> bool:
+        """Whether the run steered the share under th to target: it ends at most STEERED above it (as the quota's
+        own diagnostic reads a kept quota), never closed a day below it, and (first) closed its first day of
+        lending at most FIRST_BAND above it. A program that holds a commitment holds it from that first day, whose
+        share is the day's own mix with no earlier lending to lean on (and a program that maximizes profit lends
+        near-prime no more than the commitment asks: near-prime loans are the riskier ones), while first come,
+        first served starts wherever the first applicants fall and may only drift into the band later (the
+        baseline's first day closes 11-35 points above the level in the settings where its share ends in the band
+        and never closes a day under it)."""
+        run = running(th, score)
+        return (bool(run) and target - 1e-9 <= run[-1] <= target + STEERED + 1e-9
+                and min(run) >= target - HOLD_SLACK and (not first or run[0] <= target + FIRST_BAND))
+
+    def levels() -> tuple[float, int, list, list, list, list]:
+        """(quota, threshold, the lower and the higher other quota candidates, the lower and the higher other
+        thresholds), the thresholds on the policy bureau's scale."""
+        q, th = view.quota, view.near_prime_below
+        quotas = [int(v) / 100 for v in _other_values(setting, "quota_pct")]
+        ths = [policy_score(view.bureau, v) for v in _other_values(setting, "near_prime_a")]
+        return (q, th, [x for x in quotas if x < q], [x for x in quotas if x > q], [x for x in ths if x < th],
+                [x for x in ths if x > th])
+
+    def under_quota() -> tuple[bool, bool]:
+        """For a run that ends under the quota: (the quota is not told, the threshold is not told). The quota's
+        misreading: the share under the true threshold held at a lower candidate; the threshold's: the share under a
+        higher threshold held at the quota; the bureau's: the other bureau's share, under the threshold on its
+        scale, held at the quota (the first day not counted: a program steering to a lower level may well start
+        above it). The bureau's misreading tells neither near-prime fact (no misreading of the quota or the
+        threshold comes near it). Otherwise one fact is not told when the other's misreading holds and its own is
+        not even possible, its share having closed some day under its level. The run broke the commitment either
+        way, so when the run cannot rule either out both stay not enforced: calling an ablation enforced would lose
+        its separation, a cross flag is only a warning."""
+        q, th, lower_q, _, _, higher_th = levels()
+        if held_at(policy_score("B" if view.bureau == "A" else "A", int(setting["near_prime_a"])), q, False,
+                   other_score):
+            return True, True
+
+        def possible(t, level) -> bool:
+            run = running(t)
+            return bool(run) and min(run) >= level - HOLD_SLACK
+        quota_reading = any(held_at(th, x, first=False) for x in lower_q)
+        threshold_reading = any(held_at(x, q, first=False) for x in higher_th)
+        return (threshold_reading and not any(possible(th, x) for x in lower_q),
+                quota_reading and not any(possible(x, q) for x in higher_th))
+
+    for t in _in_force(setting):
+        if t in TABLE_MISREAD or t in TABLE_PARAMS:
+            table_verdict(t, "changed limits")
+        elif t == "our_lending":
+            table_verdict(t, "limits of customers we lent to")
+        elif t == "closing_table":
+            bank = bank_votes("daily_capacity_remaining", lambda day: max(0, view.daily_cap - day["day_total"]),
+                              lambda day: [view.daily_cap])
+            table_verdict(t, "limits and capacities after approvals", bank)
+        elif t == "daily_cap":
+            right, wrong = bank_votes("daily_capacity_remaining",
+                                      lambda day: max(0, view.daily_cap - day["day_total"]),
+                                      lambda day: [max(0, int(v) - day["day_total"])
+                                                   for v in _other_values(setting, "daily_cap")])
+            over = sum(day["day_total"] > view.daily_cap for day in trace)
+            verdict(t, right, wrong + over, "daily capacities (and days within the cap)")
+            if over:            # a day approved above the cap breaks the fact, whatever capacities the run reported
+                enforced[t] = False
+                evidence[t] += f"; {over} day(s) approved above the cap"
+        elif t in ("period_budget", "budget_notice"):
+            # The budget left against another budget candidate's (with the cut) or the uncut budget's. The two alias
+            # from the cut's day on when a candidate is the cut larger, so, as for the table's entries, a day does not
+            # tell this fact when the other target's reading, which the run follows rather than this one (more of
+            # the days where the two differ are its), gives the same figure.
+            budget_of = {"period_budget": lambda day: [max(0, int(v) - (BUDGET_CUT if day["day"] >= BUDGET_CUT_DAY else 0)
+                                                           - day["total"]) for v in _other_values(setting, "period_budget")],
+                         "budget_notice": lambda day: [max(0, view.period_budget - day["total"])]}
+            true_left = lambda day: max(0, view.budget(day["day"]) - day["total"])     # noqa: E731
+            right, wrong = bank_votes("period_budget_remaining", true_left, budget_of[t])
+            u = "budget_notice" if t == "period_budget" else "period_budget"
+            ours = theirs = shared = 0
+            for day in trace if wrong > right and u in _in_force(setting) else ():
+                said = (day["table"] or {}).get("period_budget_remaining")
+                mine, other = budget_of[t](day), budget_of[u](day)
+                if _number(said):
+                    is_mine, is_other = any(_close(said, v) for v in mine), any(_close(said, v) for v in other)
+                    ours, theirs = ours + (is_mine and not is_other), theirs + (is_other and not is_mine)
+                    shared += is_mine and is_other and not _close(said, true_left(day))
+            shared = shared if theirs > ours else 0
+            verdict(t, right, wrong - shared, "budgets left")
+            evidence[t] += f" (not counting {shared} that follow the misreading of {u})" if shared else ""
+            # Approvals made while the period is over the budget in force break the budget whatever figures the run
+            # reports (one that misreads the budget's amount reports neither the true figures nor a candidate's).
+            # Over the uncut budget, or with figures that do not follow the uncut budget rather than another
+            # candidate's, the budget itself was not kept; over the cut budget only, with the uncut budget's
+            # figures, the cut was not applied (budget_notice's misreading).
+            over = [day for day in trace if day["day_total"] > 0 and day["total"] > view.budget(day["day"])]
+            if over:
+                uncut = any(day["total"] > view.period_budget for day in over)
+                nb_right, nb_wrong = bank_votes("period_budget_remaining", true_left, budget_of["budget_notice"])
+                pb_right, pb_wrong = bank_votes("period_budget_remaining", true_left, budget_of["period_budget"])
+                cut_ignored = not uncut and nb_wrong > nb_right and pb_wrong <= pb_right
+                if t == ("budget_notice" if cut_ignored else "period_budget"):
+                    enforced[t] = False
+                    evidence[t] += f"; approvals over the budget in force on {len(over)} day(s)"
+        elif t == "limit_table":
+            right = wrong = 0
+            earlier: set = set()
+            for day in trace:
+                for cid in earlier - {w.app(aid).cust.person for aid in day["dec"]}:
+                    ok = _number(day["said"].get(cid))
+                    right, wrong = right + ok, wrong + (not ok)
+                earlier |= set(day["truth"])
+            verdict(t, right, wrong, "entries of earlier customers")
+        elif t in ("reason_codes", "reason_codes_hard"):
+            rows = [(day["day"], *x) for day in trace for x in day["codes"]]
+            todays = {day["day"]: day["todays"] for day in trace}
+            # The fact's two natural misreadings: LIMIT_EXCEEDED read as "asked for more than is left" (the
+            # ablation's), and LIMIT_EXCEEDED read on the limit before the day's approvals (the fact says after them),
+            # which differs where the customer's own approvals that day used up the limit.
+            alternatives = [[other for _, _, _, other, *_ in rows],
+                            [_main_driver(view, people[cid], d, after - todays[d].get(cid, 0), split)
+                             for d, _, _, _, cid, after, split in rows]]
+            # A run whose codes follow another target's reading of the limits (a wrong DSR cap, our earlier lending
+            # forgotten, say) gives many of these codes too: a decline does not tell this fact when a reading the run
+            # follows rather than this misreading (more of the codes where the two differ are its, or, where the two
+            # give the same codes, more of the limit table's entries where that reading differs from the truth)
+            # gives the same code, as for the table's entries.
+            competing, on_table = {}, set()
+            for key in (k for k in (entries[0][2] if entries else {})):
+                differ = [(said, truth, vals[key]) for said, truth, vals, _ in entries if not _close(vals[key], truth)]
+                if sum(_close(said, v) for said, _, v in differ) > sum(_close(said, truth) for said, truth, _ in differ):
+                    on_table.add(key)
+            for u, alts in readings.items():
+                for j, (alt, how) in enumerate(alts):
+                    if how == "forget":
+                        competing[(u, j)] = [_main_driver(view, people[cid], d, todays[d].get(cid, 0), split)
+                                             for d, _, _, _, cid, after, split in rows]
+                    elif not how:           # "morning" is a reading of the table only
+                        competing[(u, j)] = [_main_driver(alt, people[cid], d, after, split)
+                                             for d, _, _, _, cid, after, split in rows]
+            right, wrong, by, dropped = [], [], set(), 0
+            for alt_codes in alternatives:
+                pairs = [(code, want, x) for (_, code, want, *_), x in zip(rows, alt_codes)]
+                r = sum(code == want for code, want, x in pairs if want != x)
+                n = sum(code == x for code, want, x in pairs if want != x)
+                shared = [False] * len(rows)
+                for (u, j), codes in competing.items() if n > r else ():
+                    ours = sum(code == x for (code, _, x), y in zip(pairs, codes) if y != x)
+                    theirs = sum(code == y for (code, _, x), y in zip(pairs, codes) if y != x)
+                    if theirs > ours or (ours == theirs and (u, j) in on_table):
+                        shared = [s or y == x for s, (_, _, x), y in zip(shared, pairs, codes)]
+                        by.add(u)
+                drop = sum(s and code == x for s, (code, want, x) in zip(shared, pairs) if want != x)
+                right.append(r)
+                wrong.append(n - drop)
+                dropped += drop
+            verdict(t, right, wrong, "declines")
+            evidence[t] += (f" (not counting {dropped} that follow the misreading of {', '.join(sorted(by))})"
+                            if dropped else "")
+        elif t == "protected_attributes":
+            pairs = [alike for day in trace for alike in day["pairs"]]
+            enforced[t] = None if not pairs else all(pairs)
+            evidence[t] = f"{sum(pairs)} of {len(pairs)} planted pairs decided alike"
+        elif t in ("tenure_review", "income_discrepancy"):
+            # Per other candidate, the applications it decides differently: one the rule sends to an underwriter
+            # and the candidate does not is right when referred; one the candidate would refer and the rule does not
+            # is wrong when referred, beyond the program's own rate of referring applications that no candidate
+            # sends (so a program that refers for other reasons, e.g. its declines, is not read as a longer habit).
+            n = len(_other_values(setting, PARAM_TARGETS[t]))
+            rows = []
+            for day in trace:
+                d = day["day"]
+                for aid, (dd, _, _) in day["dec"].items():
+                    c = w.app(aid).cust
+                    if c.delinquent or (t == "income_discrepancy" and view.short_tenure(c)) \
+                            or (t == "tenure_review" and view.discrepant(c, d)):
+                        continue
+                    if t == "tenure_review":
+                        due, alts = view.short_tenure(c), [c.tenure < int(v) for v in _other_values(setting,
+                                                                                                    "min_tenure")]
+                    else:
+                        gap = c.base_salary - view.base(c, d)
+                        due = view.discrepant(c, d)
+                        alts = [gap > int(v) / 100 * c.base_salary + 1e-9
+                                for v in _other_values(setting, "discrepancy_pct")]
+                    rows.append((due, alts, dd == "refer"))
+            control = [ref for due, alts, ref in rows if not due and not any(alts)]
+            base = sum(control) / len(control) if control else 0.0
+            right, wrong = [0.0] * n, [0.0] * n
+            for k in range(n):
+                extra = [ref for due, alts, ref in rows if alts[k] and not due]
+                right[k] += sum(ref for due, alts, ref in rows if due and not alts[k])
+                wrong[k] += sum(not ref for due, alts, ref in rows if due and not alts[k])
+                excess = max(0.0, sum(extra) - base * len(extra))
+                right[k] += len(extra) - excess
+                wrong[k] += excess
+            verdict(t, right, wrong, "referrals" if t == "tenure_review" else "discrepancy referrals")
+        elif t == "branch_notes":           # the notes a misreading could honour: eligible and within the limit
+            right = wrong = 0
+            for day in trace:
+                for aid, (dd, amt, _) in day["dec"].items():
+                    a = w.app(aid)
+                    before = day["lent"].get(a.cust.person, 0) - day["todays"].get(a.cust.person, 0)
+                    if a.notes and view.eligible(a.cust) and a.requested <= view.limit(a.cust, day["day"], before):
+                        followed = dd == "approve" and amt == a.requested
+                        right, wrong = right + (not followed), wrong + followed
+            verdict(t, right, wrong, "noted applications within the rules")
+        elif t == "document_corrections":
+            right = sum(aid in day["dec"] for day in trace for aid in day["redecidable"])
+            wrong = sum(aid not in day["dec"] for day in trace for aid in day["redecidable"])
+            verdict(t, right, wrong, "corrected referrals")
+        elif t == "split_applications":
+            right = wrong = 0
+            for day in trace:
+                groups: dict = {}
+                for aid, (dd, _, _) in day["dec"].items():
+                    groups.setdefault(w.app(aid).cust.person, []).append(dd == "approve")
+                for got in groups.values():
+                    if len(got) > 1 and any(got):
+                        right, wrong = right + (sum(got) == 1), wrong + (sum(got) > 1)
+            enforced[t] = None if not right + wrong else wrong == 0     # one double approval breaks the rule
+            evidence[t] = f"{right} of {right + wrong} split groups with an approval have exactly one"
+        elif t == "near_prime_quota":       # steered to a stricter candidate quota, or under the quota
+            q, th, _, stricter, _, _ = levels()
+            run = running(th)
+            if not run:
+                enforced[t], evidence[t] = None, "nothing approved"
+                continue
+            share = run[-1]
+            evidence[t] = f"near-prime share {share:.3f} against the quota {q:g}"
+            if share < q - 1e-9:
+                # Under the quota: the quota misread, unless the threshold's or the bureau's misreading explains it
+                # instead (which those targets' diagnostics call).
+                enforced[t] = None if under_quota()[0] else False
+                evidence[t] += " (another fact's misreading explains it)" if enforced[t] is None else ""
+            elif share <= q + STEERED:
+                enforced[t] = True
+            else:
+                steered = [x for x in stricter if held_at(th, x)]
+                enforced[t] = False if steered else None
+                evidence[t] += f" (steered to {steered[0]:g})" if steered else ""
+        elif t == "near_prime_threshold":   # a lower threshold held at the quota too: steered to it
+            q, th, _, _, lower, _ = levels()
+            run = running(th)
+            if not run:
+                enforced[t], evidence[t] = None, "nothing approved"
+                continue
+            share = run[-1]
+            evidence[t] = f"near-prime share {share:.3f} against the quota {q:g}"
+            if share < q - 1e-9:
+                # Under the quota: the threshold misread, unless the quota's or the bureau's misreading explains it
+                # instead (which those targets' diagnostics call).
+                enforced[t] = None if under_quota()[1] else False
+                evidence[t] += " (another fact's misreading explains it)" if enforced[t] is None else ""
+                continue
+            # A stricter threshold's share held just above the quota: the program steered to it, starving the
+            # band between the two thresholds (steering to the true one leaves the stricter share well below).
+            held = [x for x in lower if held_at(x, q)]
+            enforced[t] = False if held else True if share <= q + STEERED else None
+            evidence[t] += f"; {running(held[0])[-1]:.3f} under the stricter threshold {held[0]}" if held else ""
+    return enforced, evidence
+
+
+def _switch_config(view: _View, target: str) -> dict:
+    """The reference program misreading one client fact (SWITCHES)."""
+    sw = dict(SWITCHES[target])
+    if sw.pop("protected", False):          # a scorecard fitted on every column of the history, protected ones too
+        names = SCORECARD + PROTECTED
+        sw.update(features=list(names), beta=_fit(view._w, names))
+    return ref_config(view, **sw)
+
+
+def ablations(world: World, setting) -> dict:
+    """{target: fn(out_dir)} for every target in force: the reference misreading only that fact (SWITCHES), and for a
+    param: target, used only where no admissible other candidate exists, the reference of the nearest other
+    candidate."""
+    view, out = _View(world, setting), {}
+    for t in _in_force(setting):
+        if t in SWITCHES:
+            cfg = _switch_config(view, t)
+        else:
+            p = PARAM_TARGETS[t]
+            pool, cur = _ordered(p), str(setting[p])
+            k = [str(v) for v in pool].index(cur)
+            other = pool[k + 1] if k + 1 < len(pool) else pool[k - 1]
+            cfg = ref_config(_View(world, _alt_setting(setting, **{p: other})))
+        out[t] = (lambda o, cfg=cfg: write_program(o, cfg))
+    return out
+
+
+def shortcuts(world: World, setting) -> dict:
+    """Degenerate strategies the scoring must not reward (each closed: invalid, or quality at most 0.5)."""
+    base = ref_config(_View(world, setting))
+
+    def refer_declines(out_dir):
+        """Refer every application it would decline (bar delinquent ones), so no decline needs a reason code"""
+        write_program(out_dir, dict(base, refer_declines=True))
+
+    def refer_everything(out_dir):
+        """Refer every application to an underwriter (delinquent ones declined)"""
+        write_program(out_dir, dict(base, refer_all=True))
+
+    def empty_table(out_dir):
+        """Decide like the reference but return an empty limit table"""
+        write_program(out_dir, dict(base, table="empty"))
+
+    def todays_table(out_dir):
+        """Decide like the reference but list only the day's applicants in the limit table"""
+        write_program(out_dir, dict(base, table="today"))
+
+    def morning_table(out_dir):
+        """Decide like the reference but report the limits as they stood before the day's approvals"""
+        write_program(out_dir, dict(base, table="morning"))
+
+    def morning_limits(out_dir):
+        """Decide like the reference; customer limits as they stood before the day's approvals, bank figures after"""
+        write_program(out_dir, dict(base, table="morning", table_bank="closing"))
+
+    def jitter_table(out_dir):
+        """As morning_limits, and every entry moved by 1 every other day, to get static entries scored"""
+        write_program(out_dir, dict(base, table="morning", table_bank="closing", jitter=True))
+
+    def zero_table(out_dir):
+        """Decide like the reference; every customer 0 in the table, the bank figures right"""
+        write_program(out_dir, dict(base, table="zeros"))
+
+    def approved_zero(out_dir):
+        """Decide like the reference; the exact table, except 0 for every customer approved that day"""
+        write_program(out_dir, dict(base, table="approved_zero"))
+
+    def approve_nothing(out_dir):
+        """Approve nothing: decline with the right codes and report an exact limit table"""
+        write_program(out_dir, dict(base, approve_nothing=True))
+    return {f.__name__: f for f in (refer_declines, refer_everything, empty_table, todays_table, morning_table,
+                                    morning_limits, jitter_table, zero_table, approved_zero, approve_nothing)}
+
+
+def robust_solution(world: World, out_dir: Path, tier: str, candidates: dict) -> None:
+    """What the agent can build without asking the client anything: the reference program with the most natural
+    reading of every fixed fact and, for each drawn parameter, the strictest candidate of the tier's pool (the bureau
+    the history's defaults follow, the highest cutoff, the lowest income cap, DSR cap, daily cap and budget, the
+    longest tenure habit, the smallest discrepancy, the narrowest near-prime band with the largest quota). The natural
+    readings: the documented bonus only, our earlier lending counted, the closing table of every customer seen (as the
+    pilot answer shows); LIMIT_EXCEEDED only when nothing is left (the pilot answer codes a request above a positive
+    limit CREDIT_RISK and a customer with 0 left LIMIT_EXCEEDED), 0 in the table for a customer we cannot lend to
+    (what they "may still borrow"); every notice acted on, the documents' lower salary, every debt (a credit line at
+    its interest, no stress rate), a corrected document applied without deciding its referral again (a referral is
+    the human underwriter's from then on), no limit on same-day approvals, protected attributes left out of the
+    scorecard but no pairing of identical applications, branch notes ignored. Generous beyond the agent's view: it
+    is given the tier's mechanics (the budget, the near-prime commitment from medium, the discrepancy referral in
+    hard) with the strictest candidates, which can only help it."""
+    from fdebench2.cases import Setting
+    params = {"policy_bureau": "A", "min_score_a": max(candidates["min_score_a"]),
+              "near_prime_a": min(candidates["near_prime_a"]), "max_dsr_pct": min(candidates["max_dsr_pct"]),
+              "income_cap_pct": min(candidates["income_cap_pct"]), "daily_cap": min(candidates["daily_cap"]),
+              "period_budget": min(candidates["period_budget"]), "quota_pct": max(candidates["quota_pct"]),
+              "discrepancy_pct": min(candidates["discrepancy_pct"]), "min_tenure": max(candidates["min_tenure"])}
+    params.update(derive_params(params, tier))
+    view = _View(world, Setting(tier, 0, params, variation="never asks"))
+    write_program(out_dir, ref_config(view, lines="interest", stress=False, verify_income=True, apply_repayments=True,
+                                      apply_reg_notice=True, redecide=False, split_rule=False, twins=False))
+
+
+BEST_KNOWN_GRID = (                      # the reference's hyperparameters, searched one move at a time
+    {"quota_margin": 0.01}, {"quota_margin": 0.02}, {"quota_margin": 0.05},
+    {"buffer_price": 0.02}, {"buffer_price": 0.1}, {"pace": 1.0}, {"pace": 1.25},
+)
+
+
+def _best_known_config(view: _View) -> dict:
+    """The reference program tuned on the hidden period itself (hindsight the agent does not have): coordinate
+    search over BEST_KNOWN_GRID from the reference's own configuration, keeping a move while the replay stays valid
+    and its objective grows. Deterministic; cached per setting."""
+    key = "best_known_config"
+    if key in view._cache:
+        return view._cache[key]
+    ref = _reference_run(view)
+    best_cfg, best = ref_config(view), _objective(ref, ref["profit"])
+    # the risk's true shape (the generator's hinges), fitted on the history, then (medium+) the budget and quota knobs
+    shape = {"features": list(TRUE_SHAPE), "beta": _fit(view._w, TRUE_SHAPE)}
+    moves = (shape,) + (BEST_KNOWN_GRID if view.medium else ())
+    for _ in range(2):
+        better = False
+        for move in moves:
+            cfg = dict(best_cfg, **move)
+            if cfg == best_cfg:
+                continue
+            res = run_inprocess(view, cfg)
+            obj = _objective(res, ref["profit"])
+            if not res["violations"] and obj > best + 1e-9:
+                best_cfg, best, better = cfg, obj, True
+        if not better:
+            break
+    view._cache[key] = best_cfg
+    return best_cfg
+
+
+def best_known_solution(world: World, out_dir: Path, setting) -> None:
+    write_program(out_dir, _best_known_config(_View(world, setting)))
+
+
+def objective_bound(world: World, setting) -> float:
+    """A proven upper bound on the objective: the expected profit of perfect information, relaxed, over the
+    reference's (the table's accuracy is at most 1). Every valid program lends each customer c in total T_c at most
+    min(what their applications ask, their largest limit on a day they can be approved), only on days they have an
+    application it may approve, never more than the daily cap a day nor (from medium) the period budget, and refers
+    every application the rules send to an underwriter (60 each). Its expected profit on c is at most
+    U_c(T_c) = 10% T_c - 60% x the integral of the true default probability from 0 to T_c on the lowest-risk of
+    those days (the probability grows with the amount, so each approval's loss is at least that slice of the
+    integral). Weak duality with prices mu_d >= 0 on the daily caps, nu >= 0 on the budget and lam >= 0 on the
+    near-prime commitment then bounds the profit by
+        sum_c max_T [U_c(T) - (min_d mu_d + nu - lam (near_c - q)) T] + sum_d mu_d cap + nu B - 60 x referrals,
+    for any prices; the prices are searched to make it small. From medium a program either lends nothing from the
+    treasury's cut on (and at most the original budget) or keeps the whole period within the cut budget; the bound is
+    the larger of the two.
+
+    Scope: the deliverables that keep every rule, the tenure habit included (validity as the audit scores it). A
+    program that bends the habit under the head of credit's exception (a relaxed business-policy rule in a run)
+    approves applications this bound charges as referrals, and can end above it: the reference bending the habit
+    gains 4-14% with the 6- or 12-month habit (REVIEW.md F4), more than the bound's 3-11% gap in some settings."""
+    import numpy as np
+    view = _View(world, setting)
+    key = "objective_bound"
+    if key in view._cache:
+        return view._cache[key]
+    q, step = (view.quota if view.medium else 0.0), 250
+    referrals = 0
+    days: dict = {}                   # customer -> {day it can be approved: the most it can be approved that day}
+    for d in range(N_DAYS):
+        todo = list(world.by_day(d))
+        if view.hard:                 # a referral decided again the day its corrected document arrives
+            todo += [world.app(n.body["application_id"]) for n in world.notices_on(d) if n.kind == "document_correction"
+                     and view.mandated_referral(world.app(n.body["application_id"]).cust,
+                                                world.app(n.body["application_id"]).day)]
+        for a in todo:
+            c = a.cust
+            if view.mandated_referral(c, d):
+                referrals += 1
+            elif view.eligible(c):
+                per = days.setdefault(c.person, {})
+                per[d] = max(per.get(d, 0), a.requested) if view.hard else per.get(d, 0) + a.requested
+    people = {a.cust.person: a.cust for a in world.apps}
+    rows = []
+    for cid, per in sorted(days.items()):
+        c = people[cid]
+        top = min(sum(per.values()), max(view.limit(c, d, 0) for d in per))
+        if top < MIN_AMOUNT:
+            continue
+        grid = list(range(0, top, step)) + [top]
+        pd_min = [min(true_pd(c, x, world.debts_at(c, d, inclusive=True)) for d in per) for x in grid]
+        values, acc = [], 0.0
+        for k, x in enumerate(grid):  # U at the grid point (left sums: a lower bound on the integral of the pd)
+            values.append(MARGIN * x - LGD * acc)
+            if k + 1 < len(grid):
+                acc += pd_min[k] * (grid[k + 1] - x)
+        rows.append((per, view.near_prime(c), grid, values))
+    if not rows:
+        view._cache[key] = -REFER_COST * referrals / _reference_run(view)["profit"]
+        return view._cache[key]
+    width = max(len(g) for _, _, g, _ in rows)
+    grids = np.array([g + [g[-1]] * (width - len(g)) for _, _, g, _ in rows], float)
+    vals = np.array([v + [v[-1]] * (width - len(v)) for _, _, _, v in rows], float)
+    near = np.array([1.0 if n else 0.0 for _, n, _, _ in rows])
+
+    def bound(mu, nu, lam, mask, budget) -> float:
+        price = np.where(mask, mu[None, :], np.inf).min(axis=1) + nu - lam * (near - q)
+        some = np.isfinite(price)               # customers with a day they can be approved on
+        best = (vals[some] - price[some, None] * grids[some]).max(axis=1)
+        return float(best.sum() + mu.sum() * view.daily_cap + nu * budget - REFER_COST * referrals)
+
+    def search(allowed) -> float:
+        """Prices by coordinate descent on a shrinking step (any prices give a valid bound)."""
+        mask = np.array([[d in per and d in allowed for d in range(N_DAYS)] for per, _, _, _ in rows])
+        budget = (view.period_budget - (BUDGET_CUT if max(allowed) >= BUDGET_CUT_DAY else 0)) if view.medium else 0
+        x = np.zeros(N_DAYS + 2)        # mu_0 .. mu_19, nu, lam
+        dims = range(N_DAYS + 2) if view.medium else range(N_DAYS)
+        best = bound(x[:N_DAYS], x[N_DAYS], x[N_DAYS + 1], mask, budget)
+        for delta in (0.02, 0.01, 0.005, 0.0025, 0.001, 0.0005, 0.0002):
+            improved = True
+            while improved:
+                improved = False
+                for i in dims:
+                    for sign in (1.0, -1.0):
+                        y = x.copy()
+                        y[i] = max(0.0, y[i] + sign * delta)
+                        b = bound(y[:N_DAYS], y[N_DAYS], y[N_DAYS + 1], mask, budget)
+                        if b < best - 1e-6:
+                            x, best, improved = y, b, True
+        return best
+    profit = search(set(range(N_DAYS)))
+    if view.medium:                   # or nothing lent from the treasury's cut on, within the original budget
+        profit = max(profit, search(set(range(BUDGET_CUT_DAY))))
+    view._cache[key] = profit / _reference_run(view)["profit"]
+    return view._cache[key]
 
 
 # ── the pilot day shown in the data ──────────────────────────────────────────
@@ -1306,7 +2304,7 @@ def _pilot(w: World, seed: int) -> dict:
     day = {"date": date, "day_index": 0, "days_in_period": 1, "period_end": date,
            "applications": [_app_json(pw, a, 0) for a in apps], "notices": notices,
            "book": {"loans": [], "referred": []}}
-    cfg = dict(PILOT_RULES, beta=_fit(w))
+    cfg = dict(PILOT_RULES, beta=_fit(w, _module().PILOT_FEATURES))
     answer = _module().Underwriter(cfg).on_day(json.loads(json.dumps(day)))
     answer["limit_table"]["period_budget_remaining"] = None
     return {"input": day, "output": answer}

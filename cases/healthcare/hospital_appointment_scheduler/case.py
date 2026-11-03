@@ -33,8 +33,12 @@ notices and notes. The tier decides which rules are in force:
           follow-ups (two to a slot, a cap per doctor session), duplicate requests (one appointment per
           patient and department) and extra trips of patients with several departments
 
-The rule set (A / B / C) sets the parameters: which clinic closes on the holiday, the urgent window, the
-interpreters per day, the lab cap, the overbooking cap, the notice period for moves and the waitlist order.
+A rule seed draws the client's rule values from the pools in case.yaml, each on its own: which clinic closes
+on the holiday, how many morning slots the urgent reserve holds, the in-person interpreters per day, the
+waitlist order, the lab cap (medium+) and the overbooking cap (hard). The urgent window (2 working days) and
+the notice period for a changed appointment (3 working days) are fixed: the reference never books an urgent
+request later than tomorrow, and it moves appointments too rarely at short notice for another value to change
+its answer (see README.md, "Parameters and rule seeds").
 """
 
 from __future__ import annotations
@@ -62,12 +66,14 @@ FIRST_DAY = dt.date(2026, 11, 9)        # day 0 of the hidden period (a Monday)
 N_DAYS = 20                             # calls: days 0..19 (9 Nov - 4 Dec)
 HORIZON = 10                            # bookings on days d+1 .. d+10
 N_CAL = N_DAYS + HORIZON                # calendar days 0..29
-HOLIDAY = 10                            # Monday 23 November 2026, City Day: one clinic closes (rule set)
+HOLIDAY = 10                            # Monday 23 November 2026, City Day: one clinic closes (drawn)
 SCORED = range(1, N_DAYS + 1)           # clinic days whose appointments are final at the end (1..20)
 SLOT = 20
 AM = tuple(540 + SLOT * k for k in range(9))      # 09:00 .. 11:40
 PM = tuple(780 + SLOT * k for k in range(9))      # 13:00 .. 15:40
-RESERVE = (540, 560)                    # urgent reserve: the first two slots of every morning session
+RESERVE = (540, 560)                    # the office's urgent reserve before the period (the initial book)
+URGENT_DAYS = 2                         # an urgent request is seen within 2 working days of its first possible day
+MOVE_NOTICE = 3                         # working days' notice for a changed date or time
 DEPTS = ("IM", "CARD", "DERM", "ORTH", "PED")
 CLOSABLE = ("DERM", "ORTH", "PED")
 LANGS = ("L0", "F1", "F2", "F3", "F4")  # L0 = the local language
@@ -257,6 +263,21 @@ class World:
         return self._cache[key]
 
 
+# ── the rule seed's parameters ───────────────────────────────────────────────
+
+RESERVE_TIMES = {   # the reserve's slots as each locale lists them, by the number of slots
+    2: {"zh": "09:00 和 09:20", "en": "09:00 and 09:20", "ko": "09:00, 09:20", "ja": "09:00と09:20",
+        "es": "09:00 y 09:20"},
+    3: {"zh": "09:00、09:20 和 09:40", "en": "09:00, 09:20 and 09:40", "ko": "09:00, 09:20, 09:40",
+        "ja": "09:00、09:20と09:40", "es": "09:00, 09:20 y 09:40"},
+}
+
+
+def derive_params(params: dict, tier: str) -> dict:
+    """The urgent reserve's slot times, worded per locale, from the drawn number of reserve slots."""
+    return {"reserve_times": dict(RESERVE_TIMES[int(params["reserve_slots"])])}
+
+
 def no_show(r: Req, lead: int) -> float:
     """True probability that the patient stays away from an appointment booked `lead` working days ahead."""
     return min(0.9, r.base_p + LEAD_SLOPE * max(lead, 0))
@@ -269,11 +290,12 @@ class _View:
         self._w, self.setting = world, setting
         self.medium, self.hard = setting.at_least("medium"), setting.at_least("hard")
         self.closed = str(setting["closed_dept"])
-        self.urgent_days = int(setting["urgent_days"])
+        self.urgent_days = URGENT_DAYS
+        self.reserve = AM[:int(setting["reserve_slots"])]     # the first N slots of every morning session
         self.interpreters = int(setting["interpreters_per_day"])
         self.lab_cap = int(setting["lab_cap"])
         self.ob_cap = int(setting["overbooked_per_session"])
-        self.notice = int(setting["move_notice_days"])
+        self.notice = MOVE_NOTICE
         self.order = str(setting["waitlist_order"])
         self._cache = world._cache.setdefault(("setting", setting.label), {})
 
@@ -788,7 +810,7 @@ class Engine:
                 if a.day < r.earliest:
                     self.flag("not_before_earliest", f"{day}: {rid} on {iso(a.day)} before {iso(r.earliest)}")
                 if r.urgency != "U" and a.day >= d + 2 and any(
-                        s in RESERVE and w.slot_half(a.doctor, a.day).get(s) == "AM" for s in a.slots()):
+                        s in v.reserve and w.slot_half(a.doctor, a.day).get(s) == "AM" for s in a.slots()):
                     self.flag("urgent_reserve", f"{day}: {r.urgency} request {rid} in the reserve slot "
                                                 f"{a.doctor} {iso(a.day)} {hhmm(a.start)}")
                 # Notice is for a changed date or time; the same slot with another doctor needs none.
@@ -919,7 +941,7 @@ class Engine:
                         for s in starts:
                             if self.occ.get((doc.id, t, s)):
                                 continue
-                            if h == "AM" and s in RESERVE and t >= d + 2:
+                            if h == "AM" and s in v.reserve and t >= d + 2:
                                 held += 1
                             else:
                                 free += 1
@@ -1065,6 +1087,7 @@ def _noshow_prior(world: World) -> dict:
 def ref_config(view: _View, **extra) -> dict:
     s = view.setting
     cfg = {"tier": s.tier, "closed_dept": view.closed, "holiday": iso(HOLIDAY), "urgent_days": view.urgent_days,
+           "reserve_slots": len(view.reserve),
            "interpreters_per_day": view.interpreters, "lab_cap": view.lab_cap,
            "overbooked_per_session": view.ob_cap, "move_notice_days": view.notice,
            "waitlist_order": view.order, "horizon": HORIZON, "noshow": _noshow_prior(view._w),
@@ -1169,7 +1192,7 @@ class _State:
             not any(self.e.occ.get((doc, t, x)) for x in ss)
 
     def reserve(self, doc: str, t: int, s: int, n: int) -> bool:
-        return any(x in RESERVE and self.w.slot_half(doc, t).get(x) == "AM" for x in (s, s + SLOT * (n - 1)))
+        return any(x in self.v.reserve and self.w.slot_half(doc, t).get(x) == "AM" for x in (s, s + SLOT * (n - 1)))
 
     def ok_day(self, doc: str, t: int) -> bool:
         return not self.v.closed_on(self.w.doc[doc].dept, t) and not self.v.absent(doc, t, self.d)

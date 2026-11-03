@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-799486</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9790949799486</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>바다의 지도</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Bada-ui Jido</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>윤하은</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Yoon Ha-eun</PersonName></AlternativeName>
+      </Contributor>
+      <Contributor><SequenceNumber>2</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>박하은</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Park Ha-eun</PersonName></AlternativeName>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">마지막 기차가 돌아오지 않자, 고원의 기상 관측소에 사는 은퇴한 지도 제작자는 무엇을 남길지 결정해야 한다.
+
+과거와 현재를 오가는 31개의 짧은 장으로 시간이 한 장소를 바꾸는 방식을 묻는다.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1967</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

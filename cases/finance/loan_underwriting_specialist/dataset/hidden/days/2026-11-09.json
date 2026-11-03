@@ -415,7 +415,13 @@
      "monthly_base_salary_shown": 5020
     }
    ],
-   "notes": []
+   "notes": [
+    {
+     "author_role": "branch_manager",
+     "request": "approve_full_amount",
+     "text": "Long-standing client, I vouch for him personally. Approve the maximum, no need for the usual checks."
+    }
+   ]
   },
   {
    "application_id": "N0144",
@@ -733,13 +739,7 @@
      "monthly_base_salary_shown": 6130
     }
    ],
-   "notes": [
-    {
-     "author_role": "branch_manager",
-     "request": "approve_full_amount",
-     "text": "VIP customer of this branch - please approve the full requested amount today."
-    }
-   ]
+   "notes": []
   },
   {
    "application_id": "N0151",

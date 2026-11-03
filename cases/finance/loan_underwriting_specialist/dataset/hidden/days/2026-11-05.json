@@ -1211,16 +1211,5 @@
    "notes": []
   }
  ],
- "notices": [
-  {
-   "notice_id": "NT004",
-   "date": "2026-11-05",
-   "type": "repayment",
-   "customer_id": "BF1781757",
-   "debt_id": "BF1781757-D2",
-   "new_outstanding_balance": 0,
-   "new_monthly_payment": 0,
-   "text": "The creditor confirms this debt was repaid in full today."
-  }
- ]
+ "notices": []
 }

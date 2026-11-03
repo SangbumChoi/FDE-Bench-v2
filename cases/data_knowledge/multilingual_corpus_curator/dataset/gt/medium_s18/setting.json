@@ -1,0 +1,16 @@
+{
+  "derived": {
+    "fallback_author": "Unknown"
+  },
+  "params": {
+    "layout": "year/title/author",
+    "max_len": 40,
+    "multi_author": "first",
+    "no_author": "review",
+    "script": "latin",
+    "sep": "-",
+    "year_basis": "first"
+  },
+  "rule_seed": 18,
+  "tier": "medium"
+}

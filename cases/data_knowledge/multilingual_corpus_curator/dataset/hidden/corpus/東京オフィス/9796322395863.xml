@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-395863</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9796322395863</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>最後の図書館</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Saigo no Toshokan</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>佐藤大翔</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Sato Hiroto</PersonName></AlternativeName>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">目の見えない調律師は長いあいだ河口の古い波止場を避けてきた。だが火事で資料館が焼けると、すべてがよみがえる。
+
+過去と現在を行き来する二十の短い章で、時間が場所を変えていくことを問いかける。</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1991</Date></PublishingDate>
+      <PublishingDate><PublishingDateRole>11</PublishingDateRole><Date dateformat="05">1984</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

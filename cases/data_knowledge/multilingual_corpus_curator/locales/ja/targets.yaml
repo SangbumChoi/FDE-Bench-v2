@@ -3,30 +3,22 @@
 - id: year_basis
   text: パスの年は{{year_basis}}です。年が1つしかない本はその年を使います。
 - id: script
-  text: パスの書名と著者名は{{script}}で書きます。ローマ字はメタデータで原語の表記と対になっているものを使います。
+  text: パスの書名と著者名は{{script}}で書きます。
 - id: co_authors
   text: 共著の本では、パスの著者の部分は{{multi_author}}です。
-- id: name_rules
-  text: '書名と著者名：NFKC、\ / : * ? " < > | と制御文字は空白に、連続する空白は{{sep}}に、先頭の {{max_len}} 文字だけ残し、両端の空白・ピリオド・区切り文字を除く。'
+- id: separator
+  text: 書名と著者名の中の連続する空白は{{sep}}にします。
+- id: max_len
+  text: 書名と著者名は先頭の {{max_len}} 文字だけ残し、両端の空白・ピリオド・区切り文字を除きます。
 - id: content
-  text: ライブラリのファイルにはその本の紹介文だけを UTF-8 で入れ、段落の間に空行を入れます。
-- id: manifest_review
-  text: manifest.csv にすべての本を載せ（元ファイルは ; 区切り、状態は placed か review）、確認に回す本はファイルを _review/ の下にコピーし、理由コード UNREADABLE、NO_TITLE、NO_AUTHOR、NO_YEAR、NO_DESCRIPTION、CONFLICT のうち最初に当てはまるものを付けます。
-- id: precedence
-  text: 各情報は埋め込みメタデータ、扉ページのテキスト、ファイル名の順に取ります。ファイルの作成日・更新日は刊行年ではありません。
-- id: encodings
-  text: 一部のファイルは目印なしで GB18030、CP949、Shift_JIS、CP1252 になっています（HTML は charset を宣言）。
-- id: year_notations
-  text: 年は和暦、民国紀年、檀紀、漢数字、ローマ数字でも書かれており、すべて4桁の年に直します。
-- id: author_variants
-  text: 同じ著者がいくつものローマ字表記や「姓, 名」の形で出てきます。常に正式な対の表記を使い、その本のファイルにないときはドライブにある同じ著者のほかの本から見つけます。
-- id: duplicates
-  text: 複数のファイルや形式にある同じ本のコピーはライブラリのファイル1つにまとめ、一覧のその行にファイルをすべて載せます。
-- id: exceptions
-  text: 欠けた項目はその本のほかのファイルから取ります。意味のあるファイル名は書名になります（汎用的な名前は除く）。著作権表示が年になります。紹介文がなければ NO_DESCRIPTION で、決して作りません。同じ段階の2つの情報源で年が違えば CONFLICT です。
-- id: containers
-  text: zip アーカイブと目録 CSV（1行1冊、ヘッダーは英語か日本語）にも本があります。画像だけのスキャンは読めるコピーがあれば無視し、なければ UNREADABLE です。不要ファイルからは何も出力しません。
+  text: ライブラリのファイルにはその本の紹介文だけを入れます（書名・著者・年の行は入れない）。UTF-8 で、段落の間に空行を入れます。
+- id: review_codes
+  text: 確認の行には理由コード UNREADABLE、NO_TITLE、NO_AUTHOR、NO_YEAR、NO_DESCRIPTION、CONFLICT のうち1つを付けます（この順で最初に当てはまるもの）。
 - id: missing_author
-  text: 著者のない本は NO_AUTHOR として確認に回します。方針なので、例外が承認されれば「{{fallback_author}}」でライブラリに並べます。
-- id: scoring
-  text: 1冊ごとに、正しいパスと紹介文なら1点（そうでなければ紹介文が正しくて0.4点、年・書名・著者が合うごとに0.2点、パスだけ正しく紹介文が違えば0.2点）、確認はその本のファイルを挙げる行がすべて正しい理由コードなら1点（すべて同じ別のコードなら0.4点、行が食い違えば0点）。一覧の行がない、または誤っている場合はその本の点数の5分の1を失います。medium と hard では本でないライブラリのファイル1つにつき0.5点を引きます。
+  text: '<!-- when: no_author=review -->著者のない本は NO_AUTHOR として確認に回します。方針なので、例外が承認されれば「{{fallback_author}}」でライブラリに並べます。<!-- /when --><!-- when: no_author=Unknown,Anonymous -->著者のない本は著者名「{{fallback_author}}」でほかの本と同じようにライブラリに並べ、確認には回しません（NO_AUTHOR は使わない）。<!-- /when -->'
+- id: no_description
+  text: どの情報源にも紹介文がない本は NO_DESCRIPTION として確認に回します。作った紹介文や仮の文言は決して書きません。
+- id: conflict
+  text: 同じ段階の2つの情報源で年が食い違う本（たとえば1冊の JSON レコードと ONIX レコード）は CONFLICT として確認に回します。どちらの年も採りません。
+- id: generic_titles
+  text: 意味のあるファイル名は書名になります（アンダースコアは空白）が、doc_0042、scan_0007、book_0031 や ISBN のような汎用的な名前はなりません。ほかに書名のない本は NO_TITLE として確認に回します。

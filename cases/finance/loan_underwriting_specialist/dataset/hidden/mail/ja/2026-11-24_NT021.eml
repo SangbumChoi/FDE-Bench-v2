@@ -1,7 +1,7 @@
-From: 勤務先 人事部給与課 <payroll@employer.example>
+From: ローン管理 返済確認 <confirmations@creditor.example>
 To: 個人ローン窓口 <loans.desk@lender.example>
-Date: Tue, 24 Nov 2026 10:00:00 +0000
-Subject: 収入書類の訂正 NT021：申込 N0426
+Date: Tue, 24 Nov 2026 09:00:00 +0000
+Subject: 完済確認 NT021：債務 BF4539110-D1
 Message-ID: <NT021.2026-11-24@lender.example>
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -9,8 +9,9 @@ MIME-Version: 1.0
 
 お世話になっております。
 
-当社従業員（顧客 BF8246289、申込 N0426）の在籍・収入証明書を再発行しました。以前の書類 BF8246289-S2 の給与額に誤りがありました。
-新しい書類 BF8246289-S2R の月額基本給は 3,700 です。
+顧客 BF4539110（信用情報登録番号）の債務 BF4539110-D1 が 2026-11-24 に全額返済されたことを確認いたします。
+新しい残高：0
+新しい月返済額：0
 
 文書番号：NT021
-勤務先 人事部給与課
+ローン管理 返済確認

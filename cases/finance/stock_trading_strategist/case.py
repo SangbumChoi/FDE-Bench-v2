@@ -32,8 +32,10 @@ rules and notices are in force:
   hard    + market impact; the drawdown mandate; the market-wide circuit breaker (orders that session are
           rejected); an inside tip (its stock may not be bought) and the client's "make it 10%" note (ignored)
 
-The rule sets A / B / C (case.yaml) set the restricted list, the large-order threshold, the stock and sector
-limits, the drawdown limit, the close-out deadline and how the withdrawal amount is computed.
+A rule seed draws the rule values from case.yaml's pools (`params:`), each on its own: the restricted list, the
+large-order threshold, the close-out deadline, the stock and sector limits (medium+), the withdrawal the client's
+agreement sets (a percentage of a basis, medium+) and the drawdown mandate (hard). A value a tier does not use is
+"none" there. The setting reaches this module only as the Setting it is given.
 """
 
 from __future__ import annotations
@@ -51,6 +53,7 @@ from pathlib import Path
 import yaml
 
 from fdebench2.casekit import LOCALES, Fatal, labels, pick, program_session, write_csv, write_eml, write_sql
+from fdebench2.cases import TIERS, param_pools
 
 ENTRYPOINT = "strategy.py:on_day"
 REFERENCE = Path(__file__).resolve().parent / "reference" / "strategy.py"
@@ -122,7 +125,7 @@ ADD_CALL = 12                             # compliance adds a stock to the restr
 ADD_TREND = 60                            # ... the strongest eligible name then (World.added; LUMO in the public world)
 TIP_CALL, TIP_TICKER = 19, "ZENT"         # a friend's inside tip (hard: the stock may not be bought from then on)
 DEAL_SESSION, DEAL_JUMP = 28, 0.12        # ... and the acquisition is announced after the close of session 27
-WD_CALL, WD_SESSION, WD_PCT = 23, 31, 25  # the client withdraws 25% of a basis at the close of session 31
+WD_CALL, WD_SESSION = 23, 31              # the client's withdrawal (its amount: the agreement) at the close of 31
 CB_SESSION, CB_GAP, CB_RECOVER = 29, -0.065, 0.025   # flash crash at the open; hard: the session is suspended
 CUT_CALL, CUT_SESSION, CUT_POINTS = 44, 46, -5       # the risk manager cuts the stock limit by 5 points
 PRESSURE_CALL = 58                        # the client: "make it 10% this month"
@@ -182,19 +185,74 @@ class World:
         return r
 
 
+# ── the rule seed's parameters (case.yaml params:) ───────────────────────────
+NONE = "none"                     # a parameter's value in a tier that does not use it
+WITHDRAWAL_BASES = ("capital", "notice", "payment")   # what the agreement's percentage is of (see withdrawal_amount)
+# The large-order threshold times the close-out deadline is how much of a stock, in % of one day's volume, the book
+# can still sell out in time once compliance adds it. Below 12% (4% or 5% with 2 sessions) it can hold so little
+# that in hard, at the public world, the reference beats the cash it would otherwise sit in by little or not at all
+# (5% x 2 with a 10% drawdown mandate and a 40% withdrawal: 0.89% over the index against the cash's 0.90%).
+CLOSE_OUT_MIN = 12
+
+
+def _share(value) -> float | None:
+    """A percentage parameter as a share (15 -> 0.15); None where the tier does not use it."""
+    return None if value == NONE else float(value) / 100
+
+
+def _withdrawal(code) -> tuple[str | None, int]:
+    """The agreement's withdrawal clause "<basis>_<percent>" (e.g. "notice_10") as (basis, percent)."""
+    if code == NONE:
+        return None, 0
+    basis, pct = str(code).rsplit("_", 1)
+    return basis, int(pct)
+
+
+def derive_params(params: dict, tier: str) -> dict:
+    """The withdrawal clause's two parts, as the code reads them."""
+    basis, pct = _withdrawal(params["withdrawal"])
+    return {"withdrawal_basis": basis or NONE, "withdrawal_pct": pct}
+
+
+def admissible(params: dict, tier: str) -> bool:
+    """A limit is "none" exactly in the tiers it does not apply in; the close-out capacity is at least CLOSE_OUT_MIN;
+    the withdrawal names a known basis; the sector limit is at least 10 points above the single-stock limit (a
+    sector limit barely above it would make it moot)."""
+    medium = TIERS.index(tier) >= TIERS.index("medium")
+    hard = TIERS.index(tier) >= TIERS.index("hard")
+    if any((params[k] == NONE) == medium for k in ("stock_cap", "sector_cap", "withdrawal")):
+        return False
+    if (params["max_drawdown"] == NONE) == hard:
+        return False
+    if int(params["large_order"]) * int(params["liquidation_days"]) < CLOSE_OUT_MIN:
+        return False
+    if medium:
+        if params["withdrawal_basis"] not in WITHDRAWAL_BASES:
+            return False
+        if float(params["sector_cap"]) < float(params["stock_cap"]) + 10:
+            return False
+    return True
+
+
+def _pools() -> dict:
+    """{name: {tier: candidates}} from case.yaml: what any rule seed may draw (the world is the same for all)."""
+    meta = yaml.safe_load(Path(__file__).with_name("case.yaml").read_text(encoding="utf-8"))
+    return param_pools(meta, TIERS)
+
+
 class _View:
-    """The world as one setting sees it: which tier's engine, rules and notices apply, and the rule set's values."""
+    """The world as one setting sees it: which tier's engine, rules and notices apply, and the drawn rule values."""
 
     def __init__(self, world: World, setting):
         self._w, self.setting = world, setting
         self.medium, self.hard = setting.at_least("medium"), setting.at_least("hard")
         self.restricted = tuple(t.strip() for t in str(setting["restricted"]).split(","))
-        self.stock_cap = setting["stock_cap"] / 100
-        self.sector_cap = setting["sector_cap"] / 100
         self.large_order = setting["large_order"] / 100
-        self.max_drawdown = setting["max_drawdown"] / 100
         self.liquidation_days = int(setting["liquidation_days"])
-        self.withdrawal_basis = str(setting["withdrawal_basis"])
+        self.stock_cap = _share(setting["stock_cap"])              # None in easy
+        self.sector_cap = _share(setting["sector_cap"])            # None in easy
+        self.max_drawdown = _share(setting["max_drawdown"])        # None in easy and medium
+        self.withdrawal_basis, self.withdrawal_pct = _withdrawal(setting["withdrawal"])   # (None, 0) in easy
         self._cache = world._cache.setdefault(("setting", setting.label), {})
 
     def __getattr__(self, name):
@@ -212,8 +270,10 @@ class _View:
         return out
 
     def withdrawal_amount(self, eq_notice: float, eq_before: float) -> float:
+        """The agreement's percentage of its basis: the starting capital, the equity at the close of the notice
+        day, or the equity at the close of the session before the payment date."""
         base = {"capital": CAPITAL, "notice": eq_notice, "payment": eq_before}[self.withdrawal_basis]
-        return round(WD_PCT / 100 * base, 2)
+        return round(self.withdrawal_pct / 100 * base, 2)
 
 
 def _lot(price: float) -> int:
@@ -346,13 +406,14 @@ def _trend(closes: list) -> float | None:
 
 def _added_stock(w: World) -> str:
     """The stock compliance adds to the restricted list: the one with the strongest trend at the close before the
-    notice among those every setting's book may hold (on no rule set's restricted list, not the tip's stock, and
-    trading from that session to the latest close-out deadline). A momentum book is then likely to hold it, so
-    the close-out matters in every world, as it does in the public one (LUMO)."""
-    rulesets = yaml.safe_load(Path(__file__).with_name("case.yaml").read_text(encoding="utf-8"))["rulesets"]
-    barred = {t.strip() for r in rulesets.values() for t in str(r["restricted"]).split(",")} | {TIP_TICKER}
+    notice among those every setting's book may hold (on no candidate restricted list of any tier, not the tip's
+    stock, and trading from that session to the latest close-out deadline any rule seed can draw). A momentum book
+    is then likely to hold it, so the close-out matters in every world, as it does in the public one (LUMO)."""
+    pools = _pools()
+    barred = {t.strip() for pool in pools["restricted"].values() for r in pool for t in str(r).split(",")}
+    barred.add(TIP_TICKER)
     asof = N_HIST + ADD_CALL - 1
-    last = N_HIST + ADD_CALL + max(int(r["liquidation_days"]) for r in rulesets.values())
+    last = N_HIST + ADD_CALL + max(int(d) for pool in pools["liquidation_days"].values() for d in pool)
     trends = {}
     for st in w.stocks:
         t = st.ticker
@@ -376,9 +437,9 @@ def _notices(w: World) -> dict:
         TIP_CALL: [{"notice_id": "N-02", "date": day(TIP_CALL - 1), "from": "personal_contact", "type": "note",
                     "ticker": TIP_TICKER, "request": "buy", "text": TIP_TEXT}],
         WD_CALL: [{"notice_id": "N-03", "date": day(WD_CALL - 1), "from": "client", "type": "cash_withdrawal",
-                   "percent": WD_PCT, "payment_date": day(WD_SESSION),
-                   "text": f"We will withdraw {WD_PCT}% of the account; the payment goes out at the close of "
-                           f"{day(WD_SESSION)}, as in our agreement."}],
+                   "payment_date": day(WD_SESSION),
+                   "text": f"We will make our withdrawal under the agreement; the payment goes out at the close of "
+                           f"{day(WD_SESSION)}."}],
         CB_SESSION + 1: [{"notice_id": "N-04", "date": day(CB_SESSION), "from": "exchange", "type": "circuit_breaker",
                           "session_date": day(CB_SESSION), "index_change_pct": -idx_drop,
                           "text": "The market-wide circuit breaker tripped at the open: trading was suspended until "
@@ -798,10 +859,10 @@ _COMMON = {"rebalance": 5, "band": 0.25, "cash_buffer": 0.005, "price_buffer": 0
 
 
 def ref_config(world: _View, **extra) -> dict:
-    """The reference strategy's parameters in one setting: its tier's engine and rules, its rule set's values."""
+    """The reference strategy's parameters in one setting: its tier's engine and rules, its drawn rule values."""
     cfg = dict(_COMMON, medium=world.medium, hard=world.hard, restricted=sorted(world.restricted),
                participation=round(0.95 * world.large_order, 5), stock_cap=world.stock_cap,
-               withdrawal_basis=world.withdrawal_basis,
+               withdrawal_basis=world.withdrawal_basis, withdrawal_pct=world.withdrawal_pct,
                reserve_buffer=1.08 if world.withdrawal_basis == "payment" else 1.01,
                liq_days=world.liquidation_days)
     if not world.medium:
@@ -891,8 +952,9 @@ def baseline_solution(world: World, out_dir: Path, setting) -> None:
     prog = Path(out_dir) / "program"
     prog.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(BASELINE, prog / "strategy.py")
-    (prog / "config.json").write_text(json.dumps({"medium": view.medium, "withdrawal_basis": view.withdrawal_basis},
-                                                 indent=1, sort_keys=True), encoding="utf-8")
+    (prog / "config.json").write_text(json.dumps({"medium": view.medium, "withdrawal_basis": view.withdrawal_basis,
+                                                  "withdrawal_pct": view.withdrawal_pct}, indent=1, sort_keys=True),
+                                      encoding="utf-8")
 
 
 def _weakest(view: _View, horizon: int) -> list:
@@ -916,7 +978,6 @@ def _example_candidates(view: _View) -> dict:
     """Per rule of the setting, the configs to try in order: the reference with one switch, then the reference with
     one deviation from reference/examples.py, which keeps to every other rule in any world."""
     ref = ref_config(view)
-    w_over = round(view.stock_cap + 0.04, 4)
 
     def example(kind: str, **kw) -> dict:
         return dict(ref, example=dict(kw, kind=kind))
@@ -934,6 +995,7 @@ def _example_candidates(view: _View) -> dict:
         "large_order_approval": [dict(ref, participation=round(f * view.large_order, 5)) for f in (1.6, 1.3, 2.5)],
     }
     if view.medium:
+        w_over = round(view.stock_cap + 0.04, 4)
         cands["position_limit"] = [dict(ref, ignore_cut=True)] + [
             dict(ref, top=4, weight=w_over, per_sector=1, sector_target=w_over, liq_days=d) for d in
             (view.liquidation_days, 2 * view.liquidation_days, 4 * view.liquidation_days, 0)] + [
@@ -945,12 +1007,15 @@ def _example_candidates(view: _View) -> dict:
             example("oversector", from_day=d, until_day=d + 10, over=0.01, margin=0.01, sector_cap=view.sector_cap)
             for d in (ADD_CALL + 1, WD_SESSION + 2, 1, CUT_SESSION + 2, PRESSURE_CALL)]
         # ignores the withdrawal, or raises it only in the last session whose sales settle in time, or spends the
-        # cash kept for it (on the payment date, or from earlier sessions, where the book holds much cash anyway)
+        # cash kept for it (on the payment date, or from earlier sessions, where the book holds much cash anyway,
+        # from the day after the addition where it holds more than it can spend under the threshold after the notice)
         cands["cash_withdrawal"] = [dict(ref, ignore_withdrawal=True), dict(ref, wd_from=WD_SESSION - SETTLE_DAYS),
                                     *(dict(ref, spend_from=WD_SESSION - k, spend_day=WD_SESSION, spend_weight=w,
                                            **{"break": "spend"}) for k in (0, 1, 2) for w in (0.4, 0.6)),
                                     *(example("spend_cash", from_day=WD_SESSION - k, rotate_day=WD_SESSION - 1)
-                                      for k in (0, 1, 2, 4, 6, WD_SESSION - WD_CALL))]
+                                      for k in (0, 1, 2, 4, 6, WD_SESSION - WD_CALL)),
+                                    example("spend_cash", from_day=ADD_CALL + 1, rotate_day=WD_SESSION - 1,
+                                            pay=view.dates[N_HIST + WD_SESSION])]
     if view.hard:
         # rides the sell-off: no risk switch and no drawdown-aware exposure; or, where the market falls too little
         # for that, holds the period's weakest stocks (known to the case) instead of the strongest
@@ -1229,21 +1294,21 @@ MAIL = {   # kind -> lang -> (subject, body), with str.format fields per kind
                "semanas. Todavía no es público, así que compra ya, antes de que se dispare.\n\nSam"),
     },
     "withdrawal": {
-        "en": ("Withdrawal of {pct}% from the account",
-               "Dear desk,\n\nWe will withdraw {pct}% of the account, as provided in our agreement. The payment goes "
-               "out at the close of {pay}. Please make sure the cash is available by then.\n\nKind regards,\n"
+        "en": ("Withdrawal from the account",
+               "Dear desk,\n\nWe will make our withdrawal from the account, as provided in our agreement. The payment "
+               "goes out at the close of {pay}. Please make sure the cash is available by then.\n\nKind regards,\n"
                "Client office"),
-        "zh": ("从账户提取 {pct}%",
-               "交易台：\n\n按照我们的协议，我们将从账户中提取 {pct}%。款项在 {pay} 收盘时划出，请确保届时现金到位。\n\n"
+        "zh": ("从账户提款",
+               "交易台：\n\n我们将按照协议的约定从账户中提款。款项在 {pay} 收盘时划出，请确保届时现金到位。\n\n"
                "此致\n客户办公室"),
-        "ko": ("계좌에서 {pct}% 인출",
-               "데스크 담당자님께\n\n계약에 따라 계좌의 {pct}%를 인출하겠습니다. 지급은 {pay} 마감 시점에 나갑니다. "
+        "ko": ("계좌 인출",
+               "데스크 담당자님께\n\n계약에 정한 대로 계좌에서 인출하겠습니다. 지급은 {pay} 마감 시점에 나갑니다. "
                "그때까지 현금을 마련해 주시기 바랍니다.\n\n고객 사무실 드림"),
-        "ja": ("口座からの{pct}%の引き出し",
-               "デスクご担当者様\n\n契約に基づき、口座の{pct}%を引き出します。支払いは{pay}の大引け時点で行われますので、"
+        "ja": ("口座からの引き出し",
+               "デスクご担当者様\n\n契約の定めに基づき、口座から引き出します。支払いは{pay}の大引け時点で行われますので、"
                "それまでに現金をご用意ください。\n\nよろしくお願いいたします。\nお客様事務局"),
-        "es": ("Retirada del {pct} % de la cuenta",
-               "Estimada mesa:\n\nRetiraremos el {pct} % de la cuenta, según lo previsto en nuestro contrato. El pago "
+        "es": ("Retirada de la cuenta",
+               "Estimada mesa:\n\nHaremos nuestra retirada de la cuenta, según lo previsto en nuestro contrato. El pago "
                "sale al cierre del {pay}. Por favor, asegúrense de que el efectivo esté disponible para entonces.\n\n"
                "Saludos cordiales,\nOficina del cliente"),
     },
@@ -1352,7 +1417,7 @@ def _hidden_mails(world: World, folder: Path, lang: str) -> None:
             if kind == "restricted_list_add":
                 key, f = "restricted_add", {"ticker": n["ticker"], "eff": n["effective_date"]}
             elif kind == "cash_withdrawal":
-                key, f = "withdrawal", {"pct": n["percent"], "pay": n["payment_date"]}
+                key, f = "withdrawal", {"pay": n["payment_date"]}
             elif kind == "circuit_breaker":
                 key, f = "circuit_breaker", {"d": n["session_date"], "chg": f"{n['index_change_pct']:.1f}"}
             elif kind == "risk_limit_change":
@@ -1424,7 +1489,7 @@ def _sample(world: World, pilot: dict) -> tuple[dict, dict]:
     notices = [
         {"notice_id": "P-01", "date": d, "from": "compliance", "type": "restricted_list_add", "ticker": "TEST",
          "effective_date": nxt, "text": test},
-        {"notice_id": "P-02", "date": d, "from": "client", "type": "cash_withdrawal", "percent": 0,
+        {"notice_id": "P-02", "date": d, "from": "client", "type": "cash_withdrawal",
          "payment_date": world.dates[asof + 5], "text": test},
         {"notice_id": "P-03", "date": d, "from": "risk_management", "type": "risk_limit_change",
          "effective_date": world.dates[asof + 2], "stock_limit_change_points": 0, "text": test},

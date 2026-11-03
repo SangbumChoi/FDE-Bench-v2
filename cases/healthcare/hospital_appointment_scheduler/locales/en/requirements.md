@@ -43,8 +43,11 @@ A folder `program/` with a file `scheduler.py` that defines **`on_day(day)`**. A
 
 **Urgent requests**
 
-- Every **urgent (U)** request must be booked **the day it arrives**, on a day within **{{urgent_days}} working days** of its first possible day (that day or one of the next {{urgent_days}}), and must stay inside that window if it is ever moved.
-- **Urgent reserve:** the **first two slots of every morning session (09:00 and 09:20)** are held for urgent requests. Two or more working days ahead only U requests may use them. In the call of the working day before (i.e. for tomorrow's clinics) they are released and anyone may be booked there.
+- Every **urgent (U)** request must be booked **the day it arrives**, on a day within **2 working days** of its first possible day (that day or one of the next two), and must stay inside that window if it is ever moved.
+- **Urgent reserve:** the **first {{reserve_slots}} slots of every morning session ({{reserve_times}})** are held for urgent requests. Two or more working days ahead only U requests may use them. In the call of the working day before (i.e. for tomorrow's clinics) they are released and anyone may be booked there.
+<!-- when: reserve_slots=3 -->
+- Until now the office kept only 09:00 and 09:20 free; from 9 November the reserve is three slots. Appointments already booked at 09:40 before that stay where they are.
+<!-- /when -->
 
 **Who sees whom**
 
@@ -54,7 +57,7 @@ A folder `program/` with a file `scheduler.py` that defines **`on_day(day)`**. A
 
 **Changing a patient's appointment**
 
-- When we change the **date or time** of a patient's appointment (a move, or releasing it and booking the request again, the same day or later), the new appointment must be at least **{{move_notice_days}} working days after the day of the change** (for a release, the day we released it): patients need that much notice. Giving the same date and time with another doctor needs no notice.
+- When we change the **date or time** of a patient's appointment (a move, or releasing it and booking the request again, the same day or later), the new appointment must be at least **3 working days after the day of the change** (for a release, the day we released it): patients need that much notice. Giving the same date and time with another doctor needs no notice.
 - Every change we make to a patient's appointment (move or release) is a burden for the patient and costs in the score; do not shuffle appointments without a reason.
 
 **The waitlist**
@@ -109,7 +112,7 @@ A folder `program/` with a file `scheduler.py` that defines **`on_day(day)`**. A
 Every day, after your actions, return for each department code (`IM`, `CARD`, `DERM`, `ORTH`, `PED`) three whole numbers about the **booking window** (the next 10 working days):
 
 - `free_slots`: slots of the department's doctors in the calendar that hold no appointment and that anyone may be booked into: not held back (below) and not in a clinic that is closed (the holiday)<!-- tier: medium hard --> or on a day of a notified doctor absence<!-- /tier -->.
-- `held_back`: urgent-reserve slots (09:00 and 09:20 of a morning session) two or more working days ahead that hold no appointment (same exclusions).
+- `held_back`: urgent-reserve slots ({{reserve_times}} of a morning session) two or more working days ahead that hold no appointment (same exclusions).
 - `waitlist`: the department's requests still waiting after your actions (received by today, no appointment, not cancelled)<!-- tier: medium hard -->, not counting new patients whose referral has run out (valid until before tomorrow)<!-- /tier --><!-- tier: hard -->. Count **patients**, not requests: a patient with several waiting requests for the department counts once, and a patient who holds an upcoming appointment there or had one take place in the period does not count<!-- /tier -->.
 
 An entry is right only when it is exact. A day scores the share of its 15 entries that are right; the table's accuracy is the mean over the 20 days.
@@ -126,7 +129,7 @@ An entry is right only when it is exact. A day scores the share of its 15 entrie
 - A slot holds at most two follow-ups and a new-patient visit never shares its slots; at most {{overbooked_per_session}} overbooked slots per doctor per session; at most one appointment per patient and department in the period.
 <!-- /tier -->
 - Only the calendar's slots (two consecutive in one session for a new patient), the right department, never before the earliest date, no {{closed_dept}} appointment on 23 November, at most {{interpreters_per_day}} interpreted new-patient visits a day.
-- Urgent requests booked the day they arrive within {{urgent_days}} working days; the urgent reserve kept two or more days ahead; at least {{move_notice_days}} working days' notice for a changed date or time; the waitlist priority order.
+- Urgent requests booked the day they arrive within 2 working days; the urgent reserve kept two or more days ahead; at least 3 working days' notice for a changed date or time; the waitlist priority order.
 <!-- tier: medium hard -->
 - Referrals valid on the visit day; blood tests a working day or more before the visit, at most {{lab_cap}} a day; no appointment left with an absent doctor; the interpreters actually there.
 <!-- /tier -->

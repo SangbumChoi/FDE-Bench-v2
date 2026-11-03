@@ -1,0 +1,806 @@
+# Interface text of the case explainers and the site, in the five locales. {name} fields are filled in code.
+en:
+  language: Language
+  case_eyebrow: '{field} · FDE-Bench v2 case'
+  task_type: Task type
+  deliverable: Deliverable
+  objective: Objective
+  settings: Settings
+  maximize: maximize
+  minimize: minimize
+  program: Program {entry}
+  batch_files: 'Batch files: {files}'
+  one_problem: one fixed problem
+  nav_request: Request
+  nav_settings: Settings
+  nav_rules: Rules
+  nav_requirements: What only the client knows
+  nav_targets: Facts to ask about
+  nav_data: Data & answers
+  nav_readme: Case notes
+  nav_review: Review findings
+  request_title: What the AI is asked
+  request_intro: 'The client''s request: the only text the AI gets at the start. It is the same in every version
+    of the case.'
+  spec_title: Deliverable spec ({label})
+  spec_program: the program interface
+  spec_batch: given to the converter that puts the AI's files into the scored format, not to the AI
+  settings_title: 'Settings: one dataset, {n} ground truths'
+  tiers: Tiers
+  tier: Tier
+  in_force: What is in force
+  parameter: Parameter
+  no_settings: 'This case has no settings: one fixed problem at every difficulty.'
+  rules_title: Rules
+  rules_intro: 'Breaking any rule makes the deliverable invalid (score 0). The one exception: a rule the company
+    policy lets bend, if the AI asked the client for an exception first.'
+  rule: Rule
+  class: Class
+  description: Description
+  class_physical: physical
+  class_contractual: contractual
+  class_business_policy: business policy
+  note_physical: never bends
+  note_contractual: bends only if the policy allows contractual exceptions
+  note_business_policy: may bend through the policy's exception process
+  requirements_title: What only the client knows
+  requirements_intro: The simulated client answers from this text. The AI learns it only by asking (in the full-spec
+    hand-over it is given at the start). Pick a version below.
+  setting: Setting
+  not_available: (not available)
+  targets_title: Facts the AI should ask about
+  targets_intro: What a good engineer would ask the client. The question score (Ask-F1) checks how many of these
+    the AI's questions uncovered.
+  target: Target
+  fact: Fact
+  kind: Kind
+  all_tiers: all
+  data_title: Data & answers
+  data_intro: 'Everything is stored as files next to the case: <code>agent_view/</code> is exactly what the AI receives;
+    <code>hidden/</code> holds inputs used only for scoring (for a program, the days or files it is run on); <code>gt/</code>
+    holds the correct answer for each version of the case.'
+  visible_data: Data the AI receives ({language})
+  hidden_inputs: Scoring inputs (never given to the AI)
+  scores_title: Scores of the reference solution
+  scores_intro: Quality is measured on a scale where the client's own way without an engineer is 0 and the reference
+    solution is 1. Better than the reference goes above 1.
+  reference_objective: Reference solution (scores 1)
+  baseline_objective: Client's own way (scores 0)
+  metrics: Metrics (first four)
+  folder: Folder
+  open: open
+  no_dataset: (no dataset yet)
+  answer_folder: 'One answer folder: {folder}'
+  readme_title: Case notes (README)
+  no_readme: (no README)
+  untranslated: Not translated into this language yet; showing the English version.
+  review_title: Review findings (REVIEW)
+  index_eyebrow: FDE-Bench v2
+  index_title: Built cases
+  index_intro: '{n} cases. Each link opens the case page: what the AI has to do, what it is given, how it is scored,
+    and all the details.'
+  field: Field
+  role: Role
+  case_id: Case id
+  site_cases: All cases
+  site_direction: Direction
+  site_design: Design
+  site_catalog: Catalog
+  site_source: Source on GitHub
+  site_english_only: (English)
+  settings_value: '{tiers} difficulties × {seeds} published versions (unpublished versions are used for evaluation)'
+  settings_intro: The AI sees the same request and data in every version. The <strong>difficulty</strong> decides
+    which client rules apply; the <strong>rule seed</strong> picks the exact values of those rules (a threshold,
+    a unit, a date) from the candidates below. A difficulty's score is the average over rule seeds.
+  param_candidates: Parameter candidates
+  public_panel: Public rule seeds
+  public_panel_intro: 'The settings stored in <code>dataset/</code> and shown on this page, with the values each
+    rule seed drew. Any other seed is private: a fresh draw from the same candidates.'
+  rule_seed: Rule seed
+  drawn_values: Drawn values
+  derived_note: 'Derived by the case from the drawn values: {names}.'
+  description_params: Description (parameters in {{…}} are drawn by the rule seed)
+  targets_intro_params: What a good engineer would ask the client. The question score (Ask-F1) checks how many of
+    these the AI's questions uncovered. <code>{{param}}</code> is the value drawn by the rule seed.
+  only_when: only when {cond}
+  glance_title: At a glance
+  nav_glance: At a glance
+  task_title: What the AI has to do
+  given_title: What the AI is given
+  ask_title: What the AI must find out by asking the client
+  scoring_title: How it is scored
+  nav_scoring: How it is scored
+  invalid_title: Scores 0 if the deliverable…
+  quality_title: If it is valid, quality is…
+  common_title: The same in every case
+  common_body: <ol><li><strong>Valid or not.</strong> Breaking any rule above makes the deliverable invalid and
+    the run scores 0. A rule the company policy lets bend counts only if the AI asked the client for an exception.</li><li><strong>Quality.</strong>
+    The result is placed on a scale where the client's own way without an engineer is 0 and the reference solution
+    is 1. Better than the reference goes above 1; full credit at the policy's cap (1.5).</li><li><strong>Final score.</strong>
+    Quality, plus how well the AI asked (did its questions uncover the facts above?), how it communicated (the client's
+    language, a NOTES.md) and how efficient it was, weighted by the company policy.</li><li><strong>Several versions.</strong>
+    The data stays the same; only the client's exact values (a threshold, a unit, a date) change from one version
+    of the case to another. A difficulty's score is the average over several versions, so memorising one answer
+    does not help.</li></ol>
+  tiers_title: Easy, medium and hard
+  details_title: Details
+  nav_details: Details
+  details_intro: 'The full material behind the summary: the request as written, the client''s rules and their candidate
+    values, what only the client knows, the data and the stored answers, and the case notes.'
+  difficulty: Difficulty
+  asks_for: What it asks for
+  nav_evidence: Evidence
+  evidence_title: Evidence the facts matter
+  evidence_intro: 'Measured by <code>audit-case</code> on {n} settings of this dataset: the public rule seeds and other
+    combinations of the candidates. Everything is on the quality scale (the client''s own way 0, the reference solution
+    1), and a deliverable that breaks a rule earns 0.'
+  ablation_title: If the AI gets only this fact wrong
+  ablation_intro: 'The reference solution with this one fact misread and everything else right. Score lost is how much
+    of the way from the client''s own way to the reference it gives up (100%: it breaks a rule or does no better than
+    the client). The fact matters in a setting when at least {min} is lost; a wrong parameter value counts at its least
+    harmful.'
+  in_force_tiers: In force
+  checked_by: How it is checked
+  checked_param: the reference for another value of {param}
+  checked_hook: a misreading written by the case
+  checked_none: not checked yet
+  score_lost: Score lost
+  matters_in: Matters in
+  k_of_n: '{k} of {n} settings'
+  diagnostic: Checked directly
+  answer_yes: 'yes'
+  answer_no: 'no'
+  shortcuts_title: Shortcuts
+  shortcuts_intro: Strategies that skip the part of the task the case exists to test. A shortcut is closed in a setting
+    when it breaks a rule or scores at most {max}.
+  shortcut: Shortcut
+  what_it_does: What it does
+  closed_in: Closed in
+  best_quality: Best quality
+  no_shortcuts: (no shortcuts measured yet)
+  voi_title: Value of asking
+  voi_intro: What an AI that never asks the client can still earn, on average over the settings of a tier. The
+    reference solution, which knows everything the client knows, earns 1; the value of asking is the difference.
+  voi_params: Right for one setting, used for all
+  voi_robust: Never asks, plans for every setting
+  voi_reference: Asks (the reference)
+  bounds_title: How close the reference is to the best possible
+  bounds_intro: A stronger, slower solver (best known) and a proven limit that no solution can pass (bound), both on
+    the quality scale; the gap is how far the bound is from the reference's objective.
+  best_known: Best known
+  bound: Bound
+  gap_to_bound: Gap to bound
+  no_bounds: (no best known solution or bound yet)
+  not_measured: (not measured)
+ko:
+  language: 언어
+  case_eyebrow: '{field} · FDE-Bench v2 케이스'
+  task_type: 과제 유형
+  deliverable: 산출물
+  objective: 목표값
+  settings: 설정
+  maximize: 최대화
+  minimize: 최소화
+  program: 프로그램 {entry}
+  batch_files: '결과 파일: {files}'
+  one_problem: 고정된 문제 하나
+  nav_request: 요청
+  nav_settings: 설정
+  nav_rules: 규칙
+  nav_requirements: 고객만 아는 요구사항
+  nav_targets: 물어봐야 할 사실
+  nav_data: 데이터와 정답
+  nav_readme: 케이스 노트
+  nav_review: 리뷰 발견 사항
+  request_title: AI가 받는 요청
+  request_intro: 고객의 요청입니다. AI가 처음에 받는 유일한 글이며, 케이스의 모든 버전에서 같습니다.
+  spec_title: 산출물 명세 ({label})
+  spec_program: 프로그램 인터페이스
+  spec_batch: AI가 아니라, AI가 만든 파일을 채점 형식으로 옮기는 변환기에게만 주어짐
+  settings_title: '설정: 데이터 하나, 정답 {n}개'
+  tiers: 티어
+  tier: 티어
+  in_force: 적용되는 내용
+  parameter: 파라미터
+  no_settings: 이 케이스에는 설정이 없습니다. 모든 난이도에서 같은 문제 하나를 풉니다.
+  rules_title: 규칙
+  rules_intro: 규칙을 하나라도 어기면 산출물은 무효(0점)입니다. 예외는 하나뿐입니다. 회사 정책이 굽히는 것을 허용한 규칙이고, AI가 먼저 고객에게 예외를 요청한 경우입니다.
+  rule: 규칙
+  class: 등급
+  description: 설명
+  class_physical: 물리적
+  class_contractual: 계약상
+  class_business_policy: 업무 관행
+  note_physical: 절대 완화되지 않음
+  note_contractual: 정책이 계약상 예외를 허용할 때만 완화됨
+  note_business_policy: 정책의 예외 절차를 거치면 완화될 수 있음
+  requirements_title: 고객만 아는 요구사항
+  requirements_intro: 시뮬레이션 고객은 이 글을 근거로 답합니다. AI는 물어봐야만 알 수 있습니다(요구사항을 처음부터 넘겨주는 진행 방식에서는 시작할 때 받습니다). 아래에서 버전을
+    고르세요.
+  setting: 설정
+  not_available: (없음)
+  targets_title: AI가 물어봐야 할 사실
+  targets_intro: 좋은 엔지니어라면 고객에게 물어볼 내용입니다. 질문 점수(Ask-F1)는 AI의 질문이 이 중 몇 개를 알아냈는지로 매깁니다.
+  target: 목표
+  fact: 내용
+  kind: 종류
+  all_tiers: 전체
+  data_title: 데이터와 정답
+  data_intro: 모든 것이 케이스 옆에 파일로 저장되어 있습니다. <code>agent_view/</code>는 AI가 받는 그대로의 데이터, <code>hidden/</code>은 채점에만
+    쓰는 입력(프로그램이라면 실제로 돌려 보는 날짜나 파일), <code>gt/</code>는 케이스의 버전마다 하나씩 있는 정답입니다.
+  visible_data: AI가 받는 데이터 ({language})
+  hidden_inputs: 채점용 입력 (AI에게는 주지 않음)
+  scores_title: 모범 답안의 점수
+  scores_intro: 품질은 '엔지니어 없이 고객이 하던 방식 = 0점, 모범 답안 = 1점' 척도로 잽니다. 모범 답안보다 나으면 1을 넘습니다.
+  reference_objective: 모범 답안 (1점 기준)
+  baseline_objective: 기존 방식 (0점 기준)
+  metrics: 지표 (처음 네 개)
+  folder: 폴더
+  open: 열기
+  no_dataset: (아직 데이터셋 없음)
+  answer_folder: '정답 폴더 예시: {folder}'
+  readme_title: 케이스 노트 (README)
+  no_readme: (README 없음)
+  untranslated: 아직 이 언어로 번역되지 않아 영어판을 보여 줍니다.
+  review_title: 리뷰 발견 사항 (REVIEW)
+  index_eyebrow: FDE-Bench v2
+  index_title: 구축된 케이스
+  index_intro: 케이스는 {n}개입니다. 각 링크를 누르면 AI가 해야 할 일, 주어지는 것, 평가 방법, 그리고 자세한 내용을 볼 수 있습니다.
+  field: 분야
+  role: 역할
+  case_id: 케이스 ID
+  site_cases: 전체 케이스
+  site_direction: 방향성
+  site_design: 설계
+  site_catalog: 카탈로그
+  site_source: GitHub 소스
+  site_english_only: (영문)
+  settings_value: 난이도 {tiers}단계 × 공개 버전 {seeds}개 (평가에는 공개하지 않은 버전을 씀)
+  settings_intro: AI는 모든 버전에서 같은 요청과 데이터를 봅니다. <strong>난이도</strong>는 어떤 고객 규칙이 적용되는지를 정하고, <strong>규칙 시드</strong>는
+    그 규칙의 구체적인 값(기준치, 단위, 날짜 등)을 아래 후보에서 고릅니다. 난이도별 점수는 여러 규칙 시드의 평균입니다.
+  param_candidates: 파라미터 후보
+  public_panel: 공개 규칙 시드
+  public_panel_intro: <code>dataset/</code>에 저장되고 이 페이지에 나오는 설정과, 각 규칙 시드가 뽑은 값입니다. 그 밖의 시드는 모두 비공개이며, 같은 후보에서 새로
+    뽑습니다.
+  rule_seed: 규칙 시드
+  drawn_values: 뽑힌 값
+  derived_note: '케이스가 뽑힌 값으로부터 계산하는 값: {names}.'
+  description_params: 설명 ({{…}} 안의 파라미터는 규칙 시드가 뽑음)
+  targets_intro_params: 좋은 엔지니어라면 고객에게 물어볼 내용입니다. 질문 점수(Ask-F1)는 AI의 질문이 이 중 몇 개를 알아냈는지로 매깁니다. <code>{{param}}</code>은
+    규칙 시드가 뽑은 값입니다.
+  only_when: '{cond}일 때만'
+  glance_title: 한눈에 보기
+  nav_glance: 한눈에 보기
+  task_title: AI가 해야 할 일
+  given_title: AI에게 주어지는 것
+  ask_title: 고객에게 물어봐야 알 수 있는 것
+  scoring_title: 평가 방법
+  nav_scoring: 평가 방법
+  invalid_title: 이러면 0점 (무효)
+  quality_title: 유효하면 품질은…
+  common_title: 모든 케이스 공통
+  common_body: <ol><li><strong>유효한가.</strong> 위 규칙을 하나라도 어기면 산출물은 무효이고 0점입니다. 회사 정책이 굽히는 것을 허용한 규칙은 AI가 고객에게 예외를
+    요청했을 때만 인정됩니다.</li><li><strong>품질.</strong> 결과를 '엔지니어 없이 고객이 하던 방식 = 0점, 모범 답안 = 1점' 척도로 환산합니다. 모범 답안보다 나으면
+    1을 넘고, 정책의 상한(1.5)에서 만점입니다.</li><li><strong>최종 점수.</strong> 품질에 더해 AI가 얼마나 잘 물어봤는지(질문으로 위의 사실들을 알아냈는지), 소통(고객의
+    언어 사용, NOTES.md), 효율을 회사 정책의 가중치로 합칩니다.</li><li><strong>여러 버전.</strong> 데이터는 그대로 두고, 고객 규칙의 구체적인 값(기준치, 단위,
+    날짜 등)만 케이스의 버전마다 바뀝니다. 난이도별 점수는 여러 버전의 평균이라 답 하나를 외워서는 점수가 나오지 않습니다.</li></ol>
+  tiers_title: 난이도별 차이
+  details_title: 자세히 보기
+  nav_details: 자세히 보기
+  details_intro: 요약의 근거가 되는 전체 자료입니다. 요청 원문, 고객 규칙과 그 값의 후보, 고객만 아는 요구사항, 데이터와 저장된 정답, 케이스 노트가 있습니다.
+  difficulty: 난이도
+  asks_for: 요구하는 것
+  nav_evidence: 근거
+  evidence_title: 사실이 점수를 좌우한다는 근거
+  evidence_intro: <code>audit-case</code>로 이 데이터셋의 설정 {n}개(공개 규칙 시드와 후보값의 다른 조합)에서 잰 결과입니다. 모든 값은
+    품질 척도(기존 방식 = 0, 모범 답안 = 1) 위에 있고, 규칙을 어긴 산출물은 0입니다.
+  ablation_title: AI가 이 사실 하나만 잘못 알면
+  ablation_intro: '모범 답안에서 이 사실 하나만 잘못 읽고 나머지는 모두 맞게 한 경우입니다. 잃는 점수는 기존 방식에서 모범 답안까지의 거리 중 얼마를 잃는지입니다(100%:
+    규칙을 어기거나 기존 방식보다 낫지 않음). 설정에서 {min} 이상을 잃으면 그 사실이 중요하다고 봅니다. 파라미터 값을 잘못 고른 경우는 가장 피해가 적은 값으로 셉니다.'
+  in_force_tiers: 적용 티어
+  checked_by: 확인 방법
+  checked_param: '{param}의 다른 값에 맞춘 모범 답안'
+  checked_hook: 케이스가 정의한 잘못된 해석
+  checked_none: 아직 확인하지 않음
+  score_lost: 잃는 점수
+  matters_in: 중요한 설정
+  k_of_n: '{n}개 중 {k}개'
+  diagnostic: 직접 검사
+  answer_yes: 예
+  answer_no: 아니요
+  shortcuts_title: 지름길
+  shortcuts_intro: 케이스가 시험하려는 부분을 건너뛰는 전략입니다. 설정에서 규칙을 어기거나 품질이 {max} 이하이면 그 지름길은 막힌 것입니다.
+  shortcut: 지름길
+  what_it_does: 하는 일
+  closed_in: 막힌 설정
+  best_quality: 최고 품질
+  no_shortcuts: (아직 잰 지름길 없음)
+  voi_title: 질문의 가치
+  voi_intro: 고객에게 한 번도 묻지 않는 AI가 한 티어의 설정들에서 평균적으로 얻을 수 있는 점수입니다. 고객이 아는 것을 모두 아는 모범 답안은 1을 얻고, 그 차이가 질문의
+    가치입니다.
+  voi_params: 한 설정에 맞는 답을 모든 설정에 사용
+  voi_robust: 묻지 않고 모든 설정에 대비
+  voi_reference: 묻는 경우 (모범 답안)
+  bounds_title: 모범 답안이 최선에 얼마나 가까운가
+  bounds_intro: 더 강하고 느린 풀이(지금까지 찾은 가장 좋은 답)와 어떤 답도 넘을 수 없음이 증명된 한계(한계값)를 품질 척도로 나타냈습니다. 간격은 한계값이 모범 답안의 목표값에서
+    얼마나 떨어져 있는지입니다.
+  best_known: 지금까지 찾은 가장 좋은 답
+  bound: 한계값
+  gap_to_bound: 한계값까지의 간격
+  no_bounds: (지금까지 찾은 가장 좋은 답도, 한계값도 아직 없음)
+  not_measured: (재지 않음)
+ja:
+  language: 言語
+  case_eyebrow: '{field} · FDE-Bench v2 ケース'
+  task_type: タスクの種類
+  deliverable: 成果物
+  objective: 目的
+  settings: 設定
+  maximize: 最大化
+  minimize: 最小化
+  program: プログラム {entry}
+  batch_files: 成果物ファイル：{files}
+  one_problem: 固定された一つの問題
+  nav_request: 依頼
+  nav_settings: 設定
+  nav_rules: ルール
+  nav_requirements: 顧客だけが知っている要件
+  nav_targets: 確認すべき事実
+  nav_data: データと正解
+  nav_readme: ケースの解説
+  nav_review: レビュー結果
+  request_title: AIへの依頼
+  request_intro: 顧客からの依頼です。AIが最初に受け取る唯一の文章で、ケースのどのバージョンでも同じです。
+  spec_title: 成果物の仕様（{label}）
+  spec_program: プログラムのインターフェース
+  spec_batch: AIではなく、AIが作ったファイルを採点用の形式に変換する変換器にだけ渡される
+  settings_title: 設定：データは一つ、正解は {n} 通り
+  tiers: ティア
+  tier: ティア
+  in_force: 適用される内容
+  parameter: パラメータ
+  no_settings: このケースには設定がありません。どの難易度でも同じ一つの問題です。
+  rules_title: ルール
+  rules_intro: ルールを一つでも破ると成果物は無効（0点）です。例外は一つだけで、会社の方針が緩めることを認めたルールについて、AIが先に顧客へ例外を申請した場合です。
+  rule: ルール
+  class: 区分
+  description: 説明
+  class_physical: 物理的
+  class_contractual: 契約上
+  class_business_policy: 業務慣行
+  note_physical: 決して緩和されない
+  note_contractual: 方針が契約上の例外を認める場合にのみ緩和される
+  note_business_policy: 方針の例外手続きを経れば緩和されうる
+  requirements_title: 顧客だけが知っている要件
+  requirements_intro: シミュレーションの顧客はこの文章をもとに答えます。AIは質問しなければ知ることができません（要件を最初に渡す進め方では、開始時に受け取ります）。下でバージョンを選んでください。
+  setting: 設定
+  not_available: （なし）
+  targets_title: AIが確認すべき事実
+  targets_intro: 優れたエンジニアなら顧客に確認する内容です。質問スコア（Ask-F1）は、AIの質問がこのうちいくつを引き出したかで決まります。
+  target: 事項
+  fact: 内容
+  kind: 種類
+  all_tiers: すべて
+  data_title: データと正解
+  data_intro: すべてケースの隣にファイルとして保存されています。<code>agent_view/</code> はAIが受け取るそのままのデータ、<code>hidden/</code> は採点にだけ使う入力（プログラムなら実際に動かす日やファイル）、<code>gt/</code>
+    はケースのバージョンごとの正解です。
+  visible_data: AIが受け取るデータ（{language}）
+  hidden_inputs: 採点用の入力（AIには渡さない）
+  scores_title: 模範解答のスコア
+  scores_intro: 品質は「エンジニアなしで顧客がしていたやり方 = 0点、模範解答 = 1点」の尺度で測ります。模範解答より良ければ1を超えます。
+  reference_objective: 模範解答（1点の基準）
+  baseline_objective: 従来のやり方（0点の基準）
+  metrics: 指標（最初の四つ）
+  folder: フォルダ
+  open: 開く
+  no_dataset: （データセットはまだありません）
+  answer_folder: 正解フォルダの例：{folder}
+  readme_title: ケースの解説（README）
+  no_readme: （README なし）
+  untranslated: この言語にはまだ翻訳されていないため、英語版を表示しています。
+  review_title: レビュー結果（REVIEW）
+  index_eyebrow: FDE-Bench v2
+  index_title: 構築済みのケース
+  index_intro: ケースは{n}件です。各リンクから、AIがすること、与えられるもの、評価方法、詳しい内容を見られます。
+  field: 分野
+  role: 役割
+  case_id: ケース ID
+  site_cases: すべてのケース
+  site_direction: 方向性
+  site_design: 設計
+  site_catalog: カタログ
+  site_source: GitHub のソース
+  site_english_only: （英語）
+  settings_value: 難易度 {tiers}段階 × 公開バージョン {seeds}個（評価には非公開のバージョンを使う）
+  settings_intro: AIはどのバージョンでも同じ依頼とデータを見ます。<strong>難易度</strong>はどの顧客ルールが適用されるかを決め、<strong>ルールシード</strong>はそのルールの具体的な値（基準値、単位、日付など）を下の候補から選びます。難易度ごとのスコアは複数のルールシードの平均です。
+  param_candidates: パラメータ候補
+  public_panel: 公開ルールシード
+  public_panel_intro: <code>dataset/</code> に保存され、このページに示す設定と、各ルールシードが抽選した値です。それ以外のシードはすべて非公開で、同じ候補から新たに抽選します。
+  rule_seed: ルールシード
+  drawn_values: 抽選された値
+  derived_note: 抽選された値からケースが算出する値：{names}。
+  description_params: 説明（{{…}} のパラメータはルールシードで抽選される）
+  targets_intro_params: 優れたエンジニアなら顧客に確認する内容です。質問スコア（Ask-F1）は、AIの質問がこのうちいくつを引き出したかで決まります。<code>{{param}}</code> はルールシードが選んだ値です。
+  only_when: '{cond} の場合のみ'
+  glance_title: ひと目でわかる概要
+  nav_glance: 概要
+  task_title: AIがすること
+  given_title: AIに与えられるもの
+  ask_title: 顧客に聞かないとわからないこと
+  scoring_title: 評価方法
+  nav_scoring: 評価方法
+  invalid_title: こうなると0点（無効）
+  quality_title: 有効なら、品質は…
+  common_title: すべてのケースに共通
+  common_body: <ol><li><strong>有効かどうか。</strong>上のルールを一つでも破ると成果物は無効で0点です。会社の方針が緩めることを認めたルールは、AIが顧客に例外を申請した場合にだけ認められます。</li><li><strong>品質。</strong>結果を「エンジニアなしで顧客がしていたやり方
+    = 0点、模範解答 = 1点」の尺度に換算します。模範解答より良ければ1を超え、方針の上限（1.5）で満点です。</li><li><strong>最終スコア。</strong>品質に加えて、AIの質問の良さ（質問で上の事実を引き出せたか）、コミュニケーション（顧客の言語、NOTES.md）、効率を、会社の方針の重みで合わせます。</li><li><strong>複数のバージョン。</strong>データは同じままで、顧客ルールの具体的な値（基準値、単位、日付など）だけがケースのバージョンごとに変わります。難易度ごとのスコアは複数のバージョンの平均なので、答えを一つ覚えても点にはなりません。</li></ol>
+  tiers_title: 難易度ごとの違い
+  details_title: 詳しく見る
+  nav_details: 詳しく見る
+  details_intro: 概要のもとになる資料のすべてです。依頼の原文、顧客ルールとその値の候補、顧客だけが知っている要件、データと保存された正解、ケースのメモがあります。
+  difficulty: 難易度
+  asks_for: 求められること
+  nav_evidence: 根拠
+  evidence_title: 事実がスコアを左右する根拠
+  evidence_intro: <code>audit-case</code> でこのデータセットの {n} 個の設定（公開ルールシードと候補値の別の組み合わせ）を測った結果です。どの値も品質の尺度（従来のやり方
+    = 0、模範解答 = 1）の上にあり、ルールを破った成果物は0です。
+  ablation_title: AIがこの事実だけを取り違えると
+  ablation_intro: 模範解答でこの事実だけを読み違え、ほかはすべて正しくした場合です。失う点数は、従来のやり方から模範解答までの距離のうちどれだけを失うかです（100%：ルールを破るか、従来のやり方より良くない）。ある設定で
+    {min} 以上を失えば、その事実は重要とみなします。パラメータの値を取り違えた場合は、最も害の小さい値で数えます。
+  in_force_tiers: 適用されるティア
+  checked_by: 確かめ方
+  checked_param: '{param} の別の値に合わせた模範解答'
+  checked_hook: ケースが定義した誤った解釈
+  checked_none: まだ確かめていない
+  score_lost: 失う点数
+  matters_in: 重要な設定
+  k_of_n: '{n} 個中 {k} 個'
+  diagnostic: 直接の検査
+  answer_yes: はい
+  answer_no: いいえ
+  shortcuts_title: 近道
+  shortcuts_intro: ケースが試したい部分を飛ばす戦略です。ある設定でルールを破るか品質が {max} 以下なら、その近道はふさがれています。
+  shortcut: 近道
+  what_it_does: すること
+  closed_in: ふさがれた設定
+  best_quality: 最高の品質
+  no_shortcuts: （まだ測った近道はありません）
+  voi_title: 質問の価値
+  voi_intro: 顧客に一度も尋ねないAIが、あるティアの設定で平均してまだ得られる点数です。顧客が知っていることをすべて知る模範解答は1を得て、その差が質問の価値です。
+  voi_params: 一つの設定の正解をすべてに使う
+  voi_robust: 尋ねずにすべての設定に備える
+  voi_reference: 尋ねる場合（模範解答）
+  bounds_title: 模範解答は最善にどれだけ近いか
+  bounds_intro: より強く遅い解法（これまでに見つかった最善の解答）と、どの解答も越えられないと証明された限界（限界値）を品質の尺度で示します。差は限界値が模範解答の目的の値からどれだけ離れているかです。
+  best_known: これまでに見つかった最善の解答
+  bound: 限界値
+  gap_to_bound: 限界値までの差
+  no_bounds: （これまでに見つかった最善の解答も限界値もまだありません）
+  not_measured: （測っていない）
+zh:
+  language: 语言
+  case_eyebrow: '{field} · FDE-Bench v2 案例'
+  task_type: 任务类型
+  deliverable: 交付物
+  objective: 目标
+  settings: 设置
+  maximize: 最大化
+  minimize: 最小化
+  program: 程序 {entry}
+  batch_files: 交付文件：{files}
+  one_problem: 一个固定的问题
+  nav_request: 需求
+  nav_settings: 设置
+  nav_rules: 规则
+  nav_requirements: 只有客户知道的需求
+  nav_targets: 应问的事实
+  nav_data: 数据与答案
+  nav_readme: 案例说明
+  nav_review: 评审发现
+  request_title: AI 收到的需求
+  request_intro: 客户的需求，是 AI 一开始收到的唯一文字，在案例的所有版本中都相同。
+  spec_title: 交付物规格（{label}）
+  spec_program: 程序接口
+  spec_batch: 不给 AI，只给把 AI 的文件转换成评分格式的转换器
+  settings_title: 设置：一份数据，{n} 套标准答案
+  tiers: 层级
+  tier: 层级
+  in_force: 适用内容
+  parameter: 参数
+  no_settings: 此案例没有设置：每个难度下都是同一个固定问题。
+  rules_title: 规则
+  rules_intro: 违反任何一条规则，交付物即无效（0 分）。唯一的例外：公司政策允许放宽的规则，且 AI 事先向客户申请了例外。
+  rule: 规则
+  class: 类别
+  description: 说明
+  class_physical: 物理约束
+  class_contractual: 合同约束
+  class_business_policy: 业务惯例
+  note_physical: 绝不放宽
+  note_contractual: 仅当政策允许合同例外时放宽
+  note_business_policy: 经政策的例外流程可以放宽
+  requirements_title: 只有客户知道的需求
+  requirements_intro: 模拟客户依据这段文字回答。AI 只有提问才能知道（在一开始就交出需求的交接方式下，开始时就会给它）。请在下方选择版本。
+  setting: 设置
+  not_available: （无）
+  targets_title: AI 应该问清的事实
+  targets_intro: 优秀的工程师会向客户问的内容。提问得分（Ask-F1）看 AI 的提问问出了其中多少条。
+  target: 事项
+  fact: 内容
+  kind: 类型
+  all_tiers: 全部
+  data_title: 数据与答案
+  data_intro: 所有内容都以文件形式保存在案例旁边：<code>agent_view/</code> 是 AI 收到的原样数据；<code>hidden/</code> 是只用于评分的输入（对程序来说，就是实际运行时使用的日期或文件）；<code>gt/</code>
+    是案例每个版本的正确答案。
+  visible_data: AI 收到的数据（{language}）
+  hidden_inputs: 评分用输入（不给 AI）
+  scores_title: 参考答案的得分
+  scores_intro: 质量按“客户在没有工程师时的做法 = 0 分，参考答案 = 1 分”的尺度衡量。比参考答案好就超过 1。
+  reference_objective: 参考答案（记 1 分）
+  baseline_objective: 客户原来的做法（记 0 分）
+  metrics: 指标（前四个）
+  folder: 文件夹
+  open: 打开
+  no_dataset: （尚无数据集）
+  answer_folder: 答案文件夹示例：{folder}
+  readme_title: 案例说明（README）
+  no_readme: （无 README）
+  untranslated: 尚未翻译成此语言，显示英文版。
+  review_title: 评审发现（REVIEW）
+  index_eyebrow: FDE-Bench v2
+  index_title: 已构建的案例
+  index_intro: 共 {n} 个案例。点开每个链接可以看到：AI 要做什么、给它什么、怎么评分，以及全部细节。
+  field: 领域
+  role: 角色
+  case_id: 案例 ID
+  site_cases: 全部案例
+  site_direction: 方向
+  site_design: 设计
+  site_catalog: 目录
+  site_source: GitHub 源码
+  site_english_only: （英文）
+  settings_value: '{tiers} 个难度 × {seeds} 个公开版本（评测使用未公开的版本）'
+  settings_intro: AI 在所有版本中看到的需求和数据都相同。<strong>难度</strong>决定适用哪些客户规则；<strong>规则种子</strong>从下面的候选值中选出这些规则的具体数值（门槛、单位、日期等）。每个难度的得分是多个规则种子的平均值。
+  param_candidates: 参数候选值
+  public_panel: 公开规则种子
+  public_panel_intro: 保存在 <code>dataset/</code> 中并在本页展示的设置，以及每个规则种子抽到的值。其他种子都是非公开种子：从同样的候选值中重新抽取。
+  rule_seed: 规则种子
+  drawn_values: 抽到的值
+  derived_note: 案例根据抽到的值推导出的值：{names}。
+  description_params: 说明（{{…}} 中的参数由规则种子抽取）
+  targets_intro_params: 优秀的工程师会向客户问的内容。提问得分（Ask-F1）看 AI 的提问问出了其中多少条。<code>{{param}}</code> 是规则种子抽到的值。
+  only_when: 仅当 {cond}
+  glance_title: 一眼看懂
+  nav_glance: 一眼看懂
+  task_title: AI 要做什么
+  given_title: 给 AI 的东西
+  ask_title: 必须问客户才能知道的事
+  scoring_title: 怎么评分
+  nav_scoring: 怎么评分
+  invalid_title: 出现以下情况得 0 分（无效）
+  quality_title: 有效时，质量是……
+  common_title: 所有案例通用
+  common_body: <ol><li><strong>是否有效。</strong>违反上面任何一条规则，交付物即无效，得 0 分。公司政策允许放宽的规则，只有在 AI 向客户申请了例外时才算数。</li><li><strong>质量。</strong>把结果换算到“客户在没有工程师时的做法
+    = 0 分，参考答案 = 1 分”的尺度上。比参考答案好就超过 1，达到政策上限（1.5）即满分。</li><li><strong>最终得分。</strong>在质量之外，再加上 AI 提问的好坏（提问是否问出了上面的事实）、沟通（使用客户的语言、NOTES.md）和效率，按公司政策的权重合计。</li><li><strong>多个版本。</strong>数据不变，只有客户规则的具体数值（门槛、单位、日期等）随案例版本变化。每个难度的得分是多个版本的平均值，所以背下一个答案拿不到分。</li></ol>
+  tiers_title: 各难度的区别
+  details_title: 查看详情
+  nav_details: 查看详情
+  details_intro: 以下是摘要背后的全部材料：需求原文、客户规则及其候选值、只有客户知道的需求、数据和保存的答案，以及案例说明。
+  difficulty: 难度
+  asks_for: 要求做的事
+  nav_evidence: 依据
+  evidence_title: 这些事实确实影响得分的依据
+  evidence_intro: 由 <code>audit-case</code> 在本数据集的 {n} 个设置（公开规则种子和候选值的其他组合）上测得。所有数值都在质量尺度上（客户原来的做法 =
+    0，参考答案 = 1），违反规则的交付物得 0。
+  ablation_title: 如果 AI 只弄错这一个事实
+  ablation_intro: 参考答案只把这一个事实理解错、其余全部正确时的结果。失分是从客户原来的做法到参考答案这段距离中丢掉的比例（100%：违反规则，或不比客户原来的做法好）。在某个设置中失分达到
+    {min} 即认为该事实重要；参数取错值时按危害最小的那个值计。
+  in_force_tiers: 适用层级
+  checked_by: 检验方式
+  checked_param: 按 {param} 的另一个值做出的参考答案
+  checked_hook: 案例给出的错误理解
+  checked_none: 尚未检验
+  score_lost: 失分
+  matters_in: 起作用的设置
+  k_of_n: '{n} 个中的 {k} 个'
+  diagnostic: 直接检查
+  answer_yes: 是
+  answer_no: 否
+  shortcuts_title: 捷径
+  shortcuts_intro: 跳过案例要考查的那部分任务的策略。在某个设置中违反规则或质量不超过 {max}，这条捷径就被堵住了。
+  shortcut: 捷径
+  what_it_does: 做法
+  closed_in: 被堵住的设置
+  best_quality: 最高质量
+  no_shortcuts: （尚未测量捷径）
+  voi_title: 提问的价值
+  voi_intro: 从不向客户提问的 AI 在一个层级的各设置中平均还能得多少分。知道客户所知一切的参考答案得 1，两者之差就是提问的价值。
+  voi_params: 用一个设置的正确答案应对所有设置
+  voi_robust: 不提问，为所有设置做准备
+  voi_reference: 提问（参考答案）
+  bounds_title: 参考答案离最优有多近
+  bounds_intro: 更强、更慢的求解（已知最优解）和经证明任何解都无法超越的界限（界限值），都换算到质量尺度上；差距是界限值与参考答案目标值的距离。
+  best_known: 已知最优解
+  bound: 界限值
+  gap_to_bound: 与界限值的差距
+  no_bounds: （尚无已知最优解或界限值）
+  not_measured: （未测量）
+es:
+  language: Idioma
+  case_eyebrow: '{field} · caso de FDE-Bench v2'
+  task_type: Tipo de tarea
+  deliverable: Entregable
+  objective: Objetivo
+  settings: Configuraciones
+  maximize: maximizar
+  minimize: minimizar
+  program: Programa {entry}
+  batch_files: 'Archivos de resultados: {files}'
+  one_problem: un único problema fijo
+  nav_request: Solicitud
+  nav_settings: Configuraciones
+  nav_rules: Reglas
+  nav_requirements: Lo que solo sabe el cliente
+  nav_targets: Hechos que preguntar
+  nav_data: Datos y respuestas
+  nav_readme: Notas del caso
+  nav_review: Hallazgos de la revisión
+  request_title: Lo que se le pide a la IA
+  request_intro: 'La solicitud del cliente: el único texto que la IA recibe al empezar. Es la misma en todas las
+    versiones del caso.'
+  spec_title: Especificación del entregable ({label})
+  spec_program: la interfaz del programa
+  spec_batch: la recibe el conversor que pasa los archivos de la IA al formato evaluado, no la IA
+  settings_title: 'Configuraciones: un conjunto de datos, {n} soluciones correctas'
+  tiers: Niveles
+  tier: Nivel
+  in_force: Qué se aplica
+  parameter: Parámetro
+  no_settings: 'Este caso no tiene configuraciones: es el mismo problema fijo en todas las dificultades.'
+  rules_title: Reglas
+  rules_intro: 'Romper cualquier regla invalida el entregable (0 puntos). La única excepción: una regla que la política
+    de la empresa permite flexibilizar, si la IA pidió antes una excepción al cliente.'
+  rule: Regla
+  class: Tipo
+  description: Descripción
+  class_physical: física
+  class_contractual: contractual
+  class_business_policy: costumbre del negocio
+  note_physical: nunca se flexibiliza
+  note_contractual: solo se flexibiliza si la política admite excepciones contractuales
+  note_business_policy: puede flexibilizarse mediante el procedimiento de excepción de la política
+  requirements_title: Lo que solo sabe el cliente
+  requirements_intro: El cliente simulado responde a partir de este texto. La IA solo lo descubre preguntando (en
+    la modalidad que entrega los requisitos desde el principio, lo recibe al empezar). Elija una versión abajo.
+  setting: Configuración
+  not_available: (no disponible)
+  targets_title: Hechos que la IA debe preguntar
+  targets_intro: Lo que un buen ingeniero preguntaría al cliente. La puntuación de preguntas (Ask-F1) mide cuántos
+    de ellos descubrieron las preguntas de la IA.
+  target: Pregunta
+  fact: Hecho
+  kind: Clase
+  all_tiers: todos
+  data_title: Datos y respuestas
+  data_intro: 'Todo se guarda como archivos junto al caso: <code>agent_view/</code> es exactamente lo que recibe
+    la IA; <code>hidden/</code>, las entradas que solo se usan para evaluar (en un programa, los días o archivos
+    con los que se ejecuta); <code>gt/</code>, la respuesta correcta de cada versión del caso.'
+  visible_data: Datos que recibe la IA ({language})
+  hidden_inputs: Entradas de evaluación (la IA nunca las recibe)
+  scores_title: Puntuación de la solución de referencia
+  scores_intro: La calidad se mide en una escala donde la forma de trabajar del cliente sin un ingeniero vale 0
+    y la solución de referencia vale 1. Lo que la supera pasa de 1.
+  reference_objective: Solución de referencia (vale 1)
+  baseline_objective: Forma de trabajar del cliente (vale 0)
+  metrics: Métricas (las cuatro primeras)
+  folder: Carpeta
+  open: abrir
+  no_dataset: (todavía sin conjunto de datos)
+  answer_folder: 'Una carpeta de respuestas: {folder}'
+  readme_title: Notas del caso (README)
+  no_readme: (sin README)
+  untranslated: Aún no está traducido a este idioma; se muestra la versión en inglés.
+  review_title: Hallazgos de la revisión (REVIEW)
+  index_eyebrow: FDE-Bench v2
+  index_title: Casos implementados
+  index_intro: '{n} casos. Cada enlace abre la página del caso: qué tiene que hacer la IA, qué recibe, cómo se evalúa
+    y todos los detalles.'
+  field: Área
+  role: Rol
+  case_id: ID del caso
+  site_cases: Todos los casos
+  site_direction: Orientación
+  site_design: Diseño
+  site_catalog: Catálogo
+  site_source: Código en GitHub
+  site_english_only: (en inglés)
+  settings_value: '{tiers} dificultades × {seeds} versiones publicadas (la evaluación usa versiones no publicadas)'
+  settings_intro: La IA ve la misma solicitud y los mismos datos en todas las versiones. La <strong>dificultad</strong>
+    decide qué reglas del cliente se aplican; la <strong>semilla de reglas</strong> elige los valores concretos
+    de esas reglas (un umbral, una unidad, una fecha) entre los candidatos de abajo. La puntuación de cada dificultad
+    es la media sobre varias semillas de reglas.
+  param_candidates: Candidatos de parámetro
+  public_panel: Semillas de reglas públicas
+  public_panel_intro: 'Las configuraciones guardadas en <code>dataset/</code> y mostradas en esta página, con los
+    valores que sorteó cada semilla de reglas. Cualquier otra semilla es privada: un sorteo nuevo entre los mismos
+    candidatos.'
+  rule_seed: Semilla de reglas
+  drawn_values: Valores sorteados
+  derived_note: 'Valores que el caso deriva de los sorteados: {names}.'
+  description_params: Descripción (los parámetros entre {{…}} los sortea la semilla de reglas)
+  targets_intro_params: Lo que un buen ingeniero preguntaría al cliente. La puntuación de preguntas (Ask-F1) mide
+    cuántos de ellos descubrieron las preguntas de la IA. <code>{{param}}</code> es el valor que sorteó la semilla
+    de reglas.
+  only_when: solo si {cond}
+  glance_title: De un vistazo
+  nav_glance: De un vistazo
+  task_title: Qué tiene que hacer la IA
+  given_title: Qué recibe la IA
+  ask_title: Qué debe averiguar preguntando al cliente
+  scoring_title: Cómo se evalúa
+  nav_scoring: Cómo se evalúa
+  invalid_title: Vale 0 si el entregable…
+  quality_title: Si es válido, la calidad es…
+  common_title: Igual en todos los casos
+  common_body: <ol><li><strong>Válido o no.</strong> Romper cualquiera de las reglas de arriba invalida el entregable
+    y la ejecución vale 0. Una regla que la política de la empresa permite flexibilizar solo cuenta si la IA pidió
+    una excepción al cliente.</li><li><strong>Calidad.</strong> El resultado se sitúa en una escala donde la forma
+    de trabajar del cliente sin un ingeniero vale 0 y la solución de referencia vale 1. Lo que supera a la referencia
+    pasa de 1; la puntuación completa llega en el tope de la política (1,5).</li><li><strong>Puntuación final.</strong>
+    La calidad, más lo bien que preguntó la IA (¿sus preguntas descubrieron los hechos de arriba?), cómo se comunicó
+    (el idioma del cliente, un NOTES.md) y su eficiencia, ponderados según la política de la empresa.</li><li><strong>Varias
+    versiones.</strong> Los datos no cambian; solo los valores concretos del cliente (un umbral, una unidad, una
+    fecha) cambian de una versión del caso a otra. La puntuación de cada dificultad es la media de varias versiones,
+    así que memorizar una respuesta no sirve.</li></ol>
+  tiers_title: Fácil, medio y difícil
+  details_title: Detalles
+  nav_details: Detalles
+  details_intro: 'Todo el material detrás del resumen: la solicitud tal como está escrita, las reglas del cliente
+    y sus valores candidatos, lo que solo sabe el cliente, los datos y las respuestas guardadas, y las notas del
+    caso.'
+  difficulty: Dificultad
+  asks_for: Qué pide
+  nav_evidence: Evidencia
+  evidence_title: Evidencia de que los hechos importan
+  evidence_intro: 'Medido con <code>audit-case</code> en {n} configuraciones de este conjunto de datos: las semillas de
+    reglas públicas y otras combinaciones de los candidatos. Todo está en la escala de calidad (la forma de trabajar del
+    cliente 0, la solución de referencia 1), y un entregable que rompe una regla vale 0.'
+  ablation_title: Si la IA se equivoca solo en este hecho
+  ablation_intro: 'La solución de referencia con solo este hecho mal entendido y todo lo demás bien. La puntuación perdida
+    es qué parte del camino entre la forma de trabajar del cliente y la referencia se pierde (100%: rompe una regla o no
+    mejora lo que hace el cliente). El hecho importa en una configuración cuando se pierde al menos {min}; un valor de
+    parámetro equivocado cuenta por el menos dañino.'
+  in_force_tiers: Se aplica en
+  checked_by: Cómo se comprueba
+  checked_param: la referencia para otro valor de {param}
+  checked_hook: una mala lectura escrita por el caso
+  checked_none: aún sin comprobar
+  score_lost: Puntuación perdida
+  matters_in: Importa en
+  k_of_n: '{k} de {n} configuraciones'
+  diagnostic: Comprobación directa
+  answer_yes: sí
+  answer_no: 'no'
+  shortcuts_title: Atajos
+  shortcuts_intro: Estrategias que se saltan la parte de la tarea que el caso quiere evaluar. Un atajo está cerrado en
+    una configuración cuando rompe una regla o su calidad es como mucho {max}.
+  shortcut: Atajo
+  what_it_does: Qué hace
+  closed_in: Cerrado en
+  best_quality: Mejor calidad
+  no_shortcuts: (aún no se ha medido ningún atajo)
+  voi_title: El valor de preguntar
+  voi_intro: Lo que todavía gana una IA que nunca pregunta al cliente, en promedio sobre las configuraciones de un
+    nivel. La solución de referencia, que sabe todo lo que sabe el cliente, gana 1; el valor de preguntar es la
+    diferencia.
+  voi_params: Correcta para una configuración, usada en todas
+  voi_robust: Nunca pregunta, se prepara para todas
+  voi_reference: Pregunta (la referencia)
+  bounds_title: Qué tan cerca está la referencia de lo mejor posible
+  bounds_intro: Un método más fuerte y más lento (la mejor conocida) y un límite demostrado que ninguna solución puede
+    superar (cota), ambos en la escala de calidad; la distancia es cuánto se aleja la cota del objetivo de la referencia.
+  best_known: Mejor conocida
+  bound: Cota
+  gap_to_bound: Distancia a la cota
+  no_bounds: (aún no hay mejor solución conocida ni cota)
+  not_measured: (sin medir)

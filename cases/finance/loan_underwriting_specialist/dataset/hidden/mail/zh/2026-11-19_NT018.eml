@@ -1,15 +1,17 @@
-From: 资金部 <treasury@lender.example>
+From: 贷款服务 还款确认 <confirmations@creditor.example>
 To: 个人贷款柜台 <loans.desk@lender.example>
-Date: Thu, 19 Nov 2026 08:25:00 +0000
-Subject: 资金部 NT018：本期个人贷款预算调整
+Date: Thu, 19 Nov 2026 09:00:00 +0000
+Subject: 还款确认 NT018：负债 BF3739655-D3
 Message-ID: <NT018.2026-11-19@lender.example>
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
 
-各位好：
+您好：
 
-本期个人贷款预算自 2026-11-19 起减少 400,000，即时生效。
+兹确认客户 BF3739655（征信档案号）的负债 BF3739655-D3 已于 2026-11-19 全部结清。
+新的未偿余额：0
+新的月还款额：0
 
 编号：NT018
-资金部
+贷款服务 还款确认

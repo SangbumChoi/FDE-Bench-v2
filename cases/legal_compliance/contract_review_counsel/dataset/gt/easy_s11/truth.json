@@ -1,0 +1,182 @@
+{
+  "C001": {
+    "issues": [
+      "GOVERNING_LAW",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C002": {
+    "issues": [
+      "LIABILITY_CAP"
+    ],
+    "decision": "negotiate"
+  },
+  "C004": {
+    "issues": [
+      "PAYMENT_TERMS",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C005": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C006": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C007": {
+    "issues": [
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C008": {
+    "issues": [
+      "PAYMENT_TERMS",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C009": {
+    "issues": [
+      "LIABILITY_CAP",
+      "PAYMENT_TERMS"
+    ],
+    "decision": "negotiate"
+  },
+  "C010": {
+    "issues": [
+      "GOVERNING_LAW"
+    ],
+    "decision": "negotiate"
+  },
+  "C011": {
+    "issues": [
+      "LIABILITY_CAP",
+      "GOVERNING_LAW",
+      "PAYMENT_TERMS"
+    ],
+    "decision": "negotiate"
+  },
+  "C012": {
+    "issues": [
+      "LIABILITY_CAP",
+      "GOVERNING_LAW",
+      "PAYMENT_TERMS",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  },
+  "C016": {
+    "issues": [
+      "PAYMENT_TERMS"
+    ],
+    "decision": "negotiate"
+  },
+  "C017": {
+    "issues": [
+      "LIABILITY_CAP",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  },
+  "C018": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C020": {
+    "issues": [
+      "LIABILITY_CAP"
+    ],
+    "decision": "negotiate"
+  },
+  "C021": {
+    "issues": [
+      "PAYMENT_TERMS"
+    ],
+    "decision": "negotiate"
+  },
+  "C022": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C024": {
+    "issues": [
+      "GOVERNING_LAW",
+      "PAYMENT_TERMS",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C025": {
+    "issues": [
+      "LIABILITY_CAP",
+      "PAYMENT_TERMS"
+    ],
+    "decision": "negotiate"
+  },
+  "C027": {
+    "issues": [
+      "GOVERNING_LAW"
+    ],
+    "decision": "negotiate"
+  },
+  "C028": {
+    "issues": [
+      "LIABILITY_CAP"
+    ],
+    "decision": "negotiate"
+  },
+  "C030": {
+    "issues": [
+      "LIABILITY_CAP"
+    ],
+    "decision": "negotiate"
+  },
+  "C031": {
+    "issues": [
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C033": {
+    "issues": [],
+    "decision": "sign"
+  },
+  "C034": {
+    "issues": [
+      "PAYMENT_TERMS",
+      "INDEMNITY"
+    ],
+    "decision": "negotiate"
+  },
+  "C035": {
+    "issues": [
+      "PAYMENT_TERMS"
+    ],
+    "decision": "negotiate"
+  },
+  "C037": {
+    "issues": [
+      "LIABILITY_CAP"
+    ],
+    "decision": "negotiate"
+  },
+  "C038": {
+    "issues": [
+      "LIABILITY_CAP",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  },
+  "C039": {
+    "issues": [
+      "LIABILITY_CAP",
+      "INDEMNITY"
+    ],
+    "decision": "reject"
+  }
+}

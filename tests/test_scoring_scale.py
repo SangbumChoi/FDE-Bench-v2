@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from fdebench2.cases import RATIO_CAP, NativeCase, quality_fields
+from fdebench2.cases import RATIO_CAP, NativeCase, quality_fields, quality_span
 from fdebench2.dataset import check_dataset, export_dataset
 from fdebench2.scoring.policy_score import RunFacts, apply_policy
 from fdebench2.transforms.policy import Policy, policy_brief_msgs
@@ -46,7 +46,8 @@ def baseline_solution(world, out_dir, setting=None):
     _write(out_dir, BASE * (setting["scale"] if setting else 1))
 '''
 SETTINGS_YAML = """tiers: {easy: e, medium: m, hard: h}
-rulesets: {A: {scale: 1}, B: {scale: 2}, C: {scale: 3}}
+params: {scale: {values: [1, 2, 3]}}
+rule_seeds: [1, 2, 3]
 """
 
 
@@ -123,8 +124,12 @@ def test_degenerate_baseline_falls_back_to_the_ratio(tmp_path):
 
 def test_baseline_follows_the_setting_and_must_be_valid(tmp_path):
     case = make_case(tmp_path, "maximize", ref=80.0, base=40.0, settings=True)
-    assert [case.at("hard", r).baseline_objective for r in "ABC"] == [40.0, 80.0, 120.0]
-    assert case.at("easy", "B").evaluate(submit(tmp_path, 200.0), "en")["quality_score"] == 1.5
+    seed_of = {}                                    # the first rule seed that draws each scale
+    for seed in range(1, 100):
+        seed_of.setdefault(case.at("hard", seed).setting["scale"], seed)
+    assert {k: case.at("hard", r).baseline_objective for k, r in seed_of.items()} == {1: 40.0, 2: 80.0, 3: 120.0}
+    # a shared pool draws the same scale in every tier: reference 160, baseline 80
+    assert case.at("easy", seed_of[2]).evaluate(submit(tmp_path, 200.0), "en")["quality_score"] == 1.5
     broken = make_case(tmp_path, "maximize", ref=80.0, base=40.0)
     broken.module.baseline_solution = lambda world, out_dir: broken.module._write(out_dir, 40.0, ["habit"])
     with pytest.raises(AssertionError, match="baseline solution is not valid"):
@@ -215,16 +220,20 @@ def test_dataset_stores_the_baseline_only_when_the_case_has_one(tmp_path):
                                                  "quality_score": 0.0}
 
 
-def test_a_baseline_close_to_the_reference_does_not_blow_up_quality():
-    # maximize: baseline 98, reference 100 -> zero point 95 (5% below the reference), not 98
+def test_the_baseline_is_exactly_the_zero_point_even_when_close_to_the_reference():
+    # minimize: reference 100, baseline 102 -> the baseline scores 0 (not 0.6) and 101 scores 0.5
+    assert quality_fields(102.0, 100.0, 102.0, maximize=False)["quality_score"] == 0.0
+    assert abs(quality_fields(101.0, 100.0, 102.0, maximize=False)["quality_score"] - 0.5) < 1e-9
+    assert abs(quality_fields(99.0, 100.0, 102.0, maximize=False)["quality_score"] - 1.5) < 1e-9
+    # maximize: reference 100, baseline 98
     q = quality_fields(101.0, 100.0, 98.0, maximize=True)
-    assert q["quality_anchor"] == "baseline" and abs(q["quality_score"] - 6 / 5) < 1e-9
-    assert quality_fields(98.0, 100.0, 98.0, maximize=True)["quality_score"] == 0.6
-    # minimize: baseline 102, reference 100 -> zero point 105
-    assert abs(quality_fields(99.0, 100.0, 102.0, maximize=False)["quality_score"] - 6 / 5) < 1e-9
-    # a baseline far from the reference is the zero point itself
+    assert q["quality_anchor"] == "baseline" and abs(q["quality_score"] - 1.5) < 1e-9
+    assert quality_fields(98.0, 100.0, 98.0, maximize=True)["quality_score"] == 0.0
     assert quality_fields(40.0, 80.0, 40.0, maximize=True)["quality_score"] == 0.0
     assert str(quality_fields(40.0, 80.0, 40.0, maximize=True)["quality_score"]) == "0.0"   # never -0.0
+    # the scale's width is reported instead: the validator requires MIN_QUALITY_SPAN of it
+    assert quality_span(100.0, 102.0) == 0.02 and quality_span(80.0, 40.0) == 0.5
+    assert quality_span(100.0, None) is None and quality_span(0.0, 5.0) is None
 
 
 def test_a_baseline_that_fails_on_a_world_falls_back_to_the_ratio(tmp_path):

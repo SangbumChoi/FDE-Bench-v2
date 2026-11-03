@@ -1,0 +1,27 @@
+# The explainer's case texts in Japanese (English comes from case.yaml).
+role: 給付資格審査担当者
+task_type: ルールに基づく判定
+deliverable_spec: |
+  determinations.csv、ヘッダーは ASCII の household_id,eligible,monthly_amount,reason_code
+  申請1件につき1行（household_id はデータのまま、例: H001）;
+  eligible = yes | no; monthly_amount = 今年度の月額支給額（数値、対象外なら 0）;
+  reason_code = APPROVED、RENEWAL、DENY_RESIDENCY、DENY_ASSETS、DENY_INCOME のいずれか
+  （APPROVED / RENEWAL は eligible = yes のときのみ、DENY_* は eligible = no のときのみ）。
+tiers:
+  easy: >-
+    中心となる計算: 世帯人数に誰を数えるか、居住期間、昨年度の支給額表に対する今年度の引き上げ、必要額（基準生活額に住居費上限までの家賃）、就労収入の控除、更新の運用と理由コード。今回は資産の確認を受付窓口が済ませており、障害加算はほかの部署が支給し、市議会の見直し中は養育費を収入に含めず、予算上の上限は財政課が後で適用し、変更届と文書は別に扱います。
+  medium: >-
+    easy に業務上のルールを加えます: 資産審査（居住用不動産と最も評価額の高い自動車1台を除外）と DENY_ASSETS、障害加算、養育費の収入算入、世帯人数ごとの予算上の上限。変更届と文書は引き続き別に扱います。
+  hard: >-
+    medium に日付の決まった部分と圧力が加わります: 申請日が2026年10月1日以降の申請の必要額に冬季暖房費加算を加える財政課の通知、申請後に届け出られた変更（申請日の時点ですでに効力があったものだけを反映）、そして例外を求める2通の文書（居住期間の足りない世帯の承認を求める市議会議員、養育費を収入に数えないよう求める申請者）。これらの文書は結果を変えません。
+rules:
+  residency_requirement: >-
+    申請日の時点で市内に{{residency_days}}日以上居住している世帯だけを承認できます（法定の要件）。
+  asset_limit: >-
+    算入される資産（居住用不動産と自動車1台を除く）が、{{asset_base}}に追加の世帯員1人につき{{asset_extra}}を加えた額を超える世帯は承認できません。
+  amount_cap: >-
+    月額は、世帯人数ごとの今年度の予算法上の上限を超えません: {{cap}}。
+  reason_code_required: >-
+    すべての決定に、決められた一覧のうち決定と整合する理由コードを付けます（承認は、更新申請なら RENEWAL、新規申請なら APPROVED）。
+  auto_approve_renewals: >-
+    更新申請は再審査せず、昨年度の月額で承認します。

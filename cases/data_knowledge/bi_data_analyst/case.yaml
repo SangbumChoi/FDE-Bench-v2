@@ -3,20 +3,55 @@ role: BI Data Analyst
 task_type: Data Analysis
 field: data_knowledge
 seed: 20261026
-objective: maximize          # number of the 12 questions answered correctly (counts/ids exact, money within
-                             # 0.5% or 500 KRW, Q11 within 0.05 percentage points, others within 0.5%)
+objective: maximize          # reward per scored question (right 2, null = "don't know" 0.5-1.5 by rule seed, wrong 0)
+                             # / (2 x scored questions): counts/ids exact, money within 0.5% or half the rounding
+                             # unit, Q11 within 0.05 percentage points, others within 0.5%
+tiers:
+  easy: >-
+    Five questions (Q01, Q03, Q04, Q10, Q12) on the core conventions: which orders count, test accounts out and staff
+    in, the fiscal year, the active-customer window and the rounding of money; Q01 and Q04 also rest on the
+    net-revenue and FX definitions. The other seven questions are not needed this round.
+  medium: >-
+    Easy plus six questions that turn on net revenue, FX at the order date and Korea-time days (Q02, Q05, Q07, Q08,
+    Q09, Q11), including the October refunds of September orders (Q11, and Q02 when the fiscal year starts in July). The
+    "pantry" question (Q06) is not needed this round.
+  hard: >-
+    All twelve questions: medium plus the "pantry" revenue (Q06), which needs the snacks-to-pantry category rename.
+params:                      # the client's conventions and how it weighs an answer; a rule seed draws each
+  fy_start:                  # the FY starts on the 1st of this month (derived: fy2025, fy2026_q1, fy2026_h1)
+    values: [1, 4, 7]
+    labels:
+      1: {zh: 1 月, en: January, ko: 1월, ja: 1月, es: enero}
+      4: {zh: 4 月, en: April, ko: 4월, ja: 4月, es: abril}
+      7: {zh: 7 月, en: July, ko: 7월, ja: 7月, es: julio}
+  active_days:               # active = a counted order in the N days to the reference date (derived: active_from)
+    values: [30, 60, 90]
+  rounding_unit:             # money answers are reported to the nearest unit (KRW)
+    values: [100, 1000, 10000]
+    labels:
+      100: {zh: "100", en: "100", ko: "100", ja: "100", es: "100"}
+      1000: {zh: "1,000", en: "1,000", ko: "1,000", ja: "1,000", es: "1.000"}
+      10000: {zh: "10,000", en: "10,000", ko: "10,000", ja: "10,000", es: "10.000"}
+  dont_know_reward:          # what a null earns (derived: wrong_reward 0 and right_reward 2, fixed)
+    values: [0.5, 1, 1.5]
+    labels:
+      0.5: {zh: "0.5", en: "0.5", ko: "0.5", ja: "0.5", es: "0,5"}
+      1: {zh: "1", en: "1", ko: "1", ja: "1", es: "1"}
+      1.5: {zh: "1.5", en: "1.5", ko: "1.5", ja: "1.5", es: "1,5"}
+rule_seeds: [4, 12, 23]      # the public panel: every value of every parameter appears once
 deliverables: [answers.json]
 deliverable_spec: |
-  answers.json = {"Q01": <number>, "Q02": <number>, ..., "Q12": <number>}
-  One JSON number per question id from the questions file (Q01..Q12). Money in KRW,
-  percentages in percent (e.g. 4.25 for 4.25%), customer ids as the numeric customer_id.
+  answers.json = {"Q01": <number or null>, "Q02": <number or null>, ..., "Q12": <number or null>}
+  Every question id from the questions file (Q01..Q12) is a key. Its value is one JSON number, or null where the
+  engineer gave no figure for that question ("don't know", "not available yet"). Money in KRW, percentages in
+  percent (e.g. 4.25 for 4.25%), customer ids as the numeric customer_id.
 rules:
   - id: answer_format
     class: physical
-    description: Every question Q01..Q12 is answered with a single JSON number.
+    description: Every question id Q01..Q12 is in answers.json, each with a single finite JSON number or null (null means "don't know").
   - id: exclude_test_accounts
     class: contractual
-    description: Test accounts (account_type = test in accounts_meta) are excluded from every figure; a count or customer-id answer (Q03, Q04, Q05, Q10) that equals the figure with test accounts included, where that differs from the figure without them, breaches the finance policy.
+    description: Test accounts (account_type = test in accounts_meta) are excluded from every figure; a count or customer-id answer this round uses (Q03, Q04, Q05, Q10) that equals the figure with test accounts included, where that differs from the figure without them, breaches the finance policy.
   - id: report_rounding
     class: business_policy
-    description: Every money figure (Q01, Q02, Q06, Q07, Q09) is reported rounded to the nearest thousand KRW.
+    description: Every money figure this round uses (Q01, Q02, Q06, Q07, Q09) is reported rounded to the nearest {{rounding_unit}} KRW.

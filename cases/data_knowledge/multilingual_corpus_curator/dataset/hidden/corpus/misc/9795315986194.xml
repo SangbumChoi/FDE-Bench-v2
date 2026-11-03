@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-986194</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9795315986194</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>透明的灯塔</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Touming de Dengta</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>赵明哲</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Zhao Mingzhe</PersonName></AlternativeName>
+      </Contributor>
+      <Contributor><SequenceNumber>2</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>李嘉怡</PersonName>
+        <AlternativeName><NameType>01</NameType><PersonName textscript="Latn">Li Jiayi</PersonName></AlternativeName>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">当河流在一夜之间改了道，住在运河纵横的老城的一个刚搬来的邮递员不得不决定哪些东西值得留下。
+
+这是一部关于故乡与远方的安静小说。</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1975</Date></PublishingDate>
+      <PublishingDate><PublishingDateRole>11</PublishingDateRole><Date dateformat="05">1973</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

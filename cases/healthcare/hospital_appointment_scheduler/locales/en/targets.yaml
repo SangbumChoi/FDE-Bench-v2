@@ -13,11 +13,11 @@
 - id: urgent_window
   kind: missing
   domain: business rule
-  text: Every urgent (U) request must be booked the day it arrives, within {{urgent_days}} working days of its first possible day (earliest date or the next working day after receipt), and stay within that window if moved.
+  text: Every urgent (U) request must be booked the day it arrives, within 2 working days of its first possible day (earliest date or the next working day after receipt), and stay within that window if moved.
 - id: urgent_reserve
   kind: missing
   domain: business rule
-  text: The first two slots of every morning session (09:00 and 09:20) are held for urgent requests two or more working days ahead; the day before (for tomorrow's clinics) they are released to anyone.
+  text: The first {{reserve_slots}} slots of every morning session ({{reserve_times}}) are held for urgent requests two or more working days ahead; the day before (for tomorrow's clinics) they are released to anyone.
 - id: follow_up_doctor
   kind: missing
   domain: business rule
@@ -33,7 +33,7 @@
 - id: move_notice
   kind: missing
   domain: business rule
-  text: When the hospital changes the date or time of a patient's appointment, the new one must be at least {{move_notice_days}} working days after the day of the change (for a request released and booked again later, after the day of the release; same date and time with another doctor needs no notice); every change costs.
+  text: When the hospital changes the date or time of a patient's appointment, the new one must be at least 3 working days after the day of the change (for a request released and booked again later, after the day of the release; same date and time with another doctor needs no notice); every change costs.
 - id: waitlist_priority
   kind: missing
   domain: business rule

@@ -2,10 +2,16 @@
   kind: missing
   domain: calculation
   text: Road distance is 1.3 times the straight-line distance; coordinates are kilometres from the kitchen at (0, 0).
-- id: speeds
+- id: speed
   kind: missing
   domain: calculation
-  text: Driving speed is 30 km/h for legs starting before 07:00 and 20 km/h for legs starting at 07:00 or later.
+  tiers: [easy, medium]
+  text: Vans drive at 25 km/h on average all morning; there is no rush hour this Monday (school holiday).
+- id: rush_hour
+  kind: missing
+  domain: calculation
+  tiers: [hard]
+  text: "Vans drive at 30 km/h until {{rush_start}} and at 20 km/h from {{rush_start}} on (morning rush hour); a van still on the road at {{rush_start}} slows down from then."
 - id: service_time
   kind: missing
   domain: calculation
@@ -13,15 +19,26 @@
 - id: shift
   kind: missing
   domain: business rule
-  text: Vans may leave from 05:00 and must be back at the kitchen by 09:30.
-- id: closed_c11
+  text: "Vans may leave from 05:00 and must be back at the kitchen by {{shift_end}}."
+- id: tray_limit
+  kind: ambiguous
+  domain: data semantics
+  when: {van_capacity: [100, 110]}
+  text: "max_trays (120) is what the racks hold, but this week's deeper crates limit a van to {{van_capacity}} trays."
+- id: closed_cafe
   kind: missing
   domain: business rule
-  text: The South Hill café (C11) is closed this week for renovation and must not be served.
+  text: "The {{closed_cafe}} is closed this week for renovation and must not be served."
 - id: cold_chain
   kind: ambiguous
   domain: data semantics
+  tiers: [medium, hard]
   text: Partner-brand cafés sell chilled products and may only be served by the refrigerated van V4.
+- id: partner_this_week
+  kind: ambiguous
+  domain: data semantics
+  tiers: [easy]
+  text: This week the partner brings its chilled range itself, so any van may serve the partner-brand cafés.
 - id: one_visit
   kind: ambiguous
   domain: business rule
@@ -29,8 +46,18 @@
 - id: premium_first
   kind: missing
   domain: business rule
-  text: On every route, premium cafés must be visited before standard cafés.
+  text: "<!-- when: premium_first=true -->On every route, premium cafés must be visited before standard cafés.<!-- /when --><!-- when: premium_first=false -->The premium-first habit is suspended this week: the cafés on a route may come in any order.<!-- /when -->"
 - id: lateness
   kind: missing
   domain: scoring
-  text: Arriving after deliver_by is allowed but every late minute counts three times against the total route time; arriving before opening means waiting.
+  text: "Arriving after deliver_by is allowed but every late minute costs as much as {{late_cost}} minutes of van time; arriving before opening means waiting."
+- id: workshop
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: On Monday V2 is in the workshop for its brake check until 06:40 and cannot leave the kitchen before then.
+- id: manager_pressure
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: The East Lake café (C07) manager's demand to be the first stop before 06:30 is not a rule; she gets her trays between opens and deliver_by like every café.

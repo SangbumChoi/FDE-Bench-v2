@@ -1,0 +1,27 @@
+{
+  "baseline_objective": 0.27472326969076966,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.51226973,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "judged_against": "demand",
+    "mean_wape": 0.14073,
+    "short_weight": 1.0,
+    "wape_by_store": {
+      "S1": 0.12096,
+      "S2": 0.12687,
+      "S3": 0.14797,
+      "S4": 0.18258,
+      "S5": 0.12529
+    }
+  },
+  "objective": 0.14073241489683427,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

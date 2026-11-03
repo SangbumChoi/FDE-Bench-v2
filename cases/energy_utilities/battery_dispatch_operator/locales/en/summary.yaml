@@ -1,0 +1,49 @@
+# The case in plain words, shown at the top of its page.
+task: >-
+  The operator of a battery at a solar-plus-storage site in Spain (40 MWh, 20 MW, sharing one grid connection and one
+  meter with a 30 MWp solar farm) wants a plan for next week, Monday 22 to Sunday 28 March 2027: when to charge and
+  when to discharge to make the most money. The AI hands in one file, `dispatch.csv`, with the charge and discharge
+  power in MW for each of the week's 668 quarter-hours, in local time.
+given:
+  - "The client's request: plan when the battery should charge and discharge next week \"to make the most money\". It names the five attached files and says nothing about limits or rules."
+  - "`price_forecast.csv`: the forecast market price for each hour of the week in EUR/MWh (167 hours, because 28 March has only 23). The plan is paid at the week's actual prices, which differ from the forecast."
+  - "`solar_forecast.csv`: the solar farm's average output in MW for each quarter-hour of the week (668 rows), up to 30 MW at midday on sunny days."
+  - "`battery_spec.csv`: 40 MWh, 20 MW charge and 20 MW discharge, 84.6% round-trip efficiency, the manufacturer's 5%-95% state-of-charge range and the 30 MWp of solar on the same site."
+  - "`connection_agreement.md`: a summary of the 2024 grid agreement: the site may send up to 30 MW to the grid and draw up to 20 MW, solar and battery are metered together, solar above the limit is clipped automatically, all times are local. The 30 MW is out of date."
+  - "`dispatch_log_last_week.csv`: last week's plan (15-21 March, 672 quarter-hours) with charge, discharge and state of charge. It was made with last week's values, and some of them have changed."
+ask:
+  - "How the 84.6% efficiency splits between charging and discharging: 92% and 92%, 95% and 89%, or 90% and 94%, depending on the version. It decides how much energy each quarter-hour stores or uses up."
+  - "The state-of-charge range the warranty allows at every moment: 10-90%, 15-85% or 5-95% of 40 MWh, depending on the version (the spec sheet gives only the manufacturer's 5-95%). And that the week starts at 50% and must end at no less than 50%, 40% or 30%, depending on the version."
+  - "The current export limit: substation works have cut the agreement's 30 MW to 18, 15 or 12 MW, depending on the version. While the battery discharges, solar + discharge − charge must stay within it; solar above it is clipped and lost unless the battery soaks it up."
+  - "That money is settled per quarter-hour (each hourly price applies to its four quarters), all times are local, and the clocks go forward on Sunday 28 March: there is no 02:00-02:45 that day, so the plan has exactly 668 rows."
+  - "What \"the most money\" means: the site's export income minus the cost of power drawn from the grid, minus what the solar farm would have earned on its own, with export counted only up to the export limit."
+  - "On medium and hard: when the site may draw power from the grid (charge more than the solar output): only in quarter-hours starting 00:00-05:45, 01:00-04:45 or 02:00-07:45, depending on the version. On easy it may at any hour, up to 20 MW."
+  - "On medium and hard: the evening emergency reserve, 15%, 20% or 30% of charge kept every day from 16:00-20:00, 17:00-21:00 or 18:00-22:00; and the degradation cost, 5, 15 or 25 EUR per MWh charged plus discharged (each depending on the version)."
+  - "On hard: three notices the files do not show, dated differently depending on the version. The substation works end early, so 30 MW applies again from Wednesday 24, Friday 26 or Saturday 27 March; the local grid operator (DSO) limits export to 10, 8 or 5 MW from 18:00 to 21:00 on Tuesday 23, Thursday 25 or Saturday 27 March; the battery is offline from 08:00 to 20:00 on Monday 22, Wednesday 24 or Friday 26 March. Selling the reserve at the evening peak, as the trading desk wants, needs an approved exception."
+invalid_if:
+  - "Does not have exactly one row for each of the week's 668 quarter-hours: for example a row at 02:00-02:45 on 28 March, which the clock change skips, or a missing or repeated time."
+  - "Lets the state of charge leave the warranty range at any moment (worked out with the client's per-direction efficiencies), or ends the week below the required level."
+  - "Has a negative power or one above 20 MW, charges and discharges in the same quarter-hour, draws more than 20 MW from the grid, or, on medium and hard, draws grid power outside the off-peak hours."
+  - "Sends more than the export limit to the grid while the battery discharges: 12, 15 or 18 MW; on hard 30 MW once the works end, and 5, 8 or 10 MW during the DSO's evening hours."
+  - "On medium and hard, lets the state of charge fall below the evening reserve during its hours, unless the company policy lets this rule bend and the AI asked the client for an exception first."
+  - "On hard, charges or discharges during the 08:00-20:00 maintenance outage."
+quality: >-
+  Higher is better: the battery's profit in euros over the week, settled at the week's actual prices (the AI sees only
+  the forecast): the site's export income (counted up to the export limit) minus the cost of grid power, minus what
+  the solar farm alone would have earned, and on medium and hard minus the degradation cost. The client's own way
+  (score 0) leaves the battery idle at 50% all week and earns 0 EUR, so half the reference's profit scores 0.5; the
+  reference solution (score 1) follows a simple daily rule on the forecast (charge in the cheapest night hours and
+  sell into the morning peak, recharge in the cheapest sunny hours while soaking up clipped solar, sell into the
+  evening peak) and earns about 6,000 to 26,000 EUR, depending on the version.
+tiers:
+  easy: >-
+    The core plan: the per-direction efficiency, the warranty range, the end-of-week level, the reduced export limit
+    and the clock change. The site may draw grid power at any hour, there is no evening reserve and no degradation
+    cost.
+  medium: >-
+    Adds the client's operating rules: grid power only in the off-peak hours, the evening emergency reserve, and a
+    degradation cost of 5, 15 or 25 EUR per MWh.
+  hard: >-
+    Adds three dated notices (the export limit goes back to 30 MW from a given day, the DSO's lower limit on one
+    evening, the battery offline from 08:00 to 20:00 on one day) and the trading desk's push to sell the reserve at
+    the evening peak, which only an approved exception allows.

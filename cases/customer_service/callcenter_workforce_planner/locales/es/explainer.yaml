@@ -1,0 +1,35 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Planificador de personal del centro de llamadas
+task_type: Optimización combinatoria
+deliverable_spec: |
+  roster.json = {"assignments": [{"agent": "<id del agente, p. ej. A01>", "day": "YYYY-MM-DD (2026-11-09 .. 2026-11-15)",
+                                  "shift": "<id del turno de la lista de turnos, p. ej. S0800 o P1600>",
+                                  "language": "<idioma en el que el agente atiende llamadas en este turno: ko | ja | en | zh | es>"}, ...]}
+  Una entrada por agente y por turno trabajado; los ids exactamente como en los datos; el idioma como código ASCII
+  (ko = coreano, ja = japonés, en = inglés, zh = chino, es = español).
+tiers:
+  easy: >-
+    El problema central de dotación: un solo idioma por agente y turno (uno de sus idiomas), jornada completa en turnos de 8
+    horas y media jornada en turnos de 4 horas dentro de sus topes semanales, como mucho un turno al día, las ausencias
+    aprobadas (fechas en día/mes/año; una solicitud rechazada no es ausencia) y el peso de la falta de personal, que pone
+    precio a un agente que falta frente al coste de personal. El festivo del miércoles, el pago de horas extra, los descansos
+    y el emparejamiento de las personas de nuevo ingreso quedan fuera de esta ronda, y la persona de la nota del responsable
+    de equipo vuelve el lunes, como dice la nota.
+  medium: >-
+    Easy más el descanso entre dos turnos de un agente, el festivo regional del miércoles 11 de noviembre (una parte de la
+    previsión, redondeada hacia arriba), las horas extra por encima de la semana de contrato de jornada completa (a 1,5 veces
+    la tarifa) y la costumbre de no dejar sola a una persona de nuevo ingreso en un idioma. La persona de la nota del
+    responsable de equipo vuelve el lunes.
+  hard: >-
+    Medium más un aviso de baja médica con fecha: la nota del jueves del responsable de equipo pide programar como siempre a la
+    persona que nombra, pero el parte médico que el cliente recibió el viernes por la mañana la mantiene de baja los primeros
+    días de la semana; programarla en uno de esos días incumple una regla.
+rules:
+  skill_valid: Un agente solo atiende llamadas en un idioma que figure entre sus idiomas.
+  one_shift_a_day: Ningún agente hace más de un turno en el mismo día.
+  min_rest: Al menos {{min_rest}} horas entre el final de un turno y el inicio del siguiente turno del mismo agente (por tanto, como mucho un turno al día).
+  shift_type: El personal de jornada completa solo hace turnos de 8 horas; el de media jornada, solo turnos de 4 horas.
+  max_shifts: Una persona de jornada completa trabaja como máximo {{ft_max_shifts}} turnos a la semana; una de media jornada, como máximo 3.
+  leave_respected: No se programa a nadie en un día de ausencia aprobada.
+  sick_leave: La persona de la nota del responsable de equipo no se programa ningún día hasta el {{sick_until}} incluido, el último día de su parte médico.
+  buddy_rule: Siempre que una persona de nuevo ingreso está al teléfono, hay al menos un agente que no es de nuevo ingreso en el mismo idioma y a la misma hora.

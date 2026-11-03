@@ -1,23 +1,23 @@
 - id: efficiency
   kind: ambiguous
   domain: calculation
-  text: Efficiency is modelled as 92% on charge and 92% on discharge (not the 84.6% round-trip applied once); charging P MW for a quarter adds 0.25*P*0.92 MWh and discharging P MW removes 0.25*P/0.92 MWh.
+  text: "Efficiency is modelled per direction, {{eta_charge_pct}}% on charge and {{eta_discharge_pct}}% on discharge (not the 84.6% round-trip applied once); charging P MW for a quarter adds 0.25*P*{{eta_charge}} MWh and discharging P MW removes 0.25*P/{{eta_discharge}} MWh."
 - id: soc_window
   kind: ambiguous
   domain: business rule
-  text: The warranty requires state of charge between 10% and 90% (4-36 MWh) at all times, narrower than the manufacturer's 5%-95%.
+  text: "The warranty requires state of charge between {{soc_min}}% and {{soc_max}}% ({{soc_min_mwh}}-{{soc_max_mwh}} MWh) at all times<!-- when: soc_window=10-90,15-85 -->, narrower than the manufacturer's 5%-95%<!-- /when --><!-- when: soc_window=5-95 -->, the same window as the manufacturer's<!-- /when -->."
 - id: start_end_soc
   kind: missing
   domain: business rule
-  text: The battery starts the week at 50% (20 MWh) and must finish the week at 50% or more.
+  text: "The battery starts the week at 50% (20 MWh) and must finish the week at {{end_soc}}% ({{end_soc_mwh}} MWh) or more."
 - id: export_cap
   kind: ambiguous
   domain: data semantics
-  text: The export limit is temporarily 25 MW (not the 30 MW in the agreement); solar + discharge - charge must not exceed 25 MW while discharging, and solar above 25 MW is clipped unless the battery absorbs it.
+  text: "The export limit is temporarily {{export_cap}} MW (not the 30 MW in the agreement); solar + discharge - charge must not exceed {{export_cap}} MW while discharging, and solar above {{export_cap}} MW is clipped unless the battery absorbs it."
 - id: grid_charging
   kind: missing
   domain: business rule
-  text: Charging from solar is allowed any time, but drawing from the grid is only allowed in quarters starting 00:00-05:45 local time (max 20 MW); never charge and discharge in the same quarter.
+  text: "<!-- tier: easy -->This week the site may charge from the grid at any hour (at most 20 MW)<!-- /tier --><!-- tier: medium hard -->Charging from solar is allowed any time, but drawing from the grid only in quarters starting {{import_from}}-{{import_last}} local time (max 20 MW)<!-- /tier -->; never charge and discharge in the same quarter."
 - id: quarter_settlement
   kind: ambiguous
   domain: data semantics
@@ -29,8 +29,29 @@
 - id: evening_reserve
   kind: missing
   domain: business rule
-  text: Company policy keeps at least 20% state of charge at every moment between 17:00 and 21:00 every day.
+  tiers: [medium, hard]
+  text: "Company policy keeps at least {{reserve_pct}}% ({{reserve_mwh}} MWh) state of charge at every moment between {{reserve_from}} and {{reserve_to}} every day."
+- id: degradation
+  kind: missing
+  domain: calculation
+  tiers: [medium, hard]
+  text: "Every MWh of charge plus discharge at the meter costs EUR {{degradation}} in degradation, which is subtracted from the profit."
 - id: profit_scoring
   kind: missing
   domain: scoring
-  text: The plan is scored at actual prices as site export revenue minus grid import cost minus what solar alone would earn (clipped at 25 MW), minus EUR 5 per MWh of charge plus discharge throughput.
+  text: "The plan is scored at actual prices as site export revenue minus grid import cost minus what solar alone would earn (both clipped at the export limit)<!-- tier: medium hard -->, minus the degradation cost of the charge plus discharge throughput<!-- /tier -->."
+- id: works_end
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: "The substation works end early: the {{export_cap}} MW limit holds until {{works_end}} 00:00, and from then the agreement's 30 MW applies again."
+- id: dso_limit
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: "The DSO limits site export to {{dso_mw}} MW on {{dso_day}} from 18:00 to 21:00; while discharging then, solar + discharge - charge must stay at or below {{dso_mw}} MW."
+- id: maintenance_outage
+  kind: missing
+  domain: business rule
+  tiers: [hard]
+  text: "The battery is offline for inverter maintenance on {{outage_day}} from 08:00 to 20:00: no charging or discharging in those quarters."

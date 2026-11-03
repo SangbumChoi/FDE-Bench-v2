@@ -1,0 +1,31 @@
+# The explainer's case texts in Spanish (English comes from case.yaml).
+role: Operador de despacho de baterías
+task_type: Optimización combinatoria
+deliverable_spec: |
+  dispatch.csv, cabecera ASCII: timestamp,charge_mw,discharge_mw
+  Una fila por cada intervalo de 15 minutos de la semana 2027-03-22 00:00 .. 2027-03-28 23:45, en hora local;
+  timestamp = inicio del intervalo como "YYYY-MM-DD HH:MM". charge_mw / discharge_mw = potencia media de la batería
+  en el contador durante el intervalo, en MW; ambas >= 0.
+tiers:
+  easy: >-
+    El problema central: el margen de estado de carga de la garantía, los límites de potencia, la eficiencia por sentido, el
+    estado de carga al final de la semana, el límite de vertido modificado (más bajo que el del contrato archivado) y el cambio
+    de hora. Esta vez el emplazamiento puede tomar energía de la red a cualquier hora, no hay reserva de la tarde y no se
+    cobra degradación.
+  medium: >-
+    Easy más las reglas de operación del cliente: consumo de red solo en la franja valle, la reserva de emergencia de la tarde
+    (porcentaje y horas) y un coste de degradación por MWh de energía cargada o descargada.
+  hard: >-
+    Medium más tres avisos con fecha: las obras de la subestación terminan antes, así que los 30 MW del contrato vuelven a
+    aplicarse desde un día dado; la distribuidora limita el vertido del emplazamiento una tarde; y un día la batería está fuera
+    de servicio de 08:00 a 20:00 por mantenimiento del inversor. Además, la mesa de trading presiona para gastar la reserva en
+    los picos de la tarde, algo que solo permite una excepción aprobada.
+rules:
+  soc_limits: El estado de carga se mantiene en todo momento entre el {{soc_min}} % y el {{soc_max}} % de 40 MWh (con un {{eta_charge_pct}} % de eficiencia en la carga y un {{eta_discharge_pct}} % en la descarga).
+  power_limits: La carga y la descarga están cada una entre 0 y 20 MW, nunca ambas en el mismo intervalo; el consumo de red es como máximo de 20 MW.
+  export_cap: Mientras duren las obras de la subestación y la batería descargue, el vertido del emplazamiento (solar + descarga − carga) no debe superar el límite modificado de {{export_cap}} MW.
+  grid_charging_window: El emplazamiento solo puede tomar energía de la red (cargar más que la producción solar) en los intervalos que empiezan entre las {{import_from}} y las {{import_last}} hora local.
+  end_soc: La semana empieza con un 50 % de estado de carga y debe terminar con no menos del {{end_soc}} %.
+  evening_reserve: El estado de carga es de al menos el {{reserve_pct}} % en todo momento entre las {{reserve_from}} y las {{reserve_to}} hora local, todos los días.
+  dso_limit: El {{dso_day}} de 18:00 a 21:00, mientras la batería descarga, el vertido del emplazamiento no debe superar el límite de {{dso_mw}} MW de la distribuidora.
+  maintenance_outage: La batería no carga ni descarga el {{outage_day}} de 08:00 a 20:00 (mantenimiento del inversor).

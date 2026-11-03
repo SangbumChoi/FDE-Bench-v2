@@ -1,0 +1,797 @@
+﻿candidate_id,job_family,start_month,end_month
+C001,IT support,2023-01,2023-10
+C001,information security,2023-11,2026-05
+C001,information security,2026-06,present
+C002,finance,2020-03,2021-10
+C002,software engineering,2021-11,2021-11
+C002,software engineering,2021-12,2023-07
+C002,software engineering,2023-08,2026-08
+C003,software engineering,2025-02,2026-03
+C003,software engineering,2026-04,present
+C004,finance,2011-03,2013-12
+C004,finance,2014-01,2018-01
+C004,finance,2018-02,2019-10
+C004,finance,2019-11,2024-04
+C004,IT support,2024-05,2026-09
+C005,data analytics,2020-04,2024-08
+C005,project management,2024-09,2025-01
+C005,data analytics,2025-02,present
+C006,software engineering,2021-02,2023-07
+C006,software engineering,2023-08,2025-01
+C006,software engineering,2025-02,2026-09
+C007,project management,2023-10,2026-04
+C007,information security,2026-05,present
+C008,data analytics,2014-06,2016-01
+C008,data analytics,2016-02,2017-10
+C008,IT support,2017-11,2019-03
+C008,data analytics,2019-04,2023-04
+C008,data analytics,2023-05,2026-07
+C009,finance,2023-12,2026-03
+C010,information security,2019-01,2019-08
+C010,information security,2019-09,2020-04
+C010,information security,2020-05,2025-10
+C010,information security,2025-11,2026-08
+C011,information security,2012-02,2013-12
+C011,data analytics,2014-01,2025-05
+C011,information security,2025-06,2026-05
+C012,data analytics,2014-08,2015-01
+C012,information security,2015-02,2015-07
+C012,information security,2015-08,2016-02
+C012,information security,2016-03,2022-07
+C012,information security,2022-08,present
+C013,sales,2014-12,2015-02
+C013,data analytics,2015-03,2018-02
+C013,sales,2018-03,2024-07
+C013,sales,2024-08,2026-03
+C013,sales,2026-04,present
+C014,data analytics,2015-01,2020-04
+C014,data analytics,2020-05,2025-12
+C014,software engineering,2026-01,present
+C015,software engineering,2024-07,2026-04
+C016,data analytics,2021-08,2022-04
+C016,data analytics,2022-05,2024-06
+C016,data analytics,2024-07,present
+C017,project management,2024-10,2026-03
+C018,software engineering,2022-11,2023-01
+C018,software engineering,2023-02,2026-09
+C019,IT support,2019-07,2020-08
+C019,software engineering,2020-09,2021-11
+C019,finance,2021-12,2024-03
+C019,software engineering,2024-04,2026-07
+C020,data analytics,2025-01,present
+C021,data analytics,2024-07,present
+C022,data analytics,2012-07,2013-06
+C022,data analytics,2013-07,2016-01
+C022,information security,2016-02,2022-12
+C022,data analytics,2023-01,present
+C023,data analytics,2024-05,2026-02
+C024,data analytics,2021-07,2022-04
+C024,sales,2022-05,present
+C025,IT support,2025-02,present
+C026,project management,2019-01,2020-04
+C026,data analytics,2020-05,2025-04
+C026,data analytics,2025-05,present
+C027,information security,2023-03,2024-06
+C027,information security,2024-07,2026-03
+C028,data analytics,2022-04,2022-07
+C028,finance,2022-08,2026-07
+C029,information security,2019-11,2021-07
+C029,information security,2021-08,2022-01
+C029,information security,2022-02,2026-03
+C029,information security,2026-04,2026-05
+C030,information security,2023-03,2025-04
+C030,information security,2025-05,present
+C031,finance,2016-05,2017-09
+C031,finance,2017-10,2020-07
+C031,software engineering,2020-08,2023-12
+C031,finance,2024-01,2025-03
+C031,finance,2025-04,2026-05
+C032,information security,2024-01,2026-02
+C032,information security,2026-03,present
+C033,project management,2025-08,present
+C034,sales,2023-02,2026-02
+C034,sales,2026-03,2026-06
+C035,project management,2020-02,2020-09
+C035,IT support,2020-10,2022-07
+C035,project management,2022-08,2024-03
+C035,IT support,2024-04,2026-09
+C036,data analytics,2015-07,2016-12
+C036,information security,2017-01,2019-12
+C036,data analytics,2020-01,2022-09
+C036,information security,2022-10,2023-03
+C036,data analytics,2023-04,2026-09
+C037,software engineering,2018-07,2019-02
+C037,software engineering,2019-03,2020-12
+C037,software engineering,2021-01,2022-12
+C037,software engineering,2023-01,2023-08
+C037,sales,2023-09,present
+C038,information security,2018-08,2022-02
+C038,information security,2022-03,2023-10
+C038,information security,2023-11,present
+C039,project management,2024-12,2024-12
+C039,data analytics,2025-01,present
+C040,data analytics,2022-05,2022-07
+C040,data analytics,2022-08,present
+C041,data analytics,2011-10,2015-02
+C041,data analytics,2015-03,2018-02
+C041,information security,2018-03,2020-11
+C041,information security,2020-12,2022-09
+C041,information security,2022-10,present
+C042,data analytics,2011-01,2019-01
+C042,project management,2019-02,2019-08
+C042,project management,2019-09,2023-07
+C042,data analytics,2023-08,2026-04
+C042,data analytics,2026-05,present
+C043,finance,2025-10,present
+C044,software engineering,2022-12,2023-10
+C044,information security,2023-11,present
+C045,data analytics,2015-02,2015-07
+C045,data analytics,2015-08,2015-11
+C045,data analytics,2015-12,2019-03
+C045,data analytics,2019-04,2026-02
+C045,data analytics,2026-03,present
+C046,information security,2022-03,2023-08
+C046,information security,2023-09,2024-12
+C046,information security,2025-01,present
+C047,information security,2011-06,2014-02
+C047,information security,2014-03,2016-01
+C047,IT support,2016-02,2021-07
+C047,information security,2021-08,2025-10
+C047,IT support,2025-11,2026-09
+C048,data analytics,2010-05,2012-01
+C048,software engineering,2012-02,2015-12
+C048,software engineering,2016-01,2019-04
+C048,software engineering,2019-05,2022-07
+C048,software engineering,2022-08,2026-05
+C049,data analytics,2020-09,2025-01
+C049,data analytics,2025-02,2025-11
+C049,software engineering,2025-12,2026-09
+C049,data analytics,2026-10,present
+C050,IT support,2022-10,2025-06
+C050,IT support,2025-07,present
+C051,information security,2012-05,2014-10
+C051,data analytics,2014-11,2017-01
+C051,information security,2017-02,2024-02
+C051,information security,2024-03,present
+C052,IT support,2017-03,2019-10
+C052,IT support,2019-11,2020-07
+C052,IT support,2020-08,2022-09
+C052,IT support,2022-10,2024-04
+C052,IT support,2024-05,2026-06
+C053,software engineering,2010-09,2011-11
+C053,information security,2011-12,2014-03
+C053,information security,2014-04,2021-12
+C053,information security,2022-01,2025-06
+C053,information security,2025-07,present
+C054,information security,2020-09,2024-07
+C054,information security,2024-08,2025-04
+C054,data analytics,2025-05,present
+C055,information security,2011-07,2015-12
+C055,software engineering,2016-01,2024-11
+C055,information security,2024-12,2026-06
+C056,information security,2017-07,2021-03
+C056,software engineering,2021-04,2025-03
+C056,information security,2025-04,2025-08
+C056,information security,2025-09,present
+C057,project management,2023-06,2024-02
+C057,project management,2024-03,present
+C058,data analytics,2013-03,2020-05
+C058,information security,2020-06,2025-01
+C058,data analytics,2025-02,2026-06
+C059,software engineering,2025-10,present
+C060,software engineering,2024-07,present
+C061,IT support,2024-06,present
+C062,information security,2014-01,2015-03
+C062,software engineering,2015-04,2017-07
+C062,software engineering,2017-08,2022-03
+C062,software engineering,2022-04,2026-09
+C062,software engineering,2026-10,present
+C063,information security,2016-06,2018-01
+C063,software engineering,2018-02,2025-05
+C063,information security,2025-06,2026-02
+C063,software engineering,2026-03,present
+C064,IT support,2015-11,2015-12
+C064,software engineering,2016-01,2020-02
+C064,finance,2020-03,2022-07
+C064,software engineering,2022-08,2025-10
+C064,software engineering,2025-11,2026-09
+C065,finance,2016-12,2020-07
+C065,information security,2020-08,2022-03
+C065,software engineering,2022-04,2024-03
+C065,information security,2024-04,2025-07
+C065,sales,2025-08,present
+C066,sales,2019-09,2020-04
+C066,sales,2020-05,2023-10
+C066,sales,2023-11,2025-09
+C066,sales,2025-10,present
+C067,software engineering,2022-09,2022-10
+C067,software engineering,2022-11,present
+C068,software engineering,2011-11,2017-04
+C068,software engineering,2017-05,2018-05
+C068,software engineering,2018-06,2019-01
+C068,data analytics,2019-02,2021-08
+C068,software engineering,2021-09,present
+C069,data analytics,2018-01,2021-11
+C069,data analytics,2021-12,2023-04
+C069,sales,2023-05,present
+C070,software engineering,2021-05,2022-09
+C070,software engineering,2022-10,2023-02
+C070,software engineering,2023-03,2024-08
+C070,software engineering,2024-09,2026-05
+C071,finance,2025-04,present
+C072,information security,2014-05,2015-07
+C072,data analytics,2015-08,2026-09
+C072,information security,2026-10,present
+C073,software engineering,2017-05,2020-08
+C073,software engineering,2020-09,2025-12
+C073,data analytics,2026-01,present
+C074,information security,2023-11,2025-08
+C074,software engineering,2025-09,2026-08
+C075,information security,2017-08,2017-09
+C075,information security,2017-10,2018-09
+C075,information security,2018-10,2020-08
+C075,information security,2020-09,2022-10
+C075,information security,2022-11,2026-08
+C076,software engineering,2024-10,2026-08
+C077,information security,2021-11,2024-06
+C077,information security,2024-07,2025-08
+C077,software engineering,2025-09,present
+C078,information security,2023-02,2024-09
+C078,information security,2024-10,present
+C079,information security,2012-12,2017-03
+C079,software engineering,2017-04,2025-05
+C079,software engineering,2025-06,2026-08
+C080,software engineering,2015-08,2016-03
+C080,software engineering,2016-04,2016-06
+C080,software engineering,2016-07,2024-08
+C080,software engineering,2024-09,2026-08
+C080,software engineering,2026-09,present
+C081,IT support,2023-06,2024-09
+C081,project management,2024-10,2026-03
+C082,project management,2025-07,present
+C083,information security,2018-03,2020-04
+C083,information security,2020-05,2026-03
+C083,software engineering,2026-04,2026-06
+C084,IT support,2021-06,2022-03
+C084,information security,2022-04,present
+C085,software engineering,2020-01,2022-03
+C085,data analytics,2022-04,2024-09
+C085,data analytics,2024-10,present
+C086,information security,2016-10,2019-11
+C086,information security,2019-12,2023-07
+C086,IT support,2023-08,2023-10
+C086,information security,2023-11,2025-11
+C086,information security,2025-12,2026-04
+C087,software engineering,2023-02,2024-05
+C087,software engineering,2024-06,present
+C088,information security,2023-01,2023-12
+C088,information security,2024-01,2026-03
+C089,IT support,2019-09,2020-08
+C089,sales,2020-09,2023-06
+C089,finance,2023-07,2026-08
+C090,data analytics,2016-07,2021-04
+C090,data analytics,2021-05,2022-12
+C090,data analytics,2023-01,2025-03
+C090,IT support,2025-04,present
+C091,software engineering,2024-03,2026-07
+C091,sales,2026-08,present
+C092,data analytics,2011-04,2012-08
+C092,data analytics,2012-09,2016-03
+C092,software engineering,2016-04,2023-12
+C092,data analytics,2024-01,2025-09
+C092,data analytics,2025-10,present
+C093,information security,2024-09,2025-06
+C093,information security,2025-07,present
+C094,software engineering,2022-05,2025-07
+C094,finance,2025-08,2026-07
+C095,IT support,2020-10,2021-11
+C095,IT support,2021-12,2023-09
+C095,IT support,2023-10,2024-09
+C095,IT support,2024-10,present
+C096,information security,2025-04,2026-06
+C097,data analytics,2022-03,2024-06
+C097,data analytics,2024-07,present
+C098,data analytics,2016-08,2017-08
+C098,data analytics,2017-09,2020-09
+C098,data analytics,2020-10,2022-03
+C098,data analytics,2022-04,2026-01
+C098,data analytics,2026-02,present
+C099,data analytics,2017-11,2024-05
+C099,information security,2024-06,2024-07
+C099,information security,2024-08,2025-02
+C099,data analytics,2025-03,2026-02
+C099,information security,2026-03,present
+C100,information security,2025-05,present
+C101,information security,2020-12,2021-09
+C101,information security,2021-10,2023-07
+C101,information security,2023-08,2023-11
+C101,information security,2023-12,2026-08
+C102,IT support,2017-09,2022-11
+C102,IT support,2022-12,2024-02
+C102,IT support,2024-03,2024-07
+C102,IT support,2024-08,present
+C103,information security,2019-07,2020-02
+C103,information security,2020-03,2024-07
+C103,information security,2024-08,2026-07
+C104,software engineering,2018-01,2021-09
+C104,finance,2021-10,2022-03
+C104,software engineering,2022-04,2024-06
+C104,software engineering,2024-07,present
+C105,finance,2012-03,2015-01
+C105,finance,2015-02,2015-12
+C105,data analytics,2016-01,2022-11
+C105,finance,2022-12,2024-10
+C105,finance,2024-11,present
+C106,information security,2010-03,2010-12
+C106,information security,2011-01,2011-06
+C106,information security,2011-07,2023-11
+C106,information security,2023-12,2024-08
+C106,information security,2024-09,present
+C107,information security,2020-12,2021-05
+C107,information security,2021-06,present
+C108,data analytics,2023-04,2025-10
+C108,data analytics,2025-11,2026-06
+C109,data analytics,2018-10,2023-09
+C109,data analytics,2023-10,2025-01
+C109,data analytics,2025-02,2025-04
+C109,data analytics,2025-05,2025-09
+C109,data analytics,2025-10,present
+C110,information security,2025-04,2026-04
+C111,software engineering,2021-10,2023-08
+C111,software engineering,2023-09,2023-09
+C111,software engineering,2023-10,present
+C112,data analytics,2016-04,2016-04
+C112,software engineering,2016-05,2021-11
+C112,data analytics,2021-12,2026-05
+C113,information security,2019-11,2020-03
+C113,information security,2020-04,2021-07
+C113,information security,2021-08,present
+C114,software engineering,2017-04,2022-07
+C114,information security,2022-08,2025-09
+C114,software engineering,2025-10,present
+C115,data analytics,2024-05,2025-05
+C115,data analytics,2025-06,present
+C116,sales,2016-08,2021-02
+C116,IT support,2021-03,2021-09
+C116,sales,2021-10,2024-06
+C116,IT support,2024-07,present
+C117,data analytics,2020-01,2020-12
+C117,data analytics,2021-01,2021-04
+C117,sales,2021-05,2024-11
+C117,finance,2024-12,2026-04
+C118,data analytics,2016-08,2019-08
+C118,data analytics,2019-09,2020-05
+C118,information security,2020-06,present
+C119,software engineering,2013-06,2018-12
+C119,data analytics,2019-01,2024-07
+C119,software engineering,2024-08,present
+C120,information security,2023-10,2023-10
+C120,finance,2023-11,present
+C121,data analytics,2023-10,2026-01
+C121,data analytics,2026-02,present
+C122,software engineering,2015-11,2016-05
+C122,software engineering,2016-06,2017-04
+C122,finance,2017-05,2020-04
+C122,software engineering,2020-05,2026-03
+C122,software engineering,2026-04,2026-04
+C123,information security,2022-07,2022-10
+C123,information security,2022-11,2026-09
+C124,data analytics,2024-06,present
+C125,data analytics,2017-07,2020-12
+C125,information security,2021-01,2021-12
+C125,data analytics,2022-01,2024-01
+C125,information security,2024-02,2024-10
+C125,information security,2024-11,2026-08
+C126,information security,2015-05,2023-03
+C126,data analytics,2023-04,2023-05
+C126,data analytics,2023-06,2024-09
+C126,information security,2024-10,2025-08
+C126,information security,2025-09,present
+C127,data analytics,2017-01,2019-10
+C127,data analytics,2019-11,2020-02
+C127,data analytics,2020-03,2023-05
+C127,data analytics,2023-06,2024-07
+C127,data analytics,2024-08,present
+C128,IT support,2024-06,2024-06
+C128,IT support,2024-07,present
+C129,information security,2021-10,2022-10
+C129,software engineering,2022-11,2022-12
+C129,software engineering,2023-01,2026-02
+C129,software engineering,2026-03,present
+C130,software engineering,2024-12,2026-07
+C131,data analytics,2013-05,2014-10
+C131,data analytics,2014-11,2016-04
+C131,project management,2016-05,2016-06
+C131,data analytics,2016-07,2024-11
+C131,finance,2024-12,present
+C132,project management,2012-04,2015-10
+C132,data analytics,2015-11,2018-06
+C132,data analytics,2018-07,2018-11
+C132,data analytics,2018-12,2021-11
+C132,data analytics,2021-12,present
+C133,data analytics,2016-05,2022-05
+C133,data analytics,2022-06,2024-06
+C133,data analytics,2024-07,2026-05
+C133,data analytics,2026-06,2026-06
+C133,data analytics,2026-07,present
+C134,information security,2018-05,2022-06
+C134,information security,2022-07,2026-05
+C134,information security,2026-06,present
+C135,sales,2010-05,2012-11
+C135,software engineering,2012-12,2021-10
+C135,software engineering,2021-11,2023-05
+C135,software engineering,2023-06,2023-08
+C135,project management,2023-09,2026-04
+C136,data analytics,2023-02,2025-12
+C136,data analytics,2026-01,2026-04
+C137,sales,2021-08,2024-12
+C137,sales,2025-01,present
+C138,information security,2025-02,2026-02
+C139,sales,2010-06,2012-08
+C139,data analytics,2012-09,2014-03
+C139,data analytics,2014-04,2022-02
+C139,data analytics,2022-03,2022-12
+C139,data analytics,2023-01,2026-02
+C140,sales,2011-12,2017-04
+C140,data analytics,2017-05,2017-09
+C140,data analytics,2017-10,2019-02
+C140,data analytics,2019-03,2021-01
+C140,data analytics,2021-02,2026-02
+C141,project management,2012-09,2014-05
+C141,project management,2014-06,2015-02
+C141,project management,2015-03,2021-01
+C141,project management,2021-02,2024-02
+C141,project management,2024-03,present
+C142,information security,2023-04,2023-12
+C142,information security,2024-01,2024-12
+C142,information security,2025-01,present
+C143,software engineering,2021-04,2021-07
+C143,software engineering,2021-08,2023-12
+C143,software engineering,2024-01,present
+C144,finance,2018-07,2019-07
+C144,software engineering,2019-08,2019-12
+C144,software engineering,2020-01,2021-04
+C144,software engineering,2021-05,2025-02
+C144,finance,2025-03,present
+C145,data analytics,2014-08,2018-05
+C145,data analytics,2018-06,2023-08
+C145,data analytics,2023-09,2024-06
+C145,data analytics,2024-07,present
+C146,project management,2021-02,2021-04
+C146,information security,2021-05,2022-12
+C146,information security,2023-01,2026-04
+C146,information security,2026-05,present
+C147,information security,2022-03,2023-11
+C147,information security,2023-12,2026-09
+C148,information security,2023-04,2025-05
+C148,information security,2025-06,2026-08
+C149,software engineering,2016-10,2020-03
+C149,software engineering,2020-04,2024-08
+C149,software engineering,2024-09,2025-10
+C149,software engineering,2025-11,2026-03
+C150,data analytics,2016-04,2023-05
+C150,IT support,2023-06,2025-02
+C150,data analytics,2025-03,2025-05
+C150,data analytics,2025-06,2025-12
+C150,data analytics,2026-01,present
+C151,software engineering,2016-11,2017-11
+C151,information security,2017-12,2018-12
+C151,data analytics,2019-01,2019-12
+C151,data analytics,2020-01,2023-03
+C151,data analytics,2023-04,2026-08
+C152,data analytics,2024-09,2024-12
+C152,data analytics,2025-01,present
+C153,sales,2020-02,2021-06
+C153,software engineering,2021-07,2022-03
+C153,software engineering,2022-04,2024-01
+C153,software engineering,2024-02,present
+C154,software engineering,2020-05,2021-08
+C154,software engineering,2021-09,2024-11
+C154,software engineering,2024-12,present
+C155,information security,2016-08,2017-03
+C155,software engineering,2017-04,2020-11
+C155,software engineering,2020-12,2026-02
+C156,information security,2015-10,2018-08
+C156,data analytics,2018-09,2019-02
+C156,information security,2019-03,2023-11
+C156,information security,2023-12,2026-04
+C156,information security,2026-05,2026-08
+C157,information security,2016-07,2018-05
+C157,data analytics,2018-06,2018-07
+C157,information security,2018-08,present
+C158,information security,2017-09,2019-12
+C158,information security,2020-01,2022-03
+C158,software engineering,2022-04,2026-04
+C159,information security,2014-07,2017-07
+C159,project management,2017-08,2020-03
+C159,project management,2020-04,2021-09
+C159,project management,2021-10,2021-10
+C159,project management,2021-11,2026-04
+C160,finance,2022-11,2026-01
+C160,data analytics,2026-02,present
+C161,finance,2023-04,2026-08
+C161,software engineering,2026-09,present
+C162,information security,2016-01,2016-05
+C162,data analytics,2016-06,2020-02
+C162,information security,2020-03,2022-03
+C162,data analytics,2022-04,2022-04
+C162,information security,2022-05,present
+C163,data analytics,2018-04,2020-06
+C163,data analytics,2020-07,2025-06
+C163,data analytics,2025-07,present
+C164,data analytics,2024-07,2024-11
+C164,data analytics,2024-12,present
+C165,data analytics,2024-04,2024-10
+C165,project management,2024-11,present
+C166,software engineering,2011-07,2020-03
+C166,software engineering,2020-04,2020-12
+C166,software engineering,2021-01,2024-01
+C166,software engineering,2024-02,2024-10
+C166,software engineering,2024-11,2026-06
+C167,software engineering,2015-06,2018-06
+C167,software engineering,2018-07,2023-02
+C167,information security,2023-03,2024-07
+C167,information security,2024-08,2025-05
+C167,software engineering,2025-06,2026-04
+C168,data analytics,2018-03,2018-04
+C168,data analytics,2018-05,2022-03
+C168,information security,2022-04,2022-04
+C168,data analytics,2022-05,2026-02
+C169,finance,2019-01,2020-01
+C169,finance,2020-02,2024-10
+C169,finance,2024-11,2026-04
+C170,software engineering,2013-06,2013-10
+C170,software engineering,2013-11,2015-02
+C170,software engineering,2015-03,2016-06
+C170,software engineering,2016-07,2026-02
+C170,software engineering,2026-03,present
+C171,information security,2016-09,2019-07
+C171,information security,2019-08,2022-01
+C171,information security,2022-02,2022-08
+C171,sales,2022-09,2023-11
+C171,information security,2023-12,present
+C172,software engineering,2023-06,2024-08
+C172,IT support,2024-09,present
+C173,data analytics,2018-01,2020-11
+C173,data analytics,2020-12,2024-11
+C173,data analytics,2024-12,present
+C174,information security,2016-09,2020-04
+C174,software engineering,2020-05,2025-05
+C174,information security,2025-06,2026-05
+C175,software engineering,2012-02,2016-10
+C175,software engineering,2016-11,2019-02
+C175,software engineering,2019-03,2020-04
+C175,software engineering,2020-05,2021-05
+C175,information security,2021-06,2026-07
+C176,data analytics,2023-06,2024-07
+C176,data analytics,2024-08,present
+C177,IT support,2022-07,2022-10
+C177,software engineering,2022-11,2022-11
+C177,software engineering,2022-12,present
+C178,data analytics,2016-08,2018-05
+C178,data analytics,2018-06,2019-09
+C178,finance,2019-10,2022-11
+C178,data analytics,2022-12,2026-08
+C179,software engineering,2023-07,2025-01
+C179,software engineering,2025-02,2026-09
+C180,IT support,2023-06,2025-07
+C180,IT support,2025-08,2026-09
+C181,project management,2022-03,2026-09
+C181,software engineering,2026-10,present
+C182,software engineering,2010-09,2013-06
+C182,software engineering,2013-07,2018-07
+C182,software engineering,2018-08,2022-01
+C182,software engineering,2022-02,2024-07
+C182,software engineering,2024-08,present
+C183,information security,2017-09,2017-10
+C183,data analytics,2017-11,2023-07
+C183,information security,2023-08,present
+C184,data analytics,2023-03,2026-03
+C184,data analytics,2026-04,present
+C185,information security,2020-08,2022-05
+C185,information security,2022-06,2025-10
+C185,information security,2025-11,2026-06
+C186,software engineering,2023-03,2023-12
+C186,software engineering,2024-01,2026-06
+C187,software engineering,2025-09,present
+C188,software engineering,2021-07,2023-04
+C188,software engineering,2023-05,2026-02
+C188,software engineering,2026-03,present
+C189,information security,2019-11,2022-10
+C189,sales,2022-11,2026-08
+C189,data analytics,2026-09,present
+C190,software engineering,2025-11,present
+C191,software engineering,2017-12,2020-10
+C191,software engineering,2020-11,2023-11
+C191,software engineering,2023-12,present
+C192,data analytics,2025-06,present
+C193,information security,2022-02,2025-02
+C193,information security,2025-03,2026-02
+C193,project management,2026-03,present
+C194,information security,2023-03,2025-01
+C194,information security,2025-02,present
+C195,finance,2019-01,2020-07
+C195,project management,2020-08,2022-04
+C195,finance,2022-05,2023-11
+C195,finance,2023-12,2026-03
+C196,data analytics,2016-12,2019-10
+C196,information security,2019-11,2020-11
+C196,data analytics,2020-12,2021-02
+C196,data analytics,2021-03,2024-01
+C196,data analytics,2024-02,present
+C197,information security,2014-05,2014-12
+C197,software engineering,2015-01,2022-09
+C197,information security,2022-10,2024-03
+C197,software engineering,2024-04,present
+C198,data analytics,2022-05,2026-01
+C198,data analytics,2026-02,2026-03
+C198,data analytics,2026-04,present
+C199,finance,2024-12,present
+C200,data analytics,2015-08,2017-09
+C200,information security,2017-10,2018-01
+C200,IT support,2018-02,2020-01
+C200,sales,2020-02,2025-02
+C200,data analytics,2025-03,present
+C201,data analytics,2015-11,2018-03
+C201,data analytics,2018-04,2019-10
+C201,data analytics,2019-11,2023-06
+C201,data analytics,2023-07,2025-04
+C201,data analytics,2025-05,present
+C202,software engineering,2024-09,2025-10
+C202,software engineering,2025-11,2026-08
+C203,sales,2022-09,2026-04
+C203,sales,2026-05,present
+C204,software engineering,2021-03,2021-07
+C204,data analytics,2021-08,2024-08
+C204,data analytics,2024-09,2026-09
+C205,project management,2014-04,2017-12
+C205,project management,2018-01,2020-09
+C205,project management,2020-10,2021-05
+C205,project management,2021-06,2024-12
+C205,project management,2025-01,present
+C206,IT support,2020-12,2025-05
+C206,IT support,2025-06,present
+C207,sales,2024-09,present
+C208,software engineering,2013-05,2019-03
+C208,software engineering,2019-04,2023-12
+C208,software engineering,2024-01,2025-05
+C208,software engineering,2025-06,2026-01
+C208,software engineering,2026-02,2026-07
+C209,data analytics,2024-05,2025-03
+C209,IT support,2025-04,present
+C210,data analytics,2021-06,2026-02
+C210,software engineering,2026-03,present
+C211,information security,2024-07,2025-06
+C211,information security,2025-07,present
+C212,information security,2018-12,2023-09
+C212,information security,2023-10,2023-10
+C212,finance,2023-11,2026-06
+C212,information security,2026-07,present
+C213,software engineering,2021-05,2021-05
+C213,software engineering,2021-06,2022-07
+C213,software engineering,2022-08,present
+C214,data analytics,2024-02,2025-10
+C214,data analytics,2025-11,present
+C215,software engineering,2015-05,2021-08
+C215,data analytics,2021-09,2024-08
+C215,software engineering,2024-09,2026-02
+C216,project management,2021-05,2024-03
+C216,project management,2024-04,2026-06
+C216,project management,2026-07,present
+C217,software engineering,2016-10,2020-10
+C217,software engineering,2020-11,2023-04
+C217,software engineering,2023-05,2025-10
+C217,software engineering,2025-11,present
+C218,finance,2013-03,2013-09
+C218,finance,2013-10,2016-03
+C218,finance,2016-04,2024-08
+C218,finance,2024-09,2025-06
+C218,finance,2025-07,present
+C219,software engineering,2016-12,2018-05
+C219,sales,2018-06,2018-12
+C219,software engineering,2019-01,2025-12
+C219,finance,2026-01,2026-09
+C220,data analytics,2022-03,2022-04
+C220,software engineering,2022-05,2024-08
+C220,IT support,2024-09,present
+C221,data analytics,2022-10,2023-01
+C221,data analytics,2023-02,2026-06
+C221,data analytics,2026-07,present
+C222,data analytics,2012-10,2015-07
+C222,data analytics,2015-08,2019-05
+C222,data analytics,2019-06,2021-11
+C222,data analytics,2021-12,2022-08
+C222,data analytics,2022-09,2026-07
+C223,software engineering,2025-03,present
+C224,information security,2014-03,2017-05
+C224,information security,2017-06,2023-11
+C224,information security,2023-12,2026-07
+C225,information security,2013-12,2024-03
+C225,data analytics,2024-04,2024-12
+C225,data analytics,2025-01,present
+C226,information security,2019-02,2021-03
+C226,information security,2021-04,2025-07
+C226,information security,2025-08,2026-04
+C227,finance,2012-05,2018-02
+C227,finance,2018-03,2019-03
+C227,data analytics,2019-04,2019-10
+C227,sales,2019-11,2022-01
+C227,finance,2022-02,2026-04
+C228,software engineering,2020-03,2022-08
+C228,data analytics,2022-09,2024-02
+C228,software engineering,2024-03,2026-02
+C229,information security,2021-06,2021-06
+C229,information security,2021-07,2023-08
+C229,information security,2023-09,present
+C230,information security,2022-11,2024-01
+C230,data analytics,2024-02,present
+C231,software engineering,2018-02,2024-03
+C231,software engineering,2024-04,2026-04
+C231,software engineering,2026-05,2026-06
+C232,software engineering,2022-04,2026-08
+C232,software engineering,2026-09,present
+C233,finance,2017-12,2018-09
+C233,finance,2018-10,2023-08
+C233,finance,2023-09,2024-12
+C233,finance,2025-01,2025-09
+C233,finance,2025-10,present
+C234,information security,2020-09,2021-08
+C234,finance,2021-09,2022-11
+C234,information security,2022-12,present
+C235,information security,2010-06,2014-02
+C235,information security,2014-03,2016-06
+C235,sales,2016-07,2018-10
+C235,information security,2018-11,2020-11
+C235,information security,2020-12,2026-04
+C236,information security,2012-07,2012-07
+C236,software engineering,2012-08,2020-01
+C236,software engineering,2020-02,2022-10
+C236,software engineering,2022-11,2025-10
+C236,software engineering,2025-11,2026-09
+C237,software engineering,2019-01,2022-09
+C237,software engineering,2022-10,2023-01
+C237,data analytics,2023-02,2026-06
+C238,IT support,2019-03,2023-08
+C238,software engineering,2023-09,2026-01
+C238,software engineering,2026-02,present
+C239,software engineering,2020-01,2020-03
+C239,software engineering,2020-04,2021-07
+C239,software engineering,2021-08,present
+C240,finance,2020-08,2021-09
+C240,information security,2021-10,2023-02
+C240,finance,2023-03,present
+C241,data analytics,2021-12,2025-06
+C241,data analytics,2025-07,present
+C242,software engineering,2022-08,2024-11
+C242,IT support,2024-12,present
+C243,information security,2022-06,2023-03
+C243,sales,2023-04,2023-11
+C243,information security,2023-12,2026-05
+C244,data analytics,2020-03,2023-05
+C244,sales,2023-06,2026-07
+C245,data analytics,2014-05,2022-03
+C245,data analytics,2022-04,2026-09
+C245,data analytics,2026-10,present
+C246,data analytics,2011-02,2016-02
+C246,data analytics,2016-03,2018-10
+C246,software engineering,2018-11,2019-05
+C246,data analytics,2019-06,2020-01
+C246,data analytics,2020-02,present
+C247,data analytics,2013-02,2017-01
+C247,data analytics,2017-02,2017-02
+C247,data analytics,2017-03,2017-11
+C247,information security,2017-12,2022-01
+C247,data analytics,2022-02,present
+C248,data analytics,2017-12,2022-01
+C248,data analytics,2022-02,2023-07
+C248,data analytics,2023-08,2025-10
+C248,data analytics,2025-11,2026-03
+C248,data analytics,2026-04,present
+C249,software engineering,2020-12,2021-03
+C249,software engineering,2021-04,2024-04
+C249,software engineering,2024-05,2026-05
+C250,software engineering,2017-02,2017-04
+C250,software engineering,2017-05,2021-03
+C250,software engineering,2021-04,2022-09
+C250,software engineering,2022-10,2025-10
+C250,software engineering,2025-11,2026-07

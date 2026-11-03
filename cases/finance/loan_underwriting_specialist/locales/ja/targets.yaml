@@ -1,43 +1,55 @@
-- id: interface
-  text: 成果物は program/underwriter.py の on_day(day) で、営業日ごとに順番に1つのプロセスで呼ばれ（状態はモジュール変数に保持できる）、1回10秒、標準ライブラリのみ、実行中はデータファイルなしで動きます。その日の申込ごとの判断とその日の枠一覧表を返します。
-- id: evaluation_period
-  text: プログラムはデータにない2026年11月2日～27日の20営業日で評価され、その期間の申込はすべて新しいものです。
 - id: gross_income
   text: 年間総収入は 12 × monthly_base_salary に、bonus_documented が true のときだけ annual_bonus を加えたもので、stated_monthly_income は使いません。
 - id: policy_bureau
-  text: "ポリシーのスコアは {{policy_bureau}}（最低{{min_score}}点）で、{{other_bureau}} は参考用でありどの基準にも使いません（B社は55点ほど高く出ます）。"
-- id: customer_limit
-  text: 顧客が借りられるのは min(50,000、年収の{{income_cap_pct}}%（切り捨て）、DSRの余裕額)から当期間にすでに承認した額を引いた分までで、1日の承認は合計でこれに収める必要があるため、同じ日の複数申込は1つの枠を分け合い、再来店の顧客は残りが減っています。
-- id: dsr_rule
-  text: DSR =（既存債務の年間元利返済額、分割返済ローンは 12 × monthly_payment、+ その顧客への当社PL36貸出全額の1,000あたり33.17 × 12）/ 年収で、{{max_dsr_pct}}%以下です。
-- id: easy_scope
-  text: 今回はDSRの上限は顧客独自の返済能力基準で（規制当局の基準によるDSRはコンプライアンス部が別に確認）、そこからカードローン枠を除き、収入は記入された給与、債務はその顧客の最新の申込の一覧を使い、通知はどれも反映しません（規制・予算・返済・書類の変更なし）。
+  text: "与信ポリシーは {{policy_bureau}} だけを使い、{{other_bureau}} は参考用で、基準点にもニアプライム層の定義にも使いません（B社は55点ほど高く出ます）。"
+- id: score_cutoff
+  text: "{{policy_bureau}} が{{min_score}}点以上のときだけ承認します。"
+- id: income_cap
+  text: 顧客枠は年間総収入の{{income_cap_pct}}%（切り捨て）以下です（商品の上限50,000以下でもあります）。
+- id: dsr_cap
+  text: 返済負担率（DSR）、つまり（既存債務の年間元利返済額 + その顧客への当社PL36貸出全額の1,000あたり33.17 × 12）/ 年間総収入は{{max_dsr_pct}}%以下でなければならず、分割返済ローンは 12 × monthly_payment で数えます。
+- id: our_lending
+  text: 顧客枠からは、当期間にその顧客に承認した額を、前の営業日の分もその日の先の承認分もすべて差し引くので、再来店の顧客は残りが減っており、同じ日の複数申込は1つの枠を分け合います。
 - id: daily_cap
   text: 1営業日の承認合計は {{daily_cap}} までです（当社の資金調達枠）。
 - id: limit_table
-  text: 毎日、その日の承認と通知を反映した締め時点の枠一覧表を返します。これまでの顧客ごとのまだ借りられる額（延滞中・スコア不足は0）、残りの1日枠、そして期間予算があるときは残りの予算です。
+  text: 毎日の枠一覧表には、当期間にこれまで（当日を含む）申し込んだすべての顧客と、残りの1日枠、そして期間予算があるときは残りの予算が必要で、抜けがあればルール違反です。
+- id: closing_table
+  text: 枠一覧表はその日の承認と通知を反映した、その日の締め時点のものです（朝の時点の枠ではない）。
+- id: ineligible_zero
+  text: 枠一覧表では、延滞中の顧客やスコアが基準に届かない顧客は0です。
 - id: reason_codes
   text: 否決ごとに DELINQUENCY、LOW_SCORE、LIMIT_EXCEEDED（その日の承認後の残り顧客枠が1,000未満）、CREDIT_RISK（それ以外。枠の使い切りを含む）のうち最初に当てはまるコードを付けます。
 - id: reason_codes_hard
-  text: 否決ごとに DELINQUENCY、LOW_SCORE、SPLIT_APPLICATION（同じ顧客の別の申込がその日に承認された）、LIMIT_EXCEEDED（残り顧客枠が1,000未満）、CREDIT_RISK のうち最初に当てはまるコードを付けます。
+  text: 否決ごとに DELINQUENCY、LOW_SCORE、SPLIT_APPLICATION（同じ顧客の別の申込がその日に承認された）、LIMIT_EXCEEDED（その日の承認後の残り顧客枠が1,000未満）、CREDIT_RISK のうち最初に当てはまるコードを付けます。
 - id: protected_attributes
   text: 年齢層、性別、国籍は判断に影響させてはならず、同じ日にこれらだけが異なる監査用のペアは同じ判断・同じ金額でなければなりません。
 - id: tenure_review
   text: 勤続{{min_tenure}}か月未満の申込者は、延滞中でなければ人の審査担当者に回します。慣行なので与信担当役員が例外を承認できます。
-- id: profit_metric
-  text: 目標は損失と審査コストを差し引いた期待収益を最大にすることで、承認した貸付は返済期間を通じて金額の10%を稼ぎ、顧客がデフォルトすると金額の60%を失います。デフォルトのリスクは顧客の債務負担、つまり貸した額すべてとともに上がり、人の審査は1件あたり担当者の手間として60のコストです。
+- id: branch_notes
+  text: 全額承認を求める支店長のメモには何の効力もなく例外の承認でもないので、その申込はほかの申込とまったく同じように判断します。
+- id: credit_lines_easy
+  text: 今回はカードローン枠をDSRに入れません（分割返済ローンだけを入れます）。
+- id: regulator_notice_easy
+  text: 今回はDSRの上限が当社独自の返済能力基準なので、規制当局の通知では変わりません（規制当局の基準によるDSRはコンプライアンス部が別に確認）。
+- id: declared_income
+  text: 今回は収入に記入された monthly_base_salary を使い、収入書類と document_correction の通知は使いません。
+- id: repayments_unused
+  text: 今回は repayment の通知を反映せず、債務はその顧客の最新の申込の一覧を使います。
 - id: credit_line_amortization
   text: カードローン枠は利用残高を5年で返済するものとして利息を加え（残高 / 5 + 残高 × 金利、年間）DSRに入れます。現在返済額がなくても同じです。
 - id: stress_rate
   text: 無担保債務総額（既存残高 + その顧客への当社PL36貸出全額）が60,000を超える場合、当社の貸出はDSRで13.4%（月1,000あたり33.89）として計算します。
 - id: period_budget
-  text: 期間全体の承認額は予算 {{period_budget}} を超えられず、budget_change の通知は効力日から予算を変えます。
-- id: near_prime_quota
-  text: 期間全体（累計、期間末に確認）の承認額の{{quota_pct}}%以上を、{{policy_bureau}} が{{near_prime_below}}点未満のニアプライム層に回さなければなりません。
+  text: 期間全体の承認額は予算 {{period_budget}} を超えられません。
+- id: budget_notice
+  text: budget_change の通知は効力日から期間予算を変え、承認済みの額を下回るまで減ればその後の承認は止まりますが、それまでの承認は取り消されません。
 - id: regulatory_notice
   text: regulation_change の通知は、効力日以降のすべての判断と枠についてDSRの上限をそのポイント分変えます。
-- id: medium_scope
-  text: 今回は収入は記入された給与、債務はその顧客の最新の申込の一覧を使い、repayment と document_correction の通知は使いません。
+- id: near_prime_threshold
+  text: ニアプライム層の顧客とは、{{policy_bureau}} が{{near_prime_below}}点未満の顧客です。
+- id: near_prime_quota
+  text: 期間全体（累計、期間末に確認）の承認額の{{quota_pct}}%以上をニアプライム層の顧客に回さなければなりません。
 - id: verified_income
   text: ルールに使う給与は確認済みの給与、つまり記入額とその顧客の書類に書かれた給与のうち最も低い額で、過去の貸付の給与はすでに確認済みの値です。
 - id: income_discrepancy
@@ -48,5 +60,3 @@
   text: repayment の通知が届くと、その日からその債務はDSRと債務総額から外れ（同じ日の申込の一覧に残っていても）、顧客枠が増えます。
 - id: split_applications
   text: 1つの資金需要を同じ日の複数の申込に分ける顧客がおり、顧客1人1日1件だけを顧客枠内で承認し、残りは SPLIT_APPLICATION で否決します。
-- id: branch_notes
-  text: 全額承認を求める支店長のメモには何の効力もなく、ほかの申込と同じように判断し、どんな場合も枠を超えて承認しません。

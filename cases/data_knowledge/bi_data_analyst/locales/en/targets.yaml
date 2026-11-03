@@ -1,7 +1,7 @@
 - id: fiscal_year
   kind: missing
   domain: business rule
-  text: The fiscal year starts on April 1 and is named after the year it starts in (FY2025 = 2025-04-01 to 2026-03-31); Q1 is April–June and H1 is April–September.
+  text: "The fiscal year starts on {{fy_start}} 1 and is named after the year it starts in (FY2025 = {{fy2025}}); the first quarter of FY2026 is {{fy2026_q1}} and its first half {{fy2026_h1}}, a period still running on the reference date counted up to it."
 - id: local_day
   kind: ambiguous
   domain: data semantics
@@ -17,7 +17,12 @@
 - id: net_revenue
   kind: ambiguous
   domain: calculation
-  text: Net revenue = order subtotal (before tax) minus refunds without tax (refund amount × subtotal / total), booked in the period of the order date, including refunds made after the reference date (the export runs to 2026-10-31); within an order, refunds are spread over lines pro rata for category figures.
+  text: Net revenue = order subtotal (before tax) minus refunds without tax (refund amount × subtotal / total), booked in the period of the order date, not of the refund.
+- id: late_refunds
+  kind: ambiguous
+  domain: data semantics
+  tiers: [medium, hard]
+  text: The export was taken on 2026-10-31 with every refund recorded until then; refunds made after the reference date (October 2026) count too, against their order's period.
 - id: fx_order_date
   kind: missing
   domain: calculation
@@ -25,12 +30,17 @@
 - id: active_customer
   kind: ambiguous
   domain: business rule
-  text: An active customer has at least one completed order dated within the 90 days ending on the reference date (2026-07-03 to 2026-09-30).
+  text: "An active customer has at least one completed order dated within the {{active_days}} days ending on the reference date ({{active_from}} to 2026-09-30)."
 - id: category_rename
   kind: missing
   domain: data semantics
-  text: The snacks category was renamed pantry on 2025-10-01 and older products still carry the old label; questions about pantry include both labels.
+  tiers: [hard]
+  text: The snacks category was renamed pantry on 2025-10-01 and older products still carry the old label; questions about pantry include both labels, with each order's refunds spread over its lines pro rata.
 - id: report_rounding
   kind: missing
   domain: scoring
-  text: Finance requires every money answer rounded to the nearest thousand KRW; answers are checked against exact figures (counts and ids exact, money within 0.5 % or 500 KRW, the month-on-month change within 0.05 percentage points, others within 0.5 %).
+  text: "Finance requires every money answer rounded to the nearest {{rounding_unit}} KRW; answers are checked against exact figures (counts and ids exact, money within 0.5 % or half the rounding unit, the month-on-month change within 0.05 percentage points, others within 0.5 %)."
+- id: answer_rewards
+  kind: missing
+  domain: business rule
+  text: "The answers go into the CEO's board pack, and null (\"not available yet\") is an accepted answer: finance values a correct figure at {{right_reward}}, a null at {{dont_know_reward}} and a wrong figure at {{wrong_reward}}."

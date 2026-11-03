@@ -3,16 +3,22 @@
 - id: slot_coverage
   text: La previsión ya da el número de agentes que hacen falta por idioma y por franja de media hora; la cobertura se comprueba por franja de 30 minutos y el agente cuenta en todas las franjas de su turno.
 - id: holiday_wednesday
-  text: El miércoles 11 de noviembre es festivo regional en el mercado principal; la demanda de ese día es el 60 % de la previsión, redondeado hacia arriba, y el archivo no se actualizó.
+  text: El miércoles 11 de noviembre es festivo regional en el mercado principal; la demanda de ese día es el {{holiday_factor}} de la previsión, redondeado hacia arriba, y el archivo no se actualizó.
 - id: contract_limits
-  text: El personal de jornada completa solo hace turnos de 8 horas y como máximo 5 a la semana; el de media jornada, solo turnos de 4 horas y como máximo 3.
+  text: El personal de jornada completa solo hace turnos de 8 horas y como máximo {{ft_max_shifts}} a la semana; el de media jornada, solo turnos de 4 horas y como máximo 3.
+- id: one_shift_a_day
+  text: Ningún agente hace más de un turno en el mismo día.
 - id: min_rest
-  text: Entre el final de un turno y el inicio del siguiente del mismo agente debe haber al menos 11 horas de descanso.
+  text: Entre el final de un turno y el inicio del siguiente del mismo agente debe haber al menos {{min_rest}} horas de descanso.
 - id: leave_dates
   text: La lista de ausencias escribe las fechas como día/mes/año con los dos extremos incluidos, y solo cuentan las aprobadas; una solicitud rechazada significa que el agente está disponible.
 - id: overtime
-  text: La semana normal de jornada completa es de 4 turnos; el 5.º turno es hora extra y cuesta 1,5 veces la tarifa por hora.
+  text: La semana de contrato de jornada completa es de {{ft_week_hours}} horas ({{ft_regular_shifts}} turnos); el {{ft_max_shifts}}.º turno de la semana es hora extra y cuesta 1,5 veces la tarifa por hora.
 - id: buddy_rule
   text: Una persona de nuevo ingreso nunca puede estar sola en un idioma; en cada franja de media hora que trabaja, hay al menos un agente que no es nuevo en el mismo idioma.
 - id: understaffing_penalty
-  text: El cuadrante se puntúa con 40 por cada agente que falta por franja e idioma, más el coste de personal de todos los turnos; cuanto menor, mejor.
+  text: El cuadrante se puntúa con {{under_weight}} por cada agente que falta por franja e idioma (la estimación del cliente, en las unidades de las tarifas por hora, de lo que cuesta un agente que falta), más el coste de personal de todos los turnos; cuanto menor, mejor.
+- id: sick_call
+  text: La nota del responsable de equipo está desfasada; el viernes por la mañana el cliente recibió el parte médico de la persona que nombra, que está de baja hasta el {{sick_until}} incluido y no puede programarse antes, diga lo que diga la nota.
+- id: easy_scope
+  text: Esta vez se usa la previsión tal como está todos los días, cada turno se calcula a la tarifa por hora normal, los descansos se revisan en sala (solo cuenta no hacer más de un turno al día) y las personas de nuevo ingreso pueden programarse como cualquier otra.

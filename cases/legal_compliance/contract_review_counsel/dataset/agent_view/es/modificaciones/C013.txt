@@ -1,0 +1,7 @@
+REGISTRO DE MODIFICACIÓN
+Contrato N.º C013 (Solana Sistemas S.L.)
+Fecha: 2026-09-21
+Estado: propuesta por el Proveedor, no aceptada por el Cliente
+
+La cláusula 5 (Indemnidad) del borrador se sustituye por el texto siguiente:
+El Cliente mantendrá indemne al Proveedor frente a cualesquiera reclamaciones de terceros, daños y gastos que se deriven de este contrato o guarden relación con él.

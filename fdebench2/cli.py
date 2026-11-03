@@ -2,6 +2,7 @@
 
   fdebench2 validate-case cases/<id> ...                  check native cases against the case contract
   fdebench2 export-dataset cases/<id> ...                 write each case's data and ground truth to dataset/
+  fdebench2 audit-case cases/<id> [--world-seed N]        the ground truth audit (dataset/audit.json)
   fdebench2 explain-case cases/<id> ...                   write each case's explainer.html
   fdebench2 new-case <field>/<role> [--program]          skeleton of a new case with settings
   fdebench2 cases                                        list cases
@@ -18,6 +19,7 @@ import argparse
 import json
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 from .runner import AgentSpec, Bench, Settings, run_campaign
@@ -26,13 +28,26 @@ from .transforms.policy import list_policies
 from .transforms.variant import VariantSpec
 
 
+def _count(text: str) -> int:
+    """A whole number of 0 or more (argparse type)."""
+    try:
+        n = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"not a whole number: {text!r}") from None
+    if n < 0:
+        raise argparse.ArgumentTypeError(f"must be 0 or more, got {n}")
+    return n
+
+
 def _axes(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--case", required=True)
     ap.add_argument("--customer-locale", default="en")
     ap.add_argument("--agent-locale", default="en")
     ap.add_argument("--policy", default="baseline")
     ap.add_argument("--difficulty", default="medium", help="content tier: easy | medium | hard")
-    ap.add_argument("--ruleset", default="A", help="rule parameters of cases with settings: A | B | C")
+    ap.add_argument("--rule-seed", type=int, default=None,
+                    help="rule seed of a case with settings: draws its rule parameters (default: the case's first "
+                         "public rule seed; any other int is a private draw)")
     ap.add_argument("--engagement", default="standard", help="standard | full_spec | messy (configs/engagement.yaml)")
     ap.add_argument("--condition", default=None)
     ap.add_argument("--world-seed", type=int, default=None, help="generate the case world from this seed")
@@ -48,10 +63,12 @@ def _common(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--docker-image", help="run commands in this image (use {case} for per-case images)")
 
 
-def _spec(a) -> VariantSpec:
-    return VariantSpec(case_id=a.case, customer_locale=a.customer_locale, agent_locale=a.agent_locale,
-                       policy=a.policy, difficulty=a.difficulty, noise_seed=a.noise_seed, condition=a.condition,
-                       ruleset=a.ruleset, engagement=a.engagement, world_seed=a.world_seed, trial=a.trial)
+def _spec(a, bench: Bench) -> VariantSpec:
+    # resolve: the case's first public rule seed when none is given, none for a case without settings
+    return bench.resolve(VariantSpec(case_id=a.case, customer_locale=a.customer_locale, agent_locale=a.agent_locale,
+                                     policy=a.policy, difficulty=a.difficulty, noise_seed=a.noise_seed,
+                                     condition=a.condition, rule_seed=a.rule_seed, engagement=a.engagement,
+                                     world_seed=a.world_seed, trial=a.trial))
 
 
 def _bench(a) -> Bench:
@@ -69,6 +86,12 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--no-world-seeds", action="store_true", help="skip the other-world check")
     p = sub.add_parser("export-dataset")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
+    p = sub.add_parser("audit-case", help="measure a case's ground truth (ablations, shortcuts, value of asking)")
+    p.add_argument("path", type=Path, help="a case directory under cases/")
+    p.add_argument("--world-seed", type=int, default=None, help="audit this world instead (printed, never stored)")
+    p.add_argument("--combos", type=_count, default=None,
+                   help="parameter combinations per tier besides the public panel (0 or more)")
+    p.add_argument("--no-write", action="store_true", help="print the report without storing dataset/audit.json")
     p = sub.add_parser("new-case")
     p.add_argument("case_id", help="<field>/<role>")
     p.add_argument("--program", action="store_true", help="the deliverable is a program, not files")
@@ -117,14 +140,25 @@ def main(argv: list[str] | None = None) -> None:
             write_page(path)
             n = sum(1 for f in dest.rglob("*") if f.is_file())
             print(f"{path.parent.name}/{path.name}: {n} files in {dest.relative_to(Path.cwd()) if dest.is_relative_to(Path.cwd()) else dest}")
+    elif a.cmd == "audit-case":
+        from .audit import AUDIT_COMBOS, audit_case, report, write_audit
+        from .cases import NativeCase
+        from .explain import write_page
+        started = time.time()
+        result = audit_case(NativeCase(a.path), a.world_seed, AUDIT_COMBOS if a.combos is None else a.combos)
+        print(report(result))
+        print(f"audited in {time.time() - started:.0f} s", file=sys.stderr)
+        if a.world_seed is None and not a.no_write:      # only the public world's audit is stored
+            print(write_audit(a.path, result))
+            write_page(a.path)                           # the explainer shows the stored audit
     elif a.cmd == "new-case":
         from .scaffold import new_case
         print(new_case(a.case_id, a.cases_root, kind="program" if a.program else "batch"))
     elif a.cmd == "explain-case":
         from .explain import write_index, write_page
         for path in a.paths:
-            print(write_page(path))
-        print(write_index(a.paths[0].resolve().parent.parent))
+            print(write_page(path), "(+ zh, ko, ja, es)")
+        print(write_index(a.paths[0].resolve().parent.parent), "(+ zh, ko, ja, es)")
     elif a.cmd == "build-site":
         from .site import build_site
         pages = build_site(Path("."), a.out, github=a.github, ref=a.ref)
@@ -134,11 +168,11 @@ def main(argv: list[str] | None = None) -> None:
     elif a.cmd == "cases":
         for cid, case in _bench(a).cases.items():
             print(f"{cid}\t{case.role}\t{case.task_type}\t{','.join(case.locales())}"
-                  f"\t{'settings=' + ','.join(case.tiers) + ' x ' + ','.join(case.rulesets) if case.tiers else ''}")
+                  f"\t{'settings=' + ','.join(case.tiers) + ' x rule seeds ' + ','.join(map(str, case.rule_seeds)) if case.tiers else ''}")
     elif a.cmd == "prepare":
         bench = _bench(a)
         run_dir = Path(tempfile.mkdtemp(prefix="fdeb2-prepare-"))
-        variant = bench.prepare(_spec(a), run_dir)
+        variant = bench.prepare(_spec(a, bench), run_dir)
         from .prompts import render_task_prompt
         files = sorted(p.relative_to(run_dir / "workspace").as_posix()
                        for p in (run_dir / "workspace" / "data").rglob("*") if p.is_file())
@@ -149,7 +183,7 @@ def main(argv: list[str] | None = None) -> None:
     elif a.cmd == "run":
         bench = _bench(a)
         agent = AgentSpec(harness=a.harness, model=a.model, max_steps=a.max_steps)
-        result = bench.run(_spec(a), agent, force=a.force)
+        result = bench.run(_spec(a, bench), agent, force=a.force)
         shown = result["score"] if result.get("score") else {"status": result["status"], "error": result.get("error")}
         print(json.dumps(shown, ensure_ascii=False, indent=2))
     elif a.cmd == "score":

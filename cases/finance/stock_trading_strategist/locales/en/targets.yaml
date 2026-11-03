@@ -83,7 +83,7 @@
   kind: missing
   domain: business rule
   tiers: [medium, hard]
-  text: A cash_withdrawal notice takes the given percent of {{withdrawal_basis}} out of the book at the close of its payment date, paid from settled cash only (a shortfall breaks the client's instruction); with T+2 the sells must happen early enough.
+  text: A cash_withdrawal notice gives only the payment date; the agreement sets the amount, {{withdrawal}}, which leaves the book at the close of that date, paid from settled cash only (a shortfall breaks the client's instruction); with T+2 the sells must happen early enough.
 - id: medium_scope
   kind: missing
   domain: business rule

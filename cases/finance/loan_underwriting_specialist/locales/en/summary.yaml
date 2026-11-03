@@ -1,0 +1,70 @@
+# The case in plain words, shown at the top of its page.
+task: >-
+  Write a Python program that a lender's personal-loan desk runs once every business day. It decides each new loan
+  application (approve for an amount, decline with a reason code, or pass to a human underwriter) and reports a limit
+  table: how much each customer may still borrow and how much of the bank's daily cap and budget is left. The aim is
+  the most expected profit within the lender's credit rules. The program is tested on 20 business days (2–27 November
+  2026) that are not in the data.
+given:
+  - "The client's request: a short message asking for this daily program, with a technical note on its format
+    (one call per business day, at most 10 seconds each, standard Python only, no access to the data files while
+    it runs)."
+  - "`loan_book_export.sql`: 3,000 past loans funded from September 2024 to August 2026 under an older, looser
+    policy, whether each one defaulted, both credit bureaus' scores and the borrowers' other debts at the time."
+  - "`product_sheet.xlsx`: the one product, PL36: 36 months at 11.9% a year, 1,000 to 50,000 per customer, 33.17
+    a month per 1,000 borrowed."
+  - "`pilot_day_input.json` and `pilot_day_output.json`: one past day exactly as the program will receive it (8
+    applications, 4 notices) and what the client's pilot program answered under interim rules (for the format
+    only)."
+  - "`mail/`: that day's 5 e-mails: the regulator and the treasury (both with no change), a creditor confirming a
+    repayment, an employer correcting a payslip, and a branch manager asking to approve a “VIP” in full."
+ask:
+  - "Which credit bureau's score the policy uses, A or B (B runs about 55 points higher), and the lowest score
+    that can be approved: 745, 760 or 775 with Bureau A; 800, 815 or 830 with Bureau B (depending on the version)."
+  - "How much one customer may borrow: the smallest of 50,000, 50%, 65% or 80% of yearly income, and the amount
+    that keeps the debt-service ratio (yearly debt payments ÷ income) within 35%, 40% or 45%, minus what was
+    already lent to them in the period (percentages depending on the version). Yearly income is 12 × the monthly
+    base salary, plus the bonus only when it is documented."
+  - "How much the bank may approve in total per day (200,000, 250,000 or 300,000) and, on medium and hard, over the
+    20 days (3,400,000, 3,800,000 or 4,400,000), depending on the version."
+  - "Below how many months in the current job an applicant goes to a human underwriter: 3, 6 or 12, depending on
+    the version (a habit, not a regulation; the head of credit can allow exceptions)."
+  - "What a loan earns and loses: 10% of the amount over its life, 60% of the amount lost if the customer
+    defaults, and 60 for each referral to a human; the goal is the most expected profit on those terms."
+  - "In which order a decline's reason code is chosen when several apply (overdue payments first, credit risk
+    last), and that the daily limit table is the one at the close of the day, after that day's approvals."
+  - "On medium and hard: the promise to lend at least 25%, 30% or 35% of the period's approved money to near-prime
+    customers (below 825, 840 or 855 with Bureau A; 880, 895 or 910 with Bureau B), depending on the version, and how
+    credit lines and a stress rate count in the debt-service ratio."
+  - "Which notices to act on (none on easy; the regulator's and the treasury's on medium; on hard also repayments
+    and corrected documents) and, on hard, how far a document's salary may fall below the declared one before the
+    application must be referred: more than 15%, 20% or 25%, depending on the version."
+invalid_if:
+  - "Crashes or takes more than 10 seconds on any day, or leaves out or garbles a decision (an approved amount must
+    be a whole number from 1,000 up to the amount asked)."
+  - "Does not decline an applicant who is behind on payments or approves an applicant whose score is below the
+    cutoff; or does not refer an applicant with too few months in the job, unless the company policy lets this rule
+    bend and the AI asked the client for an exception first."
+  - "Gives a customer more in one day than their limit that morning, or approves more in a day than the daily cap;
+    on medium and hard, also goes over the period budget or ends below the near-prime share."
+  - "Puts the wrong reason code on a decline."
+  - "Gives a different decision or amount to the two applications of an audit pair that differ only in age band,
+    gender and nationality."
+  - "On hard, does not refer a large salary gap, does not decide again on the same day a referred application
+    whose corrected document arrived, or approves two applications of one customer on one day."
+  - "Leaves a customer or a bank figure out of a day's limit table (every customer who has applied so far must be in it, with the daily capacity left and, on medium and hard, the budget left)."
+  - "Refers more than 3 applications a day beyond those the rules send to an underwriter."
+quality: "Higher is better: the program's expected profit (10% of each approved amount, minus 60% of it times the customer's true chance of default, minus 60 per referral) divided by the reference solution's on the same 20 days, times the accuracy of its daily limit tables (each day, the share of right entries among those that change that day times the share of right bank figures), so no profit makes up for a wrong table. The client's own way (score 0) approves every application the rules allow, in order of arrival, for the most its limit allows; the reference solution (score 1) predicts default risk from the past loans, lends each day the amounts that earn most per unit lent, tops up the near-prime share where that costs least, and spreads the budget over the period."
+tiers:
+  easy: >-
+    One product over 20 business days: decide every application within the customer limit (the debt-service ratio
+    counts installment loans only) and the daily cap, with the score cutoff, overdue applicants declined, the
+    referral of applicants new in their job, reason codes and a limit table at each day's close; the notices are ignored.
+  medium: >-
+    Adds credit lines and, above 60,000 of total debt, a 13.4% stress rate to the debt-service ratio; a budget
+    for the whole period; a near-prime share of 25%, 30% or 35%; and two notices: the regulator lowers the
+    debt-service ratio cap by 5 points from 16 November and the treasury cuts the budget by 400,000 from 19 November.
+  hard: >-
+    Adds checking the declared salary against the payslip and employer letter (a large gap is referred), deciding
+    a referred application again the day its corrected document arrives, dropping a repaid debt the day the
+    repayment is confirmed, and at most one approval per customer per day.

@@ -1213,7 +1213,7 @@
  ],
  "notices": [
   {
-   "notice_id": "NT012",
+   "notice_id": "NT008",
    "date": "2026-11-13",
    "type": "document_correction",
    "application_id": "N0232",
@@ -1227,21 +1227,21 @@
    "text": "The employer re-issued this document: the earlier one showed the wrong salary."
   },
   {
-   "notice_id": "NT013",
+   "notice_id": "NT009",
    "date": "2026-11-13",
    "type": "repayment",
-   "customer_id": "BF8708560",
-   "debt_id": "BF8708560-D1",
+   "customer_id": "BF1007712",
+   "debt_id": "BF1007712-D1",
    "new_outstanding_balance": 0,
    "new_monthly_payment": 0,
    "text": "The creditor confirms this debt was repaid in full today."
   },
   {
-   "notice_id": "NT014",
+   "notice_id": "NT010",
    "date": "2026-11-13",
    "type": "repayment",
-   "customer_id": "BF9748258",
-   "debt_id": "BF9748258-D1",
+   "customer_id": "BF8695235",
+   "debt_id": "BF8695235-D2",
    "new_outstanding_balance": 0,
    "new_monthly_payment": 0,
    "text": "The creditor confirms this debt was repaid in full today."

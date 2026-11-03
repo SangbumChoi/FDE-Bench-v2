@@ -1,0 +1,41 @@
+﻿id_contrato,proveedor,categoria,importe_anual_usd,archivo_contrato
+C001,Ibérica Sistemas S.L.,TI y servicios de datos,7000,contratos/C001.txt
+C002,Brisa Logística S.A.,Logística,21000,contratos/C002.txt
+C003,Ormsby Facility Services Ltd,Mantenimiento de instalaciones,383000,contratos/C003.txt
+C004,Retama Servicios Integrales S.L.,Mantenimiento de instalaciones,462000,contratos/C004.txt
+C005,Pinar Sistemas S.L.,TI y servicios de datos,68000,contratos/C005.txt
+C006,Peñalara Logística S.A.,Logística,250000,contratos/C006.txt
+C007,Cumbre Consultores S.L.,Servicios profesionales,25000,contratos/C007.txt
+C008,Encina Materiales S.A.,Materias primas,214000,contratos/C008.txt
+C009,Duero Materiales S.A.,Materias primas,1175000,contratos/C009.txt
+C010,Ribera Materiales S.A.,Materias primas,178000,contratos/C010.txt
+C011,Tajo Comunicación S.L.,Marketing,1038000,contratos/C011.txt
+C012,Meseta Sistemas S.L.,TI y servicios de datos,10000,contratos/C012.txt
+C013,Solana Sistemas S.L.,TI y servicios de datos,100000,contratos/C013.txt
+C014,Draycott Digital Ltd,TI y servicios de datos,124000,contratos/C014.txt
+C015,Zafiro Materiales S.A.,Materias primas,566000,contratos/C015.txt
+C016,Hispalis Sistemas S.L.,TI y servicios de datos,7000,contratos/C016.txt
+C017,Mirador Sistemas S.L.,TI y servicios de datos,60000,contratos/C017.txt
+C018,Levante Logística S.A.,Logística,473000,contratos/C018.txt
+C019,Fuente Logística S.A.,Logística,69000,contratos/C019.txt
+C020,Oriente Sistemas S.L.,TI y servicios de datos,647000,contratos/C020.txt
+C021,Faro Servicios Integrales S.L.,Mantenimiento de instalaciones,20000,contratos/C021.txt
+C022,Albor Servicios Integrales S.L.,Mantenimiento de instalaciones,6000,contratos/C022.txt
+C023,Carrow Consulting Ltd,Servicios profesionales,885000,contratos/C023.txt
+C024,Lucero Servicios Integrales S.L.,Mantenimiento de instalaciones,77000,contratos/C024.txt
+C025,Olivo Materiales S.A.,Materias primas,19000,contratos/C025.txt
+C026,Everleigh Logistics Ltd,Logística,71000,contratos/C026.txt
+C027,Jara Comunicación S.L.,Marketing,145000,contratos/C027.txt
+C028,Lince Sistemas S.L.,TI y servicios de datos,669000,contratos/C028.txt
+C029,Northcote Media Ltd,Marketing,759000,contratos/C029.txt
+C030,Ebro Consultores S.L.,Servicios profesionales,17000,contratos/C030.txt
+C031,Umbral Consultores S.L.,Servicios profesionales,21000,contratos/C031.txt
+C032,Beckett Digital Ltd,TI y servicios de datos,18000,contratos/C032.txt
+C033,Genil Materiales S.A.,Materias primas,144000,contratos/C033.txt
+C034,Candil Consultores S.L.,Servicios profesionales,122000,contratos/C034.txt
+C035,Galena Sistemas S.L.,TI y servicios de datos,150000,contratos/C035.txt
+C036,Sierra Comunicación S.L.,Marketing,50000,contratos/C036.txt
+C037,Nogal Logística S.A.,Logística,89000,contratos/C037.txt
+C038,Quercus Servicios Integrales S.L.,Mantenimiento de instalaciones,198000,contratos/C038.txt
+C039,Delta Comunicación S.L.,Marketing,157000,contratos/C039.txt
+C040,Atalaya Sistemas S.L.,TI y servicios de datos,1040000,contratos/C040.txt

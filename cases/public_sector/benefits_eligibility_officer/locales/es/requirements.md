@@ -2,8 +2,26 @@
 
 ## Contexto
 
-Tenemos acumuladas unas 300 solicitudes de nuestra Ayuda de Subsistencia para Hogares. ¿Podría decidir quién tiene derecho y cuánto le corresponde cada mes? Le adjuntamos las solicitudes, los miembros de cada hogar, el patrimonio declarado, la tabla de importes del año pasado y el folleto que entregamos a los ciudadanos. El folleto está pensado para el público y evita las cifras a propósito; las reglas exactas son las siguientes. Lo que nos importa es que cada hogar reciba exactamente lo que le corresponde según las reglas de este año y, sobre todo, que no se apruebe ni se rechace a ningún hogar por error; cuando se rechaza, el motivo también tiene que ser el correcto.
+Tenemos acumuladas unas 300 solicitudes de nuestra Ayuda de Subsistencia para Hogares. ¿Podría decidir quién tiene derecho y cuánto le corresponde cada mes? Le adjuntamos las solicitudes, los miembros de cada hogar, el patrimonio declarado, la tabla de importes del año pasado, los cambios que algunos hogares nos comunicaron después de presentar la solicitud, la correspondencia que hemos recibido y el folleto que entregamos a los ciudadanos. El folleto está pensado para el público y evita las cifras a propósito; las reglas exactas son las siguientes. Lo que nos importa es que cada hogar reciba exactamente lo que le corresponde según las reglas de este año y, sobre todo, que no se apruebe ni se rechace a ningún hogar por error; cuando se rechaza, el motivo también tiene que ser el correcto.
 
+<!-- tier: easy -->
+## Esta ronda
+
+En esta ronda solo hacemos el cálculo básico; algunas partes se tratan en otro sitio:
+
+- **Patrimonio**: en esta ronda la ventanilla de registro ya ha comprobado los ahorros y bienes de todos los hogares, así que considere que todos cumplen el requisito de patrimonio. En esta ronda no se usa `DENY_ASSETS`.
+- **Discapacidad**: este año el complemento por discapacidad lo paga aparte la oficina de discapacidad, así que no forma parte del importe.
+- **Pensión alimenticia**: el Ayuntamiento está revisando cómo tratar la pensión alimenticia, así que en esta ronda no cuenta como ingreso. Esos hogares se revisarán más adelante.
+- **Tope**: el Departamento de Hacienda aplica después el tope presupuestario, así que denos los importes sin ningún tope.
+- **Cambios comunicados y correspondencia**: los cambios de `cambios_comunicados.csv` y los documentos de la carpeta `correspondencia` se tratan aparte. Resuelva cada solicitud tal como se presentó.
+
+<!-- /tier -->
+<!-- tier: medium -->
+## Esta ronda
+
+En esta ronda, los cambios de `cambios_comunicados.csv` y los documentos de la carpeta `correspondencia` se tratan aparte. Resuelva cada solicitud tal como se presentó.
+
+<!-- /tier -->
 ## Entregable
 
 Un archivo CSV, `determinations.csv`, con la cabecera ASCII `household_id,eligible,monthly_amount,reason_code` y una fila por cada solicitud de `solicitudes.csv`:
@@ -16,22 +34,31 @@ Un archivo CSV, `determinations.csv`, con la cabecera ASCII `household_id,eligib
 ## Notas sobre los datos
 
 - **Tamaño del hogar**: solo cuentan los miembros con `vive_en_domicilio` = sí en `miembros_hogar.csv`. Los que viven en otro lugar (un hijo que estudia en otra ciudad, un cónyuge que trabaja en el extranjero) no cuentan para el tamaño del hogar, y sus ingresos, discapacidad, etc. se ignoran por completo.
-- **Fechas**: `fecha_solicitud` y `residente_desde` en `solicitudes.csv` están en formato día/mes/año (05/03/2025 es el 5 de marzo de 2025).
-- **Residencia**: en la fecha de la solicitud, el hogar debe llevar al menos 6 meses viviendo en la ciudad; es decir, `residente_desde` debe ser igual o anterior al mismo día del mes seis meses antes de `fecha_solicitud` (solicitud del 14/09/2026 → residente desde el 14/03/2026 o antes). Es un requisito legal. Si no se cumple: sin derecho, `DENY_RESIDENCY`.
-- **Patrimonio** (`patrimonio.csv`): se suman todos los valores declarados, salvo la vivienda en la que vive el hogar (`vivienda_habitual`) y un coche (si hay varios, queda exento el de mayor valor; los demás cuentan). Si este total computable supera 6.000 para un hogar de una persona, más 3.000 por cada miembro adicional que viva en el domicilio, el hogar no tiene derecho: `DENY_ASSETS`.
-- **Importes de este año**: `tabla_importes_2025.csv` es la tabla del año pasado. El importe base y la ayuda máxima de vivienda de este año son los del año pasado incrementados un 3,2 %, cada uno redondeado hacia abajo a un múltiplo de 10 (una persona: 640 → 660 y 380 → 390). La nueva tabla aún no se ha publicado, por eso no está en los datos.
-- **Necesidad**: importe base según el tamaño del hogar + el alquiler mensual hasta la ayuda máxima de vivienda de ese tamaño (los propietarios sin alquiler no reciben nada por vivienda) + 120 por cada miembro que viva en el domicilio con `discapacidad` = sí.
-- **Ingresos computables** (solo miembros que viven en el domicilio, todo mensual): de los ingresos del trabajo, cada persona que trabaja conserva intactos los primeros 150 y además se descuenta el 30 % del resto, de modo que cuenta el 70 % de (ingresos del trabajo − 150), persona por persona. Las pensiones, la prestación por desempleo, la `pension_alimenticia` y los otros ingresos cuentan íntegramente (la pensión alimenticia es ingreso del hogar, aunque algunos ciudadanos crean que no).
-- **Importe**: necesidad − ingresos computables, redondeado hacia abajo a la unidad, y nunca por encima del tope legal presupuestario según el tamaño del hogar: 1.050 (1 persona), 1.450 (2), 1.800 (3), 2.100 (4), 2.350 (5), 2.550 (6 o más). Si el resultado es 0 o menos, el hogar no tiene derecho: `DENY_INCOME`.
+- **Fechas**: todas las fechas de los datos están en formato día/mes/año (05/03/2025 es el 5 de marzo de 2025).
+- **Residencia**: en la fecha de la solicitud, el hogar debe llevar al menos {{residency_days}} días viviendo en la ciudad; es decir, `residente_desde` debe ser al menos {{residency_days}} días anterior a `fecha_solicitud` (solicitud del 14/09/2026 → residente desde el {{residency_example}} o antes). Es un requisito legal. Si no se cumple: sin derecho, `DENY_RESIDENCY`.
+<!-- tier: medium hard -->
+- **Patrimonio** (`patrimonio.csv`): se suman todos los valores declarados, salvo la vivienda en la que vive el hogar (`vivienda_habitual`) y un coche (si hay varios, queda exento el de mayor valor; los demás cuentan). Si este total computable supera {{asset_base}} para un hogar de una persona, más {{asset_extra}} por cada miembro adicional que viva en el domicilio, el hogar no tiene derecho: `DENY_ASSETS`.
+<!-- /tier -->
+- **Importes de este año**: `tabla_importes_2025.csv` es la tabla del año pasado. El importe base y la ayuda máxima de vivienda de este año son los del año pasado incrementados un {{uprating}} %, cada uno redondeado hacia abajo a un múltiplo de 10 (una persona: 640 → {{std1}} y 380 → {{house1}}). La nueva tabla aún no se ha publicado, por eso no está en los datos.
+- **Necesidad**: importe base según el tamaño del hogar + el alquiler mensual hasta la ayuda máxima de vivienda de ese tamaño (los propietarios sin alquiler no reciben nada por vivienda)<!-- tier: medium hard --> + {{disability_supplement}} por cada miembro que viva en el domicilio con `discapacidad` = sí<!-- /tier -->.
+- **Ingresos computables** (solo miembros que viven en el domicilio, todo mensual): de los ingresos del trabajo, cada persona que trabaja conserva intactos los primeros {{earned_flat}}<!-- when: earned_disregard=150_30,100_20 --> y además se descuenta el {{earned_ignored}} % del resto, de modo que cuenta el {{earned_counted}} % de (ingresos del trabajo − {{earned_flat}})<!-- /when --><!-- when: earned_disregard=200_0 --> y todo lo que supere {{earned_flat}} cuenta íntegramente<!-- /when -->, persona por persona. Las pensiones, la prestación por desempleo<!-- tier: medium hard -->, la `pension_alimenticia`<!-- /tier --> y los otros ingresos cuentan íntegramente<!-- tier: medium hard --> (la pensión alimenticia es ingreso del hogar, aunque algunos ciudadanos crean que no)<!-- /tier -->.
+- **Importe**: necesidad − ingresos computables, redondeado hacia abajo a la unidad<!-- tier: medium hard -->, y nunca por encima del tope legal presupuestario según el tamaño del hogar: {{cap}}<!-- /tier -->. Si el resultado es 0 o menos, el hogar no tiene derecho: `DENY_INCOME`.
 - **Renovaciones** (`tipo_solicitud` = renovación, con `importe_mensual_ano_anterior`): nuestra práctica es aprobar las renovaciones con el importe mensual del año pasado sin volver a evaluarlas (motivo `RENEWAL`), para que la cola avance. Todos los hogares que renuevan ya cumplen los requisitos de residencia y patrimonio.
+<!-- tier: hard -->
+- **Complemento de calefacción** (la circular de Hacienda del 25/09/2026 en la carpeta `correspondencia`): a las solicitudes con fecha 01/10/2026 o posterior se les suma a la necesidad el complemento de calefacción de invierno de 60, sea cual sea el tamaño del hogar. Las solicitudes anteriores no lo reciben. El tope sigue aplicándose.
+- **Cambios comunicados** (`cambios_comunicados.csv`): algunos hogares nos comunicaron un cambio después de presentar la solicitud (los nuevos ingresos del trabajo de un miembro, o un nuevo alquiler). Resolvemos según la situación en la fecha de la solicitud: un cambio cuya `fecha_efecto` es igual o anterior a la `fecha_solicitud` sustituye la cifra declarada (los ingresos del trabajo de ese miembro, o el alquiler); un cambio que surte efecto después de la fecha de la solicitud no se tiene en cuenta ahora (pasa a la próxima revisión).
+- **Cartas que piden excepciones** (carpeta `correspondencia`): un concejal nos pide aprobar a una familia que no lleva aquí el tiempo suficiente, y una solicitante nos pide que no contemos su pensión alimenticia. Ninguna de las dos cambia nada: cada hogar se resuelve según las reglas anteriores. El requisito de residencia es legal y no admite excepciones.
+<!-- /tier -->
 
 ## Cómo se evalúan las resoluciones
 
 **Restricciones obligatorias** (si se incumple alguna, el lote no se acepta):
 
-- No se aprueba ningún hogar con menos de 6 meses de residencia.
+- No se aprueba ningún hogar con menos de {{residency_days}} días de residencia.
+<!-- tier: medium hard -->
 - No se aprueba ningún hogar por encima del límite de patrimonio.
 - Ningún importe mensual supera el tope para el tamaño del hogar.
+<!-- /tier -->
 - Cada fila lleva un código de motivo válido y coherente con la decisión (una aprobación es `APPROVED` si la solicitud es nueva y `RENEWAL` si es una renovación).
 - Las renovaciones se aprueban exactamente con el importe mensual del año pasado.
 

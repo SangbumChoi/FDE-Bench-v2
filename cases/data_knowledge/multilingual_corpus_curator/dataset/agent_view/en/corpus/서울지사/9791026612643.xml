@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-612643</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9791026612643</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>푸른 여름</TitleText></TitleElement></TitleDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText textscript="Latn">Pureun Yeoreum</TitleText></TitleElement></TitleDetail>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">이야기는 북쪽 해안의 작은 어촌에서 시작된다. 마지막 기차가 돌아오지 않자 그 이유를 기억하는 사람은 새로 온 우체부뿐이다.
+
+한 겨울 동안의 이야기로, 새로 온 우체부와 떠나기를 거부하는 사람들을 따라간다.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">1986</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

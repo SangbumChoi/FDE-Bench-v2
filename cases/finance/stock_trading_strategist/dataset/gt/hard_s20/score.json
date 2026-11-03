@@ -1,0 +1,47 @@
+{
+  "baseline_objective": 0.25434527,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.25434527,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "added_stock_held_at_notice": 19300,
+    "added_stock_sold_by": 3,
+    "calls_failed": 0,
+    "cash_at_payout": 1119952.58,
+    "excess_return_pct": 13.257,
+    "fees": 14501.0519,
+    "filled": 99,
+    "final_net_equity": 10185958.06,
+    "final_value": 11235624.91,
+    "index_buy_and_hold": 9909944.42,
+    "large_orders": 0,
+    "max_drawdown": 0.0506,
+    "max_sector_weight_bought": 0.2808,
+    "max_stock_weight_bought": 0.162,
+    "orders": 99,
+    "over_cut_limit_at_effect": 0,
+    "paid_out": 1049666.85,
+    "reference_excess": 1325680.49,
+    "rejected_cash": 0,
+    "rejected_circuit_breaker": 0,
+    "rejected_halted": 0,
+    "restricted_orders": 0,
+    "return_component": 1.0,
+    "return_pct": 12.356,
+    "skipped_invalid": 0,
+    "spread_and_impact": 67974.702,
+    "table_accuracy": 1.0,
+    "taxes": 28127.888,
+    "traded_value": 35668163.6646,
+    "withdrawal": 1049666.85
+  },
+  "objective": 1.0,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

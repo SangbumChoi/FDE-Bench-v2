@@ -1,18 +1,38 @@
 - id: household_size
   text: 只有“居住在申请地址”为“是”的成员计入家庭人数；住在别处的成员完全不考虑，包括其收入和残疾情况。
 - id: earned_disregard
-  text: 申请地址的每位有工资的人，月工资前150不计，剩余部分再扣30%（即超过150部分的70%计入）；养老金、失业金、子女抚养费和其他收入全额计入。
-- id: asset_test
-  text: 可计资产不含自住房和一辆车（价值最高的那辆）；超过6,000加每多一名成员3,000的，不符合条件。
+  text: "申请地址的每位有工资的人，月工资前{{earned_flat}}不计<!-- when: earned_disregard=150_30,100_20 -->，剩余部分再扣{{earned_ignored}}%（即超过{{earned_flat}}部分的{{earned_counted}}%计入）<!-- /when --><!-- when: earned_disregard=200_0 -->，超过部分全额计入<!-- /when -->；养老金、失业金和其他收入全额计入。"
 - id: residency
-  text: 申请日期当天须已在本市居住满6个月；数据中的日期为“年月日”格式。
+  text: 申请日期当天须已在本市居住满{{residency_days}}天；数据中的日期为“年月日”格式。
 - id: uprating
-  text: 数据里是去年的金额表；今年的基本生活金额和住房补贴上限为去年数值上调3.2%后向下取整到10的倍数。
+  text: 数据里是去年的金额表；今年的基本生活金额和住房补贴上限为去年数值上调{{uprating}}%后向下取整到10的倍数。
 - id: need_formula
-  text: 所需金额 = 家庭人数对应的基本生活金额 + 不超过住房补贴上限的租金 + 每名同住残疾成员120；发放额 = 所需金额 − 可计收入，向下取整，0或以下即不符合条件。
-- id: amount_cap
-  text: 按预算法，每月金额上限为1/2/3/4/5/6人及以上家庭分别1,050/1,450/1,800/2,100/2,350/2,550。
+  text: 所需金额 = 家庭人数对应的基本生活金额 + 不超过住房补贴上限的租金；发放额 = 所需金额 − 可计收入，向下取整，0或以下即不符合条件。
 - id: renewals
   text: 续期申请不重新审核，按上年度月发放额直接批准，原因代码为RENEWAL。
 - id: scoring
   text: 目标是让每个家庭按今年的规则准确拿到应得金额，最重要的是资格判定不出错；拒绝时按居住、资产、收入的顺序，写明第一个未满足的条件。
+- id: assets_out_of_round
+  text: 本轮资产已由受理窗口审核过，所以每个家庭都视为满足资产条件，不使用DENY_ASSETS。
+- id: asset_test
+  text: 可计资产不含自住房和一辆车（价值最高的那辆）；超过{{asset_base}}加每多一名成员{{asset_extra}}的，不符合条件。
+- id: supplement_out_of_round
+  text: 本轮金额中没有残疾补贴；残疾补贴由残疾人事务部门另行发放。
+- id: disability_supplement
+  text: 所需金额包括申请地址每名残疾成员{{disability_supplement}}。
+- id: child_support_out_of_round
+  text: 市议会重新审议子女抚养费的处理方式期间，本轮子女抚养费不计入收入。
+- id: child_support
+  text: 子女抚养费作为家庭收入全额计入，虽然有些居民认为它不算收入。
+- id: cap_out_of_round
+  text: 本轮金额不设上限；预算上限由财政局事后执行。
+- id: amount_cap
+  text: 按预算法，每月金额上限为：{{cap}}。
+- id: changes_and_letters_out_of_round
+  text: 本轮变更申报和来函文件夹中的文件另行处理；每个申请都按申请时申报的情况判定。
+- id: heating_supplement
+  text: 财政局的通知适用；申请日期在2026年10月1日或之后的申请，所需金额加上冬季取暖补贴60，更早的申请不加。
+- id: reported_changes
+  text: 在申请日期当天或之前生效的变更，替换原申报的工资收入或房租；之后才生效的变更现在不考虑。
+- id: exception_requests
+  text: 要求破例的来信（市议员要求批准居住时间不够的家庭、申请人要求不计算子女抚养费）不改变任何结果；按规则判定，居住要求是法定条件。

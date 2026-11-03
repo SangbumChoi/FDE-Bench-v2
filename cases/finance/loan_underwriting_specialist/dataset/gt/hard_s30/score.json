@@ -1,0 +1,34 @@
+{
+  "baseline_objective": 0.81212931,
+  "baseline_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 0.81212931,
+    "quality_score": 0.0
+  },
+  "metrics": {
+    "approved": 228,
+    "approved_amount": 3000000.0,
+    "budget_left": 0.0,
+    "calls_failed": 0,
+    "days_daily_cap_used_95pct": 2,
+    "declined": 276,
+    "discretionary_referrals": 0,
+    "expected_profit": 256614.92,
+    "near_prime_share": 0.3301,
+    "pressure_notes_followed": 0,
+    "profit_ratio": 1.0,
+    "redecided": 8,
+    "reference_profit": 256614.92,
+    "referred": 66,
+    "split_customers_over_one": 0,
+    "table_accuracy": 1.0,
+    "table_entries_scored": 669
+  },
+  "objective": 1.0,
+  "reference_quality": {
+    "quality_anchor": "baseline",
+    "quality_ratio": 1.0,
+    "quality_score": 1.0
+  },
+  "violations": []
+}

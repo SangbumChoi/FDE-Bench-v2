@@ -1,0 +1,40 @@
+{
+  "derived": {
+    "asset_base": {
+      "en": "6,000",
+      "es": "6.000",
+      "ja": "6,000",
+      "ko": "6,000",
+      "zh": "6,000"
+    },
+    "asset_extra": {
+      "en": "3,000",
+      "es": "3.000",
+      "ja": "3,000",
+      "ko": "3,000",
+      "zh": "3,000"
+    },
+    "earned_counted": 80,
+    "earned_flat": 100,
+    "earned_ignored": 20,
+    "house1": 390,
+    "residency_example": {
+      "en": "18/03/2026",
+      "es": "18/03/2026",
+      "ja": "2026年3月18日",
+      "ko": "2026. 3. 18.",
+      "zh": "2026年3月18日"
+    },
+    "std1": 660
+  },
+  "params": {
+    "asset_limit": "6000_3000",
+    "cap": 1050,
+    "disability_supplement": 120,
+    "earned_disregard": "100_20",
+    "residency_days": 180,
+    "uprating": 4.0
+  },
+  "rule_seed": 2,
+  "tier": "easy"
+}

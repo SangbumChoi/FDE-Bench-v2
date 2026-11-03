@@ -1,18 +1,28 @@
 - id: road_distance
   text: La distancia por carretera es 1,3 veces la distancia en línea recta; las coordenadas son kilómetros desde la cocina en (0, 0).
-- id: speeds
-  text: La velocidad es de 30 km/h en tramos que empiezan antes de las 07:00 y de 20 km/h en tramos que empiezan a las 07:00 o después.
+- id: speed
+  text: Las furgonetas van a una media de 25 km/h durante toda la mañana; este lunes no hay hora punta (no hay colegio).
+- id: rush_hour
+  text: "Las furgonetas van a 30 km/h hasta las {{rush_start}} y a 20 km/h desde las {{rush_start}} (hora punta); una furgoneta que sigue en la carretera a las {{rush_start}} va más despacio desde ese momento."
 - id: service_time
   text: La descarga en una cafetería dura 4 minutos más 0,2 minutos por bandeja.
 - id: shift
-  text: Las furgonetas pueden salir desde las 05:00 y deben volver a la cocina a las 09:30 como muy tarde.
-- id: closed_c11
-  text: La Cafetería Colina Sur (C11) está cerrada esta semana por reformas y no debe atenderse.
+  text: "Las furgonetas pueden salir desde las 05:00 y deben volver a la cocina a las {{shift_end}} como muy tarde."
+- id: tray_limit
+  text: "max_bandejas (120) es lo que caben en las estanterías, pero esta semana las cajas más hondas limitan cada furgoneta a {{van_capacity}} bandejas."
+- id: closed_cafe
+  text: "La {{closed_cafe}} está cerrada esta semana por reformas y no debe atenderse."
 - id: cold_chain
   text: Las cafeterías de marca asociada venden productos refrigerados y solo puede atenderlas la furgoneta refrigerada V4.
+- id: partner_this_week
+  text: Esta semana el socio lleva sus refrigerados él mismo, así que cualquier furgoneta puede atender las cafeterías de marca asociada.
 - id: one_visit
   text: Cada cafetería recibe todas sus bandejas en una sola visita de una furgoneta; nunca se divide la entrega.
 - id: premium_first
-  text: En cada ruta, las cafeterías premium deben visitarse antes que las estándar.
+  text: "<!-- when: premium_first=true -->En cada ruta, las cafeterías premium deben visitarse antes que las estándar.<!-- /when --><!-- when: premium_first=false -->Esta semana no se aplica la costumbre de atender primero las premium: las cafeterías de una ruta pueden ir en cualquier orden.<!-- /when -->"
 - id: lateness
-  text: Llegar después de entregar_antes está permitido, pero cada minuto de retraso cuenta tres veces en el tiempo total de ruta; llegar antes de la apertura obliga a esperar.
+  text: "Llegar después de entregar_antes está permitido, pero cada minuto de retraso cuesta lo mismo que {{late_cost}} minutos de furgoneta; llegar antes de la apertura obliga a esperar."
+- id: workshop
+  text: El lunes V2 está en el taller por la revisión de frenos hasta las 06:40 y no puede salir de la cocina antes.
+- id: manager_pressure
+  text: La exigencia de la encargada de la Cafetería Lago Este (C07) de ser la primera parada antes de las 06:30 no es una norma; recibe sus bandejas entre la apertura y entregar_antes como todas.

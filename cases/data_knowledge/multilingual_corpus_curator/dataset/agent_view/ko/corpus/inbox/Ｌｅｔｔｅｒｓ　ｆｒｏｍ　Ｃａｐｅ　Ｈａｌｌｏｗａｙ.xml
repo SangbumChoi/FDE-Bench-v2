@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ONIXMessage xmlns="http://ns.editeur.org/onix/3.0/reference" release="3.0">
+  <Header><Sender><SenderName>Rights desk export</SenderName></Sender></Header>
+  <Product>
+    <RecordReference>rec-788330</RecordReference>
+    <ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>9799016788330</IDValue></ProductIdentifier>
+    <DescriptiveDetail>
+      <TitleDetail><TitleType>01</TitleType><TitleElement><TitleElementLevel>01</TitleElementLevel><TitleText>Ｌｅｔｔｅｒｓ　ｆｒｏｍ　Ｃａｐｅ　Ｈａｌｌｏｗａｙ</TitleText></TitleElement></TitleDetail>
+      <Contributor><SequenceNumber>1</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>Helena Calloway</PersonName>
+        <PersonNameInverted>Calloway, Helena</PersonNameInverted>
+      </Contributor>
+      <Contributor><SequenceNumber>2</SequenceNumber><ContributorRole>A01</ContributorRole><PersonName>Priya Elsworth</PersonName>
+        <PersonNameInverted>Elsworth, Priya</PersonNameInverted>
+      </Contributor>
+    </DescriptiveDetail>
+    <CollateralDetail><TextContent><TextType>03</TextType><ContentAudience>00</ContentAudience><Text textformat="06">When the lighthouse goes dark for the first time, an apprentice clockmaker in a tea garden on the border has to decide what is worth keeping.
+
+Told over a single winter, it follows an apprentice clockmaker and the people who refuse to leave.</Text></TextContent></CollateralDetail>
+    <PublishingDetail><PublishingStatus>04</PublishingStatus>
+      <PublishingDate><PublishingDateRole>01</PublishingDateRole><Date dateformat="05">2022</Date></PublishingDate>
+    </PublishingDetail>
+  </Product>
+</ONIXMessage>

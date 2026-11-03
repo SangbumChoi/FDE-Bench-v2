@@ -1,0 +1,17 @@
+{
+  "derived": {
+    "withdrawal_basis": "payment",
+    "withdrawal_pct": 40
+  },
+  "params": {
+    "large_order": 5,
+    "liquidation_days": 4,
+    "max_drawdown": "none",
+    "restricted": "TARK, VYTA",
+    "sector_cap": 35,
+    "stock_cap": 20,
+    "withdrawal": "payment_40"
+  },
+  "rule_seed": 44,
+  "tier": "medium"
+}

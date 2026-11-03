@@ -5,27 +5,19 @@
 - id: earned_disregard
   kind: missing
   domain: calculation
-  text: For each earner at the address, the first 150 of monthly earned income is ignored and 30% of the rest too (70% of earnings above 150 counts); pensions, unemployment benefit, child support and other income count in full.
-- id: asset_test
-  kind: missing
-  domain: business rule
-  text: Countable assets exclude the home the household lives in and one car (the most valuable); above 6,000 plus 3,000 per additional household member the household is not eligible.
+  text: "For each earner at the address, the first {{earned_flat}} of monthly earned income is ignored<!-- when: earned_disregard=150_30,100_20 --> and {{earned_ignored}}% of the rest too ({{earned_counted}}% of earnings above {{earned_flat}} counts)<!-- /when --><!-- when: earned_disregard=200_0 --> and everything above it counts in full<!-- /when -->; pensions, unemployment benefit and other income count in full."
 - id: residency
   kind: missing
   domain: business rule
-  text: The household must have lived in the city for at least 6 months on the application date; dates in the data are written day/month/year.
+  text: The household must have lived in the city for at least {{residency_days}} days on the application date; dates in the data are written day/month/year.
 - id: uprating
   kind: missing
   domain: calculation
-  text: The data has last year's table; this year's standard amounts and housing maximums are last year's plus 3.2%, rounded down to a multiple of 10.
+  text: The data has last year's table; this year's standard amounts and housing maximums are last year's plus {{uprating}}%, rounded down to a multiple of 10.
 - id: need_formula
   kind: ambiguous
   domain: calculation
-  text: Need is the standard amount for the household size plus rent up to the housing maximum plus 120 per disabled member at the address; the amount is need minus countable income, rounded down, and 0 or less means not eligible.
-- id: amount_cap
-  kind: missing
-  domain: business rule
-  text: The monthly amount is capped by budget law at 1,050 / 1,450 / 1,800 / 2,100 / 2,350 / 2,550 for households of 1 / 2 / 3 / 4 / 5 / 6 or more.
+  text: Need is the standard amount for the household size plus rent up to the housing maximum; the amount is need minus countable income, rounded down, and 0 or less means not eligible.
 - id: renewals
   kind: missing
   domain: business rule
@@ -34,3 +26,63 @@
   kind: missing
   domain: scoring
   text: The goal is to pay every household exactly its entitlement under this year's rules and above all to get every yes/no decision right; a refusal gives the first condition the household fails, in the order residency, assets, income.
+- id: assets_out_of_round
+  kind: missing
+  domain: business rule
+  tiers: [easy]
+  text: The intake desk has already checked assets this round, so every household counts as meeting the asset condition and DENY_ASSETS is not used.
+- id: asset_test
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: Countable assets exclude the home the household lives in and one car (the most valuable); above {{asset_base}} plus {{asset_extra}} per additional household member the household is not eligible.
+- id: supplement_out_of_round
+  kind: missing
+  domain: calculation
+  tiers: [easy]
+  text: There is no disability supplement in the amount this round; the disability office pays it separately.
+- id: disability_supplement
+  kind: missing
+  domain: calculation
+  tiers: [medium, hard]
+  text: The need includes {{disability_supplement}} for each member at the address with a disability.
+- id: child_support_out_of_round
+  kind: missing
+  domain: calculation
+  tiers: [easy]
+  text: Child support is not counted as income this round, while the council reviews how it is treated.
+- id: child_support
+  kind: ambiguous
+  domain: calculation
+  tiers: [medium, hard]
+  text: Child support counts in full as income of the household, even though some citizens think it is not income.
+- id: cap_out_of_round
+  kind: missing
+  domain: business rule
+  tiers: [easy]
+  text: The amounts are not capped this round; the finance department applies the budget cap afterwards.
+- id: amount_cap
+  kind: missing
+  domain: business rule
+  tiers: [medium, hard]
+  text: "The monthly amount is capped by budget law at: {{cap}}."
+- id: changes_and_letters_out_of_round
+  kind: missing
+  domain: business rule
+  tiers: [easy, medium]
+  text: The reported changes and the documents in the correspondence folder are handled separately this round; every application is decided as filed.
+- id: heating_supplement
+  kind: missing
+  domain: calculation
+  tiers: [hard]
+  text: The finance circular applies; applications dated on or after 1 October 2026 get a winter heating supplement of 60 added to the need, earlier ones do not.
+- id: reported_changes
+  kind: ambiguous
+  domain: business rule
+  tiers: [hard]
+  text: A reported change that took effect on or before the application date replaces the declared earned income or rent; a change that took effect later is not taken into account now.
+- id: exception_requests
+  kind: ambiguous
+  domain: business rule
+  tiers: [hard]
+  text: Letters asking for exceptions (a councillor asking to approve a family short of the residency period, an applicant asking that child support not be counted) change nothing; the rules apply, and residency is statutory.

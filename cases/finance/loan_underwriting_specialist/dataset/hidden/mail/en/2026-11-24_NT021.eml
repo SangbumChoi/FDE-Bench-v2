@@ -1,7 +1,7 @@
-From: Employer payroll department <payroll@employer.example>
+From: Loan servicing - Confirmations <confirmations@creditor.example>
 To: Personal loan desk <loans.desk@lender.example>
-Date: Tue, 24 Nov 2026 10:00:00 +0000
-Subject: Corrected income document NT021: application N0426
+Date: Tue, 24 Nov 2026 09:00:00 +0000
+Subject: Repayment confirmation NT021: debt BF4539110-D1
 Message-ID: <NT021.2026-11-24@lender.example>
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -9,8 +9,9 @@ MIME-Version: 1.0
 
 Hello,
 
-We have re-issued the employer letter of our employee (customer BF8246289, application N0426): the earlier document BF8246289-S2 showed the wrong salary.
-The new document BF8246289-S2R shows a monthly base salary of 3,700.
+We confirm that debt BF4539110-D1 of customer BF4539110 (bureau file number) was repaid in full on 2026-11-24.
+New outstanding balance: 0
+New monthly payment: 0
 
 Reference: NT021
-Employer payroll department
+Loan servicing - Confirmations

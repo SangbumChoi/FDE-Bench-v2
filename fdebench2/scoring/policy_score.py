@@ -154,6 +154,7 @@ def apply_policy(policy: Policy, raw: dict[str, Any], facts: RunFacts, *, case: 
         "quality_raw": quality_raw,
         "quality_ratio": scored.get("quality_ratio") if valid else 0.0,
         "quality_anchor": scored.get("quality_anchor") if valid else None,
+        "quality_span": scored.get("quality_span") if valid else None,
         "quality_cap": cap,
         "bent_rules": bent,
         "notes": notes_out,

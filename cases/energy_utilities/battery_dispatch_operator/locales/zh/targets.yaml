@@ -1,18 +1,26 @@
 - id: efficiency
-  text: 效率按充电 92%、放电 92% 分别计算，而不是把 84.6% 的往返效率只算一次；以 P MW 充电一个时段增加 0.25*P*0.92 MWh，放电 P MW 减少 0.25*P/0.92 MWh。
+  text: 效率按方向分别计算，充电 {{eta_charge_pct}}%、放电 {{eta_discharge_pct}}%（而不是把 84.6% 的往返效率只算一次）；以 P MW 充电一个时段增加 0.25*P*{{eta_charge}} MWh，放电 P MW 减少 0.25*P/{{eta_discharge}} MWh。
 - id: soc_window
-  text: 质保要求荷电状态任何时刻都在 10% 到 90%（4-36 MWh）之间，比厂家的 5%-95% 更窄。
+  text: '质保要求荷电状态任何时刻都在 {{soc_min}}% 到 {{soc_max}}%（{{soc_min_mwh}}-{{soc_max_mwh}} MWh）之间<!-- when: soc_window=10-90,15-85 -->，比厂家的 5%-95% 更窄<!-- /when --><!-- when: soc_window=5-95 -->，与厂家的范围相同<!-- /when -->。'
 - id: start_end_soc
-  text: 电池整周以 50%（20 MWh）开始，结束时必须不低于 50%。
+  text: 电池整周以 50%（20 MWh）开始，结束时必须不低于 {{end_soc}}%（{{end_soc_mwh}} MWh）。
 - id: export_cap
-  text: 上网上限临时为 25 MW（不是协议里的 30 MW）；放电时光伏 + 放电 − 充电 不得超过 25 MW，光伏超过 25 MW 的部分会被限发，除非电池充进去。
+  text: 上网上限临时为 {{export_cap}} MW（不是协议里的 30 MW）；放电时光伏 + 放电 − 充电 不得超过 {{export_cap}} MW，光伏超过 {{export_cap}} MW 的部分会被限发，除非电池充进去。
 - id: grid_charging
-  text: 用光伏充电任何时候都可以，但从电网取电只能在当地时间 00:00-05:45 开始的时段（最多 20 MW）；同一时段不能既充又放。
+  text: '<!-- tier: easy -->本周场站任何时候都可以从电网充电（最多 20 MW）<!-- /tier --><!-- tier: medium hard -->用光伏充电任何时候都可以，但从电网取电只能在当地时间 {{import_from}}-{{import_last}} 开始的时段（最多 20 MW）<!-- /tier -->；同一时段不能既充又放。'
 - id: quarter_settlement
   text: 按 15 分钟结算；每小时电价适用于该小时的 4 个时段，功率是时段平均值，电量 = MW × 0.25。
 - id: dst_clock
   text: 时间均为当地时间，3月28日周日开始夏令时，当天只有 23 小时、没有 02:00-02:45，计划正好 668 行。
 - id: evening_reserve
-  text: 公司规定每天 17:00 到 21:00 之间任何时刻荷电状态都不低于 20%。
+  text: 公司规定每天 {{reserve_from}} 到 {{reserve_to}} 之间任何时刻荷电状态都不低于 {{reserve_pct}}%（{{reserve_mwh}} MWh）。
+- id: degradation
+  text: 计量点每充进加放出 1 MWh，计 {{degradation}} 欧元的损耗成本，从利润中扣除。
 - id: profit_scoring
-  text: 按实际电价评分：场站上网收入减去下网成本，再减去光伏单独运行的收入（以 25 MW 封顶），再减去充放电吞吐量每 MWh 5 欧元。
+  text: '按实际电价评分：场站上网收入减去下网成本，再减去光伏单独运行的收入（两者都以上网上限封顶）<!-- tier: medium hard -->，再减去充放电吞吐量的损耗成本<!-- /tier -->。'
+- id: works_end
+  text: 变电站施工提前完工：{{export_cap}} MW 的上限只到 {{works_end}} 00:00，之后恢复协议规定的 30 MW。
+- id: dso_limit
+  text: 配电公司把 {{dso_day}} 18:00 到 21:00 的场站上网限制在 {{dso_mw}} MW；这段时间放电时，光伏 + 放电 − 充电 不得超过 {{dso_mw}} MW。
+- id: maintenance_outage
+  text: '{{outage_day}} 08:00 到 20:00 电池因逆变器检修停运：这些时段内不能充电也不能放电。'
