@@ -1,0 +1,9 @@
+{"content": {"medium": false, "withdrawal_basis": null, "withdrawal_pct": 0}, "difficulty": "easy", "file": "config.json", "seed": "44"}
+{"content": {"medium": false, "withdrawal_basis": null, "withdrawal_pct": 0}, "difficulty": "easy", "file": "config.json", "seed": "20"}
+{"content": {"medium": false, "withdrawal_basis": null, "withdrawal_pct": 0}, "difficulty": "easy", "file": "config.json", "seed": "134"}
+{"content": {"medium": true, "withdrawal_basis": "payment", "withdrawal_pct": 40}, "difficulty": "medium", "file": "config.json", "seed": "44"}
+{"content": {"medium": true, "withdrawal_basis": "notice", "withdrawal_pct": 10}, "difficulty": "medium", "file": "config.json", "seed": "20"}
+{"content": {"medium": true, "withdrawal_basis": "capital", "withdrawal_pct": 25}, "difficulty": "medium", "file": "config.json", "seed": "134"}
+{"content": {"medium": true, "withdrawal_basis": "payment", "withdrawal_pct": 40}, "difficulty": "hard", "file": "config.json", "seed": "44"}
+{"content": {"medium": true, "withdrawal_basis": "notice", "withdrawal_pct": 10}, "difficulty": "hard", "file": "config.json", "seed": "20"}
+{"content": {"medium": true, "withdrawal_basis": "capital", "withdrawal_pct": 25}, "difficulty": "hard", "file": "config.json", "seed": "134"}

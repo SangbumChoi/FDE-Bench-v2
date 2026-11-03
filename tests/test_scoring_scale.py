@@ -1,5 +1,6 @@
 """The quality scale (baseline 0, reference 1, capped credit) and the policy scoring around it."""
 
+import csv
 import json
 from pathlib import Path
 
@@ -208,21 +209,17 @@ def test_dataset_stores_the_baseline_only_when_the_case_has_one(tmp_path):
     for base in (40.0, None):
         case = make_case(tmp_path, "maximize", ref=80.0, base=base)
         export_dataset(case.root)
-        answer = case.root / "dataset" / "answer" / "default"
-        score = json.loads((answer / "score.json").read_text())
+        answer = case.root / "dataset" / "answer"
         assert check_dataset(case.root) == []
-        assert (answer / "baseline").is_dir() == (base is not None) and (answer / "reference").is_dir()
-        assert json.loads((answer / "setting.json").read_text()) == {
-            "rules": [{"id": "habit", "class": "business_policy", "description": ""},
-                      {"id": "habit2", "class": "business_policy", "description": ""}], "targets": []}
+        with (answer / "answers.csv").open(encoding="utf-8", newline="") as f:
+            rows = list(csv.DictReader(f))
+        assert len(rows) == 1 and rows[0]["difficulty"] == "default" and rows[0]["seed"] == ""
+        assert float(rows[0]["reference_objective"]) == 80.0 and rows[0]["rules"] == "habit;habit2"
+        assert (answer / "baseline.jsonl").is_file() == (base is not None) and (answer / "reference.jsonl").is_file()
         if base is None:
-            assert set(score) == {"objective", "violations", "metrics"}
+            assert rows[0]["baseline_objective"] == "" and rows[0]["quality_span"] == ""
         else:
-            assert score["baseline_objective"] == 40.0
-            assert score["reference_quality"] == {"quality_anchor": "baseline", "quality_ratio": 1.0,
-                                                  "quality_score": 1.0}
-            assert score["baseline_quality"] == {"quality_anchor": "baseline", "quality_ratio": 0.5,
-                                                 "quality_score": 0.0}
+            assert float(rows[0]["baseline_objective"]) == 40.0 and float(rows[0]["quality_span"]) == 0.5
 
 
 def test_the_baseline_is_exactly_the_zero_point_even_when_close_to_the_reference():

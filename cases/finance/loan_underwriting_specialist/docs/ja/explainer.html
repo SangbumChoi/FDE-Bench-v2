@@ -111,7 +111,7 @@ reason_code は DELINQUENCY | LOW_SCORE | SPLIT_APPLICATION | LIMIT_EXCEEDED | C
 <div class="scroll"><table><thead><tr><th>設定</th><th>これまでに見つかった最善の解答</th><th>限界値</th><th>限界値までの差</th></tr></thead><tbody><tr><td>easy/s30</td><td>1.01</td><td>1.14</td><td>5%</td></tr><tr><td>easy/s525</td><td>1.00</td><td>1.12</td><td>6%</td></tr><tr><td>easy/s1043</td><td>1.00</td><td>1.69</td><td>11%</td></tr><tr><td>easy/c1</td><td>1.00</td><td>1.08</td><td>4%</td></tr><tr><td>easy/c2</td><td>1.01</td><td>1.17</td><td>7%</td></tr><tr><td>easy/c3</td><td>1.01</td><td>1.29</td><td>6%</td></tr><tr><td>easy/c4</td><td>1.01</td><td>1.15</td><td>5%</td></tr><tr><td>easy/c5</td><td>1.00</td><td>1.42</td><td>10%</td></tr><tr><td>easy/c6</td><td>1.00</td><td>1.08</td><td>5%</td></tr><tr><td>easy/c7</td><td>1.00</td><td>1.12</td><td>6%</td></tr><tr><td>easy/c8</td><td>1.00</td><td>1.06</td><td>3%</td></tr><tr><td>easy/c9</td><td>1.01</td><td>1.10</td><td>4%</td></tr><tr><td>easy/c10</td><td>1.00</td><td>1.43</td><td>10%</td></tr><tr><td>easy/c11</td><td>1.01</td><td>1.20</td><td>9%</td></tr><tr><td>easy/c12</td><td>1.01</td><td>1.10</td><td>4%</td></tr><tr><td>medium/s30</td><td>1.05</td><td>1.31</td><td>8%</td></tr><tr><td>medium/s525</td><td>1.02</td><td>1.18</td><td>7%</td></tr><tr><td>medium/s1043</td><td>1.04</td><td>1.41</td><td>7%</td></tr><tr><td>medium/c1</td><td>1.05</td><td>1.31</td><td>6%</td></tr><tr><td>medium/c2</td><td>1.03</td><td>1.38</td><td>7%</td></tr><tr><td>medium/c3</td><td>1.01</td><td>1.25</td><td>8%</td></tr><tr><td>medium/c4</td><td>1.01</td><td>1.18</td><td>6%</td></tr><tr><td>medium/c5</td><td>1.02</td><td>1.14</td><td>4%</td></tr><tr><td>medium/c6</td><td>1.02</td><td>1.20</td><td>6%</td></tr><tr><td>medium/c7</td><td>1.02</td><td>1.15</td><td>5%</td></tr><tr><td>medium/c8</td><td>1.03</td><td>1.34</td><td>7%</td></tr><tr><td>medium/c9</td><td>1.03</td><td>1.12</td><td>6%</td></tr><tr><td>medium/c10</td><td>1.05</td><td>1.22</td><td>5%</td></tr><tr><td>medium/c11</td><td>1.02</td><td>1.10</td><td>4%</td></tr><tr><td>medium/c12</td><td>1.01</td><td>1.23</td><td>6%</td></tr><tr><td>hard/s30</td><td>1.07</td><td>1.41</td><td>8%</td></tr><tr><td>hard/s525</td><td>1.03</td><td>1.30</td><td>8%</td></tr><tr><td>hard/s1043</td><td>1.04</td><td>1.49</td><td>8%</td></tr><tr><td>hard/c1</td><td>1.02</td><td>1.22</td><td>6%</td></tr><tr><td>hard/c2</td><td>1.04</td><td>1.52</td><td>8%</td></tr><tr><td>hard/c3</td><td>1.02</td><td>1.17</td><td>6%</td></tr><tr><td>hard/c4</td><td>1.03</td><td>1.25</td><td>5%</td></tr><tr><td>hard/c5</td><td>1.02</td><td>1.16</td><td>4%</td></tr><tr><td>hard/c6</td><td>1.03</td><td>1.29</td><td>7%</td></tr><tr><td>hard/c7</td><td>1.01</td><td>1.12</td><td>6%</td></tr><tr><td>hard/c8</td><td>1.03</td><td>1.23</td><td>5%</td></tr><tr><td>hard/c9</td><td>1.03</td><td>1.12</td><td>4%</td></tr><tr><td>hard/c10</td><td>1.08</td><td>1.62</td><td>7%</td></tr><tr><td>hard/c11</td><td>1.01</td><td>1.09</td><td>4%</td></tr><tr><td>hard/c12</td><td>1.04</td><td>1.34</td><td>7%</td></tr></tbody></table></div>
 </section>
 <section id="data"><h2>データと正解 (<code>dataset/</code>)</h2>
-<p>すべてケースの隣にファイルとして保存されています。<code>agent_view/</code> はAIが受け取るそのままのデータ、<code>hidden/</code> は採点にだけ使う入力（プログラムなら実際に動かす日やファイル）、<code>answer/</code> はケースのバージョンごとの正解です。難易度とルールシードごとにフォルダが一つあり（<code>answer/easy/s30/</code>）、設定とそのルール、そのバージョンで顧客が知っている内容（すべての言語）、模範解答、従来のやり方とそれぞれのスコアが入っています。</p>
+<p>すべてケースの隣にファイルとして保存されています。<code>agent_view/</code> はAIが受け取るそのままのデータ、<code>hidden/</code> は採点にだけ使う入力（プログラムなら実際に動かす日やファイル）、<code>answer/</code> は正解を表で持っています。<a href="../../dataset/answer/answers.csv"><code>answer/answers.csv</code></a> にはケースのバージョンごとに1行（難易度、ルールシード、引かれたルールの値、模範解答と従来のやり方の目的値）があり、その隣に模範解答と従来のやり方の成果物が、すべてのバージョンを難易度・シードの列で区別して1ファイルにまとめてあります。</p>
 <h3>AIが受け取るデータ（日本語）</h3><p class='muted'>9 files, 2,877,711 bytes</p><pre class='tree'>mail/2026-10-30_NT-P1.eml  <span class='muted'>610 B</span>
 mail/2026-10-30_NT-P2.eml  <span class='muted'>460 B</span>
 mail/2026-10-30_NT-P3.eml  <span class='muted'>643 B</span>
@@ -154,44 +154,14 @@ mail/en/2026-11-12_NT007.eml  <span class='muted'>590 B</span>
 <span class='muted'>… and 165 more files</span></pre>
 <h3>難易度別の正解</h3>
 <p class="muted">品質は「エンジニアなしで顧客がしていたやり方 = 0点、模範解答 = 1点」の尺度で測ります。模範解答より良ければ1を超えます。</p>
-<h4>easy · <code>answer/easy/</code></h4><div class="scroll"><table><thead><tr><th>ルールシード</th><th>模範解答（1点の基準）</th><th>従来のやり方（0点の基準）</th><th>指標（最初の四つ）</th><th>フォルダ</th></tr></thead><tbody><tr><td><code>30</code></td><td>1.0</td><td>0.61306876</td><td>approved=308, approved_amount=4946088.0, calls_failed=0, days_daily_cap_used_95pct=19</td><td><a href="../../dataset/answer/easy/s30/"><code>answer/easy/s30/</code></a></td></tr><tr><td><code>525</code></td><td>1.0</td><td>0.46905094</td><td>approved=235, approved_amount=3845490.0, calls_failed=0, days_daily_cap_used_95pct=16</td><td><a href="../../dataset/answer/easy/s525/"><code>answer/easy/s525/</code></a></td></tr><tr><td><code>1043</code></td><td>1.0</td><td>0.84607728</td><td>approved=306, approved_amount=5135652.0, calls_failed=0, days_daily_cap_used_95pct=9</td><td><a href="../../dataset/answer/easy/s1043/"><code>answer/easy/s1043/</code></a></td></tr></tbody></table></div><h4>medium · <code>answer/medium/</code></h4><div class="scroll"><table><thead><tr><th>ルールシード</th><th>模範解答（1点の基準）</th><th>従来のやり方（0点の基準）</th><th>指標（最初の四つ）</th><th>フォルダ</th></tr></thead><tbody><tr><td><code>30</code></td><td>1.0</td><td>0.73251094</td><td>approved=229, approved_amount=3000000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/medium/s30/"><code>answer/medium/s30/</code></a></td></tr><tr><td><code>525</code></td><td>1.0</td><td>0.60234284</td><td>approved=225, approved_amount=3400000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/medium/s525/"><code>answer/medium/s525/</code></a></td></tr><tr><td><code>1043</code></td><td>1.0</td><td>0.82924732</td><td>approved=265, approved_amount=4000000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/medium/s1043/"><code>answer/medium/s1043/</code></a></td></tr></tbody></table></div><h4>hard · <code>answer/hard/</code></h4><div class="scroll"><table><thead><tr><th>ルールシード</th><th>模範解答（1点の基準）</th><th>従来のやり方（0点の基準）</th><th>指標（最初の四つ）</th><th>フォルダ</th></tr></thead><tbody><tr><td><code>30</code></td><td>1.0</td><td>0.81212931</td><td>approved=228, approved_amount=3000000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/hard/s30/"><code>answer/hard/s30/</code></a></td></tr><tr><td><code>525</code></td><td>1.0</td><td>0.74599125</td><td>approved=223, approved_amount=3400000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/hard/s525/"><code>answer/hard/s525/</code></a></td></tr><tr><td><code>1043</code></td><td>1.0</td><td>0.84464063</td><td>approved=256, approved_amount=3971582.0, budget_left=28418.0, calls_failed=0</td><td><a href="../../dataset/answer/hard/s1043/"><code>answer/hard/s1043/</code></a></td></tr></tbody></table></div>
-<h3>正解フォルダの例：<code>answer/easy/s30/</code></h3><p class='muted'>37 files, 295,796 bytes</p><pre class='tree'>baseline/program/config.json  <span class='muted'>649 B</span>
-baseline/program/underwriter.py  <span class='muted'>34,300 B</span>
-client/en/requirements.md  <span class='muted'>11,451 B</span>
-client/en/targets.yaml  <span class='muted'>3,848 B</span>
-client/es/requirements.md  <span class='muted'>13,080 B</span>
-client/es/targets.yaml  <span class='muted'>4,245 B</span>
-client/ja/requirements.md  <span class='muted'>13,792 B</span>
-client/ja/targets.yaml  <span class='muted'>4,254 B</span>
-client/ko/requirements.md  <span class='muted'>12,899 B</span>
-client/ko/targets.yaml  <span class='muted'>4,098 B</span>
-client/zh/requirements.md  <span class='muted'>10,681 B</span>
-client/zh/targets.yaml  <span class='muted'>3,533 B</span>
-decisions.csv  <span class='muted'>27,483 B</span>
-limit_tables/2026-11-02.json  <span class='muted'>732 B</span>
-limit_tables/2026-11-03.json  <span class='muted'>1,293 B</span>
-limit_tables/2026-11-04.json  <span class='muted'>1,670 B</span>
-limit_tables/2026-11-05.json  <span class='muted'>2,169 B</span>
-limit_tables/2026-11-06.json  <span class='muted'>2,662 B</span>
-limit_tables/2026-11-09.json  <span class='muted'>3,328 B</span>
-limit_tables/2026-11-10.json  <span class='muted'>3,797 B</span>
-limit_tables/2026-11-11.json  <span class='muted'>4,249 B</span>
-limit_tables/2026-11-12.json  <span class='muted'>4,768 B</span>
-limit_tables/2026-11-13.json  <span class='muted'>5,289 B</span>
-limit_tables/2026-11-16.json  <span class='muted'>5,946 B</span>
-limit_tables/2026-11-17.json  <span class='muted'>6,451 B</span>
-limit_tables/2026-11-18.json  <span class='muted'>6,971 B</span>
-limit_tables/2026-11-19.json  <span class='muted'>7,412 B</span>
-limit_tables/2026-11-20.json  <span class='muted'>7,876 B</span>
-limit_tables/2026-11-23.json  <span class='muted'>8,451 B</span>
-limit_tables/2026-11-24.json  <span class='muted'>8,931 B</span>
-limit_tables/2026-11-25.json  <span class='muted'>9,400 B</span>
-limit_tables/2026-11-26.json  <span class='muted'>9,927 B</span>
-limit_tables/2026-11-27.json  <span class='muted'>10,393 B</span>
-reference/program/config.json  <span class='muted'>628 B</span>
-reference/program/underwriter.py  <span class='muted'>34,300 B</span>
-score.json  <span class='muted'>799 B</span>
-setting.json  <span class='muted'>4,041 B</span></pre></section>
+<div class="scroll"><table><thead><tr><th>難易度</th><th>ルールシード</th><th>模範解答（1点の基準）</th><th>従来のやり方（0点の基準）</th></tr></thead><tbody><tr><td>easy</td><td><code>30</code></td><td>1.0</td><td>0.61306876</td></tr><tr><td>easy</td><td><code>525</code></td><td>1.0</td><td>0.46905094</td></tr><tr><td>easy</td><td><code>1043</code></td><td>1.0</td><td>0.84607728</td></tr><tr><td>medium</td><td><code>30</code></td><td>1.0</td><td>0.73251094</td></tr><tr><td>medium</td><td><code>525</code></td><td>1.0</td><td>0.60234284</td></tr><tr><td>medium</td><td><code>1043</code></td><td>1.0</td><td>0.82924732</td></tr><tr><td>hard</td><td><code>30</code></td><td>1.0</td><td>0.81212931</td></tr><tr><td>hard</td><td><code>525</code></td><td>1.0</td><td>0.74599125</td></tr><tr><td>hard</td><td><code>1043</code></td><td>1.0</td><td>0.84464063</td></tr></tbody></table></div>
+<h3>正解ファイル：<code>answer/</code></h3><p class='muted'>7 files, 1,297,450 bytes</p><pre class='tree'>answers.csv  <span class='muted'>6,926 B</span>
+baseline_program.jsonl  <span class='muted'>5,982 B</span>
+decisions.csv  <span class='muted'>293,332 B</span>
+files/baseline/program/underwriter.py  <span class='muted'>34,300 B</span>
+files/reference/program/underwriter.py  <span class='muted'>34,300 B</span>
+limit_tables.jsonl  <span class='muted'>916,808 B</span>
+reference_program.jsonl  <span class='muted'>5,802 B</span></pre></section>
 <section id="readme"><h2>ケースの解説（README）</h2>
 <div class="doc"><h3 id="readme-ローン審査スペシャリスト--financeloan_underwriting_specialist">ローン審査スペシャリスト — <code>finance/loan_underwriting_specialist</code></h3>
 <p>ある金融機関（以下、借り手である「顧客」と区別して「依頼元」と呼びます）の個人ローン窓口が、<strong>プログラムで日々の審査</strong>を行いたいと考えています。営業日ごとに、この機関の唯一の無担保商品（PL36：36か月、年11.9%、顧客あたり1,000–50,000）への新規申込が届きます。プログラムは申込ごとに判断（承認 / 否決 / 人の審査への回付、金額、理由コード）を下し、その日の<strong>枠一覧表</strong>を報告します。枠一覧表には、各顧客がまだ借りられる額と、銀行の1日の枠および期間予算の残りが載ります。エージェントは <code>program/underwriter.py:on_day</code> を納品し、評価器は<strong>採点用の期間（AIには渡さない）の20営業日</strong>（2026年11月2–27日、顧客501人からの申込562件）を1つの隔離されたプロセスで再生します。このケースの鍵は、すべての承認をその日の枠内に収め、毎日の枠一覧表を正しく出すことです。枠一覧表は必須の成果物（ルール）で、目的値は期待収益に、変わる項目についての表の正確さを<strong>掛けた</strong>ものなので、どれだけ収益を上げても誤った表は取り戻せません。舞台は特定の国に依存せず、どの国の規制当局や信用情報機関も名前が出てきません。このケースの正解は5つの部分（依頼元だけが知っている事実、有効性の検査、目的値、模範解答と限界値、直接の検査）からなり、保存された監査から生成されて <a href="../../GT.md">GT.md</a> にあります。</p>

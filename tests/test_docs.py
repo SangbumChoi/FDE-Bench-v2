@@ -77,7 +77,7 @@ def _toy_with_docs(tmp_path: Path) -> Path:
     (root / "GT.md").write_text("# Ground truth\n", encoding="utf-8")
     (root / "docs" / "en" / "README.md").write_text(
         "# Toy\n\nThe [catalog](../../../../README.md), the [review](REVIEW.md#findings), the stored "
-        "[answers](../../dataset/answer/easy/s1/), the [ground truth](../../GT.md) and [the data](#the-data).\n\n"
+        "[answers](../../dataset/answer/answers.csv), the [ground truth](../../GT.md) and [the data](#the-data).\n\n"
         "## The data\n", encoding="utf-8")
     (root / "docs" / "en" / "REVIEW.md").write_text(
         "# Findings\n\n- Back to the [README](README.md); [the data](#the-data).\n\n## The data\n", encoding="utf-8")
@@ -107,20 +107,19 @@ def test_every_link_of_the_generated_pages_resolves(tmp_path):
     assert broken(index, links) == [] and "GT.md" in links and "CLIENT_REVIEW.md" not in links
     assert {page_name(lang) for lang in LANGS} | {"docs/en/README.md", "docs/ko/README.md", "docs/en/REVIEW.md"} \
         <= set(links)
-    # the stored answers: the folder, each tier's and each setting's (tier x public rule seed)
-    assert {"dataset/answer/"} | {f"dataset/answer/{tier}/" for tier in ("easy", "medium", "hard")} | {
-        f"dataset/answer/{tier}/s{seed}/" for tier in ("easy", "medium", "hard") for seed in (1, 2, 3)} <= set(links)
+    # the stored answers: one table, one row per setting (tier x public rule seed), and the folder
+    assert {"dataset/answer/answers.csv", "dataset/answer/"} <= set(links)
     assert "docs/ja/README.md" not in links and "docs/ko/REVIEW.md" not in links    # not translated yet: a dash
     # an English README shown on another language's page keeps its links working from there
     zh = (root / page_name("zh")).read_text(encoding="utf-8")
     assert 'href="../en/REVIEW.md#findings"' in zh and 'href="../../GT.md"' in zh
     en = (root / PAGE).read_text(encoding="utf-8")
-    assert 'href="REVIEW.md#findings"' in en and 'href="../../dataset/answer/easy/s1/"' in en
+    assert 'href="REVIEW.md#findings"' in en and 'href="../../dataset/answer/answers.csv"' in en
     # the README and the review on one page: the same heading, one id each, and each document's link finds its own
     assert '<h4 id="readme-the-data">' in en and '<h4 id="review-the-data">' in en
     assert 'href="#readme-the-data"' in en and 'href="#review-the-data"' in en
-    # the data section names the case's own first answer folder as its example
-    assert "(<code>answer/easy/s1/</code>)" in en and "s42" not in en
+    # the data section lists every public setting in one table, from answers.csv
+    assert en.count("<td><code>1</code></td>") == 3 and "s42" not in en
     assert f'href="../../logistics/toy_planner/{page_name("ja")}"' in (cases / index_name("ja")).read_text(encoding="utf-8")
     # a new translation makes the page that shows it stale, and the index that links it
     stale = "is out of date: run `fdebench2 explain-case` (or export-dataset)"

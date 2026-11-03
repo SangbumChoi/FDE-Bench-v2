@@ -35,7 +35,7 @@ import yaml
 
 from .audit import load_audit, shortcut_summary, target_summary, tier_order
 from .cases import LOCALES, NativeCase, load_fields, value_label, value_text
-from .dataset import ANSWER_DIR, DATASET_DIR, answer_folder
+from .dataset import ANSWER_DIR, ANSWERS_CSV, DATASET_DIR
 
 LANG_NAMES = {"en": "English", "ko": "한국어", "zh": "中文", "ja": "日本語", "es": "Español"}
 LANGS = tuple(LANG_NAMES)                        # the order of the language switcher
@@ -466,7 +466,7 @@ def build_page(case_root: Path, lang: str = "en") -> str:
     # hidden requirements per setting (tier x public rule seed), in the page's language (JS switcher)
     texts, names = {}, {}
     for c in settings:
-        key = answer_folder(c)
+        key = c.setting.label if has_settings else "default"
         texts[key] = markdown(c.requirements(lang))
         names[key] = f"{c.tier} / {UI[lang]['rule_seed']} {c.rule_seed}" if has_settings else key
     keys = list(texts)
@@ -493,38 +493,30 @@ def build_page(case_root: Path, lang: str = "en") -> str:
     if audit:       # the ground truth audit, when audit-case has stored one
         parts.append(_evidence(audit, lang, src, own.get("shortcuts") or {}))
 
-    # data & answers: one folder per public setting, dataset/answer/<tier>/s<seed>/, the table grouped by tier
+    # data & answers: dataset/answer/answers.csv (one row per public setting) and the stacked answer files
     ds = root / DATASET_DIR
-    head = [t("rule_seed") if has_settings else t("setting"), t("reference_objective"), t("baseline_objective"),
-            t("metrics"), t("folder")]
-    groups: dict[str, list[list[str]]] = {}
-    stored = []
-    for c in settings:
-        folder = answer_folder(c)
-        path = ds / ANSWER_DIR / folder
-        if not path.is_dir():
-            continue
-        stored.append((folder, path))
-        sc = json.loads((path / "score.json").read_text(encoding="utf-8")) if (path / "score.json").is_file() else {}
-        top = ", ".join(f"{k}={v}" for k, v in list(sc.get("metrics", {}).items())[:4])
-        rel = f"{ANSWER_DIR}/{folder}/"
-        groups.setdefault(c.tier or "", []).append([
-            f"<code>{_esc(c.rule_seed if has_settings else folder)}</code>", _esc(sc.get("objective")),
-            _esc(sc.get("baseline_objective", "–")), _esc(top),
-            f'<a href="{UP}{DATASET_DIR}/{_esc(rel)}"><code>{_esc(rel)}</code></a>'])
-    answers = "".join((f"<h4>{_esc(tier)} · <code>{ANSWER_DIR}/{_esc(tier)}/</code></h4>" if tier else "")
-                      + _table(head, rows) for tier, rows in groups.items())
-    example = stored[0] if stored else None
-    shown = f"{ANSWER_DIR}/{example[0]}/" if example else f"{ANSWER_DIR}/<tier>/s<seed>/"     # the case's own first
+    head = [t("difficulty"), t("rule_seed") if has_settings else t("setting"), t("reference_objective"),
+            t("baseline_objective")]
+    table = ""
+    csv_path = ds / ANSWER_DIR / ANSWERS_CSV
+    if csv_path.is_file():
+        import csv as _csv
+        with csv_path.open(encoding="utf-8", newline="") as f:
+            rows = [[_esc(r.get("difficulty")), f"<code>{_esc(r.get('seed') or '–')}</code>",
+                     _esc(r.get("reference_objective")), _esc(r.get("baseline_objective") or "–")]
+                    for r in _csv.DictReader(f)]
+        table = _table(head, rows)
+    rel = f"{ANSWER_DIR}/{ANSWERS_CSV}"
+    shown = f'<a href="{UP}{DATASET_DIR}/{rel}"><code>{rel}</code></a>'
     visible = ds / "agent_view" / lang if (ds / "agent_view" / lang).is_dir() else ds / "agent_view" / "en"
     parts.append(f"""<section id="data"><h2>{t("data_title")} (<code>dataset/</code>)</h2>
-<p>{t("data_intro", example=f"<code>{_esc(shown)}</code>")}</p>
+<p>{t("data_intro", example=shown)}</p>
 <h3>{t("visible_data", language=LANG_NAMES[lang])}</h3>{_tree(visible)}
 <h3>{t("hidden_inputs")}</h3>{_tree(ds / "hidden", limit=30)}
 <h3>{t("scores_title")}</h3>
 <p class="muted">{t("scores_intro")}</p>
-{answers or f"<p class='muted'>{t('no_dataset')}</p>"}
-{f'<h3>{t("answer_folder", folder=f"<code>{ANSWER_DIR}/{_esc(example[0])}/</code>")}</h3>' + _tree(example[1], limit=40) if example else ""}</section>""")
+{table or f"<p class='muted'>{t('no_dataset')}</p>"}
+{f'<h3>{t("answer_folder", folder=f"<code>{ANSWER_DIR}/</code>")}</h3>' + _tree(ds / ANSWER_DIR, limit=40) if (ds / ANSWER_DIR).is_dir() else ""}</section>""")
 
     # README and REVIEW.md, in the page's language when translated; the English one's links still resolve from here
     here = posixpath.dirname(page_name(lang))
@@ -618,37 +610,23 @@ def _shell(title: str, body: str, script: bool = True, lang: str = "en") -> str:
 
 
 def _answer_index(root: Path, meta: dict) -> list[str]:
-    """The index's lines for dataset/answer/: the folder, then one line per tier with a link to each public rule
-    seed's folder (in case.yaml's order), or the default/ folder of a case without settings. None before export."""
+    """The index's line for dataset/answer/: answers.csv (one row per public setting) and the folder. None before
+    export."""
     base = root / DATASET_DIR / ANSWER_DIR
-    if not base.is_dir():
+    if not (base / ANSWERS_CSV).is_file():
         return []
-    tiers, seeds = list(meta.get("tiers") or {}), [f"s{s}" for s in meta.get("rule_seeds") or []]
-
-    def order(names: list[str], known: list[str]) -> list[str]:
-        return sorted(names, key=lambda n: (known.index(n) if n in known else len(known),
-                                            int(n[1:]) if re.fullmatch(r"s\d+", n) else 0, n))
-
     rel = f"{DATASET_DIR}/{ANSWER_DIR}"
-    where = ("one folder per tier and public rule seed (`<tier>/s<seed>/`)" if tiers
-             else "in `default/`, as the case has no settings")
-    lines = [f"- [{rel}/]({rel}/): the answer of each public setting, {where}, with the setting and its rules, what "
-             "the client knows in that version in every language, the reference, the client's own way and their scores"]
-    for tier in order([d.name for d in base.iterdir() if d.is_dir()], tiers):
-        folder = base / tier
-        if (folder / "setting.json").is_file():          # default/: itself a setting's folder
-            lines.append(f"  - [{tier}/]({rel}/{tier}/)")
-            continue
-        found = order([d.name for d in folder.iterdir() if d.is_dir()], seeds)
-        lines.append(f"  - [{tier}/]({rel}/{tier}/): " + ", ".join(f"[{s}]({rel}/{tier}/{s}/)" for s in found))
-    return lines
+    return [f"- [{rel}/{ANSWERS_CSV}]({rel}/{ANSWERS_CSV}): the answers, one row per public setting (difficulty, "
+            "seed, the drawn rule values, the reference's and the client's own way's objective, the rules and facts "
+            f"in force); the reference and baseline deliverables are stacked next to it in [{rel}/]({rel}/) with "
+            "difficulty and seed columns"]
 
 
 def build_case_readme(case_root: Path) -> str:
     """The case's README.md: a generated index of its documents, so the case folder shows something on GitHub. The
     role and id, one row per language (the role in that language, its README, REVIEW when the case has one, and
-    explainer page in docs/<lang>/), then the stored answers (dataset/answer/<tier>/s<seed>/), GT.md and
-    CLIENT_REVIEW.md when they exist. Read from case.yaml, the locales and the folders of dataset/answer/ only, so a
+    explainer page in docs/<lang>/), then the stored answers (dataset/answer/answers.csv), GT.md and
+    CLIENT_REVIEW.md when they exist. Read from case.yaml, the locales and dataset/answer/ only, so a
     new case's index can be written before its case.py works."""
     root = Path(case_root)
     meta = yaml.safe_load((root / "case.yaml").read_text(encoding="utf-8")) or {}

@@ -110,7 +110,7 @@ reason_code 取 DELINQUENCY | LOW_SCORE | SPLIT_APPLICATION | LIMIT_EXCEEDED | C
 <div class="scroll"><table><thead><tr><th>设置</th><th>已知最优解</th><th>界限值</th><th>与界限值的差距</th></tr></thead><tbody><tr><td>easy/s30</td><td>1.01</td><td>1.14</td><td>5%</td></tr><tr><td>easy/s525</td><td>1.00</td><td>1.12</td><td>6%</td></tr><tr><td>easy/s1043</td><td>1.00</td><td>1.69</td><td>11%</td></tr><tr><td>easy/c1</td><td>1.00</td><td>1.08</td><td>4%</td></tr><tr><td>easy/c2</td><td>1.01</td><td>1.17</td><td>7%</td></tr><tr><td>easy/c3</td><td>1.01</td><td>1.29</td><td>6%</td></tr><tr><td>easy/c4</td><td>1.01</td><td>1.15</td><td>5%</td></tr><tr><td>easy/c5</td><td>1.00</td><td>1.42</td><td>10%</td></tr><tr><td>easy/c6</td><td>1.00</td><td>1.08</td><td>5%</td></tr><tr><td>easy/c7</td><td>1.00</td><td>1.12</td><td>6%</td></tr><tr><td>easy/c8</td><td>1.00</td><td>1.06</td><td>3%</td></tr><tr><td>easy/c9</td><td>1.01</td><td>1.10</td><td>4%</td></tr><tr><td>easy/c10</td><td>1.00</td><td>1.43</td><td>10%</td></tr><tr><td>easy/c11</td><td>1.01</td><td>1.20</td><td>9%</td></tr><tr><td>easy/c12</td><td>1.01</td><td>1.10</td><td>4%</td></tr><tr><td>medium/s30</td><td>1.05</td><td>1.31</td><td>8%</td></tr><tr><td>medium/s525</td><td>1.02</td><td>1.18</td><td>7%</td></tr><tr><td>medium/s1043</td><td>1.04</td><td>1.41</td><td>7%</td></tr><tr><td>medium/c1</td><td>1.05</td><td>1.31</td><td>6%</td></tr><tr><td>medium/c2</td><td>1.03</td><td>1.38</td><td>7%</td></tr><tr><td>medium/c3</td><td>1.01</td><td>1.25</td><td>8%</td></tr><tr><td>medium/c4</td><td>1.01</td><td>1.18</td><td>6%</td></tr><tr><td>medium/c5</td><td>1.02</td><td>1.14</td><td>4%</td></tr><tr><td>medium/c6</td><td>1.02</td><td>1.20</td><td>6%</td></tr><tr><td>medium/c7</td><td>1.02</td><td>1.15</td><td>5%</td></tr><tr><td>medium/c8</td><td>1.03</td><td>1.34</td><td>7%</td></tr><tr><td>medium/c9</td><td>1.03</td><td>1.12</td><td>6%</td></tr><tr><td>medium/c10</td><td>1.05</td><td>1.22</td><td>5%</td></tr><tr><td>medium/c11</td><td>1.02</td><td>1.10</td><td>4%</td></tr><tr><td>medium/c12</td><td>1.01</td><td>1.23</td><td>6%</td></tr><tr><td>hard/s30</td><td>1.07</td><td>1.41</td><td>8%</td></tr><tr><td>hard/s525</td><td>1.03</td><td>1.30</td><td>8%</td></tr><tr><td>hard/s1043</td><td>1.04</td><td>1.49</td><td>8%</td></tr><tr><td>hard/c1</td><td>1.02</td><td>1.22</td><td>6%</td></tr><tr><td>hard/c2</td><td>1.04</td><td>1.52</td><td>8%</td></tr><tr><td>hard/c3</td><td>1.02</td><td>1.17</td><td>6%</td></tr><tr><td>hard/c4</td><td>1.03</td><td>1.25</td><td>5%</td></tr><tr><td>hard/c5</td><td>1.02</td><td>1.16</td><td>4%</td></tr><tr><td>hard/c6</td><td>1.03</td><td>1.29</td><td>7%</td></tr><tr><td>hard/c7</td><td>1.01</td><td>1.12</td><td>6%</td></tr><tr><td>hard/c8</td><td>1.03</td><td>1.23</td><td>5%</td></tr><tr><td>hard/c9</td><td>1.03</td><td>1.12</td><td>4%</td></tr><tr><td>hard/c10</td><td>1.08</td><td>1.62</td><td>7%</td></tr><tr><td>hard/c11</td><td>1.01</td><td>1.09</td><td>4%</td></tr><tr><td>hard/c12</td><td>1.04</td><td>1.34</td><td>7%</td></tr></tbody></table></div>
 </section>
 <section id="data"><h2>数据与答案 (<code>dataset/</code>)</h2>
-<p>所有内容都以文件形式保存在案例旁边：<code>agent_view/</code> 是 AI 收到的原样数据；<code>hidden/</code> 是只用于评分的输入（对程序来说，就是实际运行时使用的日期或文件）；<code>answer/</code> 是案例每个版本的答案，每个难度和规则种子各一个文件夹（<code>answer/easy/s30/</code>），其中有设置及其规则、该版本中客户知道的内容（所有语言）、参考答案、客户原来的做法以及两者的得分。</p>
+<p>所有内容都以文件形式保存在案例旁边：<code>agent_view/</code> 是 AI 收到的原样数据；<code>hidden/</code> 是只用于评分的输入（对程序来说，就是实际运行时使用的日期或文件）；<code>answer/</code> 以表格形式保存答案：<a href="../../dataset/answer/answers.csv"><code>answer/answers.csv</code></a> 中每个案例版本一行（难度、规则种子、抽到的规则值、参考答案和客户原来做法的目标值），旁边是参考答案和客户原来做法的交付物，所有版本合在一个文件里，用难度和种子列区分。</p>
 <h3>AI 收到的数据（中文）</h3><p class='muted'>9 files, 2,836,324 bytes</p><pre class='tree'>mail/2026-10-30_NT-P1.eml  <span class='muted'>562 B</span>
 mail/2026-10-30_NT-P2.eml  <span class='muted'>430 B</span>
 mail/2026-10-30_NT-P3.eml  <span class='muted'>562 B</span>
@@ -153,44 +153,14 @@ mail/en/2026-11-12_NT007.eml  <span class='muted'>590 B</span>
 <span class='muted'>… and 165 more files</span></pre>
 <h3>按难度列出的答案</h3>
 <p class="muted">质量按“客户在没有工程师时的做法 = 0 分，参考答案 = 1 分”的尺度衡量。比参考答案好就超过 1。</p>
-<h4>easy · <code>answer/easy/</code></h4><div class="scroll"><table><thead><tr><th>规则种子</th><th>参考答案（记 1 分）</th><th>客户原来的做法（记 0 分）</th><th>指标（前四个）</th><th>文件夹</th></tr></thead><tbody><tr><td><code>30</code></td><td>1.0</td><td>0.61306876</td><td>approved=308, approved_amount=4946088.0, calls_failed=0, days_daily_cap_used_95pct=19</td><td><a href="../../dataset/answer/easy/s30/"><code>answer/easy/s30/</code></a></td></tr><tr><td><code>525</code></td><td>1.0</td><td>0.46905094</td><td>approved=235, approved_amount=3845490.0, calls_failed=0, days_daily_cap_used_95pct=16</td><td><a href="../../dataset/answer/easy/s525/"><code>answer/easy/s525/</code></a></td></tr><tr><td><code>1043</code></td><td>1.0</td><td>0.84607728</td><td>approved=306, approved_amount=5135652.0, calls_failed=0, days_daily_cap_used_95pct=9</td><td><a href="../../dataset/answer/easy/s1043/"><code>answer/easy/s1043/</code></a></td></tr></tbody></table></div><h4>medium · <code>answer/medium/</code></h4><div class="scroll"><table><thead><tr><th>规则种子</th><th>参考答案（记 1 分）</th><th>客户原来的做法（记 0 分）</th><th>指标（前四个）</th><th>文件夹</th></tr></thead><tbody><tr><td><code>30</code></td><td>1.0</td><td>0.73251094</td><td>approved=229, approved_amount=3000000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/medium/s30/"><code>answer/medium/s30/</code></a></td></tr><tr><td><code>525</code></td><td>1.0</td><td>0.60234284</td><td>approved=225, approved_amount=3400000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/medium/s525/"><code>answer/medium/s525/</code></a></td></tr><tr><td><code>1043</code></td><td>1.0</td><td>0.82924732</td><td>approved=265, approved_amount=4000000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/medium/s1043/"><code>answer/medium/s1043/</code></a></td></tr></tbody></table></div><h4>hard · <code>answer/hard/</code></h4><div class="scroll"><table><thead><tr><th>规则种子</th><th>参考答案（记 1 分）</th><th>客户原来的做法（记 0 分）</th><th>指标（前四个）</th><th>文件夹</th></tr></thead><tbody><tr><td><code>30</code></td><td>1.0</td><td>0.81212931</td><td>approved=228, approved_amount=3000000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/hard/s30/"><code>answer/hard/s30/</code></a></td></tr><tr><td><code>525</code></td><td>1.0</td><td>0.74599125</td><td>approved=223, approved_amount=3400000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/hard/s525/"><code>answer/hard/s525/</code></a></td></tr><tr><td><code>1043</code></td><td>1.0</td><td>0.84464063</td><td>approved=256, approved_amount=3971582.0, budget_left=28418.0, calls_failed=0</td><td><a href="../../dataset/answer/hard/s1043/"><code>answer/hard/s1043/</code></a></td></tr></tbody></table></div>
-<h3>答案文件夹示例：<code>answer/easy/s30/</code></h3><p class='muted'>37 files, 295,796 bytes</p><pre class='tree'>baseline/program/config.json  <span class='muted'>649 B</span>
-baseline/program/underwriter.py  <span class='muted'>34,300 B</span>
-client/en/requirements.md  <span class='muted'>11,451 B</span>
-client/en/targets.yaml  <span class='muted'>3,848 B</span>
-client/es/requirements.md  <span class='muted'>13,080 B</span>
-client/es/targets.yaml  <span class='muted'>4,245 B</span>
-client/ja/requirements.md  <span class='muted'>13,792 B</span>
-client/ja/targets.yaml  <span class='muted'>4,254 B</span>
-client/ko/requirements.md  <span class='muted'>12,899 B</span>
-client/ko/targets.yaml  <span class='muted'>4,098 B</span>
-client/zh/requirements.md  <span class='muted'>10,681 B</span>
-client/zh/targets.yaml  <span class='muted'>3,533 B</span>
-decisions.csv  <span class='muted'>27,483 B</span>
-limit_tables/2026-11-02.json  <span class='muted'>732 B</span>
-limit_tables/2026-11-03.json  <span class='muted'>1,293 B</span>
-limit_tables/2026-11-04.json  <span class='muted'>1,670 B</span>
-limit_tables/2026-11-05.json  <span class='muted'>2,169 B</span>
-limit_tables/2026-11-06.json  <span class='muted'>2,662 B</span>
-limit_tables/2026-11-09.json  <span class='muted'>3,328 B</span>
-limit_tables/2026-11-10.json  <span class='muted'>3,797 B</span>
-limit_tables/2026-11-11.json  <span class='muted'>4,249 B</span>
-limit_tables/2026-11-12.json  <span class='muted'>4,768 B</span>
-limit_tables/2026-11-13.json  <span class='muted'>5,289 B</span>
-limit_tables/2026-11-16.json  <span class='muted'>5,946 B</span>
-limit_tables/2026-11-17.json  <span class='muted'>6,451 B</span>
-limit_tables/2026-11-18.json  <span class='muted'>6,971 B</span>
-limit_tables/2026-11-19.json  <span class='muted'>7,412 B</span>
-limit_tables/2026-11-20.json  <span class='muted'>7,876 B</span>
-limit_tables/2026-11-23.json  <span class='muted'>8,451 B</span>
-limit_tables/2026-11-24.json  <span class='muted'>8,931 B</span>
-limit_tables/2026-11-25.json  <span class='muted'>9,400 B</span>
-limit_tables/2026-11-26.json  <span class='muted'>9,927 B</span>
-limit_tables/2026-11-27.json  <span class='muted'>10,393 B</span>
-reference/program/config.json  <span class='muted'>628 B</span>
-reference/program/underwriter.py  <span class='muted'>34,300 B</span>
-score.json  <span class='muted'>799 B</span>
-setting.json  <span class='muted'>4,041 B</span></pre></section>
+<div class="scroll"><table><thead><tr><th>难度</th><th>规则种子</th><th>参考答案（记 1 分）</th><th>客户原来的做法（记 0 分）</th></tr></thead><tbody><tr><td>easy</td><td><code>30</code></td><td>1.0</td><td>0.61306876</td></tr><tr><td>easy</td><td><code>525</code></td><td>1.0</td><td>0.46905094</td></tr><tr><td>easy</td><td><code>1043</code></td><td>1.0</td><td>0.84607728</td></tr><tr><td>medium</td><td><code>30</code></td><td>1.0</td><td>0.73251094</td></tr><tr><td>medium</td><td><code>525</code></td><td>1.0</td><td>0.60234284</td></tr><tr><td>medium</td><td><code>1043</code></td><td>1.0</td><td>0.82924732</td></tr><tr><td>hard</td><td><code>30</code></td><td>1.0</td><td>0.81212931</td></tr><tr><td>hard</td><td><code>525</code></td><td>1.0</td><td>0.74599125</td></tr><tr><td>hard</td><td><code>1043</code></td><td>1.0</td><td>0.84464063</td></tr></tbody></table></div>
+<h3>答案文件：<code>answer/</code></h3><p class='muted'>7 files, 1,297,450 bytes</p><pre class='tree'>answers.csv  <span class='muted'>6,926 B</span>
+baseline_program.jsonl  <span class='muted'>5,982 B</span>
+decisions.csv  <span class='muted'>293,332 B</span>
+files/baseline/program/underwriter.py  <span class='muted'>34,300 B</span>
+files/reference/program/underwriter.py  <span class='muted'>34,300 B</span>
+limit_tables.jsonl  <span class='muted'>916,808 B</span>
+reference_program.jsonl  <span class='muted'>5,802 B</span></pre></section>
 <section id="readme"><h2>案例说明（README）</h2>
 <div class="doc"><h3 id="readme-贷款审批专员--financeloan_underwriting_specialist">贷款审批专员 — <code>finance/loan_underwriting_specialist</code></h3>
 <p>一家贷款机构的个人贷款柜台希望<strong>用程序逐日审批</strong>。每个工作日，它唯一的无抵押产品（PL36：36 个月，年利率 11.9%，每位客户 1,000–50,000）都会收到新申请；程序对每笔申请作出决定（批准 / 拒绝 / 转人工，金额，原因代码），并报告当天的<strong>额度表</strong>：每位客户还能借多少，以及银行剩余的每日额度和期间预算。智能体交付 <code>program/underwriter.py:on_day</code>；评估器在一个隔离的进程中回放一段<strong>由 20 个工作日组成的评分用期间</strong>（不给智能体；2026 年 11 月 2–27 日，501 位客户的 562 笔申请）。本案例的关键是让每笔批准都不超出当天的额度，并且每天都把额度表算对：额度表是必须交付的输出（一条规则），而目标值是预期收益<strong>乘以</strong>额度表在有变化的表项上的准确度，所以再多的收益也换不回一张错误的额度表。案例背景不针对任何国家：没有点名任何国家的监管机构或评分机构。本案例的标准答案分为五部分（客户掌握的事实、有效性检查、目标值、参考答案与界限值、直接检查），由保存的审查结果生成，见 <a href="../../GT.md">GT.md</a>。</p>

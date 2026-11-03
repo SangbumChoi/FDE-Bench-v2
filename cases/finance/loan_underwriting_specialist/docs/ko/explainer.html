@@ -111,7 +111,7 @@ reason_code는 DELINQUENCY | LOW_SCORE | SPLIT_APPLICATION | LIMIT_EXCEEDED | CR
 <div class="scroll"><table><thead><tr><th>설정</th><th>지금까지 찾은 가장 좋은 답</th><th>한계값</th><th>한계값까지의 간격</th></tr></thead><tbody><tr><td>easy/s30</td><td>1.01</td><td>1.14</td><td>5%</td></tr><tr><td>easy/s525</td><td>1.00</td><td>1.12</td><td>6%</td></tr><tr><td>easy/s1043</td><td>1.00</td><td>1.69</td><td>11%</td></tr><tr><td>easy/c1</td><td>1.00</td><td>1.08</td><td>4%</td></tr><tr><td>easy/c2</td><td>1.01</td><td>1.17</td><td>7%</td></tr><tr><td>easy/c3</td><td>1.01</td><td>1.29</td><td>6%</td></tr><tr><td>easy/c4</td><td>1.01</td><td>1.15</td><td>5%</td></tr><tr><td>easy/c5</td><td>1.00</td><td>1.42</td><td>10%</td></tr><tr><td>easy/c6</td><td>1.00</td><td>1.08</td><td>5%</td></tr><tr><td>easy/c7</td><td>1.00</td><td>1.12</td><td>6%</td></tr><tr><td>easy/c8</td><td>1.00</td><td>1.06</td><td>3%</td></tr><tr><td>easy/c9</td><td>1.01</td><td>1.10</td><td>4%</td></tr><tr><td>easy/c10</td><td>1.00</td><td>1.43</td><td>10%</td></tr><tr><td>easy/c11</td><td>1.01</td><td>1.20</td><td>9%</td></tr><tr><td>easy/c12</td><td>1.01</td><td>1.10</td><td>4%</td></tr><tr><td>medium/s30</td><td>1.05</td><td>1.31</td><td>8%</td></tr><tr><td>medium/s525</td><td>1.02</td><td>1.18</td><td>7%</td></tr><tr><td>medium/s1043</td><td>1.04</td><td>1.41</td><td>7%</td></tr><tr><td>medium/c1</td><td>1.05</td><td>1.31</td><td>6%</td></tr><tr><td>medium/c2</td><td>1.03</td><td>1.38</td><td>7%</td></tr><tr><td>medium/c3</td><td>1.01</td><td>1.25</td><td>8%</td></tr><tr><td>medium/c4</td><td>1.01</td><td>1.18</td><td>6%</td></tr><tr><td>medium/c5</td><td>1.02</td><td>1.14</td><td>4%</td></tr><tr><td>medium/c6</td><td>1.02</td><td>1.20</td><td>6%</td></tr><tr><td>medium/c7</td><td>1.02</td><td>1.15</td><td>5%</td></tr><tr><td>medium/c8</td><td>1.03</td><td>1.34</td><td>7%</td></tr><tr><td>medium/c9</td><td>1.03</td><td>1.12</td><td>6%</td></tr><tr><td>medium/c10</td><td>1.05</td><td>1.22</td><td>5%</td></tr><tr><td>medium/c11</td><td>1.02</td><td>1.10</td><td>4%</td></tr><tr><td>medium/c12</td><td>1.01</td><td>1.23</td><td>6%</td></tr><tr><td>hard/s30</td><td>1.07</td><td>1.41</td><td>8%</td></tr><tr><td>hard/s525</td><td>1.03</td><td>1.30</td><td>8%</td></tr><tr><td>hard/s1043</td><td>1.04</td><td>1.49</td><td>8%</td></tr><tr><td>hard/c1</td><td>1.02</td><td>1.22</td><td>6%</td></tr><tr><td>hard/c2</td><td>1.04</td><td>1.52</td><td>8%</td></tr><tr><td>hard/c3</td><td>1.02</td><td>1.17</td><td>6%</td></tr><tr><td>hard/c4</td><td>1.03</td><td>1.25</td><td>5%</td></tr><tr><td>hard/c5</td><td>1.02</td><td>1.16</td><td>4%</td></tr><tr><td>hard/c6</td><td>1.03</td><td>1.29</td><td>7%</td></tr><tr><td>hard/c7</td><td>1.01</td><td>1.12</td><td>6%</td></tr><tr><td>hard/c8</td><td>1.03</td><td>1.23</td><td>5%</td></tr><tr><td>hard/c9</td><td>1.03</td><td>1.12</td><td>4%</td></tr><tr><td>hard/c10</td><td>1.08</td><td>1.62</td><td>7%</td></tr><tr><td>hard/c11</td><td>1.01</td><td>1.09</td><td>4%</td></tr><tr><td>hard/c12</td><td>1.04</td><td>1.34</td><td>7%</td></tr></tbody></table></div>
 </section>
 <section id="data"><h2>데이터와 정답 (<code>dataset/</code>)</h2>
-<p>모든 것이 케이스 옆에 파일로 저장되어 있습니다. <code>agent_view/</code>는 AI가 받는 그대로의 데이터, <code>hidden/</code>은 채점에만 쓰는 입력(프로그램이라면 실제로 돌려 보는 날짜나 파일), <code>answer/</code>는 케이스의 버전마다 하나씩 있는 정답입니다. 난이도와 규칙 시드마다 폴더가 하나씩 있고(<code>answer/easy/s30/</code>), 그 안에 설정과 그 규칙, 그 버전에서 고객이 아는 내용(모든 언어), 모범 답안, 기존 방식과 그 점수가 들어 있습니다.</p>
+<p>모든 것이 케이스 옆에 파일로 저장되어 있습니다. <code>agent_view/</code>는 AI가 받는 그대로의 데이터, <code>hidden/</code>은 채점에만 쓰는 입력(프로그램이라면 실제로 돌려 보는 날짜나 파일), <code>answer/</code>는 정답을 표로 담고 있습니다. <a href="../../dataset/answer/answers.csv"><code>answer/answers.csv</code></a>에는 케이스의 버전마다 한 줄씩(난이도, 규칙 시드, 뽑힌 규칙 값, 모범 답안과 기존 방식의 목표값) 들어 있고, 그 옆에 모범 답안과 기존 방식의 결과물이 모든 버전을 난이도·시드 열로 구분해 한 파일에 모아 놓여 있습니다.</p>
 <h3>AI가 받는 데이터 (한국어)</h3><p class='muted'>9 files, 2,874,677 bytes</p><pre class='tree'>mail/2026-10-30_NT-P1.eml  <span class='muted'>574 B</span>
 mail/2026-10-30_NT-P2.eml  <span class='muted'>459 B</span>
 mail/2026-10-30_NT-P3.eml  <span class='muted'>591 B</span>
@@ -154,44 +154,14 @@ mail/en/2026-11-12_NT007.eml  <span class='muted'>590 B</span>
 <span class='muted'>… and 165 more files</span></pre>
 <h3>난이도별 정답</h3>
 <p class="muted">품질은 &#x27;엔지니어 없이 고객이 하던 방식 = 0점, 모범 답안 = 1점&#x27; 척도로 잽니다. 모범 답안보다 나으면 1을 넘습니다.</p>
-<h4>easy · <code>answer/easy/</code></h4><div class="scroll"><table><thead><tr><th>규칙 시드</th><th>모범 답안 (1점 기준)</th><th>기존 방식 (0점 기준)</th><th>지표 (처음 네 개)</th><th>폴더</th></tr></thead><tbody><tr><td><code>30</code></td><td>1.0</td><td>0.61306876</td><td>approved=308, approved_amount=4946088.0, calls_failed=0, days_daily_cap_used_95pct=19</td><td><a href="../../dataset/answer/easy/s30/"><code>answer/easy/s30/</code></a></td></tr><tr><td><code>525</code></td><td>1.0</td><td>0.46905094</td><td>approved=235, approved_amount=3845490.0, calls_failed=0, days_daily_cap_used_95pct=16</td><td><a href="../../dataset/answer/easy/s525/"><code>answer/easy/s525/</code></a></td></tr><tr><td><code>1043</code></td><td>1.0</td><td>0.84607728</td><td>approved=306, approved_amount=5135652.0, calls_failed=0, days_daily_cap_used_95pct=9</td><td><a href="../../dataset/answer/easy/s1043/"><code>answer/easy/s1043/</code></a></td></tr></tbody></table></div><h4>medium · <code>answer/medium/</code></h4><div class="scroll"><table><thead><tr><th>규칙 시드</th><th>모범 답안 (1점 기준)</th><th>기존 방식 (0점 기준)</th><th>지표 (처음 네 개)</th><th>폴더</th></tr></thead><tbody><tr><td><code>30</code></td><td>1.0</td><td>0.73251094</td><td>approved=229, approved_amount=3000000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/medium/s30/"><code>answer/medium/s30/</code></a></td></tr><tr><td><code>525</code></td><td>1.0</td><td>0.60234284</td><td>approved=225, approved_amount=3400000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/medium/s525/"><code>answer/medium/s525/</code></a></td></tr><tr><td><code>1043</code></td><td>1.0</td><td>0.82924732</td><td>approved=265, approved_amount=4000000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/medium/s1043/"><code>answer/medium/s1043/</code></a></td></tr></tbody></table></div><h4>hard · <code>answer/hard/</code></h4><div class="scroll"><table><thead><tr><th>규칙 시드</th><th>모범 답안 (1점 기준)</th><th>기존 방식 (0점 기준)</th><th>지표 (처음 네 개)</th><th>폴더</th></tr></thead><tbody><tr><td><code>30</code></td><td>1.0</td><td>0.81212931</td><td>approved=228, approved_amount=3000000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/hard/s30/"><code>answer/hard/s30/</code></a></td></tr><tr><td><code>525</code></td><td>1.0</td><td>0.74599125</td><td>approved=223, approved_amount=3400000.0, budget_left=0.0, calls_failed=0</td><td><a href="../../dataset/answer/hard/s525/"><code>answer/hard/s525/</code></a></td></tr><tr><td><code>1043</code></td><td>1.0</td><td>0.84464063</td><td>approved=256, approved_amount=3971582.0, budget_left=28418.0, calls_failed=0</td><td><a href="../../dataset/answer/hard/s1043/"><code>answer/hard/s1043/</code></a></td></tr></tbody></table></div>
-<h3>정답 폴더 예시: <code>answer/easy/s30/</code></h3><p class='muted'>37 files, 295,796 bytes</p><pre class='tree'>baseline/program/config.json  <span class='muted'>649 B</span>
-baseline/program/underwriter.py  <span class='muted'>34,300 B</span>
-client/en/requirements.md  <span class='muted'>11,451 B</span>
-client/en/targets.yaml  <span class='muted'>3,848 B</span>
-client/es/requirements.md  <span class='muted'>13,080 B</span>
-client/es/targets.yaml  <span class='muted'>4,245 B</span>
-client/ja/requirements.md  <span class='muted'>13,792 B</span>
-client/ja/targets.yaml  <span class='muted'>4,254 B</span>
-client/ko/requirements.md  <span class='muted'>12,899 B</span>
-client/ko/targets.yaml  <span class='muted'>4,098 B</span>
-client/zh/requirements.md  <span class='muted'>10,681 B</span>
-client/zh/targets.yaml  <span class='muted'>3,533 B</span>
-decisions.csv  <span class='muted'>27,483 B</span>
-limit_tables/2026-11-02.json  <span class='muted'>732 B</span>
-limit_tables/2026-11-03.json  <span class='muted'>1,293 B</span>
-limit_tables/2026-11-04.json  <span class='muted'>1,670 B</span>
-limit_tables/2026-11-05.json  <span class='muted'>2,169 B</span>
-limit_tables/2026-11-06.json  <span class='muted'>2,662 B</span>
-limit_tables/2026-11-09.json  <span class='muted'>3,328 B</span>
-limit_tables/2026-11-10.json  <span class='muted'>3,797 B</span>
-limit_tables/2026-11-11.json  <span class='muted'>4,249 B</span>
-limit_tables/2026-11-12.json  <span class='muted'>4,768 B</span>
-limit_tables/2026-11-13.json  <span class='muted'>5,289 B</span>
-limit_tables/2026-11-16.json  <span class='muted'>5,946 B</span>
-limit_tables/2026-11-17.json  <span class='muted'>6,451 B</span>
-limit_tables/2026-11-18.json  <span class='muted'>6,971 B</span>
-limit_tables/2026-11-19.json  <span class='muted'>7,412 B</span>
-limit_tables/2026-11-20.json  <span class='muted'>7,876 B</span>
-limit_tables/2026-11-23.json  <span class='muted'>8,451 B</span>
-limit_tables/2026-11-24.json  <span class='muted'>8,931 B</span>
-limit_tables/2026-11-25.json  <span class='muted'>9,400 B</span>
-limit_tables/2026-11-26.json  <span class='muted'>9,927 B</span>
-limit_tables/2026-11-27.json  <span class='muted'>10,393 B</span>
-reference/program/config.json  <span class='muted'>628 B</span>
-reference/program/underwriter.py  <span class='muted'>34,300 B</span>
-score.json  <span class='muted'>799 B</span>
-setting.json  <span class='muted'>4,041 B</span></pre></section>
+<div class="scroll"><table><thead><tr><th>난이도</th><th>규칙 시드</th><th>모범 답안 (1점 기준)</th><th>기존 방식 (0점 기준)</th></tr></thead><tbody><tr><td>easy</td><td><code>30</code></td><td>1.0</td><td>0.61306876</td></tr><tr><td>easy</td><td><code>525</code></td><td>1.0</td><td>0.46905094</td></tr><tr><td>easy</td><td><code>1043</code></td><td>1.0</td><td>0.84607728</td></tr><tr><td>medium</td><td><code>30</code></td><td>1.0</td><td>0.73251094</td></tr><tr><td>medium</td><td><code>525</code></td><td>1.0</td><td>0.60234284</td></tr><tr><td>medium</td><td><code>1043</code></td><td>1.0</td><td>0.82924732</td></tr><tr><td>hard</td><td><code>30</code></td><td>1.0</td><td>0.81212931</td></tr><tr><td>hard</td><td><code>525</code></td><td>1.0</td><td>0.74599125</td></tr><tr><td>hard</td><td><code>1043</code></td><td>1.0</td><td>0.84464063</td></tr></tbody></table></div>
+<h3>정답 파일: <code>answer/</code></h3><p class='muted'>7 files, 1,297,450 bytes</p><pre class='tree'>answers.csv  <span class='muted'>6,926 B</span>
+baseline_program.jsonl  <span class='muted'>5,982 B</span>
+decisions.csv  <span class='muted'>293,332 B</span>
+files/baseline/program/underwriter.py  <span class='muted'>34,300 B</span>
+files/reference/program/underwriter.py  <span class='muted'>34,300 B</span>
+limit_tables.jsonl  <span class='muted'>916,808 B</span>
+reference_program.jsonl  <span class='muted'>5,802 B</span></pre></section>
 <section id="readme"><h2>케이스 노트 (README)</h2>
 <div class="doc"><h3 id="readme-대출-심사-전문가--financeloan_underwriting_specialist">대출 심사 전문가 — <code>finance/loan_underwriting_specialist</code></h3>
 <p>한 대출기관의 개인대출 창구가 <strong>프로그램으로 매일 심사</strong>하려고 합니다. 영업일마다 이 기관의 유일한 무담보 상품(PL36: 36개월, 연 11.9%, 고객당 1,000–50,000)에 새 신청이 들어오고, 프로그램은 신청마다 결정(승인 / 거절 / 수기 심사, 금액, 사유 코드)을 내린 뒤 그날의 <strong>한도표</strong>를 보고합니다. 한도표에는 고객마다 더 빌릴 수 있는 금액과 은행의 남은 일일 한도와 기간 예산이 담깁니다. 에이전트는 <code>program/underwriter.py:on_day</code>를 제출하고, 평가기는 <strong>20영업일의 채점용 기간</strong>(AI에게는 주지 않음. 2026년 11월 2–27일, 고객 501명의 신청 562건)을 격리된 프로세스 하나에서 재생합니다. 이 케이스의 핵심은 모든 승인을 그날의 한도 안에 두고 날마다 한도표를 정확히 내는 것입니다. 한도표는 필수 산출물(규칙)이고, 목표값은 기대수익에 그날 바뀌는 항목에 대한 한도표 정확도를 <strong>곱한</strong> 값이므로, 수익을 아무리 내도 틀린 한도표를 메울 수 없습니다. 배경은 특정 국가에 묶이지 않으며, 어느 나라의 감독당국이나 신용평가사도 이름이 나오지 않습니다. 이 케이스의 정답은 저장된 감사 결과에서 생성해 다섯 부분(고객만 아는 사실, 유효성 검사, 목표값, 모범 답안과 한계값, 직접 검사)으로 <a href="../../GT.md">GT.md</a>에 정리했습니다.</p>

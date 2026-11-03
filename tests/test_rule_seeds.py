@@ -6,6 +6,8 @@ texts, the validator (including the parameter-binding check), the dataset, the e
 """
 
 import json
+import tempfile
+import csv
 import os
 import random
 import shutil
@@ -497,42 +499,36 @@ def test_panel_that_shows_one_candidate_is_warned(tmp_path):
 
 # ── dataset, explainer, variants, campaigns and the report ──────────────────
 
-def test_dataset_folders_and_setting_json(tmp_path):
+def test_dataset_answers_in_one_table(tmp_path):
     root = make_toy(tmp_path)
     answer = root / "dataset" / "answer"
-    assert sorted(p.name for p in answer.iterdir()) == ["easy", "hard", "medium"]
-    assert all(sorted(p.name for p in (answer / t).iterdir()) == ["s1", "s2", "s3"] for t in ("easy", "medium", "hard"))
+    assert sorted(p.name for p in answer.iterdir()) == ["answers.csv", "baseline.jsonl", "reference.jsonl"]
+    with (answer / "answers.csv").open(encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+    # one row per public setting: difficulty and seed, the drawn values, both objectives, rules and targets in force
+    assert [(r["difficulty"], r["seed"]) for r in rows] == [(t, str(s)) for t in ("easy", "medium", "hard")
+                                                           for s in (1, 2, 3)]
     case = NativeCase(root).at("hard", 2)
-    folder = answer / "hard" / "s2"
-    doc = json.loads((folder / "setting.json").read_text())
-    assert doc == {"tier": "hard", "rule_seed": 2, "params": case.drawn_params,
-                   "derived": {"budget": case.setting["budget"]},
-                   "rules": [{"id": r.id, "class": r.rule_class, "description": r.description}
-                             for r in case.rules().rules],
-                   "targets": [t.id for t in case.targets("en")]}
-    assert list(doc["params"]) == ["cap", "price"] and check_dataset(root) == []
-    assert doc["rules"] and all("{{" not in r["description"] for r in doc["rules"])     # rendered for the setting
-    # what the client knows in this version, in every locale: the rendered requirements and the targets in force
-    for lang in LOCALES:
-        client = folder / "client" / lang
-        assert (client / "requirements.md").read_text(encoding="utf-8") == case.requirements(lang) + "\n"
-        targets = yaml.safe_load((client / "targets.yaml").read_text(encoding="utf-8"))
-        assert [(t["id"], t["text"]) for t in targets] == [(t.id, t.text) for t in case.targets(lang)]
-        assert [t["id"] for t in targets] == doc["targets"]
-    # the reference and the baseline, the two ends of the quality scale, with their scores
-    score = json.loads((folder / "score.json").read_text())
-    assert (folder / "reference" / "answer.json").is_file() and (folder / "baseline" / "answer.json").is_file()
-    assert score["reference_quality"]["quality_score"] == 1.0 and score["baseline_quality"]["quality_score"] == 0.0
+    row = rows[7]
+    assert {k: row[k] for k in ("cap", "price")} == {k: str(v) for k, v in case.drawn_params.items()}
+    assert float(row["reference_objective"]) == case.reference_objective
+    assert float(row["baseline_objective"]) == case.baseline_objective
+    assert row["rules"] == ";".join(r.id for r in case.rules().rules)
+    assert row["targets"] == ";".join(t.id for t in case.targets("en"))
+    # the reference and baseline deliverables: every setting stacked in one file, keyed by difficulty and seed
+    lines = [json.loads(x) for x in (answer / "reference.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert [(x["difficulty"], x["seed"], x["file"]) for x in lines][7] == ("hard", "2", "answer.json")
+    with tempfile.TemporaryDirectory() as tmp:
+        case.write_reference(Path(tmp))
+        assert lines[7]["content"] == json.loads((Path(tmp) / "answer.json").read_text())
     manifest = json.loads((root / "dataset" / "MANIFEST.json").read_text())
-    assert {f"answer/hard/s2/{name}" for name in ("setting.json", "score.json", "baseline/answer.json")} | {
-        f"answer/hard/s2/client/{lang}/{name}" for lang in LOCALES for name in ("requirements.md", "targets.yaml")
-    } <= set(manifest)
+    assert {"answer/answers.csv", "answer/reference.jsonl", "answer/baseline.jsonl"} <= set(manifest)
+    assert check_dataset(root) == []
     # a dataset/gt/ left from the old layout is a problem that names the new one
     (root / "dataset" / "gt" / "hard_s2").mkdir(parents=True)
     (root / "dataset" / "gt" / "hard_s2" / "score.json").write_text("{}")
     found = check_dataset(root)
-    assert len(found) == 1 and found[0].startswith("dataset/gt/: the stored answers are in "
-                                                   "dataset/answer/<tier>/s<seed>/ now")
+    assert len(found) == 1 and found[0].startswith("dataset/gt/: the stored answers are in dataset/answer/ now")
     assert found[0] in check_case(root).problems
     export_dataset(root)
     assert not (root / "dataset" / "gt").exists() and check_dataset(root) == []
@@ -546,12 +542,9 @@ def test_explainer_shows_candidates_panel_and_seed_selector(tmp_path):
     assert "<code>5</code> five euros" in en and "<code>budget</code>" in en
     assert json.dumps(case.at("easy", 2).drawn_params).replace('"', "&quot;") in en
     assert '<option value="easy/s2">easy / Rule seed 2</option>' in en
-    # the stored answers: a table per tier, three rule seeds each, linking dataset/answer/<tier>/s<seed>/
-    groups = [en.index(f"<h4>{tier} · <code>answer/{tier}/</code></h4>") for tier in ("easy", "medium", "hard")]
-    assert groups == sorted(groups)
-    links = [f'href="../../dataset/answer/{tier}/s{seed}/"' for tier in ("easy", "medium", "hard") for seed in (1, 2, 3)]
-    assert all(link in en for link in links) and "dataset/gt" not in en and "gt/" not in en
-    assert "<code>answer/easy/s1/</code></h3>" in en
+    # the stored answers: one table from dataset/answer/answers.csv, every public setting a row
+    assert 'href="../../dataset/answer/answers.csv"' in en and "dataset/gt" not in en and "gt/" not in en
+    assert en.count("<td><code>2</code></td>") == 3
     assert "only when price = 5" in en and "규칙 시드" in ko and "<code>5</code> 오 유로" in ko
     assert "rule set" not in en.replace("rule seed", "").lower().replace("rule sets", "")
 

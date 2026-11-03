@@ -8,25 +8,17 @@ writes, next to case.yaml:
       agent_view/<lang>/...   what the agent receives, per customer locale (identical in every setting)
       hidden/...              inputs the agent never sees: a program case's hidden period or corpus
                               (case.py `write_hidden(world, dir)`, optional)
-      answer/                 the answers, one folder per public setting, grouped by tier:
-        easy/s<seed>/  ...    one per public rule seed (case.yaml `rule_seeds`), as in the setting label
-        medium/s<seed>/ ...   easy/s42; a case without settings has the one folder answer/default/
-        hard/s<seed>/  ...
-          setting.json        {tier, rule_seed, params: the drawn values}, plus derived: the derive_params
-                              values when the case has that hook, rules: the rules in force (id, class and
-                              the English description as rendered for the setting) and targets: the ids of
-                              the targets in force
-          client/<lang>/      what the client knows in this version, in each locale: requirements.md (the
-                              hidden requirements rendered for the setting) and targets.yaml (the targets
-                              in force: id, kind, domain and the rendered text)
-          reference/          the reference deliverable (files, or program/): quality 1
-          baseline/           the client's own way without an engineer (case.py `baseline_solution`, when
-                              the case has one): quality 0
-          score.json          the reference's objective and metrics under this setting; with a baseline,
-                              also its objective and both solutions' quality fields (reference_quality,
-                              baseline_quality)
-          ...                 anything case.py `write_ground_truth(world, dir, setting)` adds
-                              (e.g. the expected daily tables or the expected library)
+      answer/                 the answers of the public settings (tier x public rule seed), as tables:
+        answers.csv           one row per setting: difficulty, seed, every drawn parameter, the reference's and
+                              the baseline's objective, the quality scale's width, the rules and targets in force
+                              (ids) and the reference's scalar metrics
+        <name>.csv            every CSV the answers hold (the reference deliverable as reference_<file>.csv,
+                              the baseline's as baseline_<file>.csv, the case's extra answer tables under their
+                              own name), the settings stacked, with difficulty and seed as the first columns
+        <name>.jsonl          every JSON file, stacked the same way, one line per setting and file:
+                              {difficulty, seed, file, content}, grouped by the folder it lives in
+        files/                anything else (a reference program, an expected library): files/<path> when it
+                              is the same in every setting, else files/<difficulty>_s<seed>/<path>
       MANIFEST.json           sha256 of every file above
       audit.json              the ground truth audit (`fdebench2 audit-case`, fdebench2.audit): not part of the
                               manifest, kept when the dataset is exported again, and checked by its own
@@ -40,6 +32,7 @@ the repository only: the agent's sandbox mounts its workspace, never the case.
 from __future__ import annotations
 
 import hashlib
+import csv
 import json
 import shutil
 import tempfile
@@ -47,55 +40,133 @@ from pathlib import Path
 
 import yaml
 
-from .cases import LOCALES, NativeCase, NotLocalized, quality_fields
+from .cases import LOCALES, NativeCase, NotLocalized, quality_span
 
 DATASET_DIR = "dataset"
 AUDIT_FILE = "audit.json"       # dataset/audit.json: written by audit-case, never by export-dataset
-ANSWER_DIR = "answer"           # dataset/answer/<tier>/s<seed>/ (dataset/answer/default/ without settings)
+ANSWER_DIR = "answer"           # dataset/answer/: answers.csv and the stacked answer files
+ANSWERS_CSV = "answers.csv"     # one row per public setting
+FILES_DIR = "files"             # dataset/answer/files/: answer files that are neither CSV nor JSON
 LEGACY_ANSWER_DIR = "gt"        # dataset/gt/<tier>_s<seed>/, the layout before dataset/answer/
-CLIENT_DIR = "client"           # <answer folder>/client/<lang>/{requirements.md, targets.yaml}
-BASELINE_DIR = "baseline"       # <answer folder>/baseline/: the baseline deliverable
+BASELINE_DIR = "baseline"       # the baseline deliverable's prefix (baseline_<file>.csv)
 
 
-def answer_folder(case: NativeCase) -> str:
-    """A setting's folder in dataset/answer/: "<tier>/s<seed>" (Setting.folder), "default" without settings."""
-    return case.setting.folder if case.tiers else "default"
+def setting_key(case: NativeCase) -> tuple[str, str]:
+    """(difficulty, seed) of a setting's rows: ("easy", "42"); ("default", "") for a case without settings."""
+    return (case.setting.tier, str(case.setting.rule_seed)) if case.tiers else ("default", "")
 
 
-def setting_record(case: NativeCase) -> dict:
-    """setting.json: {tier, rule_seed, params} with params the drawn values, and derived (the derive_params
-    keys) when there are any (none of them without settings); then rules, the rules in force with their class
-    and English description as rendered for the setting, and targets, the ids of the targets in force."""
-    s = case.setting
-    out: dict = {}
-    if s is not None:
-        drawn = case.drawn_params
-        derived = {k: v for k, v in s.params.items() if k not in drawn}
-        out = {"tier": s.tier, "rule_seed": s.rule_seed, "params": drawn, **({"derived": derived} if derived else {})}
-    out["rules"] = [{"id": r.id, "class": r.rule_class, "description": r.description} for r in case.rules().rules]
+def _cell(value) -> str:
+    return value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
+
+
+def answer_row(case: NativeCase, res: dict) -> dict:
+    """answers.csv's row for a setting: difficulty, seed, the drawn parameters, the objectives, the scale's width,
+    the rules and targets in force and the reference's scalar metrics."""
+    difficulty, seed = setting_key(case)
+    row = {"difficulty": difficulty, "seed": seed}
+    row.update({k: _cell(v) for k, v in (case.drawn_params.items() if case.tiers else [])})
+    ref, base = res.get("objective"), case.baseline_objective
+    row["reference_objective"] = ref
+    row["baseline_objective"] = "" if base is None else base
+    span = quality_span(float(ref), base) if ref is not None else None
+    row["quality_span"] = "" if span is None else span
+    row["reference_violations"] = len(res.get("violations") or [])
+    row["rules"] = ";".join(r.id for r in case.rules().rules)
     try:
-        out["targets"] = [t.id for t in case.targets(case.source_locale)]
+        row["targets"] = ";".join(t.id for t in case.targets(case.source_locale))
     except NotLocalized:
-        out["targets"] = []
-    return out
-
-
-def client_texts(case: NativeCase, lang: str) -> dict[str, str] | None:
-    """What the client knows in this setting, in `lang`: {"requirements.md": the hidden requirements rendered for
-    the setting, "targets.yaml": the targets in force (id, kind, domain, rendered text)}; None when the case has no
-    such texts in that locale."""
-    try:
-        requirements = case.requirements(lang)
-        targets = [{"id": t.id, "kind": t.kind, "domain": t.domain, "text": t.text} for t in case.targets(lang)]
-    except NotLocalized:
-        return None
-    return {"requirements.md": requirements + "\n",
-            "targets.yaml": yaml.safe_dump(targets, allow_unicode=True, sort_keys=False, width=100)}
+        row["targets"] = ""
+    for k, v in (res.get("metrics") or {}).items():
+        if isinstance(v, (int, float, str, bool)) or v is None:
+            row[f"metric_{k}"] = "" if v is None else v
+    return row
 
 
 def _json(path: Path, doc: dict) -> None:
     path.write_text(json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True, default=str) + "\n",
                     encoding="utf-8")
+
+
+def _bundle(case: NativeCase, c: NativeCase, extra, dest: Path) -> dict:
+    """Write one setting's answer files into dest (reference/, baseline/ and the case's write_ground_truth extras);
+    return its answers.csv row."""
+    (dest / "reference").mkdir(parents=True)
+    c.write_reference(dest / "reference")
+    res = c.raw_score(dest / "reference")
+    if c.baseline_objective is not None:
+        (dest / BASELINE_DIR).mkdir()
+        c.write_baseline(dest / BASELINE_DIR)
+    if extra is not None:
+        extra(case.world, dest, *((c.setting,) if c.tiers else ()))
+    return answer_row(c, res)
+
+
+def _flat(rel: str) -> str:
+    return rel.replace("/", "_")
+
+
+def _pack(bundles: list[tuple[tuple[str, str], Path]], out: Path) -> None:
+    """Stack the settings' answer files into out: each CSV path into one CSV with difficulty and seed first, the JSON
+    files of each folder into one JSONL, anything else into files/ (once when the same in every setting)."""
+    by_rel: dict[str, list[tuple[tuple[str, str], Path]]] = {}
+    for key, root in bundles:
+        for p in sorted(root.rglob("*")):
+            if p.is_file() and "__pycache__" not in p.parts:
+                by_rel.setdefault(p.relative_to(root).as_posix(), []).append((key, p))
+    jsonl: dict[str, list[dict]] = {}
+    for rel, items in by_rel.items():
+        if rel.endswith(".csv") and _stack_csv(items, out / _flat(rel)):
+            continue
+        if rel.endswith(".json"):
+            parent, name = rel.rpartition("/")[::2]
+            group = _flat(parent) if parent else name[:-5]
+            for (difficulty, seed), p in items:
+                jsonl.setdefault(group, []).append({"difficulty": difficulty, "seed": seed, "file": name,
+                                                    "content": json.loads(p.read_text(encoding="utf-8"))})
+            continue
+        blobs = {p.read_bytes() for _, p in items}
+        if len(blobs) == 1 and len(items) == len(bundles):
+            target = out / FILES_DIR / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(blobs.pop())
+            continue
+        for (difficulty, seed), p in items:
+            target = out / FILES_DIR / (f"{difficulty}_s{seed}" if seed else difficulty) / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(p.read_bytes())
+    for group, rows in jsonl.items():
+        (out / f"{group}.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n"
+                                                    for r in rows), encoding="utf-8")
+
+
+def _stack_csv(items: list[tuple[tuple[str, str], Path]], dest: Path) -> bool:
+    """One CSV from the same CSV of every setting, with difficulty and seed first; False when their headers differ
+    (the caller then keeps the files apart)."""
+    header, rows = None, []
+    for (difficulty, seed), p in items:
+        with p.open(encoding="utf-8-sig", newline="") as f:
+            reader = csv.reader(f)
+            head = next(reader, [])
+            if header is not None and head != header:
+                return False
+            header = head
+            rows += [[difficulty, seed, *r] for r in reader]
+    with dest.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(["difficulty", "seed", *(header or [])])
+        w.writerows(rows)
+    return True
+
+
+def _write_answers(rows: list[dict], dest: Path) -> None:
+    columns: list[str] = []
+    for r in rows:
+        columns += [k for k in r if k not in columns]
+    with dest.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=columns, lineterminator="\n", restval="")
+        w.writeheader()
+        w.writerows(rows)
 
 
 def _write(case: NativeCase, out: Path) -> None:
@@ -106,30 +177,16 @@ def _write(case: NativeCase, out: Path) -> None:
         (out / "hidden").mkdir(parents=True, exist_ok=True)
         hidden(case.world, out / "hidden")
     extra = getattr(case.module, "write_ground_truth", None)
-    for c in case.settings():
-        answer = out / ANSWER_DIR / answer_folder(c)
-        (answer / "reference").mkdir(parents=True)
-        c.write_reference(answer / "reference")
-        res = c.raw_score(answer / "reference")
-        _json(answer / "setting.json", setting_record(c))
-        for lang in LOCALES:
-            texts = client_texts(c, lang)
-            if texts is not None:
-                (answer / CLIENT_DIR / lang).mkdir(parents=True)
-                for name, text in texts.items():
-                    (answer / CLIENT_DIR / lang / name).write_text(text, encoding="utf-8")
-        score = {"objective": res.get("objective"), "violations": res.get("violations"),
-                 "metrics": res.get("metrics", {})}
-        if c.baseline_objective is not None:
-            (answer / BASELINE_DIR).mkdir()
-            c.write_baseline(answer / BASELINE_DIR)
-            ref, base = float(res["objective"]), c.baseline_objective
-            maximize = c.meta.get("objective") == "maximize"
-            score.update(baseline_objective=base, reference_quality=quality_fields(ref, ref, base, maximize),
-                         baseline_quality=quality_fields(base, ref, base, maximize))
-        _json(answer / "score.json", score)
-        if extra is not None:
-            extra(case.world, answer, *( (c.setting,) if c.tiers else () ))
+    rows, bundles = [], []
+    with tempfile.TemporaryDirectory() as tmp:
+        for i, c in enumerate(case.settings()):
+            dest = Path(tmp) / str(i)
+            rows.append(_bundle(case, c, extra, dest))
+            bundles.append((setting_key(c), dest))
+        answer = out / ANSWER_DIR
+        answer.mkdir(parents=True)
+        _write_answers(rows, answer / ANSWERS_CSV)
+        _pack(bundles, answer)
     for p in out.rglob("__pycache__"):
         shutil.rmtree(p, ignore_errors=True)
 
@@ -139,10 +196,9 @@ def legacy_answers(case_root: Path) -> list[str]:
     old = Path(case_root) / DATASET_DIR / LEGACY_ANSWER_DIR
     if not old.exists():
         return []
-    return [f"{DATASET_DIR}/{LEGACY_ANSWER_DIR}/: the stored answers are in {DATASET_DIR}/{ANSWER_DIR}/<tier>/s<seed>/ "
-            f"now ({DATASET_DIR}/{ANSWER_DIR}/default/ without settings), each with setting.json, "
-            f"{CLIENT_DIR}/<lang>/, reference/, {BASELINE_DIR}/ and score.json: run `fdebench2 export-dataset`, which "
-            f"writes them and removes {DATASET_DIR}/{LEGACY_ANSWER_DIR}/"]
+    return [f"{DATASET_DIR}/{LEGACY_ANSWER_DIR}/: the stored answers are in {DATASET_DIR}/{ANSWER_DIR}/ now "
+            f"({ANSWERS_CSV}, one row per setting, and the answer files stacked with difficulty and seed columns): run "
+            f"`fdebench2 export-dataset`, which writes them and removes {DATASET_DIR}/{LEGACY_ANSWER_DIR}/"]
 
 
 def _manifest(root: Path) -> dict[str, str]:
