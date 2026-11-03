@@ -20,7 +20,7 @@ from fdebench2.audit import (audit_case, audit_path, findings, fingerprint, load
 from fdebench2.cases import NativeCase, Target
 from fdebench2.cli import main
 from fdebench2.dataset import check_dataset, export_dataset
-from fdebench2.explain import UI, _t, build_page, check_page
+from fdebench2.explain import PAGE, UI, _t, build_page, check_page, page_name
 from fdebench2.llm import ChatResponse
 from fdebench2.runner import never_in_a_run, tree_hash
 from fdebench2.scoring.clarify import score_clarification
@@ -595,12 +595,14 @@ def test_the_fingerprint_covers_what_the_audit_measures(tmp_path, monkeypatch):
         after = fingerprint(root)
         path.write_bytes(old) if old is not None else path.unlink()
         return after != before
-    # the docs in every language (GT.md and CLIENT_REVIEW.md too: they are written from audit.json), the stored
-    # dataset and the keys that decide only what validate-case enforces: no
-    assert not any(changes(rel, "notes\n") for rel in ("README.md", "README.ko.md", "REVIEW.ja.md", "explainer.es.html",
-                                                       "GT.md", "CLIENT_REVIEW.md", "locales/ko/summary.yaml",
+    # the docs in every language (the index README.md, docs/<lang>/, GT.md and CLIENT_REVIEW.md too: they are written
+    # from audit.json), the stored dataset and the keys that decide only what validate-case enforces: no
+    assert not any(changes(rel, "notes\n") for rel in ("README.md", "docs/en/README.md", "docs/ko/README.md",
+                                                       "docs/ja/REVIEW.md", "docs/es/explainer.html", "GT.md",
+                                                       "CLIENT_REVIEW.md", "locales/ko/summary.yaml",
                                                        "locales/zh/explainer.yaml", "dataset/audit.json",
                                                        "dataset/MANIFEST.json"))
+    assert never_in_a_run("docs/zh/REVIEW.md") and never_in_a_run("README.md")
     assert never_in_a_run("GT.md") and never_in_a_run("CLIENT_REVIEW.md")    # nor a run's fingerprint
     assert not changes("case.yaml", CASE_YAML + "audited: true\nquality_cap: 1.2\n")
     # everything else: the texts in any locale, case.yaml, a reference program case.py copies or imports
@@ -680,17 +682,17 @@ def test_a_target_param_must_name_a_parameter(tmp_path):
 def test_audit_case_stores_the_public_world_and_the_case_still_validates(tmp_path, capsys):
     root = toy(tmp_path, dataset=True)
     export_dataset(root)                    # the targets gained param: (a source of the audit, not of the dataset)
-    page = (root / "explainer.html").read_text(encoding="utf-8")
+    page = (root / PAGE).read_text(encoding="utf-8")
     assert 'id="evidence"' not in page and "#evidence" not in page
     main(["audit-case", str(root), "--world-seed", "2"])
     assert "# Ground truth audit: logistics/toy_planner (world seed 2)" in capsys.readouterr().out
     assert load_audit(root) is None                                       # another world is printed, never stored
-    ran, ko = tree_hash(root, never_in_a_run), (root / "explainer.ko.html").read_text(encoding="utf-8")
+    ran, ko = tree_hash(root, never_in_a_run), (root / page_name("ko")).read_text(encoding="utf-8")
     main(["audit-case", str(root), "--combos", "2"])
     assert load_audit(root)["world_seed"] == 7 and check_page(root) == [] and check_dataset(root) == []
     # the pages in every language and audit.json changed, and none of it reaches a run: stored runs stay fresh
-    assert (root / "explainer.ko.html").read_text(encoding="utf-8") != ko and tree_hash(root, never_in_a_run) == ran
-    page = (root / "explainer.html").read_text(encoding="utf-8")
+    assert (root / page_name("ko")).read_text(encoding="utf-8") != ko and tree_hash(root, never_in_a_run) == ran
+    page = (root / PAGE).read_text(encoding="utf-8")
     assert '<section id="evidence"><h2>Evidence the facts matter</h2>' in page and 'href="#evidence"' in page
     assert "If the AI gets only this fact wrong" in page and "the reference for another value of <code>cap</code>" in page
     # min_order has no ablation: no "0 of 0 settings" where it matters, a dash

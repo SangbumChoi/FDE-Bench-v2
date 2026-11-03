@@ -8,7 +8,7 @@ import pytest
 
 from fdebench2.cli import main
 from fdebench2.dataset import export_dataset
-from fdebench2.explain import check_page, write_page
+from fdebench2.explain import PAGE, check_page, page_name, write_page
 from fdebench2.scaffold import new_case
 from fdebench2.validate import Report, check_case, check_hash_seed, validate_case
 
@@ -87,7 +87,7 @@ def test_parameter_missing_from_one_locale(tmp_path):
     assert "ko/requirements.md: parameters differ from en (missing ['usd_krw'])" in validate_case(root)
 
 
-@pytest.mark.parametrize("name, text", [("README.md", "\nTODO: the numbers for world seed 2.\n"),
+@pytest.mark.parametrize("name, text", [("docs/en/README.md", "\nTODO: the numbers for world seed 2.\n"),
                                         ("case.yaml", "# rules:\n#   - id: TODO_rule\n")], ids=["readme", "scaffold-id"])
 def test_todo_left(tmp_path, name, text):
     root = _copy(tmp_path, SETTINGS)
@@ -154,15 +154,16 @@ def test_hash_seed_check_imports_this_package(tmp_path, monkeypatch):
 
 def test_review_findings_in_explainer(tmp_path):
     root = _copy(tmp_path, FAST)
-    (root / "REVIEW.md").write_text("# Findings\n\n- C11 is the Clock Tower café in the texts only.\n", encoding="utf-8")
-    assert check_page(root) == ["explainer.html is out of date: run `fdebench2 explain-case` (or export-dataset)"]
+    (root / "docs/en/REVIEW.md").write_text("# Findings\n\n- C11 is the Clock Tower café in the texts only.\n",
+                                            encoding="utf-8")
+    assert check_page(root) == [f"{PAGE} is out of date: run `fdebench2 explain-case` (or export-dataset)"]
     page = write_page(root).read_text(encoding="utf-8")
     assert '<section id="review">' in page and "C11 is the Clock Tower café in the texts only." in page
     assert ("Deliverable spec (given to the converter that puts the AI's files into the scored format, not to the AI)"
             in html.unescape(page))
     assert check_page(root) == []
     # every language has its own page, its interface and the case's words in that language
-    ko = (root / "explainer.ko.html").read_text(encoding="utf-8")
+    ko = (root / page_name("ko")).read_text(encoding="utf-8")
     assert '<html lang="ko">' in ko and "AI가 받는 요청" in ko and "베이커리" in ko
 
 
@@ -180,9 +181,12 @@ def test_new_case_fails_until_filled(tmp_path):
     shutil.copy2(REPO / "cases" / "fields.yaml", tmp_path / "fields.yaml")
     root = new_case("retail/shelf_planner", tmp_path)
     problems = validate_case(root)
-    assert {"case.yaml", "case.py", "README.md", "locales/en/request.md"} <= {p.split(":")[0] for p in problems
-                                                                            if "TODO left" in p}
+    assert {"case.yaml", "case.py", "docs/en/README.md", "docs/ko/README.md", "locales/en/request.md"} <= {
+        p.split(":")[0] for p in problems if "TODO left" in p}
     assert "locales/en/targets.yaml: TODO left on line 1, 4" in problems     # the id TODO_target, then its text
+    # the README in every language and their index (the explainer pages come with export-dataset)
+    assert all((root / "docs" / lang / "README.md").is_file() for lang in ("en", "zh", "ko", "ja", "es"))
+    assert "[README.md](docs/es/README.md)" in (root / "README.md").read_text(encoding="utf-8")
 
 
 def test_rule_number_the_texts_never_state(tmp_path):

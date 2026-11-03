@@ -1,6 +1,6 @@
 # FDE-Bench v2
 
-[English](README.md) · [中文](README.zh.md) · [한국어](README.ko.md) · [日本語](README.ja.md) · [Español](README.es.md)
+[English](README.md) · [中文](docs/zh/README.md) · [한국어](docs/ko/README.md) · [日本語](docs/ja/README.md) · [Español](docs/es/README.md)
 
 A benchmark for forward-deployed-engineering agents across **customer languages** (zh/en/ko/ja/es),
 **company policies** and **realistic difficulty**. Open and closed models are compared through one
@@ -12,8 +12,8 @@ Design, scoring and status: [DESIGN.md](DESIGN.md). Direction, related work and 
 
 **Browse the cases:** https://sangbumchoi.github.io/FDE-Bench-v2/ — one page per case (request, settings,
 rules, hidden requirements, targets, stored data and answers, review findings), rebuilt from
-`cases/*/*/explainer.html` by `fdebench2 build-site` and published to the `gh-pages` branch on every push
-(`.github/workflows/pages.yml`).
+`cases/*/*/docs/<lang>/explainer.html` by `fdebench2 build-site` and published to the `gh-pages` branch on
+every push (`.github/workflows/pages.yml`).
 
 ## Setup
 
@@ -64,8 +64,10 @@ Axes on every command: `--customer-locale {zh,en,ko,ja,es}`, `--agent-locale {zh
 ```
 cases/<field>/<role>/  case.yaml, case.py, locales/<lang>/{request.md, requirements.md, targets.yaml},
                        dataset/ (data per locale, hidden inputs, ground truth per setting),
-                       README.md (tiers, rule parameters, numbers per setting)
+                       docs/<lang>/{README.md (tiers, rule parameters, numbers per setting), REVIEW.md,
+                       explainer.html}, README.md (generated index of docs/), GT.md (audited cases)
 cases/README.md        catalog of cases by field   cases/fields.yaml  field names in 5 locales
+cases/docs/<lang>/     index.html: the catalog's page in each language (the site's home page)
 fdebench2/
   cases.py           Case interface and loader
   casekit.py         helpers for case authors        validate.py   case contract checks
@@ -79,5 +81,6 @@ fdebench2/
   scoring/           extraction · clarification judges · policy score · report
 configs/             policies/ engagement.yaml models.example.yaml experiments.example.yaml
 docker/              Dockerfile.agent: the image for isolated runs (tools and vendor CLIs only)
+docs/                DIRECTION.md · specs/ (unbuilt cases) · <lang>/README.md (this README in zh, ko, ja, es)
 tests/
 ```

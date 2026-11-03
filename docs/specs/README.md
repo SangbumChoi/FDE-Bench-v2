@@ -3,7 +3,7 @@
 Research-grounded specs for the catalog's unbuilt cases, one file per field. Each spec gives the client's
 request, the deliverable, the world and data, 7-9 hidden requirements, rules with classes, the objective and
 reference approach, hard-tier hooks, policy and language angles, authoring risks and sources. The catalog
-itself is [`cases/README.md`](../cases/README.md).
+itself is [`cases/README.md`](../../cases/README.md).
 
 ## Before authoring a case from a spec
 

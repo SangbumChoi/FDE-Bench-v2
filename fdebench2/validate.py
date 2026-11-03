@@ -1,7 +1,8 @@
 """`fdebench2 validate-case`: the checks every native case must pass before it is used.
 
 1. case.yaml is complete; every rule has a class; no TODO is left from the
-   scaffold in case.yaml, case.py, README.md or the locales.
+   scaffold in case.yaml, case.py, docs/<lang>/README.md or the locales; no
+   document is left at the case root from the layout before docs/<lang>/.
 2. All five locales have request.md, requirements.md and targets.yaml, with the
    same target ids, parameters and setting blocks (tier and when markers) as en,
    written in the right script.
@@ -189,9 +190,11 @@ def _script_problem(text: str, lang: str) -> str | None:
 
 
 def _todos(root: Path) -> list[str]:
-    """Scaffold placeholders still in the case's own files: a new case fails until every TODO is filled."""
+    """Scaffold placeholders still in the case's own files (case.yaml, case.py, the READMEs docs/<lang>/README.md and
+    the locales): a new case fails until every TODO is filled."""
     problems = []
-    for p in [root / "case.yaml", root / "case.py"] + sorted(root.glob("README*.md")) + sorted((root / "locales").rglob("*")):
+    readmes = sorted(root.glob("docs/*/README.md"))
+    for p in [root / "case.yaml", root / "case.py"] + readmes + sorted((root / "locales").rglob("*")):
         if p.is_file():
             lines = [str(i) for i, line in enumerate(p.read_text(encoding="utf-8", errors="replace").splitlines(), 1)
                      if TODO.search(line)]
@@ -226,10 +229,36 @@ def _summaries(case: NativeCase) -> list[str]:
     return problems
 
 
+def _old_layout(root: Path) -> list[str]:
+    """Documents left at the case root from the layout before docs/<lang>/ (README.<lang>.md, REVIEW*.md,
+    explainer*.html, or the case README itself: a README.md that is not the generated index, with no
+    docs/en/README.md), each with its new path."""
+    from .explain import CASE_INDEX, INDEX_MARK, doc_path, legacy_doc
+    problems = []
+    for p in sorted(root.iterdir()):
+        new = legacy_doc(p.name) if p.is_file() else None
+        if new is None:
+            continue
+        if p.suffix == ".html":
+            problems.append(f"{p.name}: the explainer pages are docs/<lang>/ now: delete it, `fdebench2 explain-case` "
+                            f"writes {new}")
+        else:
+            problems.append(f"{p.name}: each language's documents are in docs/<lang>/ now: move it to {new} "
+                            f"(git mv {p.name} {new})")
+    index = root / CASE_INDEX
+    if (index.is_file() and not (root / doc_path("en", "README.md")).is_file()
+            and INDEX_MARK not in index.read_text(encoding="utf-8", errors="replace")):
+        problems.append(f"{CASE_INDEX}: the case README is {doc_path('en', 'README.md')} now and {CASE_INDEX} the index "
+                        f"`fdebench2 explain-case` writes: git mv {CASE_INDEX} {doc_path('en', 'README.md')}, then "
+                        "run explain-case")
+    return problems
+
+
 def _translations(case: NativeCase) -> list[str]:
     """The explainer in every language: locales/<lang>/explainer.yaml covers the case's own words (role, task
-    type, every tier and rule, the deliverable spec), and README.md / REVIEW.md have a README.<lang>.md /
-    REVIEW.<lang>.md next to them."""
+    type, every tier and rule, the deliverable spec), and docs/en/README.md / REVIEW.md have a translation in
+    docs/<lang>/."""
+    from .explain import TRANSLATED_DOCS, doc_path
     problems = []
     rule_ids = [r["id"] for r in case.meta.get("rules", [])]
     for lang in LOCALES:
@@ -247,9 +276,10 @@ def _translations(case: NativeCase) -> list[str]:
         if missing or extra:
             problems.append(f"{lang}/explainer.yaml: " + "; ".join(
                 ([f"missing {', '.join(missing)}"] if missing else []) + ([f"unknown {', '.join(extra)}"] if extra else [])))
-        for doc_name in ("README", "REVIEW"):
-            if (case.root / f"{doc_name}.md").is_file() and not (case.root / f"{doc_name}.{lang}.md").is_file():
-                problems.append(f"{doc_name}.{lang}.md is missing (the translation of {doc_name}.md)")
+        for name in TRANSLATED_DOCS:
+            english, own = doc_path("en", name), doc_path(lang, name)
+            if (case.root / english).is_file() and not (case.root / own).is_file():
+                problems.append(f"{own} is missing (the translation of {english})")
     return problems
 
 
@@ -808,6 +838,7 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
     if meta.get("field") not in load_fields(root.parent.parent):
         problems.append(f"field {meta.get('field')!r} is not listed in cases/fields.yaml")
     problems += _todos(case.root)
+    problems += _old_layout(case.root)
     kind = meta.get("deliverable_type", "batch")
     if kind == "batch" and not meta.get("deliverables"):
         problems.append("case.yaml: batch cases need deliverables")

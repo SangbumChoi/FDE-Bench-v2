@@ -3,7 +3,8 @@
   fdebench2 validate-case cases/<id> ...                  check native cases against the case contract
   fdebench2 export-dataset cases/<id> ...                 write each case's data and ground truth to dataset/
   fdebench2 audit-case cases/<id> [--world-seed N]        the ground truth audit (dataset/audit.json)
-  fdebench2 explain-case cases/<id> ...                   write each case's explainer.html
+  fdebench2 explain-case cases/<id> ...                   write each case's docs/<lang>/explainer.html, its index
+                                                         README.md and the catalog's cases/docs/<lang>/index.html
   fdebench2 new-case <field>/<role> [--program]          skeleton of a new case with settings
   fdebench2 cases                                        list cases
   fdebench2 prepare   --case ID [axes]                   materialize a variant, print the agent prompt
@@ -37,6 +38,19 @@ def _count(text: str) -> int:
     if n < 0:
         raise argparse.ArgumentTypeError(f"must be 0 or more, got {n}")
     return n
+
+
+def _case_paths(paths: list[Path]) -> list[Path]:
+    """The case directories among `paths`. The shell's cases/*/*/ also matches the catalog's page folders
+    cases/docs/<lang>/ (no case.yaml): those are skipped, with a note on stderr."""
+    from .explain import DOCS_DIR
+    keep = []
+    for path in paths:
+        if not (path / "case.yaml").is_file() and path.resolve().parent.name == DOCS_DIR:
+            print(f"{path}: skipped, the catalog's pages (not a case)", file=sys.stderr)
+        else:
+            keep.append(path)
+    return keep
 
 
 def _axes(ap: argparse.ArgumentParser) -> None:
@@ -96,7 +110,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("case_id", help="<field>/<role>")
     p.add_argument("--program", action="store_true", help="the deliverable is a program, not files")
     p.add_argument("--cases", dest="cases_root", type=Path, default=Path("cases"))
-    p = sub.add_parser("explain-case")
+    p = sub.add_parser("explain-case", help="the explainer pages, the case index README.md and the catalog pages")
     p.add_argument("paths", type=Path, nargs="+", help="case directories under cases/")
     p = sub.add_parser("build-site", help="the explainers as a static site (GitHub Pages)")
     p.add_argument("--out", type=Path, default=Path("site"))
@@ -121,6 +135,10 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("out", type=Path)
 
     a = ap.parse_args(argv)
+    if a.cmd in ("validate-case", "export-dataset", "explain-case"):
+        a.paths = _case_paths(a.paths)
+        if not a.paths:
+            ap.error(f"{a.cmd}: no case directory given")
     if a.cmd == "validate-case":
         from .validate import check_case
         failed = 0

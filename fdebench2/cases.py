@@ -53,16 +53,17 @@ _WHEN = re.compile(r"<!-- when: ([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([^>]*?) -->\n?"
 PARAM = re.compile(r"\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}")
 MIN_QUALITY_SPAN = 0.05   # the validator's floor on a setting's quality scale, see quality_span()
 # Case files only people read, in every language: never part of a run (runner.Bench.fingerprint) or of what the
-# ground truth audit measures (audit.fingerprint). Paths relative to the case directory. GT.md and CLIENT_REVIEW.md
-# are written from dataset/audit.json: hashing them would make every audit stale the moment they are regenerated.
-CASE_DOCS = ("README*.md", "REVIEW*.md", "GT*.md", "CLIENT_REVIEW*.md", "explainer*.html", "locales/*/summary.yaml",
-             "locales/*/explainer.yaml")
+# ground truth audit measures (audit.fingerprint). Paths relative to the case directory: the generated index
+# README.md, everything under docs/ (docs/<lang>/README.md, REVIEW.md, explainer.html), the ground truth write-ups
+# and the page texts. GT.md and CLIENT_REVIEW.md are written from dataset/audit.json: hashing them would make every
+# audit stale the moment they are regenerated. (fnmatch's * also matches /, so docs/* is the whole folder.)
+CASE_DOCS = ("README.md", "docs/*", "GT*.md", "CLIENT_REVIEW*.md", "locales/*/summary.yaml", "locales/*/explainer.yaml")
 
 
 def is_case_doc(rel: str) -> bool:
-    """Whether a case file (path relative to the case directory, with /) is one of its docs: the READMEs, REVIEWs,
-    ground truth write-ups (GT.md, CLIENT_REVIEW.md) and explainer pages next to case.yaml and the page texts
-    locales/<lang>/summary.yaml and explainer.yaml."""
+    """Whether a case file (path relative to the case directory, with /) is one of its docs: the index README.md,
+    the READMEs, REVIEWs and explainer pages in docs/<lang>/, the ground truth write-ups (GT.md, CLIENT_REVIEW.md)
+    next to case.yaml and the page texts locales/<lang>/summary.yaml and explainer.yaml."""
     return any(fnmatchcase(rel, pattern) for pattern in CASE_DOCS)
 
 

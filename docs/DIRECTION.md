@@ -230,8 +230,8 @@ Lost in Simulation 2601.17087; Mind the Sim2Real Gap 2603.11245; MAPS 2505.15935
 An independent reviewer read each of the 13 cases (code, data, five locales, stored dataset) and a second agent
 tried to refute every finding by re-running the reviewer's evidence. 121 findings: 82 confirmed, 39 confirmed in
 part, none refuted (the verifiers were lenient: read "partly" as "the direction is right, a detail is overstated").
-Each case's findings, with what was fixed and what is left as a proposal, are in its `REVIEW.md` and in the
-"Review findings" section of its `explainer.html`.
+Each case's findings, with what was fixed and what is left as a proposal, are in its `docs/<lang>/REVIEW.md` and
+in the "Review findings" section of its explainer page (`docs/<lang>/explainer.html`).
 
 ### 10.1 Patterns across cases
 

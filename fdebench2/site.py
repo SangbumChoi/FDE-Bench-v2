@@ -1,16 +1,18 @@
 """`fdebench2 build-site`: the case explainers as a static web site (GitHub Pages).
 
-The site is the stored pages, not a second renderer: cases/index.html becomes the home page, each case's
-explainer.html becomes <field>/<role>/index.html, and the other languages' pages (index.<lang>.html,
-explainer.<lang>.html) the same paths under <lang>/. DESIGN.md, docs/DIRECTION.md and the catalog
-(cases/README.md) are rendered, in English, with the explainer's markdown renderer. A static host lists no
-folders, so links into a case's files (dataset/gt/<setting>/, README.md, ...) point to the same path in the
-GitHub repository at the published ref. Every page gets a small navigation bar in its language.
+The site is the stored pages, not a second renderer: cases/docs/en/index.html becomes the home page, each case's
+docs/en/explainer.html becomes <field>/<role>/index.html, and the other languages' pages (cases/docs/<lang>/index.html,
+docs/<lang>/explainer.html) the same paths under <lang>/. DESIGN.md, docs/DIRECTION.md and the catalog
+(cases/README.md) are rendered, in English, with the explainer's markdown renderer. Every relative link is resolved
+from the page's own folder in the repository; a static host lists no folders, so links into a case's files
+(dataset/gt/<setting>/, GT.md, docs/<lang>/README.md, ...) point to the same path in the GitHub repository at the
+published ref. Every page gets a small navigation bar in its language.
 """
 
 from __future__ import annotations
 
 import os
+import posixpath
 import re
 import shutil
 import subprocess
@@ -100,6 +102,7 @@ def build_site(repo: Path, out: Path, github: str | None = None, ref: str | None
 
     cases = {cid: c for cid, c in discover(cases_root).items() if (c.root / PAGE).is_file()}
     langs = [l for l in LANGS if l == "en" or (cases_root / index_name(l)).is_file()]
+    # repository path -> site URL (relative to the site root), for every page the site has
     local = {f"cases/{cid}": f"{cid}/index.html" for cid in cases}
     for lang in langs:     # a case not yet translated links to its English page
         local |= {f"cases/{cid}/{page_name(lang)}": _site_path(f"{cid}/index.html", lang)
@@ -118,13 +121,14 @@ def build_site(repo: Path, out: Path, github: str | None = None, ref: str | None
     for lang in langs:
         extra = 0 if lang == "en" else 1
         index = (cases_root / index_name(lang)).read_text(encoding="utf-8")
-        write(_site_path("index.html", lang), _publish(index, page_dir="cases", depth=extra, lang=lang,
-                                                       github=github, ref=ref, local=local))
+        write(_site_path("index.html", lang), _publish(index, page_dir=posixpath.dirname(f"cases/{index_name(lang)}"),
+                                                       depth=extra, lang=lang, github=github, ref=ref, local=local))
         for cid, case in cases.items():
             page = case.root / page_name(lang)
             if page.is_file():
                 write(_site_path(f"{cid}/index.html", lang),
-                      _publish(page.read_text(encoding="utf-8"), page_dir=f"cases/{cid}",
+                      _publish(page.read_text(encoding="utf-8"),
+                               page_dir=posixpath.dirname(f"cases/{cid}/{page_name(lang)}"),
                                depth=cid.count("/") + 1 + extra, lang=lang, github=github, ref=ref, local=local))
     for page, (key, src) in DOCS.items():
         if (repo / src).is_file():

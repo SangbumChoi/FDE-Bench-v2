@@ -44,10 +44,17 @@ cases/<field>/<role>/
     request.md              the client's short, under-specified request (what the agent sees)
     requirements.md         complete requirements (hidden; the simulated client answers from it)
     targets.yaml            clarification targets: the facts a good FDE must ask for
-  README.md                 the client, data, rules and situations; reference and baseline numbers
-  REVIEW.md                 findings of a case review and their status (rendered in explainer.html)
+  README.md                 generated index (explain-case): the role and id, one row per language linking to
+                            its docs/<lang>/ files, then GT.md and CLIENT_REVIEW.md when the case has them
+  docs/<en|zh|ko|ja|es>/    each language's documents in its own folder (en: the originals, the others their
+                            translations, which validate-case requires for every English one)
+    README.md               the client, data, rules and situations; reference and baseline numbers
+    REVIEW.md               findings of a case review and their status (rendered in the explainer)
+    explainer.html          the case's page in this language, generated (fdebench2 explain-case)
   GT.md, CLIENT_REVIEW.md   audited cases: the ground truth in five parts and what the client answers from,
-                            generated from dataset/audit.json (docs: outside the audit's and a run's hashes)
+                            generated from dataset/audit.json, in English (docs: outside the audit's and a
+                            run's hashes, like the index README.md, everything under docs/ and the page
+                            texts locales/*/summary.yaml and explainer.yaml)
   dataset/                  the generated data and ground truth as files (fdebench2 export-dataset):
     agent_view/<lang>/      what the agent receives, per customer locale
     hidden/                 inputs the agent never sees (a program case's hidden period or corpus)
@@ -93,7 +100,10 @@ Design rules that keep scoring language-independent:
   and the same sequence of setting markers, in the right script;
 - data renders deterministically in every locale with no untranslated labels, and byte-identically in two
   processes with different `PYTHONHASHSEED`s;
-- the stored `dataset/` and `explainer.html` match what the generator produces now; no TODO is left;
+- the stored `dataset/`, the explainer pages `docs/<lang>/explainer.html` and the index `README.md` match what
+  the generator produces now; no TODO is left; no document is left at the case root from the layout before
+  `docs/<lang>/` (`README.<lang>.md`, `REVIEW*.md`, `explainer*.html`: the validator names each one's new path);
+  `docs/en/README.md` and `REVIEW.md` have their translations in every other `docs/<lang>/`;
 - the reference scores validity 1 / quality 1.0 and an empty submission is invalid;
 - every case has a baseline, valid and strictly worse than the reference in every setting;
 - every case has a plain-words summary in every locale (`locales/<lang>/summary.yaml`: what the AI has to do,
@@ -353,8 +363,9 @@ or as many have been skipped; another value of a `param:` target whose reference
 **Stored audit.** `audit-case cases/<field>/<role> [--world-seed N] [--combos N] [--no-write]` prints a report and
 writes `dataset/audit.json` (public world only; with `--world-seed` it prints only) and the explainer pages, which
 then show the section "Evidence the facts matter". Its `fingerprint` is a sha256 over `AUDIT_VERSION`, `audit.py`
-and every file of the case except its docs (`cases.is_case_doc`: READMEs, REVIEWs and explainer pages in every
-language, `GT.md` and `CLIENT_REVIEW.md`, which are generated from `audit.json` and would otherwise make every
+and every file of the case except its docs (`cases.is_case_doc`: the index `README.md`, everything under `docs/`
+(READMEs, REVIEWs and explainer pages in every language), `GT.md` and `CLIENT_REVIEW.md`, which are generated from
+`audit.json` and would otherwise make every
 audit stale the moment they are written, `locales/*/summary.yaml` and `explainer.yaml`) and `dataset/`: case.py,
 case.yaml, every locale's `request.md`, `requirements.md` and `targets.yaml`, and the reference programs case.py
 copies or imports. case.yaml counts without `audited` and `quality_cap`, which change what validate-case
@@ -549,7 +560,7 @@ model configs, agent, sandbox, framework version).
   A / B / C are gone; every case draws its parameters.
 - Built cases: one or more per field (see `cases/README.md`), all passing `validate-case` in all five
   locales and on world seeds 1–3, each with a baseline, a README and a REVIEW.md of open findings, and an
-  explainer in every language. Every case has settings: three tiers and a public panel of rule seeds, among
+  explainer in every language (all three per language in the case's `docs/<lang>/`). Every case has settings: three tiers and a public panel of rule seeds, among
   them stock trading, loan underwriting, hospital scheduling and multilingual corpus curation as programs, and
   BI analysis, where answers may be "don't know" and the rule seed draws what a don't-know answer earns.
   Open binding findings (a parameter stated in a tier where it changes nothing) are listed in

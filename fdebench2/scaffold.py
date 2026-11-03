@@ -1,9 +1,11 @@
 """`fdebench2 new-case <field>/<role>`: the skeleton of a new case with settings.
 
-It writes case.yaml, case.py, README.md and the five locales with every
-required part in place and marked TODO, so a new role starts from the same
-contract as the built ones. validate-case fails while any TODO is left; once
-they are filled, `fdebench2 export-dataset` and `fdebench2 validate-case` finish it.
+It writes case.yaml, case.py, the five locales and the README in every
+language (docs/<lang>/README.md) with every required part in place and marked
+TODO, plus the index README.md of those documents, so a new role starts from the
+same contract as the built ones. validate-case fails while any TODO is left; once
+they are filled, `fdebench2 export-dataset` (which also writes the explainer pages
+and the index) and `fdebench2 validate-case` finish it.
 Built cases to copy patterns from: a batch case with settings is
 `manufacturing/procurement_specialist`; daily program cases are
 `finance/loan_underwriting_specialist`, `healthcare/hospital_appointment_scheduler`
@@ -17,6 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .cases import LOCALES, load_fields
+from .explain import CASE_INDEX, build_case_readme, doc_path
 
 CASE_YAML = """id: {role}
 role: {title}
@@ -255,7 +258,6 @@ def new_case(case_id: str, cases_root: Path = Path("cases"), kind: str = "batch"
     program_import = ("from fdebench2.casekit import program_session, run_program  # noqa: F401\n\n"
                       "ENTRYPOINT = \"solution.py:run\"\n" if kind == "program" else "")
     (root / "case.py").write_text(CASE_PY.format(title=title, program_import=program_import), encoding="utf-8")
-    (root / "README.md").write_text(README.format(title=title, case_id=case_id), encoding="utf-8")
     for lang in LOCALES:
         d = root / "locales" / lang
         d.mkdir()
@@ -263,7 +265,12 @@ def new_case(case_id: str, cases_root: Path = Path("cases"), kind: str = "batch"
         (d / "requirements.md").write_text(REQUIREMENTS, encoding="utf-8")
         (d / "targets.yaml").write_text(TARGETS_EN if lang == "en" else TARGETS, encoding="utf-8")
         (d / "summary.yaml").write_text(SUMMARY, encoding="utf-8")
-        if lang != "en":    # the explainer and the README in every language
+        readme = root / doc_path(lang, "README.md")     # the README in every language, docs/<lang>/README.md
+        readme.parent.mkdir(parents=True)
+        if lang == "en":
+            readme.write_text(README.format(title=title, case_id=case_id), encoding="utf-8")
+        else:               # and the explainer's case texts
             (d / "explainer.yaml").write_text(EXPLAINER, encoding="utf-8")
-            (root / f"README.{lang}.md").write_text(f"TODO: README.md in {lang}.\n", encoding="utf-8")
+            readme.write_text(f"TODO: {doc_path('en', 'README.md')} in {lang}.\n", encoding="utf-8")
+    (root / CASE_INDEX).write_text(build_case_readme(root), encoding="utf-8")    # the index of those documents
     return root

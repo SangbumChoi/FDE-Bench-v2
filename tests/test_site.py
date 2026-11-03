@@ -2,7 +2,8 @@
 
 import re
 
-from fdebench2.explain import LANGS, page_name
+from fdebench2.cases import discover
+from fdebench2.explain import LANGS, PAGE, page_name
 from fdebench2.site import build_site
 
 from conftest import REPO
@@ -13,7 +14,7 @@ GITHUB = "https://github.com/example/FDE-Bench-v2"
 def test_site_pages_and_links(tmp_path):
     out = tmp_path / "site"
     pages = build_site(REPO, out, github=GITHUB, ref="main")
-    cases = sorted(p.parent.relative_to(REPO / "cases").as_posix() for p in (REPO / "cases").glob("*/*/explainer.html"))
+    cases = sorted(cid for cid, c in discover(REPO / "cases").items() if (c.root / PAGE).is_file())
     assert cases and {"index.html", "direction.html", "design.html", "catalog.html", ".nojekyll"} <= {
         p.name for p in out.iterdir()}
     expected = 3
@@ -36,4 +37,10 @@ def test_site_pages_and_links(tmp_path):
             # nothing relative is left except in-page anchors and the site's own pages
             for href in re.findall(r'href="([^"]*)"', html):
                 assert href.startswith(("#", GITHUB + "/tree/main/cases/", "../")) or href == GITHUB, (c, href)
+            # every link into the repository, resolved from the page's folder docs/<lang>/, names a path that exists
+            # (the stored answers, GT.md, the catalog's other cases, ...)
+            tree = GITHUB + "/tree/main/"
+            files = [h[len(tree):].partition("#")[0] for h in re.findall(r'href="([^"]*)"', html) if h.startswith(tree)]
+            assert any(f.startswith(f"cases/{c}/dataset/") for f in files), c
+            assert [f for f in files if not (REPO / f).exists()] == [], (lang, c)
     assert len(pages) == expected
