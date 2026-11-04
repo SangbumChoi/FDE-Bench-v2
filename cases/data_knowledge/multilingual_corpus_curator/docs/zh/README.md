@@ -147,7 +147,7 @@ out_dir/manifest.csv               source,status,path,reason（placed | review |
 
 ## 保存的数据集（`dataset/`）
 
-由 `python -m fdebench2.cli export-dataset cases/data_knowledge/multilingual_corpus_curator` 写出；`validate-case` 会重新生成它，与生成器不一致时报错（约 2 MB，约 2,300 个小文件）。`audit-case` 写出 `dataset/audit.json`（export-dataset 会保留它）。
+由 `python -m fdebench2.cli export-dataset cases/data_knowledge/multilingual_corpus_curator` 写出；`validate-case` 会重新生成它，与生成器不一致时报错（约 2 MB，约 2,100 个小文件）。`audit-case` 写出 `dataset/audit.json`（export-dataset 会保留它）。
 
 ```
 dataset/
@@ -155,18 +155,26 @@ dataset/
   hidden/corpus/...                  organize() 收到的评分用共享盘原样（每个设置都相同）
   audit.json                         标准答案审查（公开世界）：只把这一个事实弄错的答案、捷径、提问的价值、
                                        界限值、直接检查；GT.md 由它生成
-  answer/<tier>/s<seed>/             easy/s11 ... hard/s21，公开规则种子
-    setting.json, score.json         抽到的参数（+ 推导出的 fallback_author），以及参考答案在评分用语料上的
-                                       得分（含客户原来的做法的目标值和两者的归一化质量）
-    reference/program/               参考交付物（organize.py + 该设置的 config.json）
-    reference_output/                参考答案在评分用语料上写出的内容（library/、_review/、manifest.csv）
-    expected_output/                 此设置下计分的书在评分用语料上的正确 out_dir：
+  answer/                            公开规则种子（easy/s11 ... hard/s21），每个文件都以 difficulty 和 seed 区分设置
+    answers.csv                      每个设置一行：抽到的参数（推导出的 fallback_author 不单独保存）、参考答案和
+                                       客户原来的做法在评分用语料上的目标值、质量尺度的宽度、生效的规则和应问事项、
+                                       参考答案的指标
+    files/reference/program/         参考交付物的 organize.py（各设置相同；各设置的 config.json 在
+                                       reference_program.jsonl 中）
+    files/baseline/program/          客户原来的做法的 organize.py（各设置的 config.json 在 baseline_program.jsonl 中）
+    reference_output_*               参考答案在评分用语料上写出的内容：reference_output_manifest.csv、
+                                       reference_output__review_<REASON>.jsonl（_review/ 中的 JSON 文件）、
+                                       files/reference_output/ 中的其他 _review/ 文件（各设置相同），以及
+                                       files/<difficulty>_s<seed>/reference_output/ 中的 library/
+    files/<difficulty>_s<seed>/expected_output/
+                                     此设置下计分的书在评分用语料上的正确 out_dir：
                                        library/... 每本上架的书一个简介文件，位于该设置规定的路径
                                        _review/<REASON>/<把 / 换成 __ 的路径>  复核书的源文件
-                                       manifest.csv  placed / review 行（带原因），hard 中还有 JUNK 的 skipped 行
+                                       （其中的 JSON 文件在 expected_output__review_<REASON>.jsonl 中）
+    expected_output_manifest.csv     它的 manifest.csv：placed / review 行（带原因），hard 中还有 JUNK 的 skipped 行
     books.csv                        答案表（评分用语料）：每本书的类型、层级、是否计分、预期状态、
                                        路径和原因、规范书名/作者/年份及其源文件
-    expected_score.json              评估器给 expected_output 的得分：easy 和 medium 为 100；hard 在复核规定下
+    expected_score.jsonl             评估器给 expected_output 的得分：easy 和 medium 为 100；hard 在复核规定下
                                        为 99.4（两本 NO_AUTHOR 书在复核区得 0.7；没有放宽任何规则），在上架
                                        规定下为 100
 ```

@@ -64,12 +64,15 @@ Written by `python -m fdebench2.cli export-dataset cases/finance/loan_underwriti
   snapshot, notices) without `book`, which the engine fills from the program's own earlier decisions.
 - `hidden/mail/<lang>/<date>_<ref>.eml`: the hidden period's 25 notices (1 regulation change, 1 budget cut, 15
   repayments, 8 document corrections) and 10 branch notes as e-mails, per locale.
-- `answer/<tier>/s<seed>/` (the 9 public settings): `setting.json` (tier, rule seed, the drawn parameters and the
-  derived `min_score`, `near_prime_below`, `other_bureau`), `reference/program/` (the reference with its config),
-  `score.json` (objective 1.0, metrics), `decisions.csv` (the reference's decisions per day: date, day_index,
-  application_id, customer_id, decision, amount, reason_code, redecision = 1 for hard's re-decisions) and
-  `limit_tables/<date>.json` (the expected closing limit table of each day as the evaluator computes it after
-  the reference's approvals: `customers`, `daily_capacity_remaining`, `period_budget_remaining`, null in easy).
+- `answer/` (the 9 public settings, each file keyed by difficulty and seed): `answers.csv` (one row per setting:
+  the drawn parameters, the reference's and the baseline's objective, the rules and targets in force and the
+  reference's metrics; the derived `min_score`, `near_prime_below` and `other_bureau` are not stored),
+  `files/reference/program/underwriter.py` and `files/baseline/program/underwriter.py` (the same in every setting)
+  with each setting's config in `reference_program.jsonl` and `baseline_program.jsonl`, `decisions.csv` (the
+  reference's decisions per day: difficulty, seed, date, day_index, application_id, customer_id, decision, amount,
+  reason_code, redecision = 1 for hard's re-decisions) and `limit_tables.jsonl` (one line per setting and day,
+  `file` = `<date>.json`: the expected closing limit table of each day as the evaluator computes it after the
+  reference's approvals: `customers`, `daily_capacity_remaining`, `period_budget_remaining`, null in easy).
 
 ## Interface (`on_day(day)`)
 

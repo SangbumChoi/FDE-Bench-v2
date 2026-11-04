@@ -76,8 +76,8 @@ combination of every tier's pools on these four worlds (REVIEW.md, "Quality scal
 above the base. On the whole fit, hard's scale is the same as before, and world seed 2 still has medium and hard
 settings below 5% (medium/s19 3.2%, hard/s19 3.4%).
 
-The drawn values of each public setting are stored in `dataset/answer/<tier>/s<seed>/setting.json` (with the
-derived `shortlist_total`). Any other rule seed is a private seed: a fresh draw of the same pools; the world
+The drawn values of each public setting are stored in `dataset/answer/answers.csv`, one row per setting (the
+derived `shortlist_total` follows from them and is not stored). Any other rule seed is a private seed: a fresh draw of the same pools; the world
 generator makes sure the reference and the baseline are valid under every combination of every tier's pools.
 
 **Every parameter binds** (validator, hard/s31, on the public world and world seeds 1–3): another

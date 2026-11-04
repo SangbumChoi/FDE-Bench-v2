@@ -36,7 +36,7 @@
 - `agent_view/<lang>/`：上記のファイル、ロケールごと（どの設定でも同一）。
 - `hidden/days/<date>.json`：採点用の20日分の `on_day` 入力（その日の朝の信用情報のスナップショット付きの申込、通知）。`book` は含まず、エンジンがプログラム自身のそれまでの判断から埋めます。
 - `hidden/mail/<lang>/<date>_<ref>.eml`：採点用の期間の通知25件（規制変更1件、予算削減1件、返済15件、書類の訂正8件）と支店のメモ10件をメールにしたもの、ロケールごと。
-- `answer/<tier>/s<seed>/`（9つの公開設定）：`setting.json`（ティア、ルールシード、抽選されたパラメータと、そこから算出される `min_score`、`near_prime_below`、`other_bureau`）、`reference/program/`（設定ファイル付きの模範解答）、`score.json`（目的値1.0、指標）、`decisions.csv`（模範解答の日ごとの判断：date, day_index, application_id, customer_id, decision, amount, reason_code、hard の再判断は redecision = 1）、`limit_tables/<date>.json`（模範解答の承認後に評価器が計算する、各日の期待される締め時点の枠一覧表：`customers`、`daily_capacity_remaining`、`period_budget_remaining`、easy では null）。
+- `answer/`（9つの公開設定。どのファイルも difficulty と seed で設定を区別）：`answers.csv`（設定ごとに1行：抽選されたパラメータ、模範解答とベースラインの目的値、適用されるルールと確認すべき事実、模範解答の指標。そこから算出される `min_score`、`near_prime_below`、`other_bureau` は保存しない）、`files/reference/program/underwriter.py` と `files/baseline/program/underwriter.py`（どの設定でも同一）と、設定ごとの設定ファイルを収めた `reference_program.jsonl` と `baseline_program.jsonl`、`decisions.csv`（模範解答の日ごとの判断：difficulty, seed, date, day_index, application_id, customer_id, decision, amount, reason_code、hard の再判断は redecision = 1）、`limit_tables.jsonl`（設定と日ごとに1行、`file` = `<date>.json`：模範解答の承認後に評価器が計算する、各日の期待される締め時点の枠一覧表：`customers`、`daily_capacity_remaining`、`period_budget_remaining`、easy では null）。
 
 ## インターフェース（`on_day(day)`）
 

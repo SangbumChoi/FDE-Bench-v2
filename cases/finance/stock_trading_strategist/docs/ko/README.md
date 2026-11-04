@@ -220,8 +220,8 @@ hard에서 값이 4개인 풀마다 세 값을 보여 줍니다(5% 기준, 20% �
 | hard/s20 | NEXO, PYRO; 9; 3; 18; 35; notice_10; 15 | 27% | 1.000 | 0.254 |
 | hard/s134 | MEDQ, GLAC; 6; 2; 10; 25; capital_25; 10 | 12% | 1.000 | 0.566 |
 
-`dataset/answer/<tier>/s<seed>/setting.json`에는 설정마다 뽑힌 값의 사전(티어가 쓰지 않는 값은 `none`)과 계산된
-`withdrawal_basis`, `withdrawal_pct`가 있습니다.
+`dataset/answer/answers.csv`에는 설정마다 한 행으로 뽑힌 값(티어가 쓰지 않는 값은 `none`)이 있습니다. 계산된
+`withdrawal_basis`, `withdrawal_pct`는 여기서 나오므로 따로 저장하지 않습니다.
 
 **파라미터 구속**(validate-case, hard/s44에서 시작): 모든 파라미터는 처음 시도하는 다른 값에서 정답을 바꿉니다.
 `restricted` = MEDQ, GLAC, `liquidation_days` = 3(4% 기준에서는 2가 허용되지 않음), `stock_cap` = 10 또는 `sector_cap` =
@@ -342,9 +342,11 @@ hard에서 값이 4개인 풀마다 세 값을 보여 줍니다(5% 기준, 20% �
   엔진이 보내는 정확한 `market`, 그날의 `notices`가 들어 있습니다(`portfolio`는 프로그램 자신의 주문에 따라 달라지므로
   빠져 있습니다. 정답 참고). 숨은 80거래일의 `daily_prices.csv`와 `index_levels.csv`(마지막 거래일의 시세는 어떤
   호출에도 들어가지 않음). `mail/<lang>/*.eml`은 6개 통지의 원본 메일을 모든 로캘로 담은 것입니다.
-- `answer/<tier>/s<seed>/`, 공개 설정마다 하나(`easy/s44` … `hard/s134`): `setting.json`(티어, 규칙 시드, 뽑힌 값과 계산된
-  `withdrawal_basis` / `withdrawal_pct`), `reference/program/`(strategy.py + config.json), `score.json`(목표값 1.0과
-  지표), 그리고 `write_ground_truth`가 쓴 참조 해답의 실행 결과: `orders.csv`(체결되는 거래일별 형식에 맞는 주문),
-  `fills.csv`(체결과 거부, 그 사유), `positions.csv`(마감별 주식 수), `equity_curve.csv`(시작 마감을 포함한 모든 마감
-  시점의 현금, 미결제 대금, 보유분 평가액, 자산, 지급액, 자산 + 지급액의 최고치, 낙폭, 지수), `status_tables.json`(80번
-  호출 각각이 보고해야 하는 정확한 표).
+- `answer/`, 공개 설정(`easy/s44` … `hard/s134`)의 정답, 파일마다 difficulty와 seed로 설정을 구분: `answers.csv`(설정마다
+  한 행: 뽑힌 값, 참조 해답과 기준선의 목표값, 적용되는 규칙과 물어봐야 할 항목, 참조 해답의 지표),
+  `files/reference/program/strategy.py`와 `files/baseline/program/strategy.py`(모든 설정에서 동일)와 설정마다의
+  config.json이 담긴 `reference_program.jsonl`, `baseline_program.jsonl`, 그리고 `write_ground_truth`가 쓴 참조 해답의
+  실행 결과를 설정별로 쌓은 것: `orders.csv`(체결되는 거래일별 형식에 맞는 주문), `fills.csv`(체결과 거부, 그 사유),
+  `positions.csv`(마감별 주식 수), `equity_curve.csv`(시작 마감을 포함한 모든 마감 시점의 현금, 미결제 대금, 보유분
+  평가액, 자산, 지급액, 자산 + 지급액의 최고치, 낙폭, 지수), `status_tables.jsonl`(설정마다 한 줄: 80번 호출 각각이
+  보고해야 하는 정확한 표).

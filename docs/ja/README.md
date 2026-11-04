@@ -49,7 +49,7 @@ fdebench2 report runs/
 
 ```
 cases/<field>/<role>/  case.yaml, case.py, locales/<lang>/{request.md, requirements.md, targets.yaml},
-                       dataset/ (data per locale, hidden inputs, answer/<tier>/s<seed>/ per setting),
+                       dataset/ (data per locale, hidden inputs, answer/answers.csv: one row per setting),
                        docs/<lang>/{README.md (tiers, rule parameters, numbers per setting), REVIEW.md,
                        explainer.html}, README.md (generated index of docs/ and answer/), GT.md (audited cases)
 cases/README.md        catalog of cases by field   cases/fields.yaml  field names in 5 locales

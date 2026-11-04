@@ -54,7 +54,7 @@
 | hard/s13 | C14、遅延5、09:00、トレー110枚、渋滞07:30、慣習なし | 472.58 | 1,269.31 | 2.69 |
 | hard/s58 | C03、遅延2、09:30、トレー110枚、渋滞06:30、慣習なし | 537.35 | 1,177.53 | 2.19 |
 
-`dataset/answer/<tier>/s<seed>/setting.json` に保存されている辞書（`rush_start` と `premium_first` も抽選されたとおり）：
+`dataset/answer/answers.csv` に設定ごとに1行で保存されている抽選値（`rush_start` と `premium_first` も抽選されたとおり）：
 
 ```
 easy/s5    {closed_cafe: C11, late_cost: 3, shift_end: "10:00", van_capacity: 120, rush_start: none, premium_first: false}

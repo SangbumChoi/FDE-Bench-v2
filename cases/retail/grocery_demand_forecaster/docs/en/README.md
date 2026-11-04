@@ -58,8 +58,8 @@ reference invalid, moves its objective or is beaten by its own reference by at l
 | hard/s25 | floor 8, holiday Wed 11 Nov, flyer 1.5, beverages cancelled, weight 2 | 0.1962 | 0.4329 | 2.21 |
 | hard/s58 | floor 4, holiday Fri 13 Nov, flyer 2, dairy cancelled, weight 3 | 0.2108 | 0.6753 | 3.20 |
 
-The objective is the mean over the five stores of the weighted WAPE (lower is better). The dicts as stored in
-`dataset/answer/<tier>/s<seed>/setting.json`:
+The objective is the mean over the five stores of the weighted WAPE (lower is better). The drawn values as
+stored in `dataset/answer/answers.csv`, one row per setting:
 
 ```
 easy/s3    {min_display: 6, holiday_date: none,         promo_uplift: 1,   promo_cancelled: none,      short_weight: 1}

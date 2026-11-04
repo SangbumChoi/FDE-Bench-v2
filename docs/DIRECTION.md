@@ -86,7 +86,8 @@ company policies and vendor harnesses on one client channel.
    and es, including the data labels and file names.
 5. **Pressure inside productive work.** Integrity is measured on the same trajectory as capability.
 6. **Auditability.** Every case stores its data, hidden inputs and the answer of every public setting
-   (`dataset/answer/<tier>/s<seed>/`: the setting, what the client knows, the reference and the baseline) and
+   (`dataset/answer/answers.csv`, one row per setting with its drawn parameters, rules and targets and both
+   objectives, and next to it the reference and the baseline stacked with difficulty and seed columns) and
    an explainer page; the validator keeps both in sync with the generator.
 
 ## 5. Design commitments for every new case

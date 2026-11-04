@@ -180,7 +180,7 @@ note on the first half, and the client's remark for a `null` worth 0.5 or 1.5 (a
 | 23 | 4 (April) | 90 | 1,000 | 1.5 | 2025-04-01–2026-03-31 / 2026-04-01–06-30 / 2026-04-01–09-30; active from 2026-07-03 |
 
 The draw is the same in every tier, so each row is the drawn dict of `easy/sN`, `medium/sN` and `hard/sN`
-(`dataset/answer/<tier>/s<N>/setting.json`). Seed 23 is the old rule set A apart from its `null` reward (1.5 instead
+(their rows in `dataset/answer/answers.csv`). Seed 23 is the old rule set A apart from its `null` reward (1.5 instead
 of 1); seeds 4 and 12 mix values that no old rule set combined. Private seeds draw any of the 81 combinations
 (e.g. seed 101: April, 60 days, 1,000 KRW, 1; seed 102: July, 90 days, 100 KRW, 0.5).
 

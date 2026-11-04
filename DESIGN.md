@@ -45,8 +45,8 @@ cases/<field>/<role>/
     requirements.md         complete requirements (hidden; the simulated client answers from it)
     targets.yaml            clarification targets: the facts a good FDE must ask for
   README.md                 generated index (explain-case): the role and id, one row per language linking to
-                            its docs/<lang>/ files, then dataset/answer/ with each tier's and each setting's
-                            folder, and GT.md and CLIENT_REVIEW.md when the case has them
+                            its docs/<lang>/ files, then dataset/answer/answers.csv and the answer files
+                            next to it, and GT.md and CLIENT_REVIEW.md when the case has them
   docs/<en|zh|ko|ja|es>/    each language's documents in its own folder (en: the originals, the others their
                             translations, which validate-case requires for every English one)
     README.md               the client, data, rules and situations; reference and baseline numbers
@@ -59,11 +59,14 @@ cases/<field>/<role>/
   dataset/                  the generated data and answers as files (fdebench2 export-dataset):
     agent_view/<lang>/      what the agent receives, per customer locale
     hidden/                 inputs the agent never sees (a program case's hidden period or corpus)
-    answer/<tier>/s<seed>/  per public setting, grouped by tier (easy/, medium/, hard/, each with the public
-                            rule seeds; answer/default/ without settings): setting.json (the drawn
-                            parameters, the rules and targets in force), client/<lang>/ (requirements.md
-                            and targets.yaml as rendered for the setting), reference/, baseline/,
-                            score.json (both objectives and qualities) and case extras
+    answer/                 the answers of the public settings (tier x public rule seed), as tables:
+      answers.csv           one row per setting: difficulty, seed, the drawn parameters, both objectives, the
+                            quality scale's width, the rules and targets in force and the reference's metrics
+      <name>.csv            reference_<file>.csv, baseline_<file>.csv and the case's extra answer tables,
+                            the settings stacked with difficulty and seed as the first columns
+      <group>.jsonl         every JSON file, stacked the same way ({difficulty, seed, file, content})
+      files/                programs and file trees: files/<path> when the same in every setting, else
+                            files/<difficulty>_s<seed>/<path>
     MANIFEST.json           sha256 of every file; validate-case checks it against the generator
     audit.json              the ground truth audit (fdebench2 audit-case), outside the manifest
 ```
@@ -106,7 +109,7 @@ Design rules that keep scoring language-independent:
 - the stored `dataset/`, the explainer pages `docs/<lang>/explainer.html` and the index `README.md` match what
   the generator produces now; no TODO is left; no document is left at the case root from the layout before
   `docs/<lang>/` (`README.<lang>.md`, `REVIEW*.md`, `explainer*.html`: the validator names each one's new path),
-  and no `dataset/gt/` from the layout before `dataset/answer/<tier>/s<seed>/`;
+  and no `dataset/gt/` from the layout before `dataset/answer/`;
   `docs/en/README.md` and `REVIEW.md` have their translations in every other `docs/<lang>/`;
 - the reference scores validity 1 / quality 1.0 and an empty submission is invalid;
 - every case has a baseline, valid and strictly worse than the reference in every setting;
@@ -142,9 +145,9 @@ A case may declare **settings**: three content tiers (`tiers:` easy / medium / h
   weights), e.g. which clinic is closed on a holiday or how many interpreters there are, each parameter
   independently from its candidates. A tier may have its own, harder candidates. Different parameters lead to
   different correct solutions, so a solution tuned to one draw fails or scores worse under another. The
-  case's **public panel** (`rule_seeds:`) is stored in `dataset/answer/<tier>/s<seed>/`, shown in the explainer
-  and validated; any other int is a **private seed**, a fresh draw of the same candidates whose answers are
-  published nowhere.
+  case's **public panel** (`rule_seeds:`) is stored in `dataset/answer/` (one row of `answers.csv` per
+  setting), shown in the explainer and validated; any other int is a **private seed**, a fresh draw of the same
+  candidates whose answers are published nowhere.
 
 **case.yaml**
 
@@ -178,7 +181,7 @@ were. Two optional hooks in case.py shape it:
 **The setting in code.** `reference_solution`, `baseline_solution`, `score` and `violating_examples` take a
 `Setting` as their last argument: `setting.tier`, `setting.rule_seed`, `setting.at_least(tier)`,
 `setting["name"]`, and `setting.params`, the full dict (drawn and derived values). `setting.label` is
-`easy/s1`, `setting.folder` its folder in `dataset/answer/` (`easy/s1`) and `setting.slug` the flat
+`easy/s1`, `setting.folder` the same as a relative folder path (`easy/s1`) and `setting.slug` the flat
 `easy_s1`; the validator's one-parameter variations carry the change in the
 label (`easy/s1[cap=5]`), so a case may cache per label. case.py reads its setting only from the `Setting`
 it is given, never from a fixed list of settings: anything calibrated across settings (a budget that must be
@@ -206,20 +209,25 @@ drawn parameters, mean final score and valid runs. A single run (`fdebench2 run`
 seed runs the case's first public one, and its key says so; re-scoring a run whose stored parameters are no
 longer what its rule seed draws (the candidates changed) is refused.
 
-**Dataset.** `dataset/answer/<tier>/s<seed>/` for every public setting, grouped by tier (the tier's folder
-holds one folder per public rule seed, as in the label `easy/s42`; a case without settings has
-`dataset/answer/default/`). Each folder bundles everything that defines the setting's answer:
+**Dataset.** `dataset/answer/` holds the answers of every public setting as tables, each setting keyed by its
+`difficulty` and `seed` columns (the label `easy/s42` is difficulty `easy`, seed `42`; a case without settings
+has the single key `default` with an empty seed):
 
-- `setting.json` = `{tier, rule_seed, params: {drawn values}}` (plus `derived` when the case derives values),
-  `rules` (the rules in force: `id`, `class` and the English `description` as rendered for the setting) and
-  `targets` (the ids of the targets in force);
-- `client/<lang>/requirements.md` and `client/<lang>/targets.yaml` in all five locales: what the client knows
-  in this version (`case.at(tier, seed).requirements(lang)`, and the targets in force with `id`, `kind`,
-  `domain` and their rendered `text`);
-- `reference/`, the reference deliverable (quality 1), and `baseline/`, what the client's own way produces
-  (`baseline_solution`, quality 0);
-- `score.json` (both objectives and qualities) and whatever case.py `write_ground_truth(world, dir, setting)`
-  adds (expected tables or outputs).
+- `answers.csv`, one row per setting: `difficulty`, `seed`, one column per drawn parameter (derived values are
+  not stored), `reference_objective`, `baseline_objective`, `quality_span` (the quality scale's width),
+  `reference_violations`, `rules` and `targets` (the ids in force, separated by `;`) and a `metric_<name>`
+  column for each scalar metric of the reference;
+- next to it, each answer file stacked over the settings: the reference deliverable (quality 1) and what the
+  client's own way produces (`baseline_solution`, quality 0) as `reference_<file>.csv` and `baseline_<file>.csv`,
+  and whatever case.py `write_ground_truth(world, dir, setting)` adds (expected tables or outputs) under its own
+  name, each CSV with `difficulty` and `seed` as its first columns;
+- every JSON file as one line of `<group>.jsonl` (`{difficulty, seed, file, content}`), grouped by the folder
+  it lives in (`reference.jsonl`, `reference_program.jsonl`);
+- `files/` for anything else (a reference program, an expected file tree): `files/<path>` when it is the same
+  in every setting, else `files/<difficulty>_s<seed>/<path>`.
+
+What the client knows in each setting (its requirements and targets in every locale) is not stored: the
+explainer renders it.
 
 `MANIFEST.json` covers every file; `validate-case` regenerates the dataset and compares, and reports a
 `dataset/gt/` left from the layout before `dataset/answer/` (export-dataset removes it).

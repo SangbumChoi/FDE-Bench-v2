@@ -145,7 +145,7 @@ out_dir/manifest.csv                   source,status,path,reason (placed | revie
 
 ## 저장된 데이터셋(`dataset/`)
 
-`python -m fdebench2.cli export-dataset cases/data_knowledge/multilingual_corpus_curator`로 작성합니다. `validate-case`가 다시 생성하며, 생성기와 달라지면 실패합니다(약 2 MB, 작은 파일 약 2,300개). `audit-case`는 `dataset/audit.json`을 씁니다(export-dataset은 이 파일을 그대로 둡니다).
+`python -m fdebench2.cli export-dataset cases/data_knowledge/multilingual_corpus_curator`로 작성합니다. `validate-case`가 다시 생성하며, 생성기와 달라지면 실패합니다(약 2 MB, 작은 파일 약 2,100개). `audit-case`는 `dataset/audit.json`을 씁니다(export-dataset은 이 파일을 그대로 둡니다).
 
 ```
 dataset/
@@ -153,18 +153,26 @@ dataset/
   hidden/corpus/...                  organize()가 받는 그대로의 채점용 드라이브(모든 설정에서 같음)
   audit.json                         정답 감사(공개 월드): 사실 하나만 잘못 안 답, 지름길, 질문의 가치,
                                        한계값, 직접 검사. GT.md는 이 파일로 생성
-  answer/<tier>/s<seed>/             easy/s11 ... hard/s21, 공개 규칙 시드
-    setting.json, score.json         뽑힌 파라미터(+ 파생된 fallback_author)와 채점용 코퍼스에서의 모범 답안
-                                       점수(기존 방식의 목표값과 두 정규화 품질 포함)
-    reference/program/               모범 답안 산출물(organize.py + 그 설정의 config.json)
-    reference_output/                모범 답안이 채점용 코퍼스에서 쓴 결과(library/, _review/, manifest.csv)
-    expected_output/                 이 설정에서 채점하는 책들의 올바른 out_dir(채점용 코퍼스):
+  answer/                            공개 규칙 시드(easy/s11 ... hard/s21), 파일마다 difficulty와 seed로 설정을 구분
+    answers.csv                      설정마다 한 줄: 뽑힌 파라미터(파생된 fallback_author는 따로 저장하지 않음),
+                                       채점용 코퍼스에서의 모범 답안과 기존 방식의 목표값, 품질 척도의 폭,
+                                       적용되는 규칙과 물어봐야 할 항목, 모범 답안의 지표
+    files/reference/program/         모범 답안 산출물의 organize.py(모든 설정에서 같음. 설정마다의 config.json은
+                                       reference_program.jsonl에)
+    files/baseline/program/          기존 방식의 organize.py(설정마다의 config.json은 baseline_program.jsonl에)
+    reference_output_*               모범 답안이 채점용 코퍼스에서 쓴 결과: reference_output_manifest.csv,
+                                       reference_output__review_<REASON>.jsonl(_review/의 JSON 파일),
+                                       files/reference_output/의 나머지 _review/ 파일(모든 설정에서 같음),
+                                       files/<difficulty>_s<seed>/reference_output/의 library/
+    files/<difficulty>_s<seed>/expected_output/
+                                     이 설정에서 채점하는 책들의 올바른 out_dir(채점용 코퍼스):
                                        library/... 서고에 올린 책마다 소개글 파일 하나, 그 설정의 경로에
                                        _review/<REASON>/<경로의 /를 __로 바꾼 이름>  검토할 책의 원본 파일
-                                       manifest.csv  placed / review 줄(사유 포함), hard에서는 JUNK skipped 줄
+                                       (그중 JSON 파일은 expected_output__review_<REASON>.jsonl에)
+    expected_output_manifest.csv     그 manifest.csv: placed / review 줄(사유 포함), hard에서는 JUNK skipped 줄
     books.csv                        정답 키(채점용 코퍼스): 책마다 종류, 티어, 채점 여부, 예상 상태,
                                        경로와 사유, 정규 제목/저자/연도, 원본 파일
-    expected_score.json              평가기가 expected_output에 매긴 점수: easy와 medium은 100, hard는
+    expected_score.jsonl             평가기가 expected_output에 매긴 점수: easy와 medium은 100, hard는
                                        검토 방침에서 99.4(NO_AUTHOR 책 2권이 검토에서 0.7; 완화한 규칙
                                        없음), 서고 배치 방침에서 100
 ```

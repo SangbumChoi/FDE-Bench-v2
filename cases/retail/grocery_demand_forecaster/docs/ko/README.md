@@ -57,8 +57,8 @@ hard에서만 평가한다는 점입니다. `case.py`는 아무 값도 파생하
 | hard/s25 | 하한 8, 공휴일 11월 11일(수), 전단 1.5, 음료 취소, 가중치 2 | 0.1962 | 0.4329 | 2.21 |
 | hard/s58 | 하한 4, 공휴일 11월 13일(금), 전단 2, 유제품 취소, 가중치 3 | 0.2108 | 0.6753 | 3.20 |
 
-목표값은 5개 점포의 가중 WAPE 평균입니다(낮을수록 좋음). `dataset/answer/<tier>/s<seed>/setting.json`에 저장된 그대로의
-딕셔너리는 다음과 같습니다.
+목표값은 5개 점포의 가중 WAPE 평균입니다(낮을수록 좋음). `dataset/answer/answers.csv`에 설정마다 한 행으로
+저장된 그대로의 뽑힌 값은 다음과 같습니다.
 
 ```
 easy/s3    {min_display: 6, holiday_date: none,         promo_uplift: 1,   promo_cancelled: none,      short_weight: 1}

@@ -121,9 +121,10 @@ hard/s49   {cap_multiple: 2,   governing_law: SG,       payment_days: 30, reject
 ```
 
 Entre las tres semillas sortean todos los candidatos de todos los conjuntos en todos los niveles.
-`dataset/answer/<tier>/s<seed>/` contiene, para cada configuración, `setting.json`, la referencia, su puntuación y
-`truth.json` (las incidencias según los criterios y la decisión de cada contrato puntuado, con la vía rápida
-mantenida).
+`dataset/answer/answers.csv` tiene una fila por configuración (los valores sorteados, los objetivos y las métricas de
+la referencia); a su lado, `reference.jsonl`, `baseline.jsonl` y `truth.jsonl` guardan, una línea por configuración,
+la referencia, la línea base y `truth.json` (las incidencias según los criterios y la decisión de cada contrato
+puntuado, con la vía rápida mantenida).
 
 ## Reglas
 

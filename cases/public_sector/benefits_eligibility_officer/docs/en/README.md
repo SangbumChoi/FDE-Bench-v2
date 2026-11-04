@@ -111,8 +111,10 @@ hard/s31    {uprating: 3.2, earned_disregard: 150_30, asset_limit: 5000_2500, di
 hard/s78    {uprating: 2.5, earned_disregard: 200_0,  asset_limit: 6000_3000, disability_supplement: 120, cap: 1150, residency_days: 365}
 ```
 
-Together the three seeds draw every candidate of every pool in every tier. `dataset/answer/<tier>/s<seed>/` holds each
-setting's `setting.json` (drawn and derived values), the reference and its score. "Best compliant" is the exact
+Together the three seeds draw every candidate of every pool in every tier. `dataset/answer/answers.csv` has one row
+per setting (the drawn values, the reference's and the baseline's objective and the reference's metrics), and
+`reference_determinations.csv` and `baseline_determinations.csv` next to it stack the deliverables with difficulty and
+seed columns. "Best compliant" is the exact
 answer with renewals rolled over as the rule requires; "exact, renewals re-assessed" bends `auto_approve_renewals`
 (see F2). World seeds 1, 2 and 3 give reference / baseline objectives of 19,415 / 49,517, 17,905 / 56,467 and
 24,657 / 44,067 (easy/s2, s31, s78), 16,341 / 35,167, 14,562 / 40,454 and 23,549 / 35,399 (medium) and 15,183 /

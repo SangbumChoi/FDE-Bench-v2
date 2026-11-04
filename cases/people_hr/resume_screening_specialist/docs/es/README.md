@@ -78,8 +78,8 @@ el 5.9% en todas las combinaciones de los candidatos de cada nivel en estos cuat
 Estas amplitudes se miden sobre el ajuste por encima de la base. Sobre el ajuste completo, la escala de hard es la misma que
 antes, y la semilla de mundo 2 sigue teniendo configuraciones medium y hard por debajo del 5% (medium/s19 3.2%, hard/s19 3.4%).
 
-Los valores sorteados de cada configuración pública se guardan en `dataset/answer/<tier>/s<seed>/setting.json` (con el derivado
-`shortlist_total`). Cualquier otra semilla de reglas es una semilla privada: un sorteo nuevo entre los mismos candidatos; el
+Los valores sorteados de cada configuración pública se guardan en `dataset/answer/answers.csv`, una fila por
+configuración (el derivado `shortlist_total` se calcula a partir de ellos y no se guarda). Cualquier otra semilla de reglas es una semilla privada: un sorteo nuevo entre los mismos candidatos; el
 generador del mundo se asegura de que la referencia y la forma de trabajar del cliente sean válidas en todas las combinaciones
 de los candidatos de cada nivel.
 

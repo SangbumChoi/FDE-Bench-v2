@@ -194,7 +194,7 @@ aparezca una vez:
 | 23 | 4 (abril) | 90 | 1,000 | 1.5 | 2025-04-01–2026-03-31 / 2026-04-01–06-30 / 2026-04-01–09-30; activo desde el 2026-07-03 |
 
 El sorteo es el mismo en todos los niveles, así que cada fila es el dict sorteado de `easy/sN`, `medium/sN` y
-`hard/sN` (`dataset/answer/<tier>/s<N>/setting.json`). La semilla 23 es el antiguo conjunto de reglas A salvo por la
+`hard/sN` (sus filas de `dataset/answer/answers.csv`). La semilla 23 es el antiguo conjunto de reglas A salvo por la
 recompensa del `null` (1.5 en lugar de 1); las semillas 4 y 12 mezclan valores que ningún conjunto de reglas antiguo
 combinaba. Las semillas privadas sortean cualquiera de las 81 combinaciones (p. ej., semilla 101: abril, 60 días,
 1,000 KRW, 1; semilla 102: julio, 90 días, 100 KRW, 0.5).

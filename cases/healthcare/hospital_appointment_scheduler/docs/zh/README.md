@@ -187,7 +187,7 @@ hard 得 0.68–0.70；预留号为三个时（种子64）空着不用的号源�
 | 10 | ORTH | 2 | 3 | `urgency_earliest` | 5 | 3 |
 | 64 | DERM | 3 | 4 | `received` | 7 | 1 |
 
-每一行是 `easy/sN`、`medium/sN` 和 `hard/sN` 抽到的值的字典（`dataset/answer/<tier>/s<N>/setting.json`，附 `derived: {reserve_times}`）。
+每一行是 `easy/sN`、`medium/sN` 和 `hard/sN` 抽到的值的字典（`dataset/answer/answers.csv` 中对应的行；推导出的 `reserve_times` 不单独保存）。
 种子1是最紧的医院（两名翻译）；种子64的翻译和检验科最宽松，但有三个预留号，且每个时段只有一个超额号源。非公开种子可以抽到
 486个组合中的任何一个，例如种子2：DERM、3、3、`urgency_received`、7、3；种子3：PED、3、4、`urgency_received`、5、2。各设置的
 参考解目标值按构造都是1.000；基线见下面的表格。
@@ -322,8 +322,9 @@ hard 得 0.68–0.70；预留号为三个时（种子64）空着不用的号源�
   D05 开会、11月24日翻译请假、四条院长熟人的请求）。
 - `hidden/requests.csv`：开始时和本期间的每条申请及其隐藏事实（提前期为零时的爽约率、患者在预约前几个工作日取消、它所重复的
   申请）。
-- `answer/<tier>/s<seed>/`：每个公开设置（种子1、10、64）的 `setting.json`（抽到的参数和推导出的 `reserve_times`）、参考解的
-  `program/` 及其 `score.json`，以及参考解回放得出的 `actions.csv`（每次调用的所有动作）、`status_tables.csv`（期望的现况表，20天 × 5个科室）、`cancellations.csv`（回放中遇到的患者取消）、
+- `answer/`：各公开设置（种子1、10、64）的答案，每个文件都以 difficulty 和 seed 区分设置：`answers.csv`（每个设置一行：抽到的参数、参考解和基线的目标值以及参考解的指标；推导出的
+  `reserve_times` 不单独保存）、参考解和基线的 `files/<reference|baseline>/program/scheduler.py`（各设置相同），各设置的配置在 `reference_program.jsonl` 和 `baseline_program.jsonl` 中，
+  以及参考解回放得出、各设置叠在一起的 `actions.csv`（每次调用的所有动作）、`status_tables.csv`（期望的现况表，20天 × 5个科室）、`cancellations.csv`（回放中遇到的患者取消）、
   `final_book.csv`（本期间进行的每次就诊 —— 有报告的附到诊情况 —— 以及将来的预约）和 `final_waitlist.csv`。
 
 ## 备注

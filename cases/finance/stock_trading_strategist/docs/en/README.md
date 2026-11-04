@@ -236,8 +236,8 @@ have more candidates in hard than in medium, so a seed's hard draw of them diffe
 | hard/s20 | NEXO, PYRO; 9; 3; 18; 35; notice_10; 15 | 27% | 1.000 | 0.254 |
 | hard/s134 | MEDQ, GLAC; 6; 2; 10; 25; capital_25; 10 | 12% | 1.000 | 0.566 |
 
-`dataset/answer/<tier>/s<seed>/setting.json` holds each drawn dict (`none` for the values the tier does not use) and
-the derived `withdrawal_basis` and `withdrawal_pct`.
+`dataset/answer/answers.csv` holds each setting's drawn values, one row per setting (`none` for the values the tier
+does not use); the derived `withdrawal_basis` and `withdrawal_pct` follow from them and are not stored.
 
 **Parameter binding** (validate-case, from hard/s44): every parameter changes the ground truth with the first
 other value it tries. With `restricted` = MEDQ, GLAC, `liquidation_days` = 3 (2 is not admissible with a 4%
@@ -371,10 +371,12 @@ Written by `python -m fdebench2.cli export-dataset cases/finance/stock_trading_s
   depends on the program's own orders, see the ground truth); `daily_prices.csv` and `index_levels.csv` for the
   80 hidden sessions (the last session's bars are in no call); `mail/<lang>/*.eml`, the e-mails behind the six
   notices in every locale.
-- `answer/<tier>/s<seed>/`, one per public setting (`easy/s44` … `hard/s134`): `setting.json` (tier, rule seed, the
-  drawn values and the derived `withdrawal_basis` / `withdrawal_pct`), `reference/program/` (strategy.py +
-  config.json), `score.json` (objective 1.0 and the metrics), and from `write_ground_truth` the reference run:
-  `orders.csv` (the well-formed orders per session they execute in), `fills.csv` (fills and rejections with their
-  reason), `positions.csv` (shares at each close), `equity_curve.csv` (cash, unsettled, positions value, equity,
-  payouts, the peak of equity plus payouts, drawdown and the index at every close, the starting close included) and
-  `status_tables.json` (the exact table each of the 80 calls must report).
+- `answer/`, the public settings (`easy/s44` … `hard/s134`), each file keyed by difficulty and seed: `answers.csv`
+  (one row per setting: the drawn values, the reference's and the baseline's objective, the rules and targets in
+  force and the reference's metrics), `files/reference/program/strategy.py` and `files/baseline/program/strategy.py`
+  (the same in every setting) with each setting's config.json in `reference_program.jsonl` and
+  `baseline_program.jsonl`, and from `write_ground_truth` the reference run, the settings stacked: `orders.csv` (the
+  well-formed orders per session they execute in), `fills.csv` (fills and rejections with their reason),
+  `positions.csv` (shares at each close), `equity_curve.csv` (cash, unsettled, positions value, equity, payouts, the
+  peak of equity plus payouts, drawdown and the index at every close, the starting close included) and
+  `status_tables.jsonl` (one line per setting: the exact table each of the 80 calls must report).

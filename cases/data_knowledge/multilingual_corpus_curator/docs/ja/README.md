@@ -145,7 +145,7 @@ AIが確認すべき事実は12個で、それぞれ1つの事柄だけを扱い
 
 ## 保存されたデータセット（`dataset/`）
 
-`python -m fdebench2.cli export-dataset cases/data_knowledge/multilingual_corpus_curator` で書き出します。`validate-case` が再生成し、生成器とずれていれば失敗します（約 2 MB、小さなファイル約2,300個）。`audit-case` が `dataset/audit.json` を書き出します（export-dataset はこれを残します）。
+`python -m fdebench2.cli export-dataset cases/data_knowledge/multilingual_corpus_curator` で書き出します。`validate-case` が再生成し、生成器とずれていれば失敗します（約 2 MB、小さなファイル約2,100個）。`audit-case` が `dataset/audit.json` を書き出します（export-dataset はこれを残します）。
 
 ```
 dataset/
@@ -153,18 +153,26 @@ dataset/
   hidden/corpus/...                  organize() が受け取るそのままの採点用のドライブ（どの設定でも同じ）
   audit.json                         正解の監査（公開ワールド）：事実を一つだけ取り違えた解答、近道、質問の価値、
                                        限界値、直接の検査。GT.md はここから生成
-  answer/<tier>/s<seed>/             easy/s11 ... hard/s21、公開ルールシード
-    setting.json, score.json         抽選されたパラメータ（+ 導出された fallback_author）と、採点用のコーパスでの
-                                       模範解答のスコア（従来のやり方の目的値と両方の正規化品質を含む）
-    reference/program/               模範解答の成果物（organize.py + その設定の config.json）
-    reference_output/                模範解答が採点用のコーパスで書き出すもの（library/、_review/、manifest.csv）
-    expected_output/                 この設定で採点する本についての正しい out_dir（採点用のコーパス）：
+  answer/                            公開ルールシード（easy/s11 ... hard/s21）。どのファイルも difficulty と seed で設定を区別
+    answers.csv                      設定ごとに1行：抽選されたパラメータ（導出された fallback_author は保存しない）、
+                                       採点用のコーパスでの模範解答と従来のやり方の目的値、品質の尺度の幅、
+                                       適用されるルールと確認すべき事実、模範解答の指標
+    files/reference/program/         模範解答の成果物の organize.py（どの設定でも同じ。設定ごとの config.json は
+                                       reference_program.jsonl に）
+    files/baseline/program/          従来のやり方の organize.py（設定ごとの config.json は baseline_program.jsonl に）
+    reference_output_*               模範解答が採点用のコーパスで書き出すもの：reference_output_manifest.csv、
+                                       reference_output__review_<REASON>.jsonl（_review/ の JSON ファイル）、
+                                       files/reference_output/ にあるその他の _review/ のファイル（どの設定でも同じ）、
+                                       files/<difficulty>_s<seed>/reference_output/ にある library/
+    files/<difficulty>_s<seed>/expected_output/
+                                     この設定で採点する本についての正しい out_dir（採点用のコーパス）：
                                        library/... 並べる本ごとに紹介文のファイル1つ、その設定のパスに
                                        _review/<REASON>/<パスの / を __ にした名前>  確認に回す本の元ファイル
-                                       manifest.csv  placed / review の行（理由付き）と、hard では JUNK の skipped 行
+                                       （そのうち JSON ファイルは expected_output__review_<REASON>.jsonl に）
+    expected_output_manifest.csv     その manifest.csv：placed / review の行（理由付き）と、hard では JUNK の skipped 行
     books.csv                        正解キー（採点用のコーパス）：各本の種類、ティア、採点対象か、期待される状態、
                                        パスと理由、正規の書名・著者・年、元ファイル
-    expected_score.json              評価器による expected_output のスコア：easy と medium は100、hard は
+    expected_score.jsonl             評価器による expected_output のスコア：easy と medium は100、hard は
                                        確認方針で99.4（NO_AUTHOR の2冊が確認で0.7；緩和したルールはない）、
                                        配架方針で100
 ```

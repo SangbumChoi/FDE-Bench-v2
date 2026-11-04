@@ -44,7 +44,7 @@
 | hard/s25 | 下限8、祝日11月11日（水）、チラシ1.5、飲料中止、重み2 | 0.1962 | 0.4329 | 2.21 |
 | hard/s58 | 下限4、祝日11月13日（金）、チラシ2、乳製品中止、重み3 | 0.2108 | 0.6753 | 3.20 |
 
-目的値は、5店舗の加重WAPEの平均です（低いほど良い）。`dataset/answer/<tier>/s<seed>/setting.json` に保存されている辞書は次のとおりです。
+目的値は、5店舗の加重WAPEの平均です（低いほど良い）。`dataset/answer/answers.csv` に設定ごとに1行で保存されている抽選値は次のとおりです。
 
 ```
 easy/s3    {min_display: 6, holiday_date: none,         promo_uplift: 1,   promo_cancelled: none,      short_weight: 1}

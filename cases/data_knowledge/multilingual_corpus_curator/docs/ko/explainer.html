@@ -295,24 +295,32 @@ out_dir/manifest.csv                   source,status,path,reason (placed | revie
 <h4 id="readme-참고-사항">참고 사항</h4>
 <ul><li>공개 코퍼스는 모든 설정과 로캘에서 바이트 단위로 같습니다(<code>content_dirs: [corpus]</code>). 코퍼스 밖에 있는 정리 메모만 현지화되어 있습니다.</li><li><code>write only inside out_dir</code>와 <code>never modify the corpus</code>는 실행기가 강제하며(프로그램은 코퍼스의 사본을 받고, docker에서는 읽기 전용), 채점하지 않습니다.</li></ul>
 <h4 id="readme-저장된-데이터셋dataset">저장된 데이터셋(<code>dataset/</code>)</h4>
-<p><code>python -m fdebench2.cli export-dataset cases/data_knowledge/multilingual_corpus_curator</code>로 작성합니다. <code>validate-case</code>가 다시 생성하며, 생성기와 달라지면 실패합니다(약 2 MB, 작은 파일 약 2,300개). <code>audit-case</code>는 <code>dataset/audit.json</code>을 씁니다(export-dataset은 이 파일을 그대로 둡니다).</p>
+<p><code>python -m fdebench2.cli export-dataset cases/data_knowledge/multilingual_corpus_curator</code>로 작성합니다. <code>validate-case</code>가 다시 생성하며, 생성기와 달라지면 실패합니다(약 2 MB, 작은 파일 약 2,100개). <code>audit-case</code>는 <code>dataset/audit.json</code>을 씁니다(export-dataset은 이 파일을 그대로 둡니다).</p>
 <pre>dataset/
   agent_view/&lt;lang&gt;/corpus/...       에이전트의 샘플 드라이브(모든 로캘에서 바이트 단위로 같음) + 정리 메모
   hidden/corpus/...                  organize()가 받는 그대로의 채점용 드라이브(모든 설정에서 같음)
   audit.json                         정답 감사(공개 월드): 사실 하나만 잘못 안 답, 지름길, 질문의 가치,
                                        한계값, 직접 검사. GT.md는 이 파일로 생성
-  answer/&lt;tier&gt;/s&lt;seed&gt;/             easy/s11 ... hard/s21, 공개 규칙 시드
-    setting.json, score.json         뽑힌 파라미터(+ 파생된 fallback_author)와 채점용 코퍼스에서의 모범 답안
-                                       점수(기존 방식의 목표값과 두 정규화 품질 포함)
-    reference/program/               모범 답안 산출물(organize.py + 그 설정의 config.json)
-    reference_output/                모범 답안이 채점용 코퍼스에서 쓴 결과(library/, _review/, manifest.csv)
-    expected_output/                 이 설정에서 채점하는 책들의 올바른 out_dir(채점용 코퍼스):
+  answer/                            공개 규칙 시드(easy/s11 ... hard/s21), 파일마다 difficulty와 seed로 설정을 구분
+    answers.csv                      설정마다 한 줄: 뽑힌 파라미터(파생된 fallback_author는 따로 저장하지 않음),
+                                       채점용 코퍼스에서의 모범 답안과 기존 방식의 목표값, 품질 척도의 폭,
+                                       적용되는 규칙과 물어봐야 할 항목, 모범 답안의 지표
+    files/reference/program/         모범 답안 산출물의 organize.py(모든 설정에서 같음. 설정마다의 config.json은
+                                       reference_program.jsonl에)
+    files/baseline/program/          기존 방식의 organize.py(설정마다의 config.json은 baseline_program.jsonl에)
+    reference_output_*               모범 답안이 채점용 코퍼스에서 쓴 결과: reference_output_manifest.csv,
+                                       reference_output__review_&lt;REASON&gt;.jsonl(_review/의 JSON 파일),
+                                       files/reference_output/의 나머지 _review/ 파일(모든 설정에서 같음),
+                                       files/&lt;difficulty&gt;_s&lt;seed&gt;/reference_output/의 library/
+    files/&lt;difficulty&gt;_s&lt;seed&gt;/expected_output/
+                                     이 설정에서 채점하는 책들의 올바른 out_dir(채점용 코퍼스):
                                        library/... 서고에 올린 책마다 소개글 파일 하나, 그 설정의 경로에
                                        _review/&lt;REASON&gt;/&lt;경로의 /를 __로 바꾼 이름&gt;  검토할 책의 원본 파일
-                                       manifest.csv  placed / review 줄(사유 포함), hard에서는 JUNK skipped 줄
+                                       (그중 JSON 파일은 expected_output__review_&lt;REASON&gt;.jsonl에)
+    expected_output_manifest.csv     그 manifest.csv: placed / review 줄(사유 포함), hard에서는 JUNK skipped 줄
     books.csv                        정답 키(채점용 코퍼스): 책마다 종류, 티어, 채점 여부, 예상 상태,
                                        경로와 사유, 정규 제목/저자/연도, 원본 파일
-    expected_score.json              평가기가 expected_output에 매긴 점수: easy와 medium은 100, hard는
+    expected_score.jsonl             평가기가 expected_output에 매긴 점수: easy와 medium은 100, hard는
                                        검토 방침에서 99.4(NO_AUTHOR 책 2권이 검토에서 0.7; 완화한 규칙
                                        없음), 서고 배치 방침에서 100</pre>
 <p>정답 키는 채점용 코퍼스에만 있습니다. 공개 샘플은 에이전트가 배우는 재료이며, 그 위에서는 점수를 계산하지 않습니다. 예상 트리에는 그 티어에서 채점하는 책(30 / 66 / 100)만 들어 있고, 티어 밖의 책은 그 설정의 정답에 속하지 않습니다. 고객 이메일이나 SQL 내보내기는 추가하지 않았습니다. 드라이브에 이미 고객 자신의 카탈로그 내보내기 파일이 있고, 새 부수 자료를 넣으면 이 케이스가 시험하는 내용이 바뀌기 때문입니다.</p></div>

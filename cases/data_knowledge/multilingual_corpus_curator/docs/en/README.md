@@ -263,7 +263,7 @@ policy). Under the review policy, bending `missing_author_review` (shelving the 
 ## Stored dataset (`dataset/`)
 
 Written by `python -m fdebench2.cli export-dataset cases/data_knowledge/multilingual_corpus_curator`;
-`validate-case` regenerates it and fails if it drifts from the generator (~2 MB, ~2,300 small files).
+`validate-case` regenerates it and fails if it drifts from the generator (~2 MB, ~2,100 small files).
 `audit-case` writes `dataset/audit.json` (export-dataset keeps it).
 
 ```
@@ -272,18 +272,26 @@ dataset/
   hidden/corpus/...                  the hidden drive exactly as organize() receives it (same in every setting)
   audit.json                         the ground truth audit (public world): ablations, shortcuts, value of asking,
                                        bounds, diagnostics; GT.md is generated from it
-  answer/<tier>/s<seed>/             easy/s11 ... hard/s21, the public panel
-    setting.json, score.json         the drawn parameters (+ derived fallback_author) and the reference's score on
-                                       the hidden corpus (with the baseline's objective and both normalized qualities)
-    reference/program/               the reference deliverable (organize.py + config.json of the setting)
-    reference_output/                what the reference writes on the hidden corpus (library/, _review/, manifest.csv)
-    expected_output/                 the correct out_dir for the books scored in this setting, hidden corpus:
+  answer/                            the public panel (easy/s11 ... hard/s21), every file keyed by difficulty and seed
+    answers.csv                      one row per setting: the drawn parameters (the derived fallback_author is not
+                                       stored), the reference's and the baseline's objective on the hidden corpus,
+                                       the quality scale's width, the rules and targets in force, the reference's metrics
+    files/reference/program/         the reference deliverable's organize.py (the same in every setting; each
+                                       setting's config.json is in reference_program.jsonl)
+    files/baseline/program/          the baseline's organize.py (its config.json per setting in baseline_program.jsonl)
+    reference_output_*               what the reference writes on the hidden corpus: reference_output_manifest.csv,
+                                       reference_output__review_<REASON>.jsonl (the JSON files in _review/), the other
+                                       _review/ files in files/reference_output/ (the same in every setting) and
+                                       library/ in files/<difficulty>_s<seed>/reference_output/
+    files/<difficulty>_s<seed>/expected_output/
+                                     the correct out_dir for the books scored in this setting, hidden corpus:
                                        library/... one description file per placed book, at the setting's path
                                        _review/<REASON>/<path with / as __>  the source files of review books
-                                       manifest.csv  placed / review rows (with reason) and, in hard, JUNK skips
+                                       (the JSON ones in expected_output__review_<REASON>.jsonl)
+    expected_output_manifest.csv     its manifest.csv: placed / review rows (with reason) and, in hard, JUNK skips
     books.csv                        answer key (hidden corpus): every book with kind, tier, scored, expected status,
                                        path and reason, canonical title/authors/years and its source files
-    expected_score.json              expected_output scored by the evaluator: 100 in easy and medium; in hard 99.4
+    expected_score.jsonl             expected_output scored by the evaluator: 100 in easy and medium; in hard 99.4
                                        under the review policy (the two NO_AUTHOR books earn 0.7 in review; no rule
                                        is bent) and 100 under a shelving policy
 ```

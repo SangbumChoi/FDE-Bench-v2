@@ -44,7 +44,7 @@
 | hard/s25 | 下限 8，假日 11 月 11 日周三，宣传单 1.5，饮料取消，权重 2 | 0.1962 | 0.4329 | 2.21 |
 | hard/s58 | 下限 4，假日 11 月 13 日周五，宣传单 2，乳制品取消，权重 3 | 0.2108 | 0.6753 | 3.20 |
 
-目标值是加权 WAPE 在 5 家门店上的平均值（越低越好）。保存在 `dataset/answer/<tier>/s<seed>/setting.json` 中的字典如下：
+目标值是加权 WAPE 在 5 家门店上的平均值（越低越好）。保存在 `dataset/answer/answers.csv` 中的抽取值如下，每个设置一行：
 
 ```
 easy/s3    {min_display: 6, holiday_date: none,         promo_uplift: 1,   promo_cancelled: none,      short_weight: 1}

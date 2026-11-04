@@ -253,8 +253,9 @@ sorteo de medium.
 | hard/s20 | NEXO, PYRO; 9; 3; 18; 35; notice_10; 15 | 27% | 1.000 | 0.254 |
 | hard/s134 | MEDQ, GLAC; 6; 2; 10; 25; capital_25; 10 | 12% | 1.000 | 0.566 |
 
-`dataset/answer/<tier>/s<seed>/setting.json` guarda el diccionario sorteado de cada configuración (`none` para los valores
-que el nivel no usa) y los valores derivados `withdrawal_basis` y `withdrawal_pct`.
+`dataset/answer/answers.csv` guarda los valores sorteados de cada configuración, una fila por configuración (`none`
+para los valores que el nivel no usa); los derivados `withdrawal_basis` y `withdrawal_pct` se calculan a partir de
+ellos y no se guardan.
 
 **Parámetros que aprietan** (validate-case, desde hard/s44): cada parámetro cambia la solución correcta con el primer
 otro valor que prueba. Con `restricted` = MEDQ, GLAC, `liquidation_days` = 3 (2 no es admisible con un umbral del 4%),
@@ -395,11 +396,13 @@ Lo escribe `python -m fdebench2.cli export-dataset cases/finance/stock_trading_s
   depende de las propias órdenes del programa, véase la solución correcta); `daily_prices.csv` e `index_levels.csv` de
   las 80 sesiones ocultas (las barras de la última sesión no están en ninguna llamada); `mail/<lang>/*.eml`, los correos
   detrás de los seis avisos en todos los idiomas.
-- `answer/<tier>/s<seed>/`, uno por configuración pública (`easy/s44` … `hard/s134`): `setting.json` (nivel, semilla de
-  reglas, los valores sorteados y los derivados `withdrawal_basis` / `withdrawal_pct`), `reference/program/`
-  (strategy.py + config.json), `score.json` (objetivo 1.0 y las métricas) y, de `write_ground_truth`, la ejecución de la
-  referencia: `orders.csv` (las órdenes bien formadas por sesión en que se ejecutan), `fills.csv` (ejecuciones y
-  rechazos con su motivo), `positions.csv` (acciones en cada cierre), `equity_curve.csv` (efectivo, pendiente de
-  liquidar, valor de las posiciones, patrimonio, pagos, el máximo del patrimonio más los pagos, la caída y el índice en
-  cada cierre, incluido el cierre inicial) y `status_tables.json` (la tabla exacta que debe presentar cada una de las 80
-  llamadas).
+- `answer/`, las configuraciones públicas (`easy/s44` … `hard/s134`), cada archivo con las columnas difficulty y seed:
+  `answers.csv` (una fila por configuración: los valores sorteados, el objetivo de la referencia y el de la línea base,
+  las reglas y los hechos por preguntar vigentes y las métricas de la referencia), `files/reference/program/strategy.py`
+  y `files/baseline/program/strategy.py` (iguales en todas las configuraciones) con el config.json de cada una en
+  `reference_program.jsonl` y `baseline_program.jsonl` y, de `write_ground_truth`, la ejecución de la referencia con las
+  configuraciones apiladas: `orders.csv` (las órdenes bien formadas por sesión en que se ejecutan), `fills.csv`
+  (ejecuciones y rechazos con su motivo), `positions.csv` (acciones en cada cierre), `equity_curve.csv` (efectivo,
+  pendiente de liquidar, valor de las posiciones, patrimonio, pagos, el máximo del patrimonio más los pagos, la caída y
+  el índice en cada cierre, incluido el cierre inicial) y `status_tables.jsonl` (una línea por configuración: la tabla
+  exacta que debe presentar cada una de las 80 llamadas).

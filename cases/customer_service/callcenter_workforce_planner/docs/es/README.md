@@ -60,8 +60,8 @@ más abajo).
 | hard/s2 | peso 25, 40 h, festivo 60%, descanso 13 h, baja hasta el jue 12 | 29,678 | 22,297 | 21,066 | 193, 17,472, 116 | 1.167 |
 | hard/s3 | peso 15, 32 h, festivo 75%, descanso 11 h, baja hasta el mar 10 | 23,722 | 20,458 | 19,919 | 422, 14,128, 98 | 1.165 |
 
-Los valores sorteados de cada configuración pública se guardan en `dataset/answer/<tier>/s<seed>/setting.json` (con los
-derivados `ft_regular_shifts` y `ft_max_shifts`). Cualquier otra semilla de reglas es una semilla privada: un sorteo nuevo
+Los valores sorteados de cada configuración pública se guardan en `dataset/answer/answers.csv`, una fila por
+configuración (los derivados `ft_regular_shifts` y `ft_max_shifts` se calculan a partir de ellos y no se guardan). Cualquier otra semilla de reglas es una semilla privada: un sorteo nuevo
 entre los mismos candidatos.
 
 **Todos los parámetros influyen** (validador, hard/s10, el primer cambio de cada parámetro que influye): `under_weight` 40 →

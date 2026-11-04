@@ -60,11 +60,14 @@
   빠져 있으며, 엔진이 프로그램 자신의 이전 결정으로 채웁니다.
 - `hidden/mail/<lang>/<date>_<ref>.eml`: 채점용 기간의 통지 25건(규제 변경 1건, 예산 삭감 1건, 상환 15건, 서류 정정
   8건)과 지점 메모 10건을 메일로 만든 것, 로캘별.
-- `answer/<tier>/s<seed>/`(공개 설정 9개): `setting.json`(티어, 규칙 시드, 뽑힌 파라미터와 거기서 계산되는 `min_score`,
-  `near_prime_below`, `other_bureau`), `reference/program/`(모범 답안과 그 설정 파일), `score.json`(목표값 1.0, 지표),
-  `decisions.csv`(모범 답안의 일별 결정: date, day_index, application_id, customer_id, decision, amount, reason_code,
-  hard의 재결정은 redecision = 1), `limit_tables/<date>.json`(모범 답안의 승인 뒤 평가기가 계산하는 날마다의 정답 마감
-  한도표: `customers`, `daily_capacity_remaining`, `period_budget_remaining`, easy에서는 null).
+- `answer/`(공개 설정 9개, 파일마다 difficulty와 seed로 설정을 구분): `answers.csv`(설정마다 한 행: 뽑힌 파라미터,
+  모범 답안과 기준선의 목표값, 적용되는 규칙과 물어봐야 할 항목, 모범 답안의 지표. 거기서 계산되는 `min_score`, `near_prime_below`,
+  `other_bureau`는 따로 저장하지 않음), `files/reference/program/underwriter.py`와 `files/baseline/program/underwriter.py`
+  (모든 설정에서 동일)와 설정마다의 설정 파일이 담긴 `reference_program.jsonl`, `baseline_program.jsonl`,
+  `decisions.csv`(모범 답안의 일별 결정: difficulty, seed, date, day_index, application_id, customer_id, decision,
+  amount, reason_code, hard의 재결정은 redecision = 1), `limit_tables.jsonl`(설정과 날마다 한 줄, `file` = `<date>.json`:
+  모범 답안의 승인 뒤 평가기가 계산하는 날마다의 정답 마감 한도표: `customers`, `daily_capacity_remaining`,
+  `period_budget_remaining`, easy에서는 null).
 
 ## 인터페이스 (`on_day(day)`)
 

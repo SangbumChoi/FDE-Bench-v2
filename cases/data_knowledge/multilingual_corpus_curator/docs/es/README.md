@@ -145,7 +145,7 @@ La forma de trabajar del cliente logra 5 / 9 / 9 colocaciones exactas; en medium
 
 ## Conjunto de datos guardado (`dataset/`)
 
-Lo escribe `python -m fdebench2.cli export-dataset cases/data_knowledge/multilingual_corpus_curator`; `validate-case` lo regenera y falla si se aparta del generador (~2 MB, ~2,300 archivos pequeños). `audit-case` escribe `dataset/audit.json` (export-dataset lo conserva).
+Lo escribe `python -m fdebench2.cli export-dataset cases/data_knowledge/multilingual_corpus_curator`; `validate-case` lo regenera y falla si se aparta del generador (~2 MB, ~2,100 archivos pequeños). `audit-case` escribe `dataset/audit.json` (export-dataset lo conserva).
 
 ```
 dataset/
@@ -153,19 +153,27 @@ dataset/
   hidden/corpus/...                  la unidad de evaluación tal como la recibe organize() (igual en todas las configuraciones)
   audit.json                         la auditoría de la respuesta correcta (mundo público): respuestas que malinterpretan un hecho, atajos, valor de
                                        preguntar, cotas, comprobaciones directas; GT.md se genera a partir de ella
-  answer/<tier>/s<seed>/             easy/s11 ... hard/s21, las semillas de reglas públicas
-    setting.json, score.json         los parámetros sorteados (+ el fallback_author derivado) y la puntuación de la
-                                       referencia sobre el corpus de evaluación (con el objetivo de la forma de trabajar
-                                       del cliente y ambas calidades normalizadas)
-    reference/program/               el entregable de referencia (organize.py + config.json de la configuración)
-    reference_output/                lo que escribe la referencia sobre el corpus de evaluación (library/, _review/, manifest.csv)
-    expected_output/                 el out_dir correcto para los libros que puntúan en esta configuración, corpus de evaluación:
+  answer/                            las semillas de reglas públicas (easy/s11 ... hard/s21), cada archivo con difficulty y seed
+    answers.csv                      una fila por configuración: los parámetros sorteados (el fallback_author derivado no se
+                                       guarda), el objetivo de la referencia y el de la forma de trabajar del cliente sobre el
+                                       corpus de evaluación, el ancho de la escala de calidad, las reglas y los hechos por
+                                       preguntar vigentes y las métricas de la referencia
+    files/reference/program/         el organize.py del entregable de referencia (igual en todas las configuraciones; el
+                                       config.json de cada una está en reference_program.jsonl)
+    files/baseline/program/          el organize.py de la forma de trabajar del cliente (sus config.json en baseline_program.jsonl)
+    reference_output_*               lo que escribe la referencia sobre el corpus de evaluación: reference_output_manifest.csv,
+                                       reference_output__review_<REASON>.jsonl (los JSON de _review/), los demás archivos de
+                                       _review/ en files/reference_output/ (iguales en todas las configuraciones) y library/
+                                       en files/<difficulty>_s<seed>/reference_output/
+    files/<difficulty>_s<seed>/expected_output/
+                                     el out_dir correcto para los libros que puntúan en esta configuración, corpus de evaluación:
                                        library/... un archivo de sinopsis por libro colocado, en la ruta de la configuración
                                        _review/<REASON>/<ruta con / como __>  los archivos de origen de los libros en revisión
-                                       manifest.csv  filas placed / review (con motivo) y, en hard, filas skipped de JUNK
+                                       (los JSON, en expected_output__review_<REASON>.jsonl)
+    expected_output_manifest.csv     su manifest.csv: filas placed / review (con motivo) y, en hard, filas skipped de JUNK
     books.csv                        clave de respuestas (corpus de evaluación): cada libro con tipo, nivel, si puntúa,
                                        estado esperado, ruta y motivo, título/autores/años canónicos y sus archivos de origen
-    expected_score.json              expected_output puntuado por el evaluador: 100 en easy y medium; en hard, 99.4
+    expected_score.jsonl             expected_output puntuado por el evaluador: 100 en easy y medium; en hard, 99.4
                                        con la política de revisión (los dos libros NO_AUTHOR suman 0.7 en revisión; no
                                        se flexibiliza ninguna regla) y 100 con una política de colocación
 ```

@@ -66,12 +66,16 @@ Lo escribe `python -m fdebench2.cli export-dataset cases/finance/loan_underwriti
   esa mañana, avisos) sin `book`, que el motor rellena a partir de las decisiones anteriores del propio programa.
 - `hidden/mail/<lang>/<date>_<ref>.eml`: los 25 avisos del período de evaluación (1 cambio regulatorio, 1 recorte de
   presupuesto, 15 amortizaciones, 8 correcciones de documentos) y 10 notas de sucursal como correos, por idioma.
-- `answer/<tier>/s<seed>/` (las 9 configuraciones públicas): `setting.json` (nivel, semilla de reglas, los parámetros sorteados y
-  los derivados `min_score`, `near_prime_below`, `other_bureau`), `reference/program/` (la referencia con su configuración),
-  `score.json` (objetivo 1.0, métricas), `decisions.csv` (las decisiones de la referencia por día: date, day_index,
-  application_id, customer_id, decision, amount, reason_code, redecision = 1 para las nuevas decisiones de hard) y
-  `limit_tables/<date>.json` (la tabla de límites al cierre esperada de cada día tal como la calcula el evaluador tras las
-  aprobaciones de la referencia: `customers`, `daily_capacity_remaining`, `period_budget_remaining`, null en easy).
+- `answer/` (las 9 configuraciones públicas, cada archivo con las columnas difficulty y seed): `answers.csv` (una fila
+  por configuración: los parámetros sorteados, el objetivo de la referencia y el de la línea base, las reglas y los
+  hechos por preguntar vigentes y las métricas de la referencia; los derivados `min_score`, `near_prime_below` y
+  `other_bureau` no se guardan), `files/reference/program/underwriter.py` y `files/baseline/program/underwriter.py`
+  (iguales en todas las configuraciones) con la configuración de cada una en `reference_program.jsonl` y
+  `baseline_program.jsonl`, `decisions.csv` (las decisiones de la referencia por día: difficulty, seed, date,
+  day_index, application_id, customer_id, decision, amount, reason_code, redecision = 1 para las nuevas decisiones de
+  hard) y `limit_tables.jsonl` (una línea por configuración y día, `file` = `<date>.json`: la tabla de límites al
+  cierre esperada de cada día tal como la calcula el evaluador tras las aprobaciones de la referencia: `customers`,
+  `daily_capacity_remaining`, `period_budget_remaining`, null en easy).
 
 ## Interfaz (`on_day(day)`)
 

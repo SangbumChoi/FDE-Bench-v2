@@ -68,7 +68,7 @@ hard/s11   {cap_multiple: 1.5, governing_law: CH_SG_EW, payment_days: 45, reject
 hard/s49   {cap_multiple: 2,   governing_law: SG,       payment_days: 30, reject_at: 1, renewal_notice_days: 60, dp_categories: it_data_marketing, tfc_above: 100000, fast_track_below: 10000}
 ```
 
-3つのシードを合わせると、どのティアでもすべてのプールのすべての候補が抽選されます。`dataset/answer/<tier>/s<seed>/` には、設定ごとの `setting.json`、参照解、そのスコア、`truth.json`（採点される各契約のプレイブック上の論点と判定。ファストトラックは維持）があります。
+3つのシードを合わせると、どのティアでもすべてのプールのすべての候補が抽選されます。`dataset/answer/answers.csv` には設定ごとに1行（抽選された値、目的値、参照解の指標）があり、その隣の `reference.jsonl`、`baseline.jsonl`、`truth.jsonl` には設定ごとに1行ずつ、参照解、ベースライン、`truth.json`（採点される各契約のプレイブック上の論点と判定。ファストトラックは維持）があります。
 
 ## ルール
 

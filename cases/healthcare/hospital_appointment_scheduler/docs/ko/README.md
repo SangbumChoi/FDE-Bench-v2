@@ -200,8 +200,8 @@ easy에서도 뽑히지만 medium부터 쓰이고, `overbooked_per_session`은 h
 | 10 | ORTH | 2 | 3 | `urgency_earliest` | 5 | 3 |
 | 64 | DERM | 3 | 4 | `received` | 7 | 1 |
 
-각 행은 `easy/sN`, `medium/sN`, `hard/sN`에서 뽑힌 값의 딕셔너리입니다(`dataset/answer/<tier>/s<N>/setting.json`,
-`derived: {reserve_times}` 포함). 시드 1은 가장 빠듯한 병원(통역사 2명)이고, 시드 64는 통역사와 검사실이 가장 넉넉하지만 예비
+각 행은 `easy/sN`, `medium/sN`, `hard/sN`에서 뽑힌 값의 딕셔너리입니다(`dataset/answer/answers.csv`의 해당 행. 파생값
+`reserve_times`는 따로 저장하지 않음). 시드 1은 가장 빠듯한 병원(통역사 2명)이고, 시드 64는 통역사와 검사실이 가장 넉넉하지만 예비
 슬롯이 세 개이고 세션당 오버부킹 슬롯이 하나입니다. 비공개 시드는 486개 조합 중 어느 것이든 뽑습니다. 예를 들어 시드 2는
 DERM, 3, 3, `urgency_received`, 7, 3이고, 시드 3은 PED, 3, 4, `urgency_received`, 5, 2입니다. 설정별 참조 해답의 목표값은 구성상
 1.000이며, 기준선은 아래 표에 있습니다.
@@ -345,8 +345,10 @@ DERM, 3, 3, `urgency_received`, 7, 3이고, 시드 3은 PED, 3, 4, `urgency_rece
   병가, 11월 20일 D05 학회, 11월 24일 통역사, 원장님 지인 요청 4건).
 - `hidden/requests.csv`: 시작 시점과 기간 중의 모든 요청과 그 숨은 사실(리드타임 0에서의 미내원율, 환자가 예약 며칠(영업일)
   전에 취소하는지, 중복 대상 요청).
-- `answer/<tier>/s<seed>/`: 공개 설정(시드 1, 10, 64)마다 `setting.json`(뽑힌 파라미터와 거기서 계산한 `reserve_times`), 참조
-  해답의 `program/`과 그 `score.json`, 그리고 참조 해답의 재생에서 나온 `actions.csv`(호출마다의 모든 액션), `status_tables.csv`(기대 현황표, 20일 × 5개 진료과), `cancellations.csv`(재생 중 일어난
+- `answer/`: 공개 설정(시드 1, 10, 64)의 정답, 파일마다 difficulty와 seed로 설정을 구분: `answers.csv`(설정마다 한 행: 뽑힌
+  파라미터, 참조 해답과 기준선의 목표값, 참조 해답의 지표. 거기서 계산한 `reserve_times`는 따로 저장하지 않음), 참조 해답과
+  기준선의 `files/<reference|baseline>/program/scheduler.py`(모든 설정에서 동일)와 설정마다의 설정 파일이 담긴
+  `reference_program.jsonl`, `baseline_program.jsonl`, 그리고 참조 해답의 재생에서 나온 결과를 설정별로 쌓은 `actions.csv`(호출마다의 모든 액션), `status_tables.csv`(기대 현황표, 20일 × 5개 진료과), `cancellations.csv`(재생 중 일어난
   환자 취소), `final_book.csv`(기간 중 이루어진 모든 진료 — 보고된 경우 내원 여부 포함 — 와 앞으로의 예약), `final_waitlist.csv`.
 
 ## 참고 사항

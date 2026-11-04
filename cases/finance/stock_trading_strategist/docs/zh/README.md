@@ -146,7 +146,7 @@ hard 在三项限额上从更宽的候选池中抽取：4% 的标准、10% 的�
 | hard/s20 | NEXO, PYRO; 9; 3; 18; 35; notice_10; 15 | 27% | 1.000 | 0.254 |
 | hard/s134 | MEDQ, GLAC; 6; 2; 10; 25; capital_25; 10 | 12% | 1.000 | 0.566 |
 
-`dataset/answer/<tier>/s<seed>/setting.json` 保存每个设置抽到的值（层级用不到的值为 `none`）以及推导出的 `withdrawal_basis` 和 `withdrawal_pct`。
+`dataset/answer/answers.csv` 保存每个设置抽到的值，每个设置一行（层级用不到的值为 `none`）；推导出的 `withdrawal_basis` 和 `withdrawal_pct` 由它们得出，不单独保存。
 
 **参数约束**（validate-case，从 hard/s44 开始）：每个参数换成它尝试的第一个其他值时，标准答案都会改变。`restricted` = MEDQ, GLAC、`liquidation_days` = 3（4% 的标准下 2 不可接受）、`stock_cap` = 10 或 `sector_cap` = 25 时，hard/s44 的参考解无效（它买入限制名单上的股票、到期限时仍持有 LUMO、或者它买入的股票或行业超过限额）。`large_order` = 5 使其目标值变为 0.929，`withdrawal` = capital_25 变为 0.821，`max_drawdown` = 10 变为 1.208。这项检查在世界种子 1、2 和 3 上也能通过；在那些世界上，有些违规变成了目标值的变化，最小的是 2.2%（世界种子 1 上的 `withdrawal`：0.978）。
 
@@ -213,4 +213,4 @@ hard 在三项限额上从更宽的候选池中抽取：4% 的标准、10% 的�
 
 - `agent_view/<lang>/`：上面的数据，5 种语言各一份（所有设置相同）。
 - `hidden/`（`write_hidden`）：`days/<date>.json`，每次调用一个（80 个，以刚收盘的交易日命名），含调用序号、引擎发送的精确 `market` 和当天的 `notices`（不含 `portfolio`：它取决于程序自己的订单，见标准答案）；隐藏的 80 个交易日的 `daily_prices.csv` 和 `index_levels.csv`（最后一个交易日的行情不在任何一次调用里）；`mail/<lang>/*.eml`，六条通知背后的邮件，每种语言都有。
-- `answer/<tier>/s<seed>/`，每个公开设置一个（`easy/s44` … `hard/s134`）：`setting.json`（层级、规则种子、抽到的值以及推导出的 `withdrawal_basis` / `withdrawal_pct`）、`reference/program/`（strategy.py + config.json）、`score.json`（目标值 1.0 和各项指标），以及由 `write_ground_truth` 写出的参考解运行结果：`orders.csv`（按执行交易日列出的格式正确的订单）、`fills.csv`（成交和拒单及其原因）、`positions.csv`（每次收盘的股数）、`equity_curve.csv`（每次收盘时的现金、未交收款、持仓市值、净值、已付出金、净值加已付出金的最高值、回撤和指数，含起始那次收盘）和 `status_tables.json`（80 次调用各自必须报告的精确状态表）。
+- `answer/`，各公开设置（`easy/s44` … `hard/s134`）的答案，每个文件都以 difficulty 和 seed 区分设置：`answers.csv`（每个设置一行：抽到的值、参考解和基线的目标值、生效的规则和应问事项以及参考解的各项指标）、`files/reference/program/strategy.py` 和 `files/baseline/program/strategy.py`（各设置相同），各设置的 config.json 在 `reference_program.jsonl` 和 `baseline_program.jsonl` 中，以及由 `write_ground_truth` 写出、各设置叠在一起的参考解运行结果：`orders.csv`（按执行交易日列出的格式正确的订单）、`fills.csv`（成交和拒单及其原因）、`positions.csv`（每次收盘的股数）、`equity_curve.csv`（每次收盘时的现金、未交收款、持仓市值、净值、已付出金、净值加已付出金的最高值、回撤和指数，含起始那次收盘）和 `status_tables.jsonl`（每个设置一行：80 次调用各自必须报告的精确状态表）。

@@ -215,8 +215,8 @@ the text, and in the agent's view nothing changed: a program still has to ask fo
 | 10 | ORTH | 2 | 3 | `urgency_earliest` | 5 | 3 |
 | 64 | DERM | 3 | 4 | `received` | 7 | 1 |
 
-Each row is the drawn dict of `easy/sN`, `medium/sN` and `hard/sN` (`dataset/answer/<tier>/s<N>/setting.json`,
-with `derived: {reserve_times}`). Seed 1 is the tightest hospital (two interpreters), seed 64 the loosest in
+Each row is the drawn dict of `easy/sN`, `medium/sN` and `hard/sN` (their rows in `dataset/answer/answers.csv`;
+the derived `reserve_times` is not stored). Seed 1 is the tightest hospital (two interpreters), seed 64 the loosest in
 interpreters and lab but with a three-slot reserve and one overbooked slot per session. Private seeds draw
 any of the 486 combinations, e.g. seed 2: DERM, 3, 3, `urgency_received`, 7, 3; seed 3: PED, 3, 4,
 `urgency_received`, 5, 2. The reference objectives per setting are 1.000 by construction; the baselines are in
@@ -370,11 +370,13 @@ Written by `python -m fdebench2.cli export-dataset cases/healthcare/hospital_app
   D13 off sick 13 Nov, D05's conference 20 Nov, the interpreter 24 Nov, four director's-acquaintance requests).
 - `hidden/requests.csv`: every request of the start and the period with its hidden facts (no-show rate at zero
   lead, the working days before an appointment the patient cancels, the request it duplicates).
-- `answer/<tier>/s<seed>/`: per public setting (seeds 1, 10, 64), `setting.json` (the drawn parameters and the
-  derived `reserve_times`), the reference `program/` and its `score.json`, and from
-  the reference's replay `actions.csv` (every action per call), `status_tables.csv` (the expected table, 20 days
-  × 5 departments), `cancellations.csv` (the patients' cancellations it met), `final_book.csv` (every
-  appointment held in the period, with attendance where reported, and the upcoming ones) and
+- `answer/`: the public settings (seeds 1, 10, 64), each file keyed by difficulty and seed: `answers.csv` (one row
+  per setting: the drawn parameters, the reference's and the baseline's objective and the reference's metrics; the
+  derived `reserve_times` is not stored), the reference and baseline `files/<reference|baseline>/program/scheduler.py`
+  (the same in every setting) with each setting's config in `reference_program.jsonl` and `baseline_program.jsonl`,
+  and from the reference's replay, the settings stacked, `actions.csv` (every action per call), `status_tables.csv`
+  (the expected table, 20 days × 5 departments), `cancellations.csv` (the patients' cancellations it met),
+  `final_book.csv` (every appointment held in the period, with attendance where reported, and the upcoming ones) and
   `final_waitlist.csv`.
 
 ## Notes

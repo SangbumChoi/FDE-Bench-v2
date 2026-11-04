@@ -118,8 +118,9 @@ hard/s78    {uprating: 2.5, earned_disregard: 200_0,  asset_limit: 6000_3000, di
 ```
 
 Entre las tres semillas sortean todos los candidatos de todos los parámetros en todos los niveles.
-`dataset/answer/<tier>/s<seed>/` contiene el `setting.json` de cada configuración (valores sorteados y derivados), la
-referencia y su puntuación. "La mejor que cumple las reglas" es la respuesta exacta con las renovaciones prorrogadas,
+`dataset/answer/answers.csv` tiene una fila por configuración (los valores sorteados, el objetivo de la referencia y
+el de la línea base y las métricas de la referencia), y a su lado `reference_determinations.csv` y
+`baseline_determinations.csv` apilan los entregables con las columnas difficulty y seed. "La mejor que cumple las reglas" es la respuesta exacta con las renovaciones prorrogadas,
 como exige la regla; "exacta, renovaciones reevaluadas" flexibiliza `auto_approve_renewals` (véase F2). Las semillas de
 mundo 1, 2 y 3 dan objetivos de referencia / línea base de 19,415 / 49,517, 17,905 / 56,467 y 24,657 / 44,067 (easy/s2,
 s31, s78), 16,341 / 35,167, 14,562 / 40,454 y 23,549 / 35,399 (medium) y 15,183 / 37,139, 14,838 / 43,482 y 24,107 /
