@@ -14,6 +14,23 @@ engineering) 에이전트를 평가하는 벤치마크입니다. 오픈 모델�
 `cases/*/*/docs/<lang>/explainer.html`로부터 다시 만들고, 푸시할 때마다 `gh-pages` 브랜치에 게시됩니다
 (`.github/workflows/pages.yml`).
 
+## 감사의 말
+
+이 벤치마크가 배운 연구의 저자들께 감사드립니다.
+
+- **FDE-Gym** (Yang et al., *FDE-Gym: The Last Mile of AI Delivery*, arXiv 2610.22350;
+  [fde-gym.com](https://fde-gym.com/paper/), [케이스](https://huggingface.co/datasets/DeepLethe/FDE-Gym),
+  [하네스](https://github.com/deeplethe/fde-gym)). 네 단계의 요청 수준, 연락 비용이 있는 스크립트 이해관계자,
+  공개하지 않은 실제 운영 트래픽에서의 재생 채점, 채택 기준(아무것도 안 하면 0, 모범 답안 1, 요청을 문자 그대로 따른
+  답과 지름길은 낮은 점수)이 이 저장소의 정답 감사에 참고가 되었습니다.
+- **Baidu FDE-Bench** (arXiv 2610.14539): 현장 배치 엔지니어(FDE)라는 틀과, v2가 이어 쓰는 지표 용어(모범 답안
+  대비 품질, DSR, Ask-F1, pass^k)를 처음 제시했습니다.
+- **τ^τ-Bench** (arXiv 2609.04611)와 **τ-bench** (arXiv 2406.12045): 만들어진 에이전트를 공개하지 않은 사용자로
+  채점하는 설계와 pass^k 추정법.
+
+v2는 이들과 코드나 데이터를 공유하지 않습니다. 모든 케이스는 시드로 생성한 독자적인 것이며, 별도 이용 조건이 있는
+FDE-Gym 케이스는 사용하지 않았습니다. 관련 연구는 [docs/DIRECTION.md](../DIRECTION.md) §2와 §9에 있습니다.
+
 ## 설치
 
 ```bash

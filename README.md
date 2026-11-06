@@ -15,6 +15,24 @@ rules, hidden requirements, targets, stored data and answers, review findings), 
 `cases/*/*/docs/<lang>/explainer.html` by `fdebench2 build-site` and published to the `gh-pages` branch on
 every push (`.github/workflows/pages.yml`).
 
+## Acknowledgements
+
+We thank the authors of the work this benchmark learned from:
+
+- **FDE-Gym** (Yang et al., *FDE-Gym: The Last Mile of AI Delivery*, arXiv 2610.22350;
+  [fde-gym.com](https://fde-gym.com/paper/), [cases](https://huggingface.co/datasets/DeepLethe/FDE-Gym),
+  [harness](https://github.com/deeplethe/fde-gym)). Its four brief levels, scripted stakeholders with a contact
+  cost, replay on held-out production traffic and admission anchors (do-nothing 0, reference 1, a literal
+  reading and shortcuts scored low) informed the ground truth audit here.
+- **Baidu FDE-Bench** (arXiv 2610.14539), which introduced the forward-deployed-engineer framing and the metric
+  vocabulary (quality against a reference, DSR, Ask-F1, pass^k) that v2 keeps.
+- **τ^τ-Bench** (arXiv 2609.04611) and **τ-bench** (arXiv 2406.12045), for the built-agent-on-held-out-users
+  design and the pass^k estimator.
+
+v2 shares no code or data with them: every case here is original and generated from a seed, and the FDE-Gym
+cases, which have their own terms, were not used. Further related work: [docs/DIRECTION.md](docs/DIRECTION.md)
+§2 and §9.
+
 ## Setup
 
 ```bash

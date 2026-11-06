@@ -13,6 +13,23 @@ Claude Code、Codex、Gemini CLI、OpenCode）则通过共享的 MCP 客户沟�
 保存的数据与答案、评审发现），由 `fdebench2 build-site` 根据 `cases/*/*/docs/<lang>/explainer.html` 重新生成，并在每次推送时发布到
 `gh-pages` 分支（`.github/workflows/pages.yml`）。
 
+## 致谢
+
+感谢本基准所借鉴的研究的作者：
+
+- **FDE-Gym**（Yang et al., *FDE-Gym: The Last Mile of AI Delivery*, arXiv 2610.22350；
+  [fde-gym.com](https://fde-gym.com/paper/)、[案例](https://huggingface.co/datasets/DeepLethe/FDE-Gym)、
+  [测试框架](https://github.com/deeplethe/fde-gym)）。它的四级需求说明、带联系成本的脚本化利益相关方、在未公开的生产流量上
+  回放评分，以及准入基准（什么都不做记 0 分，参考答案记 1 分，按字面理解需求的答案和捷径只能得低分），为本仓库的标准答案
+  审查提供了参考。
+- **Baidu FDE-Bench**（arXiv 2610.14539）：首先提出了前线部署工程师（FDE）的框架，以及 v2 沿用的指标术语（相对参考答案的
+  质量、DSR、Ask-F1、pass^k）。
+- **τ^τ-Bench**（arXiv 2609.04611）和 **τ-bench**（arXiv 2406.12045）：用未公开的用户评估所构建智能体的设计，以及 pass^k
+  估计方法。
+
+v2 与它们不共享任何代码或数据：这里的每个案例都是由种子生成的原创案例，有单独使用条款的 FDE-Gym 案例未被使用。更多相关工作
+见 [docs/DIRECTION.md](../DIRECTION.md) 第 2 节和第 9 节。
+
 ## 安装
 
 ```bash

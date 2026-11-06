@@ -8,6 +8,23 @@
 
 **ケースを見る：** https://sangbumchoi.github.io/FDE-Bench-v2/ — ケースごとに1ページ（依頼、設定、ルール、隠れた要件、確認すべき事項、保存されたデータと正解、レビュー結果）です。`fdebench2 build-site` が `cases/*/*/docs/<lang>/explainer.html` から組み立て直し、push のたびに `gh-pages` ブランチへ公開します（`.github/workflows/pages.yml`）。
 
+## 謝辞
+
+このベンチマークが学んだ研究の著者の皆さまに感謝します。
+
+- **FDE-Gym**（Yang et al., *FDE-Gym: The Last Mile of AI Delivery*, arXiv 2610.22350;
+  [fde-gym.com](https://fde-gym.com/paper/)、[ケース](https://huggingface.co/datasets/DeepLethe/FDE-Gym)、
+  [ハーネス](https://github.com/deeplethe/fde-gym)）。4段階の依頼レベル、連絡コストのある台本付きの関係者、
+  非公開の本番トラフィックでの再生による採点、採択基準（何もしなければ0、模範解答が1、依頼を文字どおりに読んだ解答と
+  近道は低い点数）が、このリポジトリの正解の監査の参考になりました。
+- **Baidu FDE-Bench**（arXiv 2610.14539）：フォワードデプロイドエンジニア（FDE）という枠組みと、v2 が引き継ぐ指標の
+  用語（模範解答に対する品質、DSR、Ask-F1、pass^k）を最初に示しました。
+- **τ^τ-Bench**（arXiv 2609.04611）と **τ-bench**（arXiv 2406.12045）：作ったエージェントを非公開のユーザーで採点する
+  設計と pass^k の推定法。
+
+v2 はこれらとコードもデータも共有していません。すべてのケースはシードから生成した独自のもので、独自の利用条件がある
+FDE-Gym のケースは使っていません。関連研究は [docs/DIRECTION.md](../DIRECTION.md) の §2 と §9 にあります。
+
 ## セットアップ
 
 ```bash

@@ -42,6 +42,30 @@ company policies and vendor harnesses on one client channel.
   - What v2 adds to that framing: counterfactual ground truths over a fixed view, rule classes with company
     policies and exception processes, dated events and pressure items, program deliverables run day by day,
     five natively authored languages on two axes, and harness comparison through one client channel.
+- **FDE-Gym** (DeepLethe and co-authors, arXiv 2610.22350, Oct 2026; harness Apache-2.0 at
+  github.com/deeplethe/fde-gym, cases gated on Hugging Face under their own terms). 95 end-to-end delivery tasks
+  from 20 scenarios in 18 sectors, adapted from real projects. The agent works in a copy of the customer's
+  production system and its delivery is replayed on held-out production traffic. The score is normalized uplift
+  (0 = the system as found, 1 = the reference), set to at most 0 on an incident, minus a hidden per-message
+  contact cost for 130+ scripted stakeholders. Briefs come at four levels (L0 gives the constraints and scoring,
+  L3 only the sponsor's original request). Tasks are admitted only if the reference scores ≥ 0.95, doing
+  nothing 0, the literal reading of the request ≤ 0.2 and each of 270+ shortcut strategies ≤ 0.8. Best result
+  (13 configurations, three runs each): 0.56 mean, 14 of 95 resolved.
+  - **Findings that support v2's direction.** Withholding the constraints costs the most: L0 to L1 drops 0.28,
+    while L1 to L3 drops only 0.04. That is what v2's counterfactual client facts isolate. Leading models obtain
+    72–85% of key facts yet reach uplift ≥ 0.8 in only 37% of the cases where they obtained all of them. This is
+    the learned-versus-enforced gap that v2's per-target funnel (revealed → learned → enforced) is built to
+    show.
+  - **Where they meet.** The same normalized scale (v2's baseline 0 / reference 1); admission anchors close to
+    v2's audit gates (§11.2); held-out replay like v2's program cases on hidden inputs.
+  - **Where they differ.** FDE-Gym prices asking (a hidden contact cost); v2 limits question rounds and scores
+    Ask-F1. FDE-Gym has fixed tasks plus held-out variants; v2 has one world with counterfactual settings drawn by
+    a rule seed. FDE-Gym is one language; v2 has five, on two axes. v2 shares no code or data with it: its cases
+    were not read.
+  - **Worth adopting.** A "literal solution" anchor: the deliverable that does exactly what the request says,
+    without the client's facts, must score low (FDE-Gym: ≤ 0.2). It complements v2's never-asks solver (which
+    plans robustly) and is a cheap admission check. An incident rule (quality at most 0 when the delivery breaks
+    the client's operation) is close to v2's hard gates.
 - **Name collision.** Another, unrelated "FDE-Bench" (arXiv 2609.27571, Sep 2026) evaluates deployment
   configuration (Docker, Compose, Kubernetes). Cite v2 with its full name and repository.
 - **Closest neighbour: τ^τ-Bench** (arXiv 2609.04611, Sep 2026). A coding agent builds a customer-service
@@ -211,6 +235,7 @@ See §10 (from an independent review of every case with adversarial verification
 | P0 | Client audit: leakage and fidelity per locale, sensitivity to the client model; consider a fact-ID knowledge boundary |
 | P0 | Private evaluation seeds (world and rule seeds) and a canary string; web tools off or logged in harness configs; an egress proxy for the agent container |
 | P1 | Settle the open binding findings (`validate.OPEN_BINDING_FINDINGS`: bi, bakery) and give a parameter a single candidate in tiers where nothing uses it (loan, hospital); add a dated event and pressure to bi |
+| P1 | A literal-solution anchor per case (the request read literally, without the client's facts, must score low; FDE-Gym's admission rule) next to the never-asks solver |
 | P1 | Human-FDE baseline on a subset (time and quality); expert review of each case's requirements |
 | P1 | Native-speaker review of the five locales; difficulty parity across locales; declare or localize each scenario's country |
 | P1 | A `confirm` target kind for facts the data already settles; CLI solver token parsing; Pareto plots |
@@ -219,7 +244,7 @@ See §10 (from an independent review of every case with adversarial verification
 
 ## 9. Sources
 
-Primary references for the claims above: Baidu FDE-Bench arXiv 2610.14539; deployment FDE-Bench arXiv
+Primary references for the claims above: Baidu FDE-Bench arXiv 2610.14539; FDE-Gym arXiv 2610.22350; deployment FDE-Bench arXiv
 2609.27571; τ^τ-Bench arXiv 2609.04611; τ-bench 2406.12045; τ²-bench 2506.07982; τ-Multilingual 2609.35820;
 SABER / τ-Bench Verified 2512.07850; UserBench 2507.22034; BIRD-Interact 2510.05318; CRMArena-Pro 2505.18878;
 GDPval 2510.04374; Remote Labor Index 2510.26787; SWE-bench Pro 2509.16941; MLE-bench 2410.07095; RE-Bench
