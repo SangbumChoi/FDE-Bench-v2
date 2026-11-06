@@ -10,7 +10,7 @@ writes, next to case.yaml:
                               (case.py `write_hidden(world, dir)`, optional)
       answer/                 the answers of the public settings (tier x public rule seed), as tables:
         answers.csv           one row per setting: difficulty, seed, every drawn parameter, the reference's and
-                              the baseline's objective, the quality scale's width, the rules and targets in force
+                              the baseline's objective, the quality scale's width, the literal solution's objective and quality, the rules and targets in force
                               (ids) and the reference's scalar metrics
         <name>.csv            every CSV the answers hold (the reference deliverable as reference_<file>.csv,
                               the baseline's as baseline_<file>.csv, the case's extra answer tables under their
@@ -71,6 +71,7 @@ def answer_row(case: NativeCase, res: dict) -> dict:
     row["baseline_objective"] = "" if base is None else base
     span = quality_span(float(ref), base) if ref is not None else None
     row["quality_span"] = "" if span is None else span
+    row["literal_objective"], row["literal_quality"] = _literal(case)
     row["reference_violations"] = len(res.get("violations") or [])
     row["rules"] = ";".join(r.id for r in case.rules().rules)
     try:
@@ -100,6 +101,18 @@ def _bundle(case: NativeCase, c: NativeCase, extra, dest: Path) -> dict:
     if extra is not None:
         extra(case.world, dest, *((c.setting,) if c.tiers else ()))
     return answer_row(c, res)
+
+
+def _literal(case: NativeCase) -> tuple:
+    """The literal solution's objective and normalized quality in this setting ("" when invalid or absent)."""
+    if not hasattr(case.module, "literal_solution"):
+        return "", ""
+    with tempfile.TemporaryDirectory() as tmp:
+        case.write_literal(Path(tmp))
+        res = case.evaluate(Path(tmp), "en")
+    if res["validity_score"] != 1.0:
+        return "invalid", ""
+    return res.get("objective"), res.get("quality_score")
 
 
 def _flat(rel: str) -> str:

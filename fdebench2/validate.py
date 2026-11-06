@@ -98,6 +98,11 @@ from .transforms.policy import RULE_CLASSES
 DISTINCT_MARGIN = 0.01           # on objectives: a parameter whose answers differ by less changes nothing
 SUMMARY_REQUIRED = True          # a case without locales/<lang>/summary.yaml fails validation
 BASELINE_REQUIRED = True         # a case without baseline_solution fails validation
+LITERAL_REQUIRED = True          # a case without literal_solution fails validation
+LITERAL_MAX_QUALITY = 0.2        # the request read literally, without the client's facts, scores at most this
+# Cases whose literal solution scores above LITERAL_MAX_QUALITY in some public setting, known and open:
+# case id -> why (a warning instead of a problem until the case changes).
+OPEN_LITERAL_FINDINGS: dict[str, str] = {}
 ADMISSIBLE_SEARCH = 5000         # combinations tried per candidate before it is called never admissible
 # Per-tier binding findings that the cases had when the check became per tier, warned about instead of failing
 # until each case's owner decides: (case id, parameter, tier) -> (worlds, why it changes nothing there), where
@@ -1045,6 +1050,18 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                for row in _data_rows(d) for text in (row, re.sub(r"[,;\t|]", " ", row))
                for x in (float(n.replace(",", "")) for n in NUMBER.findall(text)) if x >= 10}
     broken_baseline = False
+    literal_fn, literal_dir, literal_high = getattr(case.module, "literal_solution", None), None, []
+    if literal_fn is None:
+        (problems if LITERAL_REQUIRED else warnings).append(
+            "case.py has no literal_solution (the request done exactly as written, without the client's facts)")
+    else:
+        literal_dir = Path(keep.name) / "literal"
+        literal_dir.mkdir()
+        try:
+            literal_fn(case.world, literal_dir)
+        except Exception as e:
+            problems.append(f"literal_solution fails: {e!r}"[:400])
+            literal_dir = None
     try:
         case.quality_cap
     except ValueError as e:
@@ -1121,6 +1138,10 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                     span = quality_span(ref, base_obj)
                     if span is not None and span < MIN_QUALITY_SPAN:
                         close.append((c.setting.label if c.tiers else "the case", span))
+            if literal_dir is not None and first["validity_score"] == 1.0:
+                lit = c.evaluate(literal_dir, "en")
+                if lit["validity_score"] == 1.0 and lit["quality_score"] > LITERAL_MAX_QUALITY:
+                    literal_high.append(f"{c.setting.label if c.tiers else 'the case'} ({lit['quality_score']:.2f})")
             examples = c.violating_examples()
             for rule_id in [r.id for r in c.rules().rules]:
                 if rule_id not in examples:
@@ -1142,6 +1163,11 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                         problems.append(f"{at}rule {rule_id}: example still invalid when the rule is relaxed: {relaxed}")
     if ratios:
         report.notes.append("baseline/reference objective: " + ", ".join(ratios))
+    if literal_high:
+        text = (f"the literal solution (the request done exactly as written, without the client's facts) scores "
+                f"above {LITERAL_MAX_QUALITY} in {', '.join(literal_high)}: the client's facts do not matter enough")
+        why = OPEN_LITERAL_FINDINGS.get(case.id)
+        (warnings.append(f"known and open: {text} ({why})") if why else problems.append(text))
     if close:
         found = narrow_scale(case, close)
         (warnings if found.startswith("known and open") else problems).append(found)

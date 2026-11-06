@@ -97,6 +97,12 @@ Design rules that keep scoring language-independent:
   invalid. The reference is not the ceiling: the composite gives full credit at
   `quality_cap` (the policy's, 1.5 by default, or the case's when it knows its best solution), so headroom
   above the reference counts and a degenerate valid deliverable earns nothing.
+- **The literal solution scores low.** case.py `literal_solution(world, out_dir)` is the request done exactly
+  as written, from the agent's view only: the most natural reading of everything, no question asked, no hedging
+  across settings (it never gets the Setting). validate-case requires it, in every public setting, to be invalid or
+  to score at most 0.2 normalized quality (`validate.LITERAL_MAX_QUALITY`), so the score rewards learning the
+  client's facts rather than doing what the request says (FDE-Gym's admission anchor). `answers.csv` records its
+  objective and quality per setting. `validate.OPEN_LITERAL_FINDINGS` turns a known case into a warning.
 - **Rules carry a class** (`physical`, `contractual`, `business_policy`). The evaluator reports violations by
   rule id; relaxing a rule is a scoring parameter (`evaluate(..., relaxed={...})`), so no per-case hooks.
 

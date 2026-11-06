@@ -670,6 +670,11 @@ class NativeCase(Case):
     def write_reference(self, out_dir: Path) -> None:
         self.module.reference_solution(self.world, Path(out_dir), *self._args())
 
+    def write_literal(self, out_dir: Path) -> None:
+        """case.py literal_solution(world, out_dir): the request done exactly as written, without the client's
+        facts (the same in every setting, so it never gets the Setting)."""
+        self.module.literal_solution(self.world, Path(out_dir))
+
     def write_baseline(self, out_dir: Path) -> None:
         self.module.baseline_solution(self.world, Path(out_dir), *self._args())
 
