@@ -10,6 +10,10 @@ Claude Code、Codex、Gemini CLI、OpenCode）则通过共享的 MCP 客户沟�
 设计、评分与当前进展：[DESIGN.md](../../DESIGN.md)。研究方向、相关工作与评析：[docs/DIRECTION.md](../DIRECTION.md)。
 如何贡献案例、翻译或审阅：[CONTRIBUTING.md](CONTRIBUTING.md)。
 
+**浏览案例：** https://sangbumchoi.github.io/FDE-Bench-v2/ —— 每个案例一页（需求、设置、规则、隐藏需求、应问事项、
+保存的数据与答案、评审发现），由 `fdebench2 build-site` 根据 `cases/*/*/docs/<lang>/explainer.html` 重新生成，并在每次推送时发布到
+`gh-pages` 分支（`.github/workflows/pages.yml`）。
+
 ## 有何不同
 
 在下表比较的基准中，只有 FDE-Bench v2 做到以下几点（每一点都由本仓库中的代码检查）：
@@ -40,10 +44,6 @@ Claude Code、Codex、Gemini CLI、OpenCode）则通过共享的 MCP 客户沟�
 
 “–”：[docs/DIRECTION.md](../DIRECTION.md) 第 2 节（其他基准的信息来源）未提及；并不表示该基准没有这项功能。本仓库使用了
 τ-bench 的 pass^k 估计方法。v2 尚未进行真实评测，所以漏斗和框架比较目前还没有数字。
-
-**浏览案例：** https://sangbumchoi.github.io/FDE-Bench-v2/ —— 每个案例一页（需求、设置、规则、隐藏需求、应问事项、
-保存的数据与答案、评审发现），由 `fdebench2 build-site` 根据 `cases/*/*/docs/<lang>/explainer.html` 重新生成，并在每次推送时发布到
-`gh-pages` 分支（`.github/workflows/pages.yml`）。
 
 ## 致谢
 

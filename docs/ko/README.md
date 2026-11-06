@@ -10,6 +10,11 @@ engineering) 에이전트를 평가하는 벤치마크입니다. 오픈 모델�
 설계, 채점, 현황: [DESIGN.md](../../DESIGN.md). 방향, 관련 연구, 비판적 검토: [docs/DIRECTION.md](../DIRECTION.md).
 케이스, 번역, 검토로 기여하는 방법: [CONTRIBUTING.md](CONTRIBUTING.md).
 
+**케이스 둘러보기:** https://sangbumchoi.github.io/FDE-Bench-v2/ — 케이스마다 한 페이지(요청, 설정, 규칙, 숨은
+요구사항, 질문 목표, 저장된 데이터와 정답, 리뷰 발견 사항)가 있습니다. 이 사이트는 `fdebench2 build-site`가
+`cases/*/*/docs/<lang>/explainer.html`로부터 다시 만들고, 푸시할 때마다 `gh-pages` 브랜치에 게시됩니다
+(`.github/workflows/pages.yml`).
+
 ## 무엇이 다른가
 
 아래 표에서 비교한 벤치마크 가운데 다음을 하는 것은 FDE-Bench v2뿐입니다(각 항목은 이 저장소의 코드가 검사합니다).
@@ -43,11 +48,6 @@ engineering) 에이전트를 평가하는 벤치마크입니다. 오픈 모델�
 "–": 다른 벤치마크에 대한 출처인 [docs/DIRECTION.md](../DIRECTION.md) §2에 나오지 않는다는 뜻이며, 그 기능이 없다는
 뜻은 아닙니다. 이 저장소는 τ-bench의 pass^k 추정법을 씁니다. v2는 아직 실제 평가를 돌리지 않았으므로 깔때기와 하네스
 비교에는 아직 수치가 없습니다.
-
-**케이스 둘러보기:** https://sangbumchoi.github.io/FDE-Bench-v2/ — 케이스마다 한 페이지(요청, 설정, 규칙, 숨은
-요구사항, 질문 목표, 저장된 데이터와 정답, 리뷰 발견 사항)가 있습니다. 이 사이트는 `fdebench2 build-site`가
-`cases/*/*/docs/<lang>/explainer.html`로부터 다시 만들고, 푸시할 때마다 `gh-pages` 브랜치에 게시됩니다
-(`.github/workflows/pages.yml`).
 
 ## 감사의 말
 

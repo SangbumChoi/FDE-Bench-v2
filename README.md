@@ -10,6 +10,11 @@ shared MCP client channel. Self-contained: no dependency on any other benchmark'
 Design, scoring and status: [DESIGN.md](DESIGN.md). Direction, related work and critique:
 [docs/DIRECTION.md](docs/DIRECTION.md). To add a case, a translation or a review: [CONTRIBUTING.md](CONTRIBUTING.md).
 
+**Browse the cases:** https://sangbumchoi.github.io/FDE-Bench-v2/ — one page per case (request, settings,
+rules, hidden requirements, targets, stored data and answers, review findings), rebuilt from
+`cases/*/*/docs/<lang>/explainer.html` by `fdebench2 build-site` and published to the `gh-pages` branch on
+every push (`.github/workflows/pages.yml`).
+
 ## What is different here
 
 Among the benchmarks compared below, only FDE-Bench v2 does the following (each point is checked by code in this
@@ -47,11 +52,6 @@ repository):
 "–": not stated in [docs/DIRECTION.md](docs/DIRECTION.md) §2, the source for the other benchmarks; not a claim
 that the feature is absent. τ-bench is used here for its pass^k estimator. No live campaign has run on v2 yet, so
 the funnel and harness comparison have no numbers so far.
-
-**Browse the cases:** https://sangbumchoi.github.io/FDE-Bench-v2/ — one page per case (request, settings,
-rules, hidden requirements, targets, stored data and answers, review findings), rebuilt from
-`cases/*/*/docs/<lang>/explainer.html` by `fdebench2 build-site` and published to the `gh-pages` branch on
-every push (`.github/workflows/pages.yml`).
 
 ## Acknowledgements
 

@@ -12,6 +12,11 @@ Diseño, puntuación y estado: [DESIGN.md](../../DESIGN.md). Orientación, traba
 [docs/DIRECTION.md](../DIRECTION.md). Cómo aportar un caso, una traducción o una revisión:
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
+**Explorar los casos:** https://sangbumchoi.github.io/FDE-Bench-v2/ — una página por caso (solicitud,
+configuraciones, reglas, requisitos ocultos, preguntas clave, datos y respuestas guardados, hallazgos de la
+revisión), que `fdebench2 build-site` reconstruye a partir de `cases/*/*/docs/<lang>/explainer.html` y que se
+publica en la rama `gh-pages` con cada push (`.github/workflows/pages.yml`).
+
 ## Qué tiene de diferente
 
 Entre los benchmarks que compara la tabla de abajo, solo FDE-Bench v2 hace lo siguiente (cada punto lo comprueba el
@@ -51,11 +56,6 @@ código de este repositorio):
 «–»: no figura en [docs/DIRECTION.md](../DIRECTION.md), §2, la fuente para los demás benchmarks; no significa que
 les falte la función. Este repositorio usa el estimador pass^k de τ-bench. v2 aún no ha ejecutado ninguna campaña
 real, así que el embudo y la comparación de arneses todavía no tienen cifras.
-
-**Explorar los casos:** https://sangbumchoi.github.io/FDE-Bench-v2/ — una página por caso (solicitud,
-configuraciones, reglas, requisitos ocultos, preguntas clave, datos y respuestas guardados, hallazgos de la
-revisión), que `fdebench2 build-site` reconstruye a partir de `cases/*/*/docs/<lang>/explainer.html` y que se
-publica en la rama `gh-pages` con cada push (`.github/workflows/pages.yml`).
 
 ## Agradecimientos
 

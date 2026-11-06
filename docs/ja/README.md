@@ -6,6 +6,8 @@
 
 設計・採点・現状：[DESIGN.md](../../DESIGN.md)。方向性・関連研究・批判的検討：[docs/DIRECTION.md](../DIRECTION.md)。ケース、翻訳、レビューで貢献する方法：[CONTRIBUTING.md](CONTRIBUTING.md)。
 
+**ケースを見る：** https://sangbumchoi.github.io/FDE-Bench-v2/ — ケースごとに1ページ（依頼、設定、ルール、隠れた要件、確認すべき事項、保存されたデータと正解、レビュー結果）です。`fdebench2 build-site` が `cases/*/*/docs/<lang>/explainer.html` から組み立て直し、push のたびに `gh-pages` ブランチへ公開します（`.github/workflows/pages.yml`）。
+
 ## ほかと何が違うか
 
 下の表で比べたベンチマークのうち、次のことをするのは FDE-Bench v2 だけです（どの項目も、このリポジトリのコードが検査しています）。
@@ -30,8 +32,6 @@
 | 採点 | 有効性の関門；品質は基準解 0 から模範解答 1 まで、1 を超えても加点；Ask-F1；pass^k；方針ごとの重み | – | 作ったエージェントを非公開のユーザーで採点しオラクル基準と比較（構成ごとに 1 回、信頼区間なし） | 顧客が受け入れた解に対する品質、DSR、pass^3、Ask-F1、ブートストラップ信頼区間 | 正規化した改善幅、事故なら 0 以下、隠れた連絡コストを差し引く |
 
 「–」：ほかのベンチマークについての出典である [docs/DIRECTION.md](../DIRECTION.md) の §2 に記載がないという意味で、その機能がないという意味ではありません。このリポジトリは τ-bench の pass^k 推定法を使っています。v2 はまだ実際の評価を一度も実行していないため、ファネルとハーネスの比較にはまだ数値がありません。
-
-**ケースを見る：** https://sangbumchoi.github.io/FDE-Bench-v2/ — ケースごとに1ページ（依頼、設定、ルール、隠れた要件、確認すべき事項、保存されたデータと正解、レビュー結果）です。`fdebench2 build-site` が `cases/*/*/docs/<lang>/explainer.html` から組み立て直し、push のたびに `gh-pages` ブランチへ公開します（`.github/workflows/pages.yml`）。
 
 ## 謝辞
 
