@@ -805,6 +805,17 @@ def baseline_solution(world: World, out_dir: Path, setting: Setting) -> None:
     _write(out_dir, {q: None for q in QIDS})
 
 
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request done as written ("answer every question with a single number", money in KRW): a careful analysis
+    of the export with the natural reading of every definition the client did not give. Completed orders only,
+    test accounts out (the dictionary flags them), net revenue = subtotal less refunds (tax excluded) at the
+    order date's rate, as compute() does; the fiscal year read as the calendar year, days as the stored UTC dates,
+    "active" as ordered in the last 30 days, "pantry" as the products labelled pantry, and money to the whole won.
+    Every question gets a number (the same sheet in every setting)."""
+    ans = compute(world, fy_start=1, active_days=30, local_day=False, both_labels=False)
+    _write(out_dir, {q: (round(v) if q in MONEY_Q else v) for q, v in ans.items()})
+
+
 def _score_answers(world: World, ans: dict, setting: Setting) -> dict:
     with tempfile.TemporaryDirectory() as tmp:
         _write(Path(tmp), ans)

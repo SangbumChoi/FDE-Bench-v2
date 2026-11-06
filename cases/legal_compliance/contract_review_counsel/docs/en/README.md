@@ -240,6 +240,19 @@ keeping the fast track):
 With the policy's default quality cap of 1.5, the best possible review reaches 1.12–1.24 / 1.5 of the quality
 component on the public panel (REVIEW.md F1).
 
+### Literal solution
+
+`literal_solution` reviews every contract (the e-mailed and the small ones included, an amendment marked agreed
+applied) with every clause read correctly and judged by common market practice, since no playbook is on hand: a cap
+below one year's fees, a payment term under 30 days, auto-renewal with less than two months' notice, no
+data-protection clause where the supplier handles personal data, no termination for convenience, a one-way indemnity;
+the governing law is not flagged. A contract with any issue is "negotiate" ("which ones need changes"), otherwise
+"sign". It is the same review in every setting and is invalid in all 9 public settings (quality 0): contracts with
+the playbook's number of critical issues are not rejected, and in hard the small contracts are reviewed instead of
+fast-tracked. Its issue lists are good: with those two rules relaxed it would score 0.45–0.80, and a reading that
+rejects two or more critical issues (cap, data protection, indemnity) is valid in medium/s6 and medium/s11 at 0.83
+and 0.74. The validity rules carry the client's decision logic here; the issue thresholds alone do not.
+
 ## Notes
 
 - Practice behind the facts. The seven points are the usual items of an in-house procurement playbook. World

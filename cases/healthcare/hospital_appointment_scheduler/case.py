@@ -1558,6 +1558,19 @@ def _pilot(w: World, seed: int) -> dict:
     return {"input": day, "output": answer}
 
 
+# ── literal solution: the request as written ─────────────────────────────────
+
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request at face value, from the agent's view only: the reference program on the only rule values the
+    view shows, the pilot's (PILOT_RULES, as its answer reveals them: earliest free slot first, urgent requests and
+    then everyone by the date received, no slots held back for urgent patients, three interpreters a day, a day's
+    notice to move an appointment, no overbooking), every clinic open on City Day as the outpatient office's
+    e-mail says, and every notice and request field acted on (absences, the interpreter's absence, referral dates,
+    blood tests within the pilot's lab figure); notes asking for special treatment are not followed. The same
+    program in every setting."""
+    write_program(out_dir, dict(PILOT_RULES, tier="medium"))
+
+
 # ── data rendering ───────────────────────────────────────────────────────────
 #
 # The agent sees what the hospital would hand over: an export of the booking system as a plain-text SQL dump

@@ -342,6 +342,15 @@ How the rules and situations bind (reference runs; easy / medium / hard where th
 The urgent window does not bind for the reference (the reserve absorbs the 18 urgent requests on the next
 day); it binds for a program that fills the reserve early or moves an urgent appointment.
 
+**Literal solution** (`literal_solution`: the request done as written, the same in every setting): the reference
+program on the only rule values the agent's view shows, the pilot's (`PILOT_RULES`: earliest free slot first, U
+and then everyone by the date received, no slots held back, three interpreters a day, a day's notice for a move,
+no overbooking, a lab figure of 10), every clinic open on City Day as the outpatient office's e-mail says, and
+every notice and request field acted on (absences, the interpreter's absence, referral dates, blood tests); notes
+are not followed. Filling every slot at once, it gives the urgent reserve away and then misses urgent windows; it
+books the closed clinic on City Day and breaks the waitlist order in every setting, the interpreter cap where it is
+2, the lab cap from medium and books duplicates in hard, so it is invalid in all 9 public settings.
+
 ## Data files and formats
 
 The agent's `data/` (the same in every setting; file names, enum values, names and comments in the customer

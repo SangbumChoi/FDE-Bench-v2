@@ -326,6 +326,16 @@ Table sensitivity (reference orders, one wrong definition): drawdown without the
 0.85 accuracy in every medium/hard setting (1.0 in easy, where nothing is paid out); buying power as settled
 cash only (ignoring proceeds that settle next session and the withdrawal reserve) 0.91–0.93.
 
+**Literal solution** (`literal_solution`: the request done as written, the same in every setting): the reference
+program with the only limits the agent's view gives: the engine as the pilot ran it (sales tax, T+2), the firm's
+restricted list as the desk database shows it today (empty: FERN and DUNE were removed), a stock compliance adds at
+run time no longer bought and sold out as fast as the order size allows, orders kept to 10% of the 20-session
+average volume (the book's threshold is not given: "ask me"), no stock, sector or drawdown limit (the easy
+portfolio, up to 8 names at 24%, behind the reference's risk switch), a withdrawal or a limit cut without its
+figure not acted on, a note asking to buy never followed. Its orders are above the book's threshold (4–9%) 70–85
+times in every setting, so it is invalid in all 9 public settings; it also buys the restricted names in s20 and
+s134, and from medium breaks the stock and sector limits and the withdrawal.
+
 ## Notes
 
 - **One process per replay**: `casekit.program_session` loads `strategy.py` once and makes the 80 calls in the

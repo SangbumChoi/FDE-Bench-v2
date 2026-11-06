@@ -180,6 +180,13 @@ The case-seed routes of the headline settings:
 Most of the baseline's extra cost is waiting (vans at cafés before they open) and lateness at the cafés it reaches
 last.
 
+**Literal solution** (`literal_solution`: the request done as written, the same in every setting): the reference
+planner with the readings the agent's view gives, every café on the list served ("all our cafés"), any van for any
+café up to its racks' 120 trays, out from 05:00 with no shift end, `deliver_by` as the target (a late minute
+weighted as ten van minutes), no closed café, rush, habit, cold chain or workshop day. It delivers to the café that
+is closed this week, so it is invalid in all 9 public settings (also over the week's tray limit in 7, and against
+the cold chain, the habit and V2's workshop morning wherever they apply).
+
 Reference objectives on the validator's other world seeds:
 
 | World seed | easy s5 / s13 / s58 | medium s5 / s13 / s58 | hard s5 / s13 / s58 |

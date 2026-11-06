@@ -159,6 +159,16 @@ days from a start staggered within their language and contract; leave days (and 
 left empty, and each new hire shadows a senior full-timer of their language (same days, same shift). Quality is
 normalized: baseline 0, reference 1. Both are valid in every setting.
 
+**Literal solution** (`literal_solution`: the request done as written, the same in every setting): the reference
+greedy with the readings the agent's view gives: the forecast file covered wherever it can be ("enough people on
+the phones so customers aren't left waiting", a missing agent weighted above any shift's pay), skills, shift types,
+one shift a day and the leave file's day/month dates with approved requests only, the usual five-day week for
+everyone (the view gives no weekly cap), the agent in the team lead's note rostered as usual, and no holiday cut,
+overtime, rest time or new-hire pairing. Its part-timers work up to 5 shifts against the client's 3, so it is
+invalid in all 9 public settings (also against the rest time and the buddy habit from medium, and the sick call in
+hard). The cap is the only thing that sinks it in easy: with the part-timers kept to 3 the same greedy would score
+0.68–0.98 there.
+
 The **optimum** column is an exact MILP of the same model (1,316–1,364 binaries) solved with scipy's HiGHS in
 under 10 seconds per setting, to proven optimality, and checked with `case.py`'s own evaluator. It is an analysis
 script, not part of the case (scipy is not a dependency). At the old single setting (weight 40, 32 h, holiday

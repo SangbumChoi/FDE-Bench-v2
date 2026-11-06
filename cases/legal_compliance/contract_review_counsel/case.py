@@ -1229,6 +1229,41 @@ def baseline_solution(world: World, out_dir: Path, setting: Setting) -> None:
     _write(out_dir, {c.id: {"issues": [], "decision": "sign"} for c in world.contracts})
 
 
+def literal_issues(c: Contract) -> list[str]:
+    """A careful counsel's checklist with no playbook: every clause read correctly (whatever its wording or
+    language), judged by common market practice. A cap below one year's fees (a cap of N months' fees is N/12), a
+    payment term under 30 days, an automatic renewal with less than two months' notice, no data-protection clause
+    where the supplier handles personal data (IT & data services, marketing, or customers' data in the scope), no
+    termination for convenience, a one-way indemnity. The governing law is not flagged: nothing on hand says which
+    laws the company accepts."""
+    found = []
+    if c.cap_ratio() < 1.0:
+        found.append("LIABILITY_CAP")
+    if c.renew is not None and c.renew[0] < 60:
+        found.append("AUTO_RENEWAL")
+    if c.pay[0] < 30:
+        found.append("PAYMENT_TERMS")
+    if (c.category in ("it_data", "marketing") or c.cust_data) and c.dp is None:
+        found.append("DATA_PROTECTION")
+    if c.tfc is None:
+        found.append("TERMINATION_CONVENIENCE")
+    if c.indemnity == "one_way":
+        found.append("INDEMNITY")
+    return found
+
+
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request done as written ("tell us which ones need changes before we sign"): every contract reviewed,
+    the e-mailed one and the small ones included, an amendment marked agreed applied (_as_read), the issues of
+    literal_issues, and "negotiate" for a contract with any issue, otherwise "sign" (the same review in every
+    setting)."""
+    out = {}
+    for c in world.contracts:
+        issues = literal_issues(_as_read(world, c))
+        out[c.id] = {"issues": issues, "decision": "negotiate" if issues else "sign"}
+    _write(out_dir, out)
+
+
 def violating_examples(world: World, setting: Setting) -> dict:
     ref = _reference(world, setting)
 

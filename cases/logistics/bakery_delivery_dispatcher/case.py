@@ -692,6 +692,25 @@ def baseline_solution(world: World, out_dir: Path, setting: Setting) -> None:
     (out_dir / "routes.json").write_text(json.dumps({"routes": plan}, indent=2), encoding="utf-8")
 
 
+# ── literal solution: the request as written ─────────────────────────────────
+
+LITERAL_SHIFT_END = 12 * 60   # literal_solution: no shift end in the agent's view, so the whole morning
+LITERAL_LATE = 10.0           # literal_solution: deliver_by read as a firm target, a late minute costing ten
+
+
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request at face value: every café on the list gets its trays ("all our cafés"), any van may serve any
+    café (nothing says the partner range needs the refrigerated van), up to its racks' max_trays, leaving from
+    05:00 and driving as long as the morning needs, with deliver_by as the target (a late minute weighted as ten
+    van minutes) and the drivers' time otherwise kept short. The reference planner under those readings: no closed
+    café, no week's tray limit, no shift end, no habit, no rush and no workshop day. It delivers to the café that
+    is closed this week, so it is invalid in every setting."""
+    rules = Rules(tier="easy", closed=None, capacity=CAPACITY, shift_end=LITERAL_SHIFT_END, late_weight=LITERAL_LATE,
+                  rush=None, cold_chain=False, premium_first=False)
+    plan = _plan(world, rules)
+    (out_dir / "routes.json").write_text(json.dumps({"routes": plan}, indent=2), encoding="utf-8")
+
+
 # ── violating examples ───────────────────────────────────────────────────────
 
 OVERFULL_BUDGET = 20000   # route evaluations per search for an over-full route

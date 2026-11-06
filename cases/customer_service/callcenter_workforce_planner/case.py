@@ -159,9 +159,10 @@ class Rules:
     buddy: bool                   # new hires never alone on a language
     sick_agent: str | None        # the agent off sick on sick_days (hard)
     sick_days: frozenset = frozenset()
+    pt_max: int = PT_MAX_SHIFTS   # a part-timer's weekly cap (literal_solution reads another one)
 
     def max_shifts(self, contract: str) -> int:
-        return self.ft_max if contract == "FT" else PT_MAX_SHIFTS
+        return self.ft_max if contract == "FT" else self.pt_max
 
     def need(self, world: World, d: int, s: int, lang: str) -> int:
         v = world.demand[(d, s, lang)]
@@ -504,6 +505,26 @@ def _baseline(world: World, R: Rules) -> list[tuple[str, int, str, str]]:
 def baseline_solution(world: World, out_dir: Path, setting) -> None:
     roster = _baseline(world, rules_for(world, setting))
     (out_dir / "roster.json").write_text(json.dumps(_dump(roster), indent=2), encoding="utf-8")
+
+
+# ── literal solution: the request as written ─────────────────────────────────
+
+LITERAL_WEEK = 5         # literal_solution: no weekly cap in the agent's view, so the usual five-day week for all
+LITERAL_WEIGHT = 1000.0  # literal_solution: "enough people on the phones so customers aren't left waiting":
+                         # a missing agent outweighs any shift's pay, so the forecast is covered wherever it can be
+
+
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request at face value, from the agent's view: cover the forecast file as it is in every language
+    ("enough people on the phones so customers aren't left waiting", a missing agent weighted above any shift's
+    pay), each agent on one of their skills, full-timers on the 8-hour and part-timers on the 4-hour shifts as
+    shifts.csv says, one shift a day and the usual five-day week for everyone (nothing in the view gives a weekly
+    cap), leave read as the file's day/month dates with only approved requests, and the agent in the team lead's
+    note rostered as usual, as the note asks. No holiday cut, overtime, rest time or new-hire pairing, which the
+    view never mentions. The reference's greedy under those readings; the same roster in every setting."""
+    R = Rules(weight=LITERAL_WEIGHT, holiday_factor=1.0, ft_regular=LITERAL_WEEK, ft_max=LITERAL_WEEK, overtime=1.0,
+              min_rest=None, buddy=False, sick_agent=None, pt_max=LITERAL_WEEK)
+    (out_dir / "roster.json").write_text(json.dumps(_dump(_solve(world, R)), indent=2), encoding="utf-8")
 
 
 def violating_examples(world: World, setting) -> dict:

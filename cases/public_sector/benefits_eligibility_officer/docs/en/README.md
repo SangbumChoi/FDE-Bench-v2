@@ -205,6 +205,15 @@ within the cap from medium, on the declarations as filed. It misses the uprating
 disability supplement, the circular and the reported changes, and counts child support in easy too. Both are valid
 in every setting; normalized quality is (baseline − objective) / (baseline − reference).
 
+**Literal solution** (`literal_solution`: the request done as written, the same in every setting): every
+application decided, renewals re-assessed like new ones ("who qualifies and how much"), with the figures the
+agent's view gives: last year's table (no uprating stated) plus rent up to the housing maximum, plus the circular's
+heating supplement from 1 October, minus every income of the members at the address with each reported change
+applied at its latest value; the leaflet's hints that carry no figure (an earnings disregard, a disability extra, a
+residence wait, a savings test) are not applied and the letters' requests are not granted. It breaks
+`auto_approve_renewals` (109 renewals) and `residency_requirement` (10–23 recent arrivals approved) everywhere, and
+the asset limit and the cap from medium, so it is invalid in all 9 public settings (46–90 wrong decisions).
+
 Otherwise exact answers with one fact wrong, at hard/s2 (stored seed; easy/s2 and medium/s2 where noted):
 
 | Submission | Objective | Normalized quality |

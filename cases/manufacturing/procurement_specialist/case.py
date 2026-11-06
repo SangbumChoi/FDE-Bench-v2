@@ -2392,6 +2392,21 @@ def robust_solution(world: World, out_dir: Path, tier: str, candidates: dict) ->
     _write(_plan_anyway(_View(world, setting, ROBUST_READING, holds=tuple(holds[1:]))), out_dir)
 
 
+# The request at face value: the data read as robust_solution reads it (the flash change in the BOM, the delivery
+# history, the allocation notice, the price breaks in the quotes and the holiday weeks all used, since the request
+# hands them over; a missing piece priced at a multiple of its cost), and none of the client's own facts: no safety
+# stock, no dual-sourcing habit, no quality hold, the dollar at the rate the quotes were drawn at (1,380).
+LITERAL_READING = ROBUST_READING | {"single_source"}
+LITERAL_PARAMS = {"usd_krw": 1380, "safety_weeks": 0, "max_share": 100, "quality_hold": "S07-W0"}
+
+
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request done as written: the reference planner on LITERAL_READING with no safety stock, single sourcing
+    allowed and no supplier on hold (the same plan in every setting)."""
+    setting = Setting("easy", 0, {**LITERAL_PARAMS, **derive_params(LITERAL_PARAMS, "easy")})
+    _write(_plan_anyway(_View(world, setting, LITERAL_READING)), out_dir)
+
+
 def best_known_solution(world: World, out_dir: Path, setting: Setting) -> None:
     """The best plan known: the wide local search (new lines, transfers, longer moves) from each of the three
     cheapest planner variants and from the reference, the cheapest by the planner's own view (estimated lateness,

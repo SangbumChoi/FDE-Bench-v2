@@ -190,6 +190,14 @@ reach. On the four world seeds it reaches 1.03–1.30 of the reference. A perfec
 an upper bound no plan can reach. Under the default quality cap of 1.5 a forecast LP earns about 0.69–0.86 of
 the quality credit.
 
+### Literal solution
+
+`literal_solution` is the request done as written from the files on hand: the reference heuristic on the spec
+sheet's manufacturer window (5–95%), its 84.6% round trip split evenly (92% each way), the agreement's 30 MW export
+and import at any hour, back at the 50% the week starts at, with no reserve, no degradation charge and no notice.
+It is the same plan in every setting and is invalid in all 9 public settings (quality 0): the state of charge leaves
+the warranty window (under 5–95% the 95/89 efficiency pushes it past 95%) and it sells above the amended export cap.
+
 ## Notes
 
 - Synthetic or unverified. Prices, solar output, the export amendments, the efficiencies, degradation costs, import

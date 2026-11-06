@@ -184,6 +184,14 @@ unnecessary, though it still beats the till fit by 3–5% (the censored days onl
 till sale's median sits close to demand's). Bending the floor pays 7–11% with a floor of 6 or 8 and nothing with 4
 under weight 3, where the quantile forecast already clears it.
 
+### Literal solution
+
+`literal_solution` is the request done as written: the reference's model fitted to till sales net of returns, with
+the promotion plan at the lift past promotions show and the holidays on file (none in the horizon), I07's history as
+recorded, the median forecast and no display floor; S4's Sundays come out at 0 because its history has no Sunday
+rows. It is the same forecast in every setting and is invalid in all 9 public settings (quality 0): 128–136
+core-item forecasts fall below the client's display floor.
+
 ## Notes
 
 - Synthetic. All volumes, profiles, elasticities, holiday effects and stockout rates are invented; nothing is

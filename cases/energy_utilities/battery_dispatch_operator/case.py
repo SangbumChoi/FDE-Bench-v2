@@ -606,6 +606,22 @@ def baseline_solution(world: World, out_dir: Path, setting: Setting) -> None:
     _write_plan(world, out_dir, [0.0] * n, [0.0] * n)
 
 
+# The request at face value, from the files on hand: the spec sheet's manufacturer SOC window (5-95%) and its 84.6%
+# round trip split evenly (92% each way), the connection agreement's 30 MW export and import at any hour, back at the
+# 50% the week starts at, no reserve, no degradation charge and no notice the data does not hold.
+LITERAL_RULES = Rules(soc_min=0.05 * CAPACITY, soc_max=0.95 * CAPACITY, eta_c=0.92, eta_d=0.92,
+                      soc_end=0.50 * CAPACITY, export_cap=AGREEMENT_EXPORT, works_end=None, import_window=None,
+                      reserve=None, res_from=0, res_to=0, degradation=0.0, dso_day=None, dso_mw=0.0,
+                      outage_day=None)
+
+
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request done as written: the reference's dispatch heuristic on LITERAL_RULES (the same plan in every
+    setting)."""
+    ch, dis = _heuristic(world.week, LITERAL_RULES)
+    _write_plan(world, out_dir, ch, dis)
+
+
 def violating_examples(world: World, setting: Setting) -> dict:
     """One plan per rule of the setting that breaks exactly that rule (for the validator)."""
     r = rules_of(setting)

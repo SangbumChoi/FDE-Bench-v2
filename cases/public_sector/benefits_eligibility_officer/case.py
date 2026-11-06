@@ -967,6 +967,40 @@ def baseline_solution(world: World, out_dir: Path, setting: Setting) -> None:
     _write(out_dir, rows)
 
 
+# the request read at face value: the figures the agent's view gives, and nothing the leaflet only hints at
+LITERAL_RULES = Rules(tier="easy", uprating=0, earned_flat=0, earned_ignored=0, asset_limit=None, disability=0,
+                      child_support=True, cap=None, residency_days=0, circular=True, changes=False)
+
+
+def _as_reported(h: Household) -> Household:
+    """The household with every change it reported applied, the latest report of each item winning."""
+    members, rent = h.members, h.rent
+    for c in sorted(h.changes, key=lambda c: (c.reported, c.effective)):
+        if c.item == "rent":
+            rent = c.value
+        else:
+            members = [replace(m, income={**m.income, "earned": c.value}) if m.no == c.member_no else m
+                       for m in members]
+    return replace(h, members=members, rent=rent, changes=[])
+
+
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request at face value: decide every one of the ~300 applications, renewals included ("who qualifies and
+    how much"), with the figures the agent's view gives. Need = last year's table (the only amounts attached; the
+    leaflet says they are published every year but gives no uprating) for the members at the address, plus rent up
+    to the table's housing maximum, plus the finance circular's heating supplement for applications dated from
+    1 October; minus every income of the members at the address, the reported changes applied (their latest
+    values). The leaflet's hints without a figure (some earnings not counted, a disability extra, a residence wait,
+    a savings test) cannot be applied, so they are not; the letters ask for exceptions and are not granted. An
+    approved renewal is coded RENEWAL, a new one APPROVED, a refusal DENY_INCOME. It re-assesses renewals and
+    approves recent arrivals, so it is invalid in every setting."""
+    r, rows = LITERAL_RULES, []
+    for h in world.households:
+        elig, amt, code = assess(_as_reported(h), r)
+        rows.append([h.id, "yes" if elig else "no", amt, code])
+    _write(out_dir, rows)
+
+
 def violating_examples(world: World, setting: Setting) -> dict:
     """One deliverable per rule of the setting that breaks exactly that rule (for the validator)."""
     r = rules_of(setting)

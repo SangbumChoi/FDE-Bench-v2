@@ -467,7 +467,7 @@ class Fit:
     ratios: dict[tuple[str, str], list[float]]   # sorted actual / fitted on usable days of the last 26 weeks
 
 
-def _fit(world: World, demand: bool) -> Fit:
+def _fit(world: World, demand: bool, unit_change: bool = True) -> Fit:
     """A weekday-level model per store x item from the history only, cached per world and target.
 
     demand=True (hard): stockout days are censored and left out, return rows are not demand. demand=False
@@ -475,9 +475,9 @@ def _fit(world: World, demand: bool) -> Fit:
     against the day's sales. Both: I07's history before the unit change is divided by 6, promotion and holiday
     days are left out of the level and the weekday profile, and their lifts are measured per category (per
     discount for promotions) against the local level. Deliberately plain (a recent mean level, ratio lifts) so a
-    careful agent can beat it.
+    careful agent can beat it. unit_change=False takes I07's history as recorded (the literal solution).
     """
-    key = ("fit", demand)
+    key = ("fit", demand, unit_change)
     if key in world.cache:
         return world.cache[key]
     n = (HORIZON_START - HIST_START).days
@@ -491,7 +491,7 @@ def _fit(world: World, demand: bool) -> Fit:
         t = (dt.date.fromisoformat(d) - HIST_START).days
         k = (s, i)
         promo[k][t] = p
-        x = u / PACK if i == "I07" and days[t] < UNIT_CHANGE else u
+        x = u / PACK if unit_change and i == UNIT_CHANGE_ITEM and days[t] < UNIT_CHANGE else u
         if u < 0:
             if not demand:
                 sales[k][t] += x      # the till report nets a return against the day's sales
@@ -568,13 +568,13 @@ def _quantile(sorted_values: list[float], q: float) -> float:
     return sorted_values[lo] + (sorted_values[hi] - sorted_values[lo]) * (pos - lo)
 
 
-def _forecast(world: World, rules: Rules) -> dict[tuple[str, str, str], float]:
+def _forecast(world: World, rules: Rules, fit: Fit | None = None) -> dict[tuple[str, str, str], float]:
     """The reference: the fitted level x season x weekday, the promotions this tier forecasts (the category's lift
     at the discount, the flyer's multiple of its extra sales, none for the cancelled category), the category's
     holiday lift on the holiday, then the short_weight / (1 + short_weight) quantile of the store x item's ratio of
     actual to fitted value (the median at weight 1: a unit short then costs as much as a unit over); S4's Sundays
     at 0 and the floor on core items."""
-    fit = _fit(world, rules.demand)
+    fit = fit or _fit(world, rules.demand)
     result: dict[tuple[str, str, str], float] = {}
     for day in world.horizon:
         ds = day.isoformat()
@@ -603,6 +603,19 @@ def _write(out_dir: Path, fc: dict[tuple[str, str, str], float]) -> None:
 
 def reference_solution(world: World, out_dir: Path, setting: Setting) -> None:
     _write(out_dir, _forecast(world, rules_of(setting)))
+
+
+# The request at face value: "how much each store will sell" read as till sales net of returns, with the promotion
+# plan attached (at the lift past promotions show) and the holidays on file (none falls in the horizon); I07's history
+# taken as recorded, the median forecast (no error weight known), and no display floor (S4's Sundays come out at 0
+# because its history has no Sunday rows). No one-off holiday, flyer or cancellation, which only the client knows.
+LITERAL_RULES = Rules(tier="medium", floor=0.0, holiday=None, promos=True, uplift=1.0, cancelled=None,
+                      short_weight=1.0, demand=False)
+
+
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request done as written: the reference's model on LITERAL_RULES (the same forecast in every setting)."""
+    _write(out_dir, _forecast(world, LITERAL_RULES, _fit(world, demand=False, unit_change=False)))
 
 
 def _baseline(world: World, rules: Rules) -> dict[tuple[str, str, str], float]:

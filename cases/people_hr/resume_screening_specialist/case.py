@@ -1221,6 +1221,50 @@ def baseline_solution(world: World, out_dir: Path, setting) -> None:
     _write(_solve(world, _years_score, rules_for(setting)), out_dir)
 
 
+# The request at face value: ten per role (nothing says how many), the job description's first two skills as the core
+# ones, "several years" of backend work as three years and some analytics or security experience as a year, a
+# recognised security certificate not expired at the end of October 2026 for R3, every application counting whatever
+# its date or work authorization (nothing on hand says otherwise), referrals like everyone else, and the past
+# hires' scores as the hiring manager's note calls them, the best signal, without the protected attributes.
+LITERAL_K = 10
+LITERAL_MIN_MONTHS = {"R1": 36, "R2": 12, "R3": 12}
+LITERAL_CERT_DATE = "2026-10-31"
+
+
+def _literal_qualified(c: Candidate, role: str) -> bool:
+    spec = ROLES[role]
+    return (role in c.applied and all(s in c.skills for s in spec["must"])
+            and c.months_in(spec["family"]) >= LITERAL_MIN_MONTHS[role]
+            and (not spec["req_cert"] or bool(c.valid_certs(LITERAL_CERT_DATE) & set(spec["req_cert"]))))
+
+
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request done as written: the reference's face-value regression on the past hires (easy and medium's
+    model) ranks the applicants who pass the literal screen (_literal_qualified), greedily, one role per candidate,
+    LITERAL_K per role (the same shortlist in every setting)."""
+    model = _learned_model(world, debias=False)
+
+    def value(c: Candidate, role: str) -> float:
+        cap, weights = model[role]
+        f = _job_features(role, c.months_in(ROLES[role]["family"]) / 12, c.skills, c.valid_certs(LITERAL_CERT_DATE),
+                          c.edu, cap)
+        return sum(w * x for w, x in zip(weights, f))
+
+    pairs = sorted(((value(c, r), c.id, r) for c in world.candidates for r in ROLES if _literal_qualified(c, r)),
+                   key=lambda x: (-x[0], x[1], x[2]))
+    picks: dict[str, list[str]] = {r: [] for r in ROLES}
+    used: set[str] = set()
+    for _, cid, r in pairs:
+        if cid not in used and len(picks[r]) < LITERAL_K:
+            picks[r].append(cid)
+            used.add(cid)
+    rows = []
+    for r in ROLES:
+        ordered = sorted(picks[r], key=lambda cid: (-value(world.by_id[cid], r), cid))
+        rows += [(r, cid, i + 1) for i, cid in enumerate(ordered)]
+    _write(rows, out_dir)
+
+
 def violating_examples(world: World, setting) -> dict:
     """One deliverable per rule of the setting's tier that breaks exactly that rule (for the validator)."""
     R = rules_for(setting)

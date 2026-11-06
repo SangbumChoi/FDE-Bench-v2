@@ -239,6 +239,16 @@ same holds on world seeds 1, 2 and 3 for all 225 combinations each, with the bas
 5.02%, is hard with 1.5 weeks and Hanbit Electronics on hold). The validator checks the public panel on world seeds
 1–3; the audit measures 12 more combinations per tier (GT.md).
 
+### Literal solution
+
+`literal_solution` is the request done as written: the reference planner on the data read as `robust_solution`
+reads it (the flash change in the BOM, the delivery history, the allocation notice, the price breaks and the
+holiday weeks all used, since the request hands them over) and without the client's own facts: no safety stock, no
+dual-sourcing habit, no quality hold, the dollar at 1,380. It is the same plan in every setting and is invalid in
+all 9 public settings (quality 0): everywhere it single-sources a critical part (C04, or C25 in hard) and gives S04
+81% of C01; where Kowon Passive or Hanbit Electronics is on hold it also buys from them, and with Hanbit's hold in
+easy and medium (dollar at 1,450) it also goes over a monthly budget.
+
 ### How the expectation is computed (hard)
 
 Lateness is at most two weeks, so the net position of a part at the end of week w is certain except for the

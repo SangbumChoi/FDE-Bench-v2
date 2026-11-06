@@ -255,6 +255,18 @@ World seeds 1–3 (validated by default), baseline / reference per public settin
 | 2 | 382.41 / 521.75; 696.17 / 808.95; 535.61 / 667.75 | 300.78 / 411.37; 635.84 / 707.27; 490.58 / 530.24 | 300.78 / 409.30; 635.84 / 732.09; 490.58 / 533.08 |
 | 3 | 358.20 / 545.88; 600.38 / 841.71; 471.70 / 700.33 | 318.48 / 434.43; 567.24 / 744.56; 455.14 / 545.36 | 318.48 / 447.94; 567.24 / 729.26; 455.14 / 537.08 |
 
+### Literal solution
+
+`literal_solution` shortlists ten per role (nothing says how many) with the reference's face-value regression on the
+past hires (the note calls their scores the best signal; no protected attribute is used), one role per candidate,
+among the applicants with the job description's first two skills, three years of backend work (R1, "several years")
+or a year of analytics or security work (R2, R3), and for R3 a CISSP or Security+ not expired at the end of October
+2026. Every application counts whatever its date or work authorization, and referrals are treated like everyone
+else. It is the same shortlist in every setting and is invalid in all 9 public settings (quality 0): in s31 and s19
+the shortlist has the wrong size (6 and 8 per role); in s4 four candidates need visa sponsorship for R1 or R3, and
+from medium seven applied after the closing date, four qualified referrals are left out and one R3 certificate
+expires before the interview day.
+
 ## Notes
 
 - Synthetic. Candidates, careers, skills, certificates, scores and the bias sizes are generated; the fit

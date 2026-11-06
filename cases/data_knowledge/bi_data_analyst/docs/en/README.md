@@ -299,6 +299,15 @@ reference's ✗ marks its one wrong answer):
 Under s23 (an April year and a 90-day window) the exact figures are those of the case without settings. Q05 and
 Q11 do not depend on the fiscal year; Q04 is the same customer under the April and the January year.
 
+### Literal solution
+
+`literal_solution` answers every question with a number, as the request asks: completed orders only, test accounts
+out, net revenue = subtotal less refunds at the order date's rate (as `compute()` does), with the natural reading of
+what the client did not say: the calendar year as the fiscal year, the stored UTC dates as days, "active" as ordered
+in the last 30 days, "pantry" as the products labelled pantry, and money to the whole won. It is the same sheet in
+every setting and is invalid in all 9 public settings (quality 0): no money figure is rounded to the client's 100,
+1,000 or 10,000 KRW. With that rule relaxed it would score 0.36–0.60 under the January year (s4) and 0 elsewhere.
+
 ## Notes
 
 - Synthetic. Prices, tax rates, FX paths, order rhythms and refund rates are invented; the shop, its customers and
