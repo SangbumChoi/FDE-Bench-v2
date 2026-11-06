@@ -4,10 +4,10 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 
 | Language | Role | README | REVIEW | Explainer |
 |---|---|---|---|---|
-| English | Hospital Appointment Scheduler | [README.md](docs/en/README.md) | [REVIEW.md](docs/en/REVIEW.md) | [explainer.html](docs/en/explainer.html) |
-| 中文 | 医院预约专员 | [README.md](docs/zh/README.md) | [REVIEW.md](docs/zh/REVIEW.md) | [explainer.html](docs/zh/explainer.html) |
-| 한국어 | 병원 진료 예약 담당자 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [explainer.html](docs/ko/explainer.html) |
-| 日本語 | 病院の外来予約担当者 | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [explainer.html](docs/ja/explainer.html) |
-| Español | Gestor de citas hospitalarias | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [explainer.html](docs/es/explainer.html) |
+| English | Hospital Appointment Scheduler | [README.md](docs/en/README.md) | [REVIEW.md](docs/en/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/healthcare/hospital_appointment_scheduler/) |
+| 中文 | 医院预约专员 | [README.md](docs/zh/README.md) | [REVIEW.md](docs/zh/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/zh/healthcare/hospital_appointment_scheduler/) |
+| 한국어 | 병원 진료 예약 담당자 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/ko/healthcare/hospital_appointment_scheduler/) |
+| 日本語 | 病院の外来予約担当者 | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/ja/healthcare/hospital_appointment_scheduler/) |
+| Español | Gestor de citas hospitalarias | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/es/healthcare/hospital_appointment_scheduler/) |
 
 - [dataset/answer/answers.csv](dataset/answer/answers.csv): the answers, one row per public setting (difficulty, seed, the drawn rule values, the reference's and the client's own way's objective, the rules and facts in force); the reference and baseline deliverables are stacked next to it in [dataset/answer/](dataset/answer/) with difficulty and seed columns

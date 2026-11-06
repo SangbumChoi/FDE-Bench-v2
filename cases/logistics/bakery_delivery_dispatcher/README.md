@@ -4,10 +4,10 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 
 | Language | Role | README | REVIEW | Explainer |
 |---|---|---|---|---|
-| English | Bakery Delivery Dispatcher | [README.md](docs/en/README.md) | [REVIEW.md](docs/en/REVIEW.md) | [explainer.html](docs/en/explainer.html) |
-| 中文 | 面包店配送调度员 | [README.md](docs/zh/README.md) | [REVIEW.md](docs/zh/REVIEW.md) | [explainer.html](docs/zh/explainer.html) |
-| 한국어 | 베이커리 배송 배차 담당자 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [explainer.html](docs/ko/explainer.html) |
-| 日本語 | ベーカリー配送の配車担当者 | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [explainer.html](docs/ja/explainer.html) |
-| Español | Coordinador de reparto de panadería | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [explainer.html](docs/es/explainer.html) |
+| English | Bakery Delivery Dispatcher | [README.md](docs/en/README.md) | [REVIEW.md](docs/en/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/logistics/bakery_delivery_dispatcher/) |
+| 中文 | 面包店配送调度员 | [README.md](docs/zh/README.md) | [REVIEW.md](docs/zh/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/zh/logistics/bakery_delivery_dispatcher/) |
+| 한국어 | 베이커리 배송 배차 담당자 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/ko/logistics/bakery_delivery_dispatcher/) |
+| 日本語 | ベーカリー配送の配車担当者 | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/ja/logistics/bakery_delivery_dispatcher/) |
+| Español | Coordinador de reparto de panadería | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/es/logistics/bakery_delivery_dispatcher/) |
 
 - [dataset/answer/answers.csv](dataset/answer/answers.csv): the answers, one row per public setting (difficulty, seed, the drawn rule values, the reference's and the client's own way's objective, the rules and facts in force); the reference and baseline deliverables are stacked next to it in [dataset/answer/](dataset/answer/) with difficulty and seed columns

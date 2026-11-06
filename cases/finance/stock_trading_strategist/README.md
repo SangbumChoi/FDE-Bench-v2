@@ -4,10 +4,10 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 
 | Language | Role | README | REVIEW | Explainer |
 |---|---|---|---|---|
-| English | Stock Trading Strategist | [README.md](docs/en/README.md) | [REVIEW.md](docs/en/REVIEW.md) | [explainer.html](docs/en/explainer.html) |
-| 中文 | 股票交易策略师 | [README.md](docs/zh/README.md) | [REVIEW.md](docs/zh/REVIEW.md) | [explainer.html](docs/zh/explainer.html) |
-| 한국어 | 주식 매매 전략가 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [explainer.html](docs/ko/explainer.html) |
-| 日本語 | 株式売買ストラテジスト | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [explainer.html](docs/ja/explainer.html) |
-| Español | Estratega de trading de acciones | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [explainer.html](docs/es/explainer.html) |
+| English | Stock Trading Strategist | [README.md](docs/en/README.md) | [REVIEW.md](docs/en/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/finance/stock_trading_strategist/) |
+| 中文 | 股票交易策略师 | [README.md](docs/zh/README.md) | [REVIEW.md](docs/zh/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/zh/finance/stock_trading_strategist/) |
+| 한국어 | 주식 매매 전략가 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/ko/finance/stock_trading_strategist/) |
+| 日本語 | 株式売買ストラテジスト | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/ja/finance/stock_trading_strategist/) |
+| Español | Estratega de trading de acciones | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/es/finance/stock_trading_strategist/) |
 
 - [dataset/answer/answers.csv](dataset/answer/answers.csv): the answers, one row per public setting (difficulty, seed, the drawn rule values, the reference's and the client's own way's objective, the rules and facts in force); the reference and baseline deliverables are stacked next to it in [dataset/answer/](dataset/answer/) with difficulty and seed columns

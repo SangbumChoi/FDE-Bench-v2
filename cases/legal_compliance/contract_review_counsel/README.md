@@ -4,10 +4,10 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 
 | Language | Role | README | REVIEW | Explainer |
 |---|---|---|---|---|
-| English | Contract Review Counsel | [README.md](docs/en/README.md) | [REVIEW.md](docs/en/REVIEW.md) | [explainer.html](docs/en/explainer.html) |
-| 中文 | 合同审查法律顾问 | [README.md](docs/zh/README.md) | [REVIEW.md](docs/zh/REVIEW.md) | [explainer.html](docs/zh/explainer.html) |
-| 한국어 | 계약 검토 변호사 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [explainer.html](docs/ko/explainer.html) |
-| 日本語 | 契約審査担当弁護士 | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [explainer.html](docs/ja/explainer.html) |
-| Español | Asesor jurídico de revisión de contratos | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [explainer.html](docs/es/explainer.html) |
+| English | Contract Review Counsel | [README.md](docs/en/README.md) | [REVIEW.md](docs/en/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/legal_compliance/contract_review_counsel/) |
+| 中文 | 合同审查法律顾问 | [README.md](docs/zh/README.md) | [REVIEW.md](docs/zh/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/zh/legal_compliance/contract_review_counsel/) |
+| 한국어 | 계약 검토 변호사 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/ko/legal_compliance/contract_review_counsel/) |
+| 日本語 | 契約審査担当弁護士 | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/ja/legal_compliance/contract_review_counsel/) |
+| Español | Asesor jurídico de revisión de contratos | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/es/legal_compliance/contract_review_counsel/) |
 
 - [dataset/answer/answers.csv](dataset/answer/answers.csv): the answers, one row per public setting (difficulty, seed, the drawn rule values, the reference's and the client's own way's objective, the rules and facts in force); the reference and baseline deliverables are stacked next to it in [dataset/answer/](dataset/answer/) with difficulty and seed columns

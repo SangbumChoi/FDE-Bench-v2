@@ -28,3 +28,7 @@ fdebench2 = ["prompts/agent/*.yaml", "prompts/*.yaml", "prompts/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.fdebench2]
+# The published explainer site (GitHub Pages, fdebench2 build-site): the case index READMEs link each language's page here.
+site_url = "https://sangbumchoi.github.io/FDE-Bench-v2/"

@@ -4,10 +4,10 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 
 | Language | Role | README | REVIEW | Explainer |
 |---|---|---|---|---|
-| English | Call-Center Workforce Planner | [README.md](docs/en/README.md) | [REVIEW.md](docs/en/REVIEW.md) | [explainer.html](docs/en/explainer.html) |
-| 中文 | 呼叫中心人力排班规划师 | [README.md](docs/zh/README.md) | [REVIEW.md](docs/zh/REVIEW.md) | [explainer.html](docs/zh/explainer.html) |
-| 한국어 | 콜센터 인력 운영 플래너 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [explainer.html](docs/ko/explainer.html) |
-| 日本語 | コールセンター要員計画担当 | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [explainer.html](docs/ja/explainer.html) |
-| Español | Planificador de personal del centro de llamadas | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [explainer.html](docs/es/explainer.html) |
+| English | Call-Center Workforce Planner | [README.md](docs/en/README.md) | [REVIEW.md](docs/en/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/customer_service/callcenter_workforce_planner/) |
+| 中文 | 呼叫中心人力排班规划师 | [README.md](docs/zh/README.md) | [REVIEW.md](docs/zh/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/zh/customer_service/callcenter_workforce_planner/) |
+| 한국어 | 콜센터 인력 운영 플래너 | [README.md](docs/ko/README.md) | [REVIEW.md](docs/ko/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/ko/customer_service/callcenter_workforce_planner/) |
+| 日本語 | コールセンター要員計画担当 | [README.md](docs/ja/README.md) | [REVIEW.md](docs/ja/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/ja/customer_service/callcenter_workforce_planner/) |
+| Español | Planificador de personal del centro de llamadas | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/es/customer_service/callcenter_workforce_planner/) |
 
 - [dataset/answer/answers.csv](dataset/answer/answers.csv): the answers, one row per public setting (difficulty, seed, the drawn rule values, the reference's and the client's own way's objective, the rules and facts in force); the reference and baseline deliverables are stacked next to it in [dataset/answer/](dataset/answer/) with difficulty and seed columns

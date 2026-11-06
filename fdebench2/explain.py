@@ -622,6 +622,18 @@ def _answer_index(root: Path, meta: dict) -> list[str]:
             "difficulty and seed columns"]
 
 
+def site_url(start: Path) -> str | None:
+    """The published site's address, `[tool.fdebench2] site_url` in the repository's pyproject.toml (found by
+    walking up from `start`); None when there is none, and links then go to the stored pages."""
+    import tomllib
+    for folder in [Path(start).resolve(), *Path(start).resolve().parents]:
+        if (folder / "pyproject.toml").is_file():
+            conf = tomllib.loads((folder / "pyproject.toml").read_text(encoding="utf-8"))
+            url = conf.get("tool", {}).get("fdebench2", {}).get("site_url")
+            return url.rstrip("/") + "/" if url else None
+    return None
+
+
 def build_case_readme(case_root: Path) -> str:
     """The case's README.md: a generated index of its documents, so the case folder shows something on GitHub. The
     role and id, one row per language (the role in that language, its README, REVIEW when the case has one, and
@@ -636,9 +648,16 @@ def build_case_readme(case_root: Path) -> str:
     def cell(lang: str, name: str) -> str:
         return f"[{name}]({doc_path(lang, name)})" if (root / doc_path(lang, name)).is_file() else "–"
 
+    site, cid = site_url(root), f"{root.parent.name}/{root.name}"
+
+    def page_link(lang: str) -> str:      # the published page when the repository has a site, else the stored file
+        if site:
+            return f"[web page]({site}{'' if lang == 'en' else lang + '/'}{cid}/)"
+        return f"[explainer.html]({page_name(lang)})"
+
     head = ["Language", "Role", "README", *(["REVIEW"] if review else []), "Explainer"]
     rows = [[LANG_NAMES[lang], str(case_texts(root, lang).get("role") or role), cell(lang, "README.md"),
-             *([cell(lang, "REVIEW.md")] if review else []), f"[explainer.html]({page_name(lang)})"]
+             *([cell(lang, "REVIEW.md")] if review else []), page_link(lang)]
             for lang in README_LANGS]
     table = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     table += ["| " + " | ".join(c.replace("|", "\\|") for c in r) + " |" for r in rows]
