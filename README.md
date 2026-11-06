@@ -8,7 +8,45 @@ OpenAI-compatible protocol, and vendor harnesses (Claude Code, Codex, Gemini CLI
 shared MCP client channel. Self-contained: no dependency on any other benchmark's code or data.
 
 Design, scoring and status: [DESIGN.md](DESIGN.md). Direction, related work and critique:
-[docs/DIRECTION.md](docs/DIRECTION.md).
+[docs/DIRECTION.md](docs/DIRECTION.md). To add a case, a translation or a review: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## What is different here
+
+Among the benchmarks compared below, only FDE-Bench v2 does the following (each point is checked by code in this
+repository):
+
+- **One world, counterfactual settings.** Each case has one dataset and one request. Difficulty tier × rule seed
+  draws the client's rules and parameters, and the agent's view is byte-identical in every setting
+  (`validate-case` checks it). The score depends on the client's facts; a private rule seed has an answer stored
+  nowhere.
+- **Five natively authored languages on two axes:** the customer's language (request, data labels, file names,
+  the client's answers) and the agent's instruction language, each zh / en / ko / ja / es.
+- **A ground truth audit per fact** (`audit-case`): every client fact must bite, shortcuts must be closed, the
+  value of asking is measured, and the reference is placed against the best known solution or a bound. Every case's
+  literal solution (the request done as written) must score ≤ 0.2.
+- **A revealed → learned → enforced funnel** per fact: did the client say it, did the agent ask for it, does the
+  deliverable apply it.
+- **Rule classes, company policies and an exception process:** physical rules never bend; others bend only
+  through the policy's exception process, an approval covers one named rule, and a run can be re-scored under
+  other policies without re-running.
+- **Dated events and pressure inside the work** (regulator notices, absences, VIP notes, an insider tip),
+  scored as rule violations; **program deliverables** are run day by day on a hidden, dated period.
+
+| | FDE-Bench v2 | τ-bench | τ^τ-Bench | Baidu FDE-Bench | FDE-Gym |
+|---|---|---|---|---|---|
+| Deliverable | Files, or a program run on hidden inputs | – | A customer-service agent, scored on held-out simulated users | Solutions to 49 real customer projects (optimization, ML) | A delivery in a copy of the customer's production system, replayed on held-out traffic |
+| Hidden client facts | Simulated client answers from hidden requirements; per-fact targets | – | Client with hidden requirements (fixed fact IDs) | Revealed by a simulated customer | 130+ scripted stakeholders; briefs at four levels |
+| Counterfactual settings on one fixed view | Tier × rule seed, private seeds | – | – | No (fixed data, a stated limit) | Fixed tasks plus held-out variants |
+| Languages | 5, customer × agent | – | – | – | 1 |
+| Company policies, exception process | 4 policies; one approval per named rule | – | – | – | – |
+| Ground truth audit / admission anchors | Per-fact audit (3 cases); literal ≤ 0.2 and scale ≥ 5% for all | – | – | – | Reference ≥ 0.95, do-nothing 0, literal ≤ 0.2, shortcuts ≤ 0.8 |
+| Fact funnel revealed → learned → enforced | Per fact, in the report | – | – | – (notes agents asking about a rule, then not enforcing it) | – (reports key facts obtained against uplift) |
+| Harness comparison | Reference loop + 4 vendor CLIs on one MCP client channel | – | Claude Code, Codex, Kimi Code, OpenCode | – | 13 configurations |
+| Scoring | Validity gate; quality from baseline 0 to reference 1, above 1 counts; Ask-F1; pass^k; policy-weighted | – | Built agent on held-out users vs an oracle reference (one trial, no CIs) | Quality vs accepted solution, DSR, pass^3, Ask-F1, bootstrap CIs | Normalized uplift, ≤ 0 on an incident, minus a hidden contact cost |
+
+"–": not stated in [docs/DIRECTION.md](docs/DIRECTION.md) §2, the source for the other benchmarks; not a claim
+that the feature is absent. τ-bench is used here for its pass^k estimator. No live campaign has run on v2 yet, so
+the funnel and harness comparison have no numbers so far.
 
 **Browse the cases:** https://sangbumchoi.github.io/FDE-Bench-v2/ — one page per case (request, settings,
 rules, hidden requirements, targets, stored data and answers, review findings), rebuilt from

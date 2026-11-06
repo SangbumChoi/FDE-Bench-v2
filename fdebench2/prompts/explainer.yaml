@@ -88,6 +88,17 @@ en:
   site_catalog: Catalog
   site_source: Source on GitHub
   site_english_only: (English)
+  diff_title: What is different
+  diff_body: <ul><li><strong>One dataset, several right answers.</strong> The client's hidden rules change from version
+    to version while the AI gets exactly the same files, so the score depends on finding out this client's facts.</li><li><strong>Five
+    languages written natively</strong>, for the client and, separately, for the AI's instructions.</li><li><strong>Every
+    client fact is checked to matter.</strong> Misreading it costs score, shortcuts are closed, and doing the request
+    word for word scores at most 0.2.</li><li><strong>Each fact is followed</strong> from what the client said, to what
+    the AI found out, to what the deliverable does.</li><li><strong>Like real work:</strong> company policies with an
+    exception process, dated events and pressure during the job, and programs that run day by day on days the AI
+    never saw.</li></ul>
+  diff_more: The full comparison with other benchmarks
+  diff_heading: What is different here
   settings_value: '{tiers} difficulties × {seeds} published versions (unpublished versions are used for evaluation)'
   settings_intro: The AI sees the same request and data in every version. The <strong>difficulty</strong> decides which client
     rules apply; the <strong>rule seed</strong> picks the exact values of those rules (a threshold, a unit, a date) from the
@@ -253,6 +264,15 @@ ko:
   site_catalog: 카탈로그
   site_source: GitHub 소스
   site_english_only: (영문)
+  diff_title: 무엇이 다른가
+  diff_body: <ul><li><strong>데이터는 하나, 정답은 여럿.</strong> 버전마다 고객의 숨은 규칙이 바뀌지만 AI가 받는 파일은 똑같습니다.
+    그래서 점수는 이 고객의 사실을 알아내는지에 달려 있습니다.</li><li><strong>직접 작성한 다섯 언어.</strong> 고객의 언어와 AI 지시문의
+    언어를 따로 고릅니다.</li><li><strong>고객의 사실은 모두 결과를 바꾸는지 검사합니다.</strong> 잘못 읽으면 점수가 깎이고, 지름길은
+    막혀 있으며, 요청을 글자 그대로 수행하면 많아야 0.2점입니다.</li><li><strong>사실 하나하나를 추적합니다.</strong> 고객이 말했는지,
+    AI가 알아냈는지, 산출물이 지키는지.</li><li><strong>실제 업무처럼:</strong> 예외 절차가 있는 회사 정책, 작업 중에 오는 날짜가 있는
+    이벤트와 압력, AI가 본 적 없는 날들에 하루씩 실행되는 프로그램.</li></ul>
+  diff_more: 다른 벤치마크와의 전체 비교
+  diff_heading: 무엇이 다른가
   settings_value: 난이도 {tiers}단계 × 공개 버전 {seeds}개 (평가에는 공개하지 않은 버전을 씀)
   settings_intro: AI는 모든 버전에서 같은 요청과 데이터를 봅니다. <strong>난이도</strong>는 어떤 고객 규칙이 적용되는지를 정하고, <strong>규칙 시드</strong>는 그 규칙의 구체적인
     값(기준치, 단위, 날짜 등)을 아래 후보에서 고릅니다. 난이도별 점수는 여러 규칙 시드의 평균입니다.
@@ -405,6 +425,10 @@ ja:
   site_catalog: カタログ
   site_source: GitHub のソース
   site_english_only: （英語）
+  diff_title: ほかと何が違うか
+  diff_body: <ul><li><strong>データは一つ、正解はいくつも。</strong>バージョンごとに顧客の隠れたルールが変わりますが、AIが受け取るファイルはまったく同じです。そのため点数は、この顧客の事実を聞き出せるかで決まります。</li><li><strong>ネイティブに書いた五つの言語。</strong>顧客の言語とAIへの指示の言語を別々に選べます。</li><li><strong>顧客の事実はどれも結果を左右するか確かめています。</strong>読み違えると点数が下がり、近道は塞がれ、依頼を文字どおりに実行しても0.2点までです。</li><li><strong>事実を一つずつ追跡します。</strong>顧客が言ったか、AIが把握したか、成果物が守っているか。</li><li><strong>実際の仕事のように：</strong>例外の手続きがある会社方針、作業中に届く日付つきのイベントと圧力、AIが見たことのない日々で一日ずつ実行されるプログラム。</li></ul>
+  diff_more: ほかのベンチマークとの比較の全体
+  diff_heading: ほかと何が違うか
   settings_value: 難易度 {tiers}段階 × 公開バージョン {seeds}個（評価には非公開のバージョンを使う）
   settings_intro: AIはどのバージョンでも同じ依頼とデータを見ます。<strong>難易度</strong>はどの顧客ルールが適用されるかを決め、<strong>ルールシード</strong>はそのルールの具体的な値（基準値、単位、日付など）を下の候補から選びます。難易度ごとのスコアは複数のルールシードの平均です。
   param_candidates: パラメータ候補
@@ -552,6 +576,10 @@ zh:
   site_catalog: 目录
   site_source: GitHub 源码
   site_english_only: （英文）
+  diff_title: 有何不同
+  diff_body: <ul><li><strong>一份数据，多个正确答案。</strong>每个版本中客户的隐藏规则都不同，而 AI 拿到的文件完全相同，所以得分取决于能否问出这位客户的事实。</li><li><strong>五种原生撰写的语言。</strong>客户的语言和 AI 指令的语言分别选择。</li><li><strong>每条客户事实都经过检验，确认它会影响结果。</strong>理解错就会丢分，捷径已被堵住，照需求字面去做最多得 0.2 分。</li><li><strong>逐条追踪每个事实：</strong>客户是否说过，AI 是否问到，交付物是否执行。</li><li><strong>贴近真实工作：</strong>带例外流程的公司政策、工作中带日期的事件和压力，以及在 AI 从未见过的日子里逐日运行的程序。</li></ul>
+  diff_more: 与其他基准的完整比较
+  diff_heading: 有何不同
   settings_value: '{tiers} 个难度 × {seeds} 个公开版本（评测使用未公开的版本）'
   settings_intro: AI 在所有版本中看到的需求和数据都相同。<strong>难度</strong>决定适用哪些客户规则；<strong>规则种子</strong>从下面的候选值中选出这些规则的具体数值（门槛、单位、日期等）。每个难度的得分是多个规则种子的平均值。
   param_candidates: 参数候选值
@@ -708,6 +736,18 @@ es:
   site_catalog: Catálogo
   site_source: Código en GitHub
   site_english_only: (en inglés)
+  diff_title: Qué tiene de diferente
+  diff_body: <ul><li><strong>Un solo conjunto de datos, varias respuestas correctas.</strong> Las reglas ocultas del
+    cliente cambian de una versión a otra mientras la IA recibe exactamente los mismos archivos, así que la puntuación
+    depende de averiguar los hechos de este cliente.</li><li><strong>Cinco idiomas redactados de forma nativa</strong>,
+    para el cliente y, por separado, para las instrucciones de la IA.</li><li><strong>Se comprueba que cada hecho del
+    cliente importa.</strong> Malinterpretarlo cuesta puntos, los atajos están cerrados y hacer la solicitud al pie de la
+    letra puntúa como mucho 0,2.</li><li><strong>Cada hecho se sigue</strong> desde lo que dijo el cliente hasta lo que
+    averiguó la IA y lo que hace el entregable.</li><li><strong>Como el trabajo real:</strong> políticas de empresa con
+    un proceso de excepciones, eventos con fecha y presión durante el trabajo, y programas que se ejecutan día a día
+    sobre días que la IA nunca vio.</li></ul>
+  diff_more: La comparación completa con otros benchmarks
+  diff_heading: Qué tiene de diferente
   settings_value: '{tiers} dificultades × {seeds} versiones publicadas (la evaluación usa versiones no publicadas)'
   settings_intro: La IA ve la misma solicitud y los mismos datos en todas las versiones. La <strong>dificultad</strong> decide
     qué reglas del cliente se aplican; la <strong>semilla de reglas</strong> elige los valores concretos de esas reglas (un

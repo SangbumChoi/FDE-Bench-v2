@@ -697,8 +697,13 @@ def build_index(cases_root: Path, lang: str = "en") -> str:
         rows.append([_esc(fields.get(case.field, {}).get(lang, case.field)),
                      f'<a href="{_esc(rel)}">{_esc(own.get("role") or case.role)}</a>', f"<code>{_esc(cid)}</code>",
                      _esc(kind), _esc(settings), _esc(own.get("task_type") or meta.get("task_type", ""))])
+    # what sets the benchmark apart, linking the README's section of that name (in this language) when it exists
+    readme = "README.md" if lang == "en" else f"docs/{lang}/README.md"
+    more = (f'<p><a href="{UP}../{readme}#{_esc(heading_id(_esc(UI[lang]["diff_heading"])))}">{t("diff_more")}</a></p>'
+            if (Path(cases_root).parent / readme).is_file() else "")
     body = f"""<header>{_switcher(lang, "index.html")}<p class="eyebrow">{t("index_eyebrow")}</p><h1>{t("index_title")}</h1>
 <p class="muted">{t("index_intro", n=len(rows))}</p></header>
+<section><h2>{t("diff_title")}</h2><div class="common">{t("diff_body")}</div>{more}</section>
 <section><h2>{t("scoring_title")}</h2><div class="common">{t("common_body")}</div></section>
 <section>{_table([t("field"), t("role"), t("case_id"), t("deliverable"), t("settings"), t("task_type")], rows)}</section>"""
     return _shell(f"FDE-Bench v2 — {UI[lang]['index_title']}", body, script=False, lang=lang)

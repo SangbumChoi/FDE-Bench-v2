@@ -9,7 +9,48 @@ los proveedores (Claude Code, Codex, Gemini CLI, OpenCode), mediante un canal de
 MCP. Es autocontenido: no depende del código ni de los datos de ningún otro benchmark.
 
 Diseño, puntuación y estado: [DESIGN.md](../../DESIGN.md). Orientación, trabajos relacionados y crítica:
-[docs/DIRECTION.md](../DIRECTION.md).
+[docs/DIRECTION.md](../DIRECTION.md). Cómo aportar un caso, una traducción o una revisión:
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Qué tiene de diferente
+
+Entre los benchmarks que compara la tabla de abajo, solo FDE-Bench v2 hace lo siguiente (cada punto lo comprueba el
+código de este repositorio):
+
+- **Un solo mundo, configuraciones contrafactuales.** Cada caso tiene un conjunto de datos y una solicitud. El nivel
+  de dificultad × la semilla de reglas fija las reglas y los parámetros del cliente, y lo que ve el agente es idéntico
+  byte a byte en todas las configuraciones (lo comprueba `validate-case`). La puntuación depende de los hechos del
+  cliente; una semilla de reglas privada tiene una respuesta que no se guarda en ningún sitio.
+- **Cinco idiomas redactados de forma nativa, en dos ejes:** el idioma del cliente (solicitud, etiquetas de los datos,
+  nombres de archivo, respuestas del cliente) y el idioma de las instrucciones del agente, cada uno zh / en / ko / ja / es.
+- **Una auditoría de la respuesta correcta hecho por hecho** (`audit-case`): cada hecho del cliente tiene que pesar,
+  los atajos tienen que estar cerrados, se mide cuánto vale preguntar y la referencia se compara con la mejor solución
+  conocida o con una cota. En todos los casos, la solución literal (la solicitud hecha tal como está escrita) debe
+  puntuar ≤ 0,2.
+- **Un embudo revelado → aprendido → aplicado** por hecho: si el cliente lo dijo, si el agente lo preguntó y si el
+  entregable lo cumple.
+- **Clases de reglas, políticas de empresa y un proceso de excepciones:** las reglas físicas nunca se flexibilizan;
+  las demás solo a través del proceso de excepciones de la política, cada aprobación cubre una regla concreta, y una
+  ejecución se puede volver a puntuar con otras políticas sin repetirla.
+- **Eventos con fecha y presión dentro del trabajo** (avisos del regulador, ausencias, notas VIP, un soplo de
+  información privilegiada), puntuados como infracciones de reglas; los **entregables de programa** se ejecutan día a
+  día sobre un periodo oculto y con fechas.
+
+| | FDE-Bench v2 | τ-bench | τ^τ-Bench | Baidu FDE-Bench | FDE-Gym |
+|---|---|---|---|---|---|
+| Entregable | Archivos, o un programa ejecutado sobre entradas ocultas | – | Un agente de atención al cliente, evaluado con usuarios simulados reservados | Soluciones a 49 proyectos reales de clientes (optimización, ML) | Una entrega en una copia del sistema de producción del cliente, reproducida sobre tráfico reservado |
+| Hechos ocultos del cliente | Un cliente simulado responde desde requisitos ocultos; objetivos por hecho | – | Cliente con requisitos ocultos (IDs de hechos fijos) | Los revela un cliente simulado | Más de 130 partes interesadas con guion; encargos en cuatro niveles |
+| Configuraciones contrafactuales sobre una misma vista | Nivel × semilla de reglas, semillas privadas | – | – | No (datos fijos, un límite declarado) | Tareas fijas más variantes reservadas |
+| Idiomas | 5, cliente × agente | – | – | – | 1 |
+| Políticas de empresa, proceso de excepciones | 4 políticas; una aprobación por regla concreta | – | – | – | – |
+| Auditoría de la respuesta correcta / criterios de admisión | Auditoría por hecho (3 casos); en todos, solución literal ≤ 0,2 y escala ≥ 5 % | – | – | – | Referencia ≥ 0,95, no hacer nada 0, literal ≤ 0,2, atajos ≤ 0,8 |
+| Embudo revelado → aprendido → aplicado | Por hecho, en el informe | – | – | – (señala agentes que preguntaron por una regla y luego no la aplicaron) | – (informa de los hechos clave obtenidos frente a la mejora) |
+| Comparación de arneses | Bucle de referencia + 4 CLI de proveedores en un único canal de cliente MCP | – | Claude Code, Codex, Kimi Code, OpenCode | – | 13 configuraciones |
+| Puntuación | Validez como requisito; calidad de la línea base 0 a la referencia 1, también por encima de 1; Ask-F1; pass^k; ponderada por política | – | El agente construido con usuarios reservados frente a una referencia oráculo (un intento, sin intervalos de confianza) | Calidad frente a la solución aceptada, DSR, pass^3, Ask-F1, intervalos bootstrap | Mejora normalizada, ≤ 0 ante un incidente, menos un coste de contacto oculto |
+
+«–»: no figura en [docs/DIRECTION.md](../DIRECTION.md), §2, la fuente para los demás benchmarks; no significa que
+les falte la función. Este repositorio usa el estimador pass^k de τ-bench. v2 aún no ha ejecutado ninguna campaña
+real, así que el embudo y la comparación de arneses todavía no tienen cifras.
 
 **Explorar los casos:** https://sangbumchoi.github.io/FDE-Bench-v2/ — una página por caso (solicitud,
 configuraciones, reglas, requisitos ocultos, preguntas clave, datos y respuestas guardados, hallazgos de la

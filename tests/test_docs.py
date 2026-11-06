@@ -178,3 +178,16 @@ def test_the_cases_glob_skips_the_catalog_pages(tmp_path, capsys):
     with pytest.raises(SystemExit) as done:
         main(["validate-case", str(cases / "docs" / "ko")])
     assert done.value.code == 2 and "validate-case: no case directory given" in capsys.readouterr().err
+
+
+def test_the_home_page_links_each_readmes_what_is_different_section():
+    from fdebench2.explain import UI, build_index, heading_id
+    for lang in LANGS:
+        page = REPO / "cases" / index_name(lang)
+        assert page.read_text(encoding="utf-8") == build_index(REPO / "cases", lang)      # regenerated
+        hrefs = [h for h in HTML_LINK.findall(page.read_text(encoding="utf-8")) if "README.md#" in h]
+        assert len(hrefs) == 1 and broken(page, hrefs) == [], lang
+        path, _, frag = hrefs[0].partition("#")
+        lines = (page.parent / path).read_text(encoding="utf-8").splitlines()
+        assert "## " + UI[lang]["diff_heading"] in lines, lang
+        assert unquote(frag) in {heading_id(line[3:].strip()) for line in lines if line.startswith("## ")}, lang
