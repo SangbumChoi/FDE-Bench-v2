@@ -15,6 +15,8 @@ rules, hidden requirements, targets, stored data and answers, review findings), 
 `cases/*/*/docs/<lang>/explainer.html` by `fdebench2 build-site` and published to the `gh-pages` branch on
 every push (`.github/workflows/pages.yml`).
 
+**Leaderboard:** https://sangbumchoi.github.io/FDE-Bench-v2/leaderboard.html (from `leaderboard/*.json`). To take part, see [docs/SUBMITTING.md](docs/SUBMITTING.md).
+
 ## What is different here
 
 Among the benchmarks compared below, only FDE-Bench v2 does the following (each point is checked by code in this
@@ -39,15 +41,15 @@ repository):
 
 | | FDE-Bench v2 | τ-bench | τ^τ-Bench | Baidu FDE-Bench | FDE-Gym |
 |---|---|---|---|---|---|
-| Deliverable | Files, or a program run on hidden inputs | – | A customer-service agent, scored on held-out simulated users | Solutions to 49 real customer projects (optimization, ML) | A delivery in a copy of the customer's production system, replayed on held-out traffic |
-| Hidden client facts | Simulated client answers from hidden requirements; per-fact targets | – | Client with hidden requirements (fixed fact IDs) | Revealed by a simulated customer | 130+ scripted stakeholders; briefs at four levels |
-| Counterfactual settings on one fixed view | Tier × rule seed, private seeds | – | – | No (fixed data, a stated limit) | Fixed tasks plus held-out variants |
-| Languages | 5, customer × agent | – | – | – | 1 |
-| Company policies, exception process | 4 policies; one approval per named rule | – | – | – | – |
+| Deliverable | Files, or a program run on hidden inputs | A conversational tool-calling agent, judged in the dialogue | A customer-service agent, scored on held-out simulated users | Solutions to 49 real customer projects (optimization, ML) | A delivery in a copy of the customer's production system, replayed on held-out traffic |
+| Hidden client facts | Simulated client answers from hidden requirements; per-fact targets | A simulated user holds the task's goal and reveals it in conversation | Client with hidden requirements (fixed fact IDs) | Revealed by a simulated customer | 130+ scripted stakeholders; briefs at four levels |
+| Counterfactual settings on one fixed view | Tier × rule seed, private seeds | Fixed tasks (115 retail, 50 airline) | – | No (fixed data, a stated limit) | Fixed tasks plus held-out variants |
+| Languages | 5, customer × agent | 1 (English) | – | – | 1 |
+| Company policies, exception process | 4 policies; one approval per named rule | A domain policy document (Markdown); no exception process | – | – | – |
 | Ground truth audit / admission anchors | Per-fact audit (3 cases); literal ≤ 0.2 and scale ≥ 5% for all | – | – | – | Reference ≥ 0.95, do-nothing 0, literal ≤ 0.2, shortcuts ≤ 0.8 |
 | Fact funnel revealed → learned → enforced | Per fact, in the report | – | – | – (notes agents asking about a rule, then not enforcing it) | – (reports key facts obtained against uplift) |
-| Harness comparison | Reference loop + 4 vendor CLIs on one MCP client channel | – | Claude Code, Codex, Kimi Code, OpenCode | – | 13 configurations |
-| Scoring | Validity gate; quality from baseline 0 to reference 1, above 1 counts; Ask-F1; pass^k; policy-weighted | – | Built agent on held-out users vs an oracle reference (one trial, no CIs) | Quality vs accepted solution, DSR, pass^3, Ask-F1, bootstrap CIs | Normalized uplift, ≤ 0 on an incident, minus a hidden contact cost |
+| Harness comparison | Reference loop + 4 vendor CLIs on one MCP client channel | Models in one tool-calling loop | Claude Code, Codex, Kimi Code, OpenCode | – | 13 configurations |
+| Scoring | Validity gate; quality from baseline 0 to reference 1, above 1 counts; Ask-F1; pass^k; policy-weighted | 0/1 per task: final database state and required answers; pass^k | Built agent on held-out users vs an oracle reference (one trial, no CIs) | Quality vs accepted solution, DSR, pass^3, Ask-F1, bootstrap CIs | Normalized uplift, ≤ 0 on an incident, minus a hidden contact cost |
 
 "–": not stated in [docs/DIRECTION.md](docs/DIRECTION.md) §2, the source for the other benchmarks; not a claim
 that the feature is absent. τ-bench is used here for its pass^k estimator. No live campaign has run on v2 yet, so
@@ -82,6 +84,12 @@ cp configs/models.example.yaml configs/models.yaml   # set endpoints and API-key
 
 ```bash
 fdebench2 cases                                   # <field>/<role>, role title, task type, locales
+# Try a case without a model or API key (the request, its files, the facts only the client knows, the
+# score scale, and the literal solution, baseline and reference scored; --submission DIR scores your own):
+fdebench2 try
+fdebench2 try --case logistics/bakery_delivery_dispatcher --difficulty hard --lang ko --submission my_deliverable/
+# Package a campaign's results for the leaderboard (docs/SUBMITTING.md):
+fdebench2 submit runs/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
 fdebench2 validate-case cases/*/*/                # contract checks for every case
 fdebench2 export-dataset cases/<field>/<role>     # store a case's data and answers in dataset/
 fdebench2 audit-case cases/<field>/<role>         # measure its ground truth, stored in dataset/audit.json

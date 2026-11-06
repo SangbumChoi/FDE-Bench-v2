@@ -12,7 +12,7 @@
 | **翻訳またはネイティブレビュー** | ある言語のテキストの修正やレビュー：`locales/<lang>/`（request、requirements、targets、summary、explainer.yaml）、`docs/<lang>/README.md` と `REVIEW.md`、`fdebench2/prompts/*.yaml`、`docs/<lang>/` | 母語について PR を作り、レビューしたファイルを書く |
 | **顧客の回答のレビュー** | 監査済みケースの `CLIENT_REVIEW.md` に判定を書く：各言語の顧客が根拠にする一節は、自然な質問に正しく、過不足なく答えているか | 下の節 |
 | **バグ報告** | 誤った採点、検証の抜け、クラッシュ、壊れたページ、ルールを漏らしたり作り出したりする顧客 | *Bug report* テンプレートで issue を作る |
-| **結果の提出** | あるモデルやハーネスでこのベンチマークを実行した結果 | `docs/SUBMITTING.md`（準備中） |
+| **結果の提出** | あるモデルやハーネスでこのベンチマークを実行した結果 | [docs/SUBMITTING.md](../SUBMITTING.md) |
 
 ### 顧客の回答のレビュー
 

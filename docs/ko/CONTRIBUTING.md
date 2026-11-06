@@ -14,7 +14,7 @@
 | **번역 또는 원어민 검토** | 한 언어의 텍스트를 고치거나 검토: `locales/<lang>/`(request, requirements, targets, summary, explainer.yaml), `docs/<lang>/README.md`와 `REVIEW.md`, `fdebench2/prompts/*.yaml`, `docs/<lang>/` | 모국어에 대해 PR을 열고 어떤 파일을 검토했는지 적기 |
 | **고객 답변 검토** | 감사를 마친 케이스의 `CLIENT_REVIEW.md`에 판정 쓰기: 각 언어의 고객이 근거로 삼는 구절이 자연스러운 질문에 정확히, 더도 덜도 없이 답하는가? | 아래 절 |
 | **버그 신고** | 잘못된 채점, 검증기의 빈틈, 오류로 인한 중단, 깨진 페이지, 규칙을 흘리거나 지어내는 고객 | *Bug report* 템플릿으로 이슈 열기 |
-| **결과 제출** | 어떤 모델이나 하네스로 이 벤치마크를 실행한 결과 | `docs/SUBMITTING.md`(작성 중) |
+| **결과 제출** | 어떤 모델이나 하네스로 이 벤치마크를 실행한 결과 | [docs/SUBMITTING.md](../SUBMITTING.md) |
 
 ### 고객 답변 검토
 

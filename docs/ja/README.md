@@ -8,6 +8,8 @@
 
 **ケースを見る：** https://sangbumchoi.github.io/FDE-Bench-v2/ — ケースごとに1ページ（依頼、設定、ルール、隠れた要件、確認すべき事項、保存されたデータと正解、レビュー結果）です。`fdebench2 build-site` が `cases/*/*/docs/<lang>/explainer.html` から組み立て直し、push のたびに `gh-pages` ブランチへ公開します（`.github/workflows/pages.yml`）。
 
+**リーダーボード:** https://sangbumchoi.github.io/FDE-Bench-v2/leaderboard.html（`leaderboard/*.json` から生成）。参加方法は [docs/SUBMITTING.md](../SUBMITTING.md) を参照してください。
+
 ## ほかと何が違うか
 
 下の表で比べたベンチマークのうち、次のことをするのは FDE-Bench v2 だけです（どの項目も、このリポジトリのコードが検査しています）。
@@ -21,15 +23,15 @@
 
 | | FDE-Bench v2 | τ-bench | τ^τ-Bench | Baidu FDE-Bench | FDE-Gym |
 |---|---|---|---|---|---|
-| 成果物 | ファイル、または非公開の入力で実行するプログラム | – | 顧客対応エージェント、非公開の模擬ユーザーで採点 | 実際の顧客プロジェクト 49 件の解（最適化、機械学習） | 顧客の本番システムの複製での納品、非公開のトラフィックで再生 |
-| 隠れた顧客の事実 | 模擬顧客が隠れた要件から回答；事実ごとの確認事項 | – | 隠れた要件をもつ顧客（固定の事実 ID） | 模擬顧客が明かす | 台本付きの関係者 130 人以上；4 段階の依頼レベル |
-| 同じ画面の上の反実仮想の設定 | 段階 × ルールシード、非公開シード | – | – | なし（固定データ、自ら挙げた限界） | 固定の課題と非公開の変形 |
-| 言語 | 5、顧客 × エージェント | – | – | – | 1 |
-| 会社方針、例外の手続き | 方針 4 つ；承認一回で指定ルール一つ | – | – | – | – |
+| 成果物 | ファイル、または非公開の入力で実行するプログラム | 対話しながらツールを呼ぶエージェント、対話の中で判定 | 顧客対応エージェント、非公開の模擬ユーザーで採点 | 実際の顧客プロジェクト 49 件の解（最適化、機械学習） | 顧客の本番システムの複製での納品、非公開のトラフィックで再生 |
+| 隠れた顧客の事実 | 模擬顧客が隠れた要件から回答；事実ごとの確認事項 | シミュレーションのユーザーがタスクの目標を持ち、会話の中で伝える | 隠れた要件をもつ顧客（固定の事実 ID） | 模擬顧客が明かす | 台本付きの関係者 130 人以上；4 段階の依頼レベル |
+| 同じ画面の上の反実仮想の設定 | 段階 × ルールシード、非公開シード | 固定タスク（小売 115、航空 50） | – | なし（固定データ、自ら挙げた限界） | 固定の課題と非公開の変形 |
+| 言語 | 5、顧客 × エージェント | 1（英語） | – | – | 1 |
+| 会社方針、例外の手続き | 方針 4 つ；承認一回で指定ルール一つ | ドメインのポリシー文書（Markdown）、例外手続きなし | – | – | – |
 | 正解の監査 / 採択基準 | 事実ごとの監査（3 ケース）；全ケースで文字どおりの解 ≤ 0.2、点数の幅 ≥ 5% | – | – | – | 模範解答 ≥ 0.95、何もしなければ 0、文字どおりの解 ≤ 0.2、近道 ≤ 0.8 |
 | 事実のファネル 伝えられた → 把握した → 反映した | 事実ごとにレポートに | – | – | –（ルールを質問しながら守らなかったエージェントを指摘） | –（得た主要な事実と改善幅の関係を報告） |
-| ハーネスの比較 | 基準ループ + ベンダー CLI 4 つ、共通の MCP 顧客チャネル | – | Claude Code、Codex、Kimi Code、OpenCode | – | 13 構成 |
-| 採点 | 有効性の関門；品質は基準解 0 から模範解答 1 まで、1 を超えても加点；Ask-F1；pass^k；方針ごとの重み | – | 作ったエージェントを非公開のユーザーで採点しオラクル基準と比較（構成ごとに 1 回、信頼区間なし） | 顧客が受け入れた解に対する品質、DSR、pass^3、Ask-F1、ブートストラップ信頼区間 | 正規化した改善幅、事故なら 0 以下、隠れた連絡コストを差し引く |
+| ハーネスの比較 | 基準ループ + ベンダー CLI 4 つ、共通の MCP 顧客チャネル | 一つのツール呼び出しループでモデルを比較 | Claude Code、Codex、Kimi Code、OpenCode | – | 13 構成 |
+| 採点 | 有効性の関門；品質は基準解 0 から模範解答 1 まで、1 を超えても加点；Ask-F1；pass^k；方針ごとの重み | タスクごとに 0/1：最終的なDBの状態と必要な回答、pass^k | 作ったエージェントを非公開のユーザーで採点しオラクル基準と比較（構成ごとに 1 回、信頼区間なし） | 顧客が受け入れた解に対する品質、DSR、pass^3、Ask-F1、ブートストラップ信頼区間 | 正規化した改善幅、事故なら 0 以下、隠れた連絡コストを差し引く |
 
 「–」：ほかのベンチマークについての出典である [docs/DIRECTION.md](../DIRECTION.md) の §2 に記載がないという意味で、その機能がないという意味ではありません。このリポジトリは τ-bench の pass^k 推定法を使っています。v2 はまだ実際の評価を一度も実行していないため、ファネルとハーネスの比較にはまだ数値がありません。
 
@@ -61,6 +63,12 @@ cp configs/models.example.yaml configs/models.yaml   # set endpoints and API-key
 
 ```bash
 fdebench2 cases                                   # <field>/<role>, role title, task type, locales
+# モデルやAPIキーなしでケースを試す（依頼、渡されるファイル、顧客だけが知る事実、点数の尺度、literal 解答・
+# 従来のやり方・模範解答の点数。--submission DIR で自分の成果物も採点）:
+fdebench2 try
+fdebench2 try --case logistics/bakery_delivery_dispatcher --difficulty hard --lang ko --submission my_deliverable/
+# キャンペーンの結果をリーダーボード用の提出ファイルにまとめる（docs/SUBMITTING.md）:
+fdebench2 submit runs/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
 fdebench2 validate-case cases/*/*/                # contract checks for every case
 fdebench2 export-dataset cases/<field>/<role>     # store a case's data and answers in dataset/
 fdebench2 audit-case cases/<field>/<role>         # measure its ground truth, stored in dataset/audit.json

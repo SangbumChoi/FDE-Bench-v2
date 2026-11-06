@@ -15,6 +15,8 @@ engineering) 에이전트를 평가하는 벤치마크입니다. 오픈 모델�
 `cases/*/*/docs/<lang>/explainer.html`로부터 다시 만들고, 푸시할 때마다 `gh-pages` 브랜치에 게시됩니다
 (`.github/workflows/pages.yml`).
 
+**리더보드:** https://sangbumchoi.github.io/FDE-Bench-v2/leaderboard.html (`leaderboard/*.json`에서 생성). 참여 방법은 [docs/SUBMITTING.md](../SUBMITTING.md)를 보세요.
+
 ## 무엇이 다른가
 
 아래 표에서 비교한 벤치마크 가운데 다음을 하는 것은 FDE-Bench v2뿐입니다(각 항목은 이 저장소의 코드가 검사합니다).
@@ -35,15 +37,15 @@ engineering) 에이전트를 평가하는 벤치마크입니다. 오픈 모델�
 
 | | FDE-Bench v2 | τ-bench | τ^τ-Bench | Baidu FDE-Bench | FDE-Gym |
 |---|---|---|---|---|---|
-| 산출물 | 파일, 또는 숨겨진 입력에서 실행되는 프로그램 | – | 고객 상담 에이전트, 공개하지 않은 시뮬레이션 사용자로 채점 | 실제 고객 프로젝트 49개의 해(최적화, ML) | 고객 운영 시스템 사본에서의 납품, 공개하지 않은 트래픽에서 재생 |
-| 숨은 고객 사실 | 시뮬레이션 고객이 숨은 요구사항에서 답함; 사실마다 질문 목표 | – | 숨은 요구사항이 있는 고객(고정된 사실 ID) | 시뮬레이션 고객이 알려 줌 | 스크립트 이해관계자 130명 이상; 네 단계의 요청 수준 |
-| 고정된 화면 위의 반사실적 설정 | 단계 × 규칙 시드, 비공개 시드 | – | – | 없음(고정 데이터, 스스로 밝힌 한계) | 고정 과제와 공개하지 않은 변형 |
-| 언어 | 5개, 고객 × 에이전트 | – | – | – | 1개 |
-| 회사 정책, 예외 절차 | 정책 4개; 승인 한 번에 지정 규칙 하나 | – | – | – | – |
+| 산출물 | 파일, 또는 숨겨진 입력에서 실행되는 프로그램 | 대화하며 도구를 호출하는 에이전트, 대화 안에서 판정 | 고객 상담 에이전트, 공개하지 않은 시뮬레이션 사용자로 채점 | 실제 고객 프로젝트 49개의 해(최적화, ML) | 고객 운영 시스템 사본에서의 납품, 공개하지 않은 트래픽에서 재생 |
+| 숨은 고객 사실 | 시뮬레이션 고객이 숨은 요구사항에서 답함; 사실마다 질문 목표 | 시뮬레이션 사용자가 과제의 목표를 갖고 대화 중에 알려 줌 | 숨은 요구사항이 있는 고객(고정된 사실 ID) | 시뮬레이션 고객이 알려 줌 | 스크립트 이해관계자 130명 이상; 네 단계의 요청 수준 |
+| 고정된 화면 위의 반사실적 설정 | 단계 × 규칙 시드, 비공개 시드 | 고정 과제(리테일 115개, 항공 50개) | – | 없음(고정 데이터, 스스로 밝힌 한계) | 고정 과제와 공개하지 않은 변형 |
+| 언어 | 5개, 고객 × 에이전트 | 1개(영어) | – | – | 1개 |
+| 회사 정책, 예외 절차 | 정책 4개; 승인 한 번에 지정 규칙 하나 | 도메인 정책 문서(마크다운); 예외 절차 없음 | – | – | – |
 | 정답 감사 / 채택 기준 | 사실별 감사(케이스 3개); 모든 케이스: 문자 그대로의 해 ≤ 0.2, 점수 폭 ≥ 5% | – | – | – | 모범 답안 ≥ 0.95, 아무것도 안 하면 0, 문자 그대로의 해 ≤ 0.2, 지름길 ≤ 0.8 |
 | 사실 깔때기 드러남 → 파악 → 반영 | 사실별로 보고서에 | – | – | –(규칙을 묻고도 지키지 않은 에이전트를 지적) | –(알아낸 핵심 사실과 개선 폭의 관계를 보고) |
-| 하네스 비교 | 기준 루프 + 벤더 CLI 4개, 하나의 MCP 고객 채널 | – | Claude Code, Codex, Kimi Code, OpenCode | – | 구성 13개 |
-| 채점 | 유효성 관문; 품질은 기준선 0에서 모범 답안 1까지, 1을 넘어도 인정; Ask-F1; pass^k; 정책별 가중치 | – | 만든 에이전트를 공개하지 않은 사용자로 채점, 오라클 기준과 비교(구성마다 1회, 신뢰구간 없음) | 고객이 받아들인 해 대비 품질, DSR, pass^3, Ask-F1, 부트스트랩 신뢰구간 | 정규화한 개선 폭, 사고 시 0 이하, 숨은 연락 비용 차감 |
+| 하네스 비교 | 기준 루프 + 벤더 CLI 4개, 하나의 MCP 고객 채널 | 하나의 도구 호출 루프에서 모델 비교 | Claude Code, Codex, Kimi Code, OpenCode | – | 구성 13개 |
+| 채점 | 유효성 관문; 품질은 기준선 0에서 모범 답안 1까지, 1을 넘어도 인정; Ask-F1; pass^k; 정책별 가중치 | 과제마다 0/1: 최종 DB 상태와 필요한 답; pass^k | 만든 에이전트를 공개하지 않은 사용자로 채점, 오라클 기준과 비교(구성마다 1회, 신뢰구간 없음) | 고객이 받아들인 해 대비 품질, DSR, pass^3, Ask-F1, 부트스트랩 신뢰구간 | 정규화한 개선 폭, 사고 시 0 이하, 숨은 연락 비용 차감 |
 
 "–": 다른 벤치마크에 대한 출처인 [docs/DIRECTION.md](../DIRECTION.md) §2에 나오지 않는다는 뜻이며, 그 기능이 없다는
 뜻은 아닙니다. 이 저장소는 τ-bench의 pass^k 추정법을 씁니다. v2는 아직 실제 평가를 돌리지 않았으므로 깔때기와 하네스
@@ -77,6 +79,12 @@ cp configs/models.example.yaml configs/models.yaml   # set endpoints and API-key
 
 ```bash
 fdebench2 cases                                   # <field>/<role>, role title, task type, locales
+# 모델이나 API 키 없이 케이스 체험(요청, 받는 파일, 고객만 아는 사실, 점수 척도, literal 답안·기존 방식·
+# 모범 답안의 점수; --submission DIR로 직접 만든 결과물도 채점):
+fdebench2 try
+fdebench2 try --case logistics/bakery_delivery_dispatcher --difficulty hard --lang ko --submission my_deliverable/
+# 캠페인 결과를 리더보드 제출 파일로 묶기(docs/SUBMITTING.md):
+fdebench2 submit runs/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
 fdebench2 validate-case cases/*/*/                # contract checks for every case
 fdebench2 export-dataset cases/<field>/<role>     # store a case's data and answers in dataset/
 fdebench2 audit-case cases/<field>/<role>         # measure its ground truth, stored in dataset/audit.json

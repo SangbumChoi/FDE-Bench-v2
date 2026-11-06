@@ -59,7 +59,7 @@ def test_try_in_another_language_tier_and_private_seed(capsys):
     text = _try(capsys, "--lang", "ko", "--difficulty", "hard", "--rule-seed", "4242")
     assert "설정: hard, 규칙 시드 4242 (비공개) · 언어: ko" in text
     assert "\nAI가 받는 요청\n" in text and "\n점수 척도\n" in text and "data/가격예측.csv" in text
-    assert _row(text, "참조 풀이") == ["예", "1.000", "0.667"]
+    assert _row(text, "모범 답안 (1점 기준)") == ["예", "1.000", "0.667"]
     with pytest.raises(SystemExit):
         main(["try", "--cases", str(CASES), "--case", "no/such_case"])
 

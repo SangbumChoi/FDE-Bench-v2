@@ -14,7 +14,7 @@
 | **翻译或母语审阅** | 修改或审阅某个语言版本的文字：`locales/<lang>/`（request、requirements、targets、summary、explainer.yaml）、`docs/<lang>/README.md` 和 `REVIEW.md`、`fdebench2/prompts/*.yaml`、`docs/<lang>/` | 为你的母语提交 PR，并说明审阅了哪些文件 |
 | **客户回答审阅** | 在已审查案例的 `CLIENT_REVIEW.md` 中给出结论：每个语言版本的客户依据的段落，能否正确回答自然会问的问题，且不多答？ | 见下文 |
 | **错误报告** | 评分错误、验证器漏洞、崩溃、页面损坏、客户泄露或编造规则 | 用 *Bug report* 模板开 issue |
-| **提交结果** | 某个模型或框架（harness）在本基准上的运行结果 | `docs/SUBMITTING.md`（编写中） |
+| **提交结果** | 某个模型或框架（harness）在本基准上的运行结果 | [docs/SUBMITTING.md](../SUBMITTING.md) |
 
 ### 客户回答审阅
 

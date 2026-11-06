@@ -14,6 +14,8 @@ Claude Code、Codex、Gemini CLI、OpenCode）则通过共享的 MCP 客户沟�
 保存的数据与答案、评审发现），由 `fdebench2 build-site` 根据 `cases/*/*/docs/<lang>/explainer.html` 重新生成，并在每次推送时发布到
 `gh-pages` 分支（`.github/workflows/pages.yml`）。
 
+**排行榜：** https://sangbumchoi.github.io/FDE-Bench-v2/leaderboard.html（由 `leaderboard/*.json` 生成）。参与方式见 [docs/SUBMITTING.md](../SUBMITTING.md)。
+
 ## 有何不同
 
 在下表比较的基准中，只有 FDE-Bench v2 做到以下几点（每一点都由本仓库中的代码检查）：
@@ -32,15 +34,15 @@ Claude Code、Codex、Gemini CLI、OpenCode）则通过共享的 MCP 客户沟�
 
 | | FDE-Bench v2 | τ-bench | τ^τ-Bench | Baidu FDE-Bench | FDE-Gym |
 |---|---|---|---|---|---|
-| 交付物 | 文件，或在隐藏输入上运行的程序 | – | 客服智能体，用未公开的模拟用户评分 | 49 个真实客户项目的解（优化、机器学习） | 在客户生产系统副本中的交付，在未公开的流量上回放 |
-| 隐藏的客户事实 | 模拟客户根据隐藏需求回答；按事实设目标 | – | 带隐藏需求的客户（固定事实 ID） | 由模拟客户透露 | 130 多个脚本化利益相关方；四级需求说明 |
-| 同一固定视图上的反事实设置 | 层级 × 规则种子，非公开种子 | – | – | 无（固定数据，其自述的局限） | 固定任务加未公开的变体 |
-| 语言 | 5 种，客户 × 智能体 | – | – | – | 1 种 |
-| 公司政策、例外流程 | 4 套政策；一次批准对应一条指定规则 | – | – | – | – |
+| 交付物 | 文件，或在隐藏输入上运行的程序 | 边对话边调用工具的智能体，在对话中评判 | 客服智能体，用未公开的模拟用户评分 | 49 个真实客户项目的解（优化、机器学习） | 在客户生产系统副本中的交付，在未公开的流量上回放 |
+| 隐藏的客户事实 | 模拟客户根据隐藏需求回答；按事实设目标 | 模拟用户掌握任务目标，在对话中透露 | 带隐藏需求的客户（固定事实 ID） | 由模拟客户透露 | 130 多个脚本化利益相关方；四级需求说明 |
+| 同一固定视图上的反事实设置 | 层级 × 规则种子，非公开种子 | 固定任务（零售 115 个，航空 50 个） | – | 无（固定数据，其自述的局限） | 固定任务加未公开的变体 |
+| 语言 | 5 种，客户 × 智能体 | 1（英语） | – | – | 1 种 |
+| 公司政策、例外流程 | 4 套政策；一次批准对应一条指定规则 | 领域政策文档（Markdown）；没有例外流程 | – | – | – |
 | 标准答案审查 / 准入基准 | 逐条事实审查（3 个案例）；所有案例：字面解 ≤ 0.2，评分尺度 ≥ 5% | – | – | – | 参考答案 ≥ 0.95，什么都不做 0，字面解 ≤ 0.2，捷径 ≤ 0.8 |
 | 事实漏斗 透露 → 获知 → 落实 | 按事实，列在报告中 | – | – | –（指出智能体问过规则却未执行） | –（报告获得的关键事实与提升的关系） |
-| 框架（harness）比较 | 参考循环 + 4 个厂商 CLI，共用一个 MCP 客户通道 | – | Claude Code、Codex、Kimi Code、OpenCode | – | 13 种配置 |
-| 评分 | 有效性门槛；质量从基线 0 到参考答案 1，超过 1 也计分；Ask-F1；pass^k；按政策加权 | – | 构建的智能体在未公开用户上对比 oracle 参考（每种配置一次，无置信区间） | 相对客户认可方案的质量、DSR、pass^3、Ask-F1、bootstrap 置信区间 | 归一化提升，出事故时 ≤ 0，减去隐藏的联系成本 |
+| 框架（harness）比较 | 参考循环 + 4 个厂商 CLI，共用一个 MCP 客户通道 | 在同一个工具调用循环中比较模型 | Claude Code、Codex、Kimi Code、OpenCode | – | 13 种配置 |
+| 评分 | 有效性门槛；质量从基线 0 到参考答案 1，超过 1 也计分；Ask-F1；pass^k；按政策加权 | 每个任务 0/1：最终数据库状态和必需的回答；pass^k | 构建的智能体在未公开用户上对比 oracle 参考（每种配置一次，无置信区间） | 相对客户认可方案的质量、DSR、pass^3、Ask-F1、bootstrap 置信区间 | 归一化提升，出事故时 ≤ 0，减去隐藏的联系成本 |
 
 “–”：[docs/DIRECTION.md](../DIRECTION.md) 第 2 节（其他基准的信息来源）未提及；并不表示该基准没有这项功能。本仓库使用了
 τ-bench 的 pass^k 估计方法。v2 尚未进行真实评测，所以漏斗和框架比较目前还没有数字。
@@ -73,6 +75,12 @@ cp configs/models.example.yaml configs/models.yaml   # set endpoints and API-key
 
 ```bash
 fdebench2 cases                                   # <field>/<role>, role title, task type, locales
+# 无需模型或 API 密钥即可试用一个案例（需求、收到的文件、只有客户知道的事实、评分尺度，以及 literal 答案、
+# 客户原来的做法和参考答案的得分；用 --submission DIR 给自己的交付物评分）：
+fdebench2 try
+fdebench2 try --case logistics/bakery_delivery_dispatcher --difficulty hard --lang ko --submission my_deliverable/
+# 把一次评测活动的结果打包成排行榜提交文件（docs/SUBMITTING.md）：
+fdebench2 submit runs/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
 fdebench2 validate-case cases/*/*/                # contract checks for every case
 fdebench2 export-dataset cases/<field>/<role>     # store a case's data and answers in dataset/
 fdebench2 audit-case cases/<field>/<role>         # measure its ground truth, stored in dataset/audit.json

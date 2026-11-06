@@ -369,8 +369,8 @@ ko:
   try_rules: '규칙 {n}개: 하나라도 어기면 결과물은 무효입니다.'
   try_scale: 점수 척도
   try_scale_invalid: 규칙을 어긴 결과물은 무효이며 0점입니다.
-  try_scale_quality: 그렇지 않으면 품질을 고객 자신의 방식(베이스라인)이 0, 참조 풀이가 1인 척도에 놓습니다. 1을 넘으면 참조 풀이보다 낫습니다.
-  try_scale_final: '기본 정책({policy})에서의 최종 점수: 품질 / {cap}, 최대 1. 참조 풀이는 {ref}점이고, 만점에는 품질 {cap}이 필요합니다.'
+  try_scale_quality: 그렇지 않으면 품질을 기존 방식(엔지니어 없이 고객이 하던 방식)이 0점, 모범 답안이 1점인 척도에 놓습니다. 1을 넘으면 모범 답안보다 낫습니다.
+  try_scale_final: '기본 정책({policy})에서의 최종 점수: 품질 / {cap}, 최대 1. 모범 답안은 {ref}점이고, 만점을 받으려면 품질이 {cap} 이상이어야 합니다.'
   try_scale_offline: 질문, 소통, 효율은 오프라인 제출처럼 채점합니다(질문을 하지 않았으므로 Ask-F1은 0). 기본 정책에서는 이들의 가중치가 0입니다.
   try_scores: 이 설정에서의 점수
   try_col_deliverable: 결과물
@@ -378,15 +378,15 @@ ko:
   try_col_quality: 품질 (정규화)
   try_col_final: 최종
   try_literal: 문자 그대로의 풀이 (요청을 쓰인 그대로 수행)
-  try_baseline: 베이스라인 (고객 자신의 방식)
-  try_reference: 참조 풀이
+  try_baseline: 기존 방식 (0점 기준)
+  try_reference: 모범 답안 (1점 기준)
   try_yours: 내 제출물
   try_yours_title: '내 제출물: {path}'
   try_missing: '없는 파일: {files}. 파일을 변환할 모델이 없으므로, 폴더에 평가기가 읽는 이름 그대로 결과물이 있어야 합니다: {expected}.'
   try_fatal: '평가기가 읽지 못했습니다: {error}'
   try_violations: '어긴 규칙 ({n}개):'
   try_more: … 외 {n}개
-  try_objective: '목표값 {obj} (참조 {ref}, 베이스라인 {base}): 품질 {quality}.'
+  try_objective: '목표값 {obj} (모범 답안 {ref}, 기존 방식 {base}): 품질 {quality}.'
   try_next: '다음 단계: 직접 만든 결과물을 폴더에 넣고 `fdebench2 try --submission DIR`로 채점해 보세요. 모델을 실행하려면 `fdebench2
     run`(README), 리더보드에 결과를 제출하려면 docs/SUBMITTING.md를 보세요.'
   settings_value: 난이도 {tiers}단계 × 공개 버전 {seeds}개 (평가에는 공개하지 않은 버전을 씀)

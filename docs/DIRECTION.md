@@ -42,6 +42,13 @@ company policies and vendor harnesses on one client channel.
   - What v2 adds to that framing: counterfactual ground truths over a fixed view, rule classes with company
     policies and exception processes, dated events and pressure items, program deliverables run day by day,
     five natively authored languages on two axes, and harness comparison through one client channel.
+- **τ-bench** (Sierra, arXiv 2406.12045). A conversational agent serves a simulated user (an LLM that holds
+  the task's goal) through tools over a database, under a Markdown domain policy, in two domains: retail (115
+  tasks) and airline (50). A task scores 0 or 1 on the final database state and the required answers, and
+  pass^k asks that all k trials succeed. GPT-4o reached about 61% (retail) and about 35% (airline) at pass^1, and
+  under 25% at pass^8 in retail. Removing the policy document cost it 22 points in airline but only 4 in
+  retail. v2 keeps pass^k. It differs in what is hidden: τ-bench's policy is given to the agent, while v2's
+  client facts must be asked for, and change across settings.
 - **FDE-Gym** (DeepLethe and co-authors, arXiv 2610.22350, Oct 2026; harness Apache-2.0 at
   github.com/deeplethe/fde-gym, cases gated on Hugging Face under their own terms). 95 end-to-end delivery tasks
   from 20 scenarios in 18 sectors, adapted from real projects. The agent works in a copy of the customer's

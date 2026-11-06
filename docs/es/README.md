@@ -17,6 +17,8 @@ configuraciones, reglas, requisitos ocultos, preguntas clave, datos y respuestas
 revisión), que `fdebench2 build-site` reconstruye a partir de `cases/*/*/docs/<lang>/explainer.html` y que se
 publica en la rama `gh-pages` con cada push (`.github/workflows/pages.yml`).
 
+**Clasificación:** https://sangbumchoi.github.io/FDE-Bench-v2/leaderboard.html (desde `leaderboard/*.json`). Para participar, ver [docs/SUBMITTING.md](../SUBMITTING.md).
+
 ## Qué tiene de diferente
 
 Entre los benchmarks que compara la tabla de abajo, solo FDE-Bench v2 hace lo siguiente (cada punto lo comprueba el
@@ -43,15 +45,15 @@ código de este repositorio):
 
 | | FDE-Bench v2 | τ-bench | τ^τ-Bench | Baidu FDE-Bench | FDE-Gym |
 |---|---|---|---|---|---|
-| Entregable | Archivos, o un programa ejecutado sobre entradas ocultas | – | Un agente de atención al cliente, evaluado con usuarios simulados reservados | Soluciones a 49 proyectos reales de clientes (optimización, ML) | Una entrega en una copia del sistema de producción del cliente, reproducida sobre tráfico reservado |
-| Hechos ocultos del cliente | Un cliente simulado responde desde requisitos ocultos; objetivos por hecho | – | Cliente con requisitos ocultos (IDs de hechos fijos) | Los revela un cliente simulado | Más de 130 partes interesadas con guion; encargos en cuatro niveles |
-| Configuraciones contrafactuales sobre una misma vista | Nivel × semilla de reglas, semillas privadas | – | – | No (datos fijos, un límite declarado) | Tareas fijas más variantes reservadas |
-| Idiomas | 5, cliente × agente | – | – | – | 1 |
-| Políticas de empresa, proceso de excepciones | 4 políticas; una aprobación por regla concreta | – | – | – | – |
+| Entregable | Archivos, o un programa ejecutado sobre entradas ocultas | Un agente conversacional que llama herramientas, juzgado en el diálogo | Un agente de atención al cliente, evaluado con usuarios simulados reservados | Soluciones a 49 proyectos reales de clientes (optimización, ML) | Una entrega en una copia del sistema de producción del cliente, reproducida sobre tráfico reservado |
+| Hechos ocultos del cliente | Un cliente simulado responde desde requisitos ocultos; objetivos por hecho | Un usuario simulado tiene el objetivo de la tarea y lo revela en la conversación | Cliente con requisitos ocultos (IDs de hechos fijos) | Los revela un cliente simulado | Más de 130 partes interesadas con guion; encargos en cuatro niveles |
+| Configuraciones contrafactuales sobre una misma vista | Nivel × semilla de reglas, semillas privadas | Tareas fijas (115 de comercio, 50 de aerolínea) | – | No (datos fijos, un límite declarado) | Tareas fijas más variantes reservadas |
+| Idiomas | 5, cliente × agente | 1 (inglés) | – | – | 1 |
+| Políticas de empresa, proceso de excepciones | 4 políticas; una aprobación por regla concreta | Un documento de políticas del dominio (Markdown); sin proceso de excepciones | – | – | – |
 | Auditoría de la respuesta correcta / criterios de admisión | Auditoría por hecho (3 casos); en todos, solución literal ≤ 0,2 y escala ≥ 5 % | – | – | – | Referencia ≥ 0,95, no hacer nada 0, literal ≤ 0,2, atajos ≤ 0,8 |
 | Embudo revelado → aprendido → aplicado | Por hecho, en el informe | – | – | – (señala agentes que preguntaron por una regla y luego no la aplicaron) | – (informa de los hechos clave obtenidos frente a la mejora) |
-| Comparación de arneses | Bucle de referencia + 4 CLI de proveedores en un único canal de cliente MCP | – | Claude Code, Codex, Kimi Code, OpenCode | – | 13 configuraciones |
-| Puntuación | Validez como requisito; calidad de la línea base 0 a la referencia 1, también por encima de 1; Ask-F1; pass^k; ponderada por política | – | El agente construido con usuarios reservados frente a una referencia oráculo (un intento, sin intervalos de confianza) | Calidad frente a la solución aceptada, DSR, pass^3, Ask-F1, intervalos bootstrap | Mejora normalizada, ≤ 0 ante un incidente, menos un coste de contacto oculto |
+| Comparación de arneses | Bucle de referencia + 4 CLI de proveedores en un único canal de cliente MCP | Modelos en un mismo bucle de llamadas a herramientas | Claude Code, Codex, Kimi Code, OpenCode | – | 13 configuraciones |
+| Puntuación | Validez como requisito; calidad de la línea base 0 a la referencia 1, también por encima de 1; Ask-F1; pass^k; ponderada por política | 0/1 por tarea: estado final de la base de datos y respuestas requeridas; pass^k | El agente construido con usuarios reservados frente a una referencia oráculo (un intento, sin intervalos de confianza) | Calidad frente a la solución aceptada, DSR, pass^3, Ask-F1, intervalos bootstrap | Mejora normalizada, ≤ 0 ante un incidente, menos un coste de contacto oculto |
 
 «–»: no figura en [docs/DIRECTION.md](../DIRECTION.md), §2, la fuente para los demás benchmarks; no significa que
 les falte la función. Este repositorio usa el estimador pass^k de τ-bench. v2 aún no ha ejecutado ninguna campaña
@@ -87,6 +89,12 @@ cp configs/models.example.yaml configs/models.yaml   # set endpoints and API-key
 
 ```bash
 fdebench2 cases                                   # <field>/<role>, role title, task type, locales
+# Probar un caso sin modelo ni clave de API (el encargo, sus archivos, los hechos que solo sabe el cliente, la
+# escala, y la solución literal, la del cliente y la de referencia puntuadas; --submission DIR puntúa la tuya):
+fdebench2 try
+fdebench2 try --case logistics/bakery_delivery_dispatcher --difficulty hard --lang ko --submission my_deliverable/
+# Empaquetar los resultados de una campaña para la clasificación (docs/SUBMITTING.md):
+fdebench2 submit runs/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
 fdebench2 validate-case cases/*/*/                # contract checks for every case
 fdebench2 export-dataset cases/<field>/<role>     # store a case's data and answers in dataset/
 fdebench2 audit-case cases/<field>/<role>         # measure its ground truth, stored in dataset/audit.json

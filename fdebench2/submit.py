@@ -180,18 +180,8 @@ def _date(date: str | None) -> str:
 
 
 def load_runs(out: Path) -> list[dict[str, Any]]:
-    """Every run's result.json under a campaign's results directory: out/<agent>/<run key>/result.json, where a run
-    key holds its case id `<field>/<role>`, so a campaign's run directory is out/<agent>/<field>/<role>__c-.../
-    (report.load_results reads out/*/*/result.json only). Never a result.json an agent left in its workspace."""
-    found = load_results(out)
-    for p in sorted(Path(out).glob("*/*/*/result.json")):
-        if "__c-" in p.parent.name:                      # a run directory, not a run's workspace/ or submission/
-            r = json.loads(p.read_text(encoding="utf-8"))
-            if "ruleset" in r or "ruleset" in (r.get("spec") or {}):
-                raise ValueError(f"{p}: this run was scored under a rule set, before rule seeds replaced rule "
-                                 f"sets; run it again")
-            found.append(r)
-    return found
+    """Every run's result.json under a campaign's results directory (report.load_results)."""
+    return load_results(Path(out))
 
 
 def build_submission(results_dir: Path, *, name: str, model: str | None = None, harness: str | None = None,

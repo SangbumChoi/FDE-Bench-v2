@@ -15,7 +15,7 @@ casos nuevos en [docs/DIRECTION.md](../DIRECTION.md), §5.
 | **Una traducción o una revisión nativa** | Corregir o revisar los textos de un idioma: `locales/<lang>/` (request, requirements, targets, summary, explainer.yaml), `docs/<lang>/README.md` y `REVIEW.md`, `fdebench2/prompts/*.yaml`, `docs/<lang>/` | Una PR para el idioma que se lee de forma nativa, indicando qué archivos se revisaron |
 | **Una revisión de las respuestas del cliente** | Un veredicto en el `CLIENT_REVIEW.md` de un caso auditado: ¿el pasaje del que responde el cliente de cada idioma contesta a la pregunta natural, correctamente y sin dar de más? | La sección de abajo |
 | **Un informe de error** | Puntuación incorrecta, un hueco del validador, un fallo, una página rota, un cliente que filtra o inventa una regla | Un issue con la plantilla *Bug report* |
-| **El envío de resultados** | Ejecuciones de un modelo o un arnés sobre el benchmark | `docs/SUBMITTING.md` (en preparación) |
+| **El envío de resultados** | Ejecuciones de un modelo o un arnés sobre el benchmark | [docs/SUBMITTING.md](../SUBMITTING.md) |
 
 ### Revisión de las respuestas del cliente
 

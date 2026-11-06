@@ -15,7 +15,7 @@ catalog in [cases/README.md](cases/README.md) and the design rules for new cases
 | **A translation or native review** | Fixing or reviewing a locale's texts: `locales/<lang>/` (request, requirements, targets, summary, explainer.yaml), `docs/<lang>/README.md` and `REVIEW.md`, `fdebench2/prompts/*.yaml`, `docs/<lang>/` | A pull request for the locale you read natively; say which files you reviewed |
 | **A client-answer review** | A verdict in an audited case's `CLIENT_REVIEW.md`: does the passage each locale's client answers from answer the natural question, correctly and no more? | The section below |
 | **A bug report** | Wrong scoring, a validator gap, a crash, a broken page, a client that leaks or invents a rule | An issue with the *Bug report* template |
-| **A result submission** | Runs of a model or harness on the benchmark | `docs/SUBMITTING.md` (in preparation) |
+| **A result submission** | Runs of a model or harness on the benchmark | [docs/SUBMITTING.md](docs/SUBMITTING.md) |
 
 ### Client-answer reviews
 
