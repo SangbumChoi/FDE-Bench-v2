@@ -88,6 +88,67 @@ en:
   site_catalog: Catalog
   site_source: Source on GitHub
   site_english_only: (English)
+  site_leaderboard: Leaderboard
+  lb_title: Leaderboard
+  lb_intro: 'Agent systems (model × harness) compared on the same cases. <strong>Final</strong> is the composite score under
+    the default policy (0 when the deliverable breaks a rule), with its 95% bootstrap interval over cases. Only submissions
+    on private rule seeds with at least 3 trials are <strong>ranked</strong>; the others are shown as <strong>development</strong>.
+    The anchor rows are each case''s own literal solution, baseline and reference, not models.'
+  lb_how: 'How to take part: {link}.'
+  lb_rank: Rank
+  lb_system: System
+  lb_model: Model
+  lb_harness: Harness
+  lb_final: Final [95% CI]
+  lb_validity: Validity
+  lb_quality: Quality
+  lb_ask_f1: Ask-F1
+  lb_enforced: Enforced share
+  lb_cost: Cost/run
+  lb_status: Status
+  lb_ranked: ranked
+  lb_development: development
+  lb_anchor: anchor
+  lb_example: EXAMPLE
+  lb_cases: '{n} cases, {runs} runs'
+  lb_none: No submissions yet.
+  lb_anchor_rows: Reference rows (anchors, not models)
+  try_setting: 'Setting: {tier}, rule seed {seed} ({kind}) · language: {lang}'
+  try_public: public
+  try_private: private
+  try_no_settings: 'One fixed problem (no settings) · language: {lang}'
+  try_asked: What the AI is asked
+  try_files: 'The files it gets ({n}, in data/)'
+  try_facts_title: What only the client knows
+  try_facts: '{n} facts only the client knows. The AI starts with the request and the files only, and has to ask the client
+    for these.'
+  try_rules: '{n} rules: breaking any one of them makes the deliverable invalid.'
+  try_scale: Score scale
+  try_scale_invalid: A deliverable that breaks a rule is invalid and scores 0.
+  try_scale_quality: Otherwise its quality is placed on a scale where the client's own way (the baseline) is 0 and the
+    reference solution is 1. Above 1 beats the reference.
+  try_scale_final: 'Final score under the default policy ({policy}): quality / {cap}, at most 1. The reference earns {ref};
+    full credit needs quality {cap}.'
+  try_scale_offline: Asking, communication and efficiency are scored as in an offline submission (no questions asked, so
+    Ask-F1 is 0); the default policy gives them no weight.
+  try_scores: Scores in this setting
+  try_col_deliverable: Deliverable
+  try_col_valid: Valid
+  try_col_quality: Quality (normalized)
+  try_col_final: Final
+  try_literal: Literal solution (the request done as written)
+  try_baseline: Baseline (the client's own way)
+  try_reference: Reference solution
+  try_yours: Your submission
+  try_yours_title: 'Your submission: {path}'
+  try_missing: 'Missing files: {files}. Without a model to convert them, the folder must hold the deliverable under the
+    names the evaluator reads: {expected}.'
+  try_fatal: 'The evaluator could not read it: {error}'
+  try_violations: 'Rules broken ({n}):'
+  try_more: … and {n} more
+  try_objective: 'Objective {obj} (reference {ref}, baseline {base}): quality {quality}.'
+  try_next: 'Next: put your own deliverable in a folder and score it with `fdebench2 try --submission DIR`. To run a model
+    on the case: `fdebench2 run` (README). To submit results to the leaderboard: docs/SUBMITTING.md.'
   settings_value: '{tiers} difficulties × {seeds} published versions (unpublished versions are used for evaluation)'
   settings_intro: The AI sees the same request and data in every version. The <strong>difficulty</strong> decides which client
     rules apply; the <strong>rule seed</strong> picks the exact values of those rules (a threshold, a unit, a date) from the
@@ -253,6 +314,61 @@ ko:
   site_catalog: 카탈로그
   site_source: GitHub 소스
   site_english_only: (영문)
+  site_leaderboard: 리더보드
+  lb_title: 리더보드
+  lb_intro: '같은 케이스에서 비교한 에이전트 시스템(모델 × 하네스)입니다. <strong>최종 점수</strong>는 기본 정책에서의 종합 점수이며(결과물이
+    규칙을 어기면 0), 케이스에 대한 95% 부트스트랩 구간을 함께 표시합니다. 비공개 규칙 시드로 3회 이상 시도한 제출만 <strong>순위</strong>에
+    오르고, 나머지는 <strong>개발용</strong>으로 표시됩니다. 기준 행은 각 케이스의 문자 그대로의 풀이, 베이스라인, 참조 풀이이며 모델이 아닙니다.'
+  lb_how: '참여 방법: {link}.'
+  lb_rank: 순위
+  lb_system: 시스템
+  lb_model: 모델
+  lb_harness: 하네스
+  lb_final: 최종 점수 [95% CI]
+  lb_validity: 유효율
+  lb_quality: 품질
+  lb_ask_f1: Ask-F1
+  lb_enforced: 반영 비율
+  lb_cost: 실행당 비용
+  lb_status: 상태
+  lb_ranked: 순위 대상
+  lb_development: 개발용
+  lb_anchor: 기준
+  lb_example: 예시
+  lb_cases: '케이스 {n}개, 실행 {runs}회'
+  lb_none: 아직 제출이 없습니다.
+  lb_anchor_rows: 기준 행 (모델이 아닌 기준점)
+  try_setting: '설정: {tier}, 규칙 시드 {seed} ({kind}) · 언어: {lang}'
+  try_public: 공개
+  try_private: 비공개
+  try_no_settings: '고정된 문제 하나 (설정 없음) · 언어: {lang}'
+  try_asked: AI가 받는 요청
+  try_files: 'AI가 받는 파일 ({n}개, data/ 안)'
+  try_facts_title: 고객만 아는 것
+  try_facts: '고객만 아는 사실 {n}개. AI는 요청과 파일만 가지고 시작하며, 이 사실들은 고객에게 물어봐야 알 수 있습니다.'
+  try_rules: '규칙 {n}개: 하나라도 어기면 결과물은 무효입니다.'
+  try_scale: 점수 척도
+  try_scale_invalid: 규칙을 어긴 결과물은 무효이며 0점입니다.
+  try_scale_quality: 그렇지 않으면 품질을 고객 자신의 방식(베이스라인)이 0, 참조 풀이가 1인 척도에 놓습니다. 1을 넘으면 참조 풀이보다 낫습니다.
+  try_scale_final: '기본 정책({policy})에서의 최종 점수: 품질 / {cap}, 최대 1. 참조 풀이는 {ref}점이고, 만점에는 품질 {cap}이 필요합니다.'
+  try_scale_offline: 질문, 소통, 효율은 오프라인 제출처럼 채점합니다(질문을 하지 않았으므로 Ask-F1은 0). 기본 정책에서는 이들의 가중치가 0입니다.
+  try_scores: 이 설정에서의 점수
+  try_col_deliverable: 결과물
+  try_col_valid: 유효
+  try_col_quality: 품질 (정규화)
+  try_col_final: 최종
+  try_literal: 문자 그대로의 풀이 (요청을 쓰인 그대로 수행)
+  try_baseline: 베이스라인 (고객 자신의 방식)
+  try_reference: 참조 풀이
+  try_yours: 내 제출물
+  try_yours_title: '내 제출물: {path}'
+  try_missing: '없는 파일: {files}. 파일을 변환할 모델이 없으므로, 폴더에 평가기가 읽는 이름 그대로 결과물이 있어야 합니다: {expected}.'
+  try_fatal: '평가기가 읽지 못했습니다: {error}'
+  try_violations: '어긴 규칙 ({n}개):'
+  try_more: … 외 {n}개
+  try_objective: '목표값 {obj} (참조 {ref}, 베이스라인 {base}): 품질 {quality}.'
+  try_next: '다음 단계: 직접 만든 결과물을 폴더에 넣고 `fdebench2 try --submission DIR`로 채점해 보세요. 모델을 실행하려면 `fdebench2
+    run`(README), 리더보드에 결과를 제출하려면 docs/SUBMITTING.md를 보세요.'
   settings_value: 난이도 {tiers}단계 × 공개 버전 {seeds}개 (평가에는 공개하지 않은 버전을 씀)
   settings_intro: AI는 모든 버전에서 같은 요청과 데이터를 봅니다. <strong>난이도</strong>는 어떤 고객 규칙이 적용되는지를 정하고, <strong>규칙 시드</strong>는 그 규칙의 구체적인
     값(기준치, 단위, 날짜 등)을 아래 후보에서 고릅니다. 난이도별 점수는 여러 규칙 시드의 평균입니다.
@@ -405,6 +521,60 @@ ja:
   site_catalog: カタログ
   site_source: GitHub のソース
   site_english_only: （英語）
+  site_leaderboard: リーダーボード
+  lb_title: リーダーボード
+  lb_intro: '同じケースで比較したエージェントシステム（モデル × ハーネス）です。<strong>最終スコア</strong>は既定のポリシーでの総合スコア（成果物がルールに違反すると
+    0）で、ケースについての 95% ブートストラップ区間を添えています。非公開のルールシードで 3 回以上試行した提出だけが<strong>順位付け</strong>され、それ以外は<strong>開発用</strong>として表示されます。基準行は各ケース自身の文字どおりの解、ベースライン、参照解であり、モデルではありません。'
+  lb_how: '参加方法：{link}。'
+  lb_rank: 順位
+  lb_system: システム
+  lb_model: モデル
+  lb_harness: ハーネス
+  lb_final: 最終スコア [95% CI]
+  lb_validity: 有効率
+  lb_quality: 品質
+  lb_ask_f1: Ask-F1
+  lb_enforced: 反映率
+  lb_cost: 1 回あたりのコスト
+  lb_status: 状態
+  lb_ranked: 順位付け
+  lb_development: 開発用
+  lb_anchor: 基準
+  lb_example: 例
+  lb_cases: '{n} ケース、{runs} 回の実行'
+  lb_none: まだ提出はありません。
+  lb_anchor_rows: 基準行（モデルではなく基準点）
+  try_setting: '設定：{tier}、ルールシード {seed}（{kind}）· 言語：{lang}'
+  try_public: 公開
+  try_private: 非公開
+  try_no_settings: '固定された問題 1 つ（設定なし）· 言語：{lang}'
+  try_asked: AI への依頼
+  try_files: 'AI が受け取るファイル（{n} 個、data/ 内）'
+  try_facts_title: 顧客だけが知っていること
+  try_facts: '顧客だけが知っている事実が {n} 個あります。AI は依頼とファイルだけを持って始め、これらは顧客に質問して知る必要があります。'
+  try_rules: 'ルール {n} 個：1 つでも違反すると成果物は無効です。'
+  try_scale: スコアの尺度
+  try_scale_invalid: ルールに違反した成果物は無効で、0 点です。
+  try_scale_quality: そうでなければ、品質を顧客自身のやり方（ベースライン）が 0、参照解が 1 の尺度に置きます。1 を超えれば参照解より優れています。
+  try_scale_final: '既定のポリシー（{policy}）での最終スコア：品質 / {cap}、最大 1。参照解は {ref} 点で、満点には品質 {cap} が必要です。'
+  try_scale_offline: 質問・コミュニケーション・効率はオフライン提出と同じく採点します（質問していないので Ask-F1 は 0）。既定のポリシーではこれらの重みは 0 です。
+  try_scores: この設定でのスコア
+  try_col_deliverable: 成果物
+  try_col_valid: 有効
+  try_col_quality: 品質（正規化）
+  try_col_final: 最終
+  try_literal: 文字どおりの解（依頼を書かれたとおりに実行）
+  try_baseline: ベースライン（顧客自身のやり方）
+  try_reference: 参照解
+  try_yours: あなたの提出物
+  try_yours_title: 'あなたの提出物：{path}'
+  try_missing: '見つからないファイル：{files}。ファイルを変換するモデルがないため、フォルダーには評価器が読む名前のまま成果物を置く必要があります：{expected}。'
+  try_fatal: '評価器が読み取れませんでした：{error}'
+  try_violations: '違反したルール（{n} 件）：'
+  try_more: … ほか {n} 件
+  try_objective: '目的値 {obj}（参照 {ref}、ベースライン {base}）：品質 {quality}。'
+  try_next: '次の一歩：自分の成果物をフォルダーに入れ、`fdebench2 try --submission DIR` で採点してください。モデルを実行するには `fdebench2
+    run`（README）、リーダーボードに結果を提出するには docs/SUBMITTING.md を参照してください。'
   settings_value: 難易度 {tiers}段階 × 公開バージョン {seeds}個（評価には非公開のバージョンを使う）
   settings_intro: AIはどのバージョンでも同じ依頼とデータを見ます。<strong>難易度</strong>はどの顧客ルールが適用されるかを決め、<strong>ルールシード</strong>はそのルールの具体的な値（基準値、単位、日付など）を下の候補から選びます。難易度ごとのスコアは複数のルールシードの平均です。
   param_candidates: パラメータ候補
@@ -552,6 +722,60 @@ zh:
   site_catalog: 目录
   site_source: GitHub 源码
   site_english_only: （英文）
+  site_leaderboard: 排行榜
+  lb_title: 排行榜
+  lb_intro: '在相同案例上比较的智能体系统（模型 × 运行框架）。<strong>最终得分</strong>是默认策略下的综合得分（交付物违反规则则为 0），并附有按案例计算的 95% 自助法区间。只有使用非公开规则种子、且每个设置至少试验
+    3 次的提交才<strong>参与排名</strong>，其余显示为<strong>开发用</strong>。基准行是各案例自己的字面解、基线和参考解，不是模型。'
+  lb_how: '如何参与：{link}。'
+  lb_rank: 排名
+  lb_system: 系统
+  lb_model: 模型
+  lb_harness: 运行框架
+  lb_final: 最终得分 [95% CI]
+  lb_validity: 有效率
+  lb_quality: 质量
+  lb_ask_f1: Ask-F1
+  lb_enforced: 落实比例
+  lb_cost: 每次运行成本
+  lb_status: 状态
+  lb_ranked: 参与排名
+  lb_development: 开发用
+  lb_anchor: 基准
+  lb_example: 示例
+  lb_cases: '{n} 个案例，{runs} 次运行'
+  lb_none: 暂无提交。
+  lb_anchor_rows: 基准行（基准点，不是模型）
+  try_setting: '设置：{tier}，规则种子 {seed}（{kind}）· 语言：{lang}'
+  try_public: 公开
+  try_private: 非公开
+  try_no_settings: '一个固定的问题（无设置）· 语言：{lang}'
+  try_asked: AI 收到的请求
+  try_files: 'AI 收到的文件（{n} 个，在 data/ 中）'
+  try_facts_title: 只有客户知道的事
+  try_facts: '只有客户知道的事实共 {n} 条。AI 开始时只有请求和这些文件，必须向客户提问才能得知。'
+  try_rules: '规则 {n} 条：违反任何一条，交付物即无效。'
+  try_scale: 评分尺度
+  try_scale_invalid: 违反规则的交付物无效，得 0 分。
+  try_scale_quality: 否则，质量放在这样的尺度上：客户自己的做法（基线）为 0，参考解为 1。高于 1 即优于参考解。
+  try_scale_final: '默认策略（{policy}）下的最终得分：质量 / {cap}，最高为 1。参考解得 {ref}；满分需要质量达到 {cap}。'
+  try_scale_offline: 提问、沟通和效率按离线提交计分（没有提问，所以 Ask-F1 为 0）；默认策略中它们的权重为 0。
+  try_scores: 此设置下的得分
+  try_col_deliverable: 交付物
+  try_col_valid: 有效
+  try_col_quality: 质量（归一化）
+  try_col_final: 最终
+  try_literal: 字面解（照请求原文去做）
+  try_baseline: 基线（客户自己的做法）
+  try_reference: 参考解
+  try_yours: 你的提交
+  try_yours_title: '你的提交：{path}'
+  try_missing: '缺少文件：{files}。没有模型来转换文件，文件夹中的交付物必须使用评估器读取的文件名：{expected}。'
+  try_fatal: '评估器无法读取：{error}'
+  try_violations: '违反的规则（{n} 条）：'
+  try_more: … 另有 {n} 条
+  try_objective: '目标值 {obj}（参考 {ref}，基线 {base}）：质量 {quality}。'
+  try_next: '下一步：把你自己的交付物放进一个文件夹，用 `fdebench2 try --submission DIR` 评分。要在案例上运行模型，见 `fdebench2
+    run`（README）；要向排行榜提交结果，见 docs/SUBMITTING.md。'
   settings_value: '{tiers} 个难度 × {seeds} 个公开版本（评测使用未公开的版本）'
   settings_intro: AI 在所有版本中看到的需求和数据都相同。<strong>难度</strong>决定适用哪些客户规则；<strong>规则种子</strong>从下面的候选值中选出这些规则的具体数值（门槛、单位、日期等）。每个难度的得分是多个规则种子的平均值。
   param_candidates: 参数候选值
@@ -708,6 +932,68 @@ es:
   site_catalog: Catálogo
   site_source: Código en GitHub
   site_english_only: (en inglés)
+  site_leaderboard: Clasificación
+  lb_title: Clasificación
+  lb_intro: 'Sistemas de agentes (modelo × arnés) comparados en los mismos casos. La <strong>puntuación final</strong> es
+    la puntuación compuesta con la política por defecto (0 cuando el entregable incumple una regla), con su intervalo bootstrap
+    del 95 % sobre los casos. Solo se <strong>clasifican</strong> los envíos con semillas de reglas privadas y al menos 3
+    intentos; los demás aparecen como <strong>desarrollo</strong>. Las filas de referencia son la solución literal, la línea
+    base y la solución de referencia de cada caso, no modelos.'
+  lb_how: 'Cómo participar: {link}.'
+  lb_rank: Puesto
+  lb_system: Sistema
+  lb_model: Modelo
+  lb_harness: Arnés
+  lb_final: Final [IC 95 %]
+  lb_validity: Validez
+  lb_quality: Calidad
+  lb_ask_f1: Ask-F1
+  lb_enforced: Proporción aplicada
+  lb_cost: Coste por ejecución
+  lb_status: Estado
+  lb_ranked: clasificado
+  lb_development: desarrollo
+  lb_anchor: referencia
+  lb_example: EJEMPLO
+  lb_cases: '{n} casos, {runs} ejecuciones'
+  lb_none: Todavía no hay envíos.
+  lb_anchor_rows: Filas de referencia (puntos de anclaje, no modelos)
+  try_setting: 'Configuración: {tier}, semilla de reglas {seed} ({kind}) · idioma: {lang}'
+  try_public: pública
+  try_private: privada
+  try_no_settings: 'Un único problema fijo (sin configuraciones) · idioma: {lang}'
+  try_asked: Lo que se le pide a la IA
+  try_files: 'Los archivos que recibe ({n}, en data/)'
+  try_facts_title: Lo que solo sabe el cliente
+  try_facts: '{n} hechos que solo conoce el cliente. La IA empieza solo con la solicitud y los archivos, y tiene que preguntárselos
+    al cliente.'
+  try_rules: '{n} reglas: incumplir cualquiera de ellas invalida el entregable.'
+  try_scale: Escala de puntuación
+  try_scale_invalid: Un entregable que incumple una regla es inválido y puntúa 0.
+  try_scale_quality: Si no, su calidad se sitúa en una escala en la que la manera de hacerlo del propio cliente (la línea
+    base) vale 0 y la solución de referencia vale 1. Por encima de 1 supera a la referencia.
+  try_scale_final: 'Puntuación final con la política por defecto ({policy}): calidad / {cap}, como máximo 1. La referencia
+    obtiene {ref}; la puntuación completa exige una calidad de {cap}.'
+  try_scale_offline: Las preguntas, la comunicación y la eficiencia se puntúan como en un envío sin conexión (no se hizo
+    ninguna pregunta, así que Ask-F1 es 0); la política por defecto no les da peso.
+  try_scores: Puntuaciones en esta configuración
+  try_col_deliverable: Entregable
+  try_col_valid: Válido
+  try_col_quality: Calidad (normalizada)
+  try_col_final: Final
+  try_literal: Solución literal (la solicitud hecha tal como está escrita)
+  try_baseline: Línea base (la manera del propio cliente)
+  try_reference: Solución de referencia
+  try_yours: Su envío
+  try_yours_title: 'Su envío: {path}'
+  try_missing: 'Faltan archivos: {files}. Sin un modelo que los convierta, la carpeta debe contener el entregable con los
+    nombres que lee el evaluador: {expected}.'
+  try_fatal: 'El evaluador no pudo leerlo: {error}'
+  try_violations: 'Reglas incumplidas ({n}):'
+  try_more: … y {n} más
+  try_objective: 'Objetivo {obj} (referencia {ref}, línea base {base}): calidad {quality}.'
+  try_next: 'Siguiente paso: ponga su propio entregable en una carpeta y puntúelo con `fdebench2 try --submission DIR`. Para
+    ejecutar un modelo en el caso: `fdebench2 run` (README). Para enviar resultados a la clasificación: docs/SUBMITTING.md.'
   settings_value: '{tiers} dificultades × {seeds} versiones publicadas (la evaluación usa versiones no publicadas)'
   settings_intro: La IA ve la misma solicitud y los mismos datos en todas las versiones. La <strong>dificultad</strong> decide
     qué reglas del cliente se aplican; la <strong>semilla de reglas</strong> elige los valores concretos de esas reglas (un

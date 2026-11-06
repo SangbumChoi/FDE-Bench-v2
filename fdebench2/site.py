@@ -6,7 +6,8 @@ docs/<lang>/explainer.html) the same paths under <lang>/. DESIGN.md, docs/DIRECT
 (cases/README.md) are rendered, in English, with the explainer's markdown renderer. Every relative link is resolved
 from the page's own folder in the repository; a static host lists no folders, so links into a case's files
 (dataset/answer/<tier>/s<seed>/, GT.md, docs/<lang>/README.md, ...) point to the same path in the GitHub repository
-at the published ref. Every page gets a small navigation bar in its language.
+at the published ref. Every page gets a small navigation bar in its language. The leaderboard (leaderboard/*.json,
+fdebench2.leaderboard) is leaderboard.html, and <lang>/leaderboard.html with the same table in each language.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from pathlib import Path
 
 from .cases import discover
 from .explain import LANGS, PAGE, Anchors, _esc, _shell, _t, index_name, markdown, page_name
+from .leaderboard import FOLDER as LEADERBOARD_DIR, PAGE as LEADERBOARD, build_page as leaderboard_page, load_submissions
 
 DOCS = {"direction.html": ("site_direction", "docs/DIRECTION.md"), "design.html": ("site_design", "DESIGN.md"),
         "catalog.html": ("site_catalog", "cases/README.md")}
@@ -54,7 +56,8 @@ def _site_path(rel: str, lang: str) -> str:
 
 def _nav(lang: str, up: str, github: str) -> str:
     english = "" if lang == "en" else " " + _t(lang, "site_english_only")
-    links = [f'<a href="{up}{_site_path("index.html", lang)}">{_t(lang, "site_cases")}</a>'] + [
+    links = [f'<a href="{up}{_site_path("index.html", lang)}">{_t(lang, "site_cases")}</a>',
+             f'<a href="{up}{_site_path(LEADERBOARD, lang)}">{_t(lang, "site_leaderboard")}</a>'] + [
         f'<a href="{up}{page}">{_t(lang, key)}{english}</a>' for page, (key, _) in DOCS.items()]
     if github:
         links.append(f'<a href="{_esc(github)}">{_t(lang, "site_source")}</a>')
@@ -109,6 +112,8 @@ def build_site(repo: Path, out: Path, github: str | None = None, ref: str | None
                   if (c.root / page_name(lang)).is_file() else f"{cid}/index.html" for cid, c in cases.items()}
         local[f"cases/{index_name(lang)}"] = _site_path("index.html", lang)
     local |= {src: page for page, (_, src) in DOCS.items() if (repo / src).is_file()}
+    # the leaderboard's pages, as its language switcher names them from the repository's leaderboard/ folder
+    local |= {f"{LEADERBOARD_DIR}/{lang}.html": _site_path(LEADERBOARD, lang) for lang in LANGS}
 
     written = []
 
@@ -130,6 +135,11 @@ def build_site(repo: Path, out: Path, github: str | None = None, ref: str | None
                       _publish(page.read_text(encoding="utf-8"),
                                page_dir=posixpath.dirname(f"cases/{cid}/{page_name(lang)}"),
                                depth=cid.count("/") + 1 + extra, lang=lang, github=github, ref=ref, local=local))
+    submissions = load_submissions(repo / LEADERBOARD_DIR)
+    for lang in LANGS:
+        write(_site_path(LEADERBOARD, lang), _publish(leaderboard_page(lang, submissions), page_dir=LEADERBOARD_DIR,
+                                                      depth=0 if lang == "en" else 1, lang=lang, github=github,
+                                                      ref=ref, local=local))
     for page, (key, src) in DOCS.items():
         if (repo / src).is_file():
             text = (repo / src).read_text(encoding="utf-8")
