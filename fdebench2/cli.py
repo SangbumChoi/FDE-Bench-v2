@@ -167,10 +167,14 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--date", default=None, help="submission date, YYYY-MM-DD (default: today, UTC)")
     p.add_argument("--agent", default=None, help="the runs' agent label (<harness>--<model>) when several ran")
     p.add_argument("--cases", dest="cases_root", type=Path, default=None)
+    p.add_argument("--rounds", type=Path, default=None,
+                   help="the leaderboard rounds file (default: leaderboard/rounds.yaml next to the cases folder)")
     p.add_argument("--out", type=Path, default=Path("submission.json"))
     p = sub.add_parser("anchors", help="the cases' anchors scored offline, as an example submission")
     p.add_argument("--case", action="append", default=[], help="<field>/<role> (repeatable; default: every case)")
     p.add_argument("--difficulty", action="append", default=[], choices=("easy", "medium", "hard"))
+    p.add_argument("--round", dest="round_id", default=None,
+                   help="score a leaderboard round's tiers and rule seeds (leaderboard/rounds.yaml), not the public ones")
     p.add_argument("--date", default=None)
     p.add_argument("--cases", dest="cases_root", type=Path, default=None)
     p.add_argument("--out", type=Path, required=True)
@@ -200,12 +204,13 @@ def main(argv: list[str] | None = None) -> None:
             n = sum(1 for f in dest.rglob("*") if f.is_file())
             print(f"{path.parent.name}/{path.name}: {n} files in {dest.relative_to(Path.cwd()) if dest.is_relative_to(Path.cwd()) else dest}")
     elif a.cmd == "audit-case":
-        from .audit import AUDIT_COMBOS, audit_case, report, write_audit
+        from .audit import AUDIT_COMBOS, audit_case, write_audit
+        from .audit import report as audit_report
         from .cases import NativeCase
         from .explain import write_page
         started = time.time()
         result = audit_case(NativeCase(a.path), a.world_seed, AUDIT_COMBOS if a.combos is None else a.combos)
-        print(report(result))
+        print(audit_report(result))
         print(f"audited in {time.time() - started:.0f} s", file=sys.stderr)
         if a.world_seed is None and not a.no_write:      # only the public world's audit is stored
             print(write_audit(a.path, result))
@@ -261,15 +266,18 @@ def main(argv: list[str] | None = None) -> None:
     elif a.cmd == "submit":
         from .submit import build_submission, write_submission
         doc = build_submission(a.results, name=a.name, model=a.model, harness=a.harness, version=a.system_version,
-                               flags=a.flag, date=a.date, agent=a.agent, cases_root=_cases_root(a.cases_root))
+                               flags=a.flag, date=a.date, agent=a.agent, cases_root=_cases_root(a.cases_root),
+                               rounds_file=a.rounds)
         print(write_submission(doc, a.out))
         agg = doc["aggregate"]
         print(f"{doc['system']['name']}: {agg['n_scored']} scored runs on {agg['n_cases']} cases, final "
               f"{agg['final']['mean']:.3f} [{agg['final']['ci'][0]:.2f}-{agg['final']['ci'][1]:.2f}], status "
-              f"{doc['status']}" + (f" ({'; '.join(doc['status_reasons'])})" if doc["status_reasons"] else ""))
+              f"{doc['status']}" + (f", round {doc['round']}" if doc.get("round") else "")
+              + (f" ({'; '.join(doc['status_reasons'])})" if doc["status_reasons"] else ""))
     elif a.cmd == "anchors":
         from .submit import anchor_submission, write_submission
-        doc = anchor_submission(_cases_root(a.cases_root), a.case or None, a.difficulty or ["medium"], date=a.date)
+        doc = anchor_submission(_cases_root(a.cases_root), a.case or None, a.difficulty or ["medium"], date=a.date,
+                                round_id=a.round_id)
         print(write_submission(doc, a.out))
 
 

@@ -7,8 +7,11 @@ revealed / learned / enforced counts and cost) and the aggregate means with 95% 
 the way `fdebench2 report` computes them (case-macro: within a case, every rule seed weighs the same).
 
 A rule seed in a case's public panel (case.yaml rule_seeds) is public: its answers are stored in the repository.
-Only a submission whose every run used a private rule seed, with at least MIN_TRIALS trials of every variant, is
-ranked; any other is marked "development".
+A submission is ranked only when it ran a leaderboard round (leaderboard/rounds.yaml): every case, at each of the
+round's tiers and rule seeds, with at least MIN_TRIALS trials, on the round's track (English client and agent, the
+baseline policy, standard engagement). Every system in a round therefore answers the same settings, and nobody
+picks their own seeds. Any other submission is marked "development". Without a rounds file (a fork, a test) the
+rule is: private rule seeds only, MIN_TRIALS trials.
 
 `anchor_submission` scores the cases' own anchors (literal solution, baseline, reference) offline, as `fdebench2
 try` does, in the same format with `kind: anchors`: the leaderboard shows them as reference rows.
@@ -23,12 +26,16 @@ from pathlib import Path
 from statistics import mean
 from typing import Any, Iterable
 
+import yaml
+
 from .cases import NativeCase, discover
 from .runner import NOT_SCORED, framework_version, never_in_a_run, tree_hash
 from .scoring.report import _agent, _usage, _without, bootstrap_ci, load_results, rule_seed, status
 
 FORMAT = "fdebench2-submission/1"
 MIN_TRIALS = 3
+ROUNDS_FILE = "leaderboard/rounds.yaml"       # next to the cases folder
+TRACK = {"customer_locale": "en", "agent_locale": "en", "policy": "baseline", "engagement": "standard"}
 STAGES = ("revealed", "learned", "enforced")
 METRICS = ("final", "validity", "quality", "ask_f1", "enforced_share", "cost_usd", "total_tokens")
 
@@ -146,8 +153,37 @@ def seeds_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
             "private": sorted({x["rule_seed"] for x in records if x["seeds"] == "private"})}
 
 
-def ranking_status(records: list[dict[str, Any]], min_trials: int) -> tuple[str, list[str]]:
-    """("ranked", []) or ("development", the reasons)."""
+def load_rounds(path: Path | None) -> list[dict[str, Any]]:
+    """The leaderboard rounds, newest last: [{id, opened, rule_seeds: [...], tiers: [...]}]; [] without the file."""
+    if path is None or not Path(path).is_file():
+        return []
+    doc = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+    return list(doc.get("rounds") or [])
+
+
+def _round_gaps(records: list[dict[str, Any]], rnd: dict[str, Any], case_ids: Iterable[str]) -> list[str]:
+    """Why these runs are not the round's track: runs off the track, and missing (case, tier, rule seed) cells."""
+    reasons = []
+    off = sum(any(x.get(k) != v for k, v in TRACK.items()) for x in records)
+    if off:
+        reasons.append(f"{off} run(s) off the round's track (English client and agent, the baseline policy, "
+                       f"standard engagement)")
+    count: dict[tuple, int] = defaultdict(int)
+    for x in records:
+        count[(x["case"], x["tier"], x["rule_seed"])] += 1
+    cells = [(c, t, s) for c in sorted(case_ids) for t in rnd["tiers"] for s in rnd["rule_seeds"]]
+    missing = [cell for cell in cells if count[cell] < MIN_TRIALS]
+    if missing:
+        c, t, sd = missing[0]
+        reasons.append(f"round {rnd['id']} asks for every case at tiers {', '.join(rnd['tiers'])} and rule seeds "
+                       f"{rnd['rule_seeds']} with {MIN_TRIALS} trials: {len(missing)} of {len(cells)} are missing "
+                       f"(e.g. {c} {t}/s{sd})")
+    return reasons
+
+
+def ranking_status(records: list[dict[str, Any]], min_trials: int, rounds: list[dict[str, Any]] | None = None,
+                   case_ids: Iterable[str] = ()) -> tuple[str, list[str], str | None]:
+    """("ranked", [], round id or None) or ("development", the reasons, None)."""
     reasons = []
     kinds = {x["seeds"] for x in records}
     if "public" in kinds:
@@ -158,7 +194,18 @@ def ranking_status(records: list[dict[str, Any]], min_trials: int) -> tuple[str,
         reasons.append("no run on a private rule seed")
     if min_trials < MIN_TRIALS:
         reasons.append(f"{min_trials} trial(s) per variant, fewer than {MIN_TRIALS}")
-    return ("development" if reasons else "ranked"), list(dict.fromkeys(reasons))
+    round_id = None
+    if rounds:
+        used = {x["rule_seed"] for x in records}
+        rnd = next((r for r in reversed(rounds) if set(r["rule_seeds"]) == used), None)
+        if rnd is None:
+            listed = "; ".join(f"{r['id']}: {r['rule_seeds']}" for r in rounds)
+            reasons.append(f"the rule seeds are not those of a leaderboard round ({listed})")
+        else:
+            reasons += _round_gaps(records, rnd, case_ids)
+            round_id = str(rnd["id"])
+    reasons = list(dict.fromkeys(reasons))
+    return ("development", reasons, None) if reasons else ("ranked", [], round_id)
 
 
 def _flags(flags: Iterable[str] | dict[str, Any]) -> dict[str, str]:
@@ -186,8 +233,10 @@ def load_runs(out: Path) -> list[dict[str, Any]]:
 
 def build_submission(results_dir: Path, *, name: str, model: str | None = None, harness: str | None = None,
                      version: str = "", flags: Iterable[str] | dict[str, Any] = (), date: str | None = None,
-                     agent: str | None = None, cases_root: Path = Path("cases")) -> dict[str, Any]:
-    """The submission of one agent's runs under `results_dir` (a campaign's out/<agent>/<run key>/result.json)."""
+                     agent: str | None = None, cases_root: Path = Path("cases"),
+                     rounds_file: Path | None = None) -> dict[str, Any]:
+    """The submission of one agent's runs under `results_dir` (a campaign's out/<agent>/<run key>/result.json).
+    `rounds_file`: the leaderboard rounds (default: leaderboard/rounds.yaml next to the cases folder)."""
     results = load_runs(Path(results_dir))
     if not results:
         raise ValueError(f"{results_dir}: no results (expected <agent>/<run key>/result.json)")
@@ -202,7 +251,8 @@ def build_submission(results_dir: Path, *, name: str, model: str | None = None, 
     records = sorted((run_record(r, cases) for r in results),
                      key=lambda x: (x["case"], x["tier"] or "", str(x["rule_seed"]), x["noise_seed"], x["trial"]))
     trials = _trials(results)
-    st, reasons = ranking_status(records, trials)
+    rounds = load_rounds(rounds_file if rounds_file is not None else Path(cases_root).resolve().parent / ROUNDS_FILE)
+    st, reasons, round_id = ranking_status(records, trials, rounds, cases)
     spec_agent = results[0]["agent"]
     return {
         "format": FORMAT,
@@ -217,15 +267,26 @@ def build_submission(results_dir: Path, *, name: str, model: str | None = None, 
         "trials": trials,
         "status": st,
         "status_reasons": reasons,
+        "round": round_id,
         "aggregate": aggregate(records),
         "runs": records,
     }
 
 
 def anchor_submission(cases_root: Path, case_ids: list[str] | None = None, tiers: Iterable[str] = ("medium",),
-                      date: str | None = None) -> dict[str, Any]:
-    """The cases' anchors (literal solution, baseline, reference) scored offline on every public rule seed of
-    `tiers`, as `fdebench2 try` scores them; one record per anchor and setting."""
+                      date: str | None = None, round_id: str | None = None,
+                      rounds_file: Path | None = None) -> dict[str, Any]:
+    """The cases' anchors (literal solution, baseline, reference) scored offline, as `fdebench2 try` scores them;
+    one record per anchor and setting. Without `round_id`: every public rule seed of `tiers`, marked as an example.
+    With it: that leaderboard round's tiers and rule seeds, the reference rows of the round."""
+    rnd = None
+    if round_id is not None:
+        rounds = load_rounds(rounds_file if rounds_file is not None
+                             else Path(cases_root).resolve().parent / ROUNDS_FILE)
+        rnd = next((r for r in rounds if str(r["id"]) == str(round_id)), None)
+        if rnd is None:
+            raise ValueError(f"no leaderboard round {round_id!r}; known: {[str(r['id']) for r in rounds]}")
+        tiers = rnd["tiers"]
     from .tryout import ANCHORS, DEFAULT_POLICY, anchor_writers, score_anchor
     from .transforms.policy import load_policy
     from . import program
@@ -237,8 +298,8 @@ def anchor_submission(cases_root: Path, case_ids: list[str] | None = None, tiers
     records: list[dict[str, Any]] = []
     for cid in ids:
         base: NativeCase = found[cid]
-        settings = ([base.at(t, s) for t in tiers if t in base.tiers for s in base.rule_seeds] if base.tiers
-                    else [base])
+        seeds = rnd["rule_seeds"] if rnd else base.rule_seeds
+        settings = [base.at(t, s) for t in tiers if t in base.tiers for s in seeds] if base.tiers else [base]
         for case in settings:
             for name in anchor_writers(case):
                 s = score_anchor(case, name, "en", policy, diagnose=True)
@@ -255,8 +316,11 @@ def anchor_submission(cases_root: Path, case_ids: list[str] | None = None, tiers
     return {
         "format": FORMAT,
         "kind": "anchors",
-        "example": True,
-        "system": {"name": "EXAMPLE: anchors (literal solution, baseline, reference), not a model", "model": None,
+        "example": rnd is None,
+        "round": str(rnd["id"]) if rnd else None,
+        "system": {"name": (f"Anchors of round {rnd['id']} (literal solution, baseline, reference), not a model"
+                            if rnd else "EXAMPLE: anchors (literal solution, baseline, reference), not a model"),
+                   "model": None,
                    "harness": None, "version": "", "agent_label": None, "max_steps": None,
                    "flags": {"scored": "offline, as `fdebench2 try` scores them: no client conversation, Ask-F1 0"},
                    "date": _date(date)},

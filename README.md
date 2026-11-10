@@ -11,16 +11,36 @@ Design, scoring and status: [DESIGN.md](DESIGN.md). Direction, related work and 
 [docs/DIRECTION.md](docs/DIRECTION.md). To add a case, a translation or a review: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **Browse the cases:** https://sangbumchoi.github.io/FDE-Bench-v2/ — one page per case (request, settings,
-rules, hidden requirements, targets, stored data and answers, review findings), rebuilt from
+rules, what only the client knows, the facts to ask about, stored data and answers, review findings), rebuilt from
 `cases/*/*/docs/<lang>/explainer.html` by `fdebench2 build-site` and published to the `gh-pages` branch on
 every push (`.github/workflows/pages.yml`).
 
 **Leaderboard:** https://sangbumchoi.github.io/FDE-Bench-v2/leaderboard.html (from `leaderboard/*.json`). To take part, see [docs/SUBMITTING.md](docs/SUBMITTING.md).
 
+## Quick start
+
+No model and no API key are needed to see what a case asks and how it is scored:
+
+```bash
+pip install -e .
+fdebench2 try                                         # one case: the request, its files, the score scale, three anchor solutions scored
+fdebench2 try --lang ko --submission my_deliverable/  # score your own deliverable (any of the five languages)
+```
+
+To run a model, set one endpoint and start with the small campaign (9 runs: three small cases, medium difficulty, public rule seeds):
+
+```bash
+cp configs/models.example.yaml configs/models.yaml    # one endpoint and its API-key env var
+fdebench2 campaign configs/experiments.starter.yaml   # 9 runs, no docker
+fdebench2 report runs-starter/
+```
+
+Three ways to take part: **try a case** (above), **submit results** to the leaderboard ([docs/SUBMITTING.md](docs/SUBMITTING.md)), or **add a case, a translation or a review** ([CONTRIBUTING.md](CONTRIBUTING.md)).
+
 ## What is different here
 
-Among the benchmarks compared below, only FDE-Bench v2 does the following (each point is checked by code in this
-repository):
+FDE-Bench v2 combines the six points below. Each is checked by code in this repository; where another benchmark
+does something similar, the table says so:
 
 - **One world, counterfactual settings.** Each case has one dataset and one request. Difficulty tier × rule seed
   draws the client's rules and parameters, and the agent's view is byte-identical in every setting
@@ -37,12 +57,12 @@ repository):
   through the policy's exception process, an approval covers one named rule, and a run can be re-scored under
   other policies without re-running.
 - **Dated events and pressure inside the work** (regulator notices, absences, VIP notes, an insider tip),
-  scored as rule violations; **program deliverables** are run day by day on a hidden, dated period.
+  scored as rule violations; **program deliverables** are run day by day on a dated period the agent never sees.
 
 | | FDE-Bench v2 | τ-bench | τ^τ-Bench | Baidu FDE-Bench | FDE-Gym |
 |---|---|---|---|---|---|
-| Deliverable | Files, or a program run on hidden inputs | A conversational tool-calling agent, judged in the dialogue | A customer-service agent, scored on held-out simulated users | Solutions to 49 real customer projects (optimization, ML) | A delivery in a copy of the customer's production system, replayed on held-out traffic |
-| Hidden client facts | Simulated client answers from hidden requirements; per-fact targets | A simulated user holds the task's goal and reveals it in conversation | Client with hidden requirements (fixed fact IDs) | Revealed by a simulated customer | 130+ scripted stakeholders; briefs at four levels |
+| Deliverable | Files, or a program run on inputs the agent never sees | A conversational tool-calling agent, judged in the dialogue | A customer-service agent, scored on held-out simulated users | Solutions to 49 real customer projects (optimization, ML) | A delivery in a copy of the customer's production system, replayed on held-out traffic |
+| Facts only the client knows | A simulated client answers from requirements the agent is not given; one target per fact | A simulated user holds the task's goal and reveals it in conversation | Client with requirements the agent is not given (fixed fact IDs) | Revealed by a simulated customer | 130+ scripted stakeholders; briefs at four levels |
 | Counterfactual settings on one fixed view | Tier × rule seed, private seeds | Fixed tasks (115 retail, 50 airline) | – | No (fixed data, a stated limit) | Fixed tasks plus held-out variants |
 | Languages | 5, customer × agent | 1 (English) | – | – | 1 |
 | Company policies, exception process | 4 policies; one approval per named rule | A domain policy document (Markdown); no exception process | – | – | – |
@@ -54,24 +74,6 @@ repository):
 "–": not stated in [docs/DIRECTION.md](docs/DIRECTION.md) §2, the source for the other benchmarks; not a claim
 that the feature is absent. τ-bench is used here for its pass^k estimator. No live campaign has run on v2 yet, so
 the funnel and harness comparison have no numbers so far.
-
-## Acknowledgements
-
-We thank the authors of the work this benchmark learned from:
-
-- **FDE-Gym** (Yang et al., *FDE-Gym: The Last Mile of AI Delivery*, arXiv 2610.22350;
-  [fde-gym.com](https://fde-gym.com/paper/), [cases](https://huggingface.co/datasets/DeepLethe/FDE-Gym),
-  [harness](https://github.com/deeplethe/fde-gym)). Its four brief levels, scripted stakeholders with a contact
-  cost, replay on held-out production traffic and admission anchors (do-nothing 0, reference 1, a literal
-  reading and shortcuts scored low) informed the ground truth audit here.
-- **Baidu FDE-Bench** (arXiv 2610.14539), which introduced the forward-deployed-engineer framing and the metric
-  vocabulary (quality against a reference, DSR, Ask-F1, pass^k) that v2 keeps.
-- **τ^τ-Bench** (arXiv 2609.04611) and **τ-bench** (arXiv 2406.12045), for the built-agent-on-held-out-users
-  design and the pass^k estimator.
-
-v2 shares no code or data with them: every case here is original and generated from a seed, and the FDE-Gym
-cases, which have their own terms, were not used. Further related work: [docs/DIRECTION.md](docs/DIRECTION.md)
-§2 and §9.
 
 ## Setup
 
@@ -89,7 +91,8 @@ fdebench2 cases                                   # <field>/<role>, role title, 
 fdebench2 try
 fdebench2 try --case logistics/bakery_delivery_dispatcher --difficulty hard --lang ko --submission my_deliverable/
 # Package a campaign's results for the leaderboard (docs/SUBMITTING.md):
-fdebench2 submit runs/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
+fdebench2 campaign configs/experiments.leaderboard.yaml       # 351 runs
+fdebench2 submit runs-leaderboard/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
 fdebench2 validate-case cases/*/*/                # contract checks for every case
 fdebench2 export-dataset cases/<field>/<role>     # store a case's data and answers in dataset/
 fdebench2 audit-case cases/<field>/<role>         # measure its ground truth, stored in dataset/audit.json
@@ -135,6 +138,10 @@ cases/docs/<lang>/     index.html: the catalog's page in each language (the site
 fdebench2/
   cases.py           Case interface and loader
   casekit.py         helpers for case authors        validate.py   case contract checks
+  dataset.py         stored data and answers         audit.py      ground truth audit (audit-case)
+  explain.py         case pages and indexes          site.py       the static site (build-site)
+  tryout.py          `try`: a case without a model   submit.py     `submit`: a leaderboard file
+  leaderboard.py     the leaderboard page
   llm.py             OpenAI-compatible client, model registry, scripted model for tests
   transforms/        language · policy · engagement (noise, events) · variant composition (setting)
   prompts/           agent instructions per locale · messages.yaml (all generated messages, 5 locales)
@@ -143,8 +150,30 @@ fdebench2/
   mcp_bridge.py      MCP server giving CLI agents the client channel
   program.py         runs Program deliverables on hidden inputs, isolated (program_host.py inside)
   scoring/           extraction · clarification judges · policy score · report
-configs/             policies/ engagement.yaml models.example.yaml experiments.example.yaml
+configs/             policies/ engagement.yaml models.example.yaml experiments.starter.yaml (9 runs)
+                     experiments.leaderboard.yaml (the current round) experiments.example.yaml (the full grid)
 docker/              Dockerfile.agent: the image for isolated runs (tools and vendor CLIs only)
-docs/                DIRECTION.md · specs/ (unbuilt cases) · <lang>/README.md (this README in zh, ko, ja, es)
+docs/                DIRECTION.md · SUBMITTING.md · specs/ (unbuilt cases) · <lang>/ (README, CONTRIBUTING and
+                     SUBMITTING in zh, ko, ja, es)
+leaderboard/         rounds.yaml (the rounds' rule seeds) · one JSON per submitted system (fdebench2 submit)
+CONTRIBUTING.md      how to add a case, a translation, a review or a result
 tests/
 ```
+
+## Acknowledgements
+
+We thank the authors of the work this benchmark learned from:
+
+- **FDE-Gym** (Yang et al., *FDE-Gym: The Last Mile of AI Delivery*, arXiv 2610.22350;
+  [fde-gym.com](https://fde-gym.com/paper/), [cases](https://huggingface.co/datasets/DeepLethe/FDE-Gym),
+  [harness](https://github.com/deeplethe/fde-gym)). Its four brief levels, scripted stakeholders with a contact
+  cost, replay on held-out production traffic and admission anchors (do-nothing 0, reference 1, a literal
+  reading and shortcuts scored low) informed the ground truth audit here.
+- **Baidu FDE-Bench** (arXiv 2610.14539), which introduced the forward-deployed-engineer framing and the metric
+  vocabulary (quality against a reference, DSR, Ask-F1, pass^k) that v2 keeps.
+- **τ^τ-Bench** (arXiv 2609.04611) and **τ-bench** (arXiv 2406.12045), for the built-agent-on-held-out-users
+  design and the pass^k estimator.
+
+v2 shares no code or data with them: every case here is original and generated from a seed, and the FDE-Gym
+cases, which have their own terms, were not used. Further related work: [docs/DIRECTION.md](docs/DIRECTION.md)
+§2 and §9.

@@ -607,8 +607,14 @@ re-export that changes it (a new layout of `dataset/answer/`, for instance) runs
   collection, an end-to-end run).
 - Ground truth audit (`audit-case`, `audited: true`, the target funnel, the lazy `diagnose()` hook and the
   diagnostic reliability checks): implemented and tested on a toy case. Three cases are audited (procurement,
-  loan underwriting, multilingual corpus curator); their stored audits predate `AUDIT_VERSION` 3 and are stale
-  until audit-case runs on them again.
+  loan underwriting, multilingual corpus curator) and their stored audits are current.
+- Literal solution: every case has one, and it is invalid in every public setting (in five cases through a
+  single client rule; see docs/DIRECTION.md §11.6).
+- Taking part: `fdebench2 try` (a case without a model or API key), `fdebench2 submit` and the leaderboard page,
+  `configs/experiments.starter.yaml` (a 9-run first campaign), CONTRIBUTING.md and docs/SUBMITTING.md in five
+  languages: implemented and tested. A submission is ranked only when it ran a full round
+  (`leaderboard/rounds.yaml`, `configs/experiments.leaderboard.yaml`: every case and tier on the round's rule
+  seeds, 3 trials). The leaderboard holds only the round's anchor rows until a live campaign runs.
 
 Not yet verified: a live model run (no API keys in the build environment), the vendor CLI command lines
 against installed versions, `DockerSandbox` and `docker/Dockerfile.agent` (no Docker daemon in the build

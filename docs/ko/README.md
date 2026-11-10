@@ -10,16 +10,36 @@ engineering) 에이전트를 평가하는 벤치마크입니다. 오픈 모델�
 설계, 채점, 현황: [DESIGN.md](../../DESIGN.md). 방향, 관련 연구, 비판적 검토: [docs/DIRECTION.md](../DIRECTION.md).
 케이스, 번역, 검토로 기여하는 방법: [CONTRIBUTING.md](CONTRIBUTING.md).
 
-**케이스 둘러보기:** https://sangbumchoi.github.io/FDE-Bench-v2/ — 케이스마다 한 페이지(요청, 설정, 규칙, 숨은
-요구사항, 질문 목표, 저장된 데이터와 정답, 리뷰 발견 사항)가 있습니다. 이 사이트는 `fdebench2 build-site`가
+**케이스 둘러보기:** https://sangbumchoi.github.io/FDE-Bench-v2/ — 케이스마다 한 페이지(요청, 설정, 규칙, 고객만 아는
+요구사항, 물어봐야 할 사실, 저장된 데이터와 정답, 리뷰 발견 사항)가 있습니다. 이 사이트는 `fdebench2 build-site`가
 `cases/*/*/docs/<lang>/explainer.html`로부터 다시 만들고, 푸시할 때마다 `gh-pages` 브랜치에 게시됩니다
 (`.github/workflows/pages.yml`).
 
 **리더보드:** https://sangbumchoi.github.io/FDE-Bench-v2/leaderboard.html (`leaderboard/*.json`에서 생성). 참여 방법은 [docs/SUBMITTING.md](../SUBMITTING.md)를 보세요.
 
+## 빠른 시작
+
+케이스가 무엇을 요구하고 어떻게 채점되는지는 모델이나 API 키 없이 바로 볼 수 있습니다.
+
+```bash
+pip install -e .
+fdebench2 try                                         # 케이스 하나: 요청, 받는 파일, 점수 척도, 기준 답안 세 개의 점수
+fdebench2 try --lang ko --submission my_deliverable/  # 직접 만든 결과물 채점 (5개 언어 중 선택)
+```
+
+모델을 돌리려면 엔드포인트 하나를 설정하고 작은 캠페인부터 시작합니다(9회 실행: 작은 케이스 3개, medium 난이도, 공개 규칙 시드).
+
+```bash
+cp configs/models.example.yaml configs/models.yaml    # 엔드포인트 하나와 API 키 환경 변수
+fdebench2 campaign configs/experiments.starter.yaml   # 9회 실행, docker 불필요
+fdebench2 report runs-starter/
+```
+
+참여 방법은 세 가지입니다. **케이스 체험**(위), 리더보드에 **결과 제출**([docs/SUBMITTING.md](../SUBMITTING.md)), **케이스·번역·검토 기여**([CONTRIBUTING.md](CONTRIBUTING.md)).
+
 ## 무엇이 다른가
 
-아래 표에서 비교한 벤치마크 가운데 다음을 하는 것은 FDE-Bench v2뿐입니다(각 항목은 이 저장소의 코드가 검사합니다).
+FDE-Bench v2는 아래 여섯 가지를 함께 갖추고 있습니다. 각 항목은 이 저장소의 코드가 검사하며, 다른 벤치마크가 비슷한 것을 하는 경우는 표에 적었습니다.
 
 - **하나의 세계, 반사실적 설정.** 케이스마다 데이터셋도 요청도 하나입니다. 난이도 단계 × 규칙 시드가 고객의 규칙과
   파라미터를 정하고, 에이전트가 보는 내용은 모든 설정에서 바이트 단위로 같습니다(`validate-case`가 검사). 그래서 점수는
@@ -33,40 +53,23 @@ engineering) 에이전트를 평가하는 벤치마크입니다. 오픈 모델�
 - **규칙 등급, 회사 정책, 예외 절차:** 물리적 규칙은 절대 굽히지 않습니다. 나머지는 정책의 예외 절차를 거쳐야만 굽힐 수
   있고, 승인 한 번은 지정한 규칙 하나에만 적용됩니다. 같은 실행을 다시 돌리지 않고 다른 정책으로 다시 채점할 수 있습니다.
 - **작업 중에 오는 날짜가 있는 이벤트와 압력**(규제 당국의 통지, 결근, VIP 메모, 내부자 정보)은 규칙 위반으로
-  채점되고, **프로그램 산출물**은 숨겨진 기간에서 날마다 실행됩니다.
+  채점되고, **프로그램 산출물**은 AI가 본 적 없는 채점용 기간에서 날마다 실행됩니다.
 
 | | FDE-Bench v2 | τ-bench | τ^τ-Bench | Baidu FDE-Bench | FDE-Gym |
 |---|---|---|---|---|---|
-| 산출물 | 파일, 또는 숨겨진 입력에서 실행되는 프로그램 | 대화하며 도구를 호출하는 에이전트, 대화 안에서 판정 | 고객 상담 에이전트, 공개하지 않은 시뮬레이션 사용자로 채점 | 실제 고객 프로젝트 49개의 해(최적화, ML) | 고객 운영 시스템 사본에서의 납품, 공개하지 않은 트래픽에서 재생 |
-| 숨은 고객 사실 | 시뮬레이션 고객이 숨은 요구사항에서 답함; 사실마다 질문 목표 | 시뮬레이션 사용자가 과제의 목표를 갖고 대화 중에 알려 줌 | 숨은 요구사항이 있는 고객(고정된 사실 ID) | 시뮬레이션 고객이 알려 줌 | 스크립트 이해관계자 130명 이상; 네 단계의 요청 수준 |
+| 산출물 | 파일, 또는 채점용 입력(AI에게는 주지 않음)에서 실행되는 프로그램 | 대화하며 도구를 호출하는 에이전트, 대화 안에서 판정 | 고객 상담 에이전트, 공개하지 않은 시뮬레이션 사용자로 채점 | 실제 고객 프로젝트 49개의 해(최적화, ML) | 고객 운영 시스템 사본에서의 납품, 공개하지 않은 트래픽에서 재생 |
+| 고객만 아는 사실 | 시뮬레이션 고객이 고객만 아는 요구사항에서 답함; 사실마다 물어봐야 할 항목 | 시뮬레이션 사용자가 과제의 목표를 갖고 대화 중에 알려 줌 | 고객만 아는 요구사항이 있는 고객(고정된 사실 ID) | 시뮬레이션 고객이 알려 줌 | 스크립트 이해관계자 130명 이상; 네 단계의 요청 수준 |
 | 고정된 화면 위의 반사실적 설정 | 단계 × 규칙 시드, 비공개 시드 | 고정 과제(리테일 115개, 항공 50개) | – | 없음(고정 데이터, 스스로 밝힌 한계) | 고정 과제와 공개하지 않은 변형 |
 | 언어 | 5개, 고객 × 에이전트 | 1개(영어) | – | – | 1개 |
 | 회사 정책, 예외 절차 | 정책 4개; 승인 한 번에 지정 규칙 하나 | 도메인 정책 문서(마크다운); 예외 절차 없음 | – | – | – |
 | 정답 감사 / 채택 기준 | 사실별 감사(케이스 3개); 모든 케이스: 문자 그대로의 해 ≤ 0.2, 점수 폭 ≥ 5% | – | – | – | 모범 답안 ≥ 0.95, 아무것도 안 하면 0, 문자 그대로의 해 ≤ 0.2, 지름길 ≤ 0.8 |
 | 사실 깔때기 드러남 → 파악 → 반영 | 사실별로 보고서에 | – | – | –(규칙을 묻고도 지키지 않은 에이전트를 지적) | –(알아낸 핵심 사실과 개선 폭의 관계를 보고) |
 | 하네스 비교 | 기준 루프 + 벤더 CLI 4개, 하나의 MCP 고객 채널 | 하나의 도구 호출 루프에서 모델 비교 | Claude Code, Codex, Kimi Code, OpenCode | – | 구성 13개 |
-| 채점 | 유효성 관문; 품질은 기준선 0에서 모범 답안 1까지, 1을 넘어도 인정; Ask-F1; pass^k; 정책별 가중치 | 과제마다 0/1: 최종 DB 상태와 필요한 답; pass^k | 만든 에이전트를 공개하지 않은 사용자로 채점, 오라클 기준과 비교(구성마다 1회, 신뢰구간 없음) | 고객이 받아들인 해 대비 품질, DSR, pass^3, Ask-F1, 부트스트랩 신뢰구간 | 정규화한 개선 폭, 사고 시 0 이하, 숨은 연락 비용 차감 |
+| 채점 | 유효성 관문; 품질은 기존 방식 0에서 모범 답안 1까지, 1을 넘어도 인정; Ask-F1; pass^k; 정책별 가중치 | 과제마다 0/1: 최종 DB 상태와 필요한 답; pass^k | 만든 에이전트를 공개하지 않은 사용자로 채점, 오라클 기준과 비교(구성마다 1회, 신뢰구간 없음) | 고객이 받아들인 해 대비 품질, DSR, pass^3, Ask-F1, 부트스트랩 신뢰구간 | 정규화한 개선 폭, 사고 시 0 이하, 숨은 연락 비용 차감 |
 
 "–": 다른 벤치마크에 대한 출처인 [docs/DIRECTION.md](../DIRECTION.md) §2에 나오지 않는다는 뜻이며, 그 기능이 없다는
 뜻은 아닙니다. 이 저장소는 τ-bench의 pass^k 추정법을 씁니다. v2는 아직 실제 평가를 돌리지 않았으므로 깔때기와 하네스
 비교에는 아직 수치가 없습니다.
-
-## 감사의 말
-
-이 벤치마크가 배운 연구의 저자들께 감사드립니다.
-
-- **FDE-Gym** (Yang et al., *FDE-Gym: The Last Mile of AI Delivery*, arXiv 2610.22350;
-  [fde-gym.com](https://fde-gym.com/paper/), [케이스](https://huggingface.co/datasets/DeepLethe/FDE-Gym),
-  [하네스](https://github.com/deeplethe/fde-gym)). 네 단계의 요청 수준, 연락 비용이 있는 스크립트 이해관계자,
-  공개하지 않은 실제 운영 트래픽에서의 재생 채점, 채택 기준(아무것도 안 하면 0, 모범 답안 1, 요청을 문자 그대로 따른
-  답과 지름길은 낮은 점수)이 이 저장소의 정답 감사에 참고가 되었습니다.
-- **Baidu FDE-Bench** (arXiv 2610.14539): 현장 배치 엔지니어(FDE)라는 틀과, v2가 이어 쓰는 지표 용어(모범 답안
-  대비 품질, DSR, Ask-F1, pass^k)를 처음 제시했습니다.
-- **τ^τ-Bench** (arXiv 2609.04611)와 **τ-bench** (arXiv 2406.12045): 만들어진 에이전트를 공개하지 않은 사용자로
-  채점하는 설계와 pass^k 추정법.
-
-v2는 이들과 코드나 데이터를 공유하지 않습니다. 모든 케이스는 시드로 생성한 독자적인 것이며, 별도 이용 조건이 있는
-FDE-Gym 케이스는 사용하지 않았습니다. 관련 연구는 [docs/DIRECTION.md](../DIRECTION.md) §2와 §9에 있습니다.
 
 ## 설치
 
@@ -84,7 +87,8 @@ fdebench2 cases                                   # <field>/<role>, role title, 
 fdebench2 try
 fdebench2 try --case logistics/bakery_delivery_dispatcher --difficulty hard --lang ko --submission my_deliverable/
 # 캠페인 결과를 리더보드 제출 파일로 묶기(docs/SUBMITTING.md):
-fdebench2 submit runs/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
+fdebench2 campaign configs/experiments.leaderboard.yaml       # 351 runs
+fdebench2 submit runs-leaderboard/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
 fdebench2 validate-case cases/*/*/                # contract checks for every case
 fdebench2 export-dataset cases/<field>/<role>     # store a case's data and answers in dataset/
 fdebench2 audit-case cases/<field>/<role>         # measure its ground truth, stored in dataset/audit.json
@@ -130,6 +134,10 @@ cases/docs/<lang>/     index.html: the catalog's page in each language (the site
 fdebench2/
   cases.py           Case interface and loader
   casekit.py         helpers for case authors        validate.py   case contract checks
+  dataset.py         stored data and answers         audit.py      ground truth audit (audit-case)
+  explain.py         case pages and indexes          site.py       the static site (build-site)
+  tryout.py          `try`: a case without a model   submit.py     `submit`: a leaderboard file
+  leaderboard.py     the leaderboard page
   llm.py             OpenAI-compatible client, model registry, scripted model for tests
   transforms/        language · policy · engagement (noise, events) · variant composition (setting)
   prompts/           agent instructions per locale · messages.yaml (all generated messages, 5 locales)
@@ -138,8 +146,29 @@ fdebench2/
   mcp_bridge.py      MCP server giving CLI agents the client channel
   program.py         runs Program deliverables on hidden inputs, isolated (program_host.py inside)
   scoring/           extraction · clarification judges · policy score · report
-configs/             policies/ engagement.yaml models.example.yaml experiments.example.yaml
+configs/             policies/ engagement.yaml models.example.yaml experiments.starter.yaml (9 runs)
+                     experiments.leaderboard.yaml (the current round) experiments.example.yaml (the full grid)
 docker/              Dockerfile.agent: the image for isolated runs (tools and vendor CLIs only)
-docs/                DIRECTION.md · specs/ (unbuilt cases) · <lang>/README.md (this README in zh, ko, ja, es)
+docs/                DIRECTION.md · SUBMITTING.md · specs/ (unbuilt cases) · <lang>/ (README, CONTRIBUTING and
+                     SUBMITTING in zh, ko, ja, es)
+leaderboard/         rounds.yaml (the rounds' rule seeds) · one JSON per submitted system (fdebench2 submit)
+CONTRIBUTING.md      how to add a case, a translation, a review or a result
 tests/
 ```
+
+## 감사의 말
+
+이 벤치마크가 배운 연구의 저자들께 감사드립니다.
+
+- **FDE-Gym** (Yang et al., *FDE-Gym: The Last Mile of AI Delivery*, arXiv 2610.22350;
+  [fde-gym.com](https://fde-gym.com/paper/), [케이스](https://huggingface.co/datasets/DeepLethe/FDE-Gym),
+  [하네스](https://github.com/deeplethe/fde-gym)). 네 단계의 요청 수준, 연락 비용이 있는 스크립트 이해관계자,
+  공개하지 않은 실제 운영 트래픽에서의 재생 채점, 채택 기준(아무것도 안 하면 0, 모범 답안 1, 요청을 문자 그대로 따른
+  답과 지름길은 낮은 점수)이 이 저장소의 정답 감사에 참고가 되었습니다.
+- **Baidu FDE-Bench** (arXiv 2610.14539): 현장 배치 엔지니어(FDE)라는 틀과, v2가 이어 쓰는 지표 용어(모범 답안
+  대비 품질, DSR, Ask-F1, pass^k)를 처음 제시했습니다.
+- **τ^τ-Bench** (arXiv 2609.04611)와 **τ-bench** (arXiv 2406.12045): 만들어진 에이전트를 공개하지 않은 사용자로
+  채점하는 설계와 pass^k 추정법.
+
+v2는 이들과 코드나 데이터를 공유하지 않습니다. 모든 케이스는 시드로 생성한 독자적인 것이며, 별도 이용 조건이 있는
+FDE-Gym 케이스는 사용하지 않았습니다. 관련 연구는 [docs/DIRECTION.md](../DIRECTION.md) §2와 §9에 있습니다.

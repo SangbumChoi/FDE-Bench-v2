@@ -13,16 +13,36 @@ Diseño, puntuación y estado: [DESIGN.md](../../DESIGN.md). Orientación, traba
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **Explorar los casos:** https://sangbumchoi.github.io/FDE-Bench-v2/ — una página por caso (solicitud,
-configuraciones, reglas, requisitos ocultos, preguntas clave, datos y respuestas guardados, hallazgos de la
+configuraciones, reglas, lo que solo sabe el cliente, los hechos que la IA debe preguntar, datos y respuestas guardados, hallazgos de la
 revisión), que `fdebench2 build-site` reconstruye a partir de `cases/*/*/docs/<lang>/explainer.html` y que se
 publica en la rama `gh-pages` con cada push (`.github/workflows/pages.yml`).
 
 **Clasificación:** https://sangbumchoi.github.io/FDE-Bench-v2/leaderboard.html (desde `leaderboard/*.json`). Para participar, ver [docs/SUBMITTING.md](../SUBMITTING.md).
 
+## Inicio rápido
+
+No hace falta ningún modelo ni clave de API para ver qué pide un caso y cómo se puntúa:
+
+```bash
+pip install -e .
+fdebench2 try                                         # un caso: el encargo, sus archivos, la escala y tres soluciones de referencia puntuadas
+fdebench2 try --lang ko --submission my_deliverable/  # puntuar un entregable propio (en cualquiera de los cinco idiomas)
+```
+
+Para ejecutar un modelo, se configura un endpoint y se empieza por la campaña pequeña (9 ejecuciones: tres casos pequeños, dificultad medium, semillas de reglas públicas):
+
+```bash
+cp configs/models.example.yaml configs/models.yaml    # un endpoint y su variable de entorno con la clave
+fdebench2 campaign configs/experiments.starter.yaml   # 9 ejecuciones, sin docker
+fdebench2 report runs-starter/
+```
+
+Hay tres formas de participar: **probar un caso** (arriba), **enviar resultados** a la clasificación ([docs/SUBMITTING.md](../SUBMITTING.md)) o **aportar un caso, una traducción o una revisión** ([CONTRIBUTING.md](CONTRIBUTING.md)).
+
 ## Qué tiene de diferente
 
-Entre los benchmarks que compara la tabla de abajo, solo FDE-Bench v2 hace lo siguiente (cada punto lo comprueba el
-código de este repositorio):
+FDE-Bench v2 reúne los seis puntos siguientes. Cada uno lo comprueba el código de este repositorio; cuando otro
+benchmark hace algo parecido, la tabla lo indica:
 
 - **Un solo mundo, configuraciones contrafactuales.** Cada caso tiene un conjunto de datos y una solicitud. El nivel
   de dificultad × la semilla de reglas fija las reglas y los parámetros del cliente, y lo que ve el agente es idéntico
@@ -41,42 +61,23 @@ código de este repositorio):
   ejecución se puede volver a puntuar con otras políticas sin repetirla.
 - **Eventos con fecha y presión dentro del trabajo** (avisos del regulador, ausencias, notas VIP, un soplo de
   información privilegiada), puntuados como infracciones de reglas; los **entregables de programa** se ejecutan día a
-  día sobre un periodo oculto y con fechas.
+  día sobre un periodo con fechas que la IA nunca ve.
 
 | | FDE-Bench v2 | τ-bench | τ^τ-Bench | Baidu FDE-Bench | FDE-Gym |
 |---|---|---|---|---|---|
-| Entregable | Archivos, o un programa ejecutado sobre entradas ocultas | Un agente conversacional que llama herramientas, juzgado en el diálogo | Un agente de atención al cliente, evaluado con usuarios simulados reservados | Soluciones a 49 proyectos reales de clientes (optimización, ML) | Una entrega en una copia del sistema de producción del cliente, reproducida sobre tráfico reservado |
-| Hechos ocultos del cliente | Un cliente simulado responde desde requisitos ocultos; objetivos por hecho | Un usuario simulado tiene el objetivo de la tarea y lo revela en la conversación | Cliente con requisitos ocultos (IDs de hechos fijos) | Los revela un cliente simulado | Más de 130 partes interesadas con guion; encargos en cuatro niveles |
+| Entregable | Archivos, o un programa ejecutado sobre entradas de evaluación (la IA nunca las recibe) | Un agente conversacional que llama herramientas, juzgado en el diálogo | Un agente de atención al cliente, evaluado con usuarios simulados reservados | Soluciones a 49 proyectos reales de clientes (optimización, ML) | Una entrega en una copia del sistema de producción del cliente, reproducida sobre tráfico reservado |
+| Hechos que solo sabe el cliente | Un cliente simulado responde desde requisitos que solo él conoce; un objetivo por hecho | Un usuario simulado tiene el objetivo de la tarea y lo revela en la conversación | Cliente con requisitos ocultos (IDs de hechos fijos) | Los revela un cliente simulado | Más de 130 partes interesadas con guion; encargos en cuatro niveles |
 | Configuraciones contrafactuales sobre una misma vista | Nivel × semilla de reglas, semillas privadas | Tareas fijas (115 de comercio, 50 de aerolínea) | – | No (datos fijos, un límite declarado) | Tareas fijas más variantes reservadas |
 | Idiomas | 5, cliente × agente | 1 (inglés) | – | – | 1 |
 | Políticas de empresa, proceso de excepciones | 4 políticas; una aprobación por regla concreta | Un documento de políticas del dominio (Markdown); sin proceso de excepciones | – | – | – |
 | Auditoría de la respuesta correcta / criterios de admisión | Auditoría por hecho (3 casos); en todos, solución literal ≤ 0,2 y escala ≥ 5 % | – | – | – | Referencia ≥ 0,95, no hacer nada 0, literal ≤ 0,2, atajos ≤ 0,8 |
 | Embudo revelado → aprendido → aplicado | Por hecho, en el informe | – | – | – (señala agentes que preguntaron por una regla y luego no la aplicaron) | – (informa de los hechos clave obtenidos frente a la mejora) |
 | Comparación de arneses | Bucle de referencia + 4 CLI de proveedores en un único canal de cliente MCP | Modelos en un mismo bucle de llamadas a herramientas | Claude Code, Codex, Kimi Code, OpenCode | – | 13 configuraciones |
-| Puntuación | Validez como requisito; calidad de la línea base 0 a la referencia 1, también por encima de 1; Ask-F1; pass^k; ponderada por política | 0/1 por tarea: estado final de la base de datos y respuestas requeridas; pass^k | El agente construido con usuarios reservados frente a una referencia oráculo (un intento, sin intervalos de confianza) | Calidad frente a la solución aceptada, DSR, pass^3, Ask-F1, intervalos bootstrap | Mejora normalizada, ≤ 0 ante un incidente, menos un coste de contacto oculto |
+| Puntuación | Validez como requisito; calidad de la forma de trabajar del cliente 0 a la referencia 1, también por encima de 1; Ask-F1; pass^k; ponderada por política | 0/1 por tarea: estado final de la base de datos y respuestas requeridas; pass^k | El agente construido con usuarios reservados frente a una referencia oráculo (un intento, sin intervalos de confianza) | Calidad frente a la solución aceptada, DSR, pass^3, Ask-F1, intervalos bootstrap | Mejora normalizada, ≤ 0 ante un incidente, menos un coste de contacto oculto |
 
 «–»: no figura en [docs/DIRECTION.md](../DIRECTION.md), §2, la fuente para los demás benchmarks; no significa que
 les falte la función. Este repositorio usa el estimador pass^k de τ-bench. v2 aún no ha ejecutado ninguna campaña
 real, así que el embudo y la comparación de arneses todavía no tienen cifras.
-
-## Agradecimientos
-
-Agradecemos a los autores de los trabajos de los que aprendió este benchmark:
-
-- **FDE-Gym** (Yang et al., *FDE-Gym: The Last Mile of AI Delivery*, arXiv 2610.22350;
-  [fde-gym.com](https://fde-gym.com/paper/), [casos](https://huggingface.co/datasets/DeepLethe/FDE-Gym),
-  [arnés](https://github.com/deeplethe/fde-gym)). Sus cuatro niveles de encargo, las partes interesadas con guion y
-  coste de contacto, la reproducción sobre tráfico de producción reservado y los criterios de admisión (no hacer
-  nada vale 0, la referencia 1, la lectura literal del encargo y los atajos puntúan bajo) sirvieron de base para la
-  auditoría de la respuesta correcta de este repositorio.
-- **Baidu FDE-Bench** (arXiv 2610.14539), que introdujo el marco del ingeniero desplegado en el cliente (FDE) y el
-  vocabulario de métricas (calidad frente a la referencia, DSR, Ask-F1, pass^k) que v2 conserva.
-- **τ^τ-Bench** (arXiv 2609.04611) y **τ-bench** (arXiv 2406.12045), por el diseño de evaluar el agente construido
-  con usuarios reservados y por el estimador pass^k.
-
-v2 no comparte código ni datos con ellos: cada caso es original y se genera a partir de una semilla, y no se usaron
-los casos de FDE-Gym, que tienen sus propias condiciones. Más trabajos relacionados en
-[docs/DIRECTION.md](../DIRECTION.md), §2 y §9.
 
 ## Instalación
 
@@ -94,7 +95,8 @@ fdebench2 cases                                   # <field>/<role>, role title, 
 fdebench2 try
 fdebench2 try --case logistics/bakery_delivery_dispatcher --difficulty hard --lang ko --submission my_deliverable/
 # Empaquetar los resultados de una campaña para la clasificación (docs/SUBMITTING.md):
-fdebench2 submit runs/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
+fdebench2 campaign configs/experiments.leaderboard.yaml       # 351 runs
+fdebench2 submit runs-leaderboard/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
 fdebench2 validate-case cases/*/*/                # contract checks for every case
 fdebench2 export-dataset cases/<field>/<role>     # store a case's data and answers in dataset/
 fdebench2 audit-case cases/<field>/<role>         # measure its ground truth, stored in dataset/audit.json
@@ -141,6 +143,10 @@ cases/docs/<lang>/     index.html: the catalog's page in each language (the site
 fdebench2/
   cases.py           Case interface and loader
   casekit.py         helpers for case authors        validate.py   case contract checks
+  dataset.py         stored data and answers         audit.py      ground truth audit (audit-case)
+  explain.py         case pages and indexes          site.py       the static site (build-site)
+  tryout.py          `try`: a case without a model   submit.py     `submit`: a leaderboard file
+  leaderboard.py     the leaderboard page
   llm.py             OpenAI-compatible client, model registry, scripted model for tests
   transforms/        language · policy · engagement (noise, events) · variant composition (setting)
   prompts/           agent instructions per locale · messages.yaml (all generated messages, 5 locales)
@@ -149,8 +155,31 @@ fdebench2/
   mcp_bridge.py      MCP server giving CLI agents the client channel
   program.py         runs Program deliverables on hidden inputs, isolated (program_host.py inside)
   scoring/           extraction · clarification judges · policy score · report
-configs/             policies/ engagement.yaml models.example.yaml experiments.example.yaml
+configs/             policies/ engagement.yaml models.example.yaml experiments.starter.yaml (9 runs)
+                     experiments.leaderboard.yaml (the current round) experiments.example.yaml (the full grid)
 docker/              Dockerfile.agent: the image for isolated runs (tools and vendor CLIs only)
-docs/                DIRECTION.md · specs/ (unbuilt cases) · <lang>/README.md (this README in zh, ko, ja, es)
+docs/                DIRECTION.md · SUBMITTING.md · specs/ (unbuilt cases) · <lang>/ (README, CONTRIBUTING and
+                     SUBMITTING in zh, ko, ja, es)
+leaderboard/         rounds.yaml (the rounds' rule seeds) · one JSON per submitted system (fdebench2 submit)
+CONTRIBUTING.md      how to add a case, a translation, a review or a result
 tests/
 ```
+
+## Agradecimientos
+
+Agradecemos a los autores de los trabajos de los que aprendió este benchmark:
+
+- **FDE-Gym** (Yang et al., *FDE-Gym: The Last Mile of AI Delivery*, arXiv 2610.22350;
+  [fde-gym.com](https://fde-gym.com/paper/), [casos](https://huggingface.co/datasets/DeepLethe/FDE-Gym),
+  [arnés](https://github.com/deeplethe/fde-gym)). Sus cuatro niveles de encargo, las partes interesadas con guion y
+  coste de contacto, la reproducción sobre tráfico de producción reservado y los criterios de admisión (no hacer
+  nada vale 0, la referencia 1, la lectura literal del encargo y los atajos puntúan bajo) sirvieron de base para la
+  auditoría de la respuesta correcta de este repositorio.
+- **Baidu FDE-Bench** (arXiv 2610.14539), que introdujo el marco del ingeniero desplegado en el cliente (FDE) y el
+  vocabulario de métricas (calidad frente a la referencia, DSR, Ask-F1, pass^k) que v2 conserva.
+- **τ^τ-Bench** (arXiv 2609.04611) y **τ-bench** (arXiv 2406.12045), por el diseño de evaluar el agente construido
+  con usuarios reservados y por el estimador pass^k.
+
+v2 no comparte código ni datos con ellos: cada caso es original y se genera a partir de una semilla, y no se usaron
+los casos de FDE-Gym, que tienen sus propias condiciones. Más trabajos relacionados en
+[docs/DIRECTION.md](../DIRECTION.md), §2 y §9.

@@ -90,13 +90,17 @@ def test_try_scores_a_submission_folder(capsys, tmp_path):
 
 # ── submit ───────────────────────────────────────────────────────────────────
 
-def _result(seed, trial, final, valid, model="m", status=None, ask=0.5, cost=0.02, enforced=(True, False)):
-    spec = VariantSpec(DEFAULT_CASE, rule_seed=seed, trial=trial)
+NO_ROUNDS = REPO / "tests" / "no-such-rounds.yaml"       # no rounds file: private seeds and 3 trials rank
+
+
+def _result(seed, trial, final, valid, model="m", status=None, ask=0.5, cost=0.02, enforced=(True, False),
+            case=DEFAULT_CASE, tier="medium"):
+    spec = VariantSpec(case, rule_seed=seed, trial=trial, difficulty=tier)
     targets = {f"t{i}": {"revealed": True, "learned": i == 0, "enforced": e} for i, e in enumerate(enforced)}
     score = None if final is None else {"final": final, "gates": {"validity": valid},
                                         "components": {"quality": final}, "quality_raw": final * 1.5}
     return {"spec": asdict(spec), "agent": {"harness": "reference", "model": model, "max_steps": 400},
-            "key": spec.key(), "status": status or ("ok" if valid else "invalid"), "tier": "medium",
+            "key": spec.key(), "status": status or ("ok" if valid else "invalid"), "tier": tier,
             "rule_seed": seed, "score": score, "clarification": {"ask_f1": ask}, "targets": targets,
             "usage": {"total_tokens": 1000, "cost_usd": cost}, "fingerprint": "abc", "error": ""}
 
@@ -118,7 +122,8 @@ def test_submit_packages_a_campaign(tmp_path, capsys):
     runs = _runs(tmp_path, results)
     out = tmp_path / "submission.json"
     main(["submit", str(runs), "--name", "My system", "--model", "m-2026", "--flag", "web_tools=off",
-          "--version", "1.0", "--date", "2026-11-06", "--cases", str(CASES), "--out", str(out)])
+          "--version", "1.0", "--date", "2026-11-06", "--cases", str(CASES), "--rounds", str(NO_ROUNDS),
+          "--out", str(out)])
     printed = capsys.readouterr().out
     assert str(out) in printed and "My system: 6 scored runs on 1 cases, final 0.417" in printed
     doc = load_submission(out)
@@ -160,6 +165,38 @@ def test_submit_marks_public_seeds_and_few_trials_as_development(tmp_path):
     with pytest.raises(ValueError, match="several agents"):
         build_submission(two, name="x", cases_root=CASES)
     assert build_submission(two, name="x", agent="reference--b", cases_root=CASES)["aggregate"]["final"]["mean"] == 0.4
+
+
+def test_only_a_full_leaderboard_round_is_ranked(tmp_path):
+    from fdebench2.cases import discover
+    from fdebench2.submit import load_rounds
+    rounds = load_rounds(REPO / "leaderboard" / "rounds.yaml")
+    rnd = rounds[-1]
+    cases = discover(CASES)
+    # the round's seeds are private for every case, and the leaderboard campaign config runs exactly them
+    assert all(seed not in c.rule_seeds for c in cases.values() for seed in rnd["rule_seeds"])
+    assert rnd["tiers"] == ["easy", "medium", "hard"] and len(rnd["rule_seeds"]) == 3
+    config = (REPO / "configs" / "experiments.leaderboard.yaml").read_text(encoding="utf-8")
+    assert f"rule_seeds: {rnd['rule_seeds']}" in config and "trials: 3" in config
+    full = [_result(seed, t, 0.5, True, case=cid, tier=tier) for cid in cases for tier in rnd["tiers"]
+            for seed in rnd["rule_seeds"] for t in range(3)]
+    doc = build_submission(_runs(tmp_path / "full", full), name="full", date="2026-11-10", cases_root=CASES)
+    assert (doc["status"], doc["status_reasons"], doc["round"]) == ("ranked", [], rnd["id"])
+    assert doc["aggregate"]["n_cases"] == 13 and doc["aggregate"]["n_runs"] == 351
+    # one case's hard tier left out: not the round's track
+    partial = [r for r in full if not (r["spec"]["case_id"] == DEFAULT_CASE and r["tier"] == "hard")]
+    doc = build_submission(_runs(tmp_path / "partial", partial), name="partial", cases_root=CASES)
+    assert doc["status"] == "development" and doc["round"] is None
+    assert any("3 of 117 are missing" in r and f"{DEFAULT_CASE} hard" in r for r in doc["status_reasons"])
+    # one's own private seeds: comparable with nobody, so not ranked
+    own = [_result(90001, t, 0.5, True) for t in range(3)]
+    doc = build_submission(_runs(tmp_path / "own", own), name="own", cases_root=CASES)
+    assert doc["status"] == "development"
+    assert any("not those of a leaderboard round" in r for r in doc["status_reasons"])
+    # the round's seeds in another language: off the track
+    ko = [dict(r, spec=dict(r["spec"], customer_locale="ko")) for r in full]
+    doc = build_submission(_runs(tmp_path / "ko", ko), name="ko", cases_root=CASES)
+    assert doc["status"] == "development" and any("off the round's track" in r for r in doc["status_reasons"])
 
 
 # ── leaderboard ──────────────────────────────────────────────────────────────
@@ -212,9 +249,9 @@ def test_build_site_writes_the_leaderboard_in_every_language(tmp_path):
     out = tmp_path / "site"
     build_site(REPO, out, github="https://github.com/example/FDE-Bench-v2", ref="main")
     en = (out / "leaderboard.html").read_text(encoding="utf-8")
-    assert "<h1>Leaderboard</h1>" in en and "EXAMPLE" in en and "Reference solution" in en
+    assert "<h1>Leaderboard</h1>" in en and "Round 2026-11" in en and "Reference solution" in en
     assert 'href="https://github.com/example/FDE-Bench-v2/tree/main/docs/SUBMITTING.md"' in en
-    assert 'href="https://github.com/example/FDE-Bench-v2/tree/main/leaderboard/EXAMPLE-anchors.json"' in en
+    assert 'href="https://github.com/example/FDE-Bench-v2/tree/main/leaderboard/anchors-2026-11.json"' in en
     assert 'href="ko/leaderboard.html"' in en                            # the language switcher
     for lang in LANGS[1:]:
         page = (out / lang / "leaderboard.html").read_text(encoding="utf-8")

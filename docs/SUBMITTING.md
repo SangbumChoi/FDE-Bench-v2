@@ -22,38 +22,41 @@ program case).
 
 ## 1. Run a campaign
 
-Copy `configs/experiments.example.yaml`, list your agent and set the rule seeds and trials:
+A first look, for development (9 runs, no docker, public rule seeds):
+
+```bash
+cp configs/models.example.yaml configs/models.yaml      # one endpoint and its API-key env var
+fdebench2 campaign configs/experiments.starter.yaml
+fdebench2 report runs-starter/
+```
+
+A leaderboard entry runs the current **round** ([leaderboard/rounds.yaml](../leaderboard/rounds.yaml)): every
+case, at three difficulties, on the round's three rule seeds, three trials each, in docker. That is 351 runs, the
+same for every system. `configs/experiments.leaderboard.yaml` is that campaign; set your agent in it and change
+nothing else:
 
 ```yaml
-defaults:
-  models: configs/models.yaml
-  out: runs
-  isolation: strict                 # every run in the docker sandbox (docker/Dockerfile.agent)
-  sandbox: {kind: docker, image: "fde-bench-agent:latest"}
-  rule_seeds: [90211, 90212, 90213] # private rule seeds: any ints outside each case's public panel
-  trials: 3                         # at least 3
 agents:
-  - {harness: reference, model: my-model}
-experiments:
-  main: {cases: all}
+  - {harness: reference, model: my-model}     # an endpoint name from configs/models.yaml, or a vendor harness
 ```
 
 ```bash
-fdebench2 campaign my_campaign.yaml
-fdebench2 report runs/                          # check the tables before you package them
+fdebench2 campaign configs/experiments.leaderboard.yaml --dry-run   # 351 runs
+fdebench2 campaign configs/experiments.leaderboard.yaml
+fdebench2 report runs-leaderboard/              # check the tables before you package them
 ```
 
 ## 2. Package the results
 
 ```bash
-fdebench2 submit runs/ --name "My system" --model my-model-2026-10 --harness reference \
+fdebench2 submit runs-leaderboard/ --name "My system" --model my-model-2026-10 --harness reference \
     --version 1.2 --flag web_tools=off --flag max_steps=400 --flag budget_usd_per_run=5 \
     --date 2026-11-06 --out leaderboard/my-system.json
 ```
 
 | Option | Meaning |
 |---|---|
-| `runs/` | the campaign's results directory (`<agent>/<run key>/result.json`) |
+| `runs-leaderboard/` | the campaign's results directory (`<agent>/<run key>/result.json`) |
 | `--name` | the system's name on the leaderboard |
 | `--model`, `--harness` | what the leaderboard shows (default: the runs' own model and harness) |
 | `--version` | your system's version |
@@ -61,9 +64,10 @@ fdebench2 submit runs/ --name "My system" --model my-model-2026-10 --harness ref
 | `--date` | the submission date, `YYYY-MM-DD` (default: today, UTC) |
 | `--agent` | the agent label `<harness>--<model>` when the directory holds several agents' runs |
 | `--cases` | the cases folder (default `cases/`), used to tell public from private rule seeds and to hash the cases |
+| `--rounds` | the rounds file (default `leaderboard/rounds.yaml`) |
 
 It prints the file it wrote and a one-line summary: scored runs, cases, the mean final score with its interval, and
-the status (`ranked` or `development`, with the reasons).
+the status (`ranked` with its round, or `development` with the reasons).
 
 ## 3. Send it
 
@@ -73,11 +77,15 @@ were on, and anything else a reader needs to reproduce them.
 
 ## Rules
 
-- **Private rule seeds.** Ranking uses private rule seeds only: ints outside every case's public panel
-  (`rule_seeds:` in its `case.yaml`), whose answers are stored nowhere. A submission with any run on a public rule
-  seed is marked `development` and shown unranked. Choose fresh seeds; they become public once the submission is
-  merged.
-- **Trials ≥ 3.** Every variant must run at least 3 times (`trials: 3`); with fewer the submission is `development`.
+- **Run the round.** A submission is ranked only when it ran one round of
+  [leaderboard/rounds.yaml](../leaderboard/rounds.yaml) in full: every case, at each of the round's tiers and rule
+  seeds, on the round's track (English client and agent, the `baseline` policy, `standard` engagement). Every system
+  in a round answers the same settings, so results are comparable and nobody picks their own seeds. The round's
+  rule seeds are outside every case's public panel: their answers are stored nowhere in the repository. A new round
+  gets new seeds, and the leaderboard lists each round apart.
+- **Anything else is `development`.** Runs on public rule seeds, on your own seeds, on part of the cases or tiers,
+  or in another language or policy are welcome, and are shown unranked with the reason.
+- **Trials ≥ 3.** Every setting must run at least 3 times (`trials: 3`); with fewer the submission is `development`.
 - **Web tools off, or logged.** A run must not look up the case online. If the harness has web tools, turn them off
   (`--flag web_tools=off`) or keep their logs and say so (`--flag web_tools=logged`).
 - **Disclose the harness and budgets.** Name the harness and its version and every budget (steps, tokens, dollars,
@@ -85,6 +93,10 @@ were on, and anything else a reader needs to reproduce them.
 - **The benchmark as released.** Run an unmodified checkout. The submission records the commit and a hash of every
   case's files, so results on other case versions are not compared.
 - **No hand edits.** The JSON is what `fdebench2 submit` wrote.
+- **Results are self-reported.** The scorer and the reference solutions are code in this repository, so a round's
+  answers can be computed by anyone who runs it. The agent must not: in the sandbox it sees only its workspace
+  (`isolation: strict`). The leaderboard relies on that, as self-reported leaderboards do; a submission that cannot
+  be reproduced from its description can be removed.
 
 ## The format
 
@@ -98,7 +110,8 @@ One JSON object, `"format": "fdebench2-submission/1"`:
 | `benchmark` | `framework_version`, `git_commit`, `git_dirty` (uncommitted changes under `cases/`, `fdebench2/` or `configs/`), `cases`: `{case id: hash of its files}` (the hash a run's fingerprint uses: the case's files except its docs and stored audit) |
 | `seeds` | `kind`: `private`, `public`, `mixed` or `none`, and the `public` and `private` rule seeds used |
 | `trials` | the fewest trials any variant ran |
-| `status` | `ranked` (private rule seeds only, `trials` ≥ 3) or `development`; `anchor` for the anchors |
+| `status` | `ranked` (a full round, `trials` ≥ 3) or `development`; `anchor` for the anchors |
+| `round` | the id of the round a ranked submission ran, else null |
 | `status_reasons` | why a submission is not ranked |
 | `aggregate` | the means below, each `{mean, ci: [low, high], n_cases}`, plus `n_runs`, `n_scored`, `n_cases` and `statuses` (runs per status) |
 | `runs` | one record per run (below) |
@@ -126,6 +139,7 @@ version, or null), `trial`, `noise_seed`, `customer_locale`, `agent_locale`, `po
 **Anchors.** A file of `kind: "anchors"` holds the cases' literal solution, baseline and reference, scored offline
 as `fdebench2 try` scores them, with `anchors: {literal | baseline | reference: aggregate}` instead of `aggregate`
 and an `anchor` field on every run. The leaderboard shows them as reference rows, never ranked.
-[leaderboard/EXAMPLE-anchors.json](../leaderboard/EXAMPLE-anchors.json) is one, written by
-`fdebench2 anchors --difficulty easy --difficulty medium --difficulty hard --out leaderboard/EXAMPLE-anchors.json`
-on the public rule seeds; it is an example of the format, not a model.
+[leaderboard/anchors-2026-11.json](../leaderboard/anchors-2026-11.json) holds them for the current round, written by
+`fdebench2 anchors --round 2026-11 --out leaderboard/anchors-2026-11.json` on the round's tiers and rule seeds, so
+the reference rows and the ranked systems answer the same settings. Without `--round` the command scores the public
+rule seeds and marks the file as an example.

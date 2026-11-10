@@ -38,8 +38,6 @@ import shutil
 import tempfile
 from pathlib import Path
 
-import yaml
-
 from .cases import LOCALES, NativeCase, NotLocalized, quality_span
 
 DATASET_DIR = "dataset"
@@ -82,11 +80,6 @@ def answer_row(case: NativeCase, res: dict) -> dict:
         if isinstance(v, (int, float, str, bool)) or v is None:
             row[f"metric_{k}"] = "" if v is None else v
     return row
-
-
-def _json(path: Path, doc: dict) -> None:
-    path.write_text(json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True, default=str) + "\n",
-                    encoding="utf-8")
 
 
 def _bundle(case: NativeCase, c: NativeCase, extra, dest: Path) -> dict:

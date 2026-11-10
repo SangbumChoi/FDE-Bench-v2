@@ -57,12 +57,17 @@ def _cost(agg: dict[str, Any]) -> str:
 
 
 def ordered(subs: list[tuple[str, dict[str, Any]]]) -> list[tuple[str | None, str, dict[str, Any]]]:
-    """(rank or None, file, submission) for the systems: ranked by mean final, then development; anchors left out."""
+    """(rank or None, file, submission) for the systems: the ranked ones by round (newest first) and, within a
+    round, by mean final, each round ranked from 1; then development; anchors left out."""
     systems = [(f, s) for f, s in subs if s.get("kind") != "anchors"]
-    key = lambda fs: -(_mean(fs[1]["aggregate"], "final") or 0.0)  # noqa: E731
-    ranked = sorted((fs for fs in systems if fs[1].get("status") == "ranked"), key=key)
-    rest = sorted((fs for fs in systems if fs[1].get("status") != "ranked"), key=key)
-    return [(str(i), f, s) for i, (f, s) in enumerate(ranked, 1)] + [(None, f, s) for f, s in rest]
+    final = lambda fs: -(_mean(fs[1]["aggregate"], "final") or 0.0)  # noqa: E731
+    ranked = [fs for fs in systems if fs[1].get("status") == "ranked"]
+    out: list[tuple[str | None, str, dict[str, Any]]] = []
+    for rnd in sorted({str(s.get("round") or "") for _, s in ranked}, reverse=True):
+        group = sorted((fs for fs in ranked if str(fs[1].get("round") or "") == rnd), key=final)
+        out += [(str(i), f, s) for i, (f, s) in enumerate(group, 1)]
+    rest = sorted((fs for fs in systems if fs[1].get("status") != "ranked"), key=final)
+    return out + [(None, f, s) for f, s in rest]
 
 
 def _row(rank: str | None, system: str, model: str, harness: str, agg: dict[str, Any],
@@ -84,8 +89,15 @@ def build_page(lang: str, subs: list[tuple[str, dict[str, Any]]]) -> str:
     head = [t(k) for k in ("lb_rank", "lb_system", "lb_model", "lb_harness", "lb_final", "lb_validity", "lb_quality",
                            "lb_ask_f1", "lb_enforced", "lb_cost", "lb_status")]
     rows = []
+    shown_round = None
     for rank, file, s in ordered(subs):
         sysinfo, agg = s.get("system") or {}, s["aggregate"]
+        if rank is not None and s.get("round") and s["round"] != shown_round:      # a header per round
+            shown_round = s["round"]
+            rows.append(f'<tr class="group"><td colspan="{len(head)}">{t("lb_round", id=_esc(shown_round))}</td></tr>')
+        elif rank is None and shown_round is not None:
+            shown_round = None
+            rows.append(f'<tr class="group"><td colspan="{len(head)}">{t("lb_development")}</td></tr>')
         name = (f'<a href="{_esc(file)}">{_esc(sysinfo.get("name"))}</a>' + (badge if s.get("example") else "")
                 + f'<br><span class="muted">{t("lb_cases", n=agg.get("n_cases", 0), runs=agg.get("n_scored", 0))}'
                 + (f" · v{_esc(sysinfo['version'])}" if sysinfo.get("version") else "") + "</span>")
@@ -100,6 +112,7 @@ def build_page(lang: str, subs: list[tuple[str, dict[str, Any]]]) -> str:
             for name, agg in s["anchors"].items():
                 label = (f'<a href="{_esc(file)}">{_esc(UI[lang].get(f"try_{name}", name))}</a>'
                          + (badge if s.get("example") else "")
+                         + (f' <span class="muted">{t("lb_round", id=_esc(s["round"]))}</span>' if s.get("round") else "")
                          + f'<br><span class="muted">{t("lb_cases", n=agg.get("n_cases", 0), runs=agg.get("n_scored", 0))}</span>')
                 rows.append(_row(None, label, "–", "–", agg, status_word["anchor"]))
     current = ' aria-current="page"'
