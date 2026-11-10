@@ -17,8 +17,8 @@
  },
  "benchmark": {
   "framework_version": "0.1.0",
-  "git_commit": "5150bc9270ab9fb9d3d74d28767fdb5b299d536a",
-  "git_dirty": true,
+  "git_commit": "31a36bd43f23c79814e8f99b567fe146a19f9abe",
+  "git_dirty": false,
   "cases": {
    "customer_service/callcenter_workforce_planner": "0c5536934f3e5c8dc355669901884f4e6fdfde101bc53d0fd4dba7a7dd017bd7",
    "data_knowledge/bi_data_analyst": "e64f5b6d559a7651ef64fd6811982ed07f5edb5b1a50028ad13cce4b23d8c7e8",
