@@ -755,7 +755,7 @@ zh:
   diff_heading: 有何不同
   site_leaderboard: 排行榜
   lb_title: 排行榜
-  lb_intro: 在相同案例上比较的智能体系统（模型 × 运行框架）。<strong>最终得分</strong>是默认策略下的综合得分（交付物违反规则则为 0），并附有按案例计算的 95% 自助法区间。只有完整运行了排行榜某一轮的提交才<strong>参与排名</strong>：每个案例、每个难度，所有系统使用相同的规则种子，每个设置至少试验
+  lb_intro: 在相同案例上比较的智能体系统（模型 × 运行框架）。<strong>最终得分</strong>是默认政策下的综合得分（交付物违反规则则为 0），并附有按案例计算的 95% 自助法区间。只有完整运行了排行榜某一轮的提交才<strong>参与排名</strong>：每个案例、每个难度，所有系统使用相同的规则种子，每个设置至少试验
     3 次。其余显示为<strong>开发用</strong>。基准行是各案例的“按字面执行需求的答案”、客户原来的做法和参考答案，不是模型。
   lb_how: 如何参与：{link}。
   lb_rank: 排名
@@ -788,8 +788,8 @@ zh:
   try_scale: 评分尺度
   try_scale_invalid: 违反规则的交付物无效，得 0 分。
   try_scale_quality: 否则，质量放在这样的尺度上：客户原来的做法（没有工程师时的做法）记 0 分，参考答案记 1 分。高于 1 即优于参考答案。
-  try_scale_final: 默认策略（{policy}）下的最终得分：质量 / {cap}，最高为 1。参考答案得 {ref}；满分需要质量达到 {cap}。
-  try_scale_offline: 提问、沟通和效率按离线提交计分（没有提问，所以 Ask-F1 为 0）；默认策略中它们的权重为 0。
+  try_scale_final: 默认政策（{policy}）下的最终得分：质量 / {cap}，最高为 1。参考答案得 {ref}；满分需要质量达到 {cap}。
+  try_scale_offline: 提问、沟通和效率按离线提交计分（没有提问，所以 Ask-F1 为 0）；默认政策中它们的权重为 0。
   try_scores: 此设置下的得分
   try_col_deliverable: 交付物
   try_col_valid: 有效
