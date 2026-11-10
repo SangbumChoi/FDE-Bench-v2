@@ -17,7 +17,7 @@ configuraciones, reglas, lo que solo sabe el cliente, los hechos que la IA debe 
 revisión), que `fdebench2 build-site` reconstruye a partir de `cases/*/*/docs/<lang>/explainer.html` y que se
 publica en la rama `gh-pages` con cada push (`.github/workflows/pages.yml`).
 
-**Clasificación:** https://sangbumchoi.github.io/FDE-Bench-v2/leaderboard.html (desde `leaderboard/*.json`). Para participar, ver [docs/SUBMITTING.md](../SUBMITTING.md).
+**Clasificación:** https://sangbumchoi.github.io/FDE-Bench-v2/leaderboard.html (desde `leaderboard/*.json`). Para participar, véase [docs/es/SUBMITTING.md](SUBMITTING.md).
 
 ## Inicio rápido
 
@@ -25,19 +25,19 @@ No hace falta ningún modelo ni clave de API para ver qué pide un caso y cómo 
 
 ```bash
 pip install -e .
-fdebench2 try                                         # un caso: el encargo, sus archivos, la escala y tres soluciones de referencia puntuadas
+fdebench2 try                                         # un caso: la solicitud, sus archivos, la escala de puntuación y tres soluciones puntuadas (la literal, la del cliente y la de referencia)
 fdebench2 try --lang ko --submission my_deliverable/  # puntuar un entregable propio (en cualquiera de los cinco idiomas)
 ```
 
 Para ejecutar un modelo, se configura un endpoint y se empieza por la campaña pequeña (9 ejecuciones: tres casos pequeños, dificultad medium, semillas de reglas públicas):
 
 ```bash
-cp configs/models.example.yaml configs/models.yaml    # un endpoint y su variable de entorno con la clave
+cp configs/models.example.yaml configs/models.yaml    # un endpoint y la variable de entorno con su clave de API
 fdebench2 campaign configs/experiments.starter.yaml   # 9 ejecuciones, sin docker
 fdebench2 report runs-starter/
 ```
 
-Hay tres formas de participar: **probar un caso** (arriba), **enviar resultados** a la clasificación ([docs/SUBMITTING.md](../SUBMITTING.md)) o **aportar un caso, una traducción o una revisión** ([CONTRIBUTING.md](CONTRIBUTING.md)).
+Hay tres formas de participar: **probar un caso** (arriba), **enviar resultados** a la clasificación ([docs/es/SUBMITTING.md](SUBMITTING.md)) o **aportar un caso, una traducción o una revisión** ([CONTRIBUTING.md](CONTRIBUTING.md)).
 
 ## Qué tiene de diferente
 
@@ -54,8 +54,8 @@ benchmark hace algo parecido, la tabla lo indica:
   los atajos tienen que estar cerrados, se mide cuánto vale preguntar y la referencia se compara con la mejor solución
   conocida o con una cota. En todos los casos, la solución literal (la solicitud hecha tal como está escrita) debe
   puntuar ≤ 0,2.
-- **Un embudo revelado → aprendido → aplicado** por hecho: si el cliente lo dijo, si el agente lo preguntó y si el
-  entregable lo cumple.
+- **Un embudo dicho → aprendido → aplicado** por hecho: si el cliente lo dijo, si el agente lo preguntó y si el
+  entregable lo aplica.
 - **Clases de reglas, políticas de empresa y un proceso de excepciones:** las reglas físicas nunca se flexibilizan;
   las demás solo a través del proceso de excepciones de la política, cada aprobación cubre una regla concreta, y una
   ejecución se puede volver a puntuar con otras políticas sin repetirla.
@@ -66,12 +66,12 @@ benchmark hace algo parecido, la tabla lo indica:
 | | FDE-Bench v2 | τ-bench | τ^τ-Bench | Baidu FDE-Bench | FDE-Gym |
 |---|---|---|---|---|---|
 | Entregable | Archivos, o un programa ejecutado sobre entradas de evaluación (la IA nunca las recibe) | Un agente conversacional que llama herramientas, juzgado en el diálogo | Un agente de atención al cliente, evaluado con usuarios simulados reservados | Soluciones a 49 proyectos reales de clientes (optimización, ML) | Una entrega en una copia del sistema de producción del cliente, reproducida sobre tráfico reservado |
-| Hechos que solo sabe el cliente | Un cliente simulado responde desde requisitos que solo él conoce; un objetivo por hecho | Un usuario simulado tiene el objetivo de la tarea y lo revela en la conversación | Cliente con requisitos ocultos (IDs de hechos fijos) | Los revela un cliente simulado | Más de 130 partes interesadas con guion; encargos en cuatro niveles |
+| Hechos que solo sabe el cliente | Un cliente simulado responde desde requisitos que solo él conoce; cada hecho se pregunta por separado | Un usuario simulado tiene el objetivo de la tarea y lo revela en la conversación | Cliente con requisitos que el agente no recibe (IDs de hechos fijos) | Los revela un cliente simulado | Más de 130 partes interesadas con guion; encargos en cuatro niveles |
 | Configuraciones contrafactuales sobre una misma vista | Nivel × semilla de reglas, semillas privadas | Tareas fijas (115 de comercio, 50 de aerolínea) | – | No (datos fijos, un límite declarado) | Tareas fijas más variantes reservadas |
 | Idiomas | 5, cliente × agente | 1 (inglés) | – | – | 1 |
 | Políticas de empresa, proceso de excepciones | 4 políticas; una aprobación por regla concreta | Un documento de políticas del dominio (Markdown); sin proceso de excepciones | – | – | – |
 | Auditoría de la respuesta correcta / criterios de admisión | Auditoría por hecho (3 casos); en todos, solución literal ≤ 0,2 y escala ≥ 5 % | – | – | – | Referencia ≥ 0,95, no hacer nada 0, literal ≤ 0,2, atajos ≤ 0,8 |
-| Embudo revelado → aprendido → aplicado | Por hecho, en el informe | – | – | – (señala agentes que preguntaron por una regla y luego no la aplicaron) | – (informa de los hechos clave obtenidos frente a la mejora) |
+| Embudo dicho → aprendido → aplicado | Por hecho, en el informe | – | – | – (señala agentes que preguntaron por una regla y luego no la aplicaron) | – (informa de los hechos clave obtenidos frente a la mejora) |
 | Comparación de arneses | Bucle de referencia + 4 CLI de proveedores en un único canal de cliente MCP | Modelos en un mismo bucle de llamadas a herramientas | Claude Code, Codex, Kimi Code, OpenCode | – | 13 configuraciones |
 | Puntuación | Validez como requisito; calidad de la forma de trabajar del cliente 0 a la referencia 1, también por encima de 1; Ask-F1; pass^k; ponderada por política | 0/1 por tarea: estado final de la base de datos y respuestas requeridas; pass^k | El agente construido con usuarios reservados frente a una referencia oráculo (un intento, sin intervalos de confianza) | Calidad frente a la solución aceptada, DSR, pass^3, Ask-F1, intervalos bootstrap | Mejora normalizada, ≤ 0 ante un incidente, menos un coste de contacto oculto |
 
@@ -90,12 +90,12 @@ cp configs/models.example.yaml configs/models.yaml   # set endpoints and API-key
 
 ```bash
 fdebench2 cases                                   # <field>/<role>, role title, task type, locales
-# Probar un caso sin modelo ni clave de API (el encargo, sus archivos, los hechos que solo sabe el cliente, la
-# escala, y la solución literal, la del cliente y la de referencia puntuadas; --submission DIR puntúa la tuya):
+# Probar un caso sin modelo ni clave de API (la solicitud, sus archivos, los hechos que solo sabe el cliente, la escala, y la
+# solución literal, la forma de trabajar del cliente y la solución de referencia puntuadas; --submission DIR puntúa la propia):
 fdebench2 try
 fdebench2 try --case logistics/bakery_delivery_dispatcher --difficulty hard --lang ko --submission my_deliverable/
-# Empaquetar los resultados de una campaña para la clasificación (docs/SUBMITTING.md):
-fdebench2 campaign configs/experiments.leaderboard.yaml       # 351 runs
+# Empaquetar los resultados de una campaña para la clasificación (docs/es/SUBMITTING.md):
+fdebench2 campaign configs/experiments.leaderboard.yaml       # 351 ejecuciones
 fdebench2 submit runs-leaderboard/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
 fdebench2 validate-case cases/*/*/                # contract checks for every case
 fdebench2 export-dataset cases/<field>/<role>     # store a case's data and answers in dataset/

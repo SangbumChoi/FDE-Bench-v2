@@ -138,6 +138,10 @@ La solución de referencia (`reference/organize.py` + `config.json` de la config
 
 La forma de trabajar del cliente logra 5 / 9 / 9 colocaciones exactas; en medium y hard, 2 de ellas (copias) pierden una quinta parte porque el libro tiene otros archivos y su fila del manifiesto solo enumera el JSON. Con las semillas de mundo 1, 2 y 3, la forma de trabajar del cliente obtiene 3.33–20.00 (easy), 2.73–19.70 (medium) y 3.80–14.00 (hard), frente a referencias de 100.00 (99.40 con la política de revisión). Con la política de revisión, flexibilizar `missing_author_review` (colocar los dos libros sin autor con "Unknown") es válido cuando la regla se relaja y da 100.00 en hard/s18 (calidad normalizada 1.007).
 
+### Solución literal
+
+`literal_solution` es el programa de referencia que lee la unidad tal como la muestran los datos (todos los formatos, codificaciones, notaciones de año, copias y excepciones) y deja en cada archivo solo la sinopsis, con la lectura natural de las reglas del catálogo que nadie dio: `library/<author>/<year>_<title>.txt`, el año de la primera publicación, la escritura original, todos los autores unidos con " & " y los nombres enteros, con sus espacios; lo que no puede archivar va a `_review/` con el motivo en palabras llanas ("years disagree", "author missing"), como pide la solicitud, ya que los seis códigos son del cliente. Es el mismo programa en todas las configuraciones y es inválido en las 9 configuraciones públicas (calidad 0): sus filas de revisión no llevan código de motivo y, con una política de colocación (hard/s11, hard/s21), los libros sin autor van a revisión. El mismo programa, si en su lugar anota esos libros como skipped (como hace `robust_solution`), es válido con 0.28–0.42: un libro mal archivado conserva 0.4 de su crédito, así que las sinopsis correctas en rutas equivocadas lo mantienen por encima de 0.2 incluso con otra estructura (s18, s21).
+
 ## Notas
 
 - El corpus visible es idéntico byte a byte en todas las configuraciones e idiomas (`content_dirs: [corpus]`); solo las notas del archivo, fuera del corpus, están localizadas.

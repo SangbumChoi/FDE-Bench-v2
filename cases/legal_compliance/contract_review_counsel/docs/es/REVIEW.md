@@ -13,7 +13,7 @@ La referencia es una lista de comprobación literal por palabras clave sobre la 
 obtenía 0.7677, y una revisión con información completa que respeta la vía rápida obtenía 0.8794 (calidad 1.145). Con
 el antiguo tope de 1.0, cualquier error en una sola trampa (sin `TERMINATION_CONVENIENCE`, sin umbral de renovación,
 el foro leído como ley aplicable, límites iguales al importe marcados, contratos propios del proveedor dejados vacíos)
-seguía recibiendo la puntuación completa. En la escala actual (línea base 0, tope de la política 1.5) y después de F2,
+seguía recibiendo la puntuación completa. En la escala actual (forma de trabajar del cliente 0, tope de la política 1.5) y después de F2,
 la referencia obtiene 0.8825 y la revisión con información completa 1.0 (calidad 1.153). Los errores de una sola
 trampa puntúan ahora 1.045–1.094 (1.018 cuando se omiten a la vez la renovación y el desistimiento), así que se
 distinguen, pero la mejor revisión posible solo alcanza 1.153 / 1.5 ≈ 0.77 de la puntuación de calidad. Con las semillas
@@ -110,7 +110,7 @@ punto de protección de datos se resuelve consultando el registro. El importe de
 importe anual del contrato». La única presión es la costumbre de la vía rápida, y empuja hacia trabajar menos, no
 hacia un incumplimiento tentador.
 
-**Estado:** abierto — propuesta: añadir situaciones puntuadas. Hechos ocultos: un contrato de marketing o de
+**Estado:** abierto — propuesta: añadir situaciones puntuadas. Hechos que solo conoce el cliente: un contrato de marketing o de
 servicios profesionales cuyo objeto indica que trata la lista de clientes de la empresa, de modo que necesita una
 cláusula de protección de datos en cuanto el cliente lo confirma; un importe del registro desfasado respecto de una
 hoja de pedido adjunta. Eventos con fecha: una modificación o carta complementaria con fecha posterior al contrato que
@@ -119,7 +119,7 @@ patrocinador que dice «C0xx está aprobado por el director general, márquelo c
 un `reject`, puntuado según la decisión real.
 
 **Actualización (semillas de reglas):** en parte. El nivel hard puntúa ahora tres de las situaciones propuestas.
-Hecho oculto: tres contratos de logística o de servicios profesionales cuyo objeto entrega al proveedor datos
+Hecho que solo conoce el cliente: tres contratos de logística o de servicios profesionales cuyo objeto entrega al proveedor datos
 personales de los clientes de la empresa (dos de ellos, sin cláusula de protección de datos, la necesitan). Eventos con
 fecha: cuatro registros de modificación, dos acordados después del borrador (uno introduce la ley y los tribunales de
 Nueva York, otro eleva el plazo de pago de 15 a 60 días), uno propuesto por el proveedor y no aceptado (una indemnidad
@@ -172,7 +172,7 @@ ahora 청구서, como las demás (los textos de los contratos solo cambian en ko
 explicativa. Sigue abierto: un tercer idioma para los contratos en el modelo del proveedor y una revisión por hablantes
 nativos de los textos nuevos (niveles, registros de modificación, el correo).
 
-### F8 — Una pregunta clave agrupaba tres hechos (media, en parte)
+### F8 — Un solo hecho que la IA debe preguntar agrupaba en realidad tres (media, en parte)
 
 `decision_and_scoring` combinaba los códigos de incidencia, la regla de decisión y los pesos "0.7 × issue F1 + 0.3 ×
 decision accuracy". El cliente puede no indicar los pesos, así que esa parte nunca podía quedar cubierta. El
@@ -180,41 +180,41 @@ verificador corrigió dos afirmaciones secundarias. Primero, `deliverable_spec` 
 agente. Segundo, el extractor solo se ejecuta cuando no existe `review.json`, así que los códigos inventados en el
 propio `review.json` de un agente siguen siendo fatales.
 
-**Estado:** corregido en este cambio — la pregunta clave se divide en `issue_codes` y `decision_rule` en los cinco
+**Estado:** corregido en este cambio — ese hecho se divide en `issue_codes` y `decision_rule` en los cinco
 idiomas (en el mismo orden), y se elimina la cláusula de puntuación. La página explicativa ya
 indica que la especificación del entregable se muestra al extractor, no al agente. Sigue abierto — propuesta: añadir
-preguntas clave separadas para las reglas límite reales («un límite igual al importe es correcto», «un contrato sin
-límite es correcto», «el foro no importa»), que hoy están dentro de las preguntas `liability_cap` y `governing_law`.
+hechos separados para las reglas límite reales («un límite igual al importe es correcto», «un contrato sin
+límite es correcto», «el foro no importa»), que hoy están dentro de los hechos `liability_cap` y `governing_law`.
 
-**Actualización (semillas de reglas):** las preguntas clave son ahora por nivel (10 en easy, 12 en medium, 15 en
-hard), con preguntas separadas para los límites de N meses (`period_caps_out_of_round`, `period_caps`) y para el foro
+**Actualización (semillas de reglas):** los hechos que la IA debe preguntar son ahora por nivel (10 en easy, 12 en medium, 15 en
+hard), con hechos separados para los límites de N meses (`period_caps_out_of_round`, `period_caps`) y para el foro
 (`law_not_forum`, `dispute_forum`). Las demás reglas límite (un límite igual, un contrato sin límite) siguen dentro de
 `liability_cap`.
 
 ### F9 — Sin README; sorpresas para el revisor (baja, confirmado)
 
-El caso no tenía un README con notas de realismo, líneas base o el techo. El docstring decía que la coincidencia por
+El caso no tenía un README con notas de realismo, la forma de trabajar del cliente o el techo. El docstring decía que la coincidencia por
 palabras clave pasa cosas por alto, mientras que ese mismo buscador de palabras clave definía la calidad 1.0. La
 referencia perdía 11 aciertos por la propia regla del cliente, y la fila del catálogo no coincidía con la regla
 flexibilizable implementada.
 
 **Estado:** corregido en este cambio — README.md cubre el cliente y los datos, las reglas, las trampas de cada
-cláusula, las situaciones presentes, el papel de la vía rápida, los errores de la referencia, las cifras de la línea
-base y del margen de mejora, y la práctica detrás de los criterios. El docstring dice ahora que la referencia es la
+cláusula, las situaciones presentes, el papel de la vía rápida, los errores de la referencia, las cifras de la forma de trabajar del cliente
+y del margen de mejora, y la práctica detrás de los criterios. El docstring dice ahora que la referencia es la
 lista de comprobación literal. Las 11 omisiones desaparecen con F2. La fila del catálogo en cases/README.md queda fuera
 del directorio de este caso y sigue abierta (véase F2).
 
 **Actualización (semillas de reglas):** README.md se ha reescrito para las configuraciones: niveles, parámetros con
-sus conjuntos de candidatos, las semillas de reglas públicas con cada diccionario sorteado y sus cifras, las preguntas
-clave por nivel y el margen de mejora por nivel. docs/<lang>/README.md y docs/<lang>/REVIEW.md siguen describiendo el caso sin
+sus conjuntos de candidatos, las semillas de reglas públicas con cada diccionario sorteado y sus cifras, los hechos que la IA debe preguntar
+por nivel y el margen de mejora por nivel. docs/<lang>/README.md y docs/<lang>/REVIEW.md siguen describiendo el caso sin
 configuraciones hasta que se vuelvan a traducir.
 
-**Línea base:** firma todos los contratos tal como están (sin incidencias, decisión `sign`), con un objetivo de 0.1125
+**Forma de trabajar del cliente:** firma todos los contratos tal como están (sin incidencias, decisión `sign`), con un objetivo de 0.1125
 frente al 0.8825 de la referencia con la semilla de mundo 20261026. Con las semillas de mundo 1–3 obtiene
 0.0750 / 0.1200 / 0.0900 frente a 0.8485 / 0.8301 / 0.7793. Es válida en todas partes: respeta la vía rápida y solo
 acierta los contratos cuya respuesta correcta es `sign` (15 de 40 con la semilla guardada).
 
-**Línea base (semillas de reglas):** sin cambios (firma todos los contratos tal como están) y válida en todas las
+**Forma de trabajar del cliente (semillas de reglas):** sin cambios (firma todos los contratos tal como están) y válida en todas las
 configuraciones. En las semillas de reglas públicas, con la semilla guardada, obtiene 0.0000–0.0750 frente al
 0.8214–0.8942 de la referencia; con los sorteos estrictos casi todos los contratos puntuados necesitan cambios, así que
 solo puntúa por las pocas decisiones `sign` acertadas.
@@ -250,7 +250,7 @@ configuraciones.
   nivel; los archivos explainer.yaml tienen los tres niveles y las reglas con sus parámetros. La frase coreana de la vía
   rápida es la que proponía F7.
 - **Comprobaciones.** `validate-case` se supera con las semillas de mundo 1–3 (y 1–12): la referencia es válida con
-  calidad 1.0 y la línea base es válida y peor en las nueve configuraciones públicas, cada regla tiene un ejemplo que
+  calidad 1.0 y la forma de trabajar del cliente es válida y peor en las nueve configuraciones públicas, cada regla tiene un ejemplo que
   solo la incumple a ella (el de la vía rápida, solo en hard), y todos los parámetros influyen en la configuración hard
   de la primera semilla pública (el margen más estrecho entre las semillas públicas y las semillas de mundo 20261026 y
   1–3 es del 1.6%, para `tfc_above`).
@@ -261,5 +261,5 @@ configuraciones.
   códigos ajenos a la ronda o con ellos; la F1 de incidencias y la exactitud de decisiones no cambian, así que todas las
   cifras guardadas siguen igual.
 - **Resuelto:** F4. **En parte:** F3 (un hecho de decisión sorteado), F5 (tres situaciones), F7 (dos cadenas), F8
-  (preguntas clave por nivel). **Sigue abierto:** F1, F6 (más denso), el resto de F3, F5 y F7, y la fila del catálogo de
+  (hechos que la IA debe preguntar, por nivel). **Sigue abierto:** F1, F6 (más denso), el resto de F3, F5 y F7, y la fila del catálogo de
   F2, fuera de este directorio.

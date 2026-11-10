@@ -15,7 +15,7 @@ casos nuevos en [docs/DIRECTION.md](../DIRECTION.md), §5.
 | **Una traducción o una revisión nativa** | Corregir o revisar los textos de un idioma: `locales/<lang>/` (request, requirements, targets, summary, explainer.yaml), `docs/<lang>/README.md` y `REVIEW.md`, `fdebench2/prompts/*.yaml`, `docs/<lang>/` | Una PR para el idioma que se lee de forma nativa, indicando qué archivos se revisaron |
 | **Una revisión de las respuestas del cliente** | Un veredicto en el `CLIENT_REVIEW.md` de un caso auditado: ¿el pasaje del que responde el cliente de cada idioma contesta a la pregunta natural, correctamente y sin dar de más? | La sección de abajo |
 | **Un informe de error** | Puntuación incorrecta, un hueco del validador, un fallo, una página rota, un cliente que filtra o inventa una regla | Un issue con la plantilla *Bug report* |
-| **El envío de resultados** | Ejecuciones de un modelo o un arnés sobre el benchmark | [docs/SUBMITTING.md](../SUBMITTING.md) |
+| **El envío de resultados** | Ejecuciones de un modelo o un arnés sobre el benchmark | [docs/es/SUBMITTING.md](SUBMITTING.md) |
 
 ### Revisión de las respuestas del cliente
 
@@ -40,8 +40,8 @@ fdebench2 audit-case cases/<field>/<role>     # the ground truth audit, stored i
 python -m pytest -q                           # the repository's tests
 ```
 
-1. **Proponer.** Abra un issue con la plantilla *Case proposal*: el rol, el cliente, el entregable, los hechos ocultos
-   y cómo cambia cada uno la respuesta. Elija un rol del catálogo o diga a qué campo pertenece (`cases/fields.yaml`).
+1. **Proponer.** Abra un issue con la plantilla *Case proposal*: el rol, el cliente, el entregable, los hechos que solo
+   conoce el cliente y cómo cambia cada uno la respuesta. Elija un rol del catálogo o diga a qué campo pertenece (`cases/fields.yaml`).
 2. **Crear el esqueleto.** `fdebench2 new-case` escribe case.yaml, case.py, los cinco idiomas y el README en cada
    idioma, con todas las partes obligatorias marcadas TODO. Tome como modelo los casos construidos que nombra su
    docstring (`fdebench2/scaffold.py`).
@@ -50,8 +50,8 @@ python -m pytest -q                           # the repository's tests
    `shortcuts`, `robust_solution`, `best_known_solution` u `objective_bound` ([DESIGN.md](../../DESIGN.md), §3).
 4. **Escribir los textos en los cinco idiomas:** `locales/<lang>/request.md`, `requirements.md`, `targets.yaml`,
    `summary.yaml`, `explainer.yaml` (salvo en) y `docs/<lang>/README.md`. Cada idioma se redacta de forma nativa, no
-   como una traducción palabra por palabra, con los mismos ids de objetivos, marcadores `{{param}}` y marcas de
-   configuración en todos.
+   como una traducción palabra por palabra, con los mismos ids de los hechos que la IA debe preguntar, los mismos
+   marcadores `{{param}}` y las mismas marcas de configuración en todos.
 5. **Exportar** con `fdebench2 export-dataset` y **validar** con `fdebench2 validate-case` hasta que no informe de
    ningún problema. Corrija los avisos o explíquelos en el `docs/en/REVIEW.md` del caso.
 6. **Auditar** con `fdebench2 audit-case` (de 10 a 40 minutos). Cuando el caso la supere, ponga `audited: true` y
@@ -62,7 +62,7 @@ python -m pytest -q                           # the repository's tests
 ## El nivel que debe alcanzar un caso
 
 - `fdebench2 validate-case` no informa de ningún problema, en el mundo público y en las semillas de mundo 1-3.
-- La escala de calidad mide al menos un 5 % en cada configuración pública: |referencia − línea base| / |referencia| ≥ 0,05.
+- La escala de calidad mide al menos un 5 % en cada configuración pública: |referencia − forma de trabajar del cliente| / |referencia| ≥ 0,05.
 - La solución literal (la solicitud hecha tal como está escrita, solo con lo que ve el agente) es inválida o puntúa
   como mucho 0,2 en cada configuración pública.
 - Lo que ve el agente (solicitud y archivos) es idéntico byte a byte en todas las configuraciones; solo cambian los

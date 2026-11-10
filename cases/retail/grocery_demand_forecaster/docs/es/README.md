@@ -8,7 +8,7 @@ noviembre", porque hace sus pedidos con esas cifras. El entregable es `forecast.
 reales del periodo de la previsión, que solo existen en el mundo.
 
 El caso tiene **configuraciones**: tres niveles × semillas de reglas (DESIGN.md, Settings). Los datos y la solicitud
-son los mismos en todas las configuraciones; solo cambian las reglas ocultas del cliente, aquello con lo que se evalúa
+son los mismos en todas las configuraciones; solo cambian las reglas que conoce únicamente el cliente, aquello con lo que se evalúa
 la previsión y, por tanto, la previsión correcta. Los ajustes de la modalidad (especificación completa frente a
 aclarar primero, perfil del cliente, ruido en los datos, eventos) se aplican por encima, como en todos los casos
 (véase [cases/README.md](../../../../README.md)).
@@ -50,7 +50,7 @@ configuración de la comprobación de influencia de los parámetros (hard/s3: si
 que el primer candidato alternativo de cada parámetro ya invalida la referencia, mueve su objetivo o hace que la
 propia referencia de esa configuración la supere en al menos un 3%.
 
-| Configuración | Parámetros sorteados | Referencia | Línea base | Línea base / referencia |
+| Configuración | Parámetros sorteados | Solución de referencia | Forma de trabajar del cliente | Forma de trabajar del cliente / referencia |
 |---|---|---|---|---|
 | easy/s3 | mínimo 6, peso 1 | 0.1750 | 0.2873 | 1.64 |
 | easy/s25 | mínimo 8, peso 2 | 0.2374 | 0.4090 | 1.72 |
@@ -89,12 +89,12 @@ la supera en al menos un 5%):
 - `short_weight`: +45.3% con peso 2, +90.6% con 3 (y allí la propia referencia de la configuración ponderada es un
   8.4% y un 18.4% mejor).
 
-Con las semillas de mundo 1, 2 y 3, el cociente línea base ÷ referencia es 1.34–1.76 (easy), 1.45–2.25 (medium) y
+Con las semillas de mundo 1, 2 y 3, el cociente forma de trabajar del cliente ÷ referencia es 1.34–1.76 (easy), 1.45–2.25 (medium) y
 1.68–2.96 (hard).
 
 ## Qué debe preguntar el agente
 
-Las preguntas clave, por nivel (`locales/<lang>/targets.yaml`):
+Los hechos que la IA debe preguntar, por nivel (`locales/<lang>/targets.yaml`):
 
 - **Todos los niveles:** el cierre dominical de S4 (`s4_sunday_closed`), el mínimo de exposición y su valor
   (`min_display`), la métrica con su peso del error y qué es lo real (`wape_metric`: ventas de caja con las
@@ -105,7 +105,7 @@ Las preguntas clave, por nivel (`locales/<lang>/targets.yaml`):
 - **hard:** la censura por roturas de stock (`stockout_censoring`), las devoluciones fuera (`returns`), la cancelación
   del 30 de octubre y su categoría (`promo_revision`), el cambio de unidad de I07 (`unit_change_i07`).
 
-Es decir, 5 preguntas clave en easy, 7 en medium y 11 en hard.
+Es decir, 5 hechos que preguntar en easy, 7 en medium y 11 en hard.
 
 ## Datos
 
@@ -149,16 +149,16 @@ la demanda de los clientes (hard); I07 solo se evalúa en hard.
 
 ## Situaciones presentes
 
-- **Hechos ocultos:** el alcance limitado a la previsión base (easy), qué es lo real (ventas de caja o demanda), las
+- **Hechos que solo conoce el cliente:** el alcance limitado a la previsión base (easy), qué es lo real (ventas de caja o demanda), las
   devoluciones, el cierre dominical de S4, el plan de promociones y el folleto, el festivo único y su fecha, el cambio
   de unidad de I07, el mínimo de exposición y el peso del error.
 - **Un evento con fecha (hard):** la cancelación del 30 de octubre, posterior a la exportación de `promo_plan.csv`,
   así que el archivo que tiene el agente está desactualizado para una categoría.
 - No hay mensaje de presión; los únicos eventos adicionales los aporta el eje de modalidad (REVIEW.md, F7).
 
-## Referencia y línea base
+## Solución de referencia y forma de trabajar del cliente
 
-La **referencia** es un modelo de nivel y perfil semanal por tienda × artículo construido solo con el historial: un
+La **solución de referencia** es un modelo de nivel y perfil semanal por tienda × artículo construido solo con el historial: un
 perfil por día de la semana a partir de las últimas 52 semanas de días utilizables sin promoción ni festivo, un nivel
 a partir de las últimas 8 semanas de esos días, un factor estacional por categoría a partir del nivel del año pasado
 en torno al periodo de la previsión, un efecto de promoción por categoría y descuento y un efecto de festivo por
@@ -170,12 +170,12 @@ del cociente entre el valor real y el ajustado de la tienda × artículo en las 
 se registraron (con los días de rotura de stock, con las devoluciones restadas, como describe el cliente lo real); en
 hard ajusta la demanda (sin los días de rotura de stock ni las filas de devolución).
 
-La **línea base** es la previsión ingenua estacional que usaría un encargado de tienda sin un ingeniero, la misma en
+La **forma de trabajar del cliente** es la previsión ingenua estacional que usaría un encargado de tienda sin un ingeniero, la misma en
 todas las configuraciones: lo que registró la caja el mismo día de la semana en la última semana del historial (del 26
 de octubre al 1 de noviembre), con los domingos de S4 a 0 y el mínimo sorteado en los artículos básicos. No hace
 ningún ajuste por roturas de stock, promociones, festivos ni peso.
 
-Lo que aporta cada parte con la semilla del caso (la referencia con un solo cambio; calidad en la escala línea base 0
+Lo que aporta cada parte con la semilla del caso (la referencia con un solo cambio; calidad en la escala forma de trabajar del cliente 0
 / referencia 1):
 
 | Cambio en la referencia | easy/s25 | medium/s25 | hard/s3 | hard/s25 | hard/s58 |
@@ -197,10 +197,19 @@ caja, no hace falta ajustar la demanda, aunque ajustarla sigue superando al ajus
 la de la demanda). Flexibilizar el mínimo aporta un 7–11% con un mínimo de 6 u 8 y nada con 4 bajo peso 3, donde la
 previsión por cuantil ya lo supera.
 
+### Solución literal
+
+`literal_solution` es la solicitud hecha tal como está escrita: el modelo de la referencia ajustado a las ventas de
+caja con las devoluciones restadas, con el plan de promociones al efecto que muestran las promociones pasadas y los
+festivos del archivo (ninguno en el periodo de la previsión), el historial de I07 tal como está registrado, la
+previsión mediana y sin mínimo de exposición; los domingos de S4 salen a 0 porque su historial no tiene filas en
+domingo. Es la misma previsión en todas las configuraciones y es inválida en las 9 configuraciones públicas (calidad
+0): 128–136 previsiones de artículos básicos quedan por debajo del mínimo de exposición del cliente.
+
 ## Notas
 
 - Sintético. Todos los volúmenes, perfiles, elasticidades, efectos de festivos y tasas de rotura de stock son
   inventados; nada está calibrado con una cadena real. El calendario de festivos es genérico (véase REVIEW.md, F8).
 - `validate-case` comprueba que los datos sean deterministas en los cinco idiomas, que la referencia tenga calidad 1.0
-  en todas las configuraciones públicas, que haya una línea base válida peor que la referencia y un entregable por
+  en todas las configuraciones públicas, que haya una forma de trabajar del cliente válida y peor que la referencia y un entregable por
   regla que incumpla solo esa regla, que todos los parámetros influyan, y las semillas de mundo 1–3.

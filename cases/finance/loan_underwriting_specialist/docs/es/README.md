@@ -67,7 +67,7 @@ Lo escribe `python -m fdebench2.cli export-dataset cases/finance/loan_underwriti
 - `hidden/mail/<lang>/<date>_<ref>.eml`: los 25 avisos del período de evaluación (1 cambio regulatorio, 1 recorte de
   presupuesto, 15 amortizaciones, 8 correcciones de documentos) y 10 notas de sucursal como correos, por idioma.
 - `answer/` (las 9 configuraciones públicas, cada archivo con las columnas difficulty y seed): `answers.csv` (una fila
-  por configuración: los parámetros sorteados, el objetivo de la referencia y el de la línea base, las reglas y los
+  por configuración: los parámetros sorteados, el objetivo de la referencia y el de la forma de trabajar del cliente, las reglas y los
   hechos por preguntar vigentes y las métricas de la referencia; los derivados `min_score`, `near_prime_below` y
   `other_bureau` no se guardan), `files/reference/program/underwriter.py` y `files/baseline/program/underwriter.py`
   (iguales en todas las configuraciones) con la configuración de cada una en `reference_program.jsonl` y
@@ -311,6 +311,17 @@ baseline) / (1 − baseline), donde baseline es el objetivo de la forma de traba
 | hard/s30 | 0.812 | 208,404 (81%) | 173 / 331 / 66 | 3,207,874 |
 | hard/s525 | 0.746 | 208,736 (75%) | 172 / 228 / 170 | 3,400,000 |
 | hard/s1043 | 0.845 | 268,709 (84%) | 223 / 208 / 139 | 4,000,000 |
+
+**Solución literal** (`literal_solution`: la solicitud hecha tal como está escrita, la misma en todas las configuraciones):
+el programa de referencia con los únicos valores de las reglas que muestra lo que ve el agente, los del piloto
+(`PILOT_RULES`: la línea diaria de 400,000 desde la que descuenta su tabla al cierre, 50,000 por cliente, su mínimo de
+puntuación y sus límites de DSR y de ingresos, sin presupuesto del período, sin compromiso near-prime, sin costumbre de
+antigüedad), el buró A y, en lo demás, las lecturas naturales que usa `robust_solution` (todos los avisos atendidos, sin
+regla de solicitudes fraccionadas, sin tratar como una unidad las parejas de auditoría, los atributos protegidos fuera del
+scorecard). Aprueba 416 solicitudes por 7,569,189 e incumple en todas las configuraciones el corte de puntuación, el límite
+del cliente, el tope diario, la costumbre de antigüedad, los códigos de motivo y las parejas de auditoría, y desde medium el
+presupuesto del período y el presupuesto que falta en la tabla, así que es inválida en las 9 configuraciones públicas (la
+precisión de su tabla es 0.03–0.14).
 
 Con las semillas de mundo 1–3 (semillas de reglas públicas) la referencia y la forma de trabajar del cliente siguen siendo
 válidas en todas partes, la segunda con un 0.486–0.923 del objetivo de la referencia, así que cada escala de calidad tiene una

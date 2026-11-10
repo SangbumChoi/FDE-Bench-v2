@@ -13,8 +13,8 @@ El caso tiene configuraciones (DESIGN.md, Settings): una configuración es un ni
 misma solicitud y los mismos datos en todas las configuraciones** (el validador comprueba que su prompt y su espacio de
 trabajo son idénticos byte a byte). El nivel decide qué reglas se aplican; la semilla de reglas sortea los números del cliente
 (cuánto cuesta que falte un agente, la semana de contrato, la proporción del festivo, las horas de descanso, el final de una
-baja por enfermedad) entre listas de candidatos. El cliente simulado responde según los requisitos ocultos de la
-configuración y el evaluador puntúa con ella, así que el agente tiene que averiguar con el cliente qué reglas y qué números se
+baja por enfermedad) entre listas de candidatos. El cliente simulado responde según los requisitos de la
+configuración, que solo conoce él, y el evaluador puntúa con ella, así que el agente tiene que averiguar con el cliente qué reglas y qué números se
 aplican esta vez. Los ajustes de la modalidad (especificación completa o aclarar primero, perfil del cliente, ruido en los
 datos, eventos) se aplican encima, como en todos los casos (véase [cases/README.md](../../../../README.md)).
 
@@ -48,7 +48,7 @@ por defecto de una ejecución suelta y la configuración en la que el validador 
 Objetivos con la semilla de mundo pública 20261109 (cuanto menor, mejor); "Óptimo" es un MILP exacto del mismo modelo (véase
 más abajo).
 
-| Configuración | Parámetros sorteados | Línea base | Referencia | Óptimo | Referencia: agentes-franja sin cubrir, coste de personal, turnos | Calidad normalizada del óptimo |
+| Configuración | Parámetros sorteados | Forma de trabajar del cliente | Solución de referencia | Óptimo | Referencia: agentes-franja sin cubrir, coste de personal, turnos | Calidad normalizada del óptimo |
 |---|---|---|---|---|---|---|
 | easy/s10 | peso 40, 32 h (tope 5) | 38,176 | 23,488 | 22,360 | 102, 19,408, 128 | 1.077 |
 | easy/s2 | peso 25, 40 h (tope 6) | 30,061 | 22,075 | 21,330 | 163, 18,000, 120 | 1.093 |
@@ -107,9 +107,9 @@ coste de personal de todos los turnos (horas × tarifa; desde medium, el turno d
 que las tarifas, de lo que cuesta que falte un agente durante media hora en llamadas abandonadas, rellamadas y niveles de
 servicio incumplidos.
 
-## Hechos ocultos (preguntas clave)
+## Lo que solo sabe el cliente (hechos que la IA debe preguntar)
 
-| Pregunta | Clase | Niveles | El hecho |
+| Hecho | Clase | Niveles | Lo que sabe el cliente |
 |---|---|---|---|
 | `one_language` | ambiguous | todos | un agente bilingüe cuenta para un solo idioma, durante todo el turno |
 | `slot_coverage` | ambiguous | todos | la previsión ya está en personas y se comprueba por franja de media hora |
@@ -133,14 +133,14 @@ es correcta. Seguir la nota, o no preguntar, incumple `sick_leave` en todas las 
 
 ## Situaciones presentes
 
-- **Hechos ocultos que deciden la validez:** el tope semanal (un plan de 6 turnos es inválido con un tope de 5: el voraz
+- **Hechos que solo conoce el cliente y que deciden la validez:** el tope semanal (un plan de 6 turnos es inválido con un tope de 5: el voraz
   planificado con el otro tope incumple `max_shifts` 16 veces en easy/s10 y 11 en easy/s3), la regla de descanso (el voraz
   planificado sin ella incumple `min_rest` de 1 a 7 veces; planificado con 11 h cuando son 13 h, 8 veces), la regla de
   acompañamiento (de 6 a 11 incumplimientos si se ignora), el aviso de baja (2 incumplimientos de `sick_leave` en todas las
   configuraciones hard si se sigue la nota), un solo idioma por turno y el archivo de ausencias (si se lee como mes/día, el
   día libre de A20 el lunes 9 de noviembre pasa a ser el 11 de septiembre, y los demás intervalos se extienden a lo largo de
   varios meses).
-- **Hechos ocultos que solo mueven la calidad** (calidad normalizada del voraz planificado con el valor equivocado): el peso
+- **Hechos que solo conoce el cliente y que únicamente mueven la calidad** (calidad normalizada del voraz planificado con el valor equivocado): el peso
   (planificado con 40 cuando es 15: 0.59–0.76; con 15 cuando es 40: 0.68–0.74; con 15 cuando es 25: 0.87–0.91; con 40 cuando
   es 25 el voraz no pierde nada, 1.00–1.02), el festivo (si se ignora: 0.87–0.88 con 50%, 0.97 con 60%, alrededor de 1.0 con
   75%), las horas extra (si se ignoran: 0.79–0.93 donde influyen; con la semilla 10 el voraz resulta, por casualidad, un 1–3%
@@ -154,17 +154,28 @@ es correcta. Seguir la nota, o no preguntar, incumple `sick_leave` en todas las 
 - **Regla flexibilizable:** `buddy_rule`. Con la antigua configuración única, el óptimo ganaba un 0.58% al flexibilizarla
   (REVIEW F4).
 
-## Referencia, línea base y óptimo
+## Solución de referencia, forma de trabajar del cliente y óptimo
 
-La **referencia** es un algoritmo voraz: añade una y otra vez el (agente, día, turno, idioma) con mayor ganancia,
+La **solución de referencia** es un algoritmo voraz: añade una y otra vez el (agente, día, turno, idioma) con mayor ganancia,
 `under_weight` por cada franja aún sin cubrir menos el pago del turno (con el recargo por horas extra desde medium),
 respetando todas las reglas de la configuración y dando preferencia a los agentes veteranos para que más adelante las
-personas de nuevo ingreso encuentren compañero. La **línea base** es el cuadrante rotativo fijo que el supervisor elabora sin
+personas de nuevo ingreso encuentren compañero. La **forma de trabajar del cliente** es el cuadrante rotativo fijo que el supervisor elabora sin
 mirar la previsión: cada veterano trabaja el mismo turno toda la semana en su idioma principal, la jornada completa su semana
 de contrato (`ft_regular_shifts` días) y la media jornada 3, en días consecutivos a partir de un inicio escalonado dentro de
 su idioma y su contrato; los días de ausencia (y en hard los días de baja) se dejan vacíos, y cada persona de nuevo ingreso
-acompaña a un veterano de jornada completa de su idioma (mismos días, mismo turno). La calidad se normaliza: línea base 0,
-referencia 1. Ambas son válidas en todas las configuraciones.
+acompaña a un veterano de jornada completa de su idioma (mismos días, mismo turno). La calidad se normaliza: la forma de trabajar del cliente
+vale 0 y la solución de referencia vale 1. Ambas son válidas en todas las configuraciones.
+
+**Solución literal** (`literal_solution`: la solicitud hecha tal como está escrita, la misma en todas las configuraciones):
+el voraz de la referencia con las lecturas que da lo que ve el agente: la previsión cubierta siempre que se pueda
+("suficiente gente al teléfono para que los clientes no esperen", con un agente que falta ponderado por encima del pago de
+cualquier turno), los idiomas de cada agente, los tipos de turno, un turno al día y las fechas del archivo de ausencias
+leídas como día/mes y solo con las solicitudes aprobadas, la semana habitual de cinco días para todos (lo que ve el agente
+no da ningún tope semanal), la persona de la nota del responsable de equipo programada como siempre, y sin recorte por el
+festivo, horas extra, descanso ni acompañamiento de las personas de nuevo ingreso. Su personal de media jornada trabaja
+hasta 5 turnos frente a los 3 del cliente, así que es inválida en las 9 configuraciones públicas (desde medium incumple
+además el descanso y la costumbre del acompañamiento, y en hard el aviso de baja). El tope es lo único que la hunde en easy:
+con la media jornada limitada a 3 turnos, el mismo voraz obtendría allí 0.68–0.98.
 
 La columna del **óptimo** es un MILP exacto del mismo modelo (1,316–1,364 variables binarias) resuelto con HiGHS de scipy en
 menos de 10 segundos por configuración, con optimalidad demostrada, y comprobado con el propio evaluador de `case.py`. Es un
@@ -173,7 +184,7 @@ festivo 60%, descanso 11 h, sin aviso de baja) da 23,464 frente a los 25,584 del
 0.5–8.1% por encima del óptimo; la calidad normalizada del óptimo es 1.03–1.17 (tabla de arriba). `case.yaml` no fija ningún
 `quality_cap` (véase REVIEW.md, F1).
 
-Semillas de mundo 1–3 (se validan por defecto), línea base / referencia por configuración:
+Semillas de mundo 1–3 (se validan por defecto), forma de trabajar del cliente / referencia por configuración:
 
 | Semilla de mundo | Persona de la nota | easy s10 / s2 / s3 | medium s10 / s2 / s3 | hard s10 / s2 / s3 |
 |---|---|---|---|---|
@@ -193,5 +204,5 @@ Semillas de mundo 1–3 (se validan por defecto), línea base / referencia por c
   12, pero en otras semillas de mundo las ausencias aprobadas de viernes a domingo muestran 13–15 (semillas 1 y 3).
 - `validate-case` comprueba el caso en las nueve configuraciones públicas con su semilla y con las semillas de mundo 1–3:
   datos deterministas en los cinco idiomas e iguales en todas las configuraciones, la referencia válida con calidad 1, la
-  línea base válida y peor, un cuadrante por regla del nivel que incumple solo esa regla, las semillas de reglas públicas y los
+  forma de trabajar del cliente válida y peor, un cuadrante por regla del nivel que incumple solo esa regla, las semillas de reglas públicas y los
   candidatos, y que todos los parámetros influyen.

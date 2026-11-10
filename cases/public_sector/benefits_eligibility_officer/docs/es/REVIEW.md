@@ -1,7 +1,7 @@
 # Revisión — public_sector/benefits_eligibility_officer
 
 Hallazgos de una revisión del caso y la comprobación de cada uno por parte de un verificador. Este cambio añade
-`baseline_solution`, puntúa los códigos de motivo (F5), reformula la pregunta clave sobre la puntuación (F7) y corrige
+`baseline_solution`, puntúa los códigos de motivo (F5), reformula el hecho que la IA debe preguntar sobre la puntuación (F7) y corrige
 la redacción en coreano (F9); los demás hallazgos son propuestas abiertas para el responsable del caso. Las cifras
 corresponden a la semilla 20261026 salvo que se indique otra cosa.
 
@@ -17,7 +17,7 @@ Flexibilizar también rescataba a agentes descuidados: la referencia con renovac
 (cociente 9.88).
 
 **Estado:** corregido en este cambio — el caso de coste cero se corrigió en el framework (`quality_fields`), y con la
-línea base añadida aquí la calidad se normaliza entre la línea base y la referencia. Se comprobó que la respuesta exacta
+forma de trabajar del cliente añadida aquí la calidad se normaliza entre ella y la referencia. Se comprobó que la respuesta exacta
 según la verdad del mundo, con `auto_approve_renewals` relajada, es válida con objetivo 0 y calidad normalizada 1.438
 (cociente 10, el tope). En las semillas de mundo 1-3 obtiene 1.380-1.422. Cuánto debe valer flexibilizar sigue abierto
 (F2).
@@ -29,7 +29,7 @@ del año pasado. Así, 16,773 de los 17,928 de la referencia (11,573 de error de
 tienen derecho × 400) son iguales para toda entrega que cumpla las reglas. El error controlable de la referencia es solo
 1,155, debido a la cantidad fija de 150 aplicada una sola vez por hogar. Los requisitos piden "lo que realmente le
 corresponde al hogar según las reglas de este año" y dicen también que las renovaciones nunca se vuelvan a evaluar. Con
-la nueva línea base, la mejor respuesta que cumple las reglas obtiene 1.028, de modo que con el tope de la política de
+la nueva forma de trabajar del cliente, la mejor respuesta que cumple las reglas obtiene 1.028, de modo que con el tope de la política de
 1.5 recibe alrededor del 69% de la puntuación de calidad. Una respuesta exacta flexibilizada obtiene 1.438. Sin la
 actualización, una respuesta exacta obtiene 1.194 flexibilizada frente a 0.880 cumpliendo las reglas, y el método de la
 referencia, 1.151 flexibilizado frente a 0.852 cumpliendo las reglas. Por lo tanto, flexibilizar siempre compensa en
@@ -80,12 +80,12 @@ del coche sigue siendo "el de mayor valor" (un hecho de medium, no un parámetro
 8 días de cada candidato de residencia y entre los dos límites de cada par de límites de patrimonio, y los niveles
 inferiores indican con las palabras del cliente lo que queda fuera de alcance.
 
-### F4 — Solo hechos ocultos, sin eventos ni presión (media, confirmado)
+### F4 — Únicamente hechos que solo conoce el cliente, sin eventos ni presión (media, confirmado)
 
 Los datos son cuatro CSV y un folleto en un solo idioma. No hay bandeja de entrada, ni corrección con fecha, ni plazo,
 ni interfaz de programa, y la única tentación es la práctica de renovaciones. cases/README.md promete "applicants in
 five languages; deadlines" (solicitantes en cinco idiomas; plazos), que no está construido. La mayoría de los hechos
-ocultos tienen una columna visible que los insinúa (el verificador señala que `amount_cap` y el objetivo no la tienen).
+que solo conoce el cliente tienen una columna visible que los insinúa (el verificador señala que `amount_cap` y el objetivo no la tienen).
 
 **Estado:** abierto — propuesta: añadir un evento con fecha, p. ej. una circular `inbox/*.eml` que corrija la
 actualización para las solicitudes a partir de una fecha dada, o una declaración de patrimonio corregida. Añadir un
@@ -121,7 +121,7 @@ mejor respuesta que cumple las reglas con todos los rechazos codificados `DENY_I
 requisitos enuncian ambas reglas en los cinco idiomas. La referencia no tiene motivos de rechazo equivocados, así que su
 objetivo no cambia.
 
-### F6 — Varios hechos ocultos apenas influyen (media, en parte)
+### F6 — Varios hechos que solo conoce el cliente apenas influyen (media, en parte)
 
 165 de las 300 fechas de solicitud tienen un día mayor que 12, lo que delata el formato de fecha de en/es. Leerlas por
 error como mes/día/año cambia 1 decisión (H022). El tope solo se aplica a 3 de los 121 hogares nuevos con derecho. Las
@@ -138,19 +138,19 @@ el problema de aproximar con 180-184 días desaparece, y 9, 7 y 7 solicitudes nu
 180 y 365 días. El tope se aplica a 10-11, 17-18 y 2-3 hogares nuevos con las tablas de 1,050, 980 y 1,150. La parte del
 formato de fecha no cambia (no se movió ningún hogar cercano al umbral a días de 12 o menos).
 
-### F7 — Algunas preguntas clave de Ask-F1 no tienen respuesta (baja, en parte)
+### F7 — Algunos hechos que la IA debe preguntar (Ask-F1) no tienen respuesta (baja, en parte)
 
-La pregunta clave `scoring` pedía la fórmula de 400 por decisión equivocada, que el cliente simulado puede no describir.
-La pregunta clave `residency` incluye "las fechas están en día/mes/año", algo que no tiene sentido en zh/ja/ko (年月日 y
+El hecho `scoring` pedía la fórmula de 400 por decisión equivocada, que el cliente simulado puede no describir.
+El hecho `residency` incluye "las fechas están en día/mes/año", algo que no tiene sentido en zh/ja/ko (年月日 y
 `2026. 9. 14.`). Además, los jueces ven allí el texto original en inglés.
 
-**Estado:** corregido en este cambio (la pregunta clave `scoring`) — en los cinco idiomas enuncia ahora el objetivo del
+**Estado:** corregido en este cambio (el hecho `scoring`) — en los cinco idiomas enuncia ahora el objetivo del
 negocio (pagar a cada hogar exactamente lo que le corresponde según las reglas de este año y, sobre todo, acertar en
 cada decisión de sí o no) y el orden de los motivos de rechazo. El contexto de los requisitos enuncia ahora ese
 objetivo, de modo que el cliente puede decirlo. La parte del formato de fecha sigue abierta: el framework exige los
-mismos ids de pregunta clave en todos los idiomas y toma kind y domain de en, así que una pregunta clave no puede
-existir solo en en/es. Propuesta: quitar la cláusula de la fecha de la pregunta clave `residency`, o añadir al framework
-preguntas clave por idioma y mantener una sobre el formato de fecha en en y es.
+mismos ids de hechos en todos los idiomas y toma kind y domain de en, así que un hecho no puede
+existir solo en en/es. Propuesta: quitar la cláusula de la fecha del hecho `residency`, o añadir al framework
+hechos por idioma y mantener uno sobre el formato de fecha en en y es.
 
 ### F8 — Los tipos de regla no coinciden con lo que dice el cliente (baja, en parte)
 
@@ -170,7 +170,7 @@ suena forzado y '2026. 3. 14. 이전부터' se señaló como poco claro (el veri
 "in our currency units", pero ko, ja, zh y es omitían la unidad, de modo que '1인 640' se leía como 640 wones (o yenes)
 al mes.
 
-**Estado:** corregido en este cambio — ko usa '예산상 상한' (requisitos y preguntas clave), '3.2% 인상한 뒤' y
+**Estado:** corregido en este cambio — ko usa '예산상 상한' (requisitos y hechos que la IA debe preguntar), '3.2% 인상한 뒤' y
 '2026. 3. 14. 또는 그 이전부터'. La línea de `monthly_amount` del entregable nombra ahora una unidad neutra en todos los idiomas:
 '시의 지급 단위', '当市の支給単位', '本市的发放单位' y 'nuestras unidades monetarias', en línea con en.
 
@@ -192,20 +192,20 @@ a la mitad, así que sus valores siguen siendo redondos, y la prestación del a�
 pasado dentro del tope más bajo que pueda sortear cualquier configuración. La residencia de las renovaciones (400 días o
 más) y el mínimo aleatorio de 60-300 no cambian.
 
-**Línea base:** renovaciones prorrogadas; solicitudes nuevas revisadas en residencia y patrimonio y pagadas según la
+**Forma de trabajar del cliente:** renovaciones prorrogadas; solicitudes nuevas revisadas en residencia y patrimonio y pagadas según la
 tabla del año pasado menos todos los ingresos, dentro del tope. Objetivo 58,879 frente a los 17,928 de la referencia
 (3.28 ×); en las semillas de mundo 1, 2 y 3: 49,945 / 14,435, 42,468 / 12,598 y 54,996 / 15,145.
 
-**Línea base (semillas de reglas):** la misma hoja de cálculo, que lee el periodo de residencia de la configuración y,
+**Forma de trabajar del cliente (semillas de reglas):** la misma hoja de cálculo, que lee el periodo de residencia de la configuración y,
 desde medium, su límite de patrimonio y su tope; cuenta íntegramente todas las columnas de ingresos en todos los niveles
-e ignora la circular y los cambios comunicados. Línea base / referencia con la semilla guardada: 62,318 / 27,472, 71,918
+e ignora la circular y los cambios comunicados. Forma de trabajar del cliente / referencia con la semilla guardada: 62,318 / 27,472, 71,918
 / 24,011 y 54,256 / 33,206 (easy/s2, s31, s78), 44,558 / 23,320, 50,087 / 20,032 y 43,212 / 29,692 (medium), 48,490 /
 22,566, 53,815 / 20,385 y 48,782 / 28,772 (hard).
 
 ## Semillas de reglas
 
 El caso tenía una sola solución correcta. Ahora tiene tres niveles y seis parámetros de reglas sorteados por semillas de
-reglas (DESIGN.md, Settings); el panel público son las semillas de reglas 2, 31 y 78, que entre las tres sortean todos
+reglas (DESIGN.md, Settings); las semillas de reglas públicas son la 2, la 31 y la 78, que entre las tres sortean todos
 los candidatos de todos los parámetros en todos los niveles. Los datos y request.md son idénticos byte a byte en todas
 las configuraciones.
 
@@ -233,17 +233,17 @@ las configuraciones.
   bloques `when` para la deducción fija de 200; case.yaml redacta por idioma la actualización, la deducción, el límite
   de patrimonio y las tablas de topes (6.000 y 3,2 en es); los archivos explainer.yaml tienen los tres niveles y las
   reglas con sus parámetros. request.md nombra ahora también los cambios comunicados y las cartas (igual en todas las
-  configuraciones). Preguntas clave: las siete que se aplican en todos los niveles, los hechos de medium (`asset_test`,
+  configuraciones). Hechos que la IA debe preguntar: los siete que se aplican en todos los niveles, los de medium (`asset_test`,
   `disability_supplement`, `child_support`, `amount_cap`), sus equivalentes de easy fuera de alcance,
   `changes_and_letters_out_of_round` (easy, medium) y `heating_supplement`, `reported_changes`, `exception_requests`
   (hard): 12, 12 y 14 por nivel.
 - **Se mantiene.** La puntuación de los códigos de motivo de F5 (el ejemplo con los códigos intercambiados y los 100 por
-  cada motivo de rechazo equivocado), la pregunta clave `scoring` de F7, la redacción en coreano de F9, la
-  simplificación deliberada de la referencia (la cantidad fija una vez por hogar) y la línea base de la hoja de cálculo
-  de la ventanilla, que ahora lee el periodo de residencia, el límite de patrimonio (desde medium) y el tope (desde
+  cada motivo de rechazo equivocado), el hecho `scoring` de F7, la redacción en coreano de F9, la
+  simplificación deliberada de la referencia (la cantidad fija una vez por hogar) y la forma de trabajar del cliente (la hoja de cálculo
+  de la ventanilla), que ahora lee el periodo de residencia, el límite de patrimonio (desde medium) y el tope (desde
   medium) de la configuración.
 - **Comprobaciones.** `validate-case` pasa con las semillas de mundo 1-3: la referencia es válida con calidad 1.0 y la
-  línea base es válida y peor en las nueve configuraciones públicas (línea base / referencia 1.46-3.00), cada regla
+  forma de trabajar del cliente es válida y peor en las nueve configuraciones públicas (su objetivo es 1.46-3.00 veces el de la referencia), cada regla
   tiene un ejemplo que solo la incumple a ella (`asset_limit` y `amount_cap` desde medium) y todos los parámetros
   influyen en hard/s2 (el margen más estrecho es el del complemento por discapacidad con la semilla guardada, F2). El
   mismo criterio de influencia se cumple también con las semillas de mundo 4-8.

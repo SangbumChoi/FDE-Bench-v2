@@ -265,6 +265,19 @@ Semillas de mundo 1–3 (validadas por defecto), forma de trabajar del cliente /
 | 2 | 382.41 / 521.75; 696.17 / 808.95; 535.61 / 667.75 | 300.78 / 411.37; 635.84 / 707.27; 490.58 / 530.24 | 300.78 / 409.30; 635.84 / 732.09; 490.58 / 533.08 |
 | 3 | 358.20 / 545.88; 600.38 / 841.71; 471.70 / 700.33 | 318.48 / 434.43; 567.24 / 744.56; 455.14 / 545.36 | 318.48 / 447.94; 567.24 / 729.26; 455.14 / 537.08 |
 
+### Solución literal
+
+`literal_solution` preselecciona a diez por puesto (nada dice cuántos) con la regresión de la referencia sobre las
+contrataciones previas con las puntuaciones tal como constan (la nota las llama la mejor señal; no se usa ningún atributo
+protegido), un puesto por candidato, entre los candidatos con las dos primeras habilidades de la descripción del puesto,
+tres años de trabajo de backend (R1, "varios años") o un año de trabajo de análisis de datos o de seguridad (R2, R3) y, para
+R3, un CISSP o Security+ que no haya vencido a finales de octubre de 2026. Cuentan todas las solicitudes, sea cual sea su
+fecha o su permiso de trabajo, y los referidos se tratan como cualquier otro candidato. Es la misma preselección en todas
+las configuraciones y es inválida en las 9 configuraciones públicas (calidad 0): en s31 y s19 la preselección tiene un
+tamaño incorrecto (6 y 8 por puesto); en s4, cuatro candidatos requieren patrocinio de visado para R1 o R3, y desde medium
+siete presentaron su solicitud después de la fecha de cierre, cuatro referidos cualificados quedan fuera y un certificado de
+R3 vence antes del día de entrevistas.
+
 ## Notas
 
 - Datos sintéticos. Los candidatos, las carreras, las habilidades, los certificados, las puntuaciones y el tamaño de los

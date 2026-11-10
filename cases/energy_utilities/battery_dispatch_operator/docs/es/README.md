@@ -20,7 +20,7 @@ Cada parámetro se sortea por separado para cada semilla de reglas (`params:` en
 |---|---|---|---|---|
 | `soc_window` | 10-90, 15-85, 5-95 | igual | igual | Margen de estado de carga de la garantía, en % de 40 MWh. 5-95 es el margen del fabricante que figura en la ficha técnica; los otros dos son más estrechos. |
 | `efficiency` | 92/92, 95/89, 90/94 | igual | igual | Eficiencia en un solo sentido, en la carga / en la descarga, en %. Todos los pares dan el 84.6% de ida y vuelta de la ficha, así que solo el cliente puede decir cómo se reparte. |
-| `end_soc` | 50, 40, 30 | igual | igual | Estado de carga mínimo después del último cuarto de hora, en %. La semana empieza al 50%, igual que termina el registro de la semana pasada, así que la línea base en reposo es válida en todas las configuraciones. |
+| `end_soc` | 50, 40, 30 | igual | igual | Estado de carga mínimo después del último cuarto de hora, en %. La semana empieza al 50%, igual que termina el registro de la semana pasada, así que la forma de trabajar del cliente (la batería en reposo) es válida en todas las configuraciones. |
 | `export_cap` | 18, 15, 12 | igual | igual | Límite de vertido modificado mientras duran las obras de la subestación, en MW (el contrato dice 30). Está por debajo de los 20 MW de la batería, así que también limita las ventas de la tarde, y la solar que lo supera se recorta salvo que la batería la absorba. |
 | `import_window` | any | 00-06, 01-05, 02-08 | igual | Consumo de red solo en los cuartos de hora que empiezan dentro de esta franja, en hora local. |
 | `reserve_pct` | 0 | 20, 30, 15 | igual | Reserva de la tarde, en % de 40 MWh. |
@@ -37,9 +37,9 @@ Cada parámetro se sortea por separado para cada semilla de reglas (`params:` en
 
 ## Semillas de reglas públicas (semilla de mundo 20270322)
 
-Valores sorteados (los parámetros con más de un candidato en el nivel; los demás toman el valor de relleno del nivel), y el beneficio de la batería de la referencia, de la línea base y de un LP sobre la previsión (solo para análisis, véase más abajo):
+Valores sorteados (los parámetros con más de un candidato en el nivel; los demás toman el valor de relleno del nivel), y el beneficio de la batería de la referencia, de la forma de trabajar del cliente y de un LP sobre la previsión (solo para análisis, véase más abajo):
 
-| Configuración | Valores sorteados | Referencia (EUR) | Línea base | LP sobre la previsión (EUR, q) |
+| Configuración | Valores sorteados | Solución de referencia (EUR) | Forma de trabajar del cliente | LP sobre la previsión (EUR, q) |
 |---|---|---|---|---|
 | easy/s141 | soc_window 5-95, efficiency 95/89, end_soc 50, export_cap 15 | 25,300.79 | 0.00 | 27,942.5, 1.104 |
 | easy/s70 | soc_window 10-90, efficiency 90/94, end_soc 40, export_cap 12 | 22,957.45 | 0.00 | 25,218.4, 1.098 |
@@ -99,18 +99,18 @@ El SOC se comprueba con una tolerancia de 0.02 MWh (el 0.05% de la capacidad), d
 - **Presión sobre una regla flexibilizable** (medium, hard: la reserva; hard: la presión de la mesa de trading). Flexibilizar la reserva aporta entre un +4% y un +19% a la referencia y entre un +0% y un +13% al LP sobre la previsión. Compensa más con una reserva del 30%.
 - **Incertidumbre de precios.** Los precios reales son la previsión más un sesgo diario y ruido horario (con un mínimo de 0); el agente planifica solo con la previsión.
 
-Trece preguntas clave: `efficiency`, `soc_window`, `start_end_soc`, `export_cap`, `grid_charging`, `quarter_settlement`, `dst_clock` y `profit_scoring` en todos los niveles (8); `evening_reserve` y `degradation` a partir de medium (10); `works_end`, `dso_limit` y `maintenance_outage` en hard (13).
+Trece hechos que la IA debe preguntar: `efficiency`, `soc_window`, `start_end_soc`, `export_cap`, `grid_charging`, `quarter_settlement`, `dst_clock` y `profit_scoring` en todos los niveles (8); `evening_reserve` y `degradation` a partir de medium (10); `works_end`, `dso_limit` y `maintenance_outage` en hard (13).
 
-## Referencia y línea base
+## Solución de referencia y forma de trabajar del cliente
 
-La referencia es una regla voraz de dos ciclos al día sobre los precios previstos. Cada día carga por completo en los cuartos de hora nocturnos más baratos de la franja de consumo de red y vende en los cuartos de hora más caros de la mañana (06:00–11:00). Después recarga en los 16 cuartos de hora soleados más baratos (09:00–17:00), también desde la red cuando se permite consumir a cualquier hora, y siempre absorbe la solar que se recortaría. Por último, vende en los cuartos de hora más caros a partir de las 15:00. Solo vende en un cuarto de hora si su precio supera el precio medio de compra del ciclo dividido entre la eficiencia de ida y vuelta más el doble del coste de degradación. En los cuartos de hora cuyo límite de vertido está por debajo de 20 MW cuenta menos MW, así que allí usa más cuartos de hora. Dos mejoras respecto al planificador de la semana pasada, que generó el registro:
+La solución de referencia es una regla voraz de dos ciclos al día sobre los precios previstos. Cada día carga por completo en los cuartos de hora nocturnos más baratos de la franja de consumo de red y vende en los cuartos de hora más caros de la mañana (06:00–11:00). Después recarga en los 16 cuartos de hora soleados más baratos (09:00–17:00), también desde la red cuando se permite consumir a cualquier hora, y siempre absorbe la solar que se recortaría. Por último, vende en los cuartos de hora más caros a partir de las 15:00. Solo vende en un cuarto de hora si su precio supera el precio medio de compra del ciclo dividido entre la eficiencia de ida y vuelta más el doble del coste de degradación. En los cuartos de hora cuyo límite de vertido está por debajo de 20 MW cuenta menos MW, así que allí usa más cuartos de hora. Dos mejoras respecto al planificador de la semana pasada, que generó el registro:
 
 - La carga nocturna deja hueco para la recarga diurna que la venta de la mañana no liberará: siempre para la solar recortada, y para toda la recarga cuando el día es más barato que la noche. El estado nocturno puede quedar por debajo de la reserva y del objetivo final en lo que aporte la recarga antes de las horas de reserva (contado al 80%).
 - Una vez pasadas las horas de reserva, vende también la reserva.
 
 Mantiene la reserva, se salta los cuartos de hora fuera de servicio y planifica el último día para terminar en el objetivo. Con los valores de la semana pasada y el interruptor de la semana pasada reproduce exactamente la antigua referencia fija (18,084.35 EUR).
 
-La línea base es el emplazamiento sin plan de despacho: la batería se queda al 50% toda la semana y la planta vende solo la energía solar; beneficio de la batería **0.00 EUR** en todas las configuraciones (válido; no se mueve nada y ningún objetivo final está por encima del 50%). Con una línea base de cero, la calidad normalizada equivale al simple cociente respecto a la referencia.
+La forma de trabajar del cliente es el emplazamiento sin plan de despacho: la batería se queda al 50% toda la semana y la planta vende solo la energía solar; beneficio de la batería **0.00 EUR** en todas las configuraciones (válido; no se mueve nada y ningún objetivo final está por encima del 50%). Como la forma de trabajar del cliente vale cero, la calidad normalizada equivale al simple cociente respecto a la referencia.
 
 Beneficio de la referencia (EUR) por semilla de mundo:
 
@@ -127,6 +127,10 @@ Beneficio de la referencia (EUR) por semilla de mundo:
 | hard/s334 | 5,816.98 | 6,997.65 | 6,833.04 | 7,068.04 |
 
 El LP sobre la previsión (un script de análisis con scipy/HiGHS sobre carga, descarga, vertido, consumo de red y recorte por cuarto de hora, con todas las reglas de la configuración, que nunca descarga mientras se recorta solar) es lo que puede alcanzar un agente cuidadoso. En las cuatro semillas de mundo llega a 1.03–1.30 veces la referencia. Un LP con previsión perfecta llega a 1.11–1.38, una cota superior que ningún plan puede alcanzar. Con el tope de calidad por defecto de 1.5, un LP sobre la previsión obtiene alrededor de 0.69–0.86 de la puntuación de calidad.
+
+### Solución literal
+
+`literal_solution` es la solicitud hecha tal como está escrita con los archivos disponibles: la heurística de la referencia con el margen del fabricante que figura en la ficha técnica (5–95%), su 84.6% de ida y vuelta repartido a partes iguales (un 92% en cada sentido), los 30 MW de vertido del contrato y consumo de red a cualquier hora, de vuelta al 50% con el que empieza la semana, sin reserva, sin coste de degradación y sin ningún aviso. Es el mismo plan en todas las configuraciones y es inválido en las 9 configuraciones públicas (calidad 0): el estado de carga se sale del margen de la garantía (con 5–95%, la eficiencia 95/89 lo lleva por encima del 95%) y vende por encima del límite de vertido modificado.
 
 ## Notas
 

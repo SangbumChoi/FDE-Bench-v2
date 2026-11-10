@@ -6,7 +6,7 @@ médico de baja o en un congreso, un intérprete ausente, notas del personal), l
 lista de espera actuales (el efecto de sus propias decisiones anteriores). Cita las solicitudes en los huecos libres de 20
 minutos de los médicos en los diez días laborables siguientes, vuelve a citar las citas a las que afecta un aviso, rellena los
 huecos liberados con la lista de espera e informa de una **tabla de situación diaria** por especialidad. El agente entrega
-`program/scheduler.py:on_day`; el evaluador reproduce un **periodo oculto de 20 días laborables** (del 9 de noviembre al 4 de
+`program/scheduler.py:on_day`; el evaluador reproduce un **periodo de evaluación de 20 días laborables** (la IA nunca lo recibe; del 9 de noviembre al 4 de
 diciembre de 2026: 1,184 solicitudes nuevas, 45 en espera y 359 citadas al inicio) en un único proceso aislado. El núcleo del
 caso es la **ocupación de los huecos**: atender al mayor número posible de pacientes en el tiempo de los médicos sin incumplir
 ninguna regla. El contexto no está ligado a ningún país: no hay reglas de una aseguradora ni de un pagador nacional.
@@ -22,9 +22,9 @@ para el formato). Una configuración es un nivel (easy / medium / hard: qué reg
 sortea los valores de las reglas del cliente entre unos candidatos: la consulta cerrada el Día de la Ciudad, el tamaño de la reserva
 de urgencias, los intérpretes por día, el orden de la lista de espera, el tope del laboratorio y el tope de sobrecitación. Las
 semillas de reglas públicas son la 1, la 10 y la 64 (nueve configuraciones); cualquier otra semilla es un sorteo privado entre los
-mismos candidatos. Todas las configuraciones son **un solo** mundo: el historial, el periodo oculto y cada solicitud, intención de
+mismos candidatos. Todas las configuraciones son **un solo** mundo: el historial, el periodo de evaluación y cada solicitud, intención de
 anulación, aviso y nota son los mismos, y lo que ve el agente (solicitud, datos, especificación del entregable) es idéntico byte a
-byte (lo comprueba el validador). Solo cambian los requisitos ocultos y el evaluador. Los ajustes de la modalidad se aplican por
+byte (lo comprueba el validador). Lo único que cambia es el evaluador y los requisitos que solo conoce el cliente. Los ajustes de la modalidad se aplican por
 encima, como en todos los casos (véase [cases/README.md](../../../../README.md)).
 
 ## El flujo diario
@@ -45,8 +45,8 @@ final:     valor operativo de los días de consulta del 10 nov al 7 dic (días 1
 
 El estado del programa se conserva entre llamadas (un solo proceso), pero la entrada repite todo lo importante: el `book`
 (cada cita pendiente con su solicitud) y la `waitlist` (las solicitudes sin cita). La anulación de un paciente llega como un
-aviso con el hueco ya libre (la solicitud se cierra); un paciente anula `k` días laborables antes de la cita (intención oculta
-por solicitud, en 135 de las solicitudes), así que cuántas anulaciones se producen depende de lo que haya citado el programa.
+aviso con el hueco ya libre (la solicitud se cierra); un paciente anula `k` días laborables antes de la cita (una intención por solicitud que el programa no ve,
+en 135 de las solicitudes), así que cuántas anulaciones se producen depende de lo que haya citado el programa.
 
 ## Interfaz (`on_day(day)`)
 
@@ -101,11 +101,11 @@ atendidos / huecos citables de los días 1–20 (easy cuenta los huecos de los m
 
 **Objetivo** (maximizar) = 0.8 × valor operativo / valor operativo del programa de referencia en la misma configuración + 0.2 ×
 precisión de la tabla. El valor de referencia se recalcula de forma determinista dentro del proceso (en caché), así que la
-referencia puntúa exactamente 0.8 + 0.2 × 1.000 = 1.0. La calidad se normaliza entre la **línea base** (0) y la referencia (1):
-q = (objetivo − línea base) / (1 − línea base). Un programa que no cita nada pero informa de una tabla perfecta no es válido
+referencia puntúa exactamente 0.8 + 0.2 × 1.000 = 1.0. La calidad se normaliza entre la **forma de trabajar del cliente** (0) y la solución de referencia (1):
+q = (objetivo − cliente) / (1 − cliente), donde «cliente» es el objetivo de la forma de trabajar del cliente. Un programa que no cita nada pero informa de una tabla perfecta no es válido
 (quedan urgentes sin citar).
 
-**Línea base** (`baseline_solution`): la práctica de la oficina de citas sin un ingeniero: el mismo programa (el primer hueco
+**Forma de trabajar del cliente** (`baseline_solution`): la práctica de la oficina de citas sin un ingeniero: el mismo programa (el primer hueco
 posible en el orden de prioridad, todas las reglas respetadas, la misma tabla exacta), pero la reserva de urgencias se queda con
 los pacientes urgentes y nunca se libera para las consultas de mañana, y nunca se sobrecita nada. El propio cliente señala la
 reserva liberada como uno de los dos sitios donde hoy pierde más tiempo de médico. Es válida en todas las combinaciones de los
@@ -146,7 +146,7 @@ jefa de la oficina de consultas externas.
 
 | Clase | Situación | Datos | Comportamiento correcto |
 |---|---|---|---|
-| ① hecho oculto | Plazo de las urgentes y **reserva de urgencias** (los dos o tres primeros huecos de la mañana, por sorteo; liberados el día anterior) | — | Preguntar; citar las U el día en que llegan; **rellenar con la lista de espera la reserva liberada para mañana** (≈100 huecos en el periodo con dos, 160–190 con tres; no liberarlos nunca cuesta el 19–21% del objetivo con dos y el 27–33% con tres) |
+| ① hecho que solo conoce el cliente | Plazo de las urgentes y **reserva de urgencias** (los dos o tres primeros huecos de la mañana, por sorteo; liberados el día anterior) | — | Preguntar; citar las U el día en que llegan; **rellenar con la lista de espera la reserva liberada para mañana** (≈100 huecos en el periodo con dos, 160–190 con tres; no liberarlos nunca cuesta el 19–21% del objetivo con dos y el 27–33% con tres) |
 | ① | Orden de prioridad de la lista de espera (por sorteo) y su grupo (especialidad, tipo de visita, médico anterior) | — | Preguntar; rellenar los huecos liberados y la reserva liberada con la lista de espera en ese orden |
 | ① | Preaviso para los cambios; cada cambio cuesta | — | Preguntar; cambiar solo cuando un aviso obliga; la misma hora con otro médico no necesita preaviso |
 | ① | Consulta cerrada el Día de la Ciudad (calendario sin actualizar), intérpretes por día, tope del laboratorio, caducidad de volantes | — | Preguntar; la consulta, los intérpretes y el tope del laboratorio los sortea la semilla de reglas |
@@ -165,10 +165,10 @@ jefa de la oficina de consultas externas.
 
 | | easy | medium | hard |
 |---|---|---|---|
-| **Reglas en vigor** | Núcleo de la citación diaria: duración de las visitas, especialidad, fecha más temprana, plazo y reserva de urgencias, cierre del Día de la Ciudad, intérpretes, preaviso, prioridad de la lista de espera, costumbre de las revisiones, tabla de situación | + caducidad de volantes, análisis de sangre en ayunas ≥ 1 día laborable antes de la visita con un tope de laboratorio, ausencias de médicos (cambios dentro del preaviso), ausencia de un intérprete | + ausencias de pacientes (valores esperados, tasas ocultas que suben con la antelación), sobrecitación de revisiones con un tope por sesión, duplicados (una cita por paciente y especialidad), viajes de más; las notas, tratadas de forma explícita |
+| **Reglas en vigor** | Núcleo de la citación diaria: duración de las visitas, especialidad, fecha más temprana, plazo y reserva de urgencias, cierre del Día de la Ciudad, intérpretes, preaviso, prioridad de la lista de espera, costumbre de las revisiones, tabla de situación | + caducidad de volantes, análisis de sangre en ayunas ≥ 1 día laborable antes de la visita con un tope de laboratorio, ausencias de médicos (cambios dentro del preaviso), ausencia de un intérprete | + ausencias de pacientes (valores esperados, tasas que el programa no ve y que suben con la antelación), sobrecitación de revisiones con un tope por sesión, duplicados (una cita por paciente y especialidad), viajes de más; las notas, tratadas de forma explícita |
 | **Fuera del alcance (dicho en los requisitos)** | Avisos de ausencias y de intérpretes (los cubren un sustituto y una agencia), volantes y análisis (de ellos se ocupan admisión y el laboratorio; `test_date` null), ausencias de pacientes (no se cuenta con ellas), segundas solicitudes (cada una con su cita) | Ausencias de pacientes (sin sobrecitación), segundas solicitudes | — |
 | **Reglas** | 12 (6 físicas, 5 contractuales, 1 de costumbre del negocio) | 16 (+ `lab_capacity`, `test_before_visit`, `doctor_available`, `referral_validity`) | 18 (`no_double_booking` → `slot_capacity`, + `overbooking_limit`, `one_per_department`) |
-| **Preguntas clave** | 13: interfaz, periodo, duración de las visitas, plazo de las urgentes, reserva de urgencias, médico de las revisiones, intérpretes, consulta cerrada en el festivo, preaviso de cambios, prioridad de la lista de espera, tabla de situación, puntuación, alcance de easy | 17: las de easy sin su pregunta de alcance, + alcance de medium, caducidad de volantes, análisis de sangre, ausencia de médicos, ausencia de intérpretes | 22: las de medium sin su pregunta de alcance, + tasas de ausencia, sobrecitación, duplicados, varias especialidades, notas del personal, puntuación de hard |
+| **Hechos que la IA debe preguntar** | 13: interfaz, periodo, duración de las visitas, plazo de las urgentes, reserva de urgencias, médico de las revisiones, intérpretes, consulta cerrada en el festivo, preaviso de cambios, prioridad de la lista de espera, tabla de situación, puntuación, alcance de easy | 17: los de easy sin su hecho de alcance, + alcance de medium, caducidad de volantes, análisis de sangre, ausencia de médicos, ausencia de intérpretes | 22: los de medium sin su hecho de alcance, + tasas de ausencia, sobrecitación, duplicados, varias especialidades, notas del personal, puntuación de hard |
 | **Qué evalúa** | Un programa diario con estado; mantener lleno el libro rellenando los huecos liberados; un orden de prioridad; un informe de situación diario exacto | Dos recursos más (día de laboratorio, día de intérprete), plazos que hacen correcto dejar fuera una solicitud, cambios forzosos sujetos a un preaviso | Citación por valor esperado bajo incertidumbre, cuándo compensa sobrecitar, reconocer las necesidades de un mismo paciente, resistir la presión |
 
 ## Parámetros y semillas de reglas
@@ -179,7 +179,7 @@ sus candidatos. Los candidatos son los mismos en los tres niveles, así que una 
 cuáles de sus reglas están en vigor (el `lab_cap` de una semilla se sortea también en easy, pero se usa desde medium, y su
 `overbooked_per_session` solo en hard). Importan 3 × 2 × 3 × 3 = 54 combinaciones en easy, 162 en medium y 486 en hard.
 
-| Parámetro | Candidatos (todos los niveles) | Qué cambia | Pregunta clave |
+| Parámetro | Candidatos (todos los niveles) | Qué cambia | Hecho que la IA debe preguntar |
 |---|---|---|---|
 | `closed_dept`: la consulta cerrada el Día de la Ciudad, lunes 23 de noviembre (el calendario la sigue mostrando) | Dermatología, Traumatología, Pediatría (`DERM`, `ORTH`, `PED`) | qué sesiones del lunes 23 pueden tener citas; los `free_slots` de la tabla para esa especialidad mientras el día está en el intervalo; capacidad de 1,566 o 1,575 huecos | `holiday_clinic` |
 | `reserve_slots`: la reserva de urgencias, los N primeros huecos de cada sesión de mañana | 2 (09:00, 09:20), 3 (09:00, 09:20, 09:40) | qué huecos no pueden ocupar las solicitudes S/R con dos o más días de antelación, `held_back` / `free_slots` de cada día, cuánto se libera para mañana (unos 100 o 160–190 huecos en el periodo); con 3 los requisitos añaden que las citas de las 09:40 que ya están en el libro se quedan | `urgent_reserve` |
@@ -189,7 +189,7 @@ cuáles de sus reglas están en vigor (el `lab_cap` de una semilla se sortea tam
 | `overbooked_per_session` (hard): huecos sobrecitados por sesión de médico | 1, 2, 3 | cuántas revisiones puede sobrecitar la referencia (47–54 huecos en las semillas públicas) | `overbooking` |
 
 `derive_params` añade `reserve_times`, las horas de la reserva tal como las enumera cada idioma («09:00 y 09:20» / «09:00, 09:20
-y 09:40»). No hace falta ningún gancho `admissible`: la referencia y la línea base son válidas, y la tabla de la referencia exacta,
+y 09:40»). No hace falta ningún gancho `admissible`: la referencia y la forma de trabajar del cliente son válidas, y la tabla de la referencia exacta,
 en las 54 combinaciones de easy, las 162 de medium y las 486 de hard en el mundo público (en hard, también en las semillas de mundo
 1, 2 y 3).
 
@@ -200,7 +200,7 @@ u hora cambiada es de **3 días laborables** (el antiguo A): la referencia solo 
 intérprete, y las lleva adonde está el siguiente hueco libre, normalmente mucho más allá del preaviso. Un preaviso de 2 y uno de 3
 dieron la misma respuesta en todas las combinaciones probadas, una referencia construida para 4 siguió siendo válida con 2 y con 3
 en alrededor de la mitad de ellas, y en la semilla de mundo 2 ningún par de 2, 3 y 4 se diferenció en nada, así que como valor
-sorteado no superó la comprobación de efecto. Ambos siguen siendo reglas y preguntas clave con su número en el texto, y en lo que ve
+sorteado no superó la comprobación de efecto. Ambos siguen siendo reglas y hechos que la IA debe preguntar, con su número en el texto, y en lo que ve
 el agente no cambió nada: un programa todavía tiene que preguntar por ellos.
 
 **Semillas de reglas públicas.** Las semillas de reglas 1, 10 y 64 muestran cada valor de cada lista de candidatos al menos una vez:
@@ -215,7 +215,7 @@ Cada fila es el diccionario sorteado de `easy/sN`, `medium/sN` y `hard/sN` (sus 
 derivado `reserve_times` no se guarda). La semilla 1 es el hospital más ajustado (dos intérpretes); la 64, el más holgado en intérpretes y
 laboratorio, pero con una reserva de tres huecos y un hueco sobrecitado por sesión. Las semillas privadas sortean cualquiera de las
 486 combinaciones, p. ej. la semilla 2: DERM, 3, 3, `urgency_received`, 7, 3; la semilla 3: PED, 3, 4, `urgency_received`, 5, 2.
-Los objetivos de la referencia por configuración son 1.000 por construcción; las líneas base están en las tablas de abajo.
+Los objetivos de la referencia por configuración son 1.000 por construcción; los de la forma de trabajar del cliente están en las tablas de abajo.
 
 **Efecto de los parámetros** (validate-case, desde `hard/s1`): cada parámetro cambia la respuesta con el primer valor distinto que
 prueba, y cada vez la referencia de `hard/s1` es inválida: `closed_dept` PED → DERM (`holiday_closure`), `reserve_slots` 2 → 3
@@ -245,7 +245,7 @@ cada semilla pública es inválida bajo las otras dos semillas de su nivel (siem
 
 ## Lo que un agente debe preguntar
 
-Los valores de la semilla de reglas están en seis preguntas clave que ningún dato muestra: `holiday_clinic` (qué consulta cierra; el
+Los valores de la semilla de reglas están en seis hechos que la IA debe preguntar y que ningún dato muestra: `holiday_clinic` (qué consulta cierra; el
 correo solo dice que una especialidad puede anunciarlo), `urgent_reserve` (dos o tres huecos; el libro inicial deja libres las 09:00
 y las 09:20, que es la práctica antigua, no la regla de este mes cuando la reserva es de tres), `interpreters` (el historial de la
 exportación llega a 10 primeras visitas con intérprete al día), `waitlist_priority` (el orden; la respuesta piloto sigue uno de los
@@ -257,7 +257,7 @@ equivocados son inválidos.
 
 ## Cifras de referencia (semilla de mundo 20261116)
 
-La referencia (`reference/scheduler.py` + un `config.json` por configuración) reconstruye el calendario a partir de la entrada
+La solución de referencia (`reference/scheduler.py` + un `config.json` por configuración) reconstruye el calendario a partir de la entrada
 de cada día; (medium y hard) cambia las citas de los médicos ausentes (primeras visitas a un colega a la misma hora si está
 libre; si no, al primer hueco con al menos el preaviso de antelación, con el mismo médico en las revisiones; si no, de vuelta a
 la lista de espera, y no se vuelven a citar antes de que pase el preaviso desde la anulación) y las visitas con intérprete que
@@ -299,15 +299,15 @@ referencia (REVIEW.md, F2).
 | No liberar nunca la reserva de urgencias (objetivo) | −21.6% | −24.4% | −24.7% |
 | Seguir la nota del jefe de servicio (objetivo) | −6.5% | −7.5% | −7.7% |
 | Sin sobrecitación (objetivo, hard) | — | — | −6.2% |
-| Objetivo de la línea base (no liberar nunca la reserva; hard: y sin sobrecitación) | 0.784 | 0.756 | 0.643 |
-| Mejor variante válida, calidad normalizada (línea base 0, referencia 1) | 1.020 | 1.040 | 1.025 |
+| Objetivo de la forma de trabajar del cliente (no liberar nunca la reserva; hard: y sin sobrecitación) | 0.784 | 0.756 | 0.643 |
+| Mejor variante válida, calidad normalizada (forma de trabajar del cliente 0, referencia 1) | 1.020 | 1.040 | 1.025 |
 
-No liberar nunca la reserva cuesta el 19–21% con una reserva de dos huecos y el 27–33% con tres (semilla 64), así que la línea base
-es más baja ahí.
+No liberar nunca la reserva cuesta el 19–21% con una reserva de dos huecos y el 27–33% con tres (semilla 64), así que la forma de trabajar del cliente
+queda más baja ahí.
 
-La línea base frente a la referencia, por configuración (la mejor variante válida es la columna de margen de mejora de arriba):
+La forma de trabajar del cliente frente a la referencia, por configuración (la mejor variante válida es la columna de margen de mejora de arriba):
 
-| Configuración | Objetivo de la línea base | Valor operativo: línea base / referencia | Ocupación: línea base / referencia | Mejor variante válida: objetivo (calidad normalizada) |
+| Configuración | Objetivo de la forma de trabajar del cliente | Valor operativo: forma de trabajar del cliente / referencia | Ocupación: forma de trabajar del cliente / referencia | Mejor variante válida: objetivo (calidad normalizada) |
 |---|---|---|---|---|
 | easy/s1 | 0.814 | 9,054 / 11,802 | 88.44% / 98.34% | 1.001 (1.003) |
 | easy/s10 | 0.809 | 8,880 / 11,664 | 88.25% / 97.83% | 1.009 (1.047) |
@@ -339,6 +339,17 @@ Cómo actúan las reglas y las situaciones (ejecuciones de referencia; easy / me
 El plazo de las urgentes no llega a actuar en la referencia (la reserva absorbe las 18 urgentes al día siguiente); actúa en un
 programa que llena la reserva antes de tiempo o mueve una cita urgente.
 
+**Solución literal** (`literal_solution`: la solicitud hecha tal como está escrita, la misma en todas las configuraciones):
+el programa de referencia con los únicos valores de las reglas que muestra lo que ve el agente, los del piloto
+(`PILOT_RULES`: primero el hueco libre más temprano, las U y después todos por fecha de recepción, sin huecos reservados,
+tres intérpretes al día, un día de preaviso para un cambio, sin sobrecitación, 10 análisis al día en el laboratorio), todas
+las consultas abiertas el Día de la Ciudad como dice el correo de la dirección de consultas externas, y todos los avisos y
+campos de las solicitudes atendidos (ausencias, la ausencia del intérprete, fechas de los volantes, análisis de sangre); las
+notas no se siguen. Al llenar todos los huecos de inmediato, entrega la reserva de urgencias y después incumple plazos de
+urgentes; cita en la consulta cerrada el Día de la Ciudad e incumple el orden de la lista de espera en todas las
+configuraciones, el tope de intérpretes donde es 2 y el tope del laboratorio desde medium, y cita duplicados en hard, así
+que es inválida en las 9 configuraciones públicas.
+
 ## Archivos de datos y formatos
 
 El `data/` del agente (el mismo en todas las configuraciones; nombres de archivo, valores enumerados, nombres y comentarios en el
@@ -359,19 +370,19 @@ Lo escribe `python -m fdebench2.cli export-dataset cases/healthcare/hospital_app
 `validate-case`; unos 11 MB, 193 archivos):
 
 - `agent_view/<lang>/`: los datos del agente descritos arriba, por idioma.
-- `hidden/days/<date>.json`: las 20 llamadas del periodo oculto. El 9 de noviembre es la entrada completa; en los demás días se
+- `hidden/days/<date>.json`: las 20 llamadas del periodo de evaluación. El 9 de noviembre es la entrada completa; en los demás días se
   omiten los campos que dependen de las decisiones anteriores del programa (`attendance`, `book`, `waitlist`, los avisos de
   `cancellation` de los pacientes); el resto (calendario, solicitudes nuevas, avisos de ausencia / intérprete / personal, notas)
   es exactamente lo que envía el motor.
 - `hidden/mail/<lang>/*.eml`: los correos del periodo que hay detrás de esos avisos y notas (la nota de D10 para dejar libres sus
   tardes el 11 nov, D13 de baja el 13 nov, el congreso de D05 el 20 nov, el intérprete el 24 nov, cuatro peticiones para
   conocidos del director).
-- `hidden/requests.csv`: cada solicitud del inicio y del periodo con sus hechos ocultos (tasa de ausencia con antelación cero,
+- `hidden/requests.csv`: cada solicitud del inicio y del periodo con lo que el programa no ve de ella (tasa de ausencia con antelación cero,
   los días laborables antes de la cita en que el paciente la anula, la solicitud a la que duplica).
 - `answer/`: las configuraciones públicas (semillas 1, 10 y 64), cada archivo con las columnas difficulty y seed:
-  `answers.csv` (una fila por configuración: los parámetros sorteados, el objetivo de la referencia y el de la línea base
+  `answers.csv` (una fila por configuración: los parámetros sorteados, el objetivo de la referencia y el de la forma de trabajar del cliente
   y las métricas de la referencia; el `reserve_times` derivado no se guarda), los `files/<reference|baseline>/program/scheduler.py`
-  de la referencia y de la línea base (iguales en todas las configuraciones) con la configuración de cada una en
+  de la referencia y de la forma de trabajar del cliente (iguales en todas las configuraciones) con la configuración de cada una en
   `reference_program.jsonl` y `baseline_program.jsonl`, y de la reproducción de la referencia, con las configuraciones apiladas, `actions.csv` (cada acción por llamada), `status_tables.csv` (la tabla esperada, 20 días × 5 especialidades),
   `cancellations.csv` (las anulaciones de pacientes con las que se encontró), `final_book.csv` (cada cita celebrada en el periodo,
   con la asistencia donde se informó, y las pendientes) y `final_waitlist.csv`.
