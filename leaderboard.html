@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FDE-Bench v2 — Leaderboard</title><style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--muted:#6b6a65;--line:#e4e1d8;--card:#ffffff;--accent:#2f5d8a;--code:#f2efe8;
+--phys:#8a2f2f;--cont:#8a6a1f;--biz:#2f6d4a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#161615;--fg:#ecebe6;--muted:#a3a198;
+--line:#33322e;--card:#1e1e1c;--accent:#8ab4e0;--code:#262623;--phys:#e08a8a;--cont:#e0c27a;--biz:#86d0a4}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);
+font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans","Noto Sans CJK KR",sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 80px}
+header{border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:8px}
+.eyebrow{text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--muted);margin:0}
+h1{font-size:28px;margin:4px 0}h2{font-size:21px;margin:36px 0 8px;padding-top:8px;border-top:1px solid var(--line)}
+h3{font-size:16px;margin:20px 0 6px}h4,h5,h6{font-size:15px;margin:16px 0 4px}
+.muted{color:var(--muted)}a{color:var(--accent)}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.92em}
+pre{background:var(--code);padding:12px;border-radius:8px;overflow:auto;font-size:13px;line-height:1.45}
+pre.tree{max-height:420px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:12px 0}
+.facts div{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+dt{font-size:12px;color:var(--muted)}dd{margin:2px 0 0}
+nav{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px}nav a{text-decoration:none}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;margin:6px 0;font-size:14px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--card)}
+details{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin:6px 0}
+summary{cursor:pointer;font-weight:600}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;border:1px solid currentColor}
+.pill.physical{color:var(--phys)}.pill.contractual{color:var(--cont)}.pill.business_policy{color:var(--biz)}
+.legend{list-style:none;padding:0}.legend li{margin:3px 0}
+.controls{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}
+select{font:inherit;padding:4px 6px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px}
+.doc{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 16px}
+.card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:4px 16px;margin:8px 0}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:4px 24px}
+.common{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 16px}
+details.more{background:none;border:0;padding:0;margin-top:36px;border-top:1px solid var(--line)}
+details.more>summary{font-size:21px;font-weight:700;padding:16px 0 8px}
+nav.sub{margin:0 0 8px}
+.langs{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;margin:0 0 8px}
+.langs a{padding:2px 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;font-size:13px}
+.langs a[aria-current]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.site-nav{max-width:1100px;margin:0 auto;padding:12px 16px;font-size:14px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px 16px}.site-nav a{color:var(--accent);text-decoration:none}.site-nav a:hover{text-decoration:underline}</style><style>.badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;padding:1px 6px;border-radius:4px;border:1px solid var(--line);color:var(--muted);margin-left:6px}tr.group td{font-weight:700;background:var(--code)}td.num{text-align:right;white-space:nowrap}</style></head><body><nav class="site-nav"><a href="index.html">All cases</a><a href="leaderboard.html">Leaderboard</a><a href="direction.html">Direction</a><a href="design.html">Design</a><a href="catalog.html">Catalog</a><a href="https://github.com/SangbumChoi/FDE-Bench-v2">Source on GitHub</a></nav><main><header><nav class="langs" aria-label="Language"><a href="leaderboard.html" data-lang="en" hreflang="en" aria-current="page">English</a><a href="ko/leaderboard.html" data-lang="ko" hreflang="ko">한국어</a><a href="zh/leaderboard.html" data-lang="zh" hreflang="zh">中文</a><a href="ja/leaderboard.html" data-lang="ja" hreflang="ja">日本語</a><a href="es/leaderboard.html" data-lang="es" hreflang="es">Español</a></nav><p class="eyebrow">FDE-Bench v2</p><h1>Leaderboard</h1><p class="muted">Agent systems (model × harness) compared on the same cases. <strong>Final</strong> is the composite score under the default policy (0 when the deliverable breaks a rule), with its 95% bootstrap interval over cases. A submission is <strong>ranked</strong> only when it ran a leaderboard round: every case and difficulty on the round's rule seeds, the same for every system, with at least 3 trials. The others are shown as <strong>development</strong>. The anchor rows are each case's own literal solution, baseline and reference, not models.</p><p>How to take part: <a href="https://github.com/SangbumChoi/FDE-Bench-v2/tree/claude/fde-bench-v2/docs/SUBMITTING.md">docs/SUBMITTING.md</a>.</p></header><section><div class="scroll"><table><thead><tr><th>Rank</th><th>System</th><th>Model</th><th>Harness</th><th>Final [95% CI]</th><th>Validity</th><th>Quality</th><th>Ask-F1</th><th>Enforced share</th><th>Cost/run</th><th>Status</th></tr></thead><tbody><tr><td colspan="11" class="muted">No submissions yet.</td></tr><tr class="group"><td colspan="11">Reference rows (anchors, not models)</td></tr><tr><td class="num">–</td><td><a href="https://github.com/SangbumChoi/FDE-Bench-v2/tree/claude/fde-bench-v2/leaderboard/anchors-2026-11.json">Literal solution (the request done as written)</a> <span class="muted">Round 2026-11</span><br><span class="muted">13 cases, 117 runs</span></td><td>–</td><td>–</td><td class="num">0.000 [0.00–0.00]</td><td class="num">0.00</td><td class="num">0.000</td><td class="num">0.00</td><td class="num">0.54</td><td class="num">–</td><td>anchor</td></tr><tr><td class="num">–</td><td><a href="https://github.com/SangbumChoi/FDE-Bench-v2/tree/claude/fde-bench-v2/leaderboard/anchors-2026-11.json">Baseline (the client&#x27;s own way)</a> <span class="muted">Round 2026-11</span><br><span class="muted">13 cases, 117 runs</span></td><td>–</td><td>–</td><td class="num">0.000 [0.00–0.00]</td><td class="num">1.00</td><td class="num">0.000</td><td class="num">0.00</td><td class="num">0.98</td><td class="num">–</td><td>anchor</td></tr><tr><td class="num">–</td><td><a href="https://github.com/SangbumChoi/FDE-Bench-v2/tree/claude/fde-bench-v2/leaderboard/anchors-2026-11.json">Reference solution</a> <span class="muted">Round 2026-11</span><br><span class="muted">13 cases, 117 runs</span></td><td>–</td><td>–</td><td class="num">0.734 [0.67–0.81]</td><td class="num">1.00</td><td class="num">1.000</td><td class="num">0.00</td><td class="num">1.00</td><td class="num">–</td><td>anchor</td></tr></tbody></table></div></section></main><script>
+(function(){var here=document.documentElement.lang,links=document.querySelectorAll('.langs a[data-lang]');
+links.forEach(function(a){a.addEventListener('click',function(){try{localStorage.setItem('fde-lang',a.dataset.lang)}catch(e){}})});
+var want=null;try{want=localStorage.getItem('fde-lang')}catch(e){}
+if(want&&want!==here){links.forEach(function(a){if(a.dataset.lang===want)location.replace(a.href+location.hash)})}})();
+</script></body></html>
