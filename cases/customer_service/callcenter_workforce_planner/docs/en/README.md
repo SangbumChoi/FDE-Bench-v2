@@ -1,7 +1,7 @@
 # Call-Center Workforce Planner — `customer_service/callcenter_workforce_planner`
 
-A multilingual customer-support center asks the agent for next week's roster (Monday 9 to Sunday 15 November
-2026) for its support team: "enough people on the phones so customers aren't left waiting, in every language
+A multilingual customer-support center asks the agent for next week's roster (Monday 9 to Sunday 15
+November 2026) for its support team: "enough people on the phones so customers aren't left waiting, in every language
 we support". The center takes calls in Korean, Japanese, English, Chinese and Spanish, 08:00–22:00 every day.
 The deliverable is `roster.json` (`{"assignments": [{"agent", "day", "shift", "language"}, ...]}`), one entry
 per agent per shift worked. The setting is country-neutral: no national labor law applies beyond the rules the

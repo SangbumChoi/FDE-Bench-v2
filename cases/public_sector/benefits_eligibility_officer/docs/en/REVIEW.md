@@ -66,8 +66,8 @@ should state what is out of scope ("asset checks were done at the intake desk th
 **Update (rule seeds):** fixed by the conversion (see Rule seeds below). Three tiers as proposed, with the
 residency rule in every tier (it is statutory) and six parameters drawn by rule seeds instead of fixed rule sets:
 `uprating` (3.2, 2.5, 4.0), `earned_disregard` (150 + 30%, 100 + 20%, a flat 200), `residency_days` (180, 90, 365)
-in every tier, and `asset_limit` (6,000 / 3,000, 5,000 / 2,500, 8,000 / 2,000), `disability_supplement` (120, 100,
-150) and `cap` (three tables) from medium. The car exemption stays "the most valuable car" (a medium fact, not a
+in every tier, and `asset_limit` (6,000 / 3,000, 5,000 / 2,500, 8,000 / 2,000), `disability_supplement` (120,
+100, 150) and `cap` (three tables) from medium. The car exemption stays "the most valuable car" (a medium fact, not a
 parameter). The generator puts households within 8 days of every residency candidate and between the lines of
 every pair of asset limits, and the lower tiers state what is out of scope in the client's words.
 

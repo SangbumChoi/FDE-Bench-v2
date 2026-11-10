@@ -40,8 +40,8 @@ requirements: when both patients come the doctor runs late, which costs a little
 
 `urgent_days` = 1, 3 or 10 gives objective 1.0000 with no violation in all nine settings: urgent requests are
 always local-language, test-free, due tomorrow and generated only when tomorrow's reserve is untouched. Before
-this change the most conservative value of every number (2 interpreters, lab 5, overbooking 1, notice 4, urgent
-1) was valid in 8 of 9 settings at 0.98–1.00, so only `waitlist_order` (and weakly `closed_dept`) separated the
+this change the most conservative value of every number (2 interpreters, lab 5, overbooking 1, notice 4,
+urgent 1) was valid in 8 of 9 settings at 0.98–1.00, so only `waitlist_order` (and weakly `closed_dept`) separated the
 rule sets. After the F8 fix that envelope is invalid in 8 of 9 (`waitlist_priority`: unused interpreters and
 lab places no longer excuse a skipped patient), but notice 4 + overbooking 1 + urgent 1 alone is still valid in
 6 of 9 at 0.988–1.000.

@@ -59,6 +59,26 @@ def test_every_markdown_link_in_the_repository_resolves():
     assert bad == {}
 
 
+def test_no_wrapped_line_starts_like_a_list_item():
+    """A paragraph wrapped so that a line begins "2026. " or "1) " renders as a numbered list on GitHub and on
+    the case pages. A numbered item directly under a prose line must be item 1 after a line that ends a sentence."""
+    marker = re.compile(r"^(\d+)[.)] \S")
+    listed = re.compile(r"^\s*(\d+[.)]|[-*+]) ")
+    found = []
+    for path in markdown_files(REPO):
+        lines, fence = path.read_text(encoding="utf-8").split("\n"), False
+        for i, line in enumerate(lines):
+            if line.strip().startswith("```"):
+                fence = not fence
+            m = marker.match(line)
+            prev = lines[i - 1] if i else ""
+            if fence or not m or not prev.strip() or listed.match(prev) or prev.startswith(("#", "|", ">", "<!--", " ")):
+                continue
+            if m.group(1) != "1" or not prev.rstrip().endswith((":", "：", ".", "。")):
+                found.append(f"{path.relative_to(REPO)}:{i + 1}: {line[:50]}")
+    assert found == []
+
+
 def test_the_layout_of_every_case():
     for case in sorted(p.parent for p in (REPO / "cases").glob("*/*/case.yaml")):
         assert "README.md" in {p.name for p in case.glob("*.md")} <= {"README.md", "GT.md", "CLIENT_REVIEW.md"}, case
