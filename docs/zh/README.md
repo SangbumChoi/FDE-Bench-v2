@@ -14,7 +14,7 @@ Claude Code、Codex、Gemini CLI、OpenCode）则通过共享的 MCP 客户沟�
 保存的数据与答案、评审发现），由 `fdebench2 build-site` 根据 `cases/*/*/docs/<lang>/explainer.html` 重新生成，并在每次推送时发布到
 `gh-pages` 分支（`.github/workflows/pages.yml`）。
 
-**排行榜：** https://sangbumchoi.github.io/FDE-Bench-v2/leaderboard.html（由 `leaderboard/*.json` 生成）。参与方式见 [docs/SUBMITTING.md](../SUBMITTING.md)。
+**排行榜：** https://sangbumchoi.github.io/FDE-Bench-v2/leaderboard.html（由 `leaderboard/*.json` 生成）。参与方式见 [docs/zh/SUBMITTING.md](SUBMITTING.md)。
 
 ## 快速开始
 
@@ -26,7 +26,7 @@ fdebench2 try                                         # 一个案例：需求、
 fdebench2 try --lang ko --submission my_deliverable/  # 给自己的交付物评分（五种语言任选）
 ```
 
-要运行模型，先配置一个端点，从小规模评测开始（9 次运行：3 个小案例、medium 难度、公开规则种子）：
+要运行模型，先配置一个端点，从一次小规模的评测活动开始（9 次运行：3 个小案例、medium 难度、公开规则种子）：
 
 ```bash
 cp configs/models.example.yaml configs/models.yaml    # 一个端点及其 API 密钥环境变量
@@ -34,7 +34,7 @@ fdebench2 campaign configs/experiments.starter.yaml   # 9 次运行，无需 doc
 fdebench2 report runs-starter/
 ```
 
-参与方式有三种：**试用一个案例**（见上）、向排行榜**提交结果**（[docs/SUBMITTING.md](../SUBMITTING.md)）、**贡献案例、翻译或审核**（[CONTRIBUTING.md](CONTRIBUTING.md)）。
+参与方式有三种：**试用一个案例**（见上）、向排行榜**提交结果**（[docs/zh/SUBMITTING.md](SUBMITTING.md)），或者**贡献案例、翻译或审阅**（[CONTRIBUTING.md](CONTRIBUTING.md)）。
 
 ## 有何不同
 
@@ -44,28 +44,28 @@ FDE-Bench v2 同时具备以下六点。每一点都由本仓库中的代码检�
   所有设置下看到的内容逐字节相同（由 `validate-case` 检查）。因此得分取决于客户的事实；非公开规则种子的答案不保存在任何地方。
 - **五种原生撰写的语言，分两个维度：** 客户的语言（需求、数据标签、文件名、客户的回答）和智能体的指令语言，各为
   zh / en / ko / ja / es。
-- **逐条事实的标准答案审查**（`audit-case`）：每条客户事实都必须起作用，捷径必须被堵住，衡量提问的价值，并把参考答案与
-  已知最优解或上界作比较。每个案例的字面解（完全照需求原文去做）得分必须 ≤ 0.2。
-- **每条事实的“透露 → 获知 → 落实”漏斗：** 客户是否说过，智能体是否问到，交付物是否执行了它。
+- **逐条事实的标准答案审查**（`audit-case`）：每条只有客户知道的事实都必须影响得分，捷径必须被堵住，衡量提问的价值，并把参考答案与
+  目前已知的最好答案或界限值作比较。每个案例按字面执行需求的答案（完全照需求原文去做）得分必须 ≤ 0.2。
+- **每条事实都追踪三个阶段**（客户说出 → 通过提问得知 → 在交付物中落实）：客户是否说过，智能体是否问到，交付物是否落实。
 - **规则类别、公司政策和例外流程：** 物理规则永不放宽；其他规则只能通过政策规定的例外流程放宽，一次批准只覆盖一条指定
   规则；同一次运行可以在其他政策下重新评分，无需重跑。
-- **工作中带日期的事件和压力**（监管通知、缺勤、VIP 备注、内幕消息），按违反规则计分；**程序交付物**在 AI 看不到的、带日期的
-  时期上逐日运行。
+- **工作中带日期的事件和压力**（监管通知、缺勤、VIP 备注、内幕消息），按违反规则计分；**程序交付物**在带日期的
+  评分用期间（不给 AI）上逐日运行。
 
 | | FDE-Bench v2 | τ-bench | τ^τ-Bench | Baidu FDE-Bench | FDE-Gym |
 |---|---|---|---|---|---|
 | 交付物 | 文件，或在评分用输入（不给 AI）上运行的程序 | 边对话边调用工具的智能体，在对话中评判 | 客服智能体，用未公开的模拟用户评分 | 49 个真实客户项目的解（优化、机器学习） | 在客户生产系统副本中的交付，在未公开的流量上回放 |
-| 只有客户知道的事实 | 模拟客户根据只有客户知道的需求回答；每个事实一个应问事项 | 模拟用户掌握任务目标，在对话中透露 | 带有只有客户知道的需求的客户（固定事实 ID） | 由模拟客户透露 | 130 多个脚本化利益相关方；四级需求说明 |
+| 只有客户知道的事实 | 模拟客户根据只有客户知道的需求回答；每条应问的事实只含一个事实 | 模拟用户掌握任务目标，在对话中透露 | 带有只有客户知道的需求的客户（固定事实 ID） | 由模拟客户透露 | 130 多个脚本化利益相关方；四级需求说明 |
 | 同一固定视图上的反事实设置 | 层级 × 规则种子，非公开种子 | 固定任务（零售 115 个，航空 50 个） | – | 无（固定数据，其自述的局限） | 固定任务加未公开的变体 |
 | 语言 | 5 种，客户 × 智能体 | 1（英语） | – | – | 1 种 |
 | 公司政策、例外流程 | 4 套政策；一次批准对应一条指定规则 | 领域政策文档（Markdown）；没有例外流程 | – | – | – |
-| 标准答案审查 / 准入基准 | 逐条事实审查（3 个案例）；所有案例：字面解 ≤ 0.2，评分尺度 ≥ 5% | – | – | – | 参考答案 ≥ 0.95，什么都不做 0，字面解 ≤ 0.2，捷径 ≤ 0.8 |
-| 事实漏斗 透露 → 获知 → 落实 | 按事实，列在报告中 | – | – | –（指出智能体问过规则却未执行） | –（报告获得的关键事实与提升的关系） |
-| 框架（harness）比较 | 参考循环 + 4 个厂商 CLI，共用一个 MCP 客户通道 | 在同一个工具调用循环中比较模型 | Claude Code、Codex、Kimi Code、OpenCode | – | 13 种配置 |
-| 评分 | 有效性门槛；质量从客户原来的做法 0 到参考答案 1，超过 1 也计分；Ask-F1；pass^k；按政策加权 | 每个任务 0/1：最终数据库状态和必需的回答；pass^k | 构建的智能体在未公开用户上对比 oracle 参考（每种配置一次，无置信区间） | 相对客户认可方案的质量、DSR、pass^3、Ask-F1、bootstrap 置信区间 | 归一化提升，出事故时 ≤ 0，减去隐藏的联系成本 |
+| 标准答案审查 / 准入基准 | 逐条事实审查（3 个案例）；所有案例：按字面执行需求的答案 ≤ 0.2，质量尺度的宽度 ≥ 5% | – | – | – | 参考答案 ≥ 0.95，什么都不做 0，按字面执行需求的答案 ≤ 0.2，捷径 ≤ 0.8 |
+| 逐条事实的三个阶段：客户说出 → 通过提问得知 → 在交付物中落实 | 按事实，列在报告中 | – | – | –（指出智能体问过规则却未执行） | –（报告获得的关键事实与提升的关系） |
+| 智能体框架（harness）比较 | 参考循环 + 4 个厂商 CLI，共用一个 MCP 客户通道 | 在同一个工具调用循环中比较模型 | Claude Code、Codex、Kimi Code、OpenCode | – | 13 种配置 |
+| 评分 | 有效性门槛；质量从客户原来的做法 0 到参考答案 1，超过 1 也计分；Ask-F1；pass^k；按政策加权 | 每个任务 0/1：最终数据库状态和必需的回答；pass^k | 构建的智能体在未公开用户上对比 oracle 参考（每种配置一次，无置信区间） | 相对客户认可方案的质量、DSR、pass^3、Ask-F1、bootstrap 置信区间 | 归一化提升，出事故时 ≤ 0，减去不向智能体公开的联系成本 |
 
 “–”：[docs/DIRECTION.md](../DIRECTION.md) 第 2 节（其他基准的信息来源）未提及；并不表示该基准没有这项功能。本仓库使用了
-τ-bench 的 pass^k 估计方法。v2 尚未进行真实评测，所以漏斗和框架比较目前还没有数字。
+τ-bench 的 pass^k 估计方法。v2 尚未进行真实的评测活动，所以三个阶段的统计和智能体框架比较目前还没有数字。
 
 ## 安装
 
@@ -78,11 +78,11 @@ cp configs/models.example.yaml configs/models.yaml   # set endpoints and API-key
 
 ```bash
 fdebench2 cases                                   # <field>/<role>, role title, task type, locales
-# 无需模型或 API 密钥即可试用一个案例（需求、收到的文件、只有客户知道的事实、评分尺度，以及 literal 答案、
+# 无需模型或 API 密钥即可试用一个案例（需求、收到的文件、只有客户知道的事实、评分尺度，以及按字面执行需求的答案、
 # 客户原来的做法和参考答案的得分；用 --submission DIR 给自己的交付物评分）：
 fdebench2 try
 fdebench2 try --case logistics/bakery_delivery_dispatcher --difficulty hard --lang ko --submission my_deliverable/
-# 把一次评测活动的结果打包成排行榜提交文件（docs/SUBMITTING.md）：
+# 把一次评测活动的结果打包成排行榜提交文件（docs/zh/SUBMITTING.md）：
 fdebench2 campaign configs/experiments.leaderboard.yaml       # 351 runs
 fdebench2 submit runs-leaderboard/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
 fdebench2 validate-case cases/*/*/                # contract checks for every case
@@ -157,9 +157,9 @@ tests/
 - **FDE-Gym**（Yang et al., *FDE-Gym: The Last Mile of AI Delivery*, arXiv 2610.22350；
   [fde-gym.com](https://fde-gym.com/paper/)、[案例](https://huggingface.co/datasets/DeepLethe/FDE-Gym)、
   [测试框架](https://github.com/deeplethe/fde-gym)）。它的四级需求说明、带联系成本的脚本化利益相关方、在未公开的生产流量上
-  回放评分，以及准入基准（什么都不做记 0 分，参考答案记 1 分，按字面理解需求的答案和捷径只能得低分），为本仓库的标准答案
+  回放评分，以及准入基准（什么都不做记 0 分，参考答案记 1 分，按字面执行需求的答案和捷径只能得低分），为本仓库的标准答案
   审查提供了参考。
-- **Baidu FDE-Bench**（arXiv 2610.14539）：首先提出了前线部署工程师（FDE）的框架，以及 v2 沿用的指标术语（相对参考答案的
+- **Baidu FDE-Bench**（arXiv 2610.14539）：首先提出了“前线部署工程师（FDE）”这一提法，以及 v2 沿用的指标术语（相对参考答案的
   质量、DSR、Ask-F1、pass^k）。
 - **τ^τ-Bench**（arXiv 2609.04611）和 **τ-bench**（arXiv 2406.12045）：用未公开的用户评估所构建智能体的设计，以及 pass^k
   估计方法。

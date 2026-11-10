@@ -292,6 +292,8 @@ out_dir/manifest.csv               source,status,path,reason（placed | review |
 <p>参考答案（<code>reference/organize.py</code> + 该设置的 <code>config.json</code>）是完整的整理程序：支持所有格式和 zip 压缩包里的条目，借助语料自身的 UTF-8 字符统计识别旧编码，处理每一种年份写法（年号、民国纪年、檀君纪年、汉字数字、罗马数字、<code>©</code> 行），按 NFKC 规范化生成路径名（slug），按规范化书名分组，在一本书的所有文件上逐字段取优先级，从共享盘的任何地方找出每位作者的正式名称配对，检测同级年份冲突，处理扫描件、垃圾文件和目录，并遵循抽到的无作者书规定。它对评分用语料中每本书的归档都与 <code>expected_output</code> 完全一样：在每个设置中都达到 <code>objective_bound</code>，<code>quality_cap</code> 为 1.0。目前已知的最好答案（<code>best_known_solution</code>，供审查使用）是由程序写出的答案表本身，也是一个达到界限值的 oracle：除参考答案之外的第二个知道全部事实的交付物，直接检查绝不能把它判为未落实。</p>
 <div class="scroll"><table><thead><tr><th>层级</th><th>计分的书</th><th>客户原来的做法的目标值</th><th>参考答案的目标值 = 界限值</th></tr></thead><tbody><tr><td>easy（s11、s18、s21）</td><td>30</td><td>16.67</td><td>100.00</td></tr><tr><td>medium（s11、s18、s21）</td><td>66</td><td>13.03</td><td>100.00</td></tr><tr><td>hard，复核规定（s18）</td><td>100</td><td>8.60</td><td>99.40（有例外时为 100）</td></tr><tr><td>hard，上架规定（s11、s21）</td><td>100</td><td>8.60</td><td>100.00</td></tr></tbody></table></div>
 <p>客户原来的做法完全正确地上架 5 / 9 / 9 本；在 medium 和 hard 中，其中 2 本（副本）因为这本书还有其他文件、而它的清单行只列了 JSON，被扣掉五分之一。在世界种子 1、2、3 上，客户原来的做法得 3.33–20.00（easy）、2.73–19.70（medium）和 3.80–14.00（hard），对应的参考答案为 100.00（复核规定下为 99.40）。在复核规定下放宽 <code>missing_author_review</code>（把两本没有作者的书以“Unknown”上架）在该规则被放宽时有效，在 hard/s18 中得 100.00（归一化质量 1.007）。</p>
+<h5 id="readme-按字面执行需求的答案">按字面执行需求的答案</h5>
+<p><code>literal_solution</code> 是参考程序，按数据本身显示的样子读共享盘（每一种格式、编码、年份写法、副本和例外），每个文件里只放简介，而没人给出的编目规则取最自然的理解：<code>library/&lt;作者&gt;/&lt;年份&gt;_&lt;书名&gt;.txt</code>，取首次出版年份，用原文文字，所有作者用 " &amp; " 连接，名称完整保留、连其中的空格也保留；归不了档的放进 <code>_review/</code>，原因用平常的话写（“years disagree”、“author missing”），正如需求所要求的，因为那六个原因代码只有客户知道。它在每个设置下都是同一个程序，在全部 9 个公开设置下都无效（质量 0）：它的复核行没有原因代码，而且在上架规定下（hard/s11、hard/s21）无作者的书被送去了复核。同样的程序如果改为把这些书记为 skipped（像 <code>robust_solution</code> 那样），就有效，得 0.28–0.42：放错位置的书保留其得分的 0.4，所以简介正确但路径不对，即使在另一种布局下（s18、s21）也能让它保持在 0.2 以上。</p>
 <h4 id="readme-备注">备注</h4>
 <ul><li>可见语料在每个设置和语言版本下都逐字节相同（<code>content_dirs: [corpus]</code>）；只有语料之外的整理说明做了本地化。</li><li><code>write only inside out_dir</code> 和 <code>never modify the corpus</code> 由运行器强制执行（程序拿到的是语料的副本，在 docker 下为只读），不计分。</li></ul>
 <h4 id="readme-保存的数据集dataset">保存的数据集（<code>dataset/</code>）</h4>
@@ -303,7 +305,7 @@ out_dir/manifest.csv               source,status,path,reason（placed | review |
                                        界限值、直接检查；GT.md 由它生成
   answer/                            公开规则种子（easy/s11 ... hard/s21），每个文件都以 difficulty 和 seed 区分设置
     answers.csv                      每个设置一行：抽到的参数（推导出的 fallback_author 不单独保存）、参考答案和
-                                       客户原来的做法在评分用语料上的目标值、质量尺度的宽度、生效的规则和应问事项、
+                                       客户原来的做法在评分用语料上的目标值、质量尺度的宽度、生效的规则和应问的事实、
                                        参考答案的指标
     files/reference/program/         参考交付物的 organize.py（各设置相同；各设置的 config.json 在
                                        reference_program.jsonl 中）
