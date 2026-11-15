@@ -104,9 +104,6 @@ LITERAL_MAX_QUALITY = 0.2        # the request read literally, without the clien
 # Cases whose literal solution scores above LITERAL_MAX_QUALITY in some public setting, known and open:
 # case id -> why (a warning instead of a problem until the case changes).
 OPEN_LITERAL_FINDINGS: dict[str, str] = {
-    "data_knowledge/bi_data_analyst": (
-        "with the rounding rule relaxed, the literal answers score 0.36-0.60 in rule seed 4, whose fiscal year is "
-        "the calendar year"),
     "finance/stock_trading_strategist": (
         "in easy/s44 the literal program breaks only the large-order approval, which an exception can relax; "
         "without it, it beats the reference (1.24)"),
@@ -122,12 +119,6 @@ ADMISSIBLE_SEARCH = 5000         # combinations tried per candidate before it is
 # worlds are the world seeds the finding holds on (None: on every world, the public one included). Remove an entry
 # once the case is changed; any other finding of this kind, on another tier or another world, fails validation.
 OPEN_BINDING_FINDINGS: dict[tuple[str, str, str], tuple[tuple[int, ...] | None, str]] = {
-    ("data_knowledge/bi_data_analyst", "dont_know_reward", "easy"): (
-        None, "the reference answers every scored question right (objective 1.0), so the reward for a null moves "
-              "no reference objective; it moves the all-null baseline and so the quality scale"),
-    ("data_knowledge/bi_data_analyst", "dont_know_reward", "medium"): (
-        None, "the reference answers every scored question right (objective 1.0), so the reward for a null moves "
-              "no reference objective; it moves the all-null baseline and so the quality scale"),
     ("logistics/bakery_delivery_dispatcher", "late_cost", "easy"): (
         None, "the easy reference is hardly ever late at a café, so the cost of a late minute moves no reference "
               "objective by 1%"),
