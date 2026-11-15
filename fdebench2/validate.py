@@ -99,10 +99,23 @@ DISTINCT_MARGIN = 0.01           # on objectives: a parameter whose answers diff
 SUMMARY_REQUIRED = True          # a case without locales/<lang>/summary.yaml fails validation
 BASELINE_REQUIRED = True         # a case without baseline_solution fails validation
 LITERAL_REQUIRED = True          # a case without literal_solution fails validation
-LITERAL_MAX_QUALITY = 0.2        # the request read literally, without the client's facts, scores at most this
+LITERAL_MAX_QUALITY = 0.2        # the request read literally, without the client's facts, scores at most this,
+                                 # as delivered and with every bendable (business_policy) rule relaxed
 # Cases whose literal solution scores above LITERAL_MAX_QUALITY in some public setting, known and open:
 # case id -> why (a warning instead of a problem until the case changes).
-OPEN_LITERAL_FINDINGS: dict[str, str] = {}
+OPEN_LITERAL_FINDINGS: dict[str, str] = {
+    "data_knowledge/bi_data_analyst": (
+        "with the rounding rule relaxed, the literal answers score 0.36-0.60 in rule seed 4, whose fiscal year is "
+        "the calendar year"),
+    "finance/stock_trading_strategist": (
+        "in easy/s44 the literal program breaks only the large-order approval, which an exception can relax; "
+        "without it, it beats the reference (1.24)"),
+    "manufacturing/procurement_specialist": (
+        "with the dual-sourcing habit relaxed, the literal plan scores 0.58 and 0.85 in hard/s42 and hard/s78"),
+    "retail/grocery_demand_forecaster": (
+        "the literal forecast breaks only the display floor, which an exception can relax; without it, it scores "
+        "0.42-0.95 in every setting"),
+}
 ADMISSIBLE_SEARCH = 5000         # combinations tried per candidate before it is called never admissible
 # Per-tier binding findings that the cases had when the check became per tier, warned about instead of failing
 # until each case's owner decides: (case id, parameter, tier) -> (worlds, why it changes nothing there), where
@@ -1139,9 +1152,16 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                     if span is not None and span < MIN_QUALITY_SPAN:
                         close.append((c.setting.label if c.tiers else "the case", span))
             if literal_dir is not None and first["validity_score"] == 1.0:
-                lit = c.evaluate(literal_dir, "en")
-                if lit["validity_score"] == 1.0 and lit["quality_score"] > LITERAL_MAX_QUALITY:
-                    literal_high.append(f"{c.setting.label if c.tiers else 'the case'} ({lit['quality_score']:.2f})")
+                # as delivered, and with every rule an approved exception can relax (business_policy) relaxed
+                bendable = frozenset(r.id for r in c.rules().rules if r.rule_class == "business_policy")
+                where = c.setting.label if c.tiers else "the case"
+                for relaxed, note in ((frozenset(), ""), (bendable, " with the bendable rules relaxed")):
+                    lit = c.evaluate(literal_dir, "en", relaxed=relaxed)
+                    if lit["validity_score"] == 1.0 and lit["quality_score"] > LITERAL_MAX_QUALITY:
+                        literal_high.append(f"{where} ({lit['quality_score']:.2f}{note})")
+                        break
+                    if not bendable:
+                        break
             examples = c.violating_examples()
             for rule_id in [r.id for r in c.rules().rules]:
                 if rule_id not in examples:

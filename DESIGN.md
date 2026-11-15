@@ -101,7 +101,9 @@ Design rules that keep scoring language-independent:
   as written, from the agent's view only: the most natural reading of everything, no question asked, no hedging
   across settings (it never gets the Setting). validate-case requires it, in every public setting, to be invalid or
   to score at most 0.2 normalized quality (`validate.LITERAL_MAX_QUALITY`), so the score rewards learning the
-  client's facts rather than doing what the request says (FDE-Gym's admission anchor). `answers.csv` records its
+  client's facts rather than doing what the request says (FDE-Gym's admission anchor). The same must hold with
+  every `business_policy` rule relaxed, since an approved exception can relax those: a literal solution that is
+  invalid only through a bendable rule is one exception away from a good score. `answers.csv` records its
   objective and quality per setting. `validate.OPEN_LITERAL_FINDINGS` turns a known case into a warning.
 - **Rules carry a class** (`physical`, `contractual`, `business_policy`). The evaluator reports violations by
   rule id; relaxing a rule is a scoring parameter (`evaluate(..., relaxed={...})`), so no per-case hooks.
