@@ -113,15 +113,6 @@ ADMISSIBLE_SEARCH = 5000         # combinations tried per candidate before it is
 # worlds are the world seeds the finding holds on (None: on every world, the public one included). Remove an entry
 # once the case is changed; any other finding of this kind, on another tier or another world, fails validation.
 OPEN_BINDING_FINDINGS: dict[tuple[str, str, str], tuple[tuple[int, ...] | None, str]] = {
-    ("logistics/bakery_delivery_dispatcher", "late_cost", "easy"): (
-        None, "the easy reference is hardly ever late at a café, so the cost of a late minute moves no reference "
-              "objective by 1%"),
-    ("logistics/bakery_delivery_dispatcher", "shift_end", "easy"): (
-        (2, 3), "the reference of rule seed 5 stays valid with the same objective under every shift end (10:00, "
-                "09:30, 09:00)"),
-    ("logistics/bakery_delivery_dispatcher", "shift_end", "medium"): (
-        (2, 3), "the reference of rule seed 5 stays valid with the same objective under every shift end (10:00, "
-                "09:30, 09:00)"),
 }
 # Settings whose quality scale is narrower than MIN_QUALITY_SPAN (the baseline within 5% of the reference), known
 # and open: a warning instead of a problem on the worlds listed (None: every world) until the case is fixed.
@@ -153,6 +144,21 @@ OPEN_AUDIT_FINDINGS: dict[tuple[str, str, str], str] = {
         "invalid in 42 of the 45 measured settings; valid only at a 9% threshold with a 4-session deadline, where the "
         "stock limit binds before the close-out room, so the program is the reference itself (q 0.98-1.13) and the "
         "close-out deadline does not bite either"),
+    ("logistics/bakery_delivery_dispatcher", "shortcut", "habit_best_departures"): (
+        "the dispatcher's own rounds, each van at its best minute, reach 0.67 in hard/c12 and 0.53 in medium/s13 of "
+        "39 settings, where his plan is within 9% and 13% of the reference and the reference within 1.1% of the "
+        "proven optimum (against the best known plan hard/c12 would still reach 0.61); a dispatcher who times to the "
+        "minute narrows other scales below 5%; on world seeds 1-3 it opens in 4, 6 and 18 settings of 39"),
+    ("logistics/bakery_delivery_dispatcher", "shortcut", "habit_one_move"): (
+        "the dispatcher's plan with its one most useful café move reaches 0.53 in one hard setting of 39 (hard/c1), "
+        "where his plan is within 8% of the reference and the reference within 0.2% of the proven optimum; folding "
+        "the move into the habit narrows scales below 5%"),
+    ("logistics/bakery_delivery_dispatcher", "shortcut", "literal_plus_closed_cafe_planner_guess"): (
+        "the literal solution with the closed café known and the travel times guessed as a planner would (1.3 times "
+        "the straight line, 25 km/h, five minutes a stop) reaches 0.77-0.93 in 6 of the 9 easy settings: the "
+        "client's travel model is close to a textbook guess, so knowing the closed café is enough there; closing "
+        "it needs a travel fact no uniform guess approximates, a redesign (a prototype with a river crossed only at "
+        "the kitchen closed it but drew a new world and opened the one-move shortcut in 19 of 39 settings)"),
 }
 REQUIRED_META = ("id", "role", "field", "task_type", "objective", "seed", "deliverable_spec", "rules")
 HANGUL = re.compile(r"[가-힣]")
