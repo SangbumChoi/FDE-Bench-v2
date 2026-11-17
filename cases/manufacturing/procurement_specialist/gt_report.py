@@ -41,8 +41,9 @@ RULE_WHY = {
 }
 # Targets that were removed (they stay in requirements.md as context) and why.
 REMOVED = {
-    "resistor_reels": "reading the resistor stock in pieces makes a planner over-order 3 KRW resistors; that cost 0.1-0.3% "
-                      "of the objective (damage 0.01-0.13, below 0.10 in eight of nine panel settings)",
+    "resistor_reels": "reading the resistor stock in pieces makes a planner over-order 3 KRW resistors; that costs "
+                      "little (damage 0.00-0.04 on the panel, re-measured after the hard hold moved to W6; the first "
+                      "audit measured 0.01-0.13, below 0.10 in eight of nine panel settings)",
     "holding_cost (from cost_model)": "a planner that ignores the 0.5% weekly holding cost still orders as late as "
                                        "possible; damage 0-0.04 on the panel",
     "expected_cost": "its only natural misreading (plan on the promised dates) is the one supplier_lateness already "
@@ -60,7 +61,7 @@ REMOVED = {
                                          "away and so measured the safety_stock fact (damage 1.0 everywhere). The "
                                          "fact stays in the easy and medium requirements; in hard, where late "
                                          "deliveries make a floor dear, it bites",
-    "usd_planning_rate in easy and hard": "in easy no wrong candidate rate loses 10% of the credit in any measured "
+    "usd_planning_rate in easy and hard":"in easy no wrong candidate rate loses 10% of the credit in any measured "
                                           "setting (Pacific Parts stays the cheapest source of its parts at every "
                                           "candidate, so the rate only moves the dollar spend); hard has one rate",
     "round_scope_easy / round_scope_medium": "split into scope_list_prices, scope_no_flash_change, scope_on_time and "
@@ -214,12 +215,18 @@ def main() -> None:
             "that never asks (`robust_solution`: the natural reading of the request and the data, the same in every "
             "tier, so the flash change applied, the delivery history and the allocation used as the request asks, "
             "planned across the tier's pools: the middle safety stock, the tightest share cap, the dearest dollar, "
-            "every candidate hold avoided) against the reference of each setting. Other never-asks readings measured "
-            "on the same settings (REVIEW.md, second pass): hedging both flashes, the strictest safety stock and "
-            "Nara Display's rise from W3 do worse; ignoring the change, which the request contradicts, does about as "
-            "well over all 39 settings (mean credit 0.158 against 0.151) but in the other tiers: 0.315 in easy, 0.095 "
-            "in medium, invalid in every hard setting (C25 never bought). No reading tried, the same in every tier, "
-            "beats 0.32 in easy, 0.13 in medium or 0.66 in hard.", ""]
+            "every candidate hold avoided, then improved by the best known solution's wide local search) against the "
+            "reference of each setting. With the reference's short search only it earned 0.57 in hard; the wide "
+            "search is what a planner that never asks can do as well (REVIEW.md, adversarial check of the literal "
+            "follow-up). With the wide search in hard, the other safety stock candidates do worse (0.53 with half a "
+            "week, 0.40 with 1.5 weeks); knowing only its own hold it would earn 0.83, only its own safety stock 0.89, "
+            "the client's backlog price per board 0.72. Measured with the short search (REVIEW.md, second pass and "
+            "literal solution follow-up): hedging both flashes (0.05 / 0.02 / 0.09 in easy / medium / hard), Nara "
+            "Display's rise from W3 and the resistor stock read in reels (0.51 in hard, against 0.57) do worse, and so "
+            "does avoiding fewer than all three candidate holds in hard (at most 0.47); ignoring the change, which "
+            "the request contradicts, earns 0.12 in easy and 0.10 in medium with half a week of safety stock (0 and "
+            "0.13 with one week) and nothing in hard (C25 never bought). No reading tried, the same in every tier, "
+            "beats 0.13 in easy or medium or robust_solution in hard.", ""]
     rows = []
     for tier in tier_order(audit["voi"]):
         v = audit["voi"][tier]
@@ -253,7 +260,7 @@ def main() -> None:
             "0.10 under the fact); a plan that is weak for other reasons carries most of its regret under both "
             "readings, so it is not drawn to the misreading; a plan better than the reference has no material "
             "regret under the fact. Where no plan known keeps every rule of a misreading (C04 cannot be "
-            "second-sourced in two hard settings), only the 0.05 is asked. A misreading that only adds a restriction "
+            "second-sourced in some hard settings), only the 0.05 is asked. A misreading that only adds a restriction "
             "the plan keeps (another supplier on hold, a stricter share cap, the allocation outside hard) scores the "
             "plan the same under both readings, so its regrets differ by what the restriction costs the best plans "
             "known, the same for every such plan. For another candidate's hold the plan must then also keep it at a "

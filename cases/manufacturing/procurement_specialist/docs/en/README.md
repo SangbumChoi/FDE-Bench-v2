@@ -20,7 +20,9 @@ persona, data noise, events) apply on top, as for every case (see [cases/README.
 `components` (24 parts plus the new flash C25, `critical` flag, standard cost), `production_plan` (boards per
 model, W1–W10), `bom` (with `valid_from_week` / `valid_to_week`: C04 in W1–W5, C25 in W6–W10), `inventory`
 (resistors in reels of 5,000), `open_orders`, `supplier_quotes.xlsx` (`currency`, `unit_price`, `moq`, two
-all-units price breaks, `lead_time_days` in business days; a `suppliers` sheet), `approved_vendors`, `budget`
+all-units price breaks, `lead_time_days` in business days; a `suppliers` sheet), `approved_vendors` (pending: Kowon
+Passive S07 for C08, C11, the board-to-board connector C17 and the LED C18, Mirae Semicon S03 for the antenna C20;
+suspended: S07 for C13, C16 and C20), `budget`
 (monthly caps), `delivery_history` (188 past deliveries, promised vs. received date), `allocations` (monthly caps
 for S03/C01, S03/C03, S08/C06) and `mail/` (three `.eml` files: the e-mail thread with Nara Display, below). The
 request mentions the history, the allocation notice, the planned flash change and the e-mail thread, so every tier
@@ -58,7 +60,7 @@ ReflectionAI procurement scenarios), which changed no plan: S04 was already the 
 | | easy | medium | hard |
 |---|---|---|---|
 | **What is in force** | The MRP core | + commercial and calendar terms | + supply uncertainty and the engineering change |
-| **Domain facts** | Demand = boards × `qty_per_board`, needed in the build week (no assembly offset); `lead_time_days` are business days, here / 5 rounded up = whole weeks, no holidays; list prices (`unit_price`, with Nara Display's C06 rise from W4), S04 in USD at the planning rate; MOQ per order line; only `approved` suppliers; a hard monthly budget by the month of the order week's Monday (W2 is November; November binds); resistor stock in reels; safety stock for critical parts; one supplier on quality hold; dual sourcing of critical parts with a share cap (company habit) | All-units price breaks per order line; lead times in business days counted from the order Monday, W5 and W6 have 4 (Christmas, New Year's Day) | Each supplier is one or two weeks late with hidden probabilities (estimate them from the history; 1–7 days after the promised Monday = one week, 8–14 = two); deliveries late independently; open orders on time. Allocation caps per month. Engineering change C04 → C25 from W6: C04 left at the end of W5 is scrapped at standard cost, C25 has no stock, is critical and must be dual-sourced; C04 needs neither. A longer quality hold (to W5), which may fall on the main semiconductor maker S03 |
+| **Domain facts** | Demand = boards × `qty_per_board`, needed in the build week (no assembly offset); `lead_time_days` are business days, here / 5 rounded up = whole weeks, no holidays; list prices (`unit_price`, with Nara Display's C06 rise from W4), S04 in USD at the planning rate; MOQ per order line; only `approved` suppliers; a hard monthly budget by the month of the order week's Monday (W2 is November; November binds); resistor stock in reels; safety stock for critical parts; one supplier on quality hold; dual sourcing of critical parts with a share cap (company habit) | All-units price breaks per order line; lead times in business days counted from the order Monday, W5 and W6 have 4 (Christmas, New Year's Day) | Each supplier is one or two weeks late with hidden probabilities (estimate them from the history; 1–7 days after the promised Monday = one week, 8–14 = two); deliveries late independently; open orders on time. Allocation caps per month. Engineering change C04 → C25 from W6: C04 left at the end of W5 is scrapped at standard cost, C25 has no stock, is critical and must be dual-sourced; C04 needs neither. A longer quality hold (through the New Year week W6), which may fall on the main semiconductor maker S03 |
 | **What the requirements put out of scope, and why** | List prices (the breaks need a frame agreement not signed yet); whole-week lead times, no holidays; no flash change (engineering is still qualifying C25: C04 in all ten weeks, no C25); no delivery history or allocation (management wants a plan on the confirmed dates first) | The flash change and the history/allocations, as in easy | Nothing |
 | **Rules** | `moq`, `quality_hold` (physical); `approved_vendor`, `budget_cap` (contractual); `dual_source_critical` (business policy, bendable) | Same | + `allocation_cap` (physical) |
 | **Quality (lower is better)** | Purchases + 0.5% of standard cost per piece held per week + 10,000 KRW per board waiting a week for a part (a missing piece costs 10,000 / the part's pieces per board, counted per part) + 1.5× standard cost per piece-week below safety stock (critical parts, weeks in use) | Same formula; purchases at the break each line reaches | Holding, backlog, shortfall and C04 scrap become exact expectations over the true lateness distribution; purchases are paid either way |
@@ -76,7 +78,7 @@ A, B and C are inside the pools: A = (1,380, 1, 80%, S07 to W3), B = (1,450, 1.5
 | `usd_krw`: planning rate for S04's USD quotes (KRW per USD) | 1,380 · 1,450 · 1,320 · 1,500 | same | 1,380 | Pacific Parts' prices in the purchases and in the monthly budget; at 1,320 S04 is the cheapest source of the MCU and DRAM, at 1,500 it barely is |
 | `safety_weeks`: safety stock = this × average weekly demand of a critical part, rounded up | 1 · 1.5 · 0.5 | same | same | how much stock the plan builds and keeps; the shortfall cost of a plan made for less |
 | `max_share`: dual sourcing, the most one supplier may get of a critical part's ordered pieces | 80% · 70% · 90% | same | 80% | how much volume moves to dearer second sources |
-| `quality_hold`: supplier on quality hold and the last week whose arrivals from it are rejected | S07 to W3 · S05 to W4 · S01 to W4 | same | S03 to W5 · S05 to W5 · S01 to W5 | *which* parts lose their cheapest early source: S07 cheap passives and mechanics, S05 the main PCB source, S01 the main connector source and a frequent second source for ICs, S03 the main semiconductor maker (also on allocation and a C25 source) |
+| `quality_hold`: supplier on quality hold and the last week whose arrivals from it are rejected | S07 to W3 · S05 to W4 · S01 to W4 | same | S03 to W6 · S05 to W6 · S01 to W6 | *which* parts lose their cheapest early source: S07 cheap passives and mechanics, S05 the main PCB source, S01 the main connector source and a frequent second source for ICs, S03 the main semiconductor maker (also on allocation and a C25 source) |
 
 Derived for the texts (`derive_params`): `hold_supplier` (the supplier's name in each locale) and `hold_until` (the
 week). `admissible()` rejects a hold that ends before the supplier's goods could arrive at all (S03 and S05 quote
@@ -90,8 +92,11 @@ other setting's reference beats it by 1%):
 
 - **The hold week is not a parameter of its own.** In hard, moving the end of an S03 hold from W4 to W5 changed
   nothing (the November budget already pushes S03's orders to W3, arriving W6), so supplier and week are drawn as one
-  value. In hard, `quality_hold` S03 to W5 → S01 to W5 makes the reference invalid on world seeds 20261123, 1, 2
-  and 3.
+  value. For the same reason the hard holds run through the New Year week W6: a hold to W5 rejected nothing that a
+  plan buys from S03 or S05 in December, so a plan that ignored it lost nothing (literal solution, below; REVIEW.md,
+  literal solution follow-up). The hard requirements give the client's reason in every locale: the supplier's
+  corrective action can only be verified at the first incoming inspection after the New Year shutdown. In hard, `quality_hold` S03 to W6 → S05 to W6 or S01 to W6 makes the reference
+  invalid on world seeds 20261123, 1, 2 and 3.
 - **The planning rate and the share cap are fixed in hard.** With late deliveries, the safety lead time and the
   allocation, S04 carries 4–9% of the hard reference's purchases, so 1,320 → 1,550 moved it 0.6–1.4% depending on the
   world, and a 90% cap left the hard reference valid under 70% on two of four worlds. In medium they bind: from the
@@ -111,7 +116,7 @@ other setting's reference beats it by 1%):
 
 Chosen so that every candidate shows up at least once in each tier (except one of the four planning rates, as three
 seeds can show only three), and so that the first seed (42), on which the validator tests binding, draws values from
-which a change binds on every world checked: 1,320 and 90% in medium, S03 to W5 in hard.
+which a change binds on every world checked: 1,320 and 90% in medium, S03 to W6 in hard.
 
 | Setting | Drawn values | Reference objective (M KRW) | Purchases / holding / backlog / shortfall / scrap (M KRW) | November spend vs. unconstrained (M KRW, cap 115) | Baseline objective (M KRW, ratio) | Bending `dual_source_critical` |
 |---|---|---|---|---|---|---|
@@ -121,15 +126,15 @@ which a change binds on every world checked: 1,320 and 90% in medium, S03 to W5 
 | medium/s42 | `{"usd_krw": 1320, "safety_weeks": 1, "max_share": 90, "quality_hold": "S07-W3"}` | 491.95 | 483.7 / 7.8 / 0.0 / 0.4 / 0.0 | 114.6 vs. 180.7 | 543.09 (1.104) | −2.7% |
 | medium/s3 | `{"usd_krw": 1450, "safety_weeks": 1.5, "max_share": 80, "quality_hold": "S01-W4"}` | 541.20 | 530.1 / 9.3 / 0.0 / 1.8 / 0.0 | 112.5 vs. 226.1 | 599.47 (1.108) | 0% |
 | medium/s78 | `{"usd_krw": 1380, "safety_weeks": 0.5, "max_share": 70, "quality_hold": "S05-W4"}` | 461.63 | 454.8 / 6.5 / 0.0 / 0.3 / 0.0 | 114.9 vs. 137.2 | 508.46 (1.101) | −2.3% |
-| hard/s42 | `{"usd_krw": 1380, "safety_weeks": 1, "max_share": 80, "quality_hold": "S03-W5"}` | 542.83 | 516.2 / 9.5 / 6.6 / 10.5 / 0.0 | 114.4 vs. 273.7 | 646.85 (1.192) | 0% |
-| hard/s3 | `{"usd_krw": 1380, "safety_weeks": 1.5, "max_share": 80, "quality_hold": "S01-W5"}` | 602.58 | 585.0 / 10.2 / 4.2 / 3.2 / 0.0 | 114.8 vs. 349.7 | 654.26 (1.086) | −0.2% |
-| hard/s78 | `{"usd_krw": 1380, "safety_weeks": 0.5, "max_share": 80, "quality_hold": "S05-W5"}` | 508.14 | 484.7 / 8.0 / 9.8 / 5.6 / 0.0 | 115.0 vs. 297.2 | 604.85 (1.190) | −0.2% |
+| hard/s42 | `{"usd_krw": 1380, "safety_weeks": 1, "max_share": 80, "quality_hold": "S03-W6"}` | 558.50 | 539.0 / 9.6 / 7.6 / 2.2 / 0.0 | 115.0 vs. 267.5 | 627.35 (1.123) | −0.3% |
+| hard/s3 | `{"usd_krw": 1380, "safety_weeks": 1.5, "max_share": 80, "quality_hold": "S01-W6"}` | 612.17 | 589.8 / 9.8 / 5.3 / 7.2 / 0.0 | 114.4 vs. 349.7 | 666.96 (1.090) | 0% |
+| hard/s78 | `{"usd_krw": 1380, "safety_weeks": 0.5, "max_share": 80, "quality_hold": "S05-W6"}` | 508.61 | 484.9 / 7.9 / 10.1 / 5.6 / 0.0 | 115.0 vs. 297.2 | 598.72 (1.177) | 0% |
 
-Means per tier: reference 504.6 (easy), 498.3 (medium), 551.2 (hard); baseline 562.6, 550.3, 635.3. "Unconstrained"
+Means per tier: reference 504.6 (easy), 498.3 (medium), 559.8 (hard); baseline 562.6, 550.3, 631.0. "Unconstrained"
 is the default planner (second-source step, two-week lots, no trim) without the budget step, the plan the budget is
 calibrated on. Bending is the best plan without the second-source step (the planner with the rule switched off, or
 the reference where that is cheaper), against the reference: 0.8–2.7% cheaper in the easy and medium settings with a
-70% or 90% cap, nothing where the cap is 80% (the plan without it is no cheaper), at most 0.2% in hard, where
+70% or 90% cap, nothing where the cap is 80% (the plan without it is no cheaper), at most 0.3% in hard, where
 deferrals, allocation and the hold already spread the volume. Whether a bend pays after the policy's penalty is in
 REVIEW.md (F1).
 
@@ -166,7 +171,10 @@ the public world, each tier's panel plus 12 admissible parameter combinations (3
   quality scale, or is invalid, in at least one measured setting of every tier where it is in force; most bite in
   most settings. A drawn parameter's misreading is the reference of another candidate, the least harmful one
   counted. The misreading planner also weighs the reference's own plan and keeps whichever is valid and cheaper by
-  its reading, so a fact that does not change the best plan in a setting costs nothing there.
+  its reading (where no plan keeps every rule of its reading, the reference when it breaks no more of them and is
+  cheaper by it), so a fact that does not change the best plan in a setting costs nothing there (and, where the
+  planner's own plan for the misreading is dearer by that reading than the reference, a fact the reference's local
+  search would still exploit is not measured: approved status only in easy/c1 and medium/c10, REVIEW.md).
 - **Diagnostics.** `diagnose()` reports `enforced` per target, computed only when the audit or a run's scoring asks
   for it (validate-case never does). A plan is not enforced on a target when it breaks a rule only the client's
   reading has, or when it is materially worse than the best plan known for the fact (regret above 0.05 of the
@@ -178,21 +186,31 @@ the public world, each tier's panel plus 12 admissible parameter combinations (3
   not enforced whenever the plan breaks their rule. The reference is enforced everywhere and every ablation that
   bites is not. The best known solution and the client's own MRP, which know every fact, are called not enforced in 0 of 657
   target-settings each (the earlier diagnostic, which compared with the reference under the misreading: 125 and
-  228), the planner's 386 unpolished variants in 29 of 6,556 (earlier 2,189). Ablations of facts that share a rule
+  228 of 657), the planner's 386 unpolished variants in 29 of 6,556 (earlier 2,189; both measured in the
+  diagnostics pass, before the hard hold moved to W6). Ablations of facts that share a rule
   with others (the monthly budget, the dual-sourcing rule) also flag those others (GT.md, part 5; REVIEW.md,
   diagnostics).
 - **Shortcuts are closed.** An empty plan, Express Parts for everything, ignoring the budget, buying everything in
   W1, no buffers at all, ordering only the critical parts, copying the gross demand through, the same order every
-  week and the client's own MRP rounded up to price breaks are each invalid or score at most 0.5 in every setting.
+  week, the client's own MRP rounded up to price breaks and the literal solution with the fact behind one rule it
+  breaks put in (the supplier on hold, the planning rate, the dual-sourcing habit) are each invalid or score at most
+  0.5 in every setting. Ignoring the budget is also invalid in all 39 settings of world seeds 1, 2 and 3 since the
+  November budget is calibrated on the reference planner too (below); there the literal plan with the hold known is
+  the one shortcut still open, in two hard settings of world seed 1 (0.94, 0.52) and two of world seed 2 (0.90,
+  0.55), where its plan happens to keep the dual-sourcing habit (REVIEW.md, adversarial check of the literal
+  follow-up).
 - **Asking is necessary.** The best plan that never asks (`robust_solution`: the request's natural reading, i.e. the
   flash change applied and the history and the allocation used as the request asks, the rise from W4, planned for
-  the middle safety stock, the tightest share cap, the dearest dollar and every candidate hold) is invalid in every
-  easy and medium setting (C04 runs out from W6 and has one supplier) and earns 0.66 in hard: value of asking 1.00
-  (easy), 1.00 (medium), 0.34 (hard). No never-asks reading tried, the same in every tier, does better than 0.32 in
-  easy (ignoring the flash change, against the request), 0.13 in medium or 0.66 in hard (REVIEW.md, second pass).
+  the middle safety stock, the tightest share cap, the dearest dollar and every candidate hold, then improved by
+  the best known solution's wide local search) is invalid in every easy and medium setting (C04 runs out from W6
+  and has one supplier) and earns 0.66 in hard: value of asking 1.00 (easy), 1.00 (medium), 0.34 (hard). With the
+  reference's short search only it earned 0.57 in hard; knowing its own hold it would earn 0.83, its own safety
+  stock 0.89. No never-asks reading tried, the same in every tier, does better than 0.13 in easy or medium
+  (ignoring the flash change, against the request) or 0.66 in hard (REVIEW.md, second pass, literal solution
+  follow-up and its adversarial check).
 - **Bounds.** A wider local search (`best_known_solution`) beats the reference by 0.3–3.2% (quality 1.03–1.31,
   median 1.106); a linear relaxation (`objective_bound`) is 4–7% below the reference in easy, 9–12% in medium and
-  18–20% in hard (MOQs and price tiers relaxed; orders due after a part's last week are columns too, since a valid
+  18–21% in hard (MOQs and price tiers relaxed; orders due after a part's last week are columns too, since a valid
   plan may place them for the share rule). `quality_cap: 1.11`, the median best-known quality, so the best plan
   known earns full quality credit and the reference 0.90.
 
@@ -225,19 +243,24 @@ In easy and medium it plans on the promised dates, as the round says; in hard, w
 adds one week to every supplier's lead time (a blanket buffer, where the reference buffers only the suppliers the
 history shows to be late).
 
-Budget in the data: November 115 M, December 480 M, January 85 M KRW. It is calibrated over every admissible
+Budget in the data: November 115 M, December 485 M, January 85 M KRW. It is calibrated over every admissible
 combination of the candidate pools in every tier (225 combinations), on the unconstrained plans: November is 95% of
-the least any combination spends there, rounded down to 5 M, so it binds in every combination a rule seed can draw;
+the least any combination spends there, rounded down to 5 M, so it binds in every combination a rule seed can draw
+(the least is taken over the plain planner's plans and over the reference planner's own budget-free plans in the
+leanest round, easy with half a week of safety stock, 36 plans: the plain plans alone left the cap above the
+reference planner's plan on some worlds, e.g. 125 M on world seed 2, where ignoring the budget then cost nothing; here
+the cap stays 115 M);
 December has 5% headroom over the most any combination spends there plus what it spends in November above the cap;
 January 5% over the most any combination spends there. Allocation: C01 6,500, C03 9,000, C06 3,500 per month (60% of
 the peak month of the unconstrained hard plan for the calibration values 1,380 / 1 / 80% / S07 to W3).
 
 Over all 225 combinations on this world the reference and the baseline are valid and the baseline is worse (ratio
-1.060–1.194 in easy, 1.078–1.229 in medium, 1.086–1.233 in hard); the unconstrained plan overspends November. The
+1.073–1.194 in easy, 1.078–1.229 in medium, 1.090–1.190 in hard); the unconstrained plan overspends November. The
 same holds on world seeds 1, 2 and 3 for all 225 combinations each, with the baseline worse by at least 7.6% / 7.3% /
-6.3% (world 1, easy / medium / hard), 5.3% / 5.1% / 13.1% (world 2) and 5.5% / 5.9% / 5.0% (world 3; the lowest,
-5.02%, is hard with 1.5 weeks and Hanbit Electronics on hold). The validator checks the public panel on world seeds
-1–3; the audit measures 12 more combinations per tier (GT.md).
+7.0% (world 1, easy / medium / hard), 6.1% / 4.9% / 13.6% (world 2, re-measured with its November cap at 110 M; the
+lowest, 4.87%, is medium at 1,500 with 0.5 weeks, a 70% cap and Kowon Passive on hold, 5.13% at 125 M) and 5.9% /
+5.8% / 9.0% (world 3, November at 130 M). The validator checks the public panel on world seeds 1–3; the audit
+measures 12 more combinations per tier (GT.md).
 
 ### Literal solution
 
@@ -247,7 +270,21 @@ holiday weeks all used, since the request hands them over) and without the clien
 dual-sourcing habit, no quality hold, the dollar at 1,380. It is the same plan in every setting and is invalid in
 all 9 public settings (quality 0): everywhere it single-sources a critical part (C04, or C25 in hard) and gives S04
 81% of C01; where Kowon Passive or Hanbit Electronics is on hold it also buys from them, and with Hanbit's hold in
-easy and medium (dollar at 1,450) it also goes over a monthly budget.
+easy and medium (dollar at 1,450) it also goes over a monthly budget. With the dual-sourcing habit relaxed (an
+exception the client may grant) it stays invalid wherever the hold rejects one of its deliveries, which is every
+hard setting and the easy and medium settings with Kowon Passive or Hanbit Electronics on hold; elsewhere it scores 0
+(it follows the flash change the round does not make, so C04 runs out from W6). In hard the request's own reading
+is the client's on everything the request hands over (history, allocation, flash change, breaks, holidays, the
+1,380 rate), so the hold carries the score there: it runs through the New Year week W6, and the November budget
+pushes the plan's December orders from Mirae Semicon and Seoul PCB Tech into W3, whose 11–13 business days arrive in
+W6. The same holds for its next readings (dual-sourced at 80%, with 0.5 or 1 week of safety stock, a backlog priced
+per board, the reels read right, on the promised dates, without the allocation) in every public setting and the
+round's rule seeds, and for the literal plan in all 225 combinations on this world and on world seeds 1–3
+(REVIEW.md, literal solution follow-up). The hold is the one client fact that carries this in hard: the literal plan
+with only the hold known (`literal_plus_quality_hold`) is invalid as delivered on this world (it breaks the
+dual-sourcing habit) but scores 0.48–0.86 in the hard settings with half a week or one week of safety stock once the
+habit is relaxed, and on world seeds 1 and 2 its plan happens to keep the habit in four hard settings (0.52–0.94 as
+delivered; REVIEW.md, adversarial check of the literal follow-up).
 
 ### How the expectation is computed (hard)
 

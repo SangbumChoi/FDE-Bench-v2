@@ -104,8 +104,6 @@ LITERAL_MAX_QUALITY = 0.2        # the request read literally, without the clien
 # Cases whose literal solution scores above LITERAL_MAX_QUALITY in some public setting, known and open:
 # case id -> why (a warning instead of a problem until the case changes).
 OPEN_LITERAL_FINDINGS: dict[str, str] = {
-    "manufacturing/procurement_specialist": (
-        "with the dual-sourcing habit relaxed, the literal plan scores 0.58 and 0.85 in hard/s42 and hard/s78"),
 }
 ADMISSIBLE_SEARCH = 5000         # combinations tried per candidate before it is called never admissible
 # Per-tier binding findings that the cases had when the check became per tier, warned about instead of failing

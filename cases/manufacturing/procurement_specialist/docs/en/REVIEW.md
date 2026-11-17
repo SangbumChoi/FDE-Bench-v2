@@ -286,6 +286,215 @@ for it, but loses less than twice what the restriction costs, is still called no
 not use an opportunity the fact gives (the price breaks) when that explains half its regret; and a misreading in a
 direction the natural one does not take is not seen.
 
+### Ground truth audit, literal solution follow-up
+
+validate-case carried one open finding for this case (`validate.OPEN_LITERAL_FINDINGS`): with the dual-sourcing
+habit relaxed, the literal solution scored 0.58 in hard/s42 and 0.85 in hard/s78. The validator wants it invalid or at
+most 0.2 in every public setting, as delivered and with every bendable rule relaxed.
+
+- **Cause.** The literal solution is `robust_solution`'s reading of the request and the data without the client's own
+  facts (no safety stock, no dual sourcing, no quality hold, 1,380 KRW per USD). In hard the request hands over
+  everything the tier uses (the delivery history, the allocation notice, the flash change, the price breaks, the
+  holiday weeks) and the planning rate is fixed at the 1,380 the literal reading assumes, so only the client's own
+  facts separate it: the safety stock, the dual-sourcing habit, the quality hold, and the backlog per board and the
+  resistor reels, which cost it little. The hold to W5 rejected nothing the plan buys from Mirae Semicon (S03) or
+  Seoul PCB Tech (S05): the November budget pushes its December orders from them into W3 (Monday 7 December), and
+  their 11–13 business days (W3 5, W4 5, the Christmas week 4) deliver in W6, the first week after the hold. With
+  S03 or S05 on hold only the safety stock and the bendable habit were left, and with the habit relaxed the plan
+  scored 0.58 / 0.56 with 1 week of safety stock and 0.90 / 0.85 with 0.5 weeks (below 0 with 1.5 weeks); only
+  Hanbit Electronics' hold, which rejects the resistors and connectors it ships from W2, made it invalid. That is 4
+  of the 9 hard combinations above 0.2, among them the round's rule seed 108807 (1 week, S05 on hold: 0.56). On
+  world seeds 1 and 2 the S03 hold let it through as well (0.68–0.94).
+- **Change (the client's terms).** The quality hold in hard runs through the New Year week W6 for each of its three
+  candidates (Mirae Semicon, Seoul PCB Tech, Hanbit Electronics): the supplier's corrective action can only be
+  verified after the holiday shutdown, so its lots are accepted again from W7, the week of 4 January. A plan that
+  does not know the hold and takes December deliveries from that supplier now has lots rejected. Easy and medium
+  keep their holds (Kowon Passive to W3, Seoul PCB Tech or Hanbit Electronics to W4). Changed: the hard pool and its
+  labels in case.yaml, the requirements' paragraph for Mirae Semicon's hold (`when: quality_hold=S03-W6`) in all five
+  locales, the hard hold week in summary.yaml (five locales) and explainer.yaml (four). The request is unchanged; the
+  data changes in one number, the same in every setting: the budget is calibrated over the candidate pools, so
+  December moves from 480 to 485 M KRW (world seeds 1, 2, 3: 475 → 480, 485 → 490, 445 → 450; summary.yaml
+  updated). The literal solution itself is unchanged.
+- **The literal solution after.** Invalid in all 9 hard combinations on the public world and on world seeds 1–3,
+  as delivered and relaxed (the hold rejects one of its deliveries in every one); in easy and medium unchanged:
+  invalid, or 0.00 with the habit relaxed (it follows the flash change, so C04 runs out from W6). Per public setting
+  (as delivered / relaxed), before → after: easy/s42, medium/s42 invalid / invalid (hold) → same; easy/s3, medium/s3
+  invalid / invalid (budget, hold) → same; easy/s78, medium/s78 invalid / 0.00 → same; hard/s42 invalid / 0.58 →
+  invalid / invalid (hold); hard/s3 invalid / invalid → same; hard/s78 invalid / 0.85 → invalid / invalid (hold).
+  Over all 225 combinations on each of the four worlds it never scores above 0.2 relaxed. Its next readings, each
+  planned the same way (dual-sourced at 80%; with 0.5 or 1 week of safety stock; dual-sourced with 1 week; a backlog
+  priced per board; the reels read right; on the promised dates; without the allocation), are invalid or score 0.00
+  in every public setting and in the round's nine (rule seeds 108807, 519122, 904685), as delivered and relaxed.
+- **Round 2026-11** (rule seeds 108807, 519122, 904685, public world): reference and baseline valid in all nine
+  settings, scale 8.0–19.0% wide (easy 10.8 / 8.0 / 15.9%, medium 11.0 / 9.2 / 16.1%, hard 15.7 / 19.0 / 11.7%),
+  literal invalid or 0.00 as delivered and relaxed (hard/s108807 was 0.56 relaxed before).
+- **Validity and scales.** All 225 combinations on each of the public world and world seeds 1–3 keep a valid
+  reference and a valid baseline that is worse by at least 5.1% (lowest: world 2, medium, 1,500 KRW per USD, 0.5
+  weeks, 70%, Kowon Passive on hold); hard is now 9.0–19.0% wide on the public world (was 8.6–23.3%) and at least
+  7.0% on worlds 1–3 (was 5.0%, world 3, 1.5 weeks with Hanbit Electronics on hold to W5). From hard/s42 the hold
+  binds on all four worlds: the reference planned for Mirae Semicon's hold breaks the hold under Seoul PCB Tech's or
+  Hanbit Electronics'.
+- **What the audit shows now** (39 settings; easy and medium are as before in every number but the budget line, so
+  these are hard): `quality_hold` bites in 9 of 9 (was 5), `moq_per_line` 7 (6), `safety_stock` 7 (9), `price_breaks`
+  7 (8), `dual_source_two` 3 (4), `holiday_weeks` 2 (3), `backlog_cost` 3 (6, now among the few-bites warnings),
+  `eco_c04_exempt` 5 (8), `shortfall_cost` 8 (8); the rest unchanged. Two findings came up and were fixed:
+  - `approved_status_only` bit in no hard setting (was 2 of 9, both with Seoul PCB Tech on hold to W5): with late
+    deliveries the pending sources (Kowon Passive, late-prone, for a resistor, a capacitor and the LED; Mirae Semicon,
+    18 business days, for the antenna) never pay, so a planner that takes pending as allowed loses nothing. It is no
+    longer a hard target (en targets.yaml `tiers: [easy, medium]`; hard has 17 targets); `approved_vendor` stays a
+    hard rule and the fact stays in the hard requirements, as the Nara Display week and the shortfall price did.
+  - `eco_c04_exempt`'s diagnostic did not tell the reference from its ablation in hard with Hanbit Electronics on hold
+    and 0.5 weeks (damage 0.12, called enforced). With Hanbit on hold no plan can second-source C04 by the
+    `c04_critical` reading, so the misread planner fell back to a planner variant that breaks that rule as the
+    reference does and costs more by the misreading itself (529.6 against 518.6 M KRW; with 1 week 586.0 against
+    560.3, damage 0.41): most of its damage was the variant, not the misreading (regret 9.1% of the scale under the
+    misreading, 11.7% under the client's reading). `_misread_plan` now also keeps the reference when, by the
+    misreading, it breaks only rules the planner's plan breaks too, and fewer of them or at less cost (the earlier
+    rule, the reference when it is valid and cheaper, is the case of none). That changes only these two ablations:
+    damage 0 there, `eco_c04_exempt` bites in 5 of 9 and separates in all of them.
+  Value of asking in hard 0.43 (was 0.34): `robust_solution`, which plans for every candidate hold, earns 0.57
+  (0.66); avoiding only two of the three holds earns at most 0.47, one 0.27, none 0; the never-asks plan with the rise
+  from W3 0.51, with the reels read right 0.51, with a backlog per board 0.56; the best fixed known-facts plan 0.30
+  (0.54). The second pass's figures for ignoring the flash change (0.315 in easy, a mean of 0.158 over the 39
+  settings) do not reproduce with the current code, before or after this change: 0.124 in easy and 0.095 in medium
+  with 0.5 weeks, 0 and 0.126 with 1 week, 0 in hard, 0.084 over all 39 against `robust_solution`'s 0.131 (0.151
+  before); GT.md and case.py now say so. Shortcuts: all closed in the 39 settings (`baseline_breaks` at most 0.009,
+  was 0.000). Diagnostics: no false negative for the best known solution or the baseline (0 of 648 each, was 0 of
+  657), `robust_solution` 65 of 648 (63 of 657; now also `quality_hold` once and `safety_stock` 4 times, was 3), the
+  same eight cross-flag warnings. Best known 0.3–3.2% below the reference, quality 1.03–1.31 with the median
+  unchanged at 1.106, so `quality_cap` stays 1.11; the bound's gap in hard 18.3–20.6% (17.9–19.5%). Bending
+  `dual_source_critical` at reference level: as before in easy and medium (worth 0.06–0.10 of credit where the cap
+  is 70% or 90%, so it pays under a 0.05 penalty in four of the nine panel settings, never under 0.1), and in hard at
+  most 0.3% (hard/s42, 0.02 of credit; was 0.2%).
+- **Checked, not changed (open).** On world seeds 2 and 3 the `ignore_budget` shortcut (the reference planner without
+  the monthly budget) is valid in easy/s78 (both worlds) and easy/c2 (world 3) and scores 1.00–1.02: there the
+  reference planner's plan already fits every month's cap (the November cap is calibrated on the default planner's
+  unconstrained plan, which the trim and the local search undercut). It is so on the commit before this change as
+  well; the audit measures shortcuts on the public world only, where it is closed in all 39 settings. Every other
+  shortcut stays invalid or at most 0.32 in the 39 settings of each of world seeds 1–3.
+
+### Ground truth audit, adversarial check of the literal solution follow-up
+
+A second engineer re-ran the follow-up's claims and changed five things: the reason for the hard hold is now in the
+requirements, the November budget is calibrated so that it binds the reference planner on every world (it did not
+on some), the approved-status fact bites in hard again, `robust_solution` searches as hard as the best known plan,
+and the literal solution's near misses are among the shortcuts. The public world's data changes in one cell
+(Kowon Passive's status for C17); its budget does not change.
+
+- **The hold through W6 (kept; its reason now stated).** The follow-up gave the reason (the supplier's corrective
+  action can only be verified after the New Year shutdown) only in this file; the requirements said "up to W6" with
+  no reason, so the simulated client could not have explained it. The hard requirements now say it in all five
+  locales (a `tier: hard` line under the hold), and so does summary.yaml's question. The week is not picked for the
+  literal plan alone: Mirae Semicon and Seoul PCB Tech quote 11–13 business days, so whatever is ordered from them in
+  W1–W3 arrives by W6, and the critical parts' opening stock (4.2–5.3 weeks of demand) runs out in W5–W6, so any plan
+  that does not know the hold buys its replenishment from them in that window; the hold to W5 missed exactly the W3
+  orders the November budget pushes there. The hold is not cheap to hedge: `robust_solution` avoids all three
+  candidates (which a planner that never asks could not even name) and earns 0.66 in hard with the wide search
+  below, and the same plan knowing only its own hold earns 0.83, so the fact is worth 0.17 even to a planner that
+  knows the pool, on top of the 9 of 9 bites (the other candidates' references break it). The literal solution and
+  its next readings, each planned the same way (dual-sourced at 80%; dual-sourced with one week of safety stock; on
+  the promised dates; a backlog per board; the reels read right; list prices; no holiday weeks; and 0.5 or 1 week of
+  safety stock alone), are invalid as delivered in all 39 audit settings of the public world and of world seeds 1–3
+  (worlds 2 and 3 re-measured after their budget changed below), and score at most 0.00 with the dual-sourcing habit
+  relaxed.
+- **The literal solution's near misses (new shortcuts).** `literal_plus_quality_hold`, `literal_plus_budget_cap`
+  (the client's planning rate, which is what makes the literal plan overspend at 1,450 and 1,500) and
+  `literal_plus_dual_source_critical`: the literal plan with the fact behind one rule it breaks put in. Each is
+  invalid in all 39 public settings (GT.md, part 5). But in hard the request hands over nearly everything, so the
+  hold carries the literal solution's failure there: with the hold known and the dual-sourcing habit relaxed it
+  scores 0.81–0.86 in the hard settings with half a week of safety stock, 0.48–0.59 with one week, 0 with 1.5; on
+  world seed 1 (hard/c3 0.94, hard/c5 0.52) and world seed 2 (hard/s78 0.90, hard/c2 0.55) its plan happens to keep
+  the habit and is valid as delivered. Open (below).
+- **`ignore_budget` on other worlds (fixed).** The follow-up left it open on world seeds 2 and 3 (valid at 1.00–1.02
+  in easy/s78 and easy/c2). Measured over all 225 combinations on the public world and world seeds 1–11, the
+  reference planner without a budget spent less in November than its cap in 14 combinations of world 2, 8 of world
+  3, 16 of world 5, 29 of world 7 and 12 of world 10 (all easy, or easy and medium on world 5): the cap is 95% of the
+  least the plain netting planner spends there (two-week lots, no trim, no local search), and the reference planner's
+  local search spends up to 31% less (world 5: 91.7 against 133.3 M KRW; it orders Pacific Parts' MCU and DRAM in W3
+  instead of W1 and bridges with Express Parts). No cheap stand-in was safe: 95% of the leanest plain variant (one-week
+  lots) still left world 5 open (its budget-free planner spends 0.79 of that variant's least), and a lower share of
+  the plain plan would have had to drop below 69% (world 5). The fix is in `_calibrate`, one rule for every world and
+  setting: November's cap is 95% of the least over the plain plans and over the reference planner's own budget-free
+  plans in the leanest round, easy with the least safety stock (half a week) at every rate, share cap and hold (36
+  plans); on all twelve worlds the least budget-free November spend is in easy, and medium's and hard's least are at
+  least 23% higher. New caps, old → new (M KRW): public world 115 → 115 (no change), world 1 110 → 110, world 2 125
+  → 110 (December 490 → 505 by the same rule), world 3 145 → 130 (December 450 → 465); for the check, worlds 4–11:
+  115 → 105, 125 → 85, 115, 145 → 110, 100, 135, 120 → 90, 115. In every one of the 225 combinations of all twelve
+  worlds the budget-free planner now spends more than the November cap, by at least 5.3% (world 2). Every shortcut
+  on world seeds 1–3 after the change, in the audit's 39 settings each: `ignore_budget` never valid; the others
+  invalid or at most 0.27 (`no_buffers`, world 3 easy/c6) except `literal_plus_quality_hold` above. All 225
+  combinations of worlds 2 and 3 keep a valid reference and a valid baseline that is worse; the least gap is now
+  4.87% on world 2 (medium, 1,500 KRW per USD, half a week, 70%, Kowon Passive on hold; it was 5.13% with November at
+  125 M), 5.8% on world 3; the round's nine settings stay 8.3–21.5% wide on worlds 1–3. The price is time: a world's
+  build now plans those 36 combinations, about 25–30 s instead of 1–2 s.
+- **`_misread_plan` (confirmed).** The follow-up's rule (keep the reference when, by the misreading, it breaks only
+  rules the planner's plan breaks too, and fewer or at less cost) acts only where the misread view has no valid
+  planner variant: on the public world that is `eco_c04_exempt` in hard/c3 (Hanbit Electronics on hold, half a week)
+  and hard/c5 (Hanbit, one week), and no other target in the 39 settings. Before, the ablation there was the first
+  planner variant that runs: damage 0.117 (c3) and 0.407 (c5), misread cost 529.6 and 586.0 M KRW; now it is the
+  reference: damage 0, misread cost 518.6 and 560.3. Whether that is the misreading's own best plan or a construction
+  that cannot bite: the reference planner on the misread view with the impossible second source of C04 waived (it
+  keeps the C04 safety stock the misreading asks for) costs more by the misreading (520.2 and 565.5) and scores 0.955
+  and 0.844 under the client's reading; polishing the reference under that misreading lowers its misread cost by 2.5
+  and 3.5 M KRW while changing C04 by 0 and +500 pieces (quality 1.02 and 1.01 under the client's reading). By the
+  misreading's own costs the C04 safety stock does not pay (it is scrapped at the end of W5 at standard cost on top
+  of its price, against a 1.5x shortfall in the weeks it is short) and no second source is possible, so a planner as
+  good as the reference hands in the reference or something very close to it: the fact costs nothing there, and the
+  old 0.41 was the fallback variant's own cost. `eco_c04_exempt` bites in 5 of 9 hard settings (s78, c1, c2, c4,
+  c6; damage 0.11–0.20; 0.09 in s42 and s3, 0 in c3 and c5). The construction has a general limit, seen with the
+  next change: where the planner's own plan for a misreading is dearer by that reading than the reference, the
+  reference is kept even when its own local search under the misreading would exploit the misreading.
+- **`approved_status_only` in hard (restored, in the client's terms).** It bit in no hard setting because the
+  pending sources (Kowon Passive for a 3 KRW resistor, a capacitor and the LED; Mirae Semicon for the antenna) save
+  too little to pay with late deliveries. Kowon Passive, suspended for the connectors, is now back in qualification
+  (pending) for the board-to-board connector C17, quoted about a sixth below the main maker (`build_world`, after
+  every random draw, so nothing else in any world changes; the agent sees one changed cell of
+  approved_vendors.csv, the same in every setting). A planner that takes pending as allowed now buys it in hard:
+  the target bites in 7 of 9 hard settings (not in c4, Mirae Semicon on hold with 1.5 weeks, or c5, Hanbit
+  Electronics with one week) and is a hard target again (hard has 18; the `tiers:` line in en targets.yaml is gone). In easy
+  and medium it bites in 14 of 15 each (was 15): in easy/c1 and medium/c10 the planner's own plan with the pending
+  sources is dearer by its reading than the reference (543.05 against 542.62, 491.88 against 483.68 M KRW), so the
+  construction above keeps the reference; the reference polished under the misreading takes the pending sources
+  there (539.18 and 478.13) and would be invalid.
+- **`backlog_cost` in hard (checked: weak, not decorative).** Damage per hard setting: s42 0.059, s3 0.006, s78
+  0.059, c1 0.000, c2 0.074, c3 0.095, c4 0.196, c5 0.152, c6 0.108 (mean 0.083). It bites in c4, c5 and c6 (one or
+  1.5 weeks of safety stock), costs 6–10% of the scale in four more and nothing in c1; the diagnostic separates where
+  it bites and calls the ablation not enforced in four of the six settings where it does not. It moves the plan in
+  eight of nine settings but rarely by a tenth of the scale; it stays a target with the few-bites warning. Knowing
+  it is worth 0.06 to the never-asks plan in hard (0.72 against 0.66).
+- **`robust_solution` (strengthened).** It used the reference's short local search (6,000 plans). The same plan
+  improved by the best known solution's wide search (60,000 plans, from the planner's own plan; a planner that never
+  asks can search as hard) earns 0.66 in hard instead of 0.57, so the value of asking in hard falls from 0.43 to 0.34
+  (still above the 0.30 warning); easy and medium stay 1.00 (it follows the flash change the round does not make).
+  Spreading the 60,000 plans over the three cheapest variants and the planner's plan, as `best_known_solution` does,
+  ends dearer by its own view (548.9 against 545.5 M KRW) and earns 0.62. With the wide search the other safety
+  stock candidates do worse (0.53 with half a week, 0.40 with 1.5 weeks); knowing its own safety stock it would earn
+  0.89, its own hold 0.83, the backlog price 0.72.
+- **Texts and data.** The agent view changes in one cell (approved_vendors.csv, C17/S07 pending) and is byte-identical
+  in every setting (validate-case). The five locales carry the same new hold sentence (it adds no number, ID or
+  date) and the same December numbers (485 M; summary.yaml in all five);
+  CLIENT_REVIEW.md's pre-check passes for every target, `approved_status_only` now in every tier. GT.md is
+  regenerated from the new audit.json; gt_report.py's removed-target entry for approved status in hard is gone and
+  its value-of-asking prose carries the new numbers. The four explainer.yaml files describe the three new shortcuts.
+- **Round 2026-11** (rule seeds 108807, 519122, 904685): on the public world and world seeds 1, 2, 3 the reference
+  and the baseline are valid in all nine settings each; scales 8.0–19.0% (public, unchanged), 8.4–17.8% (world 1),
+  8.3–21.5% (world 2), 9.2–18.9% (world 3); the literal solution is invalid as delivered everywhere and, with the
+  dual-sourcing habit relaxed, invalid or 0.00.
+- **The audit now** (39 settings, public world): all 13 shortcuts closed (best valid quality 0.009,
+  `baseline_breaks`); value of asking 1.00 / 1.00 / 0.34; no false "not enforced" for the best known solution or the
+  client's MRP (0 of 657 each), `robust_solution` 68 of 655; the same six few-bites and eight cross-flag warnings;
+  reference, baseline, best known (median quality 1.106, `quality_cap` 1.11) and bounds unchanged.
+- **Open.** (1) `literal_plus_quality_hold` is valid and above 0.5 in four hard settings of world seeds 1 and 2 (up
+  to 0.94), and 0.81–0.86 relaxed on the public world with half a week of safety stock: in hard, knowing only the
+  hold recovers most of the credit. Closing it needs the other hard facts to cost a plan that ignores them more
+  (for example no half-week safety stock candidate in hard, or a dearer shortfall there), which redraws or re-prices
+  every hard setting, the round's included; not done here. (2) One of the 225 medium combinations of world 2 is
+  4.87% wide (below 5%, not in any panel or round setting). (3) `_misread_plan` keeps the reference where the
+  planner's own misread plan is dearer than it by the misreading, which understates a fact the reference's local
+  search would exploit (approved status only in easy/c1 and medium/c10); polishing the kept reference under the
+  misreading would fix it but changes every ablation and diagnostic, so it is left for a separate pass. (4) A world
+  build takes 25–30 s.
+
 ### Rule seeds (conversion from rule sets A/B/C)
 
 The three fixed rule sets became candidate pools that a rule seed draws from, one parameter at a time (README,

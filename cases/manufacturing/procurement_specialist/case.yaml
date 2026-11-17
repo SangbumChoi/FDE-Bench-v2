@@ -22,7 +22,7 @@ tiers:
     Medium plus supply uncertainty: suppliers deliver one or two weeks late with probabilities the AI is not told (six months
     of delivery history in the data), monthly allocation caps on three constrained parts, and the engineering
     change that replaces the flash C04 by C25 from W6 (C04 left after W5 is scrapped); quality becomes an exact
-    expected cost. The quality hold runs to W5 and may fall on the main semiconductor maker; the planning rate and
+    expected cost. The quality hold runs to W6 and may fall on the main semiconductor maker; the planning rate and
     the share cap are the usual 1,380 and 80%.
 params:                      # the client's rule parameters; a rule seed draws each one from its pool
   usd_krw:                   # planning rate for the USD quotes of Pacific Parts (S04), KRW per USD (hard: fixed)
@@ -40,15 +40,16 @@ params:                      # the client's rule parameters; a rule seed draws e
       0.5: {zh: "0.5", en: "0.5", ko: "0.5", ja: "0.5", es: "0,5"}
   max_share:                 # dual sourcing: the most one supplier may get of a critical part, in % (hard: fixed)
     values: {easy: [80, 70, 90], medium: [80, 70, 90], hard: [80]}
-  quality_hold:              # the supplier on hold and the last week whose arrivals from it are rejected
-    values: {easy: [S07-W3, S05-W4, S01-W4], medium: [S07-W3, S05-W4, S01-W4], hard: [S03-W5, S05-W5, S01-W5]}
+  quality_hold:              # the supplier on hold and the last week whose arrivals from it are rejected (hard:
+                             # through the New Year week W6, see docs/en/REVIEW.md, literal solution)
+    values: {easy: [S07-W3, S05-W4, S01-W4], medium: [S07-W3, S05-W4, S01-W4], hard: [S03-W6, S05-W6, S01-W6]}
     labels:
       S07-W3: {zh: Kowon Passive（S07），至 W3, en: "Kowon Passive (S07), up to W3", ko: 고원패시브(S07) W3까지, ja: Kowon Passive（S07）、W3 まで, es: "Kowon Passive (S07), hasta W3"}
       S05-W4: {zh: Seoul PCB Tech（S05），至 W4, en: "Seoul PCB Tech (S05), up to W4", ko: 서울PCB테크(S05) W4까지, ja: Seoul PCB Tech（S05）、W4 まで, es: "Seoul PCB Tech (S05), hasta W4"}
       S01-W4: {zh: Hanbit Electronics（S01），至 W4, en: "Hanbit Electronics (S01), up to W4", ko: 한빛전자(S01) W4까지, ja: Hanbit Electronics（S01）、W4 まで, es: "Hanbit Electronics (S01), hasta W4"}
-      S03-W5: {zh: Mirae Semicon（S03），至 W5, en: "Mirae Semicon (S03), up to W5", ko: 미래반도체(S03) W5까지, ja: Mirae Semicon（S03）、W5 まで, es: "Mirae Semicon (S03), hasta W5"}
-      S05-W5: {zh: Seoul PCB Tech（S05），至 W5, en: "Seoul PCB Tech (S05), up to W5", ko: 서울PCB테크(S05) W5까지, ja: Seoul PCB Tech（S05）、W5 まで, es: "Seoul PCB Tech (S05), hasta W5"}
-      S01-W5: {zh: Hanbit Electronics（S01），至 W5, en: "Hanbit Electronics (S01), up to W5", ko: 한빛전자(S01) W5까지, ja: Hanbit Electronics（S01）、W5 まで, es: "Hanbit Electronics (S01), hasta W5"}
+      S03-W6: {zh: Mirae Semicon（S03），至 W6, en: "Mirae Semicon (S03), up to W6", ko: 미래반도체(S03) W6까지, ja: Mirae Semicon（S03）、W6 まで, es: "Mirae Semicon (S03), hasta W6"}
+      S05-W6: {zh: Seoul PCB Tech（S05），至 W6, en: "Seoul PCB Tech (S05), up to W6", ko: 서울PCB테크(S05) W6까지, ja: Seoul PCB Tech（S05）、W6 まで, es: "Seoul PCB Tech (S05), hasta W6"}
+      S01-W6: {zh: Hanbit Electronics（S01），至 W6, en: "Hanbit Electronics (S01), up to W6", ko: 한빛전자(S01) W6까지, ja: Hanbit Electronics（S01）、W6 まで, es: "Hanbit Electronics (S01), hasta W6"}
 rule_seeds: [42, 3, 78]
 deliverables: [orders.csv]
 deliverable_spec: |

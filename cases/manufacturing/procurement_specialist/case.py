@@ -38,7 +38,8 @@ decides which rules and cost terms apply and with which parameters:
     safety_weeks    safety stock of critical parts, in average weeks of demand
     max_share       dual sourcing: most any one supplier may get of a critical part; fixed at 80% in hard
     quality_hold    which supplier is on quality hold and up to which week its lots are rejected, "S07-W3"
-                    (hard: longer holds, and the main semiconductor maker S03 instead of S07)
+                    (hard: longer holds, through the New Year week W6, and the main semiconductor maker S03
+                    instead of S07)
   derived: hold_supplier (its name in each locale) and hold_until (the week), for the texts
 
 The budget in the data is calibrated over the candidate pools (`_calibrate`). Whatever a rule seed draws, the
@@ -103,6 +104,7 @@ PARAM_POOLS = param_pools(_META, TIERS)          # {parameter: {tier: candidates
 # The allocation is calibrated on one plan: the first version's rule set A.
 CALIBRATION = {"usd_krw": 1380, "safety_weeks": 1, "max_share": 80, "quality_hold": "S07-W3"}
 NOV_SHARE = 0.95                                 # November's cap: this share of the least unconstrained spend there
+                                                 # (the plain plans' and the planner's own in the leanest round)
 HEADROOM = 1.05                                  # December and January: headroom over the most any combination spends
 
 
@@ -533,8 +535,12 @@ def build_world(seed: int) -> World:
     for core, avg in cores:
         quotes[(core[0], core[1])] = _make_quote(core, avg, rm if core[0] != ECO_NEW else rh)
         avl[(core[0], core[1])] = core[5]
-    # The connector maker S03 is still in qualification for the antenna.
+    # The connector maker S03 is still in qualification for the antenna, and Kowon Passive (S07), suspended for the
+    # other connectors, is back in qualification for the board-to-board connector C17 (quoted about a sixth below
+    # the main maker: a planner that takes pending as allowed buys it in hard too, where with late deliveries the
+    # pending resistor, capacitor and LED alone never paid; REVIEW.md, literal solution follow-up, adversarial check).
     avl[("C20", "S03")] = "pending"
+    avl[("C17", "S07")] = "pending"
 
     late, history, est_late = {}, [], {}
     for sid, (b1, b2) in sorted(LATE_BASE.items()):
@@ -626,7 +632,17 @@ def _calibrate(world: World) -> None:
     most any combination spends there plus what it spends in November above that cap, and January's HEADROOM
     over the most any combination spends there, so that those two bind only where deferrals pile up. Whatever
     the reference cannot defer in time it defers late, pulls forward or cuts (`_defer`), so every combination
-    stays feasible."""
+    stays feasible.
+
+    The unconstrained plans are the plain netting planner's (two-week lots, no trim, no local search). The
+    reference planner itself, without a budget, can spend less in November (its local search moves big early lots,
+    e.g. Pacific Parts' MCU and DRAM, a few weeks later and bridges with Express Parts), and on some worlds that
+    left November's cap above its plan, so that ignoring the budget cost nothing there. November's cap is
+    therefore also kept under NOV_SHARE of the least the reference planner without a budget spends there in the
+    leanest round: easy (no price breaks, lateness or allocation pulling orders forward) with the least safety
+    stock, over every planning rate, share cap and hold (36 plans of the planner: the slow part of a world's
+    build). On the public world and world seeds 1-9 the budget-free planner spends at least 5% more than the cap
+    in November in every one of the 225 combinations (REVIEW.md, literal solution follow-up, adversarial check)."""
     nov, dec, jan = MONTHS
     world.budget = {m: math.inf for m in MONTHS}
     calibration = {**CALIBRATION, **derive_params(CALIBRATION, "hard")}
@@ -644,7 +660,11 @@ def _calibrate(world: World) -> None:
         for params in _combinations(tier):
             v = _View(world, Setting(tier, 0, params))
             spends.append(_spend(v, _solve(v, budget=False, trim=False)))
-    world.budget[nov] = float(math.floor(NOV_SHARE * min(s[nov] for s in spends) / 5e6) * 5e6)
+    least = min(params["safety_weeks"] for params in _combinations("easy"))
+    lean = [_View(world, Setting("easy", 0, params), {"budget_soft"})
+            for params in _combinations("easy") if params["safety_weeks"] == least]
+    lean_nov = min(_spend(v, _plan_anyway(v))[nov] for v in lean)
+    world.budget[nov] = float(math.floor(NOV_SHARE * min(min(s[nov] for s in spends), lean_nov) / 5e6) * 5e6)
     world.budget[dec] = _ceil_cap(HEADROOM * max(s[dec] + max(0.0, s[nov] - world.budget[nov]) for s in spends))
     world.budget[jan] = _ceil_cap(HEADROOM * max(s[jan] for s in spends))
 
@@ -2168,15 +2188,20 @@ def _misread_plan(world: World, setting: Setting, misread=frozenset()) -> list[d
     other fact right, and is otherwise as good as the reference: it also weighs the reference's own plan and keeps
     whichever of the two is valid and cheaper by its reading (so a misreading that does not change the best plan
     costs nothing, instead of exposing the heuristic's noise). When no planner variant is valid by its own reading,
-    its cheapest variant anyway (and, when even the budget step cannot run, the plan before it)."""
+    its cheapest variant anyway (and, when even the budget step cannot run, the plan before it); the reference then
+    replaces it when, by that reading, it breaks only rules the variant breaks too and fewer of them or is cheaper
+    (in hard, with Hanbit Electronics on hold, no plan can second-source the phased-out C04 that "c04_critical"
+    calls critical, and the reference breaks that rule as the variant does, at less cost by the misreading)."""
     key = ("misread", _params_key(setting), frozenset(misread))
     cache = _cache(world)
     if key not in cache:
         view = _View(world, setting, misread)
         plan = _plan_anyway(view)
         ref = _reference_lines(world, setting)
-        if not simulate(view, ref)[0] and (simulate(view, plan)[0]
-                                           or _plan_cost(view, ref) < _plan_cost(view, plan) - 1e-6):
+        broken = {r for r, _ in simulate(view, plan)[0]}
+        ref_broken = {r for r, _ in simulate(view, ref)[0]}
+        if ref_broken <= broken and (len(ref_broken) < len(broken)
+                                     or _plan_cost(view, ref) < _plan_cost(view, plan) - 1e-6):
             plan = ref
         cache[key] = plan
     return [dict(x) for x in cache[key]]
@@ -2359,8 +2384,19 @@ def shortcuts(world: World, setting: Setting) -> dict:
             lines.append({**ln, "qty": qty})
         _write(lines, out)
 
-    return {f.__name__: f for f in (no_orders, express_only, express_split, ignore_budget, all_upfront,
-                                     no_buffers, critical_only, copy_demand, constant_orders, baseline_breaks)}
+    out = {f.__name__: f for f in (no_orders, express_only, express_split, ignore_budget, all_upfront,
+                                    no_buffers, critical_only, copy_demand, constant_orders, baseline_breaks)}
+    # The literal solution's near misses: the literal plan with the client fact behind one rule it breaks put in
+    # (the supplier on hold, the planning rate the budget is counted at, the dual-sourcing habit at its share cap).
+    for rule, param, what in (("quality_hold", "quality_hold", "the supplier on hold known"),
+                              ("budget_cap", "usd_krw", "the planning rate known (the budget at the client's rate)"),
+                              ("dual_source_critical", "max_share", "the dual-sourcing habit kept")):
+        def near_miss(out_dir: Path, param=param) -> None:
+            _write(_literal_lines(world, {param: setting[param]}), out_dir)
+        near_miss.__doc__ = f"The literal solution plus one rule: the request as written, with {what}."
+        near_miss.__name__ = f"literal_plus_{rule}"
+        out[near_miss.__name__] = near_miss
+    return out
 
 
 # What a planner that never asks reads into the facts the client did not tell: the natural reading of the request
@@ -2372,10 +2408,12 @@ def shortcuts(world: World, setting: Setting) -> dict:
 # by the order week's Monday (the cautious readings), the lead times as business days and Nara Display's date as
 # W4 (an order placed on the Monday of W3 is received before Wednesday 9 December). It even knows that critical
 # parts are dual-sourced (it plans for the tightest share cap), which a planner that never asks could not.
-# Measured alternatives (REVIEW.md, "Ground truth audit, second pass"): hedging the flash change ("eco_hedge", the
-# first version's choice), Nara Display's rise from W3 and the strictest safety stock do worse over the audit's
-# settings; ignoring the change ("no_eco"), which the request contradicts, does about as well over all of them but
-# in the other tiers (easy and medium, and invalid in every hard setting).
+# Measured alternatives (REVIEW.md, "Ground truth audit, second pass" and "literal solution follow-up"): hedging the
+# flash change ("eco_hedge", the first version's choice), Nara Display's rise from W3, the strictest safety stock and
+# avoiding fewer candidate holds do worse over the audit's settings; ignoring the change ("no_eco"), which the request
+# contradicts, earns credit only in easy and medium (at most 0.13 there, invalid in every hard setting) and less over
+# all of them. The other safety stock candidates were tried again with the wide search (REVIEW.md, adversarial
+# check of the literal follow-up): the middle one stays the reading.
 ROBUST_READING = frozenset({"eco", "late", "alloc", "breaks_easy", "holidays", "reels", "backlog_piece"})
 
 
@@ -2383,28 +2421,44 @@ def robust_solution(world: World, out_dir: Path, tier: str, candidates: dict) ->
     """The best single plan without asking: the reference planner on ROBUST_READING, planning across the tier's
     pools: the middle safety stock candidate (over-buying a week of every critical part costs more on average than
     the shortfall it saves where the client wants more), the tightest share cap, the dearest dollar (the budget holds
-    whatever the rate) and every candidate quality hold avoided."""
+    whatever the rate) and every candidate quality hold avoided; then improved by the wide local search with
+    best_known_solution's budget of plans, from the planner's own plan (a planner that never asks can search as hard
+    as the best known plan does; with the reference's short search only it earned less in hard, REVIEW.md)."""
     holds = [_hold(v) for v in dict.fromkeys(candidates["quality_hold"])]
     weeks = sorted(set(candidates["safety_weeks"]))
     params = {"usd_krw": max(candidates["usd_krw"]), "safety_weeks": weeks[(len(weeks) - 1) // 2],
               "max_share": min(candidates["max_share"]), "quality_hold": candidates["quality_hold"][0]}
     setting = Setting(tier, 0, {**params, **derive_params(params, tier)})
-    _write(_plan_anyway(_View(world, setting, ROBUST_READING, holds=tuple(holds[1:]))), out_dir)
+    view = _View(world, setting, ROBUST_READING, holds=tuple(holds[1:]))
+    _write(_polish(view, _plan_anyway(view), BEST_EVALS, wide=True), out_dir)
 
 
 # The request at face value: the data read as robust_solution reads it (the flash change in the BOM, the delivery
 # history, the allocation notice, the price breaks in the quotes and the holiday weeks all used, since the request
 # hands them over; a missing piece priced at a multiple of its cost), and none of the client's own facts: no safety
 # stock, no dual-sourcing habit, no quality hold, the dollar at the rate the quotes were drawn at (1,380).
+# In hard that reading is the client's on everything the request hands over, so the hold carries the score there:
+# it runs through the New Year week W6, and the November budget pushes the plan's December orders from Mirae
+# Semicon (S03) and Seoul PCB Tech (S05) into W3, whose 11-13 business days arrive in W6 (a hold to W5, as before,
+# rejected none of them and left the plan at 0.58-0.90 with the dual-sourcing habit relaxed).
 LITERAL_READING = ROBUST_READING | {"single_source"}
 LITERAL_PARAMS = {"usd_krw": 1380, "safety_weeks": 0, "max_share": 100, "quality_hold": "S07-W0"}
+
+
+def _literal_lines(world: World, known: dict | None = None) -> list[dict]:
+    """The literal plan, or with `known` client facts put in (its near misses, see shortcuts()): "quality_hold" and
+    "usd_krw" replace LITERAL_PARAMS' values, "max_share" also turns the dual-sourcing habit on."""
+    known = dict(known or {})
+    params = {**LITERAL_PARAMS, **known}
+    reading = LITERAL_READING - ({"single_source"} if "max_share" in known else set())
+    setting = Setting("easy", 0, {**params, **derive_params(params, "easy")})
+    return _plan_anyway(_View(world, setting, reading))
 
 
 def literal_solution(world: World, out_dir: Path) -> None:
     """The request done as written: the reference planner on LITERAL_READING with no safety stock, single sourcing
     allowed and no supplier on hold (the same plan in every setting)."""
-    setting = Setting("easy", 0, {**LITERAL_PARAMS, **derive_params(LITERAL_PARAMS, "easy")})
-    _write(_plan_anyway(_View(world, setting, LITERAL_READING)), out_dir)
+    _write(_literal_lines(world), out_dir)
 
 
 def best_known_solution(world: World, out_dir: Path, setting: Setting) -> None:
