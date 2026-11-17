@@ -10,15 +10,17 @@ deliverable_spec: |
 tiers:
   easy: >-
     El problema central de dotación: un solo idioma por agente y turno (uno de sus idiomas), jornada completa en turnos de 8
-    horas y media jornada en turnos de 4 horas dentro de sus topes semanales, como mucho un turno al día, las ausencias
-    aprobadas (fechas en día/mes/año; una solicitud rechazada no es ausencia) y el peso de la falta de personal, que pone
-    precio a un agente que falta frente al coste de personal. El festivo del miércoles, el pago de horas extra, los descansos
-    y el emparejamiento de las personas de nuevo ingreso quedan fuera de esta ronda, y la persona de la nota del responsable
-    de equipo vuelve el lunes, como dice la nota.
+    horas y media jornada en turnos de 4 horas dentro de sus semanas de contrato (esta ronda sin horas extra), el descanso
+    entre dos turnos de un agente, las ausencias aprobadas (fechas en día/mes/año; una solicitud rechazada no es ausencia), un
+    festivo regional en un día de la semana (una parte de la previsión, redondeada hacia arriba) y el coste de que falte un
+    agente, que pone precio a la falta de personal frente al coste de personal (se paga por turno, pero la semana
+    garantizada de media jornada y el salario de formación de quien es de nuevo ingreso se pagan completos). Las horas extra y el emparejamiento de las
+    personas de nuevo ingreso quedan fuera de esta ronda, y la persona de la nota del responsable de equipo vuelve el lunes,
+    como dice la nota.
   medium: >-
-    Easy más el descanso entre dos turnos de un agente, el festivo regional del miércoles 11 de noviembre (una parte de la
-    previsión, redondeada hacia arriba), las horas extra por encima de la semana de contrato de jornada completa (a 1,5 veces
-    la tarifa) y la costumbre de no dejar sola a una persona de nuevo ingreso en un idioma. La persona de la nota del
+    Easy más las horas extra (una persona de jornada completa puede hacer un turno más allá de su semana de contrato, solo con
+    la aprobación del responsable de operaciones y a 1,5 veces la tarifa: una política de empresa que una excepción aprobada
+    puede flexibilizar) y la regla de no dejar sola a una persona de nuevo ingreso en un idioma. La persona de la nota del
     responsable de equipo vuelve el lunes.
   hard: >-
     Medium más un aviso de baja médica con fecha: la nota del jueves del responsable de equipo pide programar como siempre a la
@@ -26,10 +28,26 @@ tiers:
     días de la semana; programarla en uno de esos días incumple una regla.
 rules:
   skill_valid: Un agente solo atiende llamadas en un idioma que figure entre sus idiomas.
-  one_shift_a_day: Ningún agente hace más de un turno en el mismo día.
-  min_rest: Al menos {{min_rest}} horas entre el final de un turno y el inicio del siguiente turno del mismo agente (por tanto, como mucho un turno al día).
   shift_type: El personal de jornada completa solo hace turnos de 8 horas; el de media jornada, solo turnos de 4 horas.
-  max_shifts: Una persona de jornada completa trabaja como máximo {{ft_max_shifts}} turnos a la semana; una de media jornada, como máximo 3.
+  max_shifts: Una persona de jornada completa trabaja como máximo {{ft_max_shifts}} turnos a la semana; una de media jornada, como máximo {{pt_max_shifts}}.
+  min_rest: Al menos {{min_rest}} horas entre el final de un turno y el inicio del siguiente turno del mismo agente (por tanto, como mucho un turno al día).
   leave_respected: No se programa a nadie en un día de ausencia aprobada.
-  sick_leave: La persona de la nota del responsable de equipo no se programa ningún día hasta el {{sick_until}} incluido, el último día de su parte médico.
+  overtime_approval: No se planifican horas extra. El turno de una persona de jornada completa más allá de los {{ft_regular_shifts}} turnos de su semana de contrato necesita la aprobación del responsable de operaciones.
   buddy_rule: Siempre que una persona de nuevo ingreso está al teléfono, hay al menos un agente que no es de nuevo ingreso en el mismo idioma y a la misma hora.
+  sick_leave: La persona de la nota del responsable de equipo no se programa ningún día hasta el {{sick_until}} incluido, el último día de su parte médico.
+shortcuts:
+  one_shift: 'Las reglas, cumplidas al mínimo: un solo turno en toda la semana (el primer agente, su primer turno e idioma).'
+  fixed_rota: El cuadrante fijo del propio cliente, copiado (la línea base).
+  fixed_rota_no_new_hires: 'El cuadrante fijo con un solo cambio: las personas de nuevo ingreso no atienden el teléfono.'
+  fixed_rota_peak: 'El cuadrante fijo con un solo cambio: todo el mundo en el turno de las 10:00 (jornada completa) o de las 12:00 (media jornada).'
+  same_shift_all_week: 'Constantes: cada agente que no es de nuevo ingreso en el primer turno e idioma de su contrato, desde el lunes, tantos días como su semana de contrato.'
+  part_timers_only: 'La aritmética del objetivo: solo media jornada, el personal más barato por media hora (el planificador sin jornada completa).'
+  one_day_only: 'Un cuadrante parcial: solo el lunes del planificador de referencia, nadie los otros seis días.'
+  weekdays_only: 'Un cuadrante parcial: el del planificador de referencia de lunes a viernes, nadie el fin de semana.'
+  no_new_hires: 'La regla de acompañamiento cumplida en vacío: el cuadrante del planificador de referencia sin las personas de nuevo ingreso al teléfono.'
+  one_shift_each: 'Las reglas, cumplidas al mínimo: el planificador de referencia con un solo turno a la semana por agente.'
+  literal_plus_max_shifts: 'La solución literal más una regla: la solicitud tal cual, respetando los topes semanales de los dos contratos.'
+  literal_plus_min_rest: 'La solución literal más una regla: la solicitud tal cual, respetando el descanso entre dos turnos.'
+  literal_plus_buddy_rule: 'La solución literal más una regla: la solicitud tal cual, sin dejar sola en un idioma a ninguna persona de nuevo ingreso.'
+  literal_plus_overtime_approval: 'La solución literal más una regla: la solicitud tal cual, sin turnos más allá de la semana de contrato de jornada completa.'
+  literal_plus_sick_leave: 'La solución literal más una regla: la solicitud tal cual, respetando los días de baja del parte médico.'

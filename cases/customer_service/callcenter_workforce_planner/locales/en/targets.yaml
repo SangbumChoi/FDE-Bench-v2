@@ -2,54 +2,41 @@
   kind: ambiguous
   domain: data semantics
   text: An agent takes calls in only one language for the whole shift (one of their skills); a bilingual agent never counts for two languages at once.
-- id: slot_coverage
-  kind: ambiguous
-  domain: calculation
-  text: The forecast already gives the number of agents needed per language and half-hour slot; coverage is checked per 30-minute slot, and an agent counts in every slot inside the shift.
-- id: holiday_wednesday
+- id: understaffing_price
   kind: missing
-  domain: data semantics
-  tiers: [medium, hard]
-  text: Wednesday 11 November is a regional public holiday in the client's main market; the demand for that day is {{holiday_factor}} of the forecast, rounded up, and the file was not updated.
-- id: contract_limits
+  domain: scoring
+  param: under_weight
+  text: A missing agent costs {{under_weight}} per half-hour slot and language, in the units of the hourly rates (the client's estimate of abandoned calls, callbacks and missed service levels); the roster is judged on that plus the labor cost of all shifts, and lower is better.
+- id: ft_contract_week
   kind: missing
   domain: business rule
-  text: Full-timers work only 8-hour shifts and at most {{ft_max_shifts}} a week; part-timers work only 4-hour shifts and at most 3 a week.
-- id: one_shift_a_day
+  param: ft_week_hours
+  text: "A full-timer's contract week is {{ft_week_hours}} hours, that is {{ft_regular_shifts}} shifts<!-- tier: easy -->, and nobody works beyond it this round<!-- /tier --><!-- tier: medium hard -->. Overtime is not planned: one shift beyond it (paid 1.5 times) needs the operations manager's approval<!-- /tier -->."
+- id: pt_contract_week
   kind: missing
   domain: business rule
-  tiers: [easy]
-  text: An agent works at most one shift a day.
+  param: pt_week_hours
+  text: A part-timer's contract is {{pt_week_hours}} hours a week, at most {{pt_max_shifts}} shifts, with no overtime; those hours are guaranteed (paid in full even if fewer shifts are rostered).
 - id: min_rest
   kind: missing
   domain: business rule
-  tiers: [medium, hard]
+  param: min_rest
   text: There must be at least {{min_rest}} hours of rest between the end of one shift and the start of the next shift of the same agent.
-- id: leave_dates
-  kind: ambiguous
+- id: holiday
+  kind: missing
   domain: data semantics
-  text: The leave list writes dates as day/month/year with both ends included, and only approved entries are leave; rejected requests mean the agent is available.
-- id: overtime
+  text: "{{holiday_day}} is a regional public holiday in the client's main market; the demand for that day is {{holiday_factor}} of the forecast, rounded up, and the forecast file was not updated for it."
+- id: training_salary
   kind: missing
   domain: scoring
-  tiers: [medium, hard]
-  text: A full-timer's contract week is {{ft_week_hours}} hours ({{ft_regular_shifts}} shifts); the {{ft_max_shifts}}th shift of the week is overtime and costs 1.5 times the hourly rate.
+  text: "New hires are on a training salary: their whole contract week ({{ft_regular_shifts}} shifts) is paid whether or not they are on the phones, so leaving a new hire's shift off the roster saves nothing."
 - id: buddy_rule
   kind: missing
   domain: business rule
   tiers: [medium, hard]
   text: A new hire must never be alone on a language; in every half-hour slot they work, at least one non-new agent is on the same language.
-- id: understaffing_penalty
-  kind: missing
-  domain: scoring
-  text: The roster is scored as {{under_weight}} for every missing agent per half-hour slot and language (the client's estimate, in the units of the hourly rates, of what a missing agent costs) plus the labor cost of all shifts; lower is better.
 - id: sick_call
   kind: missing
   domain: data semantics
   tiers: [hard]
   text: The team lead's note is out of date; on Friday morning the client received the doctor's certificate of the agent it names, who is off sick up to and including {{sick_until}} and must not be rostered before then, whatever the note says.
-- id: easy_scope
-  kind: missing
-  domain: business rule
-  tiers: [easy]
-  text: This round the forecast is used as it is on every day, every shift is costed at its plain hourly rate, rest times are checked on the floor (only one shift a day matters), and new hires can be rostered like anyone else.

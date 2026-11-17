@@ -132,6 +132,18 @@ OPEN_NARROW_SCALES: dict[str, tuple[tuple[int, ...] | None, str]] = {
 # ("invalid_reference", "hard/cap=22,price=3"), and ("audit", "missing" or "stale")). A listed problem is a warning
 # until the case changes; waiving "stale" waives only that: the stored audit's own findings still count.
 OPEN_AUDIT_FINDINGS: dict[tuple[str, str, str], str] = {
+    ("customer_service/callcenter_workforce_planner", "shortcut", "weekdays_only"): (
+        "at the cost-driven price of a missing agent (17) the client's own objective values the whole weekend at "
+        "under half of the scale, so the planner's roster with the weekend left empty keeps up to 0.59 of it (at 50 "
+        "at most 0.29); a low price high enough to close it (25) leaves the price nothing to decide (it bites in 0 of "
+        "45 settings), a cost for a language left with nobody widened the scale until the facts and the value of "
+        "asking shrank, and a rule that every line is staffed every day makes the client's own rota invalid on world "
+        "seed 3"),
+    ("customer_service/callcenter_workforce_planner", "shortcut", "no_new_hires"): (
+        "keeping the four new hires off the phones keeps the buddy rule vacuously; with their training salary paid "
+        "anyway it keeps at most 0.515 of the scale (above 0.5 in one hard setting of 45); a rule that every new hire "
+        "works would make the client's own rota invalid, which leaves a new hire off when no experienced full-timer "
+        "of their language has days to shadow (most world seeds)"),
     ("finance/stock_trading_strategist", "shortcut", "hold_first_picks"): (
         "buying the reference's first picks and holding them (every notice and the table handled as the reference) "
         "scores about as well as the reference: the world's stock drifts persist over the whole test period and the "
