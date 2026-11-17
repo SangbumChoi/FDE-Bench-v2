@@ -1,7 +1,7 @@
 REGISTRO DE MODIFICACIÓN
-Contrato N.º C036 (Sierra Comunicación S.L.)
-Fecha: 2026-10-05
-Estado: acordada por ambas partes
+Contrato N.º C036 (Alcázar Sistemas S.L.)
+Fecha: 2026-09-29
+Estado: propuesta por el Proveedor, no aceptada por el Cliente
 
-La cláusula 5 (Limitación de responsabilidad) del borrador se sustituye por el texto siguiente:
-Salvo en caso de muerte, lesiones personales o fraude, la responsabilidad total de cada parte en virtud de este contrato no podrá superar 2 veces el importe anual del contrato.
+La cláusula 5 (Indemnidad) del borrador se sustituye por el texto siguiente:
+El Cliente mantendrá indemne al Proveedor frente a cualesquiera reclamaciones de terceros, daños y gastos que se deriven de este contrato o guarden relación con él.

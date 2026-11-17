@@ -1,15 +1,15 @@
 SUPPLY AGREEMENT No. C025
-Draft of 2026-09-26
+Draft of 2026-09-25
 
-This Agreement is made between Brightvale Holdings (the "Customer") and Redmarsh Materials Ltd (the "Supplier").
+This Agreement is made between Brightvale Holdings (the "Customer") and Brookline Consulting Ltd (the "Supplier").
 
 Article 1. Scope and Term
-1.1 The Supplier provides the Customer with packaging materials and industrial components.
-1.2 This Agreement starts on the date of signature and runs for an initial term of one year. It then expires unless the parties agree a renewal in writing.
+1.1 The Supplier provides the Customer with consulting and translation services, including the translation of the Customer's letters to its own customers, which contain their names, addresses and account details.
+1.2 This Agreement starts on the date of signature and runs for an initial term of two years. It then expires unless the parties agree a renewal in writing.
 
 Article 2. Fees and Payment
 2.1 The fees are set out in the order forms agreed between the parties.
-2.2 Undisputed invoices are payable net 30 from the date of receipt.
+2.2 The Customer shall pay each undisputed invoice within 30 days of receipt.
 
 Article 3. Confidentiality
 Each party shall keep confidential all business information received from the other party and use it only for the purposes of this Agreement. This obligation survives the end of the Agreement for three years.
@@ -18,7 +18,7 @@ Article 4. Indemnity
 Each party shall indemnify the other party against all third-party claims, losses and costs arising from its own breach of this Agreement or its negligence.
 
 Article 5. Limitation of Liability
-Except for liability for death, personal injury or fraud, the total liability of either party under this Agreement shall not exceed 0.5 times the annual fees payable under this Agreement.
+Except for liability for death, personal injury or fraud, the total liability of either party under this Agreement shall not exceed USD 490,000.
 
 Article 6. Termination
 Either party may terminate this Agreement with immediate effect by written notice if the other party commits a material breach and fails to remedy it within 30 days of being notified.

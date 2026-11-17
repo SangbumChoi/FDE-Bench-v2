@@ -231,3 +231,163 @@ tier. The data and request.md are byte-identical in every setting.
 - **Resolved:** F4. **Partly:** F3 (a drawn decision fact), F5 (three situations), F7 (two strings), F8 (targets per
   tier). **Still open:** F1, F6 (denser), the rest of F3, F5 and F7, and the catalog row of F2 outside this
   directory.
+
+## Ground truth audit
+
+The deep audit of the ground truth (DESIGN.md, Ground truth audit). The case is now `audited: true`; the measured
+evidence is in [GT.md](../../GT.md) and `dataset/audit.json`, what the client answers each fact from in
+[CLIENT_REVIEW.md](../../CLIENT_REVIEW.md) (awaiting human review). Numbers are on the public world unless stated.
+
+### What the audit found
+
+- **Nothing was measured.** `audit-case` at the start: 19 targets with no ablation, no shortcuts, no never-asks
+  solver, no best known solution or bound, no `quality_cap`.
+- **The literal solution failed through one rule.** It was invalid only because `decision_consistency` wanted a
+  `reject` its "negotiate" did not give. With the decision rule satisfied it scored 0.45–0.80 on the public panel
+  and 0.44–1.08 over every combination of the candidates (above the reference in some): its issue lists read every
+  clause right, and 0.7 × issue F1 + 0.3 × decision accuracy against a sign-everything zero rewarded flagging with
+  any thresholds (DIRECTION.md §11.6).
+- **The decision carried no information** (F3). It was a function of the listed issues, so its 0.3 weight
+  re-weighted the critical codes, and the rule that checked it voided whole reviews.
+- **Shortcuts were open.** Scored the old way, over every combination: a keyword matcher on the visible contracts
+  with market-practice thresholds and the client's decision rule 0.45–0.89; every code of the round on every
+  contract 0.23–0.89; the critical codes and `reject` on every contract 0.22–0.75; the literal issue lists with the
+  client's decision rule 0.51–1.08.
+- **The reference was not the best achievable** (F1): a perfect review scored 1.12–1.24.
+- **Codes from titles.** Three of the seven codes are the English article titles (`GOVERNING_LAW`,
+  `DATA_PROTECTION`, `INDEMNITY`); the other four are not guessable from them. An unknown code was fatal, so no
+  diagnostic could say why.
+
+### What changed
+
+All in the client's own terms; the request and the agent's view are the same in every setting.
+
+- **Objective.** The share of the scored contracts whose entry is exactly right (the issue list exactly the
+  playbook's, the decision the playbook's). The client acts on each contract as a whole: a missing issue gets a
+  defect signed, an extra one sends the supplier a demand the company does not make. The F1 and decision accuracy
+  are still reported as metrics.
+- **The decision is a judgement.** A new drawn fact, the sign-off limit `tolerance_below` (150,000, 250,000 or
+  100,000, in every tier): below it, a contract whose issues are all non-critical is signed as it is, with the
+  issues on record; at or above it any issue is negotiated. Which issues are critical became its own target
+  (`critical_issues`), and `decision_consistency` is gone: a wrong decision makes that contract wrong. The
+  decision now needs three facts the issue list does not hold.
+- **Easy's four points.** An entry that lists renewal, data protection or termination in easy is no longer "ignored":
+  procurement sends suppliers its own list for those, so such an entry is not the list asked for.
+- **Issue codes** are a rule, `known_issue_codes` (physical), instead of a fatal error, so the diagnostic can say
+  which fact a review with made-up codes missed.
+- **Baseline: what the client does today**, the legal team's own keyword checklist run with its playbook (the old
+  reference). It gets 25–59% of the contracts right on the public panel (at most 79% over world seeds 0–119), so the
+  scale is 41–75% wide (at least 20.7% over those worlds). The old baseline, signing everything, is now the
+  `sign_everything` shortcut at quality 0.
+- **Reference: the answer key**, which is also the best known solution; 1.0 is a proven bound for a review that
+  keeps the rules, and `quality_cap` is 1.0 (it was unset, so the policy's 1.5 applied).
+- **The fast track's exception has a price.** A small contract taken off the fast track under an approved exception
+  counts twice when the playbook rejects it and the entry is right, and not at all otherwise: the General Counsel
+  would not sign such a contract at any size, and any other small contract costs more legal time than it saves.
+- **Data** (the same in every setting): 44 contracts (40 before, four more names per locale); six amendment records
+  (two more agreed before their draft: a one-way indemnity made mutual, New York law replaced by Singapore law); a
+  second e-mail, from the COO about two renewals; four contracts with customers' personal data (three without a
+  clause). The generator puts three contracts in each band between two sign-off candidates with only non-critical
+  issues, three caps between each pair of candidate multiples, three English-law contracts with a London forum,
+  three marketing contracts without a data-protection clause, and the hard tier's situations above every
+  fast-track candidate and at most two per band, so every fact bites in every tier.
+- **Texts in five locales.** requirements.md (44 contracts, the four points, critical and non-critical issues, who
+  signs what, superseded amendments "even one both parties had agreed", the e-mails, what an exception is worth, the
+  quality sentence), targets.yaml, summary.yaml and explainer.yaml (rules, tiers, shortcut descriptions).
+- **Targets: 19 → 17.** New: `critical_issues`, `accepted_deviations` (`param: tolerance_below`). Removed as targets
+  and kept as context: `period_caps` and `law_not_forum` (the natural reading; their counterparts
+  `period_caps_out_of_round` and `dispute_forum` are what has to be told), `indemnity_mutual` (the natural reading),
+  `round_contracts` (the client does not use those answers, so no reading changes the score). `liability_cap`,
+  `governing_law`, `auto_renewal`, `payment_terms`, `data_protection`, `termination_convenience`, `decision_rule` and
+  `small_contract_fast_track` are `param:` targets; the edge rules inside them (an equal cap, an uncapped contract, a
+  month of 30 days) stay in the requirements.
+- **Hooks.** `ablations` (the answer key with one fact misread, `misreadings`), `shortcuts` (nine), `robust_solution`,
+  `best_known_solution`, `objective_bound`, a per-target diagnostic in `score()`; `partial_reviews` and
+  `bent_reviews` for GT.md. `gt_report.py` writes GT.md and `client_review.py` CLIENT_REVIEW.md.
+
+### Results
+
+- **Literal solution**: quality 0.000 in all nine public settings, as delivered (invalid in hard, valid elsewhere)
+  and with the fast track relaxed; 0.000 with the client's decision rule and fast track added, in all 45 measured
+  settings.
+- **Facts**: every target bites in every tier where it is in force, 13–15 of 15 settings each (`auto_renewal` 13/15
+  in hard; `customer_personal_data`, `amendments` and `requests_to_sign` 12/15 in hard, 15/15 on world seeds 1–3);
+  damage 0.091–1.0. Every diagnostic separates; no false "not enforced" on the best known solution; no cross-flag
+  warning.
+- **Shortcuts**: nine, closed in all 45 settings (best valid quality 0.000).
+- **Value of asking**: 1.000 / 0.997 / 1.000 (easy / medium / hard). The never-asks solver gets 10–43% of the
+  contracts right, below the client's checklist.
+- **Parts of the work left undone** (GT.md part 2; not shortcuts, since each needs most of the facts): the right
+  issue lists with "negotiate" for every issue, 0–0.75; the supplier paper signed unread, 0.73–0.87; the amendments
+  folder unopened, 0.91–0.94.
+- **Bending**: the targeted exception pays in 12 of 15 hard settings (+0.06 to +0.35 quality before the penalty)
+  and gains nothing in 3; reviewing every small contract pays in 7 and loses in 8 (down to −0.13).
+- **Pressure**: obeying the two e-mails costs 0.091–0.136 of the scale and is caught by the `requests_to_sign`
+  diagnostic whenever one of the three contracts is signed.
+- **Leaderboard round 2026-11** (rule seeds 108807, 519122, 904685, every tier, public world and world seeds 1–3):
+  the reference valid at quality 1.0, the baseline valid, the scale 0.448 wide or wider, the literal solution at 0.000
+  as delivered and relaxed, in all 36 settings (before: also all passing, scale 0.904 or wider, the literal invalid).
+
+### Findings resolved
+
+- **Resolved:** F1 (the reference is the answer key, `quality_cap` 1.0), F3 (the decision is a judgement of its own,
+  scored per contract), the open part of F2 (an exception now pays where the client wants one and costs elsewhere),
+  and the literal-solution finding of DIRECTION.md §11.6 for this case.
+- **Partly:** F5 (a second e-mail and three superseded amendments; a stale register value and an already renewed
+  contract are still open), F6 (a keyword matcher no longer scores without the client's facts, but contracts are
+  still templated and dense: 25 of the 29 scored contracts have an issue at easy/s6), F8 (the edge rules stay in the
+  requirements as the natural reading rather than becoming targets).
+- **Still open:** F7 (a third language for supplier paper, a native-speaker pass over the new texts), and outside
+  this directory: the catalog row in cases/README.md, the contract rows of DIRECTION.md §10.2 and §11.6, and this
+  case's rows in leaderboard/anchors-2026-11.json (now stale). docs/zh, ko, ja and es README and REVIEW still
+  describe the case before the audit until they are retranslated.
+
+### Adversarial check of the audit
+
+A second pass tried to break the audit's claims by running code. What it measured and what it changed:
+
+- **The never-asks solver was beatable.** The audited solver read four fixed facts that nothing on hand settles one
+  way only (the governing law as a critical issue, the law without the forum, data protection by category only,
+  every agreed amendment applied), although the literal solution itself reads customers' personal data in the
+  scope. Read the other way, each lifts it: the law not critical alone takes hard from 0.000 to 0.038; all four read
+  the client's way give 0.000 / 0.078 / 0.135 (easy / medium / hard). Other attempts did no better: a per-contract
+  choice that maximizes the expected clipped credit (which needs the baseline's zero point, which an agent does not
+  have) at most 0.114 in hard; the answer key of one guessed combination at most 0.050 on average over the guesses.
+  The solver now hedges the four unsettled facts (both readings of each, weighted alike, with the candidates): 0.000 /
+  0.019 / 0.028, so asking is worth 1.00 / 0.98 / 0.97 (was 1.00 / 0.997 / 1.00). GT.md reports the lucky guess
+  beside it.
+- **The objective is a fair client objective.** One contract wrong costs one contract's share of the scale (0.07–0.08
+  of quality in easy, 0.04–0.06 in medium, 0.03–0.05 in hard); two decision slips keep 0.83–0.94. What makes a
+  review worth nothing is getting no more contracts right than the client's checklist, which knows every fact. Two
+  milder per-contract credits were measured (a reject right when its decision and critical issues are; half for the
+  list, half for the decision): no shortcut opens under either (best 0.29), so the stricter, simpler one stays.
+- **The baseline and the literal solution are honest.** The checklist knows every figure, reads even the
+  supplier-paper contracts in English and fails only where keywords fail (two-promise indemnities, "net 30", notices
+  in months, caps in words, a paraphrased data clause or termination right, a seat that names an accepted city).
+  Nine other literal readings (no termination point, termination only on large contracts, the e-mails obeyed,
+  amendments by date, a reject for any critical-looking issue, stricter market figures, the four usual points) are
+  at quality 0 or below in every setting, as delivered and with the fast track relaxed.
+- **Three more shortcuts**, closed: `negotiate_everything` (0.000), `literal_reject_critical` (0.000),
+  `literal_four_points` (at most 0.083). The client's checklist with its worst wording fixed (two-promise
+  indemnities read as mutual) reaches 0.583 in easy, but it needs every client fact, so it is reported as a part of
+  the work (`keyword_reading`, GT.md part 2), not as a shortcut: in easy that one wording is about half the scale.
+- **The parts of the work left undone stay so.** `no_decision_judgement` needs every fact of the issue lists, all but
+  the three decision facts; it passes 0.5 only where reject_at is 2 and the sign-off limit low.
+- **The diagnostic missed misreadings and called an approved exception a misread fast track.** A review that took
+  off the fast track exactly the small contracts the playbook rejects was called not enforced in 7 of 15 hard
+  settings; now those contracts do not count (15/15 enforced). Misreadings no ablation makes went unseen: the forum
+  checked in place of the law (0/45 caught, damage up to 0.92), critical issues signed below the limit (0/24, up to
+  0.92), data protection not critical (0/26, up to 0.36), a reject only above the count (21/39, damage 0.07–1.0), the
+  minimum itself flagged (cap 30/45, payment 29/45, renewal 23/30). The diagnostic now weighs those readings too:
+  every one is caught where it changes the review, but data protection not critical, 20/26 (a reject against a
+  negotiate there looks like a reject threshold misread, so only a sign tells). No false "not enforced" on four
+  reviews with every fact right (format variants, two decision slips, the contracts outside the round answered
+  otherwise, the approved exception), and no cross-flag warning. Slips at the value thresholds (sign-off limit,
+  termination, fast track) touch one contract and lose 0.03–0.08; they are not caught.
+- **Data and texts.** The five locales' data agree on every id, value, draft and amendment date, e-mail, supplier name
+  and fixed cap amount, on the public world and world seeds 1–3; the requirements and targets agree on every number
+  of the decision rule and the sign-off limit.
+- **Round 2026-11.** The three seeds draw the law of Singapore only in every tier, a cap multiple of 1.5 or 2, payment
+  60 or 30 days, reject at 1 or 2 and a sign-off limit of 250,000, 150,000 or 100,000. On the public world every
+  target in force bites in at least one round seed per tier; on world seed 3 `governing_law` in medium does not
+  (0.083–0.087).

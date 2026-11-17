@@ -1,7 +1,7 @@
 AMENDMENT RECORD
-Agreement No. C036 (Westcliff Media Ltd)
-Date: 2026-10-05
-Status: agreed by both parties
+Agreement No. C036 (Briarwood Digital Ltd)
+Date: 2026-09-29
+Status: proposed by the Supplier, not accepted by the Customer
 
-Article 5 (Limitation of Liability) of the draft is replaced by the following text:
-Except for liability for death, personal injury or fraud, the total liability of either party under this Agreement shall not exceed 2 times the annual fees payable under this Agreement.
+Article 5 (Indemnity) of the draft is replaced by the following text:
+The Customer shall indemnify and hold harmless the Supplier against all third-party claims, losses and costs arising out of or in connection with this Agreement.

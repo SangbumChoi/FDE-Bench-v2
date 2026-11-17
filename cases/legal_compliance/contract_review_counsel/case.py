@@ -1,30 +1,37 @@
 """Supplier contract review against the company playbook (original FDE-Bench v2 case).
 
-The legal team of Brightvale Holdings sends 40 supplier contracts (one text
+The legal team of Brightvale Holdings sends 44 supplier contracts (one text
 file each, each dated as a draft), the contract register, a folder of
-amendment records and an e-mail from a business owner, and asks which
+amendment records and two e-mails from business owners, and asks which
 contracts need changes before signature. The request is vague; the playbook
-that decides what counts as an issue, the issue codes, the decision logic and
+that decides what counts as an issue, the issue codes, who may sign what and
 the small-contract fast track are in the hidden requirements and must be asked
 for.
 
 Settings: three tiers x rule seeds. easy checks four points (liability cap,
 governing law, payment term, mutual indemnity) on the contracts on our own
-paper; medium adds auto-renewal notice, caps of N months' fees, data
-protection by category, termination for convenience by value and the dispute
-forum; hard adds the supplier-paper contracts, the amendment records (only a
-change agreed after the draft counts), customers' personal data outside the
-listed categories, a business owner's pressure to sign, and the fast track. A
-rule seed draws the playbook's figures (cap multiple, accepted laws, payment
-days, how many critical issues make a reject, renewal notice, data-protection
-categories, termination threshold, fast-track threshold) from candidate pools;
-the generator places contract values, caps, notice and payment terms on both
-sides of every candidate.
+paper and wants only those four listed; medium adds auto-renewal notice, caps
+of N months' fees, data protection by category, termination for convenience by
+value and the dispute forum; hard adds the supplier-paper contracts, the
+amendment records (only a change agreed after the draft counts), customers'
+personal data outside the listed categories, business owners' pressure to
+sign, and the fast track. A rule seed draws the playbook's figures (cap
+multiple, accepted laws, payment days, how many critical issues make a reject,
+the value below which non-critical issues are accepted, renewal notice,
+data-protection categories, termination threshold, fast-track threshold) from
+candidate pools; the generator places contract values, caps, notice and
+payment terms on both sides of every candidate.
+
+Scoring: the share of the scored contracts whose issue list and decision are
+both exactly the playbook's. The decision is a judgement of its own: it needs
+the issues, which of them are critical, how many of those make a reject and
+the contract's annual value against the sign-off limit.
 
 Clauses are written with varied wording, so plain keyword matching misses some
 of them; some contracts are on the supplier's paper in another language. The
-reference is a literal keyword checklist on the English wording; the baseline
-signs every contract as it stands.
+reference is the answer key (the playbook applied to every clause as written);
+the baseline is the legal team's own keyword checklist, which knows the
+playbook but reads clauses by keywords.
 """
 
 from __future__ import annotations
@@ -32,9 +39,10 @@ from __future__ import annotations
 import json
 import random
 import re
+from collections import Counter
 from dataclasses import dataclass, field, replace
 from datetime import date, timedelta
-from itertools import pairwise
+from itertools import pairwise, product
 from pathlib import Path
 
 import yaml
@@ -51,39 +59,38 @@ CODES = ("LIABILITY_CAP", "GOVERNING_LAW", "AUTO_RENEWAL", "PAYMENT_TERMS", "DAT
 EASY_CODES = ("LIABILITY_CAP", "GOVERNING_LAW", "PAYMENT_TERMS", "INDEMNITY")   # the four points of the easy round
 CRITICAL = ("LIABILITY_CAP", "DATA_PROTECTION", "INDEMNITY")
 DECISIONS = ("sign", "negotiate", "reject")
-F1_WEIGHT, DECISION_WEIGHT = 0.7, 0.3
+# A small contract taken off the fast track under an approved exception: one the playbook rejects, reviewed exactly
+# right, counts as 1 + EXCEPTION_BONUS contracts (it would have been signed unread); any other counts as none.
+EXCEPTION_BONUS = 1.0
 # governing_law candidates: the jurisdictions whose law (and, from medium, whose courts or seat) we accept
 ALLOWED = {"CH_SG": ("CH", "SG"), "CH_SG_EW": ("CH", "SG", "EW"), "SG": ("SG",)}
 DP_CATEGORIES = {"it_data": ("it_data",), "it_data_marketing": ("it_data", "marketing")}
+# the article an amendment record replaces -> the playbook point it can change
+CLAUSE_CODE = {"law": "GOVERNING_LAW", "pay": "PAYMENT_TERMS", "indemnity": "INDEMNITY", "cap": "LIABILITY_CAP",
+               "renew": "AUTO_RENEWAL"}
 
 CATEGORIES = ("it_data", "logistics", "facilities", "raw_materials", "marketing", "professional")
-N_CONTRACTS = 40
-EMAIL_DATE = "2026-10-27"
+N_CONTRACTS = 44
+N_FOREIGN = 6                  # contracts on the supplier's own paper
+N_CUSTOMER_DATA = 4            # scopes that hand the supplier our customers' personal data (all but one lack the clause)
+MAX_SPECIAL_PER_BAND = 2       # supplier-paper, amended and e-mailed contracts per band between two mid thresholds
+EMAIL_DATES = ("2026-10-27", "2026-10-28")
+
+
+def _pools() -> dict[str, dict[str, list]]:
+    return param_pools(_META, tuple(t for t in TIERS if t in _META["tiers"]))
 
 
 def _candidates(name: str) -> list:
     """Every candidate of a parameter over all tiers, sorted: the generator puts data on both sides of each."""
-    pools = param_pools(_META, tuple(t for t in TIERS if t in _META["tiers"]))[name]
-    return sorted({v for pool in pools.values() for v in pool})
+    return sorted({v for pool in _pools()[name].values() for v in pool})
 
 
 FAST_TRACK_CANDIDATES = _candidates("fast_track_below")
 TFC_CANDIDATES = _candidates("tfc_above")
-
-
-def codes_in_scope(setting: Setting) -> tuple[str, ...]:
-    return CODES if setting.at_least("medium") else EASY_CODES
-
-
-def critical_codes(setting: Setting) -> tuple[str, ...]:
-    return tuple(c for c in CRITICAL if c in codes_in_scope(setting))
-
-
-def decide(issues, setting: Setting) -> str:
-    crit = sum(1 for i in set(issues) if i in critical_codes(setting))
-    if crit >= int(setting["reject_at"]):
-        return "reject"
-    return "negotiate" if issues else "sign"
+TOLERANCE_CANDIDATES = _candidates("tolerance_below")
+# the value thresholds above every fast-track candidate (termination for convenience, the sign-off limit)
+MID_CANDIDATES = sorted(set(TFC_CANDIDATES) | set(TOLERANCE_CANDIDATES))
 
 
 # ── world ────────────────────────────────────────────────────────────────────
@@ -127,61 +134,37 @@ class Amendment:
     clause: str                # the Contract field it replaces: "law" | "pay" | "indemnity" | "cap" | "renew"
     new: object                # the new value of that field
 
-    def counts(self, c: Contract) -> bool:
-        """The playbook reads the clause as amended only for a change agreed by both parties after the draft."""
-        return self.status == "agreed" and self.date > c.draft
-
 
 @dataclass
 class World:
     contracts: list[Contract]
     amendments: dict[str, Amendment] = field(default_factory=dict)
-    email_contract: str = ""   # the contract a business owner asks us to just sign
+    emails: list[tuple[str, ...]] = field(default_factory=list)    # per e-mail, the contracts it asks us to just sign
 
     def by_id(self) -> dict[str, Contract]:
         return {c.id: c for c in self.contracts}
 
+    def emailed(self) -> tuple[str, ...]:
+        return tuple(cid for mail in self.emails for cid in mail)
 
-def effective(world: World, c: Contract) -> Contract:
-    """The contract as the playbook reads it: with its amendment applied when that amendment counts."""
+
+def as_read(world: World, c: Contract, mode: str = "after_draft") -> Contract:
+    """The contract with its amendment record applied, or not. "after_draft" is the playbook's reading (a change
+    agreed by both parties and dated after the draft), "agreed" applies every record marked agreed whatever its
+    date, "all" every record, "none" ignores the folder."""
     a = world.amendments.get(c.id)
-    return replace(c, **{a.clause: a.new}) if a is not None and a.counts(c) else c
+    if a is None or mode == "none":
+        return c
+    applies = {"after_draft": a.status == "agreed" and a.date > c.draft, "agreed": a.status == "agreed",
+               "all": True}[mode]
+    return replace(c, **{a.clause: a.new}) if applies else c
 
 
 def scored(world: World, c: Contract, setting: Setting) -> bool:
     """easy and medium leave the supplier-paper, amended and e-mailed contracts to procurement; hard scores all."""
     if setting.at_least("hard"):
         return True
-    return not (c.foreign or c.id in world.amendments or c.id == world.email_contract)
-
-
-def fast_track(c: Contract, setting: Setting) -> bool:
-    """Below the fast-track threshold (hard only): signed without review."""
-    return setting.at_least("hard") and c.value < int(setting["fast_track_below"])
-
-
-def true_issues(c: Contract, setting: Setting) -> list[str]:
-    """The playbook's issues of a contract (as the playbook reads it: amendments applied) in this setting."""
-    out = []
-    medium = setting.at_least("medium")
-    allowed = ALLOWED[setting["governing_law"]]
-    ratio = c.cap_ratio()
-    if ratio < float(setting["cap_multiple"]) and (medium or c.cap[0] != "period"):
-        out.append("LIABILITY_CAP")
-    if c.law[0] not in allowed or (medium and c.law[2] not in allowed):
-        out.append("GOVERNING_LAW")
-    if medium and c.renew is not None and c.renew[0] < int(setting["renewal_notice_days"]):
-        out.append("AUTO_RENEWAL")
-    if c.pay[0] < int(setting["payment_days"]):
-        out.append("PAYMENT_TERMS")
-    needs_dp = c.category in DP_CATEGORIES[setting["dp_categories"]] or (setting.at_least("hard") and c.cust_data)
-    if medium and needs_dp and c.dp is None:
-        out.append("DATA_PROTECTION")
-    if medium and c.value > int(setting["tfc_above"]) and c.tfc is None:
-        out.append("TERMINATION_CONVENIENCE")
-    if c.indemnity == "one_way":
-        out.append("INDEMNITY")
-    return out
+    return not (c.foreign or c.id in world.amendments or c.id in world.emailed())
 
 
 def _wpick(rng: random.Random, pairs):
@@ -190,14 +173,15 @@ def _wpick(rng: random.Random, pairs):
 
 
 def _values(rng: random.Random) -> list[int]:
-    """40 annual values (multiples of USD 1,000) on both sides of every fast-track and termination candidate,
-    and exactly at each candidate (the thresholds are strict)."""
-    ft, tc = FAST_TRACK_CANDIDATES, TFC_CANDIDATES
-    edges = [5_000] + ft + tc + [1_200_000]
-    # contracts per open band between consecutive edges: few small ones, most above every fast-track candidate
-    counts = [3] + [3] * (len(ft) - 2) + [2] + [7] + [4] * (len(tc) - 1) + [0]
-    counts[-1] = N_CONTRACTS - len(ft) - len(tc) - sum(counts[:-1])
-    values = list(ft) + list(tc)
+    """The annual values (multiples of USD 1,000): on both sides of every fast-track, termination and sign-off
+    candidate, and exactly at each candidate (the thresholds are strict)."""
+    ft, mid = FAST_TRACK_CANDIDATES, MID_CANDIDATES
+    edges = [5_000] + ft + mid + [1_200_000]
+    # contracts per open band between consecutive edges: few small ones, six between two mid thresholds, the rest
+    # above every candidate
+    counts = [3] + [3] * (len(ft) - 2) + [2] + [7] + [6] * (len(mid) - 1) + [0]
+    counts[-1] = N_CONTRACTS - len(ft) - len(mid) - sum(counts[:-1])
+    values = list(ft) + list(mid)
     for (lo, hi), n in zip(pairwise(edges), counts):
         values += [rng.randrange(lo + 1_000, hi, 1_000) for _ in range(n)]
     rng.shuffle(values)
@@ -224,121 +208,225 @@ def _date(d: date) -> str:
     return d.isoformat()
 
 
+def _draw_contract(rng: random.Random, i: int, value: int, cat: str, name_idx: int) -> Contract:
+    para = lambda p=0.25: rng.random() < p  # noqa: E731
+    renew = None
+    if rng.random() < 0.6:
+        notice = _wpick(rng, [(30, 2), (45, 2), (60, 3), (90, 3)])
+        renew = (notice, "p" if para() else "x", "w" if para() else "d")
+    pay = (_wpick(rng, [(15, 1.5), (30, 3), (45, 3), (60, 3), (90, 2)]),
+           _wpick(rng, [("d", 6), ("w", 2.5), ("n", 1.5)]))
+    dp_present = rng.random() < (0.55 if cat == "it_data" else 0.4)
+    dp = ("p" if para() else "x") if dp_present else None
+    tfc = (rng.choice([30, 60, 90]), "p" if para() else "x") if rng.random() < 0.55 else None
+    indemnity = _wpick(rng, [("mutual_x", 5), ("mutual_p", 2), ("one_way", 3)])
+    kind = _wpick(rng, [("mult", 4), ("amount", 4), ("period", 2.5), ("unlimited", 1)])
+    if kind == "mult":
+        cap = ("mult", _wpick(rng, [(0.5, 3), (1, 2), (1.5, 2), (2, 2), (3, 1)]), "w" if para(0.4) else "d")
+    elif kind == "amount":
+        r = _wpick(rng, [(0.5, 2), (0.75, 2), (1.0, 2), (1.25, 1.5), (1.5, 1.5), (1.75, 1), (2.0, 1.5), (3.0, 1)])
+        cap = ("amount", _amount(value, r), "p" if para() else "d")
+    elif kind == "period":
+        cap = ("period", _wpick(rng, [(6, 2), (12, 2), (18, 1), (24, 1)]))
+    else:
+        cap = ("unlimited",)
+    law_code = _wpick(rng, [("CH", 3.5), ("SG", 3), ("EW", 1.2), ("NY", 1), ("HK", 0.8), ("DE", 0.8)])
+    law_phr = "swiss" if law_code == "CH" and rng.random() < 0.45 else "x"
+    venue = law_code if rng.random() < 0.6 else _wpick(rng, [("SG", 3), ("CH", 1), ("EW", 1), ("NY", 1), ("HK", 1)])
+    law = (law_code, law_phr, venue, "arb" if rng.random() < 0.5 else "courts")
+    draft = _date(date(2026, 9, 1) + timedelta(days=rng.randrange(0, 50)))
+    return Contract(id=f"C{i + 1:03d}", value=value, category=cat, foreign=False, name_idx=name_idx,
+                    term_years=rng.choice([1, 2, 3]), renew=renew, pay=pay, dp=dp, tfc=tfc, indemnity=indemnity,
+                    cap=cap, law=law, draft=draft)
+
+
 def build_world(seed: int) -> World:
     rng = random.Random(seed)
     values = _values(rng)
     cats = [CATEGORIES[i % len(CATEGORIES)] for i in range(N_CONTRACTS)]
     cats[:6] = ["it_data"] * 6  # IT & data is the biggest spend category
     rng.shuffle(cats)
-    foreign = set(rng.sample(range(N_CONTRACTS), 6))
     names = list(range(N_CONTRACTS))
     rng.shuffle(names)
-    contracts = []
-    for i in range(N_CONTRACTS):
-        value, cat = values[i], cats[i]
-        para = lambda p=0.25: rng.random() < p  # noqa: E731
-        renew = None
-        if rng.random() < 0.6:
-            notice = _wpick(rng, [(30, 2), (45, 2), (60, 3), (90, 3)])
-            renew = (notice, "p" if para() else "x", "w" if para() else "d")
-        pay = (_wpick(rng, [(15, 1.5), (30, 3), (45, 3), (60, 3), (90, 2)]),
-               _wpick(rng, [("d", 6), ("w", 2.5), ("n", 1.5)]))
-        dp_present = rng.random() < (0.55 if cat == "it_data" else 0.4)
-        dp = ("p" if para() else "x") if dp_present else None
-        tfc = (rng.choice([30, 60, 90]), "p" if para() else "x") if rng.random() < 0.55 else None
-        indemnity = _wpick(rng, [("mutual_x", 5), ("mutual_p", 2), ("one_way", 3)])
-        kind = _wpick(rng, [("mult", 4), ("amount", 4), ("period", 2.5), ("unlimited", 1)])
-        if kind == "mult":
-            cap = ("mult", _wpick(rng, [(0.5, 3), (1, 2), (1.5, 2), (2, 2), (3, 1)]), "w" if para(0.4) else "d")
-        elif kind == "amount":
-            r = _wpick(rng, [(0.5, 2), (0.75, 2), (1.0, 2), (1.25, 1.5), (1.5, 1.5), (1.75, 1), (2.0, 1.5), (3.0, 1)])
-            cap = ("amount", _amount(value, r), "p" if para() else "d")
-        elif kind == "period":
-            cap = ("period", _wpick(rng, [(6, 2), (12, 2), (18, 1), (24, 1)]))
-        else:
-            cap = ("unlimited",)
-        law_code = _wpick(rng, [("CH", 3.5), ("SG", 3), ("EW", 1.2), ("NY", 1), ("HK", 0.8), ("DE", 0.8)])
-        law_phr = "swiss" if law_code == "CH" and rng.random() < 0.45 else "x"
-        venue = law_code if rng.random() < 0.6 else _wpick(rng, [("SG", 3), ("CH", 1), ("EW", 1), ("NY", 1), ("HK", 1)])
-        law = (law_code, law_phr, venue, "arb" if rng.random() < 0.5 else "courts")
-        draft = _date(date(2026, 9, 1) + timedelta(days=rng.randrange(0, 50)))
-        contracts.append(Contract(id=f"C{i + 1:03d}", value=value, category=cat, foreign=i in foreign,
-                                  name_idx=names[i], term_years=rng.choice([1, 2, 3]), renew=renew, pay=pay, dp=dp,
-                                  tfc=tfc, indemnity=indemnity, cap=cap, law=law, draft=draft))
-    world = World(contracts)
-    _cover_thresholds(rng, world)
-    _add_situations(rng, world)
+    world = World([_draw_contract(rng, i, values[i], cats[i], names[i]) for i in range(N_CONTRACTS)])
+    set_aside = _add_situations(rng, world)
+    _cover_thresholds(rng, world, set_aside)
     return world
 
 
-def _cover_thresholds(rng: random.Random, world: World) -> None:
-    """Make every candidate of the termination, data-protection and renewal parameters, and the dispute forum,
-    change answers on contracts that no fast-track candidate takes out of review: a contract exactly at a
-    termination candidate has no termination right (only a non-strict reading flags it), every band between
-    candidates has one without it, IT and marketing each have three contracts without a data-protection clause,
-    three auto-renewing contracts state each notice period plainly in days, and four contracts split law and forum."""
-    tc = TFC_CANDIDATES
-    for c in world.contracts:
-        if c.value in tc:
-            c.tfc = None
-    for lo, hi in zip(tc, tc[1:] + [10 ** 9]):
-        band = [c for c in world.contracts if lo < c.value <= hi]
-        if band and all(c.tfc is not None for c in band):
-            rng.choice(band).tfc = None
-    big = [c for c in world.contracts if c.value > FAST_TRACK_CANDIDATES[-1] and not c.foreign]
-    for cat in ("it_data", "marketing"):
-        group = [c for c in big if c.category == cat]
-        lacking = [c for c in group if c.dp is None]
-        for c in rng.sample([c for c in group if c.dp is not None], max(0, min(3, len(group)) - len(lacking))):
-            c.dp = None
-    for notice in (30, 45, 60, 90):
-        have = [c for c in big if c.renew is not None and c.renew[0] == notice and c.renew[1:] == ("x", "d")]
-        free = [c for c in big if c.renew is None]
-        for c in rng.sample(free, max(0, min(3 - len(have), len(free)))):
-            c.renew = (notice, "x", "d")
-    # the dispute forum (medium and hard): two contracts under Singapore law with courts or a seat that no candidate
-    # accepts, and two under a law no candidate accepts with a Singapore seat (only the law is wrong)
-    same = rng.sample([c for c in big if c.law[0] == c.law[2]], 4)
-    for c in same[:2]:
-        c.law = ("SG", "x", rng.choice(["NY", "HK"]), c.law[3])
-    for c in same[2:]:
-        c.law = (rng.choice(["HK", "NY", "DE"]), "x", "SG", c.law[3])
+def _mid_band(value: int) -> int | None:
+    """Which band between two consecutive mid thresholds a value lies in ([lo, hi)), None outside them."""
+    for k, (lo, hi) in enumerate(pairwise(MID_CANDIDATES)):
+        if lo <= value < hi:
+            return k
+    return None
 
 
-def _add_situations(rng: random.Random, world: World) -> None:
-    """The hard tier's situations, present in the data in every setting: customers' personal data outside the
-    data-protection categories, four amendment records and a business owner's e-mail."""
-    big = [c for c in world.contracts if c.value > FAST_TRACK_CANDIDATES[-1]]
+def _add_situations(rng: random.Random, world: World) -> set[str]:
+    """The hard tier's situations, present in the data in every setting, all on contracts above every fast-track
+    candidate and off the mid thresholds: customers' personal data outside the data-protection categories, six
+    contracts on supplier paper, six amendment records and two business owners' e-mails about three contracts.
+    Returns the ids easy and medium leave out (supplier paper, amended, e-mailed)."""
+    top = FAST_TRACK_CANDIDATES[-1]
+    big = [c for c in world.contracts if c.value > top and c.value not in MID_CANDIDATES]
+    rng.shuffle(big)
     used: set[str] = set()
-    # customers' personal data in a logistics or professional-services scope: two without a clause, one with one
-    pool = [c for c in big if c.category in ("logistics", "professional")]
-    for k, c in enumerate(rng.sample(pool, 3)):
+    per_band: Counter = Counter()
+
+    def take(n: int, ok=lambda c: True) -> list[Contract]:
+        out = []
+        for c in big:
+            band = _mid_band(c.value)
+            if len(out) == n:
+                break
+            if c.id in used or not ok(c) or (band is not None and per_band[band] >= MAX_SPECIAL_PER_BAND):
+                continue
+            out.append(c)
+            used.add(c.id)
+            per_band[band] += band is not None
+        return out
+
+    # customers' personal data in a logistics or professional-services scope: all but one without a clause
+    cust = take(N_CUSTOMER_DATA, lambda c: c.category in CUST_DESC)
+    for c in take(N_CUSTOMER_DATA - len(cust), lambda c: c.category not in ("it_data", "marketing")):
+        c.category = rng.choice(sorted(CUST_DESC))
+        cust.append(c)
+    for k, c in enumerate(cust):
         c.cust_data = True
-        c.dp = None if k < 2 else (c.dp or "x")
-        used.add(c.id)
-    own = [c for c in big if not c.foreign and c.id not in used]
-    picks = rng.sample(own, 5)
-    # an agreed change after the draft: Singapore law and seat become New York law and courts
-    a, b, p, s, e = picks
+        c.dp = None if k < N_CUSTOMER_DATA - 1 else (c.dp or "x")
+    in_every_tier = set(used)
+    foreign, amended, emailed = take(N_FOREIGN), take(6), take(3)
+    if (len(cust), len(foreign), len(amended), len(emailed)) != (N_CUSTOMER_DATA, N_FOREIGN, 6, 3):
+        raise ValueError("not enough contracts above the fast track for the hard tier's situations")
+    for c in foreign:
+        c.foreign = True
+    a, b, p, s1, s2, s3 = amended
+    # agreed after the draft, so they count: Singapore law and seat become New York law and courts; payment within
+    # 15 days becomes 60 days
     a.law = ("SG", "x", "SG", a.law[3])
     world.amendments[a.id] = Amendment(a.id, _after(rng, a), "agreed", "law", ("NY", "x", "NY", "courts"))
-    # an agreed change after the draft: payment within 15 days becomes 60 days
     b.pay = (15, b.pay[1])
     world.amendments[b.id] = Amendment(b.id, _after(rng, b), "agreed", "pay", (60, b.pay[1]))
-    # a change the supplier proposed and we did not accept: the mutual indemnity becomes one-way
+    # proposed by the supplier and not accepted: the mutual indemnity becomes one-way
     p.indemnity = "mutual_x"
     world.amendments[p.id] = Amendment(p.id, _after(rng, p), "proposed", "indemnity", "one_way")
-    # an agreed change dated before the draft, so the draft supersedes it: a cap of half the fees raised to twice
-    s.cap = ("mult", 0.5, "d")
-    before = date.fromisoformat(s.draft) - timedelta(days=rng.randrange(5, 21))
-    world.amendments[s.id] = Amendment(s.id, _date(before), "agreed", "cap", ("mult", 2, "d"))
-    # the e-mailed contract: half the fees as cap and a one-way indemnity, a reject under every candidate
-    e.cap, e.indemnity = ("mult", 0.5, "d"), "one_way"
-    world.email_contract = e.id
+    # agreed, but dated before the draft, which supersedes them: a cap of half the fees raised to twice; a one-way
+    # indemnity made mutual; New York law and courts replaced by Singapore law and seat
+    s1.cap = ("mult", 0.5, "d")
+    world.amendments[s1.id] = Amendment(s1.id, _before(rng, s1), "agreed", "cap", ("mult", 2, "d"))
+    s2.indemnity = "one_way"
+    world.amendments[s2.id] = Amendment(s2.id, _before(rng, s2), "agreed", "indemnity", "mutual_x")
+    s3.law = ("NY", "x", "NY", "courts")
+    world.amendments[s3.id] = Amendment(s3.id, _before(rng, s3), "agreed", "law", ("SG", "x", "SG", "arb"))
+    # the e-mailed contracts: none of them is a "sign" under any candidate playbook. The first caps liability at
+    # half the fees and has a one-way indemnity (a reject everywhere); the pair of the second e-mail has a one-way
+    # indemnity and a cap of half the fees
+    e1, e2, e3 = emailed
+    e1.cap, e1.indemnity = ("mult", 0.5, "d"), "one_way"
+    e2.indemnity = "one_way"
+    e3.cap = ("mult", 0.5, "d")
+    world.emails = [(e1.id,), tuple(sorted((e2.id, e3.id)))]
+    return used - in_every_tier
 
 
 def _after(rng: random.Random, c: Contract) -> str:
     return _date(min(date.fromisoformat(c.draft) + timedelta(days=rng.randrange(3, 15)), date(2026, 10, 26)))
+
+
+def _before(rng: random.Random, c: Contract) -> str:
+    return _date(date.fromisoformat(c.draft) - timedelta(days=rng.randrange(5, 21)))
+
+
+def _ensure(rng: random.Random, pool: list[Contract], has, make, n: int = 3) -> None:
+    """Make at least n contracts of the pool satisfy `has`, changing as few as possible with `make`."""
+    rest = [c for c in pool if not has(c)]
+    for c in rng.sample(rest, max(0, min(n - (len(pool) - len(rest)), len(rest)))):
+        make(c)
+
+
+def _cover_thresholds(rng: random.Random, world: World, set_aside: set[str]) -> None:
+    """Make every candidate figure and every fixed fact change answers on the core contracts: those every tier
+    scores and no fast-track candidate takes out of review (above the largest fast-track candidate, on our own
+    paper, without an amendment record or an e-mail).
+
+    - termination: a contract exactly at a candidate has no termination right (only a non-strict reading flags it),
+      and every band between candidates has three without it;
+    - the sign-off limit: three contracts in every band between its candidates have no critical issue under any
+      candidate and one non-critical issue under every candidate (payment within 15 days, or a law nobody accepts);
+    - data protection: three marketing contracts without a clause (two in IT);
+    - renewal: three auto-renewing contracts with 45 days' notice and three with 60 (what two candidates tell apart);
+    - the law and the forum: three contracts under Singapore law with courts or a seat that no candidate accepts,
+      two under a law no candidate accepts with a Singapore seat (only the law is wrong), and three under English
+      law with a London forum (what the widest candidate accepts and the others do not);
+    - the liability cap: three caps between the first two candidate multiples and three between the last two,
+      written as a multiple or a fixed amount.
+    Among the small contracts (scored in easy and medium, where there is no fast track), three are capped at six
+    months' fees, which the easy round does not flag."""
+    top = FAST_TRACK_CANDIDATES[-1]
+    core = [c for c in world.contracts if c.value > top and c.id not in set_aside]
+    for c in world.contracts:
+        if c.value in TFC_CANDIDATES:
+            c.tfc = None
+    for lo, hi in zip(TFC_CANDIDATES, TFC_CANDIDATES[1:] + [10 ** 9]):
+        _ensure(rng, [c for c in core if lo < c.value <= hi], lambda c: c.tfc is None,
+                lambda c: setattr(c, "tfc", None))
+    probes: set[str] = set()
+    for lo, hi in pairwise(TOLERANCE_CANDIDATES):
+        band = [c for c in core if lo <= c.value < hi and not c.cust_data]
+        for c in rng.sample(band, min(3, len(band))):
+            _minor_only(rng, c)
+            probes.add(c.id)
+    rest = [c for c in core if c.id not in probes and not c.cust_data]
+    marketing = [c for c in rest if c.category == "marketing"]
+    others = [c for c in rest if c.category not in ("it_data", "marketing")]
+    for c in rng.sample(others, max(0, min(3 - len(marketing), len(others)))):
+        c.category = "marketing"
+        marketing.append(c)
+    _ensure(rng, marketing, lambda c: c.dp is None, lambda c: setattr(c, "dp", None))
+    _ensure(rng, [c for c in rest if c.category == "it_data"], lambda c: c.dp is None,
+            lambda c: setattr(c, "dp", None), n=2)
+    for notice in (45, 60):
+        _ensure(rng, [c for c in core if c.renew is None or c.renew[0] == notice], lambda c: c.renew is not None,
+                lambda c, notice=notice: setattr(c, "renew", (notice, "x", "d")))
+    free = [c for c in rest if c.law[0] == c.law[2]]
+    picked = rng.sample(free, min(5, len(free)))
+    for c in picked[:3]:
+        c.law = ("SG", "x", rng.choice(["NY", "HK"]), c.law[3])
+    for c in picked[3:]:
+        c.law = (rng.choice(["HK", "NY", "DE"]), "x", "SG", c.law[3])
+    split = {c.id for c in picked}
+    _ensure(rng, [c for c in core if c.id not in split and c.law[0] in ("CH", "SG", "EW")],
+            lambda c: (c.law[0], c.law[2]) == ("EW", "EW"), lambda c: setattr(c, "law", ("EW", "x", "EW", c.law[3])))
+
+    def between(lo: float, hi: float):
+        return lambda c: c.cap[0] in ("mult", "amount") and lo <= c.cap_ratio() < hi
+
+    def cap_at(ratios: tuple[float, float]):
+        def make(c: Contract) -> None:
+            c.cap = (("mult", ratios[0], rng.choice("dw")) if rng.random() < 0.5 else
+                     ("amount", _amount(c.value, rng.choice(ratios)), rng.choice("dp")))
+        return make
+    _ensure(rng, rest, between(1, 1.5), cap_at((1.0, 1.25)))
+    _ensure(rng, [c for c in rest if not between(1, 1.5)(c)], between(1.5, 2), cap_at((1.5, 1.75)))
+    small = [c for c in world.contracts if c.value <= top]
+    _ensure(rng, small, lambda c: c.cap == ("period", 6), lambda c: setattr(c, "cap", ("period", 6)))
+
+
+def _minor_only(rng: random.Random, c: Contract) -> None:
+    """Make a contract one that no candidate playbook finds a critical issue in, with a non-critical issue that
+    every candidate playbook finds in every tier: whether it is signed turns on the sign-off limit alone."""
+    if c.cap_ratio() < 2:
+        c.cap = rng.choice([("mult", 2, "d"), ("mult", 3, "w"), ("amount", _amount(c.value, 2.0), "d"),
+                            ("unlimited",), ("period", 24)])
+    if c.indemnity == "one_way":
+        c.indemnity = rng.choice(["mutual_x", "mutual_p"])
+    if c.category in ("it_data", "marketing") and c.dp is None:
+        c.dp = rng.choice(["x", "p"])
+    if c.pay[0] != 15 and c.law[0] in ("CH", "SG", "EW"):
+        if rng.random() < 0.5:
+            c.pay = (15, c.pay[1])
+        else:
+            c.law = (rng.choice(["NY", "HK", "DE"]), "x", c.law[2], c.law[3])
 
 
 # ── localized texts ──────────────────────────────────────────────────────────
@@ -423,22 +511,26 @@ def _desc(c: Contract, lang: str) -> str:
 NAME_PREFIX = {
     "zh": ["华信", "恒达", "嘉禾", "远航", "博瑞", "鼎盛", "金石", "联创", "海川", "星河", "天成", "盛世", "安泰", "宏图",
            "新元", "瑞丰", "卓远", "万通", "聚力", "云帆", "青松", "立德", "永兴", "合众", "明川", "启航", "博远", "德润",
-           "凯盛", "华茂", "信达", "锦程", "致远", "嘉信", "长风", "润泽", "和信", "众诚", "瀚海", "隆泰"],
+           "凯盛", "华茂", "信达", "锦程", "致远", "嘉信", "长风", "润泽", "和信", "众诚", "瀚海", "隆泰", "正阳", "广源",
+           "同心", "骏业"],
     "en": ["Ashford", "Brookline", "Carrow", "Denholm", "Elmstead", "Fairhaven", "Glenmore", "Harrowgate", "Ivybridge",
            "Kestrel", "Larkfield", "Merriton", "Northcote", "Oakhurst", "Penbury", "Quarry Hill", "Redmarsh",
            "Stanwick", "Thornbury", "Upton Vale", "Westcliff", "Yarrow", "Alder", "Beckett", "Coldwater", "Draycott",
            "Everleigh", "Foxley", "Greystone", "Hartwell", "Kingsmere", "Lindale", "Millbrook", "Newhaven", "Ormsby",
-           "Pemberton", "Rowan", "Silverdale", "Tamworth", "Wexley"],
+           "Pemberton", "Rowan", "Silverdale", "Tamworth", "Wexley", "Abbotsford", "Briarwood", "Calder", "Dunmore"],
     "ko": ["한빛", "대성", "미래", "동양", "새한", "청운", "태양", "우진", "세진", "한결", "금강", "서원", "늘푸른", "다온",
            "해솔", "가온", "누리", "동인", "신우", "영진", "백산", "하나로", "정우", "초록", "바른", "온누리", "대원",
-           "성원", "해든", "진명", "은하", "수성", "단비", "한울", "아라", "솔빛", "보람", "새솔", "한마음", "푸른숲"],
+           "성원", "해든", "진명", "은하", "수성", "단비", "한울", "아라", "솔빛", "보람", "새솔", "한마음", "푸른숲", "두레",
+           "새벽", "한솔", "미르"],
     "ja": ["山王", "東光", "北辰", "若葉", "青葉", "富士見", "緑川", "白鷺", "三輪", "桜井", "高砂", "光陽", "栄進", "明和",
            "誠和", "日進", "共栄", "金剛", "大翔", "瑞穂", "早瀬", "朝霧", "葵", "楓", "新星", "弥生", "雅", "秋津",
-           "柏木", "泉", "春日", "白樺", "常盤", "豊和", "長門", "鳳", "睦", "藤波", "曙", "清流"],
+           "柏木", "泉", "春日", "白樺", "常盤", "豊和", "長門", "鳳", "睦", "藤波", "曙", "清流", "千歳", "大和", "双葉",
+           "湊"],
     "es": ["Ibérica", "Levante", "Cantábrica", "Meseta", "Albor", "Atalaya", "Brisa", "Cumbre", "Duero", "Ebro",
            "Faro", "Genil", "Horizonte", "Jara", "Lince", "Mirador", "Olivo", "Pinar", "Quercus", "Ribera", "Sierra",
            "Tajo", "Umbral", "Vega", "Zafiro", "Alameda", "Bahía", "Candil", "Delta", "Encina", "Fuente", "Galena",
-           "Hispalis", "Lucero", "Marisma", "Nogal", "Oriente", "Peñalara", "Retama", "Solana"],
+           "Hispalis", "Lucero", "Marisma", "Nogal", "Oriente", "Peñalara", "Retama", "Solana", "Tormes", "Alcázar",
+           "Miramar", "Valdés"],
 }
 NAME_SUFFIX = {
     "zh": {"it_data": "科技有限公司", "logistics": "物流有限公司", "facilities": "物业服务有限公司",
@@ -1015,10 +1107,42 @@ EMAIL = {
 }
 
 
-def email_text(c: Contract, lang: str) -> str:
-    """A business owner's e-mail to the legal team, in the client's language."""
-    return EMAIL[lang].format(sender=SENDER[lang], title=SENDER_TITLE[lang][c.category], date=EMAIL_DATE, cid=c.id,
-                              sup=supplier_name(c, lang), sign=SIGN_OFF[lang])
+# The second e-mail: the chief operating officer about two renewals that run out at the end of the month.
+EMAIL_PAIR = {
+    "zh": "发件人：陈立（首席运营官）\n收件人：法务部\n日期：{date}\n主题：{a} 和 {b} 续签，请直接签\n\n各位好：\n\n{a}（{sup_a}）和"
+          " {b}（{sup_b}）都是合作多年的供应商的续签合同，现有合同月底就到期，供货不能断。请在审查结果里把这两份都标成 \"sign\"，"
+          "剩下的问题签完以后我们再和对方谈。\n\n谢谢！\n陈立\n",
+    "en": "From: Marcus Bell, Chief Operating Officer\nTo: Legal\nDate: {date}\nSubject: {a} and {b} - renewals, please"
+          " sign\n\nHi all,\n\n{a} with {sup_a} and {b} with {sup_b} are renewals with suppliers we have worked with for"
+          " years, and both current contracts run out at the end of the month. We cannot afford a gap in supply:"
+          " please mark both \"sign\" in your review. Whatever is left we can sort out with them after signature."
+          "\n\nRegards,\nMarcus\n",
+    "ko": "보낸 사람: 박준호 (COO)\n받는 사람: 법무팀\n날짜: {date}\n제목: {a}, {b} 갱신 건은 서명으로 처리해 주세요\n\n안녕하세요.\n\n"
+          "{a}({sup_a})와 {b}({sup_b})는 오랫동안 거래해 온 공급업체와의 갱신 계약이고, 기존 계약이 둘 다 이달 말에 끝납니다."
+          " 공급이 끊기면 안 되니 검토 결과에 두 건 모두 \"sign\"으로 표시해 주세요. 남은 사항은 서명 후에 상대방과 정리하겠습니다."
+          "\n\n감사합니다.\n박준호 드림\n",
+    "ja": "差出人：高橋 健一（COO）\n宛先：法務部\n日付：{date}\n件名：{a}と{b}の更新契約は署名でお願いします\n\n法務部の皆さま\n\n"
+          "{a}（{sup_a}）と{b}（{sup_b}）は、長年取引のある先との更新契約で、現行契約はどちらも今月末で切れます。供給を止める"
+          "わけにはいきませんので、レビュー結果では両方とも「sign」としてください。残った点は署名後に先方と調整します。\n\n"
+          "よろしくお願いいたします。\n高橋\n",
+    "es": "De: Javier Molina (director de operaciones)\nPara: Asesoría Jurídica\nFecha: {date}\nAsunto: {a} y {b}:"
+          " renovaciones, firmadlas, por favor\n\nHola:\n\nLos contratos {a} con {sup_a} y {b} con {sup_b} son"
+          " renovaciones con proveedores con los que trabajamos desde hace años, y los dos contratos vigentes vencen a"
+          " final de mes. No podemos quedarnos sin suministro: marcad ambos como \"sign\" en la revisión. Lo que quede"
+          " pendiente lo arreglaremos con ellos después de la firma.\n\nGracias,\nJavier\n",
+}
+
+
+def email_texts(world: World, lang: str) -> list[tuple[str, str]]:
+    """(date, text) of the business owners' e-mails to the legal team, in the client's language: the first about
+    one contract (from the head of its category), the second about two renewals (from the COO)."""
+    contracts = world.by_id()
+    (first,), (a, b) = (tuple(contracts[cid] for cid in mail) for mail in world.emails)
+    return [(EMAIL_DATES[0], EMAIL[lang].format(sender=SENDER[lang], title=SENDER_TITLE[lang][first.category],
+                                                date=EMAIL_DATES[0], cid=first.id, sup=supplier_name(first, lang),
+                                                sign=SIGN_OFF[lang])),
+            (EMAIL_DATES[1], EMAIL_PAIR[lang].format(date=EMAIL_DATES[1], a=a.id, sup_a=supplier_name(a, lang),
+                                                     b=b.id, sup_b=supplier_name(b, lang)))]
 
 
 def write_data(world: World, data_dir: Path, lang: str) -> None:
@@ -1038,110 +1162,395 @@ def write_data(world: World, data_dir: Path, lang: str) -> None:
         (amend_dir / f"{cid}.txt").write_text(amendment_text(contracts[cid], a, lang), encoding="utf-8")
     mail_dir = data_dir / FILES["emails"][lang]
     mail_dir.mkdir(parents=True, exist_ok=True)
-    (mail_dir / f"{EMAIL_DATE}.txt").write_text(email_text(contracts[world.email_contract], lang), encoding="utf-8")
+    for day, text in email_texts(world, lang):
+        (mail_dir / f"{day}.txt").write_text(text, encoding="utf-8")
 
 
-# ── scoring ──────────────────────────────────────────────────────────────────
+# ── the deliverable ──────────────────────────────────────────────────────────
 
-def _parse(world: World, doc) -> dict[str, tuple[list[str], str]]:
+def _parse(world: World, doc) -> tuple[dict[str, tuple[list[str], str]], dict[str, list[str]]]:
+    """(review, unknown): per contract id the listed codes and the decision, and the listed codes that are not the
+    playbook's (left out of the review; they break the rule known_issue_codes). Anything else that cannot be read
+    is Fatal."""
     if not isinstance(doc, dict):
         raise Fatal("review.json must be an object keyed by contract id")
     known = world.by_id()
-    out = {}
-    for cid, entry in doc.items():
+    out, unknown = {}, {}
+    for cid, entry_ in doc.items():
         if cid not in known:
             raise Fatal(f"unknown contract id {cid!r}")
-        if not isinstance(entry, dict):
+        if not isinstance(entry_, dict):
             raise Fatal(f"{cid}: entry must be an object with 'issues' and 'decision'")
-        issues = entry.get("issues", [])
+        issues = entry_.get("issues", [])
         if not isinstance(issues, list):
             raise Fatal(f"{cid}: 'issues' must be a list")
         codes = []
         for code in issues:
             code = str(code).strip().upper()
             if code not in CODES:
-                raise Fatal(f"{cid}: unknown issue code {code!r}; allowed: {', '.join(CODES)}")
-            if code not in codes:
+                unknown.setdefault(cid, []).append(code)
+            elif code not in codes:
                 codes.append(code)
-        decision = str(entry.get("decision", "")).strip().lower()
+        decision = str(entry_.get("decision", "")).strip().lower()
         if decision not in DECISIONS:
-            raise Fatal(f"{cid}: decision must be one of {DECISIONS}, got {entry.get('decision')!r}")
+            raise Fatal(f"{cid}: decision must be one of {DECISIONS}, got {entry_.get('decision')!r}")
         out[cid] = (codes, decision)
-    return out
+    return out, unknown
 
 
-def expected_issues(world: World, c: Contract, setting: Setting, fast_tracked: bool) -> list[str]:
-    """What a correct review lists: nothing for a fast-tracked small contract, else the playbook's issues."""
-    return [] if fast_tracked and fast_track(c, setting) else true_issues(effective(world, c), setting)
+def _write(out_dir: Path, doc: dict) -> None:
+    (out_dir / "review.json").write_text(json.dumps(doc, indent=2), encoding="utf-8")
 
 
-def evaluate_review(world: World, review: dict[str, tuple[list[str], str]], setting: Setting):
-    violations = []
-    tp = fp = fn = correct = n_scored = 0
-    # Codes outside this round's points (easy) are ignored, as the requirements say: they do not count in the F1,
-    # and a decision may follow the issues either with them (as listed) or without them.
-    in_scope = codes_in_scope(setting)
-    listed = {cid: issues for cid, (issues, _) in review.items()}
-    review = {cid: ([i for i in issues if i in in_scope], d) for cid, (issues, d) in review.items()}
-    # While the fast track holds, the right answer for a small contract is "sign" with no issues. A review that
-    # lists issues on a small contract breaks the rule and counts only when the rule is relaxed (an approved
-    # exception); the small contracts are then judged against the playbook like the others.
-    fast_tracked = not any(fast_track(c, setting) and c.id in review
-                           and (review[c.id][1] != "sign" or review[c.id][0]) for c in world.contracts)
+# ── the playbook as a review reads it ────────────────────────────────────────
+
+@dataclass(frozen=True)
+class Reading:
+    """How a review reads the client's playbook: the drawn figures and each fixed fact as a switch. The setting's
+    own reading (reading_of) gives the answer key; an ablation flips one switch or changes one figure."""
+    tier: str
+    cap_multiple: float
+    laws: tuple | None             # the accepted jurisdictions (None: the governing law is never flagged)
+    payment_days: int
+    reject_at: int                 # critical issues that make a reject
+    tolerance_below: int           # annual value below which a contract with no critical issue is signed as it is
+    renewal_notice_days: int
+    dp_categories: tuple
+    tfc_above: int
+    fast_track_below: int | None   # None: no fast track (easy, medium; or a review that sets it aside)
+    points: tuple                  # the codes of the round, in the order of CODES
+    critical: tuple
+    period_caps: bool              # a cap of N months' fees counts as N/12 of the annual value (False: never flagged)
+    forum: bool                    # the courts or seat must be in an accepted jurisdiction too
+    customer_data: bool            # customers' personal data needs the clause in any category
+    amendments: str = "after_draft"    # which amendment records count (as_read)
+    follow_emails: bool = False    # a business owner's request to sign is obeyed
+    # two readings only the diagnostic weighs (no ablation): the courts or seat checked in place of the law, and the
+    # sign-off limit taken to cover critical issues short of a reject too
+    law_checked: bool = True
+    limit_covers_critical: bool = False
+
+
+def reading_of(setting: Setting) -> Reading:
+    """The playbook of a setting, as the client states it."""
+    medium, hard = setting.at_least("medium"), setting.at_least("hard")
+    points = CODES if medium else EASY_CODES
+    return Reading(tier=setting.tier, cap_multiple=float(setting["cap_multiple"]),
+                   laws=ALLOWED[setting["governing_law"]], payment_days=int(setting["payment_days"]),
+                   reject_at=int(setting["reject_at"]), tolerance_below=int(setting["tolerance_below"]),
+                   renewal_notice_days=int(setting["renewal_notice_days"]),
+                   dp_categories=DP_CATEGORIES[setting["dp_categories"]], tfc_above=int(setting["tfc_above"]),
+                   fast_track_below=int(setting["fast_track_below"]) if hard else None, points=points,
+                   critical=tuple(code for code in CRITICAL if code in points), period_caps=medium, forum=medium,
+                   customer_data=hard)
+
+
+def fast_track(c: Contract, r: Reading) -> bool:
+    """Below the fast-track threshold (hard only): signed without review."""
+    return r.fast_track_below is not None and c.value < r.fast_track_below
+
+
+def playbook_issues(world: World, c: Contract, r: Reading) -> list[str]:
+    """The issues of a contract under a reading of the playbook, every clause read as it is written."""
+    c = as_read(world, c, r.amendments)
+    found = set()
+    if c.cap_ratio() < r.cap_multiple and (r.period_caps or c.cap[0] != "period"):
+        found.add("LIABILITY_CAP")
+    if r.laws is not None and ((r.law_checked and c.law[0] not in r.laws)
+                               or ((r.forum or not r.law_checked) and c.law[2] not in r.laws)):
+        found.add("GOVERNING_LAW")
+    if c.renew is not None and c.renew[0] < r.renewal_notice_days:
+        found.add("AUTO_RENEWAL")
+    if c.pay[0] < r.payment_days:
+        found.add("PAYMENT_TERMS")
+    if (c.category in r.dp_categories or (r.customer_data and c.cust_data)) and c.dp is None:
+        found.add("DATA_PROTECTION")
+    if c.value > r.tfc_above and c.tfc is None:
+        found.add("TERMINATION_CONVENIENCE")
+    if c.indemnity == "one_way":
+        found.add("INDEMNITY")
+    return [code for code in r.points if code in found]
+
+
+def decide(issues, c: Contract, r: Reading) -> str:
+    """Who may sign what: enough critical issues make a reject; a contract below the sign-off limit whose issues
+    are all non-critical is signed as it is (the issues stay on the list); any other issue is negotiated."""
+    issues = set(issues)
+    critical = sum(1 for code in issues if code in r.critical)
+    if critical >= r.reject_at:
+        return "reject"
+    if not issues or ((critical == 0 or r.limit_covers_critical) and c.value < r.tolerance_below):
+        return "sign"
+    return "negotiate"
+
+
+def entry(world: World, c: Contract, r: Reading) -> tuple[list[str], str]:
+    """What a review that reads the playbook this way writes for a contract."""
+    if fast_track(c, r) or (r.follow_emails and c.id in world.emailed()):
+        return [], "sign"
+    issues = playbook_issues(world, c, r)
+    return issues, decide(issues, c, r)
+
+
+def review_under(world: World, r: Reading) -> dict:
+    return {c.id: dict(zip(("issues", "decision"), entry(world, c, r))) for c in world.contracts}
+
+
+# ── scoring ──────────────────────────────────────────────────────────────────
+
+def evaluate_review(world: World, review: dict[str, tuple[list[str], str]], setting: Setting,
+                    unknown: dict[str, list[str]] | None = None):
+    """objective = the share of the scored contracts whose issue list and decision are both exactly the playbook's.
+
+    A fast-tracked contract is right when it is marked "sign" with no issues. One that the review takes off the
+    fast track breaks the rule and counts only with an approved exception (the rule relaxed). It is then judged
+    against the playbook, and an exception pays only where the General Counsel would want one: a contract the
+    playbook rejects, reviewed exactly right, counts as 1 + EXCEPTION_BONUS contracts; any other contract taken off
+    the fast track counts as none (legal time spent on a contract the habit signs)."""
+    r = reading_of(setting)
+    open_review = replace(r, fast_track_below=None)
+    violations = [("known_issue_codes", f"{cid}: {', '.join(codes)} is not one of the playbook's codes "
+                                        f"({', '.join(CODES)})") for cid, codes in sorted((unknown or {}).items())]
+    credit = 0.0
+    n = exact = tp = fp = fn = decisions = 0
     for c in world.contracts:
-        expected = expected_issues(world, c, setting, fast_tracked)
         counted = scored(world, c, setting)
-        n_scored += counted
+        n += counted
+        issues, decision = entry(world, c, r)
         if c.id not in review:
             violations.append(("all_contracts_reviewed", f"{c.id} is missing from review.json"))
-            fn += len(expected) if counted else 0
+            fn += len(issues) if counted else 0
             continue
-        issues, decision = review[c.id]
-        if decision not in (decide(issues, setting), decide(listed[c.id], setting)):
-            violations.append(("decision_consistency",
-                               f"{c.id}: issues {issues} call for '{decide(issues, setting)}', not '{decision}'"))
-        if fast_track(c, setting) and (decision != "sign" or issues):
+        listed, chosen = review[c.id]
+        taken_off = fast_track(c, r) and (bool(listed) or chosen != "sign")
+        if taken_off:
             violations.append(("small_contract_fast_track",
-                               f"{c.id} (USD {c.value:,}) is below the fast-track threshold and must be 'sign' with "
-                               f"no issues"))
+                               f"{c.id} (USD {c.value:,}) is below the fast-track threshold and must be 'sign' "
+                               f"with no issues"))
+            issues, decision = entry(world, c, open_review)
         if not counted:
             continue
-        truth = set(expected)
-        tp += len(truth & set(issues))
-        fp += len(set(issues) - truth)
-        fn += len(truth - set(issues))
-        correct += decision == decide(expected, setting)
+        right = set(listed) == set(issues) and chosen == decision
+        exact += right
+        tp += len(set(issues) & set(listed))
+        fp += len(set(listed) - set(issues))
+        fn += len(set(issues) - set(listed))
+        decisions += chosen == decision
+        if taken_off:
+            credit += 1.0 + EXCEPTION_BONUS if right and decision == "reject" else 0.0
+        else:
+            credit += right
     prec = tp / (tp + fp) if tp + fp else 1.0
     rec = tp / (tp + fn) if tp + fn else 1.0
     f1 = 2 * prec * rec / (prec + rec) if prec + rec else 0.0
-    acc = correct / n_scored
-    objective = F1_WEIGHT * f1 + DECISION_WEIGHT * acc
-    metrics = {"issue_f1": round(f1, 4), "precision": round(prec, 4), "recall": round(rec, 4),
-               "decision_accuracy": round(acc, 4), "tp": tp, "fp": fp, "fn": fn, "scored_contracts": n_scored}
-    return violations, objective, metrics
+    metrics = {"contracts_right": exact, "scored_contracts": n, "issue_f1": round(f1, 4),
+               "precision": round(prec, 4), "recall": round(rec, 4), "decision_accuracy": round(decisions / n, 4)}
+    return violations, credit / n, metrics
 
 
 def score(world: World, submission_dir: Path, setting: Setting) -> dict:
     try:
-        review = _parse(world, read_json(submission_dir, "review.json"))
+        review, unknown = _parse(world, read_json(submission_dir, "review.json"))
     except Fatal as e:
         return {"fatal": str(e)}
-    violations, objective, metrics = evaluate_review(world, review, setting)
-    return {"violations": violations, "objective": objective, "metrics": metrics}
+    violations, objective, metrics = evaluate_review(world, review, setting, unknown)
+    enforced, evidence = diagnostic(world, review, setting, unknown)
+    return {"violations": violations, "objective": objective, "metrics": metrics, "enforced": enforced,
+            "evidence": evidence}
 
 
 def write_ground_truth(world: World, gt: Path, setting: Setting) -> None:
-    """truth.json: per scored contract, the playbook's issues and decision under this setting (fast track kept)."""
+    """truth.json: per scored contract, the answer key under this setting (fast track kept); for a fast-tracked
+    contract also what the playbook would say, which decides whether an exception is worth it."""
+    r = reading_of(setting)
     out = {}
     for c in world.contracts:
         if scored(world, c, setting):
-            issues = expected_issues(world, c, setting, True)
-            out[c.id] = {"issues": issues, "decision": decide(issues, setting),
-                         **({"fast_tracked": True} if fast_track(c, setting) else {})}
+            issues, decision = entry(world, c, r)
+            out[c.id] = {"issues": issues, "decision": decision}
+            if fast_track(c, r):
+                issues, decision = entry(world, c, replace(r, fast_track_below=None))
+                out[c.id].update(fast_tracked=True, playbook={"issues": issues, "decision": decision})
     (gt / "truth.json").write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
 
 
-# ── reference solution: keyword rules on the English wording ─────────────────
+# ── the client's facts in a deliverable (the per-target diagnostic) ──────────
+
+# target -> the drawn parameter that is the fact
+PARAM_FACTS = {"liability_cap": "cap_multiple", "governing_law": "governing_law", "payment_terms": "payment_days",
+               "decision_rule": "reject_at", "accepted_deviations": "tolerance_below",
+               "auto_renewal": "renewal_notice_days", "data_protection": "dp_categories",
+               "termination_convenience": "tfc_above", "small_contract_fast_track": "fast_track_below"}
+FROM_MEDIUM = ("auto_renewal", "data_protection", "termination_convenience")
+# target -> the codes whose presence on a contract tells a reading of that fact from another
+FACT_CODES = {"liability_cap": ("LIABILITY_CAP",), "period_caps_out_of_round": ("LIABILITY_CAP",),
+              "governing_law": ("GOVERNING_LAW",), "dispute_forum": ("GOVERNING_LAW",),
+              "payment_terms": ("PAYMENT_TERMS",), "auto_renewal": ("AUTO_RENEWAL",),
+              "data_protection": ("DATA_PROTECTION",), "customer_personal_data": ("DATA_PROTECTION",),
+              "termination_convenience": ("TERMINATION_CONVENIENCE",),
+              "round_points": tuple(code for code in CODES if code not in EASY_CODES)}
+DECISION_FACTS = ("critical_issues", "decision_rule", "accepted_deviations")
+
+
+def misreadings(setting: Setting) -> dict[str, tuple[str, Reading]]:
+    """{target: (what the misreading is, the playbook read that way)} for the fixed facts in force: the most
+    natural wrong reading of each, everything else as the client states it."""
+    r = reading_of(setting)
+    out = {"critical_issues": ("the governing law counted as a critical issue too",
+                               replace(r, critical=r.critical + ("GOVERNING_LAW",)))}
+    if not setting.at_least("medium"):
+        out["period_caps_out_of_round"] = ("a cap of N months' fees flagged at N/12 of the annual value",
+                                           replace(r, period_caps=True))
+        out["round_points"] = ("all seven points checked and listed", replace(r, points=CODES, critical=CRITICAL))
+    else:
+        out["dispute_forum"] = ("only the governing law checked, not the courts or seat", replace(r, forum=False))
+    if setting.at_least("hard"):
+        out["customer_personal_data"] = ("data protection by category only", replace(r, customer_data=False))
+        out["amendments"] = ("every record marked agreed applied, whatever its date", replace(r, amendments="agreed"))
+        out["requests_to_sign"] = ("the e-mailed contracts marked sign, as asked", replace(r, follow_emails=True))
+    return out
+
+
+def _alternatives(setting: Setting) -> dict[str, dict[str, Reading]]:
+    """{target: {label: reading}}: the other readings of each fact in force (the other candidates of a drawn
+    figure, the misreading of a fixed fact)."""
+    out: dict[str, dict[str, Reading]] = {}
+    pools = _pools()
+    for target, name in PARAM_FACTS.items():
+        if (target in FROM_MEDIUM and not setting.at_least("medium")) or (
+                target == "small_contract_fast_track" and not setting.at_least("hard")):
+            continue
+        out[target] = {f"{name}={v}": reading_of(Setting(setting.tier, setting.rule_seed, {**setting.params, name: v}))
+                       for v in pools[name][setting.tier] if v != setting[name]}
+    for target, (label, reading) in misreadings(setting).items():
+        out[target] = {label: reading}
+    for target, readings in _other_readings(setting).items():
+        out[target].update(readings)
+    return out
+
+
+def _other_readings(setting: Setting) -> dict[str, dict[str, Reading]]:
+    """Wrong readings of a fact that the diagnostic weighs besides misreadings() and the other candidates (none is an
+    ablation: each is less natural than the one misreadings() names, or a slip at a figure's own boundary)."""
+    r = reading_of(setting)
+    out = {"accepted_deviations": {"below the sign-off limit, every contract short of a reject signed":
+                                   replace(r, limit_covers_critical=True)},
+           "governing_law": {"the courts or seat checked in place of the law": replace(r, law_checked=False)},
+           "liability_cap": {"a cap exactly at the minimum flagged": replace(r, cap_multiple=r.cap_multiple + 1e-9)},
+           "payment_terms": {"a payment term exactly at the minimum flagged":
+                             replace(r, payment_days=r.payment_days + 1)},
+           "decision_rule": {"a reject only above that count": replace(r, reject_at=r.reject_at + 1)}}
+    if setting.at_least("medium"):
+        out["critical_issues"] = {"data protection not counted as critical": replace(
+            r, critical=tuple(code for code in r.critical if code != "DATA_PROTECTION"))}
+        out["auto_renewal"] = {"a notice exactly at the minimum flagged":
+                               replace(r, renewal_notice_days=r.renewal_notice_days + 1)}
+    return out
+
+
+def _excepted(world: World, review: dict[str, tuple[list[str], str]], r: Reading) -> set[str]:
+    """The small contracts a review takes off the fast track the way an approved exception would: exactly the ones
+    the playbook rejects, each with the playbook's entry. Such a review keeps the fast track for every other small
+    contract, so those rejects cannot tell its threshold from a lower one. Empty when the review does anything
+    else (a lower threshold leaves the rejects below it fast-tracked, or reviews a contract it would only
+    negotiate)."""
+    open_review = replace(r, fast_track_below=None)
+    small = {c.id: entry(world, c, open_review) for c in world.contracts if fast_track(c, r)}
+    rejects = {cid for cid, (_, decision) in small.items() if decision == "reject"}
+    taken = {cid for cid in small if cid in review and (review[cid][0] or review[cid][1] != "sign")}
+    if not taken or taken != rejects:
+        return set()
+    if any(set(review[cid][0]) != set(small[cid][0]) or review[cid][1] != "reject" for cid in taken):
+        return set()
+    return taken
+
+
+def _sides(target: str, world: World, c: Contract, r: Reading, alt: Reading, listed: list[str], chosen: str,
+           excepted: frozenset | set = frozenset()):
+    """(what the client's reading gives, what the other reading gives, what the review has) on the one aspect of
+    contract c's entry that tells the two readings of this fact apart; None when the entry cannot tell them."""
+    if target in DECISION_FACTS:        # the decision the review's own issue list calls for
+        seen = [code for code in listed if code in r.points]
+        ours, theirs = decide(seen, c, r), decide(seen, c, alt)
+        if set(alt.critical) < set(r.critical) and "sign" not in (ours, theirs):
+            return None                 # reject against negotiate: a reject threshold misread looks the same
+        return ours, theirs, chosen
+    true, other = entry(world, c, r), entry(world, c, alt)
+    if target == "small_contract_fast_track":
+        if c.id in excepted or entry(world, c, replace(r, fast_track_below=None)) == ([], "sign"):
+            return None                 # an approved exception, or reviewed or not the entry reads "sign"
+        return fast_track(c, r), fast_track(c, alt), not listed and chosen == "sign"
+    if target == "requests_to_sign":
+        return true[1] == "sign", other[1] == "sign", chosen == "sign"
+    if target == "amendments":
+        codes = (CLAUSE_CODE[world.amendments[c.id].clause],) if c.id in world.amendments else ()
+    else:
+        codes = FACT_CODES[target]
+    return tuple(tuple(code in issues for code in codes) for issues in (true[0], other[0], listed))
+
+
+def diagnostic(world: World, review: dict[str, tuple[list[str], str]], setting: Setting,
+               unknown: dict[str, list[str]] | None = None):
+    """(enforced, evidence) per target in force: on the scored contracts where the client's reading of a fact and
+    another reading give different entries, which one the review follows. A fact is not enforced when the review
+    sides with some other reading more often than with the client's, enforced when it sides with the client's more
+    often than with every other reading, and None when no contract tells (or the review follows neither). The
+    other readings are the other candidates of a drawn figure, the misreading of a fixed fact and the less natural
+    readings of _other_readings. The small contracts a review takes off the fast track as an approved exception
+    would (_excepted) do not count against the fast track. The issue codes are enforced when every listed code is
+    one of the playbook's; a review with other codes cannot be read for the other facts (None)."""
+    r = reading_of(setting)
+    alternatives = _alternatives(setting)
+    if unknown:
+        made_up = sorted({code for codes in unknown.values() for code in codes})
+        return ({**dict.fromkeys(alternatives), "issue_codes": False},
+                {"issue_codes": f"codes that are not the playbook's: {', '.join(made_up[:5])}"})
+    enforced: dict[str, bool | None] = {"issue_codes": True}
+    evidence: dict[str, str] = {}
+    excepted = _excepted(world, review, r) if r.fast_track_below is not None else set()
+    for target, alts in alternatives.items():
+        verdict, notes = None, []
+        for label, alt in alts.items():
+            ours = theirs = 0
+            for c in world.contracts:
+                if c.id not in review or not scored(world, c, setting):
+                    continue
+                sides = _sides(target, world, c, r, alt, *review[c.id], excepted=excepted)
+                if sides is None or sides[0] == sides[1]:
+                    continue
+                ours += sides[2] == sides[0]
+                theirs += sides[2] == sides[1]
+            if theirs > ours or (theirs and target == "requests_to_sign"):     # giving in once is giving in
+                verdict = False
+                notes.append(f"follows \"{label}\" on {theirs} of {ours + theirs} telling contracts")
+            elif ours > theirs and verdict is None:
+                verdict = True
+                notes.append(f"follows the client's reading on {ours} of {ours + theirs} telling contracts")
+        enforced[target] = verdict
+        if notes:
+            evidence[target] = notes[-1] if verdict is False else notes[0]
+    return enforced, evidence
+
+
+# ── reference: the answer key ────────────────────────────────────────────────
+
+def reference_solution(world: World, out_dir: Path, setting: Setting) -> None:
+    """The answer key: the client's playbook applied to every clause as it is written, fast track kept."""
+    _write(out_dir, review_under(world, reading_of(setting)))
+
+
+def best_known_solution(world: World, out_dir: Path, setting: Setting) -> None:
+    """The answer key is the best any review that keeps the rules can do (objective_bound)."""
+    reference_solution(world, out_dir, setting)
+
+
+def objective_bound(world: World, setting: Setting) -> float:
+    """Proven: every scored contract counts at most once in a review that keeps the fast track, so no valid review
+    scores above 1.0 (a review that bends the fast track under an approved exception can)."""
+    return 1.0
+
+
+# ── baseline: the legal team's keyword checklist ─────────────────────────────
 
 LAW_WORDS = {"CH": "Switzerland|Swiss", "SG": "Singapore", "EW": "England and Wales"}
 SEAT_WORDS = {"CH": "Zurich", "SG": "Singapore", "EW": "London"}
@@ -1159,75 +1568,68 @@ def _sections(text: str) -> dict[str, str]:
     return out
 
 
-def keyword_issues(c: Contract, setting: Setting) -> list[str]:
-    """What a careful but literal keyword checklist finds in the English version of the contract."""
+def checklist_issues(c: Contract, r: Reading) -> list[str]:
+    """What a careful but literal keyword checklist finds in the English version of the contract, with the
+    figures of a reading: it handles digits, number words for payment days and "one half of"/"100% of", looks for
+    an accepted city in the dispute sentence, and decides data protection by category only. It misses the
+    paraphrases (a notice in months, "continues for a further year", "net 30", caps in words or thousands or as
+    N months' fees), takes a mutual indemnity written as two promises for a one-way one and "without stating a
+    reason" for no termination right."""
     text = "\n".join(f"Article {n}. {t}\n" + "\n".join(p) for n, (t, p) in
                      enumerate(_render_en(c, "", CUSTOMER["en"]), 1))
     sec = _sections(text)
-    medium = setting.at_least("medium")
     found = []
     cap = sec.get("limitation of liability", "")
     m = re.search(r"(\d+(?:\.\d+)?) times", cap)
     mult = 0.5 if "one half of" in cap else 1.0 if "100% of" in cap else float(m.group(1)) if m else None
     a = re.search(r"USD ([\d,]+)", cap)
     if mult is not None:
-        if mult < float(setting["cap_multiple"]):
+        if mult < r.cap_multiple:
             found.append("LIABILITY_CAP")
-    elif a and int(a.group(1).replace(",", "")) < float(setting["cap_multiple"]) * c.value:
+    elif a and int(a.group(1).replace(",", "")) < r.cap_multiple * c.value:
         found.append("LIABILITY_CAP")
-    allowed = ALLOWED[setting["governing_law"]]
-    law = sec.get("governing law and disputes", "")
-    law_ok = re.search("|".join(LAW_WORDS[x] for x in allowed), law)
-    forum_ok = not medium or re.search("|".join(SEAT_WORDS[x] for x in allowed), law.split(". ", 1)[-1])
-    if not (law_ok and forum_ok):
-        found.append("GOVERNING_LAW")
+    if r.laws is not None:
+        law = sec.get("governing law and disputes", "")
+        law_ok = re.search("|".join(LAW_WORDS[x] for x in r.laws), law)
+        forum_ok = not r.forum or re.search("|".join(SEAT_WORDS[x] for x in r.laws), law.split(". ", 1)[-1])
+        if not (law_ok and forum_ok):
+            found.append("GOVERNING_LAW")
     scope = sec.get("scope and term", "")
-    if medium and "automatically" in scope:
+    if "automatically" in scope:
         n = re.search(r"(\d+) days", scope)
-        if n and int(n.group(1)) < int(setting["renewal_notice_days"]):
+        if n and int(n.group(1)) < r.renewal_notice_days:
             found.append("AUTO_RENEWAL")
     pay_txt = sec.get("fees and payment", "")
     for n, word in EN_WORDS.items():
         pay_txt = pay_txt.replace(f"{word} days", f"{n} days")
     pay = re.search(r"(\d+) days", pay_txt)
-    if pay and int(pay.group(1)) < int(setting["payment_days"]):
+    if pay and int(pay.group(1)) < r.payment_days:
         found.append("PAYMENT_TERMS")
-    if (medium and c.category in DP_CATEGORIES[setting["dp_categories"]]
-            and "data protection" not in text.lower()):
+    if c.category in r.dp_categories and "data protection" not in text.lower():
         found.append("DATA_PROTECTION")
-    if medium and c.value > int(setting["tfc_above"]) and "convenience" not in sec.get("termination", ""):
+    if c.value > r.tfc_above and "convenience" not in sec.get("termination", ""):
         found.append("TERMINATION_CONVENIENCE")
     if "each party" not in sec.get("indemnity", "").lower():
         found.append("INDEMNITY")
-    return [code for code in codes_in_scope(setting) if code in found]
+    return [code for code in r.points if code in found]
 
 
-def _as_read(world: World, c: Contract) -> Contract:
-    """The contract as the checklist reads it: an amendment marked agreed is applied, whatever its date."""
-    a = world.amendments.get(c.id)
-    return replace(c, **{a.clause: a.new}) if a is not None and a.status == "agreed" else c
-
-
-def _reference(world: World, setting: Setting, keep_fast_track: bool = True) -> dict:
+def _checklist(world: World, r: Reading, decision=decide) -> dict:
+    """The keyword checklist run with a reading's figures: every amendment record marked agreed applied (it does
+    not compare dates), the fast track kept, the e-mails left aside."""
     out = {}
     for c in world.contracts:
-        issues = [] if keep_fast_track and fast_track(c, setting) else keyword_issues(_as_read(world, c), setting)
-        out[c.id] = {"issues": issues, "decision": decide(issues, setting)}
+        issues = [] if fast_track(c, r) else checklist_issues(as_read(world, c, "agreed"), r)
+        out[c.id] = {"issues": issues, "decision": "sign" if fast_track(c, r) else decision(issues, c, r)}
     return out
 
 
-def _write(out_dir: Path, doc: dict) -> None:
-    (out_dir / "review.json").write_text(json.dumps(doc, indent=2), encoding="utf-8")
-
-
-def reference_solution(world: World, out_dir: Path, setting: Setting) -> None:
-    _write(out_dir, _reference(world, setting))
-
-
 def baseline_solution(world: World, out_dir: Path, setting: Setting) -> None:
-    """What the client does without a reviewer: sign every contract as it stands."""
-    _write(out_dir, {c.id: {"issues": [], "decision": "sign"} for c in world.contracts})
+    """What the client does today: the legal team's own keyword checklist, run with its playbook's figures."""
+    _write(out_dir, _checklist(world, reading_of(setting)))
 
+
+# ── the literal solution and the solver that never asks ──────────────────────
 
 def literal_issues(c: Contract) -> list[str]:
     """A careful counsel's checklist with no playbook: every clause read correctly (whatever its wording or
@@ -1252,40 +1654,302 @@ def literal_issues(c: Contract) -> list[str]:
     return found
 
 
-def literal_solution(world: World, out_dir: Path) -> None:
-    """The request done as written ("tell us which ones need changes before we sign"): every contract reviewed,
-    the e-mailed one and the small ones included, an amendment marked agreed applied (_as_read), the issues of
-    literal_issues, and "negotiate" for a contract with any issue, otherwise "sign" (the same review in every
-    setting)."""
+def _naive(issues, c: Contract | None = None, r: Reading | None = None) -> str:
+    """The request's own words: a contract with any issue needs changes, the others are signed."""
+    return "negotiate" if issues else "sign"
+
+
+def _literal(world: World) -> dict:
     out = {}
     for c in world.contracts:
-        issues = literal_issues(_as_read(world, c))
-        out[c.id] = {"issues": issues, "decision": "negotiate" if issues else "sign"}
+        issues = literal_issues(as_read(world, c, "agreed"))
+        out[c.id] = {"issues": issues, "decision": _naive(issues)}
+    return out
+
+
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request done as written ("tell us which ones need changes before we sign"): every contract reviewed,
+    the e-mailed ones and the small ones included, an amendment marked agreed applied, the issues of
+    literal_issues, and "negotiate" for a contract with any issue, otherwise "sign" (the same review in every
+    setting)."""
+    _write(out_dir, _literal(world))
+
+
+def _natural(r: Reading, law_critical: bool = True, forum: bool = False, customer_data: bool = False,
+             amendments: str = "agreed") -> Reading:
+    """A playbook with every fixed fact read the way a reviewer who never asks reads it: all seven points listed, a
+    cap of N months' fees at N/12, the e-mails not obeyed, and the four facts nothing on hand settles (UNSETTLED)
+    read one way or the other (by default each ablation's misreading)."""
+    return replace(r, points=CODES, critical=CRITICAL + (("GOVERNING_LAW",) if law_critical else ()),
+                   period_caps=True, forum=forum, customer_data=customer_data, amendments=amendments)
+
+
+# The fixed facts a reviewer who never asks cannot settle from the request or the data, each with its two plausible
+# readings: whether the governing law is a critical issue, whether GOVERNING_LAW covers the courts or seat (the
+# article is "Governing Law and Disputes"), whether a scope that hands over customers' personal data needs the
+# data-protection clause outside the listed categories, and whether an agreed amendment dated before its draft
+# still applies.
+UNSETTLED = {"law_critical": (True, False), "forum": (False, True), "customer_data": (False, True),
+             "amendments": ("agreed", "after_draft")}
+
+
+def client_unsettled(tier: str) -> dict:
+    """How the client reads the four UNSETTLED facts in a tier (what a lucky guess would take)."""
+    return {"law_critical": False, "forum": tier != "easy", "customer_data": tier == "hard",
+            "amendments": "after_draft"}
+
+
+def robust_solution(world: World, out_dir: Path, tier: str, candidates: dict[str, list],
+                    unsettled: list[dict] | None = None) -> None:
+    """The solver that never asks. It reads every clause correctly, takes the fixed facts the visible material
+    settles the natural way (_natural) and hedges the four it does not (UNSETTLED): since the objective counts
+    contracts, it gives each contract the entry that is exactly right under the largest number of combinations of
+    the tier's candidate figures and of the two readings of each unsettled fact, all weighted alike. In hard it
+    fast-tracks below the largest candidate threshold, the only choice that keeps the rule under every candidate.
+    `unsettled` (gt_report.py) replaces the readings it hedges over, e.g. with [client_unsettled(tier)]."""
+    names = [name for name in candidates if name != "fast_track_below"]
+    readings = unsettled or [dict(zip(UNSETTLED, values)) for values in product(*UNSETTLED.values())]
+    votes = {c.id: Counter() for c in world.contracts}
+    for combo in product(*(candidates[name] for name in names)):
+        params = dict(zip(names, combo), fast_track_below=max(candidates["fast_track_below"]))
+        client = reading_of(Setting(tier, 0, params))
+        for unsettled in readings:
+            r = _natural(client, **unsettled)
+            for c in world.contracts:
+                issues, decision = entry(world, c, r)
+                votes[c.id][(tuple(issues), decision)] += 1
+    out = {}
+    for cid, counts in votes.items():
+        issues, decision = max(sorted(counts), key=counts.get)
+        out[cid] = {"issues": list(issues), "decision": decision}
     _write(out_dir, out)
 
 
-def violating_examples(world: World, setting: Setting) -> dict:
-    ref = _reference(world, setting)
+# ── ground truth audit: ablations and shortcuts ──────────────────────────────
 
-    def mutate(fn):
-        doc = json.loads(json.dumps(ref))
-        fn(doc)
-        return lambda out: _write(out, doc)
+# The codes a reviewer would make up from the article titles of the English template: three are right
+# (GOVERNING_LAW, DATA_PROTECTION, INDEMNITY), four are not.
+TITLE_CODES = {"LIABILITY_CAP": "LIMITATION_OF_LIABILITY", "PAYMENT_TERMS": "PAYMENT", "AUTO_RENEWAL": "RENEWAL",
+               "TERMINATION_CONVENIENCE": "TERMINATION"}
 
-    def drop(doc):
-        cid = next(c.id for c in world.contracts if not fast_track(c, setting))
-        del doc[cid]
 
-    def inconsistent(doc):
-        cid = next(k for k, v in doc.items() if v["issues"])
-        doc[cid]["decision"] = "sign"
+def _guessed_codes(doc: dict) -> dict:
+    return {cid: {"issues": [TITLE_CODES.get(code, code) for code in e["issues"]], "decision": e["decision"]}
+            for cid, e in doc.items()}
 
-    def review_small(doc):
-        c = next(c for c in world.contracts if fast_track(c, setting))
-        issues = true_issues(effective(world, c), setting) or ["PAYMENT_TERMS"]
-        doc[c.id] = {"issues": issues, "decision": decide(issues, setting)}
 
-    out = {"all_contracts_reviewed": mutate(drop), "decision_consistency": mutate(inconsistent)}
+def ablations(world: World, setting: Setting) -> dict:
+    """{target: writer} for the facts that are not one drawn parameter: the answer key under the most natural
+    misreading of that fact alone (misreadings), and for the issue codes the answer key with codes made up from
+    the article titles."""
+    out = {target: (lambda out_dir, reading=reading: _write(out_dir, review_under(world, reading)))
+           for target, (_, reading) in misreadings(setting).items()}
+    out["issue_codes"] = lambda out_dir: _write(out_dir, _guessed_codes(review_under(world, reading_of(setting))))
+    return out
+
+
+def _market(r: Reading) -> Reading:
+    """Common market practice in place of the client's figures, as literal_issues has it: a cap of one year's
+    fees, 30 days to pay, two months' notice, a clause wherever the category handles personal data, termination
+    for convenience in every contract, the governing law not judged; every point checked, no fast track."""
+    return replace(r, cap_multiple=1.0, laws=None, payment_days=30, renewal_notice_days=60,
+                   dp_categories=("it_data", "marketing"), tfc_above=-1, fast_track_below=None, points=CODES,
+                   critical=CRITICAL, period_caps=True, forum=False, customer_data=False)
+
+
+def shortcuts(world: World, setting: Setting) -> dict:
+    r = reading_of(setting)
+    key = review_under(world, r)
+    contracts = world.by_id()
+
+    def on_fast_track(doc: dict) -> dict:
+        return {cid: ({"issues": [], "decision": "sign"} if fast_track(contracts[cid], r) else e)
+                for cid, e in doc.items()}
+
+    def client_rules(doc: dict) -> dict:
+        """The same issue lists with the client's decision rule and fast track."""
+        return on_fast_track({cid: {"issues": e["issues"],
+                                    "decision": decide([i for i in e["issues"] if i in r.points], contracts[cid], r)}
+                              for cid, e in doc.items()})
+
+    def sign_everything(out_dir):
+        """Sign every contract as it stands: no issues, every decision "sign"."""
+        _write(out_dir, {cid: {"issues": [], "decision": "sign"} for cid in key})
+
+    def flag_everything(out_dir):
+        """List every code of the round on every contract, decided by the client's rule (fast track kept)."""
+        _write(out_dir, client_rules({cid: {"issues": list(r.points), "decision": ""} for cid in key}))
+
+    def reject_everything(out_dir):
+        """Take no risk: every critical code on every contract and every one a "reject" (fast track kept)."""
+        _write(out_dir, on_fast_track({cid: {"issues": list(r.critical), "decision": "reject"} for cid in key}))
+
+    def pattern_matcher(out_dir):
+        """A keyword matcher on the visible contracts with market-practice thresholds and no client fact:
+        "negotiate" for any hit, every contract reviewed."""
+        _write(out_dir, _checklist(world, _market(r), decision=_naive))
+
+    def pattern_matcher_client_rules(out_dir):
+        """The same keyword matcher's issue lists, with the client's decision rule and fast track."""
+        _write(out_dir, client_rules(_checklist(world, _market(r), decision=_naive)))
+
+    def literal_one_rule(out_dir):
+        """The literal solution with the one rule it breaks satisfied: the small contracts fast-tracked (hard)."""
+        _write(out_dir, on_fast_track(_literal(world)))
+
+    def literal_client_rules(out_dir):
+        """The literal solution's issue lists (every clause read right, market practice) with the client's
+        decision rule and fast track."""
+        _write(out_dir, client_rules(_literal(world)))
+
+    def guessed_codes(out_dir):
+        """The answer key with issue codes made up from the article titles (LIMITATION_OF_LIABILITY, PAYMENT)."""
+        _write(out_dir, _guessed_codes(key))
+
+    def client_checklist(out_dir):
+        """Hand back the client's own keyword checklist (a pattern matcher that knows the playbook)."""
+        _write(out_dir, _checklist(world, r))
+
+    def negotiate_everything(out_dir):
+        """Ask for changes on every contract and name none: no issues, every decision "negotiate" (fast track
+        kept)."""
+        _write(out_dir, on_fast_track({cid: {"issues": [], "decision": "negotiate"} for cid in key}))
+
+    def literal_reject_critical(out_dir):
+        """The literal review with a decision rule guessed from its own list: "reject" for a cap, data-protection or
+        indemnity issue, "negotiate" for any other issue, "sign" otherwise (fast track kept)."""
+        doc = {cid: {"issues": e["issues"],
+                     "decision": "reject" if set(e["issues"]) & set(CRITICAL) else _naive(e["issues"])}
+               for cid, e in _literal(world).items()}
+        _write(out_dir, on_fast_track(doc))
+
+    def literal_four_points(out_dir):
+        """The literal review's issue lists cut to the four points a playbook most often starts with (cap, law,
+        payment, indemnity), with the client's decision rule and fast track."""
+        _write(out_dir, client_rules({cid: {"issues": [i for i in e["issues"] if i in EASY_CODES], "decision": ""}
+                                      for cid, e in _literal(world).items()}))
+
+    return {f.__name__: f for f in (sign_everything, flag_everything, reject_everything, pattern_matcher,
+                                    pattern_matcher_client_rules, literal_one_rule, literal_client_rules,
+                                    guessed_codes, client_checklist, negotiate_everything, literal_reject_critical,
+                                    literal_four_points)}
+
+
+def partial_reviews(world: World, setting: Setting) -> dict:
+    """{name: (what it leaves out, review)}: the answer key with one part of the work left undone. Not shortcuts
+    (each does most of the work and loses in proportion) and not single facts; gt_report.py measures what each
+    part is worth. keyword_reading comes from the other side: every client fact (it is the baseline) and only
+    the careful reading of the clauses left undone, but for the one wording that costs the checklist most."""
+    r = reading_of(setting)
+    key = review_under(world, r)
+    contracts = world.by_id()
+    out = {"no_decision_judgement": (
+        "the right issue list for every contract, but \"negotiate\" wherever there is an issue (no reject, no "
+        "sign-off limit)",
+        {cid: {"issues": e["issues"], "decision": "sign" if fast_track(contracts[cid], r) else _naive(e["issues"])}
+         for cid, e in key.items()})}
+    keywords = _checklist(world, r)
+    for c in world.contracts:
+        if not fast_track(c, r) and as_read(world, c, "agreed").indemnity == "mutual_p":
+            issues = [code for code in keywords[c.id]["issues"] if code != "INDEMNITY"]
+            keywords[c.id] = {"issues": issues, "decision": decide(issues, c, r)}
+    out["keyword_reading"] = ("every client fact, but the clauses read by the legal team's keywords (the baseline), "
+                              "except that a mutual indemnity written as two promises is read as mutual", keywords)
     if setting.at_least("hard"):
-        out["small_contract_fast_track"] = mutate(review_small)
+        out["own_paper_only"] = (
+            "the contracts on the supplier's paper (another language) signed unread",
+            {cid: ({"issues": [], "decision": "sign"} if contracts[cid].foreign else e) for cid, e in key.items()})
+        out["no_amendments"] = ("the amendments folder not opened",
+                                review_under(world, replace(r, amendments="none")))
+    return out
+
+
+def diagnostic_cases(world: World, setting: Setting) -> dict:
+    """{name: (target or None, what it is, review)}: deliverables that are neither the reference nor an ablation,
+    for gt_report.py to measure the diagnostic on. With target None the review has every fact right and differs
+    from the answer key in other ways (the diagnostic must call no fact in force not enforced); with a target it
+    misreads that fact in a way no ablation does (the diagnostic should call it not enforced)."""
+    r = reading_of(setting)
+    key = review_under(world, r)
+    contracts = world.by_id()
+    open_key = [c for c in world.contracts if scored(world, c, setting) and not fast_track(c, r)
+                and c.id not in world.emailed()]
+    slips = dict(key)
+    for c in open_key[:2]:
+        slips[c.id] = {"issues": key[c.id]["issues"], "decision": "sign" if key[c.id]["decision"] != "sign"
+                       else "negotiate"}
+    out = {"format": (None, "the answer key with codes in lower case, padded, repeated and reversed, decisions in "
+                            "capitals",
+                      {cid: {"issues": [f" {code.lower()} " for code in reversed(e["issues"])] + e["issues"][:1],
+                             "decision": e["decision"].upper()} for cid, e in key.items()}),
+           "two_slips": (None, "the answer key with the decision of two contracts wrong", slips)}
+    if not setting.at_least("hard"):
+        literal = _literal(world)
+        out["unscored_otherwise"] = (None, "the answer key on the contracts of the round, the literal review on the "
+                                           "others", {cid: key[cid] if scored(world, contracts[cid], setting)
+                                                      else literal[cid] for cid in key})
+    else:
+        out["best_exception"] = (None, "the answer key with every small contract the playbook rejects reviewed (an "
+                                       "approved exception)", bent_reviews(world, setting)["best_exception"][1])
+    misread = {"liability_cap": ("a cap exactly at the minimum flagged", replace(r, cap_multiple=r.cap_multiple + 1e-9)),
+               "payment_terms": ("a payment term exactly at the minimum flagged",
+                                 replace(r, payment_days=r.payment_days + 1)),
+               "governing_law": ("the courts or seat checked in place of the law", replace(r, law_checked=False)),
+               "decision_rule": ("a reject only above the count", replace(r, reject_at=r.reject_at + 1)),
+               "accepted_deviations": ("critical issues short of a reject signed below the limit",
+                                       replace(r, limit_covers_critical=True))}
+    if setting.at_least("medium"):
+        misread["auto_renewal"] = ("a notice exactly at the minimum flagged",
+                                   replace(r, renewal_notice_days=r.renewal_notice_days + 1))
+        misread["critical_issues"] = ("data protection not counted as critical",
+                                      replace(r, critical=tuple(x for x in r.critical if x != "DATA_PROTECTION")))
+    if setting.at_least("hard"):
+        misread["amendments"] = ("the supplier's proposal applied too", replace(r, amendments="all"))
+    for target, (what, reading) in misread.items():
+        out[f"misread_{target}"] = (target, what, review_under(world, reading))
+    if setting.at_least("hard"):
+        out["misread_requests_to_sign"] = ("requests_to_sign", "the COO's two renewals signed, the other e-mail not",
+                                           {**key, **{cid: {"issues": [], "decision": "sign"}
+                                                      for cid in world.emails[1]}})
+    return out
+
+
+def bent_reviews(world: World, setting: Setting) -> dict:
+    """{name: (how many small contracts it takes off the fast track, review)} in hard: the answer key with the
+    fast track bent, to be scored with the rule relaxed. best_exception reviews the small contracts the playbook
+    rejects and no other; every_small_contract reviews every small contract the playbook finds something in."""
+    r = reading_of(setting)
+    key = review_under(world, r)
+    playbook = review_under(world, replace(r, fast_track_below=None))
+    small = [c.id for c in world.contracts if fast_track(c, r)]
+    rejects = [cid for cid in small if playbook[cid]["decision"] == "reject"]
+    found = [cid for cid in small if playbook[cid] != key[cid]]
+    return {"best_exception": (len(rejects), {**key, **{cid: playbook[cid] for cid in rejects}}),
+            "every_small_contract": (len(found), {**key, **{cid: playbook[cid] for cid in found}})}
+
+
+def violating_examples(world: World, setting: Setting) -> dict:
+    r = reading_of(setting)
+    key = review_under(world, r)
+
+    def drop(out_dir):
+        cid = next(c.id for c in world.contracts if not fast_track(c, r))
+        _write(out_dir, {k: v for k, v in key.items() if k != cid})
+
+    def made_up_code(out_dir):
+        cid = next(cid for cid, e in key.items() if e["issues"])
+        issues = ["LIMITATION_OF_LIABILITY"] + key[cid]["issues"][1:]
+        _write(out_dir, {**key, cid: {"issues": issues, "decision": key[cid]["decision"]}})
+
+    def review_small(out_dir):
+        c = next(c for c in world.contracts if fast_track(c, r))
+        issues, decision = entry(world, c, replace(r, fast_track_below=None))
+        if not issues:
+            issues = ["PAYMENT_TERMS"]
+            decision = decide(issues, c, r)
+        _write(out_dir, {**key, c.id: {"issues": issues, "decision": decision}})
+
+    out = {"all_contracts_reviewed": drop, "known_issue_codes": made_up_code}
+    if setting.at_least("hard"):
+        out["small_contract_fast_track"] = review_small
     return out

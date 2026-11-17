@@ -1,31 +1,31 @@
-CONTRATO DE SUMINISTRO Y SERVICIOS N.º C033
-Borrador de fecha 2026-10-08
+SUPPLY AGREEMENT No. C033
+Draft of 2026-10-09
 
-Este contrato se celebra entre Brightvale Holdings (el «Cliente») y Genil Materiales S.A. (el «Proveedor»).
+This Agreement is made between Brightvale Holdings (the "Customer") and Rowan Facility Services Ltd (the "Supplier").
 
-Cláusula 1. Objeto y duración
-1.1 El Proveedor presta al Cliente el suministro de materiales de embalaje y componentes industriales.
-1.2 El contrato entra en vigor en la fecha de su firma y tiene una duración inicial de un año. Al vencimiento, se renovará automáticamente por periodos sucesivos de un año, salvo que cualquiera de las partes notifique por escrito su voluntad de no renovarlo con una antelación mínima de 45 días.
+Article 1. Scope and Term
+1.1 The Supplier provides the Customer with cleaning and building maintenance services.
+1.2 This Agreement starts on the date of signature and runs for an initial term of two years. It then expires unless the parties agree a renewal in writing.
 
-Cláusula 2. Precio y forma de pago
-2.1 Los precios se fijan en los pedidos acordados por las partes.
-2.2 El Cliente abonará cada factura no controvertida en el plazo de 90 días desde su recepción.
+Article 2. Fees and Payment
+2.1 The fees are set out in the order forms agreed between the parties.
+2.2 The Customer shall pay each undisputed invoice within 30 days of receipt.
 
-Cláusula 3. Confidencialidad
-Cada parte mantendrá la confidencialidad de la información comercial recibida de la otra y la utilizará únicamente para los fines de este contrato. Esta obligación subsistirá durante tres años tras la terminación.
+Article 3. Confidentiality
+Each party shall keep confidential all business information received from the other party and use it only for the purposes of this Agreement. This obligation survives the end of the Agreement for three years.
 
-Cláusula 4. Indemnidad
-Cada parte mantendrá indemne a la otra frente a cualesquiera reclamaciones de terceros, daños y gastos derivados de su propio incumplimiento de este contrato o de su negligencia.
+Article 4. Indemnity
+Each party shall indemnify the other party against all third-party claims, losses and costs arising from its own breach of this Agreement or its negligence.
 
-Cláusula 5. Limitación de responsabilidad
-Las partes acuerdan expresamente que la responsabilidad de cada una de ellas en virtud de este contrato no estará sujeta a ningún límite cuantitativo.
+Article 5. Limitation of Liability
+Except for liability for death, personal injury or fraud, the total liability of either party under this Agreement shall not exceed twice the annual fees payable under this Agreement.
 
-Cláusula 6. Resolución del contrato
-6.1 Cualquiera de las partes podrá resolver el contrato con efecto inmediato mediante notificación escrita si la otra incurre en un incumplimiento grave y no lo subsana en los 30 días siguientes a su notificación.
-6.2 El Cliente podrá desistir del contrato por conveniencia en cualquier momento, con un preaviso escrito de 90 días.
+Article 6. Termination
+6.1 Either party may terminate this Agreement with immediate effect by written notice if the other party commits a material breach and fails to remedy it within 30 days of being notified.
+6.2 The Customer may also bring this Agreement to an end at any time and without stating a reason, by giving 60 days' written notice.
 
-Cláusula 7. Ley aplicable y jurisdicción
-Este contrato se rige por la legislación de Singapur. Los tribunales de Singapur serán los únicos competentes para conocer de cualquier controversia derivada del mismo.
+Article 7. Governing Law and Disputes
+This Agreement is governed by Swiss law. Any dispute arising from it shall be finally resolved by arbitration seated in Zurich.
 
-Por el Cliente: ______________________
-Por el Proveedor: ______________________
+Signed for and on behalf of the Customer: ______________________
+Signed for and on behalf of the Supplier: ______________________
