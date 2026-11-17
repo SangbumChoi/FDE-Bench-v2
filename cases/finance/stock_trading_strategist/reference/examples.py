@@ -1,6 +1,9 @@
 """Validator examples for finance/stock_trading_strategist: the reference strategy with one deviation each.
 
-Never part of a reference solution. The case copies this file into an example's program/ as strategy.py, next to
+Never part of a reference solution. The engine replays the program on several market scenarios, each from a freshly
+loaded program; a config with "when_index" makes its deviation apply only in the scenario whose index stands at that
+level after the first close of the period (the case passes scenario 1's), so an example breaks its rule in one
+scenario and is the reference in the others. The case copies this file into an example's program/ as strategy.py, next to
 the reference strategy (as reference_strategy.py) and a config.json: the reference's config plus an "example"
 entry that names the deviation. Each deviation starts from the reference's orders of the day and stays inside
 every other rule (board lots, the large-order threshold, the restricted list and the tip, the stock and sector
@@ -20,6 +23,10 @@ limits, the cash kept for the withdrawal), so that the example breaks one rule o
                under the stock limit, then leaves it to the reference to trade back
   keep_lot     (restricted_liquidation) holds one lot of the stock compliance adds (`ticker`, bought in the
                session before the addition if the book holds none) until the close-out deadline has passed
+  close_out_fast (large_order_approval) from call `start_day` to the notice, buys the stock compliance will add
+               (`ticker`, which the case passes) up to `size` times the largest order under the threshold, and at
+               the notice (`add_day`) sells the whole holding in one order: a close-out sell above the threshold,
+               within what the desk head approves
   hold_list    (max_drawdown) ranks the stocks in the order of `names[call]` (the case passes, per call, the
                stocks every rule lets it hold, weakest first over the sessions ahead) instead of by their trend,
                and holds only those
@@ -46,8 +53,10 @@ def make(cfg, reference_path):
     ex = cfg.get("example") or {}
     ids = {}                                          # id of a stock's close series -> ticker, for this call
     rank = {}                                         # ticker -> its score in this call (hold_list)
+    live = [cfg.get("when_index") is None]            # whether the deviation applies in this market scenario
     if ex.get("kind") == "hold_list":
-        ref._score = lambda closes: rank.get(ids.get(id(closes)))
+        trend = ref._score
+        ref._score = lambda closes: rank.get(ids.get(id(closes))) if live[0] else trend(closes)
 
     class Example(ref.Strategy):
         def __init__(self, cfg):
@@ -57,6 +66,12 @@ def make(cfg, reference_path):
             self.done = False
 
         def on_day(self, day_input):
+            if self.day == 1 and self.cfg.get("when_index") is not None:
+                # the deviation applies in one market scenario only, recognised by the index level at the first
+                # close of the period; in every other scenario this is the reference
+                live[0] = abs(day_input["market"]["index"]["level"][-1] - self.cfg["when_index"]) < 5e-4
+            if not live[0]:
+                return super().on_day(day_input)
             ids.clear()
             ids.update({id(b["close"]): t for t, b in day_input["market"]["bars"].items()})
             if self.ex.get("kind") == "hold_list":
@@ -74,6 +89,8 @@ def make(cfg, reference_path):
                 out["orders"] = self._oversector(day_input, out["orders"], k)
             elif kind == "keep_lot":
                 out["orders"] = self._keep_lot(day_input, out["orders"], k)
+            elif kind == "close_out_fast":
+                out["orders"] = self._close_out_fast(day_input, out["orders"], k)
             return out
 
         # ── the day's book as the reference sees it ─────────────────────────
@@ -250,6 +267,34 @@ def make(cfg, reference_path):
             # the reference's sells outside the sector stay; its buys make way (cash, and no other sector bought)
             others = [o for o in orders if o["side"] == "sell" and c["stocks"][o["ticker"]]["sector"] != sec]
             return others + buys
+
+        def _close_out_fast(self, day_input, orders, k):
+            t, add_day = self.ex["ticker"], self.ex["add_day"]
+            if not self.ex["start_day"] <= k <= add_day:
+                return orders
+            c = self._ctx(day_input, [o for o in orders if o["ticker"] != t])
+            if t in c["halted"] or t not in c["last"]:
+                return orders
+            lot, last = c["stocks"][t]["lot"], c["last"][t]
+            held, cap = c["pos"].get(t, 0), self._cap_qty(c, t)
+            rest = [o for o in orders if o["ticker"] != t]
+            at = self.cfg.get("at", "open")
+            if k == add_day:
+                # one sell for the whole holding: above the threshold (cap is 95% of it), under 1.5 times it
+                top = int(1.45 * cap / 0.95 / lot) * lot
+                if held * 0.95 > cap:
+                    return rest + [{"ticker": t, "side": "sell", "qty": min(held, top), "at": at}]
+                return orders
+            goal = int(self.ex["size"] * cap / lot) * lot
+            sec = c["stocks"][t]["sector"]
+            base = c["equity"] - c["reserve"]
+            cash = c["usable"] - c["buys_cost"] - self.cfg["cash_buffer"] * c["equity"] - c["reserve"]
+            room = min((goal - held) * last, c["weight"] * base - held * last,
+                       self.cfg["sector_target"] * base - c["sector_val"].get(sec, 0.0), cash)
+            qty = min(int(room / (last * (1 + self.cfg["price_buffer"])) / lot) * lot, cap)
+            if qty <= 0:
+                return rest
+            return rest + [{"ticker": t, "side": "buy", "qty": qty, "at": at}]
 
         def _keep_lot(self, day_input, orders, k):
             t, add_day, deadline = self.ex["ticker"], self.ex["add_day"], self.ex["deadline_day"]

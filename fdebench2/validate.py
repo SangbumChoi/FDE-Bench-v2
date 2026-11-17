@@ -104,9 +104,6 @@ LITERAL_MAX_QUALITY = 0.2        # the request read literally, without the clien
 # Cases whose literal solution scores above LITERAL_MAX_QUALITY in some public setting, known and open:
 # case id -> why (a warning instead of a problem until the case changes).
 OPEN_LITERAL_FINDINGS: dict[str, str] = {
-    "finance/stock_trading_strategist": (
-        "in easy/s44 the literal program breaks only the large-order approval, which an exception can relax; "
-        "without it, it beats the reference (1.24)"),
     "manufacturing/procurement_specialist": (
         "with the dual-sourcing habit relaxed, the literal plan scores 0.58 and 0.85 in hard/s42 and hard/s78"),
 }
@@ -134,7 +131,17 @@ OPEN_NARROW_SCALES: dict[str, tuple[tuple[int, ...] | None, str]] = {
 # why it is open (kinds and keys as fdebench2.audit.findings gives them, e.g. ("no_bite", "safety_stock@easy") or
 # ("invalid_reference", "hard/cap=22,price=3"), and ("audit", "missing" or "stale")). A listed problem is a warning
 # until the case changes; waiving "stale" waives only that: the stored audit's own findings still count.
-OPEN_AUDIT_FINDINGS: dict[tuple[str, str, str], str] = {}
+OPEN_AUDIT_FINDINGS: dict[tuple[str, str, str], str] = {
+    ("finance/stock_trading_strategist", "shortcut", "hold_first_picks"): (
+        "buying the reference's first picks and holding them (every notice and the table handled as the reference) "
+        "scores about as well as the reference: the world's stock drifts persist over the whole test period and the "
+        "reference's risk switch sits in cash through the sell-off, so ranking again adds nothing; closing it needs "
+        "a different market model, which changes the agent's data"),
+    ("finance/stock_trading_strategist", "shortcut", "no_close_out_sizing"): (
+        "invalid in 42 of the 45 measured settings; valid only at a 9% threshold with a 4-session deadline, where the "
+        "stock limit binds before the close-out room, so the program is the reference itself (q 0.98-1.13) and the "
+        "close-out deadline does not bite either"),
+}
 REQUIRED_META = ("id", "role", "field", "task_type", "objective", "seed", "deliverable_spec", "rules")
 HANGUL = re.compile(r"[가-힣]")
 KANA = re.compile(r"[぀-ヿ]")

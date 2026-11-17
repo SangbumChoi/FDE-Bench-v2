@@ -69,6 +69,8 @@ class Strategy:
     # ── notices ─────────────────────────────────────────────────────────────
     def _notices(self, notices, equity):
         cfg = self.cfg
+        if cfg.get("ignore_notices"):                 # (the case's audit: a program that acts on no message)
+            return
         for n in notices:
             kind = n.get("type")
             if kind == "restricted_list_add":
@@ -78,7 +80,8 @@ class Strategy:
                 self.withdrawal = {"pct": cfg["withdrawal_pct"] / 100, "pay": n["payment_date"], "notice_equity": equity}
             elif kind == "risk_limit_change" and cfg["medium"] and not cfg.get("ignore_cut"):
                 self.cap_cut = (n["effective_date"], n["stock_limit_change_points"] / 100)
-            elif kind == "note" and cfg["hard"] and n.get("request") == "buy" and n.get("ticker"):
+            elif (kind == "note" and (cfg["hard"] or cfg.get("notes_never_followed")) and n.get("request") == "buy"
+                  and n.get("ticker") and not cfg.get("ignore_tip")):
                 self.no_buy.add(n["ticker"])
 
     def _withdrawal_amount(self, equity):
@@ -86,15 +89,31 @@ class Strategy:
         its basis: capital, the notice day's equity, or the equity at the close before the payment date (today's
         until then)."""
         w = self.withdrawal
-        basis = self.cfg["withdrawal_basis"]
-        base = CAPITAL if basis == "capital" else w["notice_equity"] if basis == "notice" else equity
-        return w["pct"] * base
+
+        def amount(basis, pct):
+            base = CAPITAL if basis == "capital" else w["notice_equity"] if basis == "notice" else equity
+            return pct / 100 * base
+        if self.cfg.get("withdrawal_any"):            # (the case's audit: the agreement not known, the largest clause)
+            return max(amount(basis, pct) for basis, pct in self.cfg["withdrawal_any"])
+        return amount(self.cfg["withdrawal_basis"], self.cfg["withdrawal_pct"])
 
     # ── the status table ────────────────────────────────────────────────────
+    def _paid(self, portfolio):
+        """The cash paid out to the client so far, which the drawdown adds back."""
+        if self.cfg.get("dd_equity_only"):            # (the case's audit: the drawdown read on the equity alone)
+            return 0.0
+        return sum(w["amount"] for w in portfolio.get("withdrawals", []))
+
     def _status(self, stocks, last, portfolio, nxt, reserve):
         equity = portfolio["equity"]
-        paid = sum(w["amount"] for w in portfolio.get("withdrawals", []))
+        paid = self._paid(portfolio)
         self.peak = max(self.peak, equity + paid)
+        mode = self.cfg.get("table")                  # (the case's audit: degenerate tables)
+        if mode == "zeros":
+            return {"stock_weights": {}, "sector_weights": {}, "buying_power": round(portfolio["cash"], 2),
+                    "drawdown_pct": 0.0}
+        if self.cfg.get("table_no_reserve") or mode == "input":
+            reserve = 0.0
         weights, sectors = {}, {}
         for t, q in portfolio["positions"].items():
             if q > 0 and t in last:
@@ -103,9 +122,13 @@ class Strategy:
                 sec = stocks[t]["sector"]
                 sectors[sec] = sectors.get(sec, 0.0) + w
         usable = portfolio["cash"] + sum(u["amount"] for u in portfolio["unsettled"] if u["settles"] <= nxt)
+        if mode == "input":                           # the cash and the equity as the engine sends them
+            usable, paid = portfolio["cash"], 0.0
+            self.table_peak = max(getattr(self, "table_peak", CAPITAL), equity)
+        peak = self.table_peak if mode == "input" else self.peak
         return {"stock_weights": weights, "sector_weights": {k: round(v, 4) for k, v in sectors.items()},
                 "buying_power": round(max(0.0, usable - reserve), 2),
-                "drawdown_pct": round(100 * (1 - (equity + paid) / self.peak), 4)}
+                "drawdown_pct": round(100 * (1 - (equity + paid) / peak), 4)}
 
     # ── the risk switch ─────────────────────────────────────────────────────
     def _risk_state(self, market, value, dd_all):
@@ -139,24 +162,46 @@ class Strategy:
             return 1.0
         return max(0.0, min(1.0, (cfg["max_dd"] - cfg["dd_margin"] - dd_all) / cfg["stress"]))
 
-    def _adv(self, ticker, bars, actions, nxt, n=20):
+    def _volumes(self, ticker, bars, actions, nxt, n=20):
+        """The last n sessions' volumes in today's shares (raw volumes converted across a split or consolidation)."""
         vols, dates = bars["volume"][-n:], bars["date"][-n:]
-        if not vols:
-            return 0.0
-        if self.cfg.get("raw_volume"):
-            return sum(vols) / len(vols)
-        return sum(v * _effective_ratio(ticker, d, actions, nxt) for v, d in zip(vols, dates)) / len(vols)
+        if self.cfg.get("adv_hedge"):                 # (the case's audit: not knowing which, the smaller of the two)
+            return [min(v, v * _effective_ratio(ticker, d, actions, nxt)) for v, d in zip(vols, dates)]
+        return [v * _effective_ratio(ticker, d, actions, nxt) for v, d in zip(vols, dates)]
+
+    def _adv(self, ticker, bars, actions, nxt, n=20):
+        vols = self._volumes(ticker, bars, actions, nxt, n)
+        return sum(vols) / len(vols) if vols else 0.0
 
     def _liquid_value(self, ticker, bars, actions, nxt, price):
-        """The largest holding that can be closed out within the deadline in orders under the threshold."""
-        if not self.cfg.get("liq_days"):
+        """The largest holding that can be closed out within the deadline in orders under the threshold, were the
+        stock restricted today or tomorrow. The average volume the threshold is measured on moves every session, so
+        it is projected forward: the oldest sessions drop out of the 20 and the sessions to come are counted at
+        half the median volume (a busy day leaving the window lowers the threshold at once)."""
+        days = self.cfg.get("liq_days")
+        if not days:
             return float("inf")
-        return self.cfg["liq_days"] * self.cfg["participation"] * self._adv(ticker, bars, actions, nxt) * price
+        vols = self._volumes(ticker, bars, actions, nxt)
+        if not vols:
+            return 0.0
+        low = self.cfg.get("liq_low", 0.5) * sorted(vols)[len(vols) // 2]
+
+        def adv_in(j):                              # the average j sessions from now
+            window = vols[j:] + [low] * j
+            return sum(window) / len(window)
+        part = self.cfg.get("close_out_participation", self.cfg["participation"])
+        first = min(sum(adv_in(j) for j in range(a, a + days)) for a in (0, 1))
+        return part * first * price
 
     # ── one session ─────────────────────────────────────────────────────────
     def on_day(self, day_input):
         cfg = self.cfg
         market, portfolio = day_input["market"], day_input["portfolio"]
+        if self.day == 1 and cfg.get("when_index") is not None:
+            # Examples for the case's validator deviate in one market scenario only, recognised by the index level
+            # at the first close of the period (the engine replays every scenario from a freshly loaded program).
+            if abs(market["index"]["level"][-1] - cfg["when_index"]) < 5e-4:
+                cfg.update(cfg.get("then") or {})
         stocks, bars = market["stocks"], market["bars"]
         halted = set(market.get("halted", []))
         actions = market.get("corporate_actions", [])
@@ -166,12 +211,14 @@ class Strategy:
         last = {t: bars[t]["close"][-1] for t in stocks if bars[t]["close"]}
         self._notices(day_input.get("notices", []), equity)
 
-        reserve = 0.0
-        if self.withdrawal and nxt <= self.withdrawal["pay"] and self.day >= cfg.get("wd_from", 0):
-            reserve = self._withdrawal_amount(equity)      # (wd_from: validator example acting at the last moment)
-        status = self._status(stocks, last, portfolio, nxt, reserve)
+        reserve = pending = 0.0
+        if self.withdrawal and nxt <= self.withdrawal["pay"]:
+            pending = self._withdrawal_amount(equity)      # announced and not yet paid: off the buying power
+            if self.day >= cfg.get("wd_from", 0):          # (wd_from: cash raised and kept only from that call on)
+                reserve = pending
+        status = self._status(stocks, last, portfolio, nxt, pending)
         base = equity - reserve                    # what the weights are of once the withdrawal is paid
-        paid = sum(w["amount"] for w in portfolio.get("withdrawals", []))
+        paid = self._paid(portfolio)
         dd_all = 1 - (equity + paid) / self.peak
 
         state, risk_peak = self._risk_state(market, equity + paid, dd_all)
@@ -179,23 +226,44 @@ class Strategy:
         weight = cfg["weight"]
         if self.cap_cut:
             weight = min(weight, cfg["stock_cap"] + self.cap_cut[1] - cfg["cap_margin"])
+
+        def cap_of(t):
+            """The target weight of a name: after the risk manager's cut the lower one, for every holding."""
+            if cfg.get("cut_buys_only") and t in pos:      # (the case's audit: the cut read as a limit on buys)
+                return cfg["weight"]
+            return weight
+        index_weight = None
+        if cfg.get("signal") == "index":               # (the case's audit: the index held, no view on any stock)
+            caps = {t: cfg["shares"][t] * last[t] * _effective_ratio(t, cfg["shares_date"], actions, nxt)
+                    for t in stocks if t in last}
+            index_weight = {t: c / sum(caps.values()) for t, c in caps.items()}
         banned = self.restricted | self.no_buy
-        if (self.targets is None or self.day % cfg["rebalance"] == 0 or state != self.risk
-                or abs(expo - self.expo) > 0.1):
+        # (hold_first: the case's audit: the first picks held, never ranked again)
+        if self.targets is None or (not cfg.get("hold_first") and (self.day % cfg["rebalance"] == 0
+                                                                    or state != self.risk
+                                                                    or abs(expo - self.expo) > 0.1)):
             scores = {}
             for t, b in bars.items():
                 s = _score(b["close"])
+                if index_weight is not None and s is not None:
+                    s = index_weight[t]
                 if s is not None and (s > 0 or not cfg.get("positive_only")) and t not in halted and t not in banned:
                     scores[t] = s
-            # Best first, each name at the target weight or the largest holding that can still be closed out in
-            # time, within the sector budget, until the book is invested.
+            # Best first (a name the book holds keeps its place while it ranks within keep_rank, so the book does
+            # not pay to swap near-equals), each name at the target weight or the largest holding that can still be
+            # closed out in time, within the sector budget, until the book is invested.
             targets, per_sector, sec_w, total = {}, {}, {}, 0.0
-            for t in sorted(scores, key=lambda t: (-scores[t], t)):
+            ranked = sorted(scores, key=lambda t: (-scores[t], t))
+            keep = cfg.get("keep_rank", 0)
+            held = [t for t in ranked[:keep] if t in pos and t not in self.closing_out]
+            for t in held + [t for t in ranked if t not in held]:
                 sec = stocks[t]["sector"]
                 if len(targets) >= cfg["top"] or per_sector.get(sec, 0) >= cfg["per_sector"]:
                     continue
                 liq = cfg.get("liq_fill", 0.8) * self._liquid_value(t, bars[t], actions, nxt, last[t]) / base
-                w = min(weight, liq, cfg["sector_target"] - sec_w.get(sec, 0.0), cfg["invest"] - total)
+                w = min(cap_of(t), liq, cfg["sector_target"] - sec_w.get(sec, 0.0), cfg["invest"] - total)
+                if index_weight is not None:
+                    w = min(w, index_weight[t])
                 if w < cfg["min_weight"]:
                     continue
                 per_sector[sec] = per_sector.get(sec, 0) + 1
@@ -214,7 +282,7 @@ class Strategy:
             self.targets_rebuilt = True
         else:
             self.targets_rebuilt = False
-        targets = {t: w if cfg.get("break") == "pressure" else min(w, weight * expo)
+        targets = {t: w if cfg.get("break") == "pressure" else min(w, cap_of(t) * expo)
                    for t, w in self.targets.items() if t not in banned}
         scores = self.scores
 
@@ -234,13 +302,16 @@ class Strategy:
             cur = pos[t] * last[t]
             cap = int(cfg["participation"] * self._adv(t, bars[t], actions, nxt) / lot) * lot
             if t in self.closing_out:
-                qty = min(pos[t], cap)             # close out as fast as the order-size threshold allows
+                # close out as fast as the order-size threshold allows (with the desk head's approval: faster)
+                part = cfg.get("close_out_participation", cfg["participation"])
+                qty = min(pos[t], int(part * self._adv(t, bars[t], actions, nxt) / lot) * lot)
             else:
                 want = targets.get(t, 0.0) * base
                 liq = self._liquid_value(t, bars[t], actions, nxt, last[t])
                 if want <= 0:
                     qty = pos[t]
-                elif (cur > want * (1 + cfg["band"]) or (self.cap_cut and cur > want + lot * last[t])
+                elif (cur > want * (1 + cfg["band"])
+                      or (self.cap_cut and not cfg.get("cut_buys_only") and cur > want + lot * last[t])
                       or cur > cfg.get("liq_trim", 0.95) * liq):
                     want = min(want, cfg.get("liq_fill", 0.8) * liq)
                     qty = int(math.ceil((cur - want) / last[t] / lot)) * lot
@@ -279,8 +350,13 @@ class Strategy:
             lot, px = stocks[t]["lot"], last[t] * (1 + cfg["price_buffer"])
             cur = pos.get(t, 0) * last[t]
             liq = float("inf") if spend else self._liquid_value(t, bars[t], actions, nxt, last[t])
-            want = min(targets[t] * base, cfg.get("liq_fill", 0.8) * liq) - cur
-            if want < cfg["band"] * targets[t] * base and not spend:
+            target = targets[t]
+            if cfg.get("cut_buys_only") and self.cap_cut:
+                # (the case's audit: the cut read as a limit on buys only: a holding is not sold down to it, but
+                # nothing is bought above it)
+                target = min(target, weight * expo)
+            want = min(target * base, cfg.get("liq_fill", 0.8) * liq) - cur
+            if want < cfg["band"] * target * base and not spend:
                 continue
             sec = stocks[t]["sector"]
             room = cfg["sector_target"] * base - sector_val.get(sec, 0.0)
@@ -318,6 +394,11 @@ class Strategy:
         self.risk, self.risk_peak = state, risk_peak
         if self.targets_rebuilt:
             self.expo = expo
+        if (brk == "no_status" and d == 3) or cfg.get("table") == "none":
+            return {"orders": orders}
+        if cfg.get("table") == "stale":                # (the case's audit: the previous close's table)
+            status, self.last_status = getattr(self, "last_status", None) or {
+                "stock_weights": {}, "sector_weights": {}, "buying_power": 0.0, "drawdown_pct": 0.0}, status
         return {"orders": orders, "status": status}
 
 

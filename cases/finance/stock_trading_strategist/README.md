@@ -11,3 +11,5 @@ The case's documents, one folder per language (`docs/<lang>/`); the explainer pa
 | Español | Estratega de trading de acciones | [README.md](docs/es/README.md) | [REVIEW.md](docs/es/REVIEW.md) | [web page](https://sangbumchoi.github.io/FDE-Bench-v2/es/finance/stock_trading_strategist/) |
 
 - [dataset/answer/answers.csv](dataset/answer/answers.csv): the answers, one row per public setting (difficulty, seed, the drawn rule values, the reference's and the client's own way's objective, the rules and facts in force); the reference and baseline deliverables are stacked next to it in [dataset/answer/](dataset/answer/) with difficulty and seed columns
+- [GT.md](GT.md): the ground truth in five parts, generated from `dataset/audit.json`
+- [CLIENT_REVIEW.md](CLIENT_REVIEW.md): what the simulated client answers each target from
