@@ -1,50 +1,56 @@
 # The case in plain words, shown at the top of its page.
 task: >-
-  Una cadena de supermercados con cinco tiendas hace sus pedidos a partir de una previsión diaria de ventas. La IA
-  prevé cuánto venderá cada tienda de cada uno de sus 12 artículos cada día del lunes 2 al domingo 15 de noviembre de
-  2026 y entrega `forecast.csv`: una fila por tienda, artículo y día (840 filas), en la unidad de venta actual de cada
-  artículo.
+  Una cadena de supermercados con cinco tiendas hace sus pedidos a partir de una previsión diaria. La IA calcula,
+  para cada uno de sus 12 artículos, cuánto debe pedir cada tienda para cada día del lunes 2 al domingo 15 de
+  noviembre de 2026 y entrega `forecast.csv`: una fila por tienda, artículo y día (840 filas) con la cantidad a
+  pedir, en la unidad de venta actual de cada artículo. Las tiendas piden exactamente esa cifra, así que el archivo
+  se puntúa como un plan de pedidos: por lo que se espera que cueste, no comparándolo con un noviembre que salió de
+  una manera concreta.
 given:
-  - "La solicitud del cliente: tres frases que piden prever cuánto venderá cada una de las cinco tiendas de cada producto, día a día, durante las dos semanas a partir del lunes 2 de noviembre, porque «con esas cifras hacemos los pedidos». No dice nada de promociones, festivos, roturas de stock ni de cómo se evalúa la previsión."
-  - "`historial_ventas.csv`: dos años de ventas diarias (del 4 de noviembre de 2024 al 1 de noviembre de 2026): unidades vendidas por tienda, artículo y día de apertura, el descuento de promoción de ese día (0 = ninguno) y si hubo rotura de stock (sí en 4.390 filas), más 1.286 filas de devoluciones de clientes con unidades negativas; 43.718 filas en total. Los panecillos (I07) se cuentan por unidad hasta el 31 de mayo de 2026 y por paquete de 6 desde entonces, cosa que el archivo no dice."
+  - "La solicitud del cliente: tres frases que piden prever cuánto venderá cada una de las cinco tiendas de cada producto, día a día, durante las dos semanas a partir del lunes 2 de noviembre, porque «con esas cifras hacemos los pedidos». No dice nada de lo que cuesta una cifra equivocada, de promociones, festivos, roturas de stock ni de cómo se evalúan las cifras."
+  - "`historial_ventas.csv`: dos años de ventas diarias (del 4 de noviembre de 2024 al 1 de noviembre de 2026): unidades vendidas por tienda, artículo y día de apertura, el descuento de promoción de ese día (0 = ninguno) y si hubo rotura de stock (sí en 7.175 filas, más o menos una de cada seis), más 1.255 filas de devoluciones de clientes con unidades negativas; 43.687 filas en total. Los panecillos (I07) se cuentan por unidad hasta el 31 de mayo de 2026 y por paquete de 6 desde entonces, cosa que el archivo no dice."
   - "`plan_promociones.csv`: las 14 promociones previstas para las dos semanas (tienda, artículo, fecha de inicio y de fin, descuento del 10, 20 o 30 %): 7 de bebidas, 3 de panadería, 2 de lácteos y 2 de fruta y verdura."
   - "`festivos.csv`: los 12 festivos de los dos últimos años (Navidad, Año Nuevo, Día del Trabajo y un festivo de primavera, de verano y de otoño, cada uno dos veces). Ninguno cae en las dos semanas, y el festivo regional único de noviembre no figura."
   - "`tiendas.csv` y `articulos.csv`: las cinco tiendas (cuatro supermercados y la pequeña tienda exprés Casco Antiguo, S4) y los 12 artículos en cuatro categorías (fruta y verdura I01–I03, lácteos I04–I06, panadería I07–I09, bebidas I10–I12), cada uno con su unidad de venta, como kg, botella o paquete de 6."
+  - "`mail/`: un correo del 28 de octubre del gerente de la tienda Plaza Central (S1) a la mesa de pedidos: salgan las cifras que salgan, que añadan un 20 % para su tienda."
 ask:
-  - "Con qué se compara la previsión. En easy y medium: con lo que registran las cajas, restando las devoluciones de clientes (las filas con unidades negativas) de las ventas de ese día y tomando los días con rotura de stock tal como se registraron; en easy, además, sin el efecto de las promociones ni del festivo. En hard: con la demanda de los clientes. Un día con rotura de stock el lineal se quedó vacío y la demanda fue mayor que las ventas, así que esos días no son ventas normales; las devoluciones no son demanda, así que sus filas se dejan fuera."
-  - "Qué hacer con las promociones de `plan_promociones.csv`. En easy, dejarlas fuera: el equipo de categorías las añade después, así que esos días se prevén como días normales. En medium y hard, incluirlas (cuentan tanto la fecha de inicio como la de fin), con las ventas adicionales estimadas a partir de las promociones pasadas por categoría y descuento. En algunas versiones las promociones de noviembre salen además en el folleto impreso y traen 1,5 o 2 veces las ventas adicionales de una promoción pasada; en las demás no hay folleto y el efecto pasado vale tal cual."
-  - "Un festivo regional único que no figura en `festivos.csv`. En easy se deja fuera como las promociones: ese día se prevé como un día normal de su día de la semana. En medium y hard cae el lunes 9, el miércoles 11 o el viernes 13 de noviembre, según la versión (el aniversario de la ciudad); todas las tiendas abren y las ventas suben como en los festivos anteriores, sobre todo en panadería y bebidas."
+  - "Para qué sirven las cifras: cada tienda pide exactamente la cifra del archivo y nadie añade un margen de seguridad. Así que el cliente necesita la cantidad a pedir, no las ventas esperadas."
+  - "Lo que cuesta una cifra equivocada: una unidad que un cliente quería y no encontró cuesta unas 5, 12 o 30 veces (según la versión) lo que una unidad que sobra al cierre."
+  - "Qué significa la marca de rotura de stock: esos días el lineal se quedó vacío, las ventas quedaron limitadas por el stock y la demanda fue mayor, así que no son ventas normales. Las devoluciones (las filas con unidades negativas) no son demanda y se dejan fuera."
+  - "Qué hacer con las promociones de `plan_promociones.csv`. En easy, dejarlas fuera: el equipo de categorías las añade después. En medium y hard forman parte del pedido (cuentan tanto la fecha de inicio como la de fin), con las ventas adicionales estimadas a partir de las promociones pasadas por categoría y descuento; según la versión, las promociones de noviembre salen además en el folleto impreso y traen 2 o 3 veces las ventas adicionales de una promoción pasada, o no hay folleto."
+  - "Un festivo regional único que no figura en `festivos.csv`: cae el lunes 9, el miércoles 11 o el viernes 13 de noviembre, según la versión (el aniversario de la ciudad); todas las tiendas abren y la demanda sube como en los festivos anteriores, sobre todo en panadería y bebidas."
   - "Solo en hard: el viernes 30 de octubre, después de exportar `plan_promociones.csv`, se cancelaron todas las promociones de una categoría, que no se harán: bebidas, lácteos o panadería, según la versión."
-  - "Los panecillos (I07): no se evalúan en easy ni en medium, aunque sus filas tienen que estar en el archivo. En hard se evalúan, y el historial anterior al 1 de junio de 2026 hay que dividirlo por 6 para que cuente paquetes."
-  - "La tienda Casco Antiguo (S4) cierra los domingos, por eso el historial no tiene filas suyas en domingo; su previsión de los domingos debe ser 0."
-  - "La costumbre del cliente con la fruta y verdura y los lácteos (I01–I06): nunca prever menos de 4, 6 u 8 unidades en un día en que la tienda abre, según la versión, para que los lineales no parezcan vacíos."
-  - "Lo que cuesta quedarse corto: una unidad prevista de menos cuenta 1, 2 o 3 veces lo que una unidad prevista de más, según la versión (con 1, las dos cuentan lo mismo)."
+  - "Si hay que hacer caso al correo del gerente de Plaza Central: no. Es un deseo suyo, no la política de la empresa; su tienda se pide como todas las demás."
+  - "La costumbre del cliente con la fruta y verdura y los lácteos (I01–I06): nunca pedir menos de 4, 6 o 12 unidades para un día en que la tienda abre, según la versión, para que los lineales no parezcan vacíos."
+  - "El archivo: exactamente una fila por tienda, artículo y día, 840 en total, también para los domingos de la tienda Casco Antiguo (cierra, así que 0) y para los panecillos (I07), que solo se evalúan en hard, donde su historial anterior al 1 de junio de 2026 hay que dividirlo por 6."
 invalid_if:
-  - "No se puede leer: no hay `forecast.csv`, aparece una tienda o un artículo que no está en los datos, una fecha fuera del 2 al 15 de noviembre de 2026 o una previsión que no es un número."
+  - "No se puede leer: no hay `forecast.csv`, no tiene ninguna columna con la cantidad (se lee de `order_qty`; si no, de una columna `forecast`; si no, de la única otra columna de números del archivo), aparece una tienda o un artículo que no está en los datos, una fecha fuera del 2 al 15 de noviembre de 2026 o una cantidad que no es un número."
   - "Le falta una fila o tiene una repetida: cada tienda, artículo y día necesita exactamente una fila, 840 en total, incluidos los panecillos (I07) aunque no se evalúen."
-  - "Tiene una previsión negativa."
-  - "Prevé algo distinto de 0 para la tienda Casco Antiguo (S4) en domingo (8 y 15 de noviembre)."
-  - "Prevé para un artículo de fruta y verdura o de lácteos (I01–I06) menos de 4, 6 u 8 unidades (según la versión) en un día en que la tienda abre, salvo que la política de la empresa permita flexibilizar esta costumbre y la IA haya pedido antes una excepción al cliente."
+  - "Tiene una cantidad de pedido negativa."
+  - "Pide algo distinto de 0 para la tienda Casco Antiguo (S4) en domingo (8 y 15 de noviembre)."
+  - "Pide de un artículo de fruta y verdura o de lácteos (I01–I06) menos de 4, 6 o 12 unidades (según la versión) para un día en que la tienda abre, salvo que la política de la empresa permita flexibilizar esta costumbre y la IA haya pedido antes una excepción al cliente."
 quality: >-
-  Cuanto menor, mejor: para cada tienda, la suma de las unidades previstas de más y de 1, 2 o 3 veces las previstas de
-  menos (según la versión), dividida por el total real de sus artículos y días, y luego la media de las cinco
-  tiendas. La forma de trabajar del cliente (vale 0) repite para las dos semanas lo vendido la semana pasada (del 26 de
-  octubre al 1 de noviembre) en el mismo día de la semana, con los domingos de S4 a 0 y el mínimo de fruta y verdura y
-  lácteos, y no tiene en cuenta promociones, festivo, roturas de stock ni lo que cuesta quedarse corto (un error de entre un 27 % y un
-  68 % en las versiones de esta página); la solución de referencia (vale 1) estima a partir del historial el nivel
-  reciente, el patrón semanal y la estacionalidad de cada tienda y artículo y el efecto de las promociones y los
-  festivos pasados, y apunta más alto cuanto más cuesta quedarse corto (entre un 14 % y un 27 %).
+  Cuanto menor, mejor: para cada tienda, las unidades que se espera que sobren más 5, 12 o 30 veces (según la
+  versión) las que se espera que falten, divididas por la demanda esperada de sus artículos y días, y luego la media
+  de las cinco tiendas. «Esperado» quiere decir sobre lo que varía la demanda de un día a otro, que el benchmark
+  conoce con exactitud: la puntuación no depende de un noviembre con buena o mala suerte, y se conoce el mejor plan
+  posible. La forma de trabajar del cliente (vale 0) es la costumbre de los gerentes: la media de lo vendido ese día
+  de la semana en las últimas ocho semanas, sin contar los días en que se quedaron sin género, más un colchón del
+  10, 20 o 30 %, un 2 % más por cada punto de descuento en los días de promoción, y un festivo pedido como un sábado
+  (un coste de entre un 35 % y un 54 % de la demanda en las versiones de esta página). La solución de referencia
+  (vale 1) estima, a partir de los días en que el lineal no se quedó vacío, el nivel, el patrón semanal y la
+  estacionalidad de cada tienda y artículo y el efecto de las promociones y los festivos pasados, y pide la cantidad
+  que equilibra los dos costes (entre un 28 % y un 39 %). El mejor plan posible obtiene alrededor de 1,04.
 tiers:
   easy: >-
-    Solo la previsión base: un día normal por tienda y artículo, comparada con las ventas en caja menos devoluciones,
-    sin el efecto de las promociones ni del festivo. Se aplican el cierre dominical de S4, el mínimo de fruta y verdura
-    y lácteos y el coste de quedarse corto; los panecillos (I07) no se evalúan.
+    El pedido sin las promociones, que el equipo de categorías añade después. Todo lo demás se aplica: las tiendas
+    piden la cifra tal cual, el coste de una venta perdida, los días con rotura de stock, el festivo único, el cierre
+    dominical de S4, el mínimo de fruta y verdura y lácteos y el correo del gerente; los panecillos (I07) no se
+    evalúan.
   medium: >-
-    Añade las promociones de `plan_promociones.csv` (en algunas versiones salen en el folleto y traen 1,5 o 2 veces
-    las ventas adicionales de una promoción pasada) y el festivo regional único del 9, el 11 o el 13 de noviembre. Se sigue comparando con las
-    ventas en caja menos devoluciones, sin los panecillos.
+    Añade las promociones de `plan_promociones.csv` (en algunas versiones salen en el folleto y traen 2 o 3 veces las
+    ventas adicionales de una promoción pasada). Los panecillos siguen sin evaluarse.
   hard: >-
-    Se compara con la demanda de los clientes en lugar de las ventas en caja: los días con rotura de stock las ventas
-    se quedan por debajo de la demanda y las devoluciones no son demanda. Los panecillos se evalúan, así que importa su
-    cambio de unidades sueltas a paquetes de 6 el 1 de junio de 2026, y las promociones de una categoría (bebidas,
-    lácteos o panadería) se cancelaron el 30 de octubre, después de exportar `plan_promociones.csv`.
+    Añade los panecillos, así que importa su cambio de unidades sueltas a paquetes de 6 el 1 de junio de 2026, y las
+    promociones de una categoría (bebidas, lácteos o panadería) se cancelaron el 30 de octubre, después de exportar
+    `plan_promociones.csv`.

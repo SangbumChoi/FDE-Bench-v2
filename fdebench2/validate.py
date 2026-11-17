@@ -109,9 +109,6 @@ OPEN_LITERAL_FINDINGS: dict[str, str] = {
         "without it, it beats the reference (1.24)"),
     "manufacturing/procurement_specialist": (
         "with the dual-sourcing habit relaxed, the literal plan scores 0.58 and 0.85 in hard/s42 and hard/s78"),
-    "retail/grocery_demand_forecaster": (
-        "the literal forecast breaks only the display floor, which an exception can relax; without it, it scores "
-        "0.42-0.95 in every setting"),
 }
 ADMISSIBLE_SEARCH = 5000         # combinations tried per candidate before it is called never admissible
 # Per-tier binding findings that the cases had when the check became per tier, warned about instead of failing
