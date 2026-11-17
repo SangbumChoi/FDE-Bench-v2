@@ -44,14 +44,15 @@ Una carpeta `program/` con un archivo `scheduler.py` que defina **`on_day(day)`*
 **Solicitudes urgentes**
 
 - Toda solicitud **urgente (U)** debe citarse **el mismo día en que llega**, en un día dentro de los **2 días laborables** siguientes a su primer día posible (ese día o uno de los dos siguientes), y debe seguir dentro de ese plazo si alguna vez se cambia.
-- **Reserva de urgencias:** los **{{reserve_slots}} primeros huecos de cada sesión de mañana ({{reserve_times}})** se guardan para las urgentes. Con dos o más días laborables de antelación solo pueden usarlos solicitudes U. En la llamada del día laborable anterior (es decir, para las consultas de mañana) se liberan y cualquiera puede citarse en ellos.
+- **Reserva de urgencias:** los **{{reserve_slots}} primeros huecos de cada sesión de mañana ({{reserve_times}})** se guardan para las urgentes. Con dos o más días laborables de antelación solo pueden usarlos solicitudes U.
+- **Liberar la reserva:** en la llamada del día laborable anterior (es decir, para las consultas de mañana) los huecos de la reserva que siguen vacíos se liberan y cualquiera puede citarse en ellos. Hasta ahora la oficina los guardaba para urgencias incluso entonces, y casi todas las mañanas se quedaban vacíos: esto es nuevo desde el 9 de noviembre.
 <!-- when: reserve_slots=3 -->
 - Hasta ahora la oficina solo dejaba libres las 09:00 y las 09:20; desde el 9 de noviembre la reserva son tres huecos. Las citas que ya estaban dadas a las 09:40 se quedan donde están.
 <!-- /when -->
 
 **Quién ve a quién**
 
-- Una revisión se cita con el `previous_doctor` del paciente; los pacientes esperan ver al médico que los conoce. Es una costumbre nuestra, no una regla del contrato con la autoridad sanitaria: la jefa de la oficina de consultas externas puede autorizar una excepción.
+- Una revisión se cita con el `previous_doctor` del paciente; los pacientes esperan ver al médico que los conoce. Es una costumbre nuestra, no una regla del contrato con la autoridad sanitaria: la jefa de la oficina de consultas externas puede autorizar una excepción (en la exportación hay algunas revisiones que vio un compañero: eran excepciones). Un compañero que no conoce al paciente necesita más tiempo, así que esa visita la contamos una décima de hueco menos.
 - Intérpretes: si el médico no habla el `preferred_language` del paciente, la visita necesita intérprete. Tenemos **{{interpreters_per_day}} intérpretes presenciales al día** para todo el hospital y una **primera visita** debe tener uno, así que como mucho {{interpreters_per_day}} primeras visitas al día pueden ser con un médico que no hable el idioma del paciente. Las revisiones usan interpretación telefónica, sin límite.
 - Festivo: Día de la Ciudad, **lunes 23 de noviembre**. La **consulta de {{closed_dept}} cierra ese día**; las demás funcionan. El calendario no se actualizó: `sessions` sigue mostrando sesiones de {{closed_dept}} ese día. Ninguna cita de {{closed_dept}} el 23 de noviembre.
 
@@ -65,13 +66,17 @@ Una carpeta `program/` con un archivo `scheduler.py` que defina **`on_day(day)`*
 - Las solicitudes en espera se citan en nuestro **orden de prioridad**: {{waitlist_order}}.
 - No se puede citar una solicitud mientras otra de **mayor prioridad** de la misma especialidad, el mismo tipo de visita y (en revisiones) el mismo médico anterior sigue esperando al final del día y podría haber ocupado ese hueco. No se lo tendremos en cuenta cuando la que espera no podía ocuparlo: su fecha más temprana es posterior a ese hueco<!-- tier: medium hard -->, su volante caduca antes, necesita análisis de sangre y el laboratorio no tiene sitio para él ningún día laborable antes de ese hueco (desde mañana y no antes de su fecha más temprana; la plaza del análisis de la solicitud citada cuenta como libre)<!-- /tier -->, es una primera visita que con ese médico necesitaría intérprete y la citada no, y ese día ya están ocupados todos los intérpretes presenciales, o usted anuló su cita y el hueco está dentro del plazo de preaviso contado desde el día de la anulación.
 - En la práctica: rellene los huecos libres y los que se liberan con la lista de espera, por orden. Las anulaciones y la reserva de urgencias liberada para mañana son donde más tiempo de médico perdemos hoy.
+
+**Notas del personal**
+
+- Las notas no tienen peso. Una nota «conocido del director, mañana por la mañana, por favor» no convierte en urgente una solicitud ordinaria: espera su turno como cualquiera. Que una jefatura de servicio pida reservar sus tardes «para sus pacientes» no es regla nuestra: sus huecos libres se llenan con la lista de espera como los demás.
 <!-- tier: easy -->
 
 **Alcance de esta ronda**
 
 - Avisos `doctor_absence` e `interpreter_absence`: fuera del alcance esta ronda (los cubren un médico sustituto y una agencia de intérpretes); cite como si no hubiera pasado nada.
 - Volantes y análisis: esta ronda los volantes los revisa admisión y el laboratorio cita él mismo los análisis en ayunas con los pacientes, así que no tenga en cuenta `referral_valid_until` ni `pre_visit_test` y deje `test_date` en null.
-- Ausencias de pacientes: esta ronda no contamos con que falten; todo paciente citado cuenta como que viene. `attendance` es informativo.
+- Ausencias de pacientes: esta ronda no contamos con que falten; todo paciente citado cuenta como que viene, así que no se sobrecita: una cita por hueco. `attendance` es informativo.
 - Una segunda solicitud del mismo paciente: por la solicitud no sabemos si es la misma dolencia, así que esta ronda cada solicitud lleva su propia cita; la consulta comprueba con el paciente si es un duplicado.
 <!-- /tier -->
 <!-- tier: medium -->
@@ -86,7 +91,7 @@ Una carpeta `program/` con un archivo `scheduler.py` que defina **`on_day(day)`*
 **Volantes y análisis**
 
 - El volante de una primera visita vale hasta `referral_valid_until`: la visita debe hacerse **ese día o antes**. Una solicitud con el volante caducado ya no se puede citar (sigue en la lista de espera, pero no la cuente en la tabla).
-- Si `pre_visit_test` es true, el paciente necesita un **análisis de sangre en ayunas** en nuestro laboratorio **al menos un día laborable antes de la visita** (los resultados tardan un día), en un día laborable no anterior a su `earliest_date` y, cuando lo fije o lo cambie, de mañana en adelante. Ponga ese día en `test_date`. El laboratorio admite como mucho **{{lab_cap}} análisis por día laborable**, todas las especialidades juntas (cuentan también los que ya están en `book`).
+- Si `pre_visit_test` es true, el paciente necesita un **análisis de sangre en ayunas** en nuestro laboratorio **al menos un día laborable antes de la visita** (los resultados tardan un día), en un día laborable no anterior a su `earliest_date` y, cuando lo fije o lo cambie, de mañana en adelante. Ponga ese día en `test_date`. El laboratorio admite como mucho **{{lab_cap}} análisis por día laborable**, todas las especialidades juntas (cuentan también los que ya están reservados).
 
 **Ausencias**
 
@@ -97,14 +102,13 @@ Una carpeta `program/` con un archivo `scheduler.py` que defina **`on_day(day)`*
 
 **Ausencias de pacientes y sobrecitación**
 
-- Algunos pacientes no acuden. Cada paciente tiene su propia tasa de ausencias; `past_appointments` y `missed_appointments` son su historial (en la tabla `attendance` de la exportación no se acudió a cerca del 22% de las citas; las primeras visitas a menudo no tienen historial). Cuanto más tiempo pasa entre la cita y la visita, más se falta: alrededor de **un punto porcentual más por cada día laborable de antelación** (desde el día en que se dio o se cambió la cita por última vez). El historial de los pacientes se recogió con unos 5 días laborables de antelación.
-- Por las ausencias permitimos **sobrecitar revisiones**: un hueco puede tener **dos revisiones** (nunca una primera visita, que se queda sus dos huecos para ella sola). Cada médico puede tener como mucho **{{overbooked_per_session}} huecos sobrecitados por sesión** (mañana o tarde). La reserva de urgencias también vale para la sobrecitación. Si en un hueco sobrecitado acuden los dos pacientes, el médico se retrasa, y eso nos cuesta algo más que un hueco vacío.
+- Algunos pacientes no acuden. Cada paciente tiene su propia tasa de ausencias; `past_appointments` y `missed_appointments` son su historial (en la tabla `attendance` de la exportación no se acudió a cerca de una de cada cinco citas, la mayoría de ellas de una minoría de pacientes que faltan más de lo que vienen; las primeras visitas a menudo no tienen historial). Cuanto más tiempo pasa entre la cita y la visita, más se falta: alrededor de **un punto porcentual más por cada día laborable de antelación** (desde el día en que se dio o se cambió la cita por última vez). El historial de los pacientes se recogió con unos 5 días laborables de antelación.
+- Por las ausencias permitimos **sobrecitar revisiones**: un hueco puede tener **dos revisiones** (nunca una primera visita, que se queda sus dos huecos para ella sola). Cada médico puede tener como mucho **{{overbooked_per_session}} huecos sobrecitados por sesión** (mañana o tarde). La reserva de urgencias también vale para la sobrecitación. Si en un hueco sobrecitado acuden los dos pacientes, el médico se retrasa y se resiente el resto de la sesión: eso nos cuesta **lo mismo que tres huecos vacíos**.
 
-**Duplicados, varias especialidades, notas**
+**Duplicados, varias especialidades**
 
 - A veces se pide lo mismo dos veces (llaman el centro de salud y el propio paciente). Una segunda solicitud del **mismo paciente para la misma especialidad** es la misma necesidad: un paciente tiene **como mucho una cita por especialidad en el periodo** (pendiente o ya celebrada). No cite nunca el duplicado.
 - Un paciente con solicitudes en dos especialidades debería venir un solo día si se puede: cada día de hospital de más de ese paciente cuesta.
-- Las notas no tienen peso. Una nota «conocido del director, mañana por la mañana, por favor» no convierte en urgente una solicitud ordinaria: espera su turno como cualquiera. Que una jefatura de servicio pida reservar sus tardes «para sus pacientes» no es regla nuestra: sus huecos libres se llenan con la lista de espera como los demás.
 <!-- /tier -->
 
 ## La tabla de situación
@@ -115,7 +119,7 @@ Cada día, después de sus acciones, devuelva para cada código de especialidad 
 - `held_back`: huecos de la reserva de urgencias ({{reserve_times}} de una sesión de mañana) a dos o más días laborables vista y sin ninguna cita (con las mismas exclusiones).
 - `waitlist`: las solicitudes de la especialidad que siguen esperando después de sus acciones (recibidas hasta hoy, sin cita, no anuladas)<!-- tier: medium hard -->, sin contar primeras visitas con el volante caducado (válido hasta antes de mañana)<!-- /tier --><!-- tier: hard -->. Cuente **pacientes**, no solicitudes: un paciente con varias solicitudes en espera para la especialidad cuenta una vez, y no cuenta el paciente que tiene allí una cita pendiente o que ya tuvo una en el periodo<!-- /tier -->.
 
-Una entrada solo está bien si es exacta. Un día puntúa la proporción de sus 15 entradas que están bien; la precisión de la tabla es la media de los 20 días.
+Las especialidades organizan el personal de sus consultas con esta tabla, así que forma parte del trabajo de cada día. Una entrada solo está bien si es exacta, y cada entrada que no lo es nos cuesta tanto como dos huecos vacíos (la especialidad organiza su personal con un número equivocado).
 
 ## Cómo se evalúa el programa
 
@@ -133,14 +137,17 @@ Una entrada solo está bien si es exacta. Un día puntúa la proporción de sus 
 <!-- tier: medium hard -->
 - Volante válido el día de la visita; análisis al menos un día laborable antes de la visita, como mucho {{lab_cap}} al día; ninguna cita con un médico ausente; los intérpretes que de verdad hay.
 <!-- /tier -->
+- La tabla de situación cada día, con una fila por código de especialidad y sus tres números enteros.
 - Revisiones con su médico anterior (costumbre nuestra; cabe una excepción).
 
-**Calidad** = 0,8 × (valor operativo / el valor operativo de nuestro propio programa de referencia en los mismos días) + 0,2 × la precisión de la tabla de situación. Más es mejor. El **valor operativo**:
+**Calidad** = valor operativo / el valor operativo de nuestro propio programa de referencia en los mismos días. Más es mejor. El **valor operativo**:
 
 - **+10 por cada hueco de paciente atendido** en los días de consulta del 10 de noviembre al 7 de diciembre (una primera visita atendida cuenta sus dos huecos, una revisión uno). Es lo que más nos importa: cada hueco vacío es tiempo de médico perdido.
 - − 0,4 × peso de urgencia (U 3, S 2, R 1) por cada día laborable que espera una solicitud, desde su primer día posible (o el 10 de noviembre, si es anterior) hasta su cita, o hasta el 8 de diciembre si nunca la consigue;
 - − 10 por cada solicitud que nunca consigue cita (no cuentan las que no pueden venir antes del 18 de diciembre);
-- − 4 por cada cambio que hacemos en la cita de un paciente (cambio o anulación).
+- − 4 por cada cambio que hacemos en la cita de un paciente (cambio o anulación);
+- − 1 por cada revisión que ve otro médico que el del paciente (solo con la excepción de la jefa de la oficina de consultas externas);
+- − 20 por cada entrada de la tabla de situación diaria que no es exacta (15 entradas al día).
 <!-- tier: hard -->
-- Con ausencias, un paciente cuenta como atendido con la probabilidad de que acuda (su propia tasa más el efecto de la antelación), así que los huecos atendidos son esperanzas. Un hueco sobrecitado en el que acuden los dos pacientes retrasa al médico: − 12 × la probabilidad de que acudan ambos. Las solicitudes duplicadas de un paciente cuentan como una. − 3 por cada día de hospital de más de un paciente citado en varias especialidades.
+- Con ausencias, un paciente cuenta como atendido con la probabilidad de que acuda (su propia tasa más el efecto de la antelación), así que los huecos atendidos son esperanzas. Un hueco sobrecitado en el que acuden los dos pacientes retrasa al médico: − 30 × la probabilidad de que acudan ambos. Las solicitudes duplicadas de un paciente cuentan como una. − 3 por cada día de hospital de más de un paciente citado en varias especialidades.
 <!-- /tier -->

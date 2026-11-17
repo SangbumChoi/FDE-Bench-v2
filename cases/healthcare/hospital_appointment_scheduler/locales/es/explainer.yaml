@@ -10,8 +10,8 @@ deliverable_spec: |
   "sessions", "new_requests", "notices", "attendance", "book", "waitlist"}, exactamente como en el archivo de
   entrada del día piloto. Devuelve {"actions": [{"type": "book" | "move", "request_id", "doctor_id",
   "date": "YYYY-MM-DD", "start": "HH:MM", "test_date": "YYYY-MM-DD" o null} | {"type": "release", "request_id"}],
-  "status_table": {department_code: {"free_slots": int, "held_back": int, "waitlist": int}}}, como en el archivo
-  de salida del día piloto. Las acciones se aplican en orden; una solicitud sin cita sigue en la lista de espera.
+  "status_table": {department_code: {"free_slots": int, "held_back": int, "waitlist": int}}}, con el formato del
+  archivo de salida del día piloto. Las acciones se aplican en orden; una solicitud sin cita sigue en la lista de espera.
 tiers:
   easy: >-
     El núcleo de la citación diaria: primera visita = dos huecos consecutivos, revisión = uno; la especialidad; nunca
@@ -39,6 +39,7 @@ rules:
   holiday_closure: La consulta de {{closed_dept}} cierra el Día de la Ciudad, lunes 23 de noviembre de 2026, aunque el calendario sigue mostrando sus sesiones; ninguna cita de {{closed_dept}} ese día.
   not_before_earliest: Ninguna cita antes de la fecha más temprana (earliest_date) de la solicitud.
   interpreter_capacity: Como mucho {{interpreters_per_day}} primeras visitas al día en todo el hospital con un médico que no habla el idioma del paciente (cada una necesita uno de los intérpretes presenciales; en medium y hard, uno menos el día en que falta un intérprete).
+  referral_validity: 'Una primera visita tiene lugar el último día de validez de su volante (referral_valid_until) o antes.'
   lab_capacity: El laboratorio admite como mucho {{lab_cap}} análisis de sangre en ayunas por día laborable.
   test_before_visit: Una solicitud que necesita el análisis de sangre en ayunas lo tiene fijado entre su fecha más temprana y el día laborable anterior a la visita (un día de análisis que se fija de nuevo ha de estar en el futuro).
   doctor_available: Una vez llegado un aviso de ausencia, no queda ni se da ninguna cita con ese médico en un día de su ausencia.
@@ -48,4 +49,27 @@ rules:
   waitlist_priority: Las solicitudes en espera se citan en el orden de prioridad ({{waitlist_order}}); no se cita una solicitud mientras otra de mayor prioridad de la misma especialidad, el mismo tipo de visita y el mismo médico anterior sigue esperando y podría haber ocupado ese hueco.
   overbooking_limit: Como mucho {{overbooked_per_session}} huecos sobrecitados (huecos con dos revisiones) por médico y sesión (mañana o tarde).
   one_per_department: Un paciente tiene como mucho una cita por especialidad en el periodo (ya celebrada o pendiente); una solicitud duplicada (mismo paciente y especialidad) nunca se cita como segunda cita.
+  status_table: 'Cada llamada devuelve la tabla de situación: una fila por código de especialidad (IM, CARD, DERM, ORTH, PED) con sus tres números enteros (free_slots, held_back, waitlist); las especialidades organizan su personal con ella.'
   follow_up_same_doctor: Una revisión se cita con el médico anterior del paciente; es una costumbre a la que la jefa de la oficina de consultas externas puede conceder excepciones.
+shortcuts:
+  book_nobody: 'No citar a nadie: ninguna acción, una tabla de situación exacta'
+  urgent_only: 'Citar solo las solicitudes urgentes, una tabla de situación exacta'
+  arrival_order: 'Por orden de llegada: cada solicitud en el orden en que se recibió en el primer hueco libre de su médico, sin reservar huecos, la tabla como la da el piloto'
+  earliest_slots: 'Llenar los primeros huecos libres: cada solicitud con el médico de su especialidad que antes tenga hueco, sin reservar huecos'
+  copy_last_weeks: 'Seguir con lo que muestra la exportación: la reserva guardada para urgencias, un paciente por hueco, la tabla como la da el piloto'
+  no_table: 'Las citas de la solución de referencia sin tabla de situación'
+  zero_table: 'Las citas de la solución de referencia, todas las entradas de la tabla a 0'
+  morning_table: 'Las citas de la solución de referencia, la tabla tal como estaba antes de las citas del día'
+  literal_plus_holiday: 'El programa literal respetando solo el cierre del Día de la Ciudad'
+  literal_plus_order: 'El programa literal respetando solo el orden de la lista de espera'
+  literal_plus_interpreters: 'El programa literal respetando solo los intérpretes por día'
+  literal_plus_lab: 'El programa literal respetando solo el límite diario del laboratorio'
+  literal_plus_reserve: 'El programa literal respetando solo el tamaño de la reserva'
+  literal_plus_scope: 'El programa literal respetando solo el alcance de la ronda'
+  literal_plus_notice: 'El programa literal respetando solo el preaviso'
+  literal_all_rules: 'El programa literal respetando todas las reglas del cliente (todos los valores del escenario)'
+  copy_and_release: 'Seguir con lo que muestra la exportación, pero dar a la lista de espera los huecos de urgencias de mañana que quedan vacíos; la tabla como la da el piloto'
+  pilot_numbers: 'Las citas de la solución de referencia, con los números de la tabla del día piloto todos los días'
+  literal_all_rules_release: 'El programa literal respetando todas las reglas del cliente y abriendo la reserva de mañana (la tabla como la da el piloto)'
+  literal_all_rules_table: 'El programa literal respetando todas las reglas del cliente y con la tabla de situación del cliente (la reserva guardada)'
+  office_overbooking: 'Seguir la práctica de la oficina (la reserva guardada) pero sobrecitar los primeros huecos de revisión que permite el tope, sean quienes sean los pacientes, con una tabla exacta'

@@ -33,6 +33,7 @@ rules:
   holiday_closure: '2026年11月23日（周一）市民日{{closed_dept}}停诊，出诊表里仍列着当天的时段；当天不得有{{closed_dept}}的预约。'
   not_before_earliest: 预约不得早于申请的最早可约日期（earliest_date）。
   interpreter_capacity: 全院每天最多{{interpreters_per_day}}个初诊约给不会说患者语言的医生（每个都需要一名现场翻译；medium 及以上，翻译请假那天少一名）。
+  referral_validity: '初诊在转诊单有效期最后一天（referral_valid_until）当天或之前就诊。'
   lab_capacity: 检验科每个工作日最多做{{lab_cap}}例空腹抽血。
   test_before_visit: 需要空腹抽血的申请，抽血日须在其最早可约日期到就诊前一个工作日之间（新定的抽血日须在将来）。
   doctor_available: 收到缺勤通知后，该医生缺勤的日子里不得保留或新约任何预约。
@@ -42,4 +43,27 @@ rules:
   waitlist_priority: 候诊申请按优先顺序（{{waitlist_order}}）预约；同一科室、同一就诊类型、同一上次接诊医生下，若有优先级更高的申请仍在候诊且本可以用那个号源，就不能约优先级更低的申请。
   overbooking_limit: 每位医生每个时段（上午或下午）最多{{overbooked_per_session}}个超额号源（放了两个复诊的号源）。
   one_per_department: 每位患者在本期间每个科室最多一个预约（已就诊的或将来的）；重复申请（同一患者同一科室）绝不另约第二个预约。
+  status_table: '每次调用都返回现况表：每个科室代码（IM、CARD、DERM、ORTH、PED）一行，各有三个整数（free_slots、held_back、waitlist）；各科室根据它安排门诊人手。'
   follow_up_same_doctor: 复诊约给患者的上次接诊医生；这是门诊办公室主任可以批准例外的惯例。
+shortcuts:
+  book_nobody: '一个也不约：不做任何动作，现况表准确'
+  urgent_only: '只约紧急申请，现况表准确'
+  arrival_order: '先到先得：每条申请按受理顺序约进其医生最早的空号源，不留任何号源，现况表照试点的报'
+  earliest_slots: '填最早的空号源：每条申请约给本科室最早有空的医生，不留任何号源'
+  copy_last_weeks: '照导出里的做法继续：预约留给紧急患者的号源，一个号源一个患者，现况表照试点的报'
+  no_table: '参考答案的预约，不返回现况表'
+  zero_table: '参考答案的预约，现况表每项都是0'
+  morning_table: '参考答案的预约，现况表报的是当天预约之前的情况'
+  literal_plus_holiday: '字面程序，加上市民日停诊这一条'
+  literal_plus_order: '字面程序，加上候诊优先顺序这一条'
+  literal_plus_interpreters: '字面程序，加上每天的翻译人数这一条'
+  literal_plus_lab: '字面程序，加上检验科每日上限这一条'
+  literal_plus_reserve: '字面程序，加上预留号的数量这一条'
+  literal_plus_scope: '字面程序，加上本轮的范围这一条'
+  literal_plus_notice: '字面程序，加上提前通知期这一条'
+  literal_all_rules: '字面程序，遵守客户的每条规则（该设定的所有规则值）'
+  copy_and_release: '照导出数据里的做法继续，但把明天空着的紧急预留号放给候诊名单；现况表照试点的给'
+  pilot_numbers: '参考答案的预约，每天都报试点日现况表里的数字'
+  literal_all_rules_release: '字面程序，遵守客户的全部规则并放开明天的预留号（现况表照试点的给）'
+  literal_all_rules_table: '字面程序，遵守客户的全部规则并用客户定义的现况表（预留号不放）'
+  office_overbooking: '沿用门诊办公室的做法（预留号不放），但按上限把最早的复诊号源都超额预约，不管患者是谁，现况表准确'

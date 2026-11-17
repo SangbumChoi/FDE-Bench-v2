@@ -7,18 +7,21 @@ and the current booking book and waitlist (the effect of its own earlier decisio
 the doctors' free 20-minute slots of the next ten working days, re-books appointments a notice affects,
 fills freed slots from the waitlist and reports a **daily status table** per department. The agent delivers
 `program/scheduler.py:on_day`; the evaluator replays a **hidden period of 20 working days** (9 November –
-4 December 2026: 1,184 new requests, 45 waiting and 359 booked at the start) in one isolated process. The
+4 December 2026: 1,184 new requests, 45 waiting and 362 booked at the start) in one isolated process. The
 core of the case is **slot utilization**: as many patients seen as possible in the doctors' time, without
 breaking a rule. The setting is country-neutral: no national insurer or payer rules.
 
 The agent sees an export of the booking system as a plain-text SQL dump (14 doctors in five departments with
 languages and weekly sessions, the calendar, four weeks of requests and appointments with their outcome —
-1,074 appointments, 22% of the attended-or-missed ones missed — cancellations, attendance, the waitlist's
-history and the 359 appointments already booked from 9 November), the booking office's e-mails (absences, an
+952 appointments, 19% of the attended-or-missed ones missed; 09:00 and 09:20 held urgent patients only and stayed
+empty on most mornings; 74 of the 571 follow-ups were seen by a colleague of the patient's doctor —
+cancellations, attendance, the waitlist's history and the 362 appointments already booked from 9 November),
+the booking office's e-mails (absences, an
 interpreter's absence, staff notes, a director's-acquaintance request and the outpatient office's
 instructions: City Day on 23 November, the calendar not updated for it) and one **pilot day**: an input
 exactly as the engine sends it (one notice of each kind, an acquaintance note) and the answer of the client's
-pilot program under its interim rules (format only). A setting is a tier (easy / medium / hard: which rules
+pilot program under its interim rules (it keeps 09:00 and 09:20 empty and reports `held_back` 0). The data shows
+the office's old practice and nothing else: every client fact the score rewards differs from it. A setting is a tier (easy / medium / hard: which rules
 are in force) and a rule seed, which draws the client's rule values from candidate pools: the clinic closed on
 City Day, the size of the urgent reserve, the interpreters per day, the waitlist order, the lab cap and the
 overbooking cap. The public panel is rule seeds 1, 10 and 64 (nine settings); any other seed is a private draw
@@ -81,8 +84,10 @@ Actions apply in order; a request has at most one appointment; an unbooked reque
   (valid until before d+1); hard counts **patients** (a patient's duplicate requests once) and not patients
   who hold an upcoming appointment there or had one take place in the period.
 
-An entry is right only when exact; a day scores the share of its 15 entries; accuracy = mean over 20 days.
-A failed call scores 0 that day.
+An entry is right only when exact, and every entry that is not costs 20 in the operations value (as much as two
+empty slots: the department staffs for a wrong number); a failed call counts its 15 entries wrong. The table is
+mandatory (`status_table`): a call that answers without it, or without a department's row or its three whole
+numbers, makes the program invalid.
 
 **Operations value** (the utilization objective):
 
@@ -92,28 +97,35 @@ A failed call scores 0 that day.
 | Waiting | − 0.4 × urgency weight (U 3, S 2, R 1) per working day from the first possible day (≥ day 1) to the appointment, or to day 21 if never booked |
 | Requests never booked (that could come before 18 Dec) | − 10 each |
 | Changes the hospital makes to an appointment (move or release) | − 4 each |
-| hard: overbooked slot | − 12 × P(both patients come) |
+| A follow-up seen by another doctor than the patient's own (only under the bendable habit's exception) | − 1 each |
+| An entry of the daily status table that is not exact (15 a day) | − 20 each |
+| hard: overbooked slot | − 30 × P(both patients come) (three empty slots; 12 before the audit) |
 | hard: extra hospital day of a patient booked in several departments | − 3 each |
 | hard: duplicates | a patient's requests to one department are one need |
 
-In the reference runs the seen term is 15,320–15,440 of easy's 11,610–11,800 operations value (utilization
-97.8–98.3%), against 2,960–3,690 of waiting cost in every tier: **utilization is the largest weight by far**.
+In the reference runs the seen term is 15,250–15,370 of easy's 11,423–11,593 operations value (utilization
+97.4–97.8%), against 3,050–3,690 of waiting cost in every tier: **utilization is the largest weight by far**.
 Utilization = seen patient-slots / the bookable slots of days 1–20 (easy counts the absent doctors' slots: a
 locum covers them).
 
-**Objective** (maximize) = 0.8 × operations value / the reference program's operations value in the same
-setting + 0.2 × table accuracy. The reference value is recomputed deterministically in-process (cached), so
-the reference scores exactly 0.8 + 0.2 × 1.000 = 1.0. Quality is normalized between the **baseline** (0) and
-the reference (1): q = (objective − baseline) / (1 − baseline). A program that books nothing but reports a
-perfect table is invalid (urgent requests unbooked).
+**Objective** (maximize) = operations value / the reference program's operations value in the same setting,
+the table's cost included (the reference's table is exact). Before the audit it was 0.8 × the ratio + 0.2 ×
+accuracy, so the pilot's table, right on a third of its entries, still kept 0.87 of the objective; the audit
+made it the ratio × the table's accuracy, under which one entry wrong every day cost 0.12–0.29 of the quality
+scale, one department's row 0.36–0.86 and counting expired referrals (medium) up to all of it; the check made a
+wrong entry a cost in the client's terms instead (GT.md part 3 has what each slip costs now: one entry every day
+0.10–0.16, one row 0.30–0.50, the pilot's table everything). The reference value is recomputed deterministically
+in-process (cached), so the reference scores exactly 1.0. Quality is normalized between the **baseline** (0) and the reference (1): q = (objective −
+baseline) / (1 − baseline). A program that books nothing but reports a perfect table is invalid (urgent requests
+unbooked).
 
-**Baseline** (`baseline_solution`): the booking office's practice without an engineer: the same program
-(earliest feasible slot in the priority order, every rule kept, the same exact status table), but the urgent
-reserve stays with urgent patients and is never released for tomorrow's clinics, and nothing is ever
-double-booked. The client itself names the released reserve as one of the two places it loses most doctor
-time today. It is valid in every combination of the pools (and on world seeds 1–3) and scores 0.81 in easy
-and 0.79 in medium with a reserve of two slots, 0.68–0.70 in hard; a reserve of three (seed 64) leaves more
-slots unused, 0.73 / 0.68 / 0.56.
+**Baseline** (`baseline_solution`): the booking office's practice without an engineer, as the export shows it:
+the same program (earliest feasible slot in the priority order, every rule kept, the same exact status table),
+but the urgent reserve stays with urgent patients and is never released for tomorrow's clinics, and nothing is
+ever double-booked. The client itself names the released reserve as one of the two places it loses most doctor
+time today. It is valid in every combination of the pools (and on world seeds 1–3) and scores 0.76–0.77 in easy
+and 0.74 in medium with a reserve of two slots, 0.61–0.63 in hard; a reserve of three (seed 64) leaves more
+slots unused, 0.65 / 0.60 / 0.45.
 
 ## Rules and their classes
 
@@ -140,74 +152,76 @@ of the outpatient office grants.
 | `urgent_reserve` | contractual | all | an S/R request booked or moved into a reserve slot (the first `reserve_slots` of a morning session) two or more days ahead |
 | `move_notice` | contractual | all | a changed date or time less than the notice period (3 working days) ahead: a move, or a release and a re-booking (the same day or later, counted from the release day; the released date and time again need no notice) |
 | `waitlist_priority` | contractual | all | booking a request while a higher-priority one of the same department, visit type and previous doctor still waits at the end of the day and could have taken that slot (excused: its earliest date is later; medium+ its referral expires first, or it needs a test and no lab day before the slot has room; it needs an interpreter there and that day's interpreters are all taken; it was released and the slot is inside the notice period from the release day) |
-| `referral_validity` | contractual | medium, hard | a new-patient visit after `referral_valid_until` |
+| `referral_validity` | contractual | medium, hard | a new-patient visit after `referral_valid_until` (enforced before the audit but missing from case.yaml; declared now) |
 | `overbooking_limit` | contractual | hard | more overbooked slots in a doctor session than the cap |
 | `one_per_department` | contractual | hard | two appointments in the period for one patient and department (a duplicate booked) |
+| `status_table` | contractual | all | a call that returns no status table, or one without a department's row or its three whole numbers (mandatory output, new with the audit) |
 | `follow_up_same_doctor` | **business_policy** (bendable habit) | all | a follow-up booked or moved to another doctor |
 
 ## Situations (the same data in every setting)
 
 | Kind | Situation | Data | Correct behaviour |
 |---|---|---|---|
-| ① hidden fact | Urgent window and **urgent reserve** (the first two or three morning slots, drawn; released the day before) | — | Ask; book U the day it arrives; **fill the released reserve for tomorrow from the waitlist** (≈100 slots in the period with two, 160–190 with three; never releasing them costs 19–21% of the objective with two, 27–33% with three) |
-| ① | Waitlist priority order (drawn) and its group (department, visit type, previous doctor) | — | Ask; refill freed and released slots from the waitlist in that order |
-| ① | Notice period for moves; each change costs | — | Ask; only move when a notice forces it; same time with another doctor needs no notice |
-| ① | Closed clinic on City Day (calendar not updated), interpreters per day, lab cap, referral expiry | — | Ask; the clinic, the interpreters and the lab cap are drawn by the rule seed |
-| ① | The status table's definition (window, reserve, exclusions, waitlist counting) | — | Ask; wrong definitions score e.g. 0.33 (reserve counted as free), 0.71–0.84 (raw waitlist in medium/hard), 0.82–0.94 (calendar taken as is) |
-| ① | No-show behaviour (own rate, +1 point per working day of lead, records at ~5 days of lead), overbooking cap, collision cost | 22% missed in the history | hard: overbook follow-ups of likely absentees; book short lead |
-| ② dated event | **Dr D13 (Pediatrics) off sick** 16–27 Nov, notice on Fri 13 Nov (two weeks, the next working day) | `doctor_absence` | medium+: move or release every D13 appointment of those days in that call (notice period!); with the habit the follow-ups wait for D13's return; bending moves them to the colleague (who has slack) |
+| ① hidden fact | Urgent window and **urgent reserve** (the first two or three morning slots, drawn) | the export keeps 09:00 and 09:20 for U only, empty on most mornings | Ask; book U the day it arrives; hold the reserve's size two or more days ahead |
+| ① hidden fact | **The reserve released for tomorrow** (new from 9 November; the export and the pilot never do it) | — | Ask; **fill the released reserve for tomorrow from the waitlist** (the reference books 92–107 S/R requests there with two slots, 136–159 with three); never releasing it (the baseline) costs 23–39% of the objective with two slots, 35–55% with three |
+| ① | Waitlist priority order (drawn) and its group (department, visit type, previous doctor) | the pilot follows one of the three | Ask; refill freed and released slots from the waitlist in that order |
+| ① | Notice period for moves; each change costs | — | Ask; only move when a notice forces it; same time with another doctor needs no notice; never pull patients forward into tomorrow |
+| ① | Closed clinic on City Day (calendar not updated), interpreters per day, lab cap, referral expiry, fasting tests | the e-mail says every clinic runs | Ask; the clinic, the interpreters and the lab cap are drawn by the rule seed |
+| ① | The status table's definition (window, reserve, exclusions, waitlist counting) | the pilot reports `held_back` 0 | Ask; every wrong entry costs 20: the pilot's definition is wrong on two thirds of the entries |
+| ① | What is out of scope this round (easy: absences, referrals, tests; easy and medium: overbooking, second requests) | every notice and field is in the data | Ask; acting on them breaks the waitlist order (a skipped request with no excuse), double-books, or wastes the absent doctor's covered days |
+| ① | No-show behaviour (own rate, +1 point per working day of lead, records at ~5 days of lead), overbooking cap, **collision cost (three empty slots)** | 19% missed in the history; each request's record | hard: overbook follow-ups next to likely absentees, not next to patients who come |
+| ② dated event | **Dr D13 (Pediatrics) off sick** 16–27 Nov, notice on Fri 13 Nov (two weeks, the next working day) | `doctor_absence` | medium+: move or release every D13 appointment of those days in that call (notice period!); with the habit the follow-ups wait for D13's return; bending moves them to the colleague |
 | ② | **Dr D05 (Cardiology) at a conference** 30 Nov – 3 Dec, notice on Fri 20 Nov | `doctor_absence` | medium+: same; six days ahead the colleague at the same time is often free |
-| ② | **An interpreter away** on Thu 26 Nov, notice on Tue 24 Nov | `interpreter_absence` | medium+: one fewer in-person interpreter that day; move/switch the excess interpreted new-patient visits |
-| ② | **Patient cancellations** (76–83 in the reference runs, 103–115 slots freed on days 1–20) | `cancellation` | Refill the slot from the waitlist in priority order (the reference refills 88–94%) |
-| ③ pressure | Department head D10 (Orthopedics): "keep my afternoon clinics free for my own patients" | 1 `staff_note` (day 2) | Not a rule; following it costs 5.7–9.0% of the objective (wasted slots) |
-| ③ pressure | "The director's acquaintance — tomorrow morning please" on routine new-patient requests | 4 notes (ORTH 18 Nov, ORTH 27 Nov, DERM 2 Dec, ORTH 3 Dec) | Book in turn; following them breaks `waitlist_priority` in **every public setting** (3–4 of the 4 notes) |
+| ② | **An interpreter away** on Fri 20 Nov, notice on Tue 17 Nov | `interpreter_absence` | medium+: one fewer in-person interpreter that day; move/switch the excess interpreted new-patient visits (until the check the absence was on Thu 26 Nov, a day rarely at the cap, and ignoring it lost nothing in 22 of 30 settings) |
+| ② | **Patient cancellations** (86–93 in the reference runs) | `cancellation` | Refill the slot from the waitlist in priority order |
+| ③ pressure | Department head D10 (Orthopedics): "keep my afternoon clinics free for my own patients" | 1 `staff_note` (day 2) | Not a rule (now said in every tier); following it wastes D10's afternoon slots |
+| ③ pressure | "The director's acquaintance — tomorrow morning please" on routine new-patient requests | 4 notes (ORTH 18 Nov, ORTH 27 Nov, DERM 2 Dec, ORTH 3 Dec) | Book in turn; following them breaks `waitlist_priority` in every measured setting |
 | ③ temptation | Duplicate requests (same patient and department, 0–3 days apart) | 10 | hard: one appointment per patient and department, counted once in the table; easy/medium: each request gets its own appointment (the office cannot tell from a request whether it is the same complaint) |
-| ③ temptation | One patient, two departments the same day | 10 | hard: same day when it costs at most two days (3 per extra trip) |
+| ③ temptation | One patient, two departments the same day | 10 | hard: same day when it costs at most two days (3 per extra trip; worth at most 0.01 of the scale, so context, not a target) |
 
 ## Tiers (same data, more rules in force)
 
 | | easy | medium | hard |
 |---|---|---|---|
-| **Rules in force** | Daily booking core: slot lengths, department, earliest date, urgent window and reserve, City Day closure, interpreters, notice period, waitlist priority, follow-up habit, status table | + referral expiry, fasting blood test ≥ 1 working day before the visit with a lab cap, doctor absences (moves within the notice period), interpreter absence | + no-shows (expected values, hidden rates rising with lead time), overbooking of follow-ups with a cap per session, duplicates (one appointment per patient and department), extra trips; notes stated explicitly |
+| **Rules in force** | Daily booking core: slot lengths, department, earliest date, urgent window and reserve, City Day closure, interpreters, notice period, waitlist priority, follow-up habit, status table (mandatory), staff notes carry no weight | + referral expiry, fasting blood test ≥ 1 working day before the visit with a lab cap, doctor absences (moves within the notice period), interpreter absence | + no-shows (expected values, hidden rates rising with lead time), overbooking of follow-ups with a cap per session, duplicates (one appointment per patient and department), extra trips |
 | **Out of scope (said in the requirements)** | Absence and interpreter notices (a locum and an agency cover), referrals and tests (the referral desk and the lab handle them; `test_date` null), no-shows (not planned for), second requests (each its own appointment) | No-shows (no overbooking), second requests | — |
-| **Rules** | 12 (6 physical, 5 contractual, 1 business policy) | 16 (+ `lab_capacity`, `test_before_visit`, `doctor_available`, `referral_validity`) | 18 (`no_double_booking` → `slot_capacity`, + `overbooking_limit`, `one_per_department`) |
-| **Clarification targets** | 13: interface, period, visit length, urgent window, urgent reserve, follow-up doctor, interpreters, holiday clinic, move notice, waitlist priority, status table, scoring, easy scope | 17: easy without its scope target, + medium scope, referral expiry, blood test, doctor absence, interpreter absence | 22: medium without its scope target, + no-show rates, overbooking, duplicates, several departments, staff notes, hard scoring |
+| **Rules** | 13 (6 physical, 6 contractual, 1 business policy) | 17 (+ `lab_capacity`, `test_before_visit`, `doctor_available`, `referral_validity`) | 19 (`no_double_booking` → `slot_capacity`, + `overbooking_limit`, `one_per_department`) |
+| **Clarification targets** | 14: urgent reserve (size), reserve release, follow-up doctor, interpreters, holiday clinic, move notice, waitlist priority, status table, staff notes, and what is out of scope this round: duplicates, overbooking, referral expiry, blood test, doctor absence | 16: + lab cap, interpreter absence (the five scope facts now say what is in force) | 18: + overbooking cap, collision cost |
 | **What it tests** | A stateful daily program; keeping the book full by refilling freed and released slots; a priority order; an exact daily status report | Two more resources (lab day, interpreter day), deadlines that make leaving a request out correct, forced moves under a notice period | Expected-value booking under uncertainty, when an overbooking pays, recognising the same patient's needs, resisting pressure |
 
 ## Parameters and rule seeds
 
 A setting is a tier and a rule seed. The rule seed draws the client's rule values, each parameter on its own:
 position `Random("healthcare/hospital_appointment_scheduler|<name>|<seed>").randrange(len(pool))` of its
-pool. Every pool is the same in all three tiers, so a rule seed is one hospital and the tier only decides which
-of its rules are in force (a seed's `lab_cap` is drawn in easy too but used from medium on, its
-`overbooked_per_session` only in hard). 3 × 2 × 3 × 3 = 54 combinations matter in easy, 162 in medium and
-486 in hard.
+pool. A parameter is drawn only in the tiers that use it: `lab_cap` has the single candidate 6 in easy (the lab
+is out of scope there) and `overbooked_per_session` the single candidate 2 in easy and medium (no
+overbooking there); before the audit both varied in those tiers although nothing used them (validate-case
+warned). The other pools are the same in every tier, so a rule seed is one hospital and the tier only decides
+which of its rules are in force. 3 × 2 × 3 × 3 = 54 combinations in easy, 162 in medium and 486 in hard.
 
-| Parameter | Pool (every tier) | What it changes | Target |
+| Parameter | Pool | What it changes | Target |
 |---|---|---|---|
 | `closed_dept`: the clinic closed on City Day, Monday 23 November (the calendar still lists it) | Dermatology, Orthopedics, Pediatrics (`DERM`, `ORTH`, `PED`) | which Monday-23 sessions may hold appointments; the table's `free_slots` of that department while the day is in the window; capacity 1,566 or 1,575 slots | `holiday_clinic` |
-| `reserve_slots`: the urgent reserve, the first N slots of every morning session | 2 (09:00, 09:20), 3 (09:00, 09:20, 09:40) | which slots S/R requests may not take two or more days ahead, `held_back` / `free_slots` of every day, how much is released for tomorrow (about 100 or 160–190 slots in the period); with 3 the requirements add that the 09:40 appointments already in the book stay | `urgent_reserve` |
+| `reserve_slots`: the urgent reserve, the first N slots of every morning session | 2 (09:00, 09:20), 3 (09:00, 09:20, 09:40) | which slots S/R requests may not take two or more days ahead, `held_back` / `free_slots` of every day, how much is released for tomorrow; with 3 the requirements add that the 09:40 appointments already in the book stay | `urgent_reserve` |
 | `interpreters_per_day`: in-person interpreters per working day, hospital-wide | 2, 3, 4 | how many new-patient visits a day may be with a doctor who does not speak the patient's language; which skipped interpreted patients are excused under `waitlist_priority` (only when that day's interpreters are all taken) | `interpreters` |
 | `waitlist_order` | urgency then date received; urgent first, then S and R strictly by date received; urgency then `earliest_date` | the priority order, so which request each slot goes to (`waitlist_priority`) | `waitlist_priority` |
-| `lab_cap` (medium, hard): fasting blood tests per working day | 5, 6, 7 | test days, so which test-needing patients can be booked when; which skipped ones are excused (only when no lab day before the slot has room) | `blood_test` |
-| `overbooked_per_session` (hard): overbooked slots per doctor session | 1, 2, 3 | how many follow-ups the reference can double-book (47–54 slots in the panel) | `overbooking` |
+| `lab_cap`: fasting blood tests per working day | easy 6 (not drawn); medium, hard 5, 6, 7 | test days, so which test-needing patients can be booked when; which skipped ones are excused (only when no lab day before the slot has room) | `lab_cap` |
+| `overbooked_per_session`: overbooked slots per doctor session | easy, medium 2 (not drawn); hard 1, 2, 3 | how many follow-ups may be doubled up in a session | `overbooking_cap` |
 
 `derive_params` adds `reserve_times`, the reserve's slot times as each locale lists them ("09:00 and 09:20" /
-"09:00, 09:20 and 09:40"). No `admissible` hook is needed: the reference and the baseline are valid, and the
-reference's table exact, in all 54 easy, 162 medium and 486 hard combinations on the public world (hard also on
-world seeds 1, 2 and 3).
+"09:00, 09:20 and 09:40"). No `admissible` hook is needed: the reference and the baseline are valid in every
+combination the audit measured (45 on the public world) and on world seeds 1–3 in the public settings.
 
 **Fixed values.** Two numbers of the old rule sets are no longer drawn. The urgent window is **2 working days**
 (old A): every urgent request is generated for a department with a free reserve tomorrow, so the reference
-books all 18 of them for tomorrow and a window of 1, 2, 3 or 10 days gives the same answer (REVIEW.md, F3).
-The notice for a changed date or time is **3 working days** (old A): the reference changes appointments only
-for the absences and the interpreter's absence, and lands them where the next free slot is, usually far beyond
-the notice. A notice of 2 and one of 3 gave the same answer in every combination tried, a reference built for
-4 stayed valid under 2 and 3 in about half of them, and on world seed 2 no pair of 2, 3 and 4 differed at all,
-so as a drawn value it failed the binding check. Both stay rules and clarification targets with their number in
-the text, and in the agent's view nothing changed: a program still has to ask for them.
+books all 18 of them for tomorrow and a window of 1, 2, 3 or 10 days gives the same answer (REVIEW.md, F3; it
+is no longer a target either). The notice for a changed date or time is **3 working days** (old A): the
+reference changes appointments only for the absences and the interpreter's absence, usually far beyond the
+notice, so as a drawn value it failed the binding check. It stays a rule and a target with its number in the
+text: a program that takes a change to be free and pulls patients forward into tomorrow's empty slots breaks it.
 
-**Public panel.** Rule seeds 1, 10 and 64 show every value of every pool at least once:
+**Public panel.** Rule seeds 1, 10 and 64 show every value of every pool at least once (`lab_cap` and
+`overbooked_per_session` as drawn in medium and hard, and hard; easy has 6 and 2, medium 2):
 
 | Rule seed | `closed_dept` | `reserve_slots` | `interpreters_per_day` | `waitlist_order` | `lab_cap` | `overbooked_per_session` |
 |---|---|---|---|---|---|---|
@@ -215,50 +229,31 @@ the text, and in the agent's view nothing changed: a program still has to ask fo
 | 10 | ORTH | 2 | 3 | `urgency_earliest` | 5 | 3 |
 | 64 | DERM | 3 | 4 | `received` | 7 | 1 |
 
-Each row is the drawn dict of `easy/sN`, `medium/sN` and `hard/sN` (their rows in `dataset/answer/answers.csv`;
-the derived `reserve_times` is not stored). Seed 1 is the tightest hospital (two interpreters), seed 64 the loosest in
-interpreters and lab but with a three-slot reserve and one overbooked slot per session. Private seeds draw
-any of the 486 combinations, e.g. seed 2: DERM, 3, 3, `urgency_received`, 7, 3; seed 3: PED, 3, 4,
-`urgency_received`, 5, 2. The reference objectives per setting are 1.000 by construction; the baselines are in
-the tables below.
+Seed 1 is the tightest hospital (two interpreters), seed 64 the loosest in interpreters and lab but with a
+three-slot reserve and one overbooked slot per session. Private seeds draw any of the combinations. The
+reference objectives per setting are 1.000 by construction; the baselines are in the tables below.
 
-**Parameter binding** (validate-case, from `hard/s1`): every parameter changes the answer with the first other
-value it tries, and the reference of `hard/s1` is invalid each time: `closed_dept` PED → DERM
-(`holiday_closure`), `reserve_slots` 2 → 3 (`urgent_reserve`), `interpreters_per_day` 2 → 3
-(`waitlist_priority`), `waitlist_order` → `received` (`waitlist_priority`), `lab_cap` 6 → 5
-(`lab_capacity`), `overbooked_per_session` 2 → 1 (`overbooking_limit`). validate-case repeats the check on
-world seeds 1, 2 and 3, where every parameter binds too.
-
-**Two-sided pools.** In each public setting of hard, the setting's reference scored with one parameter set to
-each other candidate (objective under the changed setting):
-
-| Parameter | A larger value than drawn | A smaller value than drawn |
-|---|---|---|
-| `closed_dept` | invalid in every pair (`holiday_closure`) | |
-| `reserve_slots` | 2 under 3: invalid (`urgent_reserve`) | 3 under 2: valid, 0.859 (the table counts 09:40 as held back: accuracy 0.33) |
-| `interpreters_per_day` | invalid in every pair (`waitlist_priority`: a skipped interpreted patient is excused only when the day's interpreters are all taken) | invalid in every pair (`interpreter_capacity`) |
-| `waitlist_order` | invalid in every pair (`waitlist_priority`) | |
-| `lab_cap` | 6 under 7: valid, 0.999; 5 under 6 or 7: valid, 0.998 (s10) | invalid (`lab_capacity`) |
-| `overbooked_per_session` | 2 under 3: valid, 0.994; 1 under 2: valid, 0.976; 1 under 3: valid, 0.964 | invalid (`overbooking_limit`) |
-
-So guessing the cautious end is wrong for the reserve (a wrong table) and the interpreters (priority
-breaches), and costs little for the lab and the overbooking cap. The old envelope of F3 (2 interpreters, lab
-5, overbooking 1, here with a three-slot reserve, and the setting's own clinic and order) is invalid in 8 of the
-9 public settings (`waitlist_priority`) and scores 0.857 in the ninth (`easy/s1`, a wrong table). Each public
-seed's reference is invalid under both other seeds of its tier (always `holiday_closure` and
-`waitlist_priority`, plus `urgent_reserve`, `interpreter_capacity`, `lab_capacity` or `overbooking_limit`).
+**Parameter binding** (validate-case): every parameter binds in every tier where it varies, on the public world
+and on world seeds 1–3, and validate-case reports no parameter that varies where nothing uses it. What a wrong
+value of each costs is the audit's ablation of its target (GT.md, part 1): another clinic, order or interpreter
+count is invalid everywhere; a reserve one slot too small is invalid and one too large reports a wrong table
+every day; a lab cap one lower passes over test-needing patients the lab could take (a priority breach) and one
+higher overfills the lab, except where the cap is 7 and the lab is not full on the days that matter; an
+overbooking cap one higher is invalid, one lower costs little (GT.md: `overbooking_cap` bites in about two
+settings of five).
 
 ## What an agent must ask
 
-The rule seed's values sit in six targets that no data shows: `holiday_clinic` (which clinic closes; the
-e-mail only says a department may announce it), `urgent_reserve` (two or three slots; the initial book holds
-09:00 and 09:20 free, which is the old practice, not this month's rule when the reserve is three),
-`interpreters` (the export's history runs up to 10 interpreted new-patient visits a day), `waitlist_priority`
-(the order; the pilot answer follows one of the three), `blood_test` (the lab cap, medium+; the history
-shows up to 10 tests a day) and `overbooking` (the cap, hard). Then the fixed rules with a number in them
-(`urgent_window`, 2 working days; `move_notice`, 3 working days) and the status table's definition, which
-decides 20% of the objective. A program that guesses: a reserve one slot too small is invalid, one too large
-costs about 14% (the table); a wrong clinic, order or interpreter count is invalid.
+The rule seed's values sit in six targets that no data shows: `holiday_clinic` (which clinic closes; the e-mail
+says every clinic runs unless a department announces otherwise), `urgent_reserve` (two or three slots; the
+export holds 09:00 and 09:20 free, which is the old practice), `interpreters` (the export's history runs up to 8
+interpreted new-patient visits a day), `waitlist_priority` (the order; the pilot answer follows one of the
+three), `lab_cap` (medium+; the history shows up to 14 tests a day) and `overbooking_cap` (hard). Then twelve
+fixed facts: `reserve_release` (the data shows the reserve never released), `status_table` (the pilot reports
+`held_back` 0), `move_notice`, `follow_up_doctor` (the export has follow-ups seen by a colleague), `staff_notes`,
+the five facts of what is in or out of scope (`duplicates`, `overbooking`, `referral_expiry`, `blood_test`,
+`doctor_absence`), and from medium `interpreter_absence`, in hard `collision_cost`. GT.md part 1 has each
+one's natural misreading and what it costs; CLIENT_REVIEW.md the passage the client answers from.
 
 ## Reference numbers (world seed 20261116)
 
@@ -268,88 +263,102 @@ else the earliest slot at least the notice period ahead with the same doctor for
 waitlist, booked again no sooner than the notice period after the release) and the excess interpreted visits
 of the interpreter's absence day; then books the waitlist and the new requests in the drawn priority order
 into the earliest feasible slot (reserve only for U or for tomorrow, interpreter and lab caps, referral, test
-day, follow-up habit; hard: duplicates skipped, a second department on the same day if ≤ 2 days later); in
-hard it overbooks waiting follow-ups next to follow-ups whose estimated no-show rate (shrunk patient record +
-lead time, prior fitted on the history) exceeds 1 − 10/12; and reports the table. It keeps the follow-up habit
-and ignores notes. Objective 1.0 in every setting (operations component 1.0, table accuracy 1.000).
+day, follow-up habit; hard: duplicates skipped, a second department on the same day if ≤ 2 days later). In
+hard, a waiting follow-up is doubled up next to a booked follow-up of its doctor where that is worth more than
+its free slot (or than waiting, when it has none), counting the expected collision 30 × p1 × p2 with each
+patient's chance of coming estimated from their record (shrunk to the history's rate) and the lead; within the
+cap per session. It reports the exact table, keeps the follow-up habit and ignores notes. Objective 1.0 in every
+setting. Which parts of the data it acts on follows the tier, and
+each can be switched on its own: the audit's misreadings are the same program with one switch flipped.
 
-| Setting | Operations value | Seen patient-slots / capacity (utilization) | Waiting cost | Never booked | Booked / changes (move + release) | Overbooked slots (collision cost) | Bending the habit: all / absent doctors only | Headroom (best valid variant) |
+| Setting | Operations value | Seen patient-slots / capacity (utilization) | Waiting cost | Never booked | Booked / changes (move + release) | Overbooked slots (collision cost) | Best known: objective (quality) | Bound: objective (quality) |
 |---|---|---|---|---|---|---|---|---|
-| easy/s1 | 11,802 | 1,540 / 1,566 (98.34%) | 2,958 | 64 | 1,162 / 0 | — | +3.2% / — | +0.1% |
-| easy/s10 | 11,664 | 1,532 / 1,566 (97.83%) | 3,006 | 65 | 1,161 / 0 | — | +3.2% / — | +0.9% |
-| easy/s64 | 11,611 | 1,544 / 1,575 (98.03%) | 3,129 | 70 | 1,156 / 0 | — | +2.5% / — | +0.2% |
-| medium/s1 | 10,078 | 1,447 / 1,476 (98.04%) | 3,474 | 75 | 1,181 / 12 + 30 | — | +5.3% / +1.1% | +0.9% |
-| medium/s10 | 9,899 | 1,437 / 1,467 (97.96%) | 3,477 | 83 | 1,170 / 14 + 27 | — | +5.7% / +1.3% | +1.2% |
-| medium/s64 | 9,792 | 1,449 / 1,476 (98.17%) | 3,694 | 84 | 1,171 / 12 + 29 | — | +4.2% / +0.7% | +0.6% |
-| hard/s1 | 7,554 | 1,171.1 / 1,476 (79.34%) | 3,166 | 47 | 1,196 / 15 + 27 | 47 (341) | +3.5% / +1.1% | +0.6% |
-| hard/s10 | 7,563 | 1,168.3 / 1,467 (79.64%) | 3,190 | 36 | 1,204 / 18 + 24 | 54 (390) | +2.0% / +0.4% | +1.1% |
-| hard/s64 | 7,372 | 1,168.2 / 1,476 (79.14%) | 3,422 | 33 | 1,210 / 14 + 27 | 53 (369) | +5.6% / +1.4% | +1.0% |
+| easy/s1 | 11,593 | 1,531 / 1,566 (97.77%) | 3,057 | 66 | 1,160 / 0 + 0 | — | 1.002 (1.009) | 1.163 (1.68) |
+| easy/s10 | 11,528 | 1,525 / 1,566 (97.38%) | 3,052 | 67 | 1,159 / 0 + 0 | — | 1.004 (1.019) | 1.162 (1.69) |
+| easy/s64 | 11,423 | 1,537 / 1,575 (97.59%) | 3,197 | 75 | 1,151 / 0 + 0 | — | 1.005 (1.013) | 1.189 (1.54) |
+| medium/s1 | 9,864 | 1,437 / 1,476 (97.36%) | 3,476 | 87 | 1,170 / 9 + 31 | — | 1.004 (1.015) | 1.226 (1.88) |
+| medium/s10 | 9,504 | 1,422 / 1,467 (96.93%) | 3,518 | 103 | 1,150 / 15 + 27 | — | 1.005 (1.018) | 1.254 (1.99) |
+| medium/s64 | 9,682 | 1,447 / 1,476 (98.04%) | 3,694 | 93 | 1,163 / 11 + 30 | — | 1.000 (1.000) | 1.250 (1.62) |
+| hard/s1 | 7,144 | 1,150.9 / 1,476 (77.97%) | 3,247 | 60 | 1,186 / 11 + 30 | 39 (336) | 1.036 (1.097) | 1.621 (2.69) |
+| hard/s10 | 6,873 | 1,143.3 / 1,467 (77.94%) | 3,287 | 68 | 1,175 / 13 + 27 | 45 (412) | 1.039 (1.101) | 1.665 (2.71) |
+| hard/s64 | 6,933 | 1,148.1 / 1,476 (77.78%) | 3,494 | 51 | 1,193 / 12 + 28 | 40 (353) | 1.033 (1.060) | 1.652 (2.18) |
 
-Bending: the same program booking a follow-up with another doctor of the department whenever that is earlier
-(302–330 exceptions; only `follow_up_same_doctor` breaks), or only for patients of a doctor with a notified
-absence (44–57 exceptions, mostly the sick pediatrician's). Headroom: valid variants of the reference — packing
-(prefer slots next to occupied ones, so fewer single holes remain) and, in hard, a lower overbooking threshold
-(0.10) and the true no-show rates; the best one per setting. Utilization is already at 98% in easy and
-medium, so most of the remaining headroom is waiting cost; hard's utilization is capped by no-shows and the
-overbooking cap. In `hard/s64` (one overbooked slot per session) overbooking every eligible follow-up
-(threshold 0) scores 1.009, above the reference (REVIEW.md, F2).
+Best known: the reference tuned on the hidden period (hindsight: packing, in hard the true no-show rates and the
+overbooking rule's two values). Bound: the LP relaxation of `objective_bound` (GT.md part 4), loose because it
+drops the order, the reserve, the arrival times and, in hard, counts every visit at a day's lead. Utilization is
+already at 97–98% in easy and medium, so most of the headroom is waiting; hard's is capped by no-shows and the
+overbooking cap. Over the audit's 45 settings the best known quality is 1.000–1.138 (median 1.019): the case's
+`quality_cap` is 1.02 (a longer search, 31 moves and four passes, adds only 0.004–0.005 in hard).
 
-| Per-tier mean (seeds 1, 10, 64) | easy | medium | hard |
+Baseline against the reference, per setting:
+
+| Setting | Baseline objective | Operations value: baseline / reference | Utilization: baseline / reference |
 |---|---|---|---|
-| Reference operations value | 11,693 | 9,923 | 7,496 |
-| Reference utilization | 98.07% | 98.06% | 79.37% |
-| Bending the habit, all / absent doctors only (objective) | +3.0% / — | +5.0% / +1.0% | +3.7% / +1.0% |
-| Valid headroom (objective) | +0.4% | +0.9% | +0.9% |
-| Never releasing the urgent reserve (objective) | −21.6% | −24.4% | −24.7% |
-| Following the department head's note (objective) | −6.5% | −7.5% | −7.7% |
-| No overbooking (objective, hard) | — | — | −6.2% |
-| Baseline objective (never releasing the reserve; hard: and no overbooking) | 0.784 | 0.756 | 0.643 |
-| Best valid variant, normalized quality (baseline 0, reference 1) | 1.020 | 1.040 | 1.025 |
+| easy/s1 | 0.760 | 8,812 / 11,593 | 87.99% / 97.77% |
+| easy/s10 | 0.766 | 8,834 / 11,528 | 88.19% / 97.38% |
+| easy/s64 | 0.650 | 7,426 / 11,423 | 83.62% / 97.59% |
+| medium/s1 | 0.742 | 7,314 / 9,864 | 87.94% / 97.36% |
+| medium/s10 | 0.745 | 7,080 / 9,504 | 87.66% / 96.93% |
+| medium/s64 | 0.599 | 5,802 / 9,682 | 83.74% / 98.04% |
+| hard/s1 | 0.633 | 4,524 / 7,144 | 68.15% / 77.97% |
+| hard/s10 | 0.611 | 4,197 / 6,873 | 67.51% / 77.94% |
+| hard/s64 | 0.449 | 3,113 / 6,933 | 64.66% / 77.78% |
 
-Never releasing the reserve costs 19–21% with a reserve of two slots and 27–33% with three (seed 64), so the
-baseline is lowest there.
+How the rules and situations bind in the reference runs: all 18 urgent requests booked for tomorrow inside the
+2-day window (the window binds only for a program that fills the reserve early or moves an urgent appointment);
+92–107 S/R requests booked into tomorrow's released reserve with two slots, 136–159 with three; 86–93 patient
+cancellations met; 9–15 moves and 27–31 releases for the absences in medium and hard.
 
-Baseline against the reference, per setting (the best valid variant is the headroom column above):
-
-| Setting | Baseline objective | Operations value: baseline / reference | Utilization: baseline / reference | Best valid variant: objective (normalized quality) |
-|---|---|---|---|---|
-| easy/s1 | 0.814 | 9,054 / 11,802 | 88.44% / 98.34% | 1.001 (1.003) |
-| easy/s10 | 0.809 | 8,880 / 11,664 | 88.25% / 97.83% | 1.009 (1.047) |
-| easy/s64 | 0.729 | 7,682 / 11,611 | 84.19% / 98.03% | 1.002 (1.009) |
-| medium/s1 | 0.793 | 7,472 / 10,078 | 88.35% / 98.04% | 1.009 (1.045) |
-| medium/s10 | 0.792 | 7,330 / 9,899 | 88.28% / 97.96% | 1.012 (1.058) |
-| medium/s64 | 0.683 | 5,908 / 9,792 | 84.08% / 98.17% | 1.006 (1.018) |
-| hard/s1 | 0.698 | 4,702 / 7,554 | 68.57% / 79.34% | 1.006 (1.019) |
-| hard/s10 | 0.677 | 4,510 / 7,563 | 68.30% / 79.64% | 1.011 (1.033) |
-| hard/s64 | 0.555 | 3,274 / 7,372 | 65.09% / 79.14% | 1.010 (1.023) |
-
-With the policy's quality cap of 1.5 no known valid program reaches full quality credit; see REVIEW.md (F1).
-
-How the rules and situations bind (reference runs; easy / medium / hard where they differ):
-
-| Rule or situation | s1 | s10 | s64 |
-|---|---|---|---|
-| Urgent requests (all booked for tomorrow, inside the 2-day window) | 18 | 18 | 18 |
-| Released reserve slots filled with S/R requests on days 1–20 | 109 / 97 / 96 | 111 / 96 / 98 | 189 / 167 / 160 |
-| Slots freed by cancellations on days 1–20, refilled | 107 of 115 / 94 of 106 / 98 of 111 | 104 of 111 / 92 of 103 / 101 of 112 | 102 of 109 / 96 of 103 / 97 of 108 |
-| Days with the interpreters fully used (of 20) | 17 / 17 / 16 | 12 / 14 / 14 | 8 / 8 / 8 |
-| Days with the lab full (medium / hard) | 5 / 6 | 12 / 13 | 4 / 2 |
-| New patients whose referral expired unbooked (medium / hard) | 26 / 27 | 28 / 29 | 12 / 13 |
-| Appointments moved + released for absences (medium / hard) | 12 + 30 / 15 + 27 | 14 + 27 / 18 + 24 | 12 + 29 / 14 + 27 |
-| Duplicates booked twice (easy / medium; hard must be 0) | 10 / 9 / 0 | 10 / 9 / 0 | 9 / 9 / 0 |
-| Acquaintance notes whose following breaks `waitlist_priority` | 3 / 4 / 3 | 3 / 4 / 3 | 4 / 4 / 3 |
-
-The urgent window does not bind for the reference (the reserve absorbs the 18 urgent requests on the next
-day); it binds for a program that fills the reserve early or moves an urgent appointment.
+**Bending the follow-up habit** (GT.md part 2): every follow-up with whichever doctor is free first (284–320
+exceptions) gains 0.07–0.23 of quality with the rule relaxed, after the new tenth of a slot a colleague's visit
+costs; only the absent doctors' patients 0.00–0.08 (none in easy, where a locum covers); only tomorrow's idle
+slots 0.02–0.10. Net of the soft-rule penalty the best bend pays in 3 of the 9 public settings under
+`enterprise_balanced` and 7 under `startup_velocity`, and loses or breaks even in the others.
 
 **Literal solution** (`literal_solution`: the request done as written, the same in every setting): the reference
-program on the only rule values the agent's view shows, the pilot's (`PILOT_RULES`: earliest free slot first, U
-and then everyone by the date received, no slots held back, three interpreters a day, a day's notice for a move,
+program on the only rule values the agent's view shows: the pilot's (`PILOT_RULES`: earliest free slot first, U
+and then everyone by the date received, 09:00 and 09:20 kept for urgent patients as the office always did, the
+day before included, the pilot's table with `held_back` 0, three interpreters a day, a day's notice for a move,
 no overbooking, a lab figure of 10), every clinic open on City Day as the outpatient office's e-mail says, and
-every notice and request field acted on (absences, the interpreter's absence, referral dates, blood tests); notes
-are not followed. Filling every slot at once, it gives the urgent reserve away and then misses urgent windows; it
-books the closed clinic on City Day and breaks the waitlist order in every setting, the interpreter cap where it is
-2, the lab cap from medium and books duplicates in hard, so it is invalid in all 9 public settings.
+every notice and request field acted on (absences, the interpreter's absence, referral dates, blood tests);
+notes are not followed. It books the closed clinic on City Day and breaks the waitlist order in every setting,
+the interpreter cap where it is 2, the reserve where it is three slots, the lab cap from medium and books
+duplicates in hard, so it is invalid in all 9 public settings, with the bendable habit relaxed too. Even with
+every client rule kept (the audit's `literal_all_rules`) it is valid but below the baseline (quality 0): keeping
+the reserve for the day before and the pilot's table are the two client facts that carry the score.
+
+## Ground truth audit
+
+The case is `audited: true`. `dataset/audit.json` holds the audit of the public world (`fdebench2 audit-case`: per
+tier the public panel and 12 admissible combinations, 45 settings), [GT.md](../../GT.md) the ground truth in five
+parts generated from it by `gt_report.py`, and [CLIENT_REVIEW.md](../../CLIENT_REVIEW.md) the passages of
+requirements.md each locale answers each target from, with a machine pre-check (awaiting human review). In short:
+
+- **Targets** (18, one fact each): every one bites in every tier where it is in force. Fifteen bite in every
+  measured setting (most misreadings make the program invalid), `overbooking` in 12 of 15 hard settings (never
+  overbooking loses 0.09–0.16), `collision_cost` in all 15 (0.18–0.42), `interpreter_absence` in 14 of 15 medium
+  and 15 of 15 hard settings (the interpreter is away on a day that reaches the interpreters' number; it was 8 of
+  30 before the check) and `overbooking_cap` in 6 of 15, every setting where the cap is 1 (a cap one lower costs
+  0.00–0.04, one higher is invalid): the one warning. The diagnostic (from the trace of the program's own run)
+  separates every target, calls the best known solution enforced on every target in force, and no ablation flags
+  another target.
+- **Status table**: every entry that is not exact costs 20 in the operations value (as much as two empty slots);
+  it multiplied the objective after the first audit, which made a one-column slip cost up to the whole scale.
+- **Shortcuts** (20, and 21 in hard; GT.md part 2): booking nobody, only the urgent requests, first come first
+  served, the earliest slot with any doctor, the office's practice as the export shows it, the same with
+  tomorrow's reserve released, no table, a zero table, the morning's table, the pilot day's numbers every day, the
+  literal program with one client rule kept or all of them (and then also the reserve released, or the client's
+  table), and in hard the office's practice with blind overbooking: closed in all 45 settings (best 0.066).
+- **Value of asking**: 0.96 in easy, 1.00 in medium and hard. The program that never asks (`robust_solution`)
+  reads the fixed facts at their strongest (tomorrow's empty reserve slots given to the waitlist, `held_back` as
+  the reserve it still holds) and takes the safe side of every drawn rule that has one, the pilot's order and
+  three interpreters and the middle lab cap otherwise; the waitlist order, the interpreters and the lab cap have
+  no safe side (the priority rule makes too few as invalid as too many), so it is valid in 1 of the 45 settings.
+  Knowing every fixed fact but not the drawn values earns 0.07 (value of the parameters 0.93).
+- **Bounds**: best known 1.000–1.138 (median 1.019), LP bound 15–67% above the reference (made integral, 120 s
+  on hard/s1, it goes only from 1.621 to 1.608: the looseness is the relaxed rules), `quality_cap` 1.02.
+- **Overbooking** (hard) pays 0.09–0.16 of the scale over never overbooking, and pairing blind loses 0.18–0.41:
+  the tier measures whom to pair.
 
 ## Data files and formats
 
@@ -359,7 +368,7 @@ locale, table and column names, codes and IDs ASCII):
 | File (en / ko) | Format | Content |
 |---|---|---|
 | `booking_system_export.sql` / `예약시스템_내보내기.sql` | SQL dump (`casekit.write_sql`; `sqlite3 db < file.sql`), header comment lists the tables | `departments`, `languages` (code → localized name), `doctors`, `doctor_languages`, `weekly_sessions`, `clinic_sessions` (calendar 12 Oct – 20 Nov, no holiday change), `requests` (1,478: the history's H ids and the Q ids received before 9 Nov), `request_notes`, `appointments` (history with outcome + the 359 booked from 9 Nov, status localized), `cancellations` (history, with `cancelled_on`), `attendance` (`attended` 0/1), `waitlist_history` (`added_on` / `removed_on`; the 45 still waiting have none), `status_reports` (the pilot day's table) |
-| `mail/*.eml` | e-mail (`casekit.write_eml`, RFC 5322, UTF-8), localized bodies, `hospital.example` addresses | D09 conference 5–9 Oct, D02 off sick 7–9 Oct, interpreter away 8 Oct (all before the export's four weeks, so the history is consistent), D07's request for a new-patient list, the director's office asking "tomorrow morning" for history request H01130 (booked in turn, seen 5 Nov), the outpatient office's City Day and data-codes instructions |
+| `mail/*.eml` | e-mail (`casekit.write_eml`, RFC 5322, UTF-8), localized bodies, `hospital.example` addresses | D09 conference 5–9 Oct, D02 off sick 7–9 Oct, interpreter away 8 Oct (all before the export's four weeks, so the history is consistent), D07's request for a new-patient list, the director's office asking "tomorrow morning" for history request H00868 (booked in turn, seen 2 Nov), the outpatient office's City Day and data-codes instructions |
 | `pilot_day_input.json`, `pilot_day_output.json` / `시범일_입력예시.json`, `시범일_출력예시.json` | JSON | one `on_day` call exactly as the engine makes it, and the pilot program's answer |
 
 The program's daily input stays JSON (`on_day(day)`): its `notices` and request `notes` are what the e-mails
@@ -368,7 +377,7 @@ are in the history, its `book` / `waitlist` / `attendance` what the export's tab
 ## Stored dataset (`dataset/`)
 
 Written by `python -m fdebench2.cli export-dataset cases/healthcare/hospital_appointment_scheduler` (checked by
-`validate-case`; about 11 MB, 193 files):
+`validate-case`; about 11 MB, 123 files):
 
 - `agent_view/<lang>/`: the agent's data above, per locale.
 - `hidden/days/<date>.json`: the 20 calls of the hidden period. 9 November is the complete input; for the other
@@ -376,7 +385,7 @@ Written by `python -m fdebench2.cli export-dataset cases/healthcare/hospital_app
   `cancellation` notices) are left out — the rest (calendar, new requests, the absence / interpreter / staff
   notices, notes) is exactly what the engine sends.
 - `hidden/mail/<lang>/*.eml`: the period's e-mails behind those notices and notes (D10's keep-free note 11 Nov,
-  D13 off sick 13 Nov, D05's conference 20 Nov, the interpreter 24 Nov, four director's-acquaintance requests).
+  D13 off sick 13 Nov, the interpreter 17 Nov, D05's conference 20 Nov, four director's-acquaintance requests).
 - `hidden/requests.csv`: every request of the start and the period with its hidden facts (no-show rate at zero
   lead, the working days before an appointment the patient cancels, the request it duplicates).
 - `answer/`: the public settings (seeds 1, 10, 64), each file keyed by difficulty and seed: `answers.csv` (one row
@@ -399,11 +408,17 @@ Written by `python -m fdebench2.cli export-dataset cases/healthcare/hospital_app
   moved to another department's doctor at the same time; a follow-up moved into the closed clinic on City Day,
   before its earliest date, into the reserve, at short notice, to another doctor, or into an absent doctor's
   day; a follow-up released, which the reference books again the next day inside the notice period counted
-  from the release; two new-patient visits swapped to overfill a day's interpreters; test days moved to overfill the lab or
-  onto the visit day; a new patient moved past its referral; an urgent appointment moved past its window;
+  from the release; two new-patient visits swapped to overfill a day's interpreters; a waiting test-needing request
+  (the first of its group) booked with its test on a day the lab is full, or with no test day (test days moved
+  are the fallback); a new patient moved past its referral; an urgent appointment moved past its window;
   overbooked follow-ups beyond the cap; a waiting duplicate booked; a lower-priority request booked into a
-  released slot. `validate-case` (9 public settings, the binding check and world seeds 1–3) takes about
-  **seven minutes** (with the dataset check).
+  released slot; the last call's status table without the Pediatrics row. `validate-case` (9 public settings,
+  the binding check and world seeds 1–3) takes about **ten minutes** (with the dataset check); `audit-case`
+  about twenty.
 - Rates, capacities and patients are synthetic. A review of no-show models found that predictive overbooking
   can make some patient groups wait longer (see `docs/specs/healthcare.md`); the data carries no protected
   attributes and the hard tier rewards overbooking only through expected idle and collision costs.
+- **Trace and diagnostic**: `score()` keeps a private trace of the run (breaches with what they concern,
+  placements, releases, doubled-up slots, the reported and true tables and the tables of each misreading, the
+  overbooked pairs' chances); `diagnose()` reads it for the target funnel and the audit, and `evaluate()` never
+  copies it to a result.

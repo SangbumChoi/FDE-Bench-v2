@@ -3,8 +3,10 @@ role: Hospital Appointment Scheduler
 task_type: Decision Program
 field: healthcare
 seed: 20261116
-objective: maximize          # 0.8 x operations value / the reference program's operations value (same setting)
-                             # + 0.2 x status-table accuracy (mean over the 20 days); the reference scores 1.0
+objective: maximize          # operations value / the reference program's operations value (same setting);
+                             # every status-table entry that is not exact costs 20; the reference scores 1.0
+audited: true                # ground truth audit: dataset/audit.json, GT.md, CLIENT_REVIEW.md (gt_report.py)
+quality_cap: 1.02            # the median best known quality over the audit's 45 settings (1.019), rounded up
 deliverable_type: program
 entrypoint: scheduler.py:on_day
 tiers:                       # one world, one hidden period and the same requests, notices and notes in every setting
@@ -60,10 +62,10 @@ params:                      # the client's rule values; a rule seed draws each 
         ko: 먼저 긴급도 순(U, S, R), 같은 긴급도 안에서는 진료 가능 시작일(earliest_date)이 이른 순, 즉 가장 먼저 올 수 있는 환자 먼저
         ja: まず緊急度順（U、S、R）、同じ緊急度の中では受診可能日（earliest_date）の早い順、つまり早く来られる患者から
         es: primero por urgencia (U, luego S, luego R) y, dentro de la misma urgencia, por earliest_date (primero quien puede venir antes)
-  lab_cap:                   # medium+: fasting blood tests per working day
-    values: [5, 6, 7]
-  overbooked_per_session:    # hard: overbooked slots per doctor session
-    values: [1, 2, 3]
+  lab_cap:                   # fasting blood tests per working day: drawn where the lab is in scope (medium+)
+    values: {easy: [6], medium: [5, 6, 7], hard: [5, 6, 7]}
+  overbooked_per_session:    # overbooked slots per doctor session: drawn where overbooking is allowed (hard)
+    values: {easy: [2], medium: [2], hard: [1, 2, 3]}
 rule_seeds: [1, 10, 64]          # every candidate of every pool appears at least once
 deliverable_spec: |
   A program/ directory with scheduler.py defining on_day(day). The engine loads it once and calls it once per
@@ -73,8 +75,8 @@ deliverable_spec: |
   "sessions", "new_requests", "notices", "attendance", "book", "waitlist"} exactly as in the pilot-day input file.
   Return {"actions": [{"type": "book" | "move", "request_id", "doctor_id", "date": "YYYY-MM-DD",
   "start": "HH:MM", "test_date": "YYYY-MM-DD" or null} | {"type": "release", "request_id"}],
-  "status_table": {department_code: {"free_slots": int, "held_back": int, "waitlist": int}}} as in the pilot-day
-  output file. Actions are applied in order; a request not booked stays on the waitlist.
+  "status_table": {department_code: {"free_slots": int, "held_back": int, "waitlist": int}}} in the format of the
+  pilot-day output file. Actions are applied in order; a request not booked stays on the waitlist.
 rules:
   - id: well_formed
     class: contractual
@@ -102,6 +104,10 @@ rules:
   - id: interpreter_capacity
     class: physical
     description: At most {{interpreters_per_day}} new-patient visits per day hospital-wide with a doctor who does not speak the patient's language (each needs one of the in-person interpreters; medium+, one fewer on the day an interpreter is away).
+  - id: referral_validity
+    class: contractual
+    tiers: [medium, hard]
+    description: A new-patient visit takes place on or before the last day its referral letter is valid (referral_valid_until).
   - id: lab_capacity
     class: physical
     tiers: [medium, hard]
@@ -134,6 +140,9 @@ rules:
     class: contractual
     tiers: [hard]
     description: A patient has at most one appointment per department in the period (held or upcoming); a duplicate request (same patient and department) is never booked as a second appointment.
+  - id: status_table
+    class: contractual
+    description: Every call returns the status table, a row for every department code (IM, CARD, DERM, ORTH, PED) with its three whole numbers (free_slots, held_back, waitlist); the departments staff their clinics from it.
   - id: follow_up_same_doctor
     class: business_policy
     description: A follow-up is booked with the patient's previous doctor; a habit the head of the outpatient office can grant exceptions to.

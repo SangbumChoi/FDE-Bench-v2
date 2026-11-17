@@ -19,13 +19,19 @@ Each day:
     the holiday closure, in-person interpreters per day, (medium+) referral expiry and a blood test at least
     a working day before the visit within the lab cap; (hard) one appointment per patient and department,
     and a second department's visit on the same day when that costs at most two days;
-  * (hard) overbook waiting follow-ups into slots of follow-ups whose patients' estimated no-show rate makes
-    the expected gain positive (rate > 1 - seen value / collision cost), within the cap per session;
+  * (hard) overbook a waiting follow-up next to the booked follow-up of the same doctor with which the pair is
+    least likely to turn up together, when the expected value is positive: the second patient's expected visit
+    and the request no longer left without an appointment, against the collision cost times the chance that
+    both come (rates estimated from the patients' records and the lead time), within the cap per session;
   * report the status table.
 
-config.json holds the client's rule parameters for the setting and the no-show prior from the history; a few
-switches exist only so the case can build variants (bending the follow-up habit, following notes), the
-baseline (`hold_reserve`, `no_overbook`) and programs that break one rule each (`inject`).
+config.json holds the client's rule parameters for the setting and the no-show prior from the history. The
+tier decides which parts of the data are in scope (absence and interpreter notices, referral dates, blood
+tests, duplicates, overbooking); each can also be set on its own (`absences`, `interpreter_absence`,
+`referrals`, `tests`, `dedupe`, `same_day`), which is how the case builds the misreadings of one client fact
+at a time. Other switches exist only for variants (bending the follow-up habit, following notes, pulling
+booked patients forward, table definitions), the baseline (`hold_reserve`, `no_overbook`) and programs that
+break one rule each (`inject`, `inject_table`).
 """
 
 import datetime as dt
@@ -35,6 +41,7 @@ import os
 BASE = dt.date(2026, 1, 5)
 RESERVE_FIRST = 540                     # 09:00, the first slot of a morning session
 URG = {"U": 0, "S": 1, "R": 2}
+WAIT_WEIGHT = {"U": 3, "S": 2, "R": 1}  # how much a day of waiting weighs, by urgency
 DEPTS = ("IM", "CARD", "DERM", "ORTH", "PED")
 
 
@@ -71,6 +78,17 @@ class Scheduler:
         self.hard = cfg["tier"] == "hard"
         # the urgent reserve: the first N slots of every morning session
         self.res_starts = tuple(RESERVE_FIRST + 20 * k for k in range(cfg.get("reserve_slots", 2)))
+        # what is in scope: the tier's answer unless the config says otherwise
+        self.f_absence = cfg.get("absences", self.medium)                # doctor_absence notices
+        self.f_interp_abs = cfg.get("interpreter_absence", self.medium)  # interpreter_absence notices
+        self.f_referral = cfg.get("referrals", self.medium)              # referral_valid_until
+        self.f_tests = cfg.get("tests", self.medium)                     # pre_visit_test
+        self.f_dedupe = cfg.get("dedupe", self.hard)                     # one appointment per patient and department
+        self.f_same_day = cfg.get("same_day", self.hard)                 # a second department on the same day
+        self.f_overbook = cfg.get("overbook", self.hard) and cfg.get("overbooked_per_session", 0) > 0 \
+            and not cfg.get("no_overbook")
+        closed = cfg.get("closed_dept") or ()
+        self.closed = set([closed] if isinstance(closed, str) else closed)
         self.reset()
 
     def reset(self):
@@ -84,9 +102,9 @@ class Scheduler:
     # ── calendar helpers ───────────────────────────────────────────────────
     def bookable(self, doc, D):
         cfg = self.cfg
-        if cfg.get("holiday") and D == wd(cfg["holiday"]) and self.docs[doc]["department"] == cfg["closed_dept"]:
+        if cfg.get("holiday") and D == wd(cfg["holiday"]) and self.docs[doc]["department"] in self.closed:
             return False
-        if self.medium and D in self.absent.get(doc, ()):
+        if self.f_absence and D in self.absent.get(doc, ()):
             return False
         return True
 
@@ -96,13 +114,15 @@ class Scheduler:
         return s in self.res_starts and self.half.get((doc, D, s)) == "AM"
 
     def cap(self, D):
-        return self.cfg["interpreters_per_day"] + (self.interp_cut.get(D, 0) if self.medium else 0)
+        return self.cfg["interpreters_per_day"] + (self.interp_cut.get(D, 0) if self.f_interp_abs else 0)
 
     def needs_interp(self, r, doc):
         return r["visit_type"] == "new" and r["preferred_language"] not in self.docs[doc]["languages"]
 
     def prio(self, r):
         order = self.cfg["waitlist_order"]
+        if order == "fcfs":                 # a variant: strictly the date received, urgent or not
+            return (r["received"], r["request_id"])
         if order == "received":
             return (0 if r["urgency"] == "U" else 1, r["received"], r["request_id"])
         if order == "urgency_earliest":
@@ -165,8 +185,8 @@ class Scheduler:
         """Earliest feasible (doctor, day, start, test day) for request r from day `lo` on."""
         d, cfg = self.d, self.cfg
         n = 2 if r["visit_type"] == "new" else 1
-        hi = min(d + cfg["horizon"], self.deadline(r))
-        if self.medium and r["visit_type"] == "new" and r.get("referral_valid_until"):
+        hi = min(d + cfg.get("book_ahead", cfg["horizon"]), self.deadline(r))
+        if self.f_referral and r["visit_type"] == "new" and r.get("referral_valid_until"):
             hi = min(hi, wd(r["referral_valid_until"]))
         lo = max(lo, d + 1, wd(r["earliest_date"]))
         days = [only] if only is not None else range(lo, hi + 1)
@@ -174,7 +194,7 @@ class Scheduler:
             if D < lo or D > hi:
                 continue
             test = None
-            if self.medium and r["pre_visit_test"]:
+            if self.f_tests and r["pre_visit_test"]:
                 if keep_test is not None and keep_test < D:
                     test = keep_test
                 else:
@@ -262,9 +282,9 @@ class Scheduler:
             for m in starts:
                 self.half[(s["doctor_id"], D, m)] = s["session"]
         for n in day["notices"]:
-            if n["type"] == "doctor_absence" and self.medium:
+            if n["type"] == "doctor_absence" and self.f_absence:
                 self.absent.setdefault(n["doctor_id"], set()).update(range(wd(n["from"]), wd(n["to"]) + 1))
-            elif n["type"] == "interpreter_absence" and self.medium:
+            elif n["type"] == "interpreter_absence" and self.f_interp_abs:
                 D = wd(n["date"])
                 self.interp_cut[D] = self.interp_cut.get(D, 0) + n["in_person_interpreters_change"]
             elif n["type"] == "staff_note" and cfg.get("head_note"):       # variant only: following the note
@@ -302,7 +322,9 @@ class Scheduler:
             self.rel_day[rid] = d
 
         notice = cfg["move_notice_days"]
-        if self.medium:
+        if cfg.get("book_nothing"):         # a variant: no action at all, the table as the day ends
+            return {"actions": [], "status_table": self.table(waiting)}
+        if self.f_absence:
             # Appointments of absent doctors.
             for rid in sorted(self.appt, key=lambda x: (self.appt[x]["D"], self.appt[x]["s"], x)):
                 a = self.appt[rid]
@@ -330,6 +352,7 @@ class Scheduler:
                     move(rid, *f)
                 else:
                     release(rid)
+        if self.f_interp_abs:
             # Days that lost an interpreter.
             for D in sorted(self.interp_cut):
                 while D > d and self.interp.get(D, 0) > self.cap(D):
@@ -352,12 +375,15 @@ class Scheduler:
                     else:
                         release(rid)
 
+        morning = self.table(waiting) if cfg.get("table_morning") else None
         # The waitlist in priority order.
         todo = sorted(waiting.values(), key=self.prio)
+        if cfg.get("urgent_only"):          # a variant: only the urgent requests are booked
+            todo = [r for r in todo if r["urgency"] == "U"]
         if cfg.get("follow_notes"):
             todo.sort(key=lambda r: 0 if r.get("notes") else 1)
         skipped = set()
-        if self.hard:
+        if self.f_dedupe:
             seen = set()
             upcoming = {(self.req[x]["patient_id"], self.req[x]["department"]) for x in self.appt}
             for r in sorted(waiting.values(), key=lambda r: (r["received"], r["request_id"])):
@@ -365,7 +391,13 @@ class Scheduler:
                 if key in seen or key in self.ever or key in upcoming:
                     skipped.add(r["request_id"])
                 seen.add(key)
-        booked_today = []
+        n_ob = None
+        if self.f_overbook:              # overbooked slots per doctor session so far
+            n_ob = {}
+            for (doc, D), sessions in self.sess.items():
+                for half, starts in sessions:
+                    n_ob[(doc, D, half)] = sum(1 for s in starts if len(self.occ.get((doc, D, s), ())) >= 2)
+        stuck = set()                    # (department, previous doctor) with a follow-up left waiting today
         for r in todo:
             rid = r["request_id"]
             if rid in skipped:
@@ -391,7 +423,7 @@ class Scheduler:
                     f = self.find(r, lo, docs)
             else:
                 f = self.find(r, lo, docs)
-            if f and self.hard:
+            if f and self.f_same_day:
                 other = sorted({a["D"] for x, a in self.appt.items() if self.req[x]["patient_id"] == r["patient_id"]})
                 for X in other:
                     if f[1] < X <= f[1] + 2:
@@ -399,69 +431,25 @@ class Scheduler:
                         if g:
                             f = g
                             break
+            group = (r["department"], r["previous_doctor"])
+            if n_ob is not None and r["visit_type"] == "follow_up" and group not in stuck and not (
+                    f and r["urgency"] == "U"):
+                # a place next to another follow-up, when that is worth more than the free slot (or than waiting)
+                g = self.double_up(r, lo, f, n_ob)
+                if g:
+                    f = g[:4]
+                    n_ob[(g[0], g[1], g[4])] += 1
             if f:
                 self.place(rid, f[0], f[1], f[2], f[3], d)
                 del waiting[rid]
-                booked_today.append(rid)
+            elif r["visit_type"] == "follow_up":
+                # nobody behind this request in its doctor's queue may be doubled up into a slot it could have had
+                stuck.add(group)
 
-        if self.hard and cfg["overbooked_per_session"] > 0 and not cfg.get("no_overbook"):
-            ns = cfg["noshow"]
-            thr = cfg.get("ob_threshold", 1.0 - cfg["seen_value"] / cfg["collision_cost"])
-            hist = ns["base0"] + ns["slope"] * ns["hist_lead"]
-            oracle = cfg.get("oracle_p")
-
-            def p_occ(x, D):
-                q = self.req[x]
-                if oracle is not None:
-                    base = oracle[x]
-                else:
-                    base = (q["missed_appointments"] + ns["shrink"] * hist) / (q["past_appointments"] + ns["shrink"]) \
-                        - ns["slope"] * ns["hist_lead"]
-                return base + ns["slope"] * (D - self.appt[x]["booked_on"])
-
-            # Slots holding one follow-up whose patient will probably stay away, per doctor session.
-            good, n_ob = {}, {}
-            for (doc, D), sessions in self.sess.items():
-                if D <= d:
-                    continue
-                for half, starts in sessions:
-                    n_ob[(doc, D, half)] = sum(1 for s in starts if len(self.occ.get((doc, D, s), ())) >= 2)
-                    good[(doc, D, half)] = [s for s in starts if len(self.occ.get((doc, D, s), ())) == 1
-                                            and self.req[self.occ[(doc, D, s)][0]]["visit_type"] == "follow_up"
-                                            and p_occ(self.occ[(doc, D, s)][0], D) > thr]
-            for r in todo:
-                rid = r["request_id"]
-                if rid not in waiting or rid in skipped or r["visit_type"] != "follow_up":
-                    continue
-                lo = max(d + 1, self.rel_day.get(rid, -10 ** 6) + notice, wd(r["earliest_date"]))
-                doc = r["previous_doctor"]
-                hit = None
-                for D in range(lo, d + cfg["horizon"] + 1):
-                    halves = [(h, good.get((doc, D, h))) for h, _ in self.sess.get((doc, D), ())]
-                    if not any(g for _, g in halves) or not self.bookable(doc, D):
-                        continue
-                    test = None
-                    if self.medium and r["pre_visit_test"]:
-                        test = self.test_day(r, D)
-                        if test is None:
-                            continue
-                    for half, g in halves:
-                        if not g or n_ob[(doc, D, half)] >= cfg["overbooked_per_session"]:
-                            continue
-                        for s in g:
-                            if r["urgency"] != "U" and D >= d + 2 and self.reserve(doc, D, s):
-                                continue
-                            hit = (doc, D, s, test)
-                            g.remove(s)
-                            n_ob[(doc, D, half)] += 1
-                            break
-                        if hit:
-                            break
-                    if hit:
-                        break
-                if hit:
-                    self.place(rid, hit[0], hit[1], hit[2], hit[3], d)
-                    del waiting[rid]
+        if cfg.get("bend_idle"):
+            self.fill_idle(todo, waiting, skipped, notice)
+        if cfg.get("pull_forward"):
+            self.pull_forward(move)
 
         # Actions: what changed against the morning book.
         for rid in sorted(set(start) | set(self.appt)):
@@ -482,38 +470,161 @@ class Scheduler:
             actions.append(act)
         actions.sort(key=lambda x: (x["type"] != "release", x["type"] != "move", x["request_id"]))
 
-        table = self.table(waiting)
+        table = morning if morning is not None else self.table(waiting)
+        if cfg.get("table_none"):
+            table = None
         actions += cfg.get("inject", {}).get(str(day["day_index"]), [])
-        return {"actions": actions, "status_table": table}
+        out = {"actions": actions, "status_table": table}
+        if str(day["day_index"]) in cfg.get("inject_table", {}):        # the validator's malformed-table example
+            out["status_table"] = cfg["inject_table"][str(day["day_index"])]
+        return out
 
+    # ── overbooking (hard) ─────────────────────────────────────────────────
+    def p_show(self, rid, D, booked_on):
+        """Estimated chance that the patient of request `rid` comes on day D to an appointment booked on
+        `booked_on`: the patient's record shrunk towards the history's missed share, plus the lead-time effect."""
+        ns = self.cfg["noshow"]
+        oracle = self.cfg.get("oracle_p")
+        q = self.req[rid]
+        if oracle is not None:
+            base = oracle[rid]
+        else:
+            hist = ns["base0"] + ns["slope"] * ns["hist_lead"]
+            base = (q["missed_appointments"] + ns["shrink"] * hist) / (q["past_appointments"] + ns["shrink"]) \
+                - ns["slope"] * ns["hist_lead"]
+        return 1.0 - min(0.9, max(0.0, base + ns["slope"] * max(D - booked_on, 0)))
+
+    def double_up(self, r, lo, f, n_ob):
+        """The best slot for follow-up r next to a booked follow-up of its doctor: (doctor, day, start, test day,
+        session), or None when no such slot is worth it.
+
+        With a free slot f in reach, doubling up on an earlier day is worth the free slot it leaves for someone
+        else (`ob_slot_value`) and the days of waiting saved, less the collision cost times the chance that both
+        patients come. Without one it is worth the patient's expected visit and the request no longer left
+        without an appointment (`ob_booked_value`), less the same expected collision. `ob_blind` (a variant: a
+        program that takes a double-booked slot to cost nothing) takes the earliest such slot."""
+        cfg, d = self.cfg, self.d
+        rid, doc = r["request_id"], r["previous_doctor"]
+        cap, blind = cfg["overbooked_per_session"], cfg.get("ob_blind")
+        seen, coll = cfg["seen_value"], cfg["collision_cost"]
+        slot_value = cfg.get("ob_slot_value", 0.8 * seen)
+        booked = cfg.get("ob_booked_value", cfg.get("unbooked_cost", 10.0))
+        wait = cfg.get("wait_cost", 0.4) * WAIT_WEIGHT[r["urgency"]]
+        lo = max(lo, wd(r["earliest_date"]))
+        hi = f[1] - 1 if f else d + cfg["horizon"]
+        best = None
+        for D in range(lo, hi + 1):
+            if not self.bookable(doc, D) or (doc, D) in self.head_blocked:
+                continue
+            test = None
+            if self.f_tests and r["pre_visit_test"]:
+                test = self.test_day(r, D)
+                if test is None:
+                    continue
+            pb = self.p_show(rid, D, d)
+            for half, starts in self.sess.get((doc, D), ()):
+                if n_ob[(doc, D, half)] >= cap:
+                    continue
+                for s in starts:
+                    lst = self.occ.get((doc, D, s), ())
+                    if len(lst) != 1 or self.req[lst[0]]["visit_type"] != "follow_up":
+                        continue
+                    if r["urgency"] != "U" and (D >= d + 2 or cfg.get("hold_reserve")) and self.reserve(doc, D, s):
+                        continue
+                    if blind:
+                        gain = 1.0
+                    else:
+                        pa = self.p_show(lst[0], D, self.appt[lst[0]]["booked_on"])
+                        gain = (slot_value + wait * (f[1] - D) if f else pb * seen + booked) - coll * pa * pb
+                    if best is None or gain > best[0] + 1e-9:
+                        best = (gain, doc, D, s, test, half)
+            if blind and best:
+                break
+        return best[1:] if best and best[0] > cfg.get("ob_margin", 0.0) else None
+
+    # ── variants: what a program does that misreads one fact, or bends the habit ──
+    def fill_idle(self, todo, waiting, skipped, notice):
+        """Bending the habit where it fills doctor time: a slot still empty tomorrow goes to a waiting follow-up
+        of a colleague's patient (the head of the outpatient office's exception)."""
+        d, D = self.d, self.d + 1
+        for r in todo:
+            rid = r["request_id"]
+            if rid not in waiting or rid in skipped or r["visit_type"] != "follow_up":
+                continue
+            if wd(r["earliest_date"]) > D or self.rel_day.get(rid, -10 ** 6) + notice > D:
+                continue
+            if self.f_tests and r["pre_visit_test"]:
+                continue
+            for doc in self.dept_docs[r["department"]]:
+                if doc == r["previous_doctor"] or not self.bookable(doc, D) or (doc, D) in self.head_blocked:
+                    continue
+                s = self.first_slot(doc, D, 1, True)
+                if s is not None:
+                    self.place(rid, doc, D, s, None, d)
+                    del waiting[rid]
+                    break
+
+    def pull_forward(self, move):
+        """A slot still empty tomorrow goes to a patient of the same doctor who is booked for a later day (a
+        program that takes changing an appointment to be free and to need no notice)."""
+        d, D = self.d, self.d + 1
+        later = sorted((x for x, a in self.appt.items() if a["D"] > D and self.req[x]["urgency"] != "U"
+                        and wd(self.req[x]["earliest_date"]) <= D and a["test"] is None
+                        and not (self.f_tests and self.req[x]["pre_visit_test"])),
+                       key=lambda x: self.prio(self.req[x]))
+        for rid in later:
+            a = self.appt[rid]
+            doc = a["doctor_id"]
+            if not self.bookable(doc, D) or (doc, D) in self.head_blocked:
+                continue
+            if self.needs_interp(self.req[rid], doc) and self.interp.get(D, 0) >= self.cap(D):
+                continue
+            if len(self.occ.get((doc, a["D"], a["s"]), ())) > 1:
+                continue
+            s = self.first_slot(doc, D, a["n"], True)
+            if s is not None:
+                move(rid, doc, D, s, None)
+
+    # ── the status table ───────────────────────────────────────────────────
     def table(self, waiting):
         d, cfg = self.d, self.cfg
+        # variants (the never-asks program): the table's own reserve size and City Day closures
+        res = self.res_starts if cfg.get("table_reserve_slots") is None else tuple(
+            RESERVE_FIRST + 20 * k for k in range(cfg["table_reserve_slots"]))
+        closed = self.closed if cfg.get("table_closed") is None else set(cfg["table_closed"])
+        holiday = wd(cfg["holiday"]) if cfg.get("holiday") else None
         out = {}
         for dept in DEPTS:
             free = held = 0
             for doc in self.dept_docs.get(dept, ()):
                 for D in range(d + 1, d + cfg["horizon"] + 1):
-                    if not self.bookable(doc, D) and not cfg.get("table_calendar_as_is"):
+                    if not cfg.get("table_calendar_as_is") and (
+                            (D == holiday and dept in closed) or (self.f_absence and D in self.absent.get(doc, ()))):
                         continue
                     for half, starts in self.sess.get((doc, D), ()):
                         for s in starts:
                             if self.occ.get((doc, D, s)):
                                 continue
-                            if D >= d + 2 and self.reserve(doc, D, s) and not cfg.get("table_no_reserve"):
+                            if cfg.get("pilot_reserve", True) and s in res and half == "AM" and not cfg.get(
+                                    "table_no_reserve") and (D >= d + 2 or cfg.get("table_hold_tomorrow")):
                                 held += 1
                             else:
                                 free += 1
             rs = [r for r in waiting.values() if r["department"] == dept]
-            if self.medium and not cfg.get("table_raw_waitlist"):
+            if self.f_referral and not cfg.get("table_count_expired"):
                 rs = [r for r in rs if not (r["visit_type"] == "new" and r.get("referral_valid_until")
                                             and wd(r["referral_valid_until"]) < d + 1)]
-            if self.hard and not cfg.get("table_raw_waitlist"):
+            if self.f_dedupe and not cfg.get("table_count_requests"):
                 upcoming = {(self.req[x]["patient_id"], self.req[x]["department"]) for x in self.appt}
                 n = len({r["patient_id"] for r in rs if (r["patient_id"], dept) not in self.ever
                          and (r["patient_id"], dept) not in upcoming})
             else:
                 n = len(rs)
             out[dept] = {"free_slots": free, "held_back": held, "waitlist": n}
+        if cfg.get("table_zero"):
+            out = {dept: {"free_slots": 0, "held_back": 0, "waitlist": 0} for dept in DEPTS}
+        if cfg.get("table_const"):          # a variant: the same numbers every day
+            out = {dept: dict(row) for dept, row in cfg["table_const"].items()}
         return out
 
 

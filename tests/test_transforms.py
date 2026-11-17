@@ -156,7 +156,7 @@ def test_settings_change_the_ground_truth_not_what_the_agent_sees(tmp_path):
     assert "오버부킹" in hard.information and "오버부킹 슬롯은 최대 2개" in hard.information
     assert "피부과는 그날 휴진" in easy.information and "소아청소년과는 그날 휴진" in hard.information
     assert "{{" not in easy.information and "<!--" not in easy.information
-    assert "overbooking" not in {t.id for t in easy.targets} and "overbooking" in {t.id for t in hard.targets}
+    assert "overbooking_cap" not in {t.id for t in easy.targets} and "overbooking_cap" in {t.id for t in hard.targets}
     rules = {t: {r.id for r in case.at(t).rules().rules} for t in case.tiers}
     assert "no_double_booking" in rules["easy"] and "slot_capacity" in rules["hard"]
     assert "lab_capacity" not in rules["easy"] and "lab_capacity" in rules["medium"]
