@@ -3,8 +3,12 @@ role: Battery Dispatch Operator
 task_type: Combinatorial Optimization
 field: energy_utilities
 seed: 20270322
-objective: maximize          # battery profit in EUR at true prices: extra site export revenue vs solar alone - grid import cost
-                             # - degradation per MWh throughput (medium and hard)
+audited: true                # ground truth audit: dataset/audit.json, GT.md, CLIENT_REVIEW.md (gt_report.py)
+quality_cap: 1.0             # the reference is the optimum (best_known_solution = objective_bound): no valid plan
+                             # scores above 1.0
+objective: maximize          # the battery's expected profit in EUR, every quarter settled at its hour's forecast price:
+                             # extra site export revenue vs solar alone - grid import cost - degradation per MWh of
+                             # throughput (medium and hard); quality 0 is the client's own planner (baseline_solution)
 tiers:
   easy: >-
     The core problem: the warranty SOC window, the power limits, the per-direction efficiency, the end-of-week state
@@ -19,10 +23,10 @@ tiers:
     for inverter maintenance. The trading desk also pushes to spend the reserve on the evening peaks, which only an
     approved exception allows.
 params:                      # the client's operating values; a rule seed draws each one on its own
-  soc_window:                # warranty state-of-charge window, % of 40 MWh
-    values: ["10-90", "15-85", "5-95"]
-  efficiency:                # one-way efficiency on charge / on discharge, % (round trip about 84.6% in every case)
-    values: ["92/92", "95/89", "90/94"]
+  soc_window:                # warranty state-of-charge window, % of 40 MWh (never the sheet's 5-95 nor the log's 10-90)
+    values: ["10-85", "15-85", "15-90"]
+  efficiency:                # one-way efficiency on charge / on discharge, % (round trip about 84.6% in every case,
+    values: ["94/90", "95/89", "90/94"]   # never split evenly as the log's 92/92)
   end_soc:                   # minimum state of charge after the last quarter, %; the week starts at 50%
     values: [50, 40, 30]
   export_cap:                # amended export limit while the substation works last, MW (the agreement says 30)
@@ -32,7 +36,7 @@ params:                      # the client's operating values; a rule seed draws 
   reserve_pct:               # evening emergency reserve, % of 40 MWh
     values: {easy: [0], medium: [20, 30, 15], hard: [20, 30, 15]}
   reserve_window:            # the reserve's hours, local
-    values: {easy: ["none"], medium: ["17-21", "18-22", "16-20"], hard: ["17-21", "18-22", "16-20"]}
+    values: {easy: ["none"], medium: ["17-21", "16-20", "18-22"], hard: ["17-21", "16-20", "18-22"]}
   degradation:               # EUR per MWh of charge plus discharge at the meter
     values: {easy: [0], medium: [5, 15, 25], hard: [5, 15, 25]}
   works_end:                 # the substation works end: from this day 00:00 the agreement's 30 MW applies again
@@ -66,6 +70,9 @@ deliverable_spec: |
   start as "YYYY-MM-DD HH:MM". charge_mw / discharge_mw = average battery power at the meter over the interval in
   MW, both >= 0.
 rules:
+  - id: complete_plan
+    class: contractual
+    description: dispatch.csv has a row for each of the week's 668 quarter-hours in local time, and no power at a clock time the change to summer time skips (02:00-02:45 on 28 March).
   - id: soc_limits
     class: physical
     description: State of charge stays between {{soc_min}}% and {{soc_max}}% of 40 MWh at all times ({{eta_charge_pct}}% efficiency on charge, {{eta_discharge_pct}}% on discharge).

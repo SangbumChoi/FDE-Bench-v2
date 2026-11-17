@@ -1,57 +1,68 @@
 - id: efficiency
   kind: ambiguous
   domain: calculation
-  text: "Efficiency is modelled per direction, {{eta_charge_pct}}% on charge and {{eta_discharge_pct}}% on discharge (not the 84.6% round-trip applied once); charging P MW for a quarter adds 0.25*P*{{eta_charge}} MWh and discharging P MW removes 0.25*P/{{eta_discharge}} MWh."
+  param: efficiency
+  text: "Efficiency is modelled per direction, {{eta_charge_pct}}% on charge and {{eta_discharge_pct}}% on discharge (not the sheet's 84.6% round trip split evenly); charging P MW for a quarter adds 0.25*P*{{eta_charge}} MWh and discharging P MW removes 0.25*P/{{eta_discharge}} MWh."
 - id: soc_window
   kind: ambiguous
   domain: business rule
-  text: "The warranty requires state of charge between {{soc_min}}% and {{soc_max}}% ({{soc_min_mwh}}-{{soc_max_mwh}} MWh) at all times<!-- when: soc_window=10-90,15-85 -->, narrower than the manufacturer's 5%-95%<!-- /when --><!-- when: soc_window=5-95 -->, the same window as the manufacturer's<!-- /when -->."
-- id: start_end_soc
+  param: soc_window
+  text: "The warranty requires state of charge between {{soc_min}}% and {{soc_max}}% ({{soc_min_mwh}}-{{soc_max_mwh}} MWh) at all times, narrower than the manufacturer's 5%-95%."
+- id: end_soc
   kind: missing
   domain: business rule
-  text: "The battery starts the week at 50% (20 MWh) and must finish the week at {{end_soc}}% ({{end_soc_mwh}} MWh) or more."
+  param: end_soc
+  text: "The week must end at {{end_soc}}% ({{end_soc_mwh}} MWh) state of charge or more (it starts at 50%)."
 - id: export_cap
   kind: ambiguous
   domain: data semantics
+  param: export_cap
   text: "The export limit is temporarily {{export_cap}} MW (not the 30 MW in the agreement); solar + discharge - charge must not exceed {{export_cap}} MW while discharging, and solar above {{export_cap}} MW is clipped unless the battery absorbs it."
 - id: grid_charging
   kind: missing
   domain: business rule
-  text: "<!-- tier: easy -->This week the site may charge from the grid at any hour (at most 20 MW)<!-- /tier --><!-- tier: medium hard -->Charging from solar is allowed any time, but drawing from the grid only in quarters starting {{import_from}}-{{import_last}} local time (max 20 MW)<!-- /tier -->; never charge and discharge in the same quarter."
-- id: quarter_settlement
-  kind: ambiguous
-  domain: data semantics
-  text: Settlement is in 15-minute intervals; the hourly price applies to all four quarters, MW values are quarter averages and energy is MW x 0.25.
-- id: dst_clock
-  kind: missing
-  domain: data semantics
-  text: Timestamps are local time and clocks go forward on Sunday 28 March, so that day has 23 hours, no 02:00-02:45 rows, and the plan has exactly 668 quarter rows.
-- id: evening_reserve
+  param: import_window
+  tiers: [medium, hard]
+  text: "Drawing power from the grid (charging more than the solar output) is only allowed in quarters starting {{import_from}}-{{import_last}} local time, at most 20 MW; charging from solar is allowed at any time."
+- id: reserve_level
   kind: missing
   domain: business rule
+  param: reserve_pct
   tiers: [medium, hard]
-  text: "Company policy keeps at least {{reserve_pct}}% ({{reserve_mwh}} MWh) state of charge at every moment between {{reserve_from}} and {{reserve_to}} every day."
+  text: "Company policy keeps at least {{reserve_pct}}% ({{reserve_mwh}} MWh) state of charge in reserve for emergencies during the evening reserve hours, every day."
+- id: reserve_hours
+  kind: missing
+  domain: business rule
+  param: reserve_window
+  tiers: [medium, hard]
+  text: "The evening reserve applies at every moment between {{reserve_from}} and {{reserve_to}} local time, every day."
 - id: degradation
   kind: missing
   domain: calculation
+  param: degradation
   tiers: [medium, hard]
   text: "Every MWh of charge plus discharge at the meter costs EUR {{degradation}} in degradation, which is subtracted from the profit."
-- id: profit_scoring
-  kind: missing
-  domain: scoring
-  text: "The plan is scored at actual prices as site export revenue minus grid import cost minus what solar alone would earn (both clipped at the export limit)<!-- tier: medium hard -->, minus the degradation cost of the charge plus discharge throughput<!-- /tier -->."
 - id: works_end
   kind: missing
   domain: business rule
+  param: works_end
   tiers: [hard]
   text: "The substation works end early: the {{export_cap}} MW limit holds until {{works_end}} 00:00, and from then the agreement's 30 MW applies again."
+- id: dso_day
+  kind: missing
+  domain: business rule
+  param: dso_day
+  tiers: [hard]
+  text: "The DSO limits site export on {{dso_day}} from 18:00 to 21:00 because of planned works on the line."
 - id: dso_limit
   kind: missing
   domain: business rule
+  param: dso_mw
   tiers: [hard]
-  text: "The DSO limits site export to {{dso_mw}} MW on {{dso_day}} from 18:00 to 21:00; while discharging then, solar + discharge - charge must stay at or below {{dso_mw}} MW."
+  text: "In the DSO's hours site export may be at most {{dso_mw}} MW: while the battery discharges then, solar + discharge - charge must stay at or below {{dso_mw}} MW."
 - id: maintenance_outage
   kind: missing
   domain: business rule
+  param: outage_day
   tiers: [hard]
   text: "The battery is offline for inverter maintenance on {{outage_day}} from 08:00 to 20:00: no charging or discharging in those quarters."

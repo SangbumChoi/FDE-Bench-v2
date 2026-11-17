@@ -47,11 +47,11 @@ def test_try_explains_the_default_case_and_scores_its_anchors(capsys):
     flat = " ".join(text.split())                       # the prose is wrapped
     assert f"{len(case.targets('en'))} facts only the client knows" in flat
     assert f"{len(case.rules().rules)} rules" in flat
-    assert "quality / 1.5" in flat and "The reference earns 0.667" in flat and "Ask-F1 is 0" in flat
+    assert "quality / 1," in flat and "The reference earns 1.000" in flat and "Ask-F1 is 0" in flat
     # valid, normalized quality, final under the default policy
     assert _row(text, "Literal solution (the request done as written)") == ["no", "–", "0.000"]
     assert _row(text, "Baseline (the client's own way)") == ["yes", "0.000", "0.000"]
-    assert _row(text, "Reference solution") == ["yes", "1.000", "0.667"]
+    assert _row(text, "Reference solution") == ["yes", "1.000", "1.000"]
     assert "fdebench2 try --submission DIR" in flat and "Your submission" not in text
 
 
@@ -59,7 +59,7 @@ def test_try_in_another_language_tier_and_private_seed(capsys):
     text = _try(capsys, "--lang", "ko", "--difficulty", "hard", "--rule-seed", "4242")
     assert "설정: hard, 규칙 시드 4242 (비공개) · 언어: ko" in text
     assert "\nAI가 받는 요청\n" in text and "\n점수 척도\n" in text and "data/가격예측.csv" in text
-    assert _row(text, "모범 답안 (1점 기준)") == ["예", "1.000", "0.667"]
+    assert _row(text, "모범 답안 (1점 기준)") == ["예", "1.000", "1.000"]
     with pytest.raises(SystemExit):
         main(["try", "--cases", str(CASES), "--case", "no/such_case"])
 
@@ -74,7 +74,7 @@ def test_try_scores_a_submission_folder(capsys, tmp_path):
     case.write_literal(bad)
 
     text = _try(capsys, "--submission", str(good))
-    assert _row(text, "Your submission ") == ["yes", "1.000", "0.667"]
+    assert _row(text, "Your submission ") == ["yes", "1.000", "1.000"]
     assert f"Your submission: {good}" in text and "Objective " in text and "quality 1.000" in " ".join(text.split())
     assert "Rules broken" not in text
 
@@ -215,7 +215,7 @@ def test_the_leaderboard_ranks_private_submissions_and_shows_anchors(tmp_path):
     anchors = anchor_submission(CASES, [DEFAULT_CASE], ["medium"], date="2026-11-06")
     assert anchors["kind"] == "anchors" and anchors["example"] is True and anchors["status"] == "anchor"
     assert {k: v["final"]["mean"] for k, v in anchors["anchors"].items()} == \
-        {"literal": 0.0, "baseline": 0.0, "reference": 0.666667}
+        {"literal": 0.0, "baseline": 0.0, "reference": 1.0}
     assert len(anchors["runs"]) == 3 * len(PUBLIC) and anchors["seeds"]["kind"] == "public"
     folder = tmp_path / "leaderboard"
     for name, doc in {"a.json": _submission("alpha", 0.41, "ranked"), "b.json": _submission("beta", 0.52, "ranked"),
@@ -239,7 +239,7 @@ def test_the_leaderboard_ranks_private_submissions_and_shows_anchors(tmp_path):
     assert "Reference rows (anchors, not models)" in html
     anchor_rows = cells[3:]                            # after the group row, which has a class
     assert [r[-1] for r in anchor_rows] == ["anchor"] * 3 and all("EXAMPLE" in r[1] for r in anchor_rows)
-    assert "Reference solution" in anchor_rows[2][1] and anchor_rows[2][4] == "0.667 [0.67–0.67]"
+    assert "Reference solution" in anchor_rows[2][1] and anchor_rows[2][4] == "1.000 [1.00–1.00]"
     ko = build_page("ko", subs)
     assert "<h1>리더보드</h1>" in ko and "<th>순위</th>" in ko and "0.520 [0.00–1.00]" in ko
 

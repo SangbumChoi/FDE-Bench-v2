@@ -21,6 +21,7 @@ tiers:
     de servicio de 08:00 a 20:00 por mantenimiento del inversor. Además, la mesa de trading presiona para gastar la reserva en
     los picos de la tarde, algo que solo permite una excepción aprobada.
 rules:
+  complete_plan: "dispatch.csv tiene una fila por cada uno de los 668 cuartos de hora de la semana en hora local, y ninguna potencia en una hora que el cambio al horario de verano se salta (02:00-02:45 del 28 de marzo)."
   soc_limits: El estado de carga se mantiene en todo momento entre el {{soc_min}} % y el {{soc_max}} % de 40 MWh (con un {{eta_charge_pct}} % de eficiencia en la carga y un {{eta_discharge_pct}} % en la descarga).
   power_limits: La carga y la descarga están cada una entre 0 y 20 MW, nunca ambas en el mismo intervalo; el consumo de red es como máximo de 20 MW.
   export_cap: Mientras duren las obras de la subestación y la batería descargue, el vertido del emplazamiento (solar + descarga − carga) no debe superar el límite modificado de {{export_cap}} MW.
@@ -29,3 +30,26 @@ rules:
   evening_reserve: El estado de carga es de al menos el {{reserve_pct}} % en todo momento entre las {{reserve_from}} y las {{reserve_to}} hora local, todos los días.
   dso_limit: El {{dso_day}} de 18:00 a 21:00, mientras la batería descarga, el vertido del emplazamiento no debe superar el límite de {{dso_mw}} MW de la distribuidora.
   maintenance_outage: La batería no carga ni descarga el {{outage_day}} de 08:00 a 20:00 (mantenimiento del inversor).
+shortcuts:
+  literal_plus_soc_limits: "El plan literal cumpliendo solo una de las reglas que incumple, soc_limits: se pregunta ese dato y el resto se lee de los archivos."
+  literal_plus_export_cap: "El plan literal cumpliendo solo una de las reglas que incumple, export_cap: se pregunta ese dato y el resto se lee de los archivos."
+  literal_plus_end_soc: "El plan literal cumpliendo solo una de las reglas que incumple, end_soc: se pregunta ese dato y el resto se lee de los archivos."
+  literal_plus_grid_charging_window: "El plan literal cumpliendo solo una de las reglas que incumple, grid_charging_window: se pregunta ese dato y el resto se lee de los archivos."
+  literal_plus_evening_reserve: "El plan literal cumpliendo solo una de las reglas que incumple, evening_reserve: se pregunta ese dato y el resto se lee de los archivos."
+  literal_plus_dso_limit: "El plan literal cumpliendo solo una de las reglas que incumple, dso_limit: se pregunta ese dato y el resto se lee de los archivos."
+  literal_plus_maintenance_outage: "El plan literal cumpliendo solo una de las reglas que incumple, maintenance_outage: se pregunta ese dato y el resto se lee de los archivos."
+  last_week_settings: "Planificar con los ajustes de la semana pasada, los que hicieron el registro: 10-90 %, 92 % en cada sentido, 50 % al final, una reserva del 20 % de 17:00 a 21:00, consumo de red de 00:00 a 06:00 y un límite de 25 MW."
+  last_week_settings_plus_cap: "Los ajustes de la semana pasada preguntando solo el dato que los documentos marcan como desactualizado: el límite de vertido de esta semana."
+  copy_last_week: "Copiar los datos: el plan de la semana pasada repetido cuarto de hora a cuarto de hora, mismo día de la semana y misma hora."
+  planner_before_the_cut: "Copiar la forma del cliente y cambiar una cosa: su programa tal como funcionaba antes de bajar el límite de vertido (la carga nocturna no deja hueco para la solar de mediodía)."
+  planner_without_buffer: "Copiar la forma del cliente y cambiar una cosa: su programa sin el margen del 1 % por dentro de los límites de estado de carga."
+  planner_sells_reserve: "Copiar la forma del cliente y cambiar una cosa: su programa vende también la reserva cuando acaban sus horas."
+  idle: "No hacer nada: la batería descansa al 50 % toda la semana y la planta solar vende sola."
+  solar_only: "No tomar nunca energía de la red: todos los demás datos correctos, el mejor plan que carga solo desde la solar."
+  no_end_target: "Venderlo todo antes de acabar la semana: el mejor plan con todos los datos correctos salvo el nivel de final de semana."
+  stale_agreement: "Fiarse de los documentos para el límite de vertido: todos los demás datos correctos, los 30 MW del contrato toda la semana."
+  clock_naive: "Ignorar el cambio de hora: el mejor plan con un reloj de 672 cuartos de hora, cargando también de 02:00 a 02:45 del domingo."
+  planner_reserve_in_hours: "Copiar la forma del cliente y cambiar una cosa: la reserva se mantiene solo durante sus horas, no todo el día."
+  planner_two_changes: "Copiar la forma del cliente y quitarle sus dos costumbres más caras: el margen del 1 % y la reserva de todo el día."
+  solar_surplus_only: "Hacer lo mínimo: guardar solo la solar que el controlador recortaría y venderla en los cuartos de hora más caros de la tarde."
+  same_day_every_day: "Entregar una constante: el martes del mejor plan repetido cada día de la semana, hora a hora."

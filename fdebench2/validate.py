@@ -195,6 +195,22 @@ OPEN_AUDIT_FINDINGS: dict[tuple[str, str, str], str] = {
         "client's travel model is close to a textbook guess, so knowing the closed café is enough there; closing "
         "it needs a travel fact no uniform guess approximates, a redesign (a prototype with a river crossed only at "
         "the kitchen closed it but drew a new world and opened the one-move shortcut in 19 of 39 settings)"),
+    ("energy_utilities/battery_dispatch_operator", "shortcut", "solar_only"): (
+        "never drawing from the grid, every other fact right, scores above 0.5 in 19 of the 45 audited settings (19-20 "
+        "on world seeds 1-3) and in all six medium and hard settings of round 2026-11: at the forecast prices a night "
+        "charge rarely pays for its losses and degradation, and the free solar above the export limit fills the "
+        "battery anyway, so the best plan imports little and no window changes it. It needs every other fact and is "
+        "the safe answer to the one question it skips. Closing it trades the degradation fact's bite away: a cheaper "
+        "degradation pool, or a morning peak 30 EUR/MWh dearer with nights 10 EUR/MWh cheaper (still open in 4 of 30 "
+        "medium and hard settings, degradation biting in 21 instead of 30) (GT.md, part 1)"),
+    ("energy_utilities/battery_dispatch_operator", "shortcut", "planner_two_changes"): (
+        "the client's planner without its 1% buffer and without its all-day reserve (the reserve held only through "
+        "its hours) scores up to 0.57, above 0.5 in 3 of the 30 audited medium and hard settings (2 on each of "
+        "world seeds 1-3, none in round 2026-11), where the morning sale into the reserve pays most. It needs every "
+        "client fact and the "
+        "planner rebuilt from its description, so it is the client's way improved by applying the rules, not a way "
+        "around them; a planner that dips into the reserve in the morning on its own breaks the reserve on outage or "
+        "cloudy days (GT.md, part 2)"),
 }
 REQUIRED_META = ("id", "role", "field", "task_type", "objective", "seed", "deliverable_spec", "rules")
 HANGUL = re.compile(r"[가-힣]")
