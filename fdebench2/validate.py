@@ -135,6 +135,14 @@ OPEN_AUDIT_FINDINGS: dict[tuple[str, str, str], str] = {
         "anyway it keeps at most 0.515 of the scale (above 0.5 in one hard setting of 45); a rule that every new hire "
         "works would make the client's own rota invalid, which leaves a new hire off when no experienced full-timer "
         "of their language has days to shadow (most world seeds)"),
+    ("public_sector/benefits_eligibility_officer", "shortcut", "worksheet_best_two_changes"): (
+        "copying the client's worksheet and changing the two of its differences that recover the most reaches about "
+        "0.6-0.75 in easy and medium (every single change stays at most 0.39): the worksheet's two habits of reading "
+        "the form (the disregard for the applicant only, the earnings of adults living elsewhere) and this year's "
+        "table and supplement are each a quarter to two fifths of the scale, and its two halves (the reading habits "
+        "fixed, this year's figures put on it) together make up most of the scale (0.62-1.02 of it), so cutting its "
+        "differences into two groups leaves one near or above half in most settings; narrowing the habits moved the "
+        "excess to pairs of this year's figures (up to 0.90), and a worksheet with more errors would be a strawman"),
     ("finance/stock_trading_strategist", "shortcut", "hold_first_picks"): (
         "buying the reference's first picks and holding them (every notice and the table handled as the reference) "
         "scores about as well as the reference: the world's stock drifts persist over the whole test period and the "

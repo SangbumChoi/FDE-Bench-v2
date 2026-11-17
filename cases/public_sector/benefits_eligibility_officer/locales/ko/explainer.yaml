@@ -25,3 +25,28 @@ rules:
     모든 결정에는 정해진 목록에서 결정과 맞는 사유 코드를 붙입니다(승인은 갱신 신청이면 RENEWAL, 신규 신청이면 APPROVED).
   auto_approve_renewals: >-
     갱신 신청은 재심사 없이 작년 월 지급액으로 승인합니다.
+shortcuts:
+  deny_every_new_application: 신규 신청은 모두 소득 사유로 탈락시키고 갱신은 그대로 이어 줍니다.
+  need_without_income: 거주와 재산 요건을 통과한 신규 가구에 소득을 빼지 않고 필요액 전부를 지급합니다(상한 이내). 갱신은 그대로 이어 줍니다.
+  one_amount_for_all: 거주와 재산 요건을 통과한 신규 가구를 모두 같은 금액(모범 답안 지급액의 중앙값, 상한 이내)으로 승인합니다. 갱신은 그대로 이어 줍니다.
+  counter_screening: 예전의 간이 심사입니다. 작년 지급액표에서 신청서의 모든 소득을 빼고, 그 버전의 거주·재산·상한 기준을 적용하며, 신청서에 적힌 대로 결정하고, 갱신은 그대로 이어 줍니다.
+  literal_renewals_rolled_over: 문자 그대로 처리한 답에서 어긴 규칙 하나만 지킵니다. 갱신을 그대로 이어 줍니다.
+  literal_residency_kept: 문자 그대로 처리한 답에서 어긴 규칙 하나만 지킵니다. 거주 기간이 모자란 가구를 탈락시킵니다.
+  literal_all_rules: 문자 그대로 처리한 답에서 어긴 규칙을 모두 지킵니다. 갱신을 이어 주고, 그 버전의 거주 기간, 재산 한도, 상한을 적용합니다.
+  literal_six_months: 요청을 그다음으로 자연스럽게 읽은 답입니다. 갱신을 이어 주고, 안내문의 "새로 이사 오신 분은 일정 기간이 지나야" 받을 수 있다는 말에서 거주 기간을 6개월(180일)로 짐작합니다.
+  worksheet_members_elsewhere_left_out: 고객의 심사표를 그대로 쓰고 하나만 바꿉니다. 다른 곳에 사는 가구원의 근로소득을 뺍니다.
+  worksheet_residency_in_days: 고객의 심사표를 그대로 쓰고 하나만 바꿉니다. 거주 기간을 일수로 셉니다.
+  worksheet_disregard_every_earner: 고객의 심사표를 그대로 쓰고 하나만 바꿉니다. 작년 근로소득 공제를 신청주소에 사는 근로자 모두에게 적용합니다.
+  worksheet_this_years_disregard: 고객의 심사표를 그대로 쓰고 하나만 바꿉니다. 올해 근로소득 공제를 씁니다(심사표처럼 신청인의 근로소득에만 적용).
+  worksheet_this_years_table: 고객의 심사표를 그대로 쓰고 하나만 바꿉니다. 올해 지급액표를 씁니다.
+  worksheet_child_support_rule: 고객의 심사표를 그대로 쓰고 하나만 바꿉니다. 양육비를 이번 처리 기준대로 다룹니다.
+  worksheet_supplement_line: 고객의 심사표를 그대로 쓰고 하나만 바꿉니다. 장애 가산금을 더합니다.
+  worksheet_this_years_cap: 고객의 심사표를 그대로 쓰고 하나만 바꿉니다. 올해 상한표를 씁니다.
+  worksheet_circular: 고객의 심사표를 그대로 쓰고 하나만 바꿉니다. 재정과 공문을 적용합니다.
+  worksheet_reported_changes: 고객의 심사표를 그대로 쓰고 하나만 바꿉니다. 신청일과 같거나 그보다 앞서 효력이 생긴 변경 신고를 반영합니다.
+  worksheet_guessed_uprating: 고객의 심사표를 그대로 쓰고 하나만 바꿉니다. 올해 인상률을 3%로 짐작합니다.
+  literal_asset_limit_kept: "문자 그대로 처리한 답에서 어긴 규칙 하나만 지킵니다. 재산이 한도를 넘는 가구를 탈락시킵니다."
+  literal_cap_kept: "문자 그대로 처리한 답에서 어긴 규칙 하나만 지킵니다. 모든 지급액을 상한 안으로 맞춥니다."
+  worksheet_this_years_figures: "고객의 심사표를 그대로 쓰되 올해 수치를 인쇄합니다. 올해 지급액표, 근로소득 공제, medium부터는 상한입니다."
+  worksheet_never_refuses_income: "고객의 심사표를 그대로 쓰되 소득 때문에 탈락시킨 가구를 모두 지급액 1로 승인합니다(목표 계산의 허점: 잘못된 탈락은 400과 받을 금액, 형식적 지급은 받을 금액과의 차이만)."
+  worksheet_best_two_changes: "고객의 심사표를 그대로 쓰고, 함께 가장 많이 되찾는 두 가지 차이를 바꿉니다(그 버전에서 가장 좋은 짝. 창구의 방식을 읽은 사람이 가장 나쁜 두 습관을 고치듯이)."

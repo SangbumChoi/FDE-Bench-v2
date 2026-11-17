@@ -5,6 +5,9 @@ field: public_sector
 seed: 20261026
 objective: minimize          # total |monthly_amount - true entitlement| + 400 per wrong eligibility decision
                              # + 100 per ineligible household denied with the wrong reason code
+                             # + 200 per renewal household once any renewal is re-assessed (an approved exception)
+audited: true                # the ground truth audit is enforced (dataset/audit.json, GT.md)
+quality_cap: 1.0             # the answer key is the best a valid batch can do (objective_bound, proven)
 tiers:
   easy: >-
     The core calculation: who counts in the household, the residency period, this year's uprating of last year's
@@ -24,11 +27,13 @@ tiers:
     change nothing.
 params:                      # the scheme's figures; a rule seed draws each one from its pool
   uprating:                  # this year's table = last year's + this percentage, rounded down to a multiple of 10
-    values: [3.2, 2.5, 4.0]
+                             # (2 points apart, so a wrong guess costs a tenth of the scale in most settings of
+                             # every tier; 1.5 points bit in only 4 of 15 hard settings)
+    values: [4.0, 2.0, 6.0]
     labels:
-      3.2: {zh: "3.2", en: "3.2", ko: "3.2", ja: "3.2", es: "3,2"}
-      2.5: {zh: "2.5", en: "2.5", ko: "2.5", ja: "2.5", es: "2,5"}
       4.0: {zh: "4.0", en: "4.0", ko: "4.0", ja: "4.0", es: "4,0"}
+      2.0: {zh: "2.0", en: "2.0", ko: "2.0", ja: "2.0", es: "2,0"}
+      6.0: {zh: "6.0", en: "6.0", ko: "6.0", ja: "6.0", es: "6,0"}
   earned_disregard:          # per earner: a flat amount of monthly earnings, and a share of the rest, are ignored
     values: ["150_30", "100_20", "200_0"]
     labels:
@@ -46,8 +51,9 @@ params:                      # the scheme's figures; a rule seed draws each one 
                   ko: "5,000에 추가 1명당 2,500", ja: "5,000に1人増えるごとに2,500", es: "5.000 más 2.500 por miembro adicional"}
       "8000_2000": {zh: "8,000，每多一人加2,000", en: "8,000 plus 2,000 per additional member",
                   ko: "8,000에 추가 1명당 2,000", ja: "8,000に1人増えるごとに2,000", es: "8.000 más 2.000 por miembro adicional"}
-  disability_supplement:     # added to the need per disabled member at the address (medium, hard)
-    values: {easy: [120], medium: [120, 100, 150], hard: [120, 100, 150]}
+  disability_supplement:     # added to the need per disabled member at the address (medium, hard); 80 apart, so
+                             # a wrong guess costs about a tenth of the scale (20 to 50 apart cost 0.02-0.06)
+    values: {easy: [120], medium: [140, 60, 220], hard: [140, 60, 220]}
   cap:                       # the budget-law cap on the monthly amount by household size, named by its 1-person value
     values: {easy: [1050], medium: [1050, 980, 1150], hard: [1050, 980, 1150]}
     labels:
@@ -78,7 +84,7 @@ deliverable_spec: |
   (APPROVED / RENEWAL only with eligible = yes, DENY_* only with eligible = no).
 rules:
   - id: residency_requirement
-    class: contractual
+    class: physical            # statutory: no exception can bend it (like the budget cap)
     description: Only households resident in the city for at least {{residency_days}} days on the application date may be approved (statutory condition).
   - id: asset_limit
     class: contractual

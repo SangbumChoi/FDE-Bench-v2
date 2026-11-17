@@ -13,13 +13,16 @@ This round is only the basic calculation; some parts are dealt with elsewhere:
 - **Disability**: the disability supplement is paid separately by the disability office this year, so it is not part of the amount.
 - **Child support**: the council is reviewing how child support is treated, so it is not counted as income this round. Those households will be looked at again later.
 - **Cap**: the finance department applies the budget cap afterwards, so give us the amounts without any cap.
-- **Reported changes and letters**: the changes in `reported_changes.csv` and the documents in the `correspondence` folder are handled separately. Decide every application as filed.
+- **Reported changes**: the changes in `reported_changes.csv` are handled separately. Decide every application as filed.
+- **Letters**: the documents in the `correspondence` folder are handled separately too, the finance circular included: do not add its heating supplement this round.
 
 <!-- /tier -->
 <!-- tier: medium -->
 ## This round
 
-The changes in `reported_changes.csv` and the documents in the `correspondence` folder are handled separately this round. Decide every application as filed.
+The changes in `reported_changes.csv` are handled separately this round. Decide every application as filed.
+
+The documents in the `correspondence` folder are handled separately too, the finance circular included: do not add its heating supplement this round.
 
 <!-- /tier -->
 ## Deliverable
@@ -44,11 +47,21 @@ One CSV file, `determinations.csv`, with the ASCII header `household_id,eligible
 - **Countable income** (members at the address only, all figures monthly): for earned income, each earner keeps the first {{earned_flat}} untouched<!-- when: earned_disregard=150_30,100_20 --> and {{earned_ignored}}% of the rest is also ignored, so {{earned_counted}}% of (earned income − {{earned_flat}}) counts<!-- /when --><!-- when: earned_disregard=200_0 --> and everything above {{earned_flat}} counts in full<!-- /when -->, per person. Pensions, unemployment benefit<!-- tier: medium hard -->, `child_support`<!-- /tier --> and other income count in full<!-- tier: medium hard --> (child support is income of the household, even though some citizens think it is not)<!-- /tier -->.
 - **Amount**: need − countable income, rounded down to a whole unit<!-- tier: medium hard -->, and never more than the budget-law cap for the household size: {{cap}}<!-- /tier -->. If the result is 0 or less, the household is not eligible: `DENY_INCOME`.
 - **Renewals** (`application_type = renewal`, with `last_year_monthly_amount`): our practice is that renewals are approved at last year's monthly amount without re-assessment (reason `RENEWAL`), to keep the queue moving. All renewal households already meet the residency and asset conditions.
+- **Exceptions to the renewal practice**: only the director can approve one, and it covers the whole renewal queue, since we treat every renewal household alike: every renewal is then re-assessed under this year's rules. A re-assessment takes a caseworker half a day, which we count at 200 for each renewal household.
 <!-- tier: hard -->
 - **Heating supplement** (the finance circular of 25/09/2026 in the `correspondence` folder): for applications dated on or after 01/10/2026, add the winter heating supplement of 60 to the need, whatever the household size. Applications dated earlier do not get it. The cap still applies.
 - **Reported changes** (`reported_changes.csv`): some households told us about a change after they applied (a member's new earned income, or a new rent). We decide on the situation on the application date: a change whose `effective_from` is on or before the `application_date` replaces the declared figure (that member's earned income, or the rent); a change that takes effect after the application date is not taken into account now (it goes to the next review).
 - **Letters asking for exceptions** (`correspondence` folder): a councillor asks us to approve a family that has not lived here long enough, and an applicant asks us not to count her child support. Neither changes anything: every household is decided on the rules above. The residency condition is statutory and has no exceptions.
 <!-- /tier -->
+
+## How the counter does it today
+
+Without you, our counter staff would work through the queue with last year's paper worksheet, filled in from each application form. It has last year's figures printed on it: last year's table and last year's earnings disregard (the first 150 and 30% of the rest)<!-- tier: medium hard -->, and last year's cap: 980 (1 person), 1,350 (2), 1,680 (3), 1,960 (4), 2,200 (5), 2,400 (6 or more)<!-- /tier -->.
+Its disregard box is for the applicant's own earnings only: the other members' earnings go on the income line in full, together with the earnings of a partner, parent or other relative on the form who lives elsewhere (only a child living elsewhere is left out). Every income column counts, child support included.
+<!-- tier: medium hard -->
+The worksheet has no line for the disability supplement, which the disability office used to add afterwards.
+<!-- /tier -->
+The counter counts the residency period in whole calendar months (90 days as 3 months, 180 as 6, 365 as 12) and rolls every renewal over<!-- tier: hard -->; it decides every application as filed, since the worksheet has no step for reported changes or circulars<!-- /tier -->. That is what we would send out without you: it keeps the conditions that make a batch count, but many of its amounts, and some of its decisions, are wrong.
 
 ## How the determinations are judged
 
@@ -62,4 +75,4 @@ One CSV file, `determinations.csv`, with the ASCII header `household_id,eligible
 - Every row has a valid reason code that matches the decision (an approval is `APPROVED` for a new application and `RENEWAL` for a renewal).
 - Renewals are approved at exactly last year's monthly amount.
 
-**Quality**: the sum over all households of the absolute difference between the amount you pay (0 if not eligible) and the household's true entitlement under this year's rules, plus 400 for every wrong eligibility decision, plus 100 for every household that is rightly refused but with a reason code other than the first condition it fails (residency, assets, income). Lower is better.
+**Quality**: the sum over all households of the absolute difference between the amount you pay (0 if not eligible) and the household's true entitlement under this year's rules, plus 400 for every wrong eligibility decision, plus 100 for every household that is rightly refused but with a reason code other than the first condition it fails (residency, assets, income). Renewals are measured against their entitlement this year too: what rolling them over costs is the price of our practice, the same for every batch that keeps it. If an exception is approved and any renewal is re-assessed, add 200 for every renewal household. Lower is better.

@@ -2,30 +2,42 @@
 
 A city's social-services office has a backlog of ~300 applications for a
 monthly household living-support benefit. The request only says "decide who
-qualifies and how much"; the rules that decide validity and quality (who
-counts in the household, the earned-income disregard, the asset test and its
-exemptions, the residency period and the date format, this year's uprating,
-the disability supplement, the budget cap per household size, the renewal
-policy, the scoring) are in the requirements and must be asked for.
+qualifies and how much"; the rules that decide validity and quality (the
+earned-income disregard, the residency period, this year's uprating, the asset
+limit, the disability supplement, the budget cap, child support, the renewal
+practice and what this round leaves to other desks) are in the requirements
+and must be asked for.
 
 Settings (case.yaml): three tiers, and a rule seed that draws the scheme's figures (the uprating, the earned-income
 disregard, the asset limit, the disability supplement, the budget cap and the residency period). Easy is the core
-calculation: household size, residency, the uprated table, need, the disregard, renewals and reason codes; the
-asset test, the disability supplement, child support and the cap are out of scope this round. Medium adds them.
-Hard adds the dated and adversarial parts that are in the data in every setting: a finance circular adding a heating
-supplement to the need of applications dated from 1 October 2026, changes reported after the application (only
-those in effect on the application date count), and two letters asking for exceptions that change nothing. The
-data is the same in every setting.
+calculation: residency, the uprated table, need, the disregard, renewals and reason codes; the asset test, the
+disability supplement, child support and the cap are out of scope this round, and so are the reported changes and
+the correspondence. Medium adds the asset test, the supplement, child support and the cap. Hard adds the dated and
+adversarial parts that are in the data in every setting: a finance circular adding a heating supplement to the need
+of applications dated from 1 October 2026, changes reported after the application (only those in effect on the
+application date count), and two letters asking for exceptions that change nothing. The data is the same in every
+setting.
+
+Scoring (minimize): every household is measured against its true entitlement under this year's rules: |paid - true
+amount| + 400 per wrong yes/no + 100 per refusal with the wrong reason. Renewals are rolled over at last year's
+amount (the office's practice, a business-policy rule), so what that costs is the same for every answer that keeps
+the practice, and only an approved exception can change it: the exception covers the whole renewal queue, and each
+re-assessment costs REASSESSMENT_COST. The zero point is the client's own worksheet (baseline_solution), the
+reference is the answer key (every rule of the setting applied exactly), and the bound is the renewal practice's own
+cost (objective_bound).
 """
 
 from __future__ import annotations
 
+import calendar
 import csv
 import datetime as dt
 import io
 import math
 import random
+from collections import Counter
 from dataclasses import dataclass, field, replace
+from itertools import combinations, product
 from pathlib import Path
 
 import yaml
@@ -47,14 +59,18 @@ def _candidates(name: str) -> list:
 N_HOUSEHOLDS = 300
 WRONG_DECISION_PENALTY = 400
 WRONG_REASON_PENALTY = 100            # denying an ineligible household for a test other than the first one it fails
+REASSESSMENT_COST = 200               # a caseworker's half day per renewal household, for the whole renewal queue,
+                                      # once an approved exception re-assesses any renewal (equal treatment)
 # last year's (2025) table: household size -> (standard amount, maximum housing allowance)
 LAST_YEAR = {1: (640, 380), 2: (1020, 460), 3: (1310, 540), 4: (1580, 610), 5: (1820, 670),
              6: (2040, 720), 7: (2250, 720), 8: (2460, 720), 9: (2670, 720), 10: (2880, 720)}
 LAST_YEAR_SUPPLEMENT = 120            # last year's disability supplement (renewal awards were worked out with it)
+LAST_YEAR_EARNED = (150, 30)          # last year's earned-income disregard: the first 150, and 30% of the rest
 # the budget-law cap on the monthly amount by household size 1..6 (6 and more share one cap), named by the 1-person cap
 CAP_TABLES = {1050: (1050, 1450, 1800, 2100, 2350, 2550),
               980: (980, 1350, 1680, 1960, 2200, 2400),
               1150: (1150, 1550, 1900, 2200, 2450, 2650)}
+LAST_YEAR_CAP = CAP_TABLES[980]       # last year's cap table (the client's worksheet still has it)
 EARNED = {"150_30": (150, 30), "100_20": (100, 20), "200_0": (200, 0)}     # (flat per earner, % of the rest ignored)
 ASSET_LIMITS = {"6000_3000": (6000, 3000), "5000_2500": (5000, 2500), "8000_2000": (8000, 2000)}
 CIRCULAR_DATE = dt.date(2026, 9, 25)  # hard: the finance circular ...
@@ -71,8 +87,11 @@ assert {int(c) for c in _candidates("cap")} <= set(CAP_TABLES)
 assert {str(c) for c in _candidates("earned_disregard")} <= set(EARNED)
 assert {str(c) for c in _candidates("asset_limit")} <= set(ASSET_LIMITS)
 RESIDENCY_LINES = sorted(int(v) for v in _candidates("residency_days"))
+assert all(d % 30 in (0, 5) for d in RESIDENCY_LINES)      # 90, 180, 365 days: 3, 6, 12 calendar months
 # the strictest asset limit and cap any setting can draw: renewal households meet both (they passed last year)
 MIN_CAP = tuple(min(CAP_TABLES[int(c)][i] for c in _candidates("cap")) for i in range(6))
+# the worksheet's cap (last year's) is never above a cap a setting can draw, so the worksheet keeps the cap rule
+assert all(LAST_YEAR_CAP[i] <= CAP_TABLES[int(c)][i] for c in _candidates("cap") for i in range(6))
 
 
 def strictest_asset_limit(size: int) -> int:
@@ -81,19 +100,31 @@ def strictest_asset_limit(size: int) -> int:
 
 @dataclass(frozen=True)
 class Rules:
-    """The rules in force in one setting, as the assessment reads them."""
+    """How one assessment reads the scheme: the figures and facts in force in a setting (rules_of), and the switches
+    that the client's worksheet, a misreading or the never-asks solver flips. The defaults are the client's reading."""
 
     tier: str
-    uprating: int                       # tenths of a percent: 32 = 3.2%
+    uprating: int                       # tenths of a percent: 35 = 3.5% (0: last year's table)
     earned_flat: int                    # per earner, per month
     earned_ignored: int                 # % of the earnings above the flat amount that is also ignored
     asset_limit: tuple[int, int] | None  # (one person, per additional member); None: no asset test (easy)
-    disability: int                     # supplement per disabled member at the address (0 in easy)
+    disability: int                     # supplement per disabled member at the address (0: none)
     child_support: bool                 # child support counts as income (medium, hard)
     cap: tuple[int, ...] | None         # by household size 1..6+; None: no cap (easy)
     residency_days: int
-    circular: bool                      # hard: the finance circular's heating supplement applies
-    changes: bool                       # hard: reported changes in effect on the application date apply
+    circular: bool                      # the finance circular's heating supplement applies (hard)
+    changes: str = "none"               # the reported changes that count: none (as filed) | in_effect (those that
+                                        # took effect on or before the application date, hard) | all (every one,
+                                        # the latest report winning) | rent (only the new rents in effect)
+    disregard_on: str = "earner"        # earner (each earner at the address) | applicant (the applicant's own earnings
+                                        # only, the other members' in full) | household (once for the household)
+    away_earnings: str = "none"         # none | adults (the earnings of members living elsewhere who are not children
+                                        # counted too)
+    residency_months: bool = False      # the residency period counted in whole calendar months (90 days: 3 months)
+    cars_exempt: str = "top"            # top (the most valuable car) | all | none
+    letters: str = ""                   # the letters granted: "" none | both | approve (the councillor's family
+                                        # approved whatever its residency) | child_support (the letter writer's child
+                                        # support not counted)
 
 
 def _rules(tier: str, p: dict) -> Rules:
@@ -104,7 +135,7 @@ def _rules(tier: str, p: dict) -> Rules:
                  asset_limit=ASSET_LIMITS[str(p["asset_limit"])] if medium else None,
                  disability=int(p["disability_supplement"]) if medium else 0, child_support=medium,
                  cap=CAP_TABLES[int(p["cap"])] if medium else None, residency_days=int(p["residency_days"]),
-                 circular=hard, changes=hard)
+                 circular=hard, changes="in_effect" if hard else "none")
 
 
 def rules_of(setting: Setting) -> Rules:
@@ -112,9 +143,13 @@ def rules_of(setting: Setting) -> Rules:
 
 
 # last year's rules, which the renewal awards on file were worked out with
-LAST_YEAR_RULES = Rules(tier="medium", uprating=0, earned_flat=150, earned_ignored=30, asset_limit=(6000, 3000),
-                        disability=LAST_YEAR_SUPPLEMENT, child_support=True, cap=MIN_CAP, residency_days=180,
-                        circular=False, changes=False)
+LAST_YEAR_RULES = Rules(tier="medium", uprating=0, earned_flat=LAST_YEAR_EARNED[0], earned_ignored=LAST_YEAR_EARNED[1],
+                        asset_limit=(6000, 3000), disability=LAST_YEAR_SUPPLEMENT, child_support=True, cap=MIN_CAP,
+                        residency_days=180, circular=False)
+# the rules the generator checks its situations against (hard with these figures): fixed, so the world does not move
+# when a candidate pool changes
+PROBE = _rules("hard", {"uprating": 3.2, "earned_disregard": "150_30", "asset_limit": "6000_3000",
+                        "disability_supplement": 120, "cap": 1050, "residency_days": 180})
 
 
 def table(size: int, tenths: int) -> tuple[int, int]:
@@ -160,6 +195,7 @@ class Household:
     last_amount: int | None = None
     changes: list[Change] = field(default_factory=list)
     size: int = 0          # members at the address (no reported change moves a member)
+    asks: str = ""         # hard's letters: "approve" (the councillor's family), "child_support" (the letter writer)
 
 
 @dataclass
@@ -168,6 +204,7 @@ class World:
     councillor: str = ""   # the household a councillor asks to approve (fails residency in every setting)
     letter: str = ""       # the household whose applicant asks that child support not be counted
     truths: dict = field(default_factory=dict, repr=False, compare=False)   # Rules -> {household id: truth}
+    seen: dict = field(default_factory=dict, repr=False, compare=False)     # Rules -> the new applications' truths
 
     def get(self, hid: str) -> Household | None:
         return next((h for h in self.households if h.id == hid), None)
@@ -175,34 +212,49 @@ class World:
 
 # ── entitlement ──────────────────────────────────────────────────────────────
 
+def months_before(d: dt.date, months: int) -> dt.date:
+    """The same day `months` calendar months earlier (the month's last day when it has fewer days)."""
+    back, month = divmod(d.month - 1 - months, 12)
+    year, month = d.year + back, month + 1
+    return dt.date(year, month, min(d.day, calendar.monthrange(year, month)[1]))
+
+
 def resident(h: Household, r: Rules) -> bool:
+    """In the city for at least the residency period on the application date (in whole calendar months when the
+    reading counts months: 3, 6 or 12 months, never shorter than 90, 180 or 365 days for these dates)."""
+    if r.residency_months:
+        return h.resident_since <= months_before(h.applied, r.residency_days // 30)
     return (h.applied - h.resident_since).days >= r.residency_days
 
 
-def countable_assets(h: Household) -> int:
-    cars = sorted((v for t, v in h.assets if t == "car"), reverse=True)
+def countable_assets(h: Household, cars: str = "top") -> int:
+    """All declared values but the home the household lives in and the exempt car (the most valuable one; `cars`
+    reads the exemption another way: every car, or none)."""
+    values = sorted((v for t, v in h.assets if t == "car"), reverse=True)
     other = sum(v for t, v in h.assets if t not in ("residence", "car"))
-    return other + sum(cars[1:])           # primary residence and one car (the most valuable) are exempt
+    return other + {"top": sum(values[1:]), "all": 0, "none": sum(values)}[cars]
 
 
 def situation(h: Household, r: Rules) -> tuple[list[Member], int]:
-    """(members, rent) on the application date: in hard, the reported changes in effect by then replace the
-    declared earned income or rent; later changes wait for the next review."""
+    """(members, rent) the assessment works from: as filed, or with the reported changes that count under the
+    reading (in hard, those in effect on the application date; later ones wait for the next review)."""
     members, rent = h.members, h.rent
-    if r.changes:
-        for c in h.changes:
-            if c.effective > h.applied:
-                continue
-            if c.item == "rent":
-                rent = c.value
-            else:
-                members = [replace(m, income={**m.income, "earned": c.value}) if m.no == c.member_no else m
-                           for m in members]
+    if r.changes == "none":
+        return members, rent
+    for c in sorted(h.changes, key=lambda c: (c.reported, c.effective)):
+        if r.changes in ("in_effect", "rent") and c.effective > h.applied or r.changes == "rent" and c.item != "rent":
+            continue
+        if c.item == "rent":
+            rent = c.value
+        else:
+            members = [replace(m, income={**m.income, "earned": c.value}) if m.no == c.member_no else m
+                       for m in members]
     return members, rent
 
 
 def income_x100(home: list[Member], r: Rules, per_earner: bool = True) -> int:
-    """Countable monthly income of the members at the address, in hundredths (exact)."""
+    """Countable monthly income of the members at the address, in hundredths (exact); the generator's version (last
+    year's awards), with the flat amount per earner or once per household."""
     keep = 100 - r.earned_ignored
     earned = [m.income["earned"] for m in home if m.income["earned"] > 0]
     if per_earner:
@@ -213,39 +265,76 @@ def income_x100(home: list[Member], r: Rules, per_earner: bool = True) -> int:
     return counted + 100 * sum(m.income[k] for m in home for k in full)
 
 
-def amount_due(h: Household, r: Rules, per_earner: bool = True) -> int:
+def countable_income_x100(h: Household, members: list[Member], r: Rules) -> int:
+    """Countable monthly income of the household as the reading counts it, in hundredths (exact): earnings above the
+    disregard (per earner at the address, unless the reading applies it otherwise), pensions, unemployment benefit
+    and other income in full, child support in full when it counts."""
+    home = [m for m in members if m.at_address]
+    keep = 100 - r.earned_ignored
+
+    def counted(e: int) -> int:
+        return max(0, e - r.earned_flat) * keep
+    if r.disregard_on == "earner":
+        earned = sum(counted(m.income["earned"]) for m in home)
+    elif r.disregard_on == "applicant":
+        earned = sum(counted(m.income["earned"]) if m.relation == "applicant" else 100 * m.income["earned"]
+                     for m in home)
+    else:
+        earned = counted(sum(m.income["earned"] for m in home))
+    if r.away_earnings == "adults":
+        earned += 100 * sum(m.income["earned"] for m in members if not m.at_address and m.relation != "child")
+    full = ["pension", "unemployment", "other"]
+    if r.child_support and not (r.letters in ("both", "child_support") and h.asks == "child_support"):
+        full.append("child_support")
+    return earned + 100 * sum(m.income[k] for m in home for k in full)
+
+
+def need(h: Household, r: Rules, members: list[Member], rent: int) -> int:
+    home = [m for m in members if m.at_address]
+    std, house = table(len(home), r.uprating)
+    out = std + min(rent, house) + r.disability * sum(m.disabled for m in home)
+    return out + (HEATING if r.circular and h.applied >= CIRCULAR_FROM else 0)
+
+
+def amount_due(h: Household, r: Rules) -> int:
     """Need - countable income, rounded down, within the cap: what the household is paid if it passes the
     residency and asset tests (0 or less: refused for income)."""
     members, rent = situation(h, r)
-    home = [m for m in members if m.at_address]
-    std, house = table(len(home), r.uprating)
-    need = std + min(rent, house) + r.disability * sum(m.disabled for m in home)
-    if r.circular and h.applied >= CIRCULAR_FROM:
-        need += HEATING
-    amount = (100 * need - income_x100(home, r, per_earner)) // 100
-    return min(cap(len(home), r), amount)
+    amount = (100 * need(h, r, members, rent) - countable_income_x100(h, members, r)) // 100
+    return min(cap(h.size, r), amount)
 
 
 def cap(size: int, r: Rules) -> float:
     return r.cap[min(size, 6) - 1] if r.cap else float("inf")
 
 
-def assess(h: Household, r: Rules, per_earner: bool = True) -> tuple[bool, int, str]:
-    if not resident(h, r):
+def assess(h: Household, r: Rules) -> tuple[bool, int, str]:
+    """(eligible, monthly amount, reason code) under the reading: the first failing test in the order residency,
+    assets, income refuses."""
+    if not resident(h, r) and not (r.letters in ("both", "approve") and h.asks == "approve"):
         return False, 0, "DENY_RESIDENCY"
-    if r.asset_limit and countable_assets(h) > asset_limit(h.size, r.asset_limit):
+    if r.asset_limit and countable_assets(h, r.cars_exempt) > asset_limit(h.size, r.asset_limit):
         return False, 0, "DENY_ASSETS"
-    amount = amount_due(h, r, per_earner)
+    amount = amount_due(h, r)
     if amount <= 0:
         return False, 0, "DENY_INCOME"
     return True, int(amount), "RENEWAL" if h.renewal else "APPROVED"
 
 
 def truth(world: World, r: Rules) -> dict[str, tuple[bool, int, str]]:
-    """Every household's true determination under these rules (this year's entitlement, renewals included)."""
+    """Every household's determination under these rules (this year's entitlement, renewals included)."""
     if r not in world.truths:
         world.truths[r] = {h.id: assess(h, r) for h in world.households}
     return world.truths[r]
+
+
+def practice_cost(world: World, r: Rules) -> int:
+    """What rolling the renewals over costs under these rules: every renewal paid last year's amount, measured
+    against its entitlement this year (and 400 for each that no longer qualifies). The same for every answer that
+    keeps the renewal practice, so it is the proven floor of a valid objective (objective_bound)."""
+    true = truth(world, r)
+    return sum(abs(h.last_amount - (true[h.id][1] if true[h.id][0] else 0))
+               + (0 if true[h.id][0] else WRONG_DECISION_PENALTY) for h in world.households if h.renewal)
 
 
 # ── world ────────────────────────────────────────────────────────────────────
@@ -309,7 +398,8 @@ def _make_household(rng: random.Random, idx: int, renewal: bool) -> Household:
             inc["earned"] = rng.randrange(400, 1800, 10)   # e.g. working in another city
         if not at_home and rel == "child" and age >= 18 and rng.random() < 0.6:
             inc["earned"] = rng.randrange(300, 1200, 10)
-        members.append(Member(no, rel, age, at_home, rng.random() < 0.08, inc))
+        # a disability in about one member in seven (the case load of a means-tested benefit; 8% before the audit)
+        members.append(Member(no, rel, age, at_home, rng.random() < 0.14, inc))
     owner = rng.random() < 0.15
     rent = 0 if owner else rng.randrange(240, 920, 10)
     assets = ([("residence", rng.randrange(60000, 210000, 1000))] if owner else []) + _movable_assets(rng)
@@ -332,8 +422,8 @@ def _working(h: Household) -> list[Member]:
 
 
 def _probe() -> Rules:
-    """Hard with every parameter's first candidate: the generator checks that its situations matter there."""
-    return _rules("hard", {name: by_tier["hard"][0] for name, by_tier in POOLS.items()})
+    """The rules the generator checks that its situations matter under (PROBE)."""
+    return PROBE
 
 
 def _near_asset_lines(rng: random.Random, world: World, settled: list[Household]) -> set[str]:
@@ -372,11 +462,12 @@ def _add_situations(rng: random.Random, world: World) -> None:
         if m.at_address:
             m.income = {k: 0 for k in INCOME_TYPES}
     fam.assets = [("savings", rng.randrange(200, 1500, 10))]
-    world.councillor = fam.id
+    world.councillor, fam.asks = fam.id, "approve"
     # the applicant who asks that child support not be counted: a settled single parent who receives it
     pool = [h for h in settled if h is not fam and h.applied <= LETTER_DATE - dt.timedelta(days=2)
             and h.members[0].income["child_support"] >= 200]
-    world.letter = rng.choice(pool).id
+    writer = rng.choice(pool)
+    world.letter, writer.asks = writer.id, "child_support"
     # changes reported after the application by settled new households: half in effect on or before the
     # application date (one on that very day), half later; each would move the amount by 30 or more
     probe = _probe()
@@ -857,7 +948,7 @@ def _parse(world: World, submission_dir: Path) -> dict[str, tuple[bool, float, s
     rows = read_csv(submission_dir, "determinations.csv", ["household_id", "eligible", "monthly_amount", "reason_code"])
     out: dict[str, tuple[bool, float, str]] = {}
     for r in rows:
-        hid = (r.get("household_id") or "").strip()
+        hid = (r.get("household_id") or "").strip().upper()
         if world.get(hid) is None:
             raise Fatal(f"unknown household_id {hid!r}")
         if hid in out:
@@ -868,14 +959,23 @@ def _parse(world: World, submission_dir: Path) -> dict[str, tuple[bool, float, s
         amt = number((r.get("monthly_amount") or "0").strip() or "0", f"{hid}.monthly_amount")
         if amt < 0:
             raise Fatal(f"{hid}: negative monthly_amount")
-        out[hid] = (e in TRUE_WORDS, amt, (r.get("reason_code") or "").strip())
+        out[hid] = (e in TRUE_WORDS, amt, (r.get("reason_code") or "").strip().upper())
     missing = [h.id for h in world.households if h.id not in out]
     if missing:
         raise Fatal(f"determinations.csv has no row for {len(missing)} households, e.g. {missing[:5]}")
     return out
 
 
+def rolled_over(h: Household, row: tuple[bool, float, str]) -> bool:
+    """A renewal approved at exactly last year's monthly amount (the office's practice)."""
+    return row[0] and abs(row[1] - h.last_amount) <= 0.5
+
+
 def score(world: World, submission_dir: Path, setting: Setting) -> dict:
+    """objective = sum over households of |paid - true entitlement| + 400 per wrong yes/no + 100 per household rightly
+    refused with another reason than its first failing test, + REASSESSMENT_COST for every renewal household once
+    any renewal is not rolled over (an exception covers the whole renewal queue). Renewals are measured against their
+    entitlement this year too: what rolling them over costs is the same for every answer that keeps the practice."""
     r = rules_of(setting)
     try:
         sub = _parse(world, submission_dir)
@@ -885,10 +985,14 @@ def score(world: World, submission_dir: Path, setting: Setting) -> dict:
     violations: list[tuple[str, str]] = []
     abs_err = 0.0
     wrong = wrong_reason = 0
+    renewals = [h for h in world.households if h.renewal]
+    reassessed = {h.id for h in renewals if not rolled_over(h, sub[h.id])}
     for h in world.households:
         elig, amt, code = sub[h.id]
         t_elig, t_amount, t_reason = true[h.id]
-        paid = amt if elig else 0.0
+        # a renewal rolled over is paid last year's amount (the half-unit tolerance only reads a written amount such
+        # as 352.0 or 351.99 as 352), so every valid batch pays the renewals exactly the practice's cost
+        paid = (h.last_amount if h.renewal and h.id not in reassessed else amt) if elig else 0.0
         abs_err += abs(paid - (t_amount if t_elig else 0))
         wrong += elig != t_elig
         if code not in REASON_CODES:
@@ -907,24 +1011,299 @@ def score(world: World, submission_dir: Path, setting: Setting) -> dict:
             violations.append(("asset_limit", f"{h.id} approved with countable assets above the limit"))
         if elig and amt > cap(h.size, r) + 1e-9:
             violations.append(("amount_cap", f"{h.id}: {amt:g} exceeds the cap {cap(h.size, r)} for size {h.size}"))
-        if h.renewal and (not elig or abs(amt - h.last_amount) > 0.5):
+        if h.id in reassessed:
             violations.append(("auto_approve_renewals",
                                f"{h.id} is a renewal: must be approved at last year's {h.last_amount}"))
-    objective = abs_err + WRONG_DECISION_PENALTY * wrong + WRONG_REASON_PENALTY * wrong_reason
+    queue = REASSESSMENT_COST * len(renewals) if reassessed else 0
+    objective = abs_err + WRONG_DECISION_PENALTY * wrong + WRONG_REASON_PENALTY * wrong_reason + queue
     return {"violations": violations, "objective": round(objective, 4),
             "metrics": {"abs_amount_error": round(abs_err, 2), "wrong_decisions": wrong,
-                        "wrong_denial_reasons": wrong_reason, "households": len(world.households)}}
+                        "wrong_denial_reasons": wrong_reason, "renewals_reassessed": len(reassessed),
+                        "reassessment_cost": queue, "households": len(world.households)}}
 
 
-# ── reference solution ───────────────────────────────────────────────────────
+# ── the client's facts in a deliverable (the per-target diagnostic) ─────────
 
-def _decide(world: World, r: Rules, keep_renewal_rule: bool = True) -> list[list]:
+# the targets in force per tier (as in locales/en/targets.yaml)
+TARGETS = {
+    "easy": ("earned_disregard", "residency", "uprating", "renewals", "assets_out_of_round", "supplement_out_of_round",
+             "child_support_out_of_round", "changes_out_of_round", "circular_out_of_round"),
+    "medium": ("earned_disregard", "residency", "uprating", "renewals", "changes_out_of_round", "circular_out_of_round",
+               "asset_limit", "disability_supplement", "child_support", "amount_cap"),
+    "hard": ("earned_disregard", "residency", "uprating", "renewals", "asset_limit", "disability_supplement",
+             "child_support", "amount_cap", "reported_changes", "exception_requests"),
+}
+
+
+def misreadings(setting: Setting) -> dict[str, tuple[str, Rules]]:
+    """{target: (what the misreading is, the rules read that way)} for the targets in force that are not one drawn
+    figure: the most natural wrong reading of each fact from what the agent sees, everything else as the client
+    states it. The renewal practice is misread by re-assessing the renewals (ablations, not a reading)."""
+    r = rules_of(setting)
+    medium_limit = ASSET_LIMITS[str(POOLS["asset_limit"]["easy"][0])]
+    out: dict[str, tuple[str, Rules]] = {}
+    if setting.tier == "easy":
+        out["assets_out_of_round"] = (f"the asset test applied ({medium_limit[0]:,} + {medium_limit[1]:,} per "
+                                      "additional member, the home and the most valuable car exempt)",
+                                      replace(r, asset_limit=medium_limit))
+        out["supplement_out_of_round"] = (f"a disability supplement of {LAST_YEAR_SUPPLEMENT} per disabled member "
+                                          "at the address", replace(r, disability=LAST_YEAR_SUPPLEMENT))
+        out["child_support_out_of_round"] = ("child support counted as income", replace(r, child_support=True))
+    else:
+        out["child_support"] = ("child support not counted as income", replace(r, child_support=False))
+        out["amount_cap"] = ("no cap (nothing the agent sees names one)", replace(r, cap=None))
+    if setting.tier != "hard":
+        out["changes_out_of_round"] = ("every reported change applied (the latest report of each)",
+                                       replace(r, changes="all"))
+        out["circular_out_of_round"] = ("the finance circular's heating supplement applied",
+                                        replace(r, circular=True))
+    else:
+        out["reported_changes"] = ("every reported change applied, whatever its date (the latest report of each)",
+                                   replace(r, changes="all"))
+        out["exception_requests"] = ("the letters granted: the councillor's family approved, the letter writer's "
+                                     "child support not counted", replace(r, letters="both"))
+    return out
+
+
+PARAM_TARGETS = {"earned_disregard": "earned_disregard", "residency": "residency_days", "uprating": "uprating",
+                 "asset_limit": "asset_limit", "disability_supplement": "disability_supplement"}
+# figures an engineer who does not ask might guess that no pool holds: other upratings (1% to 8%), the candidate
+# disregards' figures crossed (the first 100 and 30% of the rest, ...), other supplements (last year's 120 among them)
+GUESSED_UPRATINGS = tuple(range(10, 81, 5))         # tenths of a percent
+GUESSED_SUPPLEMENTS = (100, 120, 180)
+
+
+def _with(setting: Setting, **params) -> Rules:
+    return _rules(setting.tier, {**setting.params, **params})
+
+
+def alternatives(setting: Setting) -> dict[str, dict[str, Rules]]:
+    """{target: {label: reading}}: the other readings of each fact in force that the diagnostic weighs: the other
+    candidates of a drawn figure, the natural misreading of a fixed fact (misreadings), and less natural readings
+    (last year's table, the disregard once per household, on the applicant's earnings only or not at all, residency
+    in calendar months, every car or none exempt, another supplement or cap, the reported changes ignored)."""
+    r = rules_of(setting)
+    tier = setting.tier
+    out: dict[str, dict[str, Rules]] = {t: {} for t in TARGETS[tier] if t != "renewals"}
+    for target, name in PARAM_TARGETS.items():
+        if target in out:
+            out[target] = {f"{name}={v}": _with(setting, **{name: v}) for v in POOLS[name][tier]
+                           if str(v) != str(setting[name])}
+    out["uprating"]["last year's table"] = replace(r, uprating=0)
+    pool = {round(float(v) * 10) for v in POOLS["uprating"][tier]}
+    out["uprating"].update({f"a guessed uprating of {t / 10:g}%": replace(r, uprating=t) for t in GUESSED_UPRATINGS
+                            if t not in pool})
+    out["earned_disregard"].update({"the disregard once per household": replace(r, disregard_on="household"),
+                                    "the disregard on the applicant's earnings only":
+                                        replace(r, disregard_on="applicant"),
+                                    "no earnings disregard": replace(r, earned_flat=0, earned_ignored=0)})
+    figures = [EARNED[str(v)] for v in _candidates("earned_disregard")]
+    out["earned_disregard"].update({f"the first {flat} and {ignored}% of the rest": replace(
+        r, earned_flat=flat, earned_ignored=ignored) for flat in sorted({f for f, _ in figures})
+        for ignored in sorted({i for _, i in figures}) if (flat, ignored) not in figures})
+    out["residency"]["the period in calendar months"] = replace(r, residency_months=True)
+    for target, (label, reading) in misreadings(setting).items():
+        out[target][label] = reading
+    if tier == "easy":
+        out["assets_out_of_round"].update({f"the asset test at {v}": replace(r, asset_limit=ASSET_LIMITS[str(v)])
+                                           for v in POOLS["asset_limit"]["medium"]})
+        out["supplement_out_of_round"].update({f"a supplement of {v}": replace(r, disability=int(v))
+                                               for v in POOLS["disability_supplement"]["medium"]})
+    else:
+        out["asset_limit"].update({"every car exempt": replace(r, cars_exempt="all"),
+                                   "no car exempt": replace(r, cars_exempt="none")})
+        out["disability_supplement"]["no disability supplement"] = replace(r, disability=0)
+        out["disability_supplement"].update({f"a supplement of {v}": replace(r, disability=v)
+                                             for v in GUESSED_SUPPLEMENTS
+                                             if v not in {int(x) for x in POOLS["disability_supplement"][tier]}})
+        out["amount_cap"].update({f"the cap table of {v}": replace(r, cap=CAP_TABLES[int(v)])
+                                  for v in POOLS["cap"][tier] if CAP_TABLES[int(v)] != r.cap})
+    if tier != "hard":
+        out["changes_out_of_round"]["the changes in effect on the application date applied"] = \
+            replace(r, changes="in_effect")
+    else:
+        out["reported_changes"]["every application as filed"] = replace(r, changes="none")
+        # the two letters told apart one by one (the ablation grants both)
+        out["exception_requests"] = {"the councillor's family approved": replace(r, letters="approve"),
+                                     LETTER_ONLY: replace(r, letters="child_support")}
+    return out
+
+
+# the letter alone tells only a deliverable that counts child support for everyone else: one that counts it for nobody
+# misreads child support, not the letter
+LETTER_ONLY = "the letter writer's child support not counted"
+
+
+# facts that decide who qualifies: the diagnostic compares decisions (and a refusal's reason), not amounts
+DECISION_TARGETS = ("residency", "asset_limit", "assets_out_of_round")
+
+
+def _same(a: tuple, b: tuple, decision: bool = False) -> bool:
+    """Two determinations agree: the same decision and, when approved, amounts within one unit (rounding); with
+    decision, the same decision and, when refused, the same reason."""
+    if a[0] != b[0]:
+        return False
+    if not a[0]:
+        return not decision or a[2] == b[2]
+    return decision or abs(a[1] - b[1]) <= 1
+
+
+def _close(a: tuple, b: tuple) -> bool:
+    """The same decision and, when approved, amounts within UNHELD_TOLERANCE."""
+    return a[0] == b[0] and (not a[0] or abs(a[1] - b[1]) <= UNHELD_TOLERANCE)
+
+
+DIAG_MIN_GAIN = 3              # another fact's reading explains a deviation when it matches this many more households
+DIAG_ROUNDS = 4                 # at most this many other facts read the deliverable's way
+UNHELD_MIN = 5                  # a figure no reading holds is judged on at least this many households it moves
+UNHELD_TOLERANCE = 10           # ... and an amount off by more than this leaves the client's (a rounding to tens does not)
+
+
+def _seen(world: World, r: Rules) -> list[tuple[bool, int, str]]:
+    """The new applications' determinations under a reading (cached; the diagnostic weighs a few hundred)."""
+    if r not in world.seen:
+        if len(world.seen) > 4000:
+            world.seen.clear()
+        world.seen[r] = [assess(h, r) for h in world.households if not h.renewal]
+    return world.seen[r]
+
+
+def _delta(r: Rules, alt: Rules) -> dict:
+    """What a reading changes in the client's (the fields where alt differs from r)."""
+    return {f: getattr(alt, f) for f in r.__dataclass_fields__ if getattr(alt, f) != getattr(r, f)}
+
+
+def _context(world: World, subs: list, r: Rules, alts: dict[str, dict[str, Rules]]) -> dict[str, tuple[str, dict]]:
+    """{target: (label, change)}: the other readings that best explain the deliverable, found greedily: each round
+    takes the one reading of a fact not yet taken that matches the most more new applications (amounts within one
+    unit, the same decision), while it gains at least DIAG_MIN_GAIN. A deliverable that misreads one fact gets that
+    fact; one that misreads two that both move amounts (the uprating and the disregard) gets both, so each is then
+    judged with the other read the deliverable's way."""
+    chosen: dict[str, tuple[str, dict]] = {}
+    current = r
+    matched = sum(_same(s, t) for s, t in zip(subs, _seen(world, r)))
+    for _ in range(DIAG_ROUNDS):
+        best = None
+        for target, options in alts.items():
+            if target in chosen:
+                continue
+            for label, alt in options.items():
+                change = _delta(r, alt)
+                m = sum(_same(s, t) for s, t in zip(subs, _seen(world, replace(current, **change))))
+                if m - matched >= DIAG_MIN_GAIN and (best is None or m > best[0]):
+                    best = (m, target, label, change)
+        if best is None:
+            break
+        matched, target, label, change = best
+        chosen[target] = (label, change)
+        current = replace(current, **change)
+    return chosen
+
+
+def diagnostic(world: World, sub: dict[str, tuple[bool, float, str]], setting: Setting) -> tuple[dict, dict]:
+    """(enforced, evidence) per target in force. For each other reading of a fact (alternatives), the new
+    applications where the client's reading and that reading give different determinations tell them apart; the
+    deliverable sides with a reading on a household when its decision is the same and its amount within one unit
+    (for the facts that decide who qualifies, DECISION_TARGETS: the same decision and, when refused, the same reason).
+    Each fact is judged in a context: the other facts read the way that best explains the deliverable (_context), so
+    a deliverable that misreads two facts which both move amounts has each one judged with the other read its way.
+    Not enforced: it sides with some other reading on at least half of the households that tell the two apart, more
+    often than with the client's, and agrees with the client's reading (in that context) on at least half of the
+    households that do not tell them apart (those the client pays, for an amount: so its deviation is this fact's,
+    not another's that moves every amount); on the letters, once is enough: giving in once is giving in. Enforced: it
+    sides with the client's reading on at least half of them, and more often, for every other reading. None: no
+    household tells them apart, or the deliverable follows neither often enough. An amount fact that ends None is
+    not enforced when the deliverable leaves the client's amounts on at least three quarters of the households some
+    reading of the fact moves and keeps them on three quarters of the others it pays (a figure no reading holds,
+    such as a guessed supplement). The renewal practice is enforced when every renewal is rolled over at last
+    year's amount and not enforced when any one is not."""
+    r = rules_of(setting)
+    new = [h for h in world.households if not h.renewal]
+    subs = [sub[h.id] for h in new]
+    enforced: dict[str, bool | None] = {}
+    evidence: dict[str, str] = {}
+    renewals = [h for h in world.households if h.renewal]
+    changed = [h.id for h in renewals if not rolled_over(h, sub[h.id])]
+    enforced["renewals"] = False if changed else True
+    evidence["renewals"] = (f"{len(changed)} of {len(renewals)} renewals not rolled over at last year's amount "
+                            f"(e.g. {changed[0]})" if changed else f"all {len(renewals)} renewals rolled over")
+    alts = alternatives(setting)
+    chosen = _context(world, subs, r, alts)
+    for target, options in alts.items():
+        base = r
+        for other_target, (_, change) in chosen.items():
+            if other_target != target:
+                base = replace(base, **change)
+        within = [label for t, (label, _) in chosen.items() if t != target]
+        client = _seen(world, base)
+        verdict, notes = None, []
+        touched: set[int] = set()               # the households some other reading of the fact decides otherwise
+        for label, alt in options.items():
+            if label == LETTER_ONLY and enforced.get("child_support") is not True:
+                continue
+            other = _seen(world, replace(base, **_delta(r, alt)))
+            decision = target in DECISION_TARGETS
+            ours = theirs = telling = agree = quiet = 0
+            for i, (s, c, a) in enumerate(zip(subs, client, other)):
+                if _same(c, a, decision):
+                    if decision or c[0]:        # amounts tell only where the client pays
+                        quiet += 1
+                        agree += _same(s, c, decision)
+                    continue
+                touched.add(i)
+                telling += 1
+                ours += _same(s, c, decision)
+                theirs += _same(s, a, decision)
+            specific = 2 * agree >= quiet       # it follows the client elsewhere: the deviation is this fact's
+            where = f" (with {'; '.join(within)})" if within else ""
+            if (theirs > ours and 2 * theirs >= telling and specific) or (theirs and target == "exception_requests"):
+                verdict = False
+                notes.append(f"follows \"{label}\" on {theirs} of the {telling} households that tell it from the "
+                             f"client's reading{where}")
+            elif ours > theirs and 2 * ours >= telling and verdict is None:
+                verdict = True
+                notes.append(f"follows the client's reading on {ours} of the {telling} households that tell it "
+                             f"from \"{label}\"{where}")
+        if verdict is None and target not in DECISION_TARGETS and target != "exception_requests":
+            # a figure no reading holds (a guessed disregard or supplement): the deliverable leaves the client's
+            # amounts on the households this fact moves and keeps them on the others it pays
+            paid = [i for i, c in enumerate(client) if c[0] and i not in touched]
+            hit = sum(_close(subs[i], client[i]) for i in touched)
+            kept = sum(_close(subs[i], client[i]) for i in paid)
+            if len(touched) >= UNHELD_MIN and len(paid) >= 2 * UNHELD_MIN and 4 * hit <= len(touched) \
+                    and 4 * kept >= 3 * len(paid):
+                verdict = False
+                notes.append(f"follows no reading on {len(touched) - hit} of the {len(touched)} households the fact "
+                             f"moves and the client's on {kept} of the {len(paid)} others it pays (a figure no "
+                             f"reading holds){where if notes else ''}")
+        enforced[target] = verdict
+        if notes:
+            evidence[target] = notes[-1] if verdict is False else notes[0]
+    return enforced, evidence
+
+
+def diagnose(world: World, submission_dir: Path, setting: Setting, scored: dict) -> dict:
+    """The per-target diagnostic of a readable deliverable (valid or not); {} when it cannot be read."""
+    try:
+        sub = _parse(world, submission_dir)
+    except Fatal:
+        return {}
+    enforced, evidence = diagnostic(world, sub, setting)
+    return {"enforced": enforced, "evidence": evidence}
+
+
+# ── reference, baseline and literal solutions ────────────────────────────────
+
+def determinations(world: World, r: Rules, reassess: bool = False) -> list[list]:
+    """One row per household under the reading: renewals rolled over at last year's amount (or, with reassess,
+    decided like new applications under the reading)."""
+    true = truth(world, r)
     rows = []
     for h in world.households:
-        if h.renewal and keep_renewal_rule:
+        if h.renewal and not reassess:
             rows.append([h.id, "yes", h.last_amount, "RENEWAL"])
             continue
-        elig, amt, code = assess(h, r, per_earner=False)   # earned flat amount applied once per household
+        elig, amt, code = true[h.id]
         rows.append([h.id, "yes" if elig else "no", amt, code])
     return rows
 
@@ -938,50 +1317,53 @@ def _write(out_dir: Path, rows: list[list]) -> None:
 
 
 def reference_solution(world: World, out_dir: Path, setting: Setting) -> None:
-    """Every rule of the setting (the circular and the reported changes in hard; no exception for the letters),
-    renewals rolled over, with one deliberate simplification: the earned-income flat amount is applied once per
-    household instead of per earner."""
-    _write(out_dir, _decide(world, rules_of(setting)))
+    """The answer key: every rule of the setting applied exactly (in hard the circular and the reported changes in
+    effect on the application date, no exception for the letters), renewals rolled over at last year's amount."""
+    _write(out_dir, determinations(world, rules_of(setting)))
+
+
+def best_known_solution(world: World, out_dir: Path, setting: Setting) -> None:
+    """The answer key is the best a valid deliverable can do (objective_bound)."""
+    reference_solution(world, out_dir, setting)
+
+
+def objective_bound(world: World, setting: Setting) -> float:
+    """Proven: a valid deliverable rolls every renewal over, and score() pays a rolled-over renewal exactly last
+    year's amount (a written 351.99 or 352.4 is read as 352), so the renewals cost practice_cost whatever else it
+    does; no renewal is re-assessed, so no queue cost; every new application costs 0 or more; the answer key costs
+    exactly that. (A deliverable that re-assesses the renewals under an approved exception is outside the bound's
+    scope and can end below it.) Before the audit's check, a renewal written half a unit towards its entitlement
+    counted as rolled over and beat the bound by 0.5 a renewal (55 on the public world)."""
+    return float(practice_cost(world, rules_of(setting)))
+
+
+def worksheet_rules(setting: Setting) -> Rules:
+    """The client's own way (requirements.md, "How the counter does it today"): last year's paper worksheet. It has
+    last year's figures printed on it: last year's table, last year's earnings disregard (150 and 30% of the rest)
+    and, from medium, last year's cap table; it has no line for the disability supplement. The disregard box is for
+    the applicant's own earnings; the other members' earnings go on the income line in full, with the earnings of a
+    partner, parent or other relative on the form who lives elsewhere (a child living elsewhere is left out). Every
+    income column counts, child support included. Residency is counted in whole calendar months. Every application
+    is decided as filed (no reported changes, no circular). It keeps the round's arrangements (no asset test or cap
+    in easy) and the residency period, asset limit and cap rules of the setting, so it is valid."""
+    return _worksheet(rules_of(setting))
+
+
+def _worksheet(r: Rules) -> Rules:
+    """The worksheet's reading of a setting's rules (worksheet_rules)."""
+    return replace(r, uprating=0, earned_flat=LAST_YEAR_EARNED[0], earned_ignored=LAST_YEAR_EARNED[1],
+                   disregard_on="applicant", away_earnings="adults", child_support=True, disability=0,
+                   cap=LAST_YEAR_CAP if r.cap else None, residency_months=True, circular=False, changes="none")
 
 
 def baseline_solution(world: World, out_dir: Path, setting: Setting) -> None:
-    """The counter's worksheet without an engineer: renewals rolled over at last year's amount (the office's
-    practice); new applications screened on residency and (from medium) assets, then paid last year's published
-    table (standard amount + rent up to the housing maximum) minus every income column of the members at the
-    address in full, within the cap from medium. No uprating, no circular, no earned-income disregard, no
-    disability supplement, the declarations as filed."""
-    r = rules_of(setting)
-    rows = []
-    for h in world.households:
-        if h.renewal:
-            rows.append([h.id, "yes", h.last_amount, "RENEWAL"])
-        elif not resident(h, r):
-            rows.append([h.id, "no", 0, "DENY_RESIDENCY"])
-        elif r.asset_limit and countable_assets(h) > asset_limit(h.size, r.asset_limit):
-            rows.append([h.id, "no", 0, "DENY_ASSETS"])
-        else:
-            std, house = LAST_YEAR[min(h.size, 10)]
-            income = sum(m.income[k] for m in h.members if m.at_address for k in INCOME_TYPES)
-            amount = min(cap(h.size, r), std + min(h.rent, house) - income)
-            rows.append([h.id, "yes", int(amount), "APPROVED"] if amount > 0 else [h.id, "no", 0, "DENY_INCOME"])
-    _write(out_dir, rows)
+    """The counter's worksheet (worksheet_rules), renewals rolled over."""
+    _write(out_dir, determinations(world, worksheet_rules(setting)))
 
 
 # the request read at face value: the figures the agent's view gives, and nothing the leaflet only hints at
 LITERAL_RULES = Rules(tier="easy", uprating=0, earned_flat=0, earned_ignored=0, asset_limit=None, disability=0,
-                      child_support=True, cap=None, residency_days=0, circular=True, changes=False)
-
-
-def _as_reported(h: Household) -> Household:
-    """The household with every change it reported applied, the latest report of each item winning."""
-    members, rent = h.members, h.rent
-    for c in sorted(h.changes, key=lambda c: (c.reported, c.effective)):
-        if c.item == "rent":
-            rent = c.value
-        else:
-            members = [replace(m, income={**m.income, "earned": c.value}) if m.no == c.member_no else m
-                       for m in members]
-    return replace(h, members=members, rent=rent, changes=[])
+                      child_support=True, cap=None, residency_days=0, circular=True, changes="all")
 
 
 def literal_solution(world: World, out_dir: Path) -> None:
@@ -994,18 +1376,14 @@ def literal_solution(world: World, out_dir: Path) -> None:
     a savings test) cannot be applied, so they are not; the letters ask for exceptions and are not granted. An
     approved renewal is coded RENEWAL, a new one APPROVED, a refusal DENY_INCOME. It re-assesses renewals and
     approves recent arrivals, so it is invalid in every setting."""
-    r, rows = LITERAL_RULES, []
-    for h in world.households:
-        elig, amt, code = assess(_as_reported(h), r)
-        rows.append([h.id, "yes" if elig else "no", amt, code])
-    _write(out_dir, rows)
+    _write(out_dir, determinations(world, LITERAL_RULES, reassess=True))
 
 
 def violating_examples(world: World, setting: Setting) -> dict:
     """One deliverable per rule of the setting that breaks exactly that rule (for the validator)."""
     r = rules_of(setting)
     true = truth(world, r)
-    base = _decide(world, r)
+    base = determinations(world, r)
     idx = {row[0]: i for i, row in enumerate(base)}
 
     def with_row(hid: str, row: list):
@@ -1034,6 +1412,407 @@ def violating_examples(world: World, setting: Setting) -> dict:
         out["asset_limit"] = with_row(ast.id, [ast.id, "yes", int(amount_due(ast, r)), "APPROVED"])
     if r.cap:
         out["amount_cap"] = with_row(new_ok.id, [new_ok.id, "yes", cap(new_ok.size, r) + 50, "APPROVED"])
+    return out
+
+
+# ── ground truth audit: ablations, shortcuts, the never-asks solver ──────────
+
+def ablations(world: World, setting: Setting) -> dict:
+    """{target: writer} for the targets that are not one drawn figure: the answer key under the most natural
+    misreading of that fact alone (misreadings), and for the renewal practice the answer key with every renewal
+    re-assessed under this year's rules (the request read as "decide every application")."""
+    out = {target: (lambda out_dir, reading=reading: _write(out_dir, determinations(world, reading)))
+           for target, (_, reading) in misreadings(setting).items()}
+    out["renewals"] = lambda out_dir: _write(out_dir, determinations(world, rules_of(setting), reassess=True))
+    return out
+
+
+def worksheet_changes(setting: Setting) -> dict[str, tuple[str, Rules]]:
+    """{name: (what it changes, rules)}: the client's worksheet with one thing changed to the client's reading, for
+    every thing the worksheet does differently in the setting (the shortcuts "copy the client's way and change one
+    thing"), and with a guessed uprating of 3%."""
+    r, w = rules_of(setting), worksheet_rules(setting)
+    one = {"members_elsewhere_left_out": ("the earnings of members living elsewhere left out",
+                                          {"away_earnings": r.away_earnings}),
+           "residency_in_days": ("the residency period counted in days", {"residency_months": r.residency_months}),
+           "disregard_every_earner": ("last year's disregard applied to every earner at the address",
+                                      {"disregard_on": r.disregard_on}),
+           "this_years_disregard": ("this year's earnings disregard (on the applicant's earnings, as the worksheet)",
+                                    {"earned_flat": r.earned_flat, "earned_ignored": r.earned_ignored}),
+           "this_years_table": ("this year's table", {"uprating": r.uprating}),
+           "child_support_rule": ("child support counted as this round says", {"child_support": r.child_support}),
+           "supplement_line": ("the disability supplement added", {"disability": r.disability}),
+           "this_years_cap": ("this year's cap table", {"cap": r.cap}),
+           "circular": ("the finance circular applied", {"circular": True}),
+           "reported_changes": ("the reported changes in effect on the application date applied",
+                                {"changes": "in_effect"})}
+    out = {name: (what, replace(w, **change)) for name, (what, change) in one.items()}
+    out["guessed_uprating"] = ("a guessed uprating of 3%", replace(w, uprating=30))
+    return {name: x for name, x in out.items() if x[1] != w}
+
+
+def shortcuts(world: World, setting: Setting) -> dict:
+    r = rules_of(setting)
+
+    def deny_every_new_application(out_dir):
+        """Refuse every new application for income and roll the renewals over."""
+        _write(out_dir, [[h.id, "yes", h.last_amount, "RENEWAL"] if h.renewal else [h.id, "no", 0, "DENY_INCOME"]
+                         for h in world.households])
+
+    def need_without_income(out_dir):
+        """Pay every new household that passes residency and assets its whole need, income not deducted (within the
+        cap), renewals rolled over."""
+        rows = []
+        for h in world.households:
+            if h.renewal:
+                rows.append([h.id, "yes", h.last_amount, "RENEWAL"])
+            elif not resident(h, r):
+                rows.append([h.id, "no", 0, "DENY_RESIDENCY"])
+            elif r.asset_limit and countable_assets(h) > asset_limit(h.size, r.asset_limit):
+                rows.append([h.id, "no", 0, "DENY_ASSETS"])
+            else:
+                members, rent = situation(h, r)
+                rows.append([h.id, "yes", int(min(cap(h.size, r), need(h, r, members, rent))), "APPROVED"])
+        _write(out_dir, rows)
+
+    def one_amount_for_all(out_dir):
+        """Approve every new household that passes residency and assets at one amount, the answer key's median
+        award (within the cap), renewals rolled over."""
+        key = determinations(world, r)
+        paid = sorted(row[2] for row, h in zip(key, world.households) if not h.renewal and row[1] == "yes")
+        flat = paid[len(paid) // 2]
+        rows = []
+        for row, h in zip(key, world.households):
+            if h.renewal or row[3] in ("DENY_RESIDENCY", "DENY_ASSETS"):
+                rows.append(row)
+            else:
+                rows.append([h.id, "yes", int(min(flat, cap(h.size, r))), "APPROVED"])
+        _write(out_dir, rows)
+
+    def counter_screening(out_dir):
+        """The old quick screening: last year's table minus every income on the form in full, residency, assets and
+        cap of the setting, as filed, renewals rolled over."""
+        _write(out_dir, determinations(world, replace(r, uprating=0, earned_flat=0, earned_ignored=0,
+                                                      child_support=True, disability=0, circular=False,
+                                                      changes="none")))
+
+    def literal_renewals_rolled_over(out_dir):
+        """The literal solution with one rule it breaks kept: the renewals rolled over."""
+        _write(out_dir, determinations(world, LITERAL_RULES))
+
+    def literal_residency_kept(out_dir):
+        """The literal solution with one rule it breaks kept: households short of the residency period refused."""
+        _write(out_dir, determinations(world, replace(LITERAL_RULES, residency_days=r.residency_days), reassess=True))
+
+    def literal_all_rules(out_dir):
+        """The literal solution with every rule it breaks kept: renewals rolled over, the residency period, the asset
+        limit and the cap of the setting."""
+        _write(out_dir, determinations(world, replace(LITERAL_RULES, residency_days=r.residency_days,
+                                                      asset_limit=r.asset_limit, cap=r.cap)))
+
+    def literal_six_months(out_dir):
+        """The literal solution read the next most natural way: renewals rolled over and a guessed residency wait of
+        six months (180 days), the leaflet's "newcomers may need to wait a while"."""
+        _write(out_dir, determinations(world, replace(LITERAL_RULES, residency_days=180)))
+
+    def literal_asset_limit_kept(out_dir):
+        """The literal solution with one rule it breaks kept: households above the asset limit refused."""
+        _write(out_dir, determinations(world, replace(LITERAL_RULES, asset_limit=r.asset_limit), reassess=True))
+
+    def literal_cap_kept(out_dir):
+        """The literal solution with one rule it breaks kept: every amount within the cap."""
+        _write(out_dir, determinations(world, replace(LITERAL_RULES, cap=r.cap), reassess=True))
+
+    w = worksheet_rules(setting)
+
+    def worksheet_this_years_figures(out_dir):
+        """Copy the client's worksheet with this year's figures printed on it: the table, the earnings disregard and,
+        from medium, the cap."""
+        _write(out_dir, determinations(world, replace(w, uprating=r.uprating, earned_flat=r.earned_flat,
+                                                      earned_ignored=r.earned_ignored, cap=r.cap)))
+
+    def worksheet_never_refuses_income(out_dir):
+        """Copy the client's worksheet but approve at 1 every household it refuses for income (the objective's
+        arithmetic: a wrong refusal costs 400 and the amount, a token award only the amount)."""
+        _write(out_dir, [[row[0], "yes", 1, "APPROVED"] if row[3] == "DENY_INCOME" else row
+                         for row in determinations(world, w)])
+
+    def worksheet_best_two_changes(out_dir):
+        """Copy the client's worksheet and change the two of its differences that recover the most together (the
+        best pair in the setting, as an engineer who read how the counter works might fix its two worst habits)."""
+        changes = {name: _delta(w, reading) for name, (_, reading) in worksheet_changes(setting).items()
+                   if name != "guessed_uprating"}
+        true = truth(world, r)
+        best = min((sum(_cost((row[1] == "yes", row[2], row[3]), true[row[0]]) for row in rows), rows)
+                   for rows in (determinations(world, replace(w, **changes[a], **changes[b]))
+                                for a, b in combinations(sorted(changes), 2)
+                                if not set(changes[a]) & set(changes[b])))
+        _write(out_dir, best[1])
+
+    out = {f.__name__: f for f in (deny_every_new_application, need_without_income, one_amount_for_all,
+                                   counter_screening, literal_renewals_rolled_over, literal_residency_kept,
+                                   literal_all_rules, literal_six_months)}
+    if r.asset_limit:
+        out.update({f.__name__: f for f in (literal_asset_limit_kept, literal_cap_kept)})
+    for name, (what, reading) in worksheet_changes(setting).items():
+        def fn(out_dir, reading=reading):
+            _write(out_dir, determinations(world, reading))
+        fn.__doc__ = f"Copy the client's worksheet and change one thing: {what}."
+        out[f"worksheet_{name}"] = fn
+    out.update({f.__name__: f for f in (worksheet_this_years_figures, worksheet_never_refuses_income,
+                                        worksheet_best_two_changes)})
+    return out
+
+
+# The reported changes are the one fixed fact a never-asks engineer cannot settle from what it sees: whether a change
+# counts, and from when. robust_solution hedges over the three readings.
+CHANGE_READINGS = ("none", "in_effect", "all")
+FIGURES = ("uprating", "earned_disregard", "asset_limit", "disability_supplement", "cap", "residency_days")
+
+
+def _natural(tier: str, p: dict, changes: str) -> Rules:
+    """A combination of the tier's candidate figures read the way an engineer who never asks reads every fixed fact:
+    every rule a figure exists for in force (the asset test with the home and the most valuable car exempt, the
+    supplement and the cap included), the disregard per earner, members living elsewhere ignored, child support
+    counted like any income, residency in days, the finance circular applied (an official circular), the letters not
+    granted, and the reported changes read as `changes`."""
+    flat, ignored = EARNED[str(p["earned_disregard"])]
+    return Rules(tier=tier, uprating=round(float(p["uprating"]) * 10), earned_flat=flat, earned_ignored=ignored,
+                 asset_limit=ASSET_LIMITS[str(p["asset_limit"])], disability=int(p["disability_supplement"]),
+                 child_support=True, cap=CAP_TABLES[int(p["cap"])], residency_days=int(p["residency_days"]),
+                 circular=True, changes=changes)
+
+
+def client_way(tier: str, rules: Rules) -> Rules:
+    """A natural reading with the fixed facts of the tier read the client's way (a lucky guess, for gt_report.py)."""
+    medium, hard = tier != "easy", tier == "hard"
+    return replace(rules, asset_limit=rules.asset_limit if medium else None, disability=rules.disability if medium
+                   else 0, cap=rules.cap if medium else None, child_support=medium, circular=hard,
+                   changes="in_effect" if hard else "none")
+
+
+def robust_solution(world: World, out_dir: Path, tier: str, candidates: dict[str, list]) -> None:
+    """The solver that never asks. It reads every fixed fact the natural way (_natural) and hedges the one it cannot
+    settle, the reported changes (none, those in effect, all), over every combination of the tier's candidate
+    figures. It rolls the renewals over (the data gives last year's amount for exactly them, and the leaflet says
+    renewing keeps the payments going) and gives each new application the decision, reason and amount with the
+    lowest mean cost over the combinations (|paid - entitlement| + 400 per wrong decision + 100 per wrong reason),
+    within a plan: the residency period it approves from, the asset limit it approves under and the cap table it
+    pays up to. Planning for the strictest candidate of each keeps the batch valid everywhere but refuses households
+    that most settings pay; planning for another candidate gambles on the drawn one. It takes the plan with the best
+    mean credit over every combination of the tier's candidates (plan_credits): an engineer does not need the
+    client's zero point to plan for the middle asset limit, so the solver may do it too where it pays."""
+    _write(out_dir, never_asks(world, tier, candidates, plan=True))
+
+
+STRICTEST = "strictest"         # a plan's asset limit: under every candidate limit (the safe plan)
+
+
+def _hedge(world: World, tier: str, candidates: dict[str, list], lucky: bool = False,
+           changes: tuple[str, ...] = CHANGE_READINGS) -> tuple[list[Rules], dict[str, Counter]]:
+    """(readings, {new application: Counter of its determinations over the readings}): every combination of the
+    tier's candidates read the natural way (or, lucky, the client's way), each reading of the reported changes."""
+    combos = [dict(zip(FIGURES, values)) for values in product(*(candidates[name] for name in FIGURES))]
+    readings = [_natural(tier, p, reading) for p in combos for reading in changes]
+    if lucky:
+        readings = list(dict.fromkeys(client_way(tier, x) for x in readings))
+    return readings, {h.id: Counter(assess(h, x) for x in readings) for h in world.households if not h.renewal}
+
+
+def _planned(world: World, truths: dict[str, Counter], residency: int, limits: list, top: tuple) -> list[tuple]:
+    """Each new application's (eligible, amount, code) with the lowest mean cost over its determinations, approving
+    only from `residency` days, under every limit in `limits` and up to the cap table `top`."""
+    out = []
+    for h in world.households:
+        if h.renewal:
+            continue
+        counts = truths[h.id]
+        options = [(False, 0, code) for code in ("DENY_RESIDENCY", "DENY_ASSETS", "DENY_INCOME")]
+        if (h.applied - h.resident_since).days >= residency and all(
+                not lim or countable_assets(h) <= asset_limit(h.size, lim) for lim in limits):
+            options += [(True, min(a, top[min(h.size, 6) - 1]), "APPROVED")
+                        for a in sorted({t[1] for t in counts if t[0]})]
+
+        def cost(o: tuple) -> float:
+            return sum(n * (abs((o[1] if o[0] else 0) - (t[1] if t[0] else 0))
+                            + WRONG_DECISION_PENALTY * (o[0] != t[0])
+                            + WRONG_REASON_PENALTY * (not o[0] and not t[0] and o[2] != t[2]))
+                       for t, n in counts.items())
+        out.append(min(dict.fromkeys(options), key=cost))
+    return out
+
+
+def _envelope(readings: list[Rules], candidates: dict[str, list], residency: int | None, limit: str | None,
+              cap_of: int | None) -> tuple[int, list, tuple]:
+    """(residency, limits, cap table) of a plan: a named candidate, or the strictest (None)."""
+    longest = residency or max(int(v) for v in candidates["residency_days"])
+    limits = ([ASSET_LIMITS[limit]] if limit and limit != STRICTEST
+              else sorted({x.asset_limit for x in readings if x.asset_limit}))
+    top = CAP_TABLES[cap_of] if cap_of else tuple(min(x.cap[i] if x.cap else math.inf for x in readings)
+                                                  for i in range(6))
+    return longest, limits, top
+
+
+def plan_credits(world: World, tier: str, candidates: dict[str, list],
+                 hedged: tuple[list[Rules], dict[str, Counter]] | None = None) -> dict[tuple, float]:
+    """{(residency, asset limit, cap): mean credit over every combination of the tier's candidates} of the hedged
+    batch planned that way (the asset limit STRICTEST: under every candidate). Credit as the audit gives it: 0 when a
+    combination's rules break, else 1 - (the new applications' cost) / (the client's worksheet's), clipped to [0, 1]
+    (the renewals cost every valid batch the same)."""
+    readings, counts = hedged or _hedge(world, tier, candidates)
+    new = [h for h in world.households if not h.renewal]
+    plans = {}
+    for res, lim, cap_v in product(sorted({int(v) for v in candidates["residency_days"]}),
+                                   [STRICTEST] + sorted({str(v) for v in candidates["asset_limit"]}),
+                                   sorted({int(v) for v in candidates["cap"]})):
+        plans[(res, lim, cap_v)] = _planned(world, counts, *_envelope(readings, candidates, res, lim, cap_v))
+    totals = dict.fromkeys(plans, 0.0)
+    combos = [dict(zip(FIGURES, values)) for values in product(*(candidates[name] for name in FIGURES))]
+    for p in combos:
+        r = _rules(tier, p)
+        true = [assess(h, r) for h in new]
+        sheet = [assess(h, _worksheet(r)) for h in new]
+        base = sum(_cost(o, t) for o, t in zip(sheet, true))
+        for plan, rows in plans.items():
+            if any(o[0] and (not resident(h, r) or o[1] > cap(h.size, r) or r.asset_limit
+                             and countable_assets(h) > asset_limit(h.size, r.asset_limit)) for o, h in zip(rows, new)):
+                continue
+            totals[plan] += min(1.0, max(0.0, 1 - sum(_cost(o, t) for o, t in zip(rows, true)) / base))
+    return {plan: total / len(combos) for plan, total in totals.items()}
+
+
+def _cost(o: tuple, t: tuple) -> float:
+    """A new application's term of the objective: decision o against the truth t."""
+    return (abs((o[1] if o[0] else 0) - (t[1] if t[0] else 0)) + WRONG_DECISION_PENALTY * (o[0] != t[0])
+            + WRONG_REASON_PENALTY * (not o[0] and not t[0] and o[2] != t[2]))
+
+
+def never_asks(world: World, tier: str, candidates: dict[str, list], lucky: bool = False,
+               changes: tuple[str, ...] = CHANGE_READINGS, residency: int | None = None, limit: str | None = None,
+               cap_of: int | None = None, plan: bool = False) -> list[list]:
+    """robust_solution's rows (plan: the plan with the best mean credit, plan_credits), and the variants
+    gt_report.py tries in order to beat it: `lucky` reads the tier's fixed facts the client's way (client_way), as a
+    solver that guessed them all right without asking would; `changes` the readings of the reported changes it
+    hedges over; `residency`, `limit` and `cap_of` plan for a candidate (approve from that residency period, under
+    that asset limit, up to that cap table) instead of the strictest, so the batch is invalid wherever the drawn
+    figure is stricter."""
+    readings, truths = _hedge(world, tier, candidates, lucky, changes)
+    if plan:
+        credits = plan_credits(world, tier, candidates, (readings, truths))
+        safe = (max(int(v) for v in candidates["residency_days"]), STRICTEST, min(int(v) for v in candidates["cap"]))
+        best = max(credits, key=lambda k: credits[k])       # the first of equals in the plans' sorted order
+        residency, limit, cap_of = safe if credits[safe] >= credits[best] - 1e-9 else best
+    rows = iter(_planned(world, truths, *_envelope(readings, candidates, residency, limit, cap_of)))
+    return [[h.id, "yes", h.last_amount, "RENEWAL"] if h.renewal else
+            (lambda o: [h.id, "yes" if o[0] else "no", int(o[1]), o[2]])(next(rows)) for h in world.households]
+
+
+def one_guess(world: World, tier: str, params: dict) -> list[list]:
+    """The answer key of one guessed combination of figures with every fixed fact read the natural way (the reported
+    changes as in effect on the application date): what an engineer who never asks and simply guesses delivers."""
+    return determinations(world, _natural(tier, params, "in_effect"))
+
+
+# ── for gt_report.py: the bend, other deliverables ───────────────────────────
+
+def bent_deliverables(world: World, setting: Setting) -> dict[str, tuple[str, list[list]]]:
+    """{name: (what it is, rows)}: deliverables that bend the renewal practice, to be scored with
+    auto_approve_renewals relaxed (an approved exception). best_exception is the answer key with every renewal
+    re-assessed under this year's rules (an exception covers the whole queue); one_renewal re-assesses only the
+    renewal whose re-assessment saves most, which buys the whole queue's re-assessment cost too."""
+    r = rules_of(setting)
+    key, bent = determinations(world, r), determinations(world, r, reassess=True)
+    true = truth(world, r)
+    gain = {h.id: abs(h.last_amount - (true[h.id][1] if true[h.id][0] else 0))
+            + (0 if true[h.id][0] else WRONG_DECISION_PENALTY) for h in world.households if h.renewal}
+    best = max(gain, key=gain.get)
+    one = [b if row[0] == best else row for row, b in zip(key, bent)]
+    return {"best_exception": ("the answer key with every renewal re-assessed", bent),
+            "one_renewal": (f"the answer key with only the renewal that gains most re-assessed ({best})", one)}
+
+
+def diagnostic_cases(world: World, setting: Setting) -> dict[str, tuple[str | None, str, list[list]]]:
+    """{name: (target or None, what it is, rows)}: deliverables that are neither the reference nor an ablation, for
+    gt_report.py to measure the diagnostic on. With target None the deliverable reads every fact right and differs
+    from the answer key in other ways (the diagnostic must call no fact in force not enforced); with a target (or a
+    pair of targets) it misreads that fact (both facts) in a way no ablation does (the diagnostic should call each
+    not enforced)."""
+    r = rules_of(setting)
+    key = determinations(world, r)
+    true = truth(world, r)
+    new = [h for h in world.households if not h.renewal]
+    exact = []
+    for row, h in zip(key, world.households):
+        if h.renewal or row[1] == "no":
+            exact.append(row)
+            continue
+        members, rent = situation(h, r)
+        raw = (100 * need(h, r, members, rent) - countable_income_x100(h, members, r)) / 100
+        exact.append([h.id, "yes", f"{min(raw, cap(h.size, r)):.2f}", row[3]])
+    slips = [list(row) for row in key]
+    for h in [h for h in new if true[h.id][0]][:2]:
+        i = world.households.index(h)
+        slips[i] = [h.id, "no", 0, "DENY_INCOME"]
+    codes = [[row[0], row[1], row[2], "DENY_INCOME" if row[1] == "no" else row[3]] for row in key]
+    styled = [[row[0].lower(), "Yes" if row[1] == "yes" else "NO", f"{float(row[2]):.2f}", row[3].lower()]
+              for row in key]
+    tens = [[row[0], row[1], int(row[2]) // 10 * 10 if row[1] == "yes" and not h.renewal else row[2], row[3]]
+            for row, h in zip(key, world.households)]
+    tens = [[row[0], "no", 0, "DENY_INCOME"] if row[1] == "yes" and float(row[2]) <= 0 else row for row in tens]
+    paid = [i for i, (row, h) in enumerate(zip(key, world.households)) if not h.renewal and row[1] == "yes"]
+    added = [list(row) for row in key]
+    for i in paid[::max(1, len(paid) // 5)][:5]:
+        added[i][2] = int(added[i][2]) + 15
+    floor = [[row[0], "no", 0, "DENY_INCOME"] if row[1] == "yes" and not h.renewal and int(row[2]) < 50 else row
+             for row, h in zip(key, world.households)]
+    out = {"cents": (None, "the answer key with amounts in cents, not rounded down", exact),
+           "format": (None, "the answer key with ids and codes in lower case, Yes/NO and amounts with two decimals",
+                      styled),
+           "two_slips": (None, "the answer key with two eligible households refused", slips),
+           "income_codes": (None, "the answer key with every refusal coded DENY_INCOME", codes),
+           "tens": (None, "the answer key with every new award rounded down to a multiple of 10", tens),
+           "five_slips": (None, "the answer key with five awards 15 too high (slips of the pen)", added),
+           "minimum_award": (None, "the answer key with awards under 50 refused for income (a minimum award the "
+                                   "client never set)", floor)}
+    misread = {"residency": ("the period counted in calendar months", replace(r, residency_months=True)),
+               "earned_disregard": ("the disregard once per household", replace(r, disregard_on="household")),
+               "uprating": ("last year's table", replace(r, uprating=0))}
+    if setting.tier != "easy":
+        misread["asset_limit"] = ("every car exempt", replace(r, cars_exempt="all"))
+        misread["amount_cap"] = ("last year's cap table (the 1,050 table where last year's is the setting's)",
+                                 replace(r, cap=LAST_YEAR_CAP if r.cap != LAST_YEAR_CAP else CAP_TABLES[1050]))
+        misread["disability_supplement"] = ("no disability supplement (the leaflet names no amount)",
+                                            replace(r, disability=0))
+    if setting.tier == "hard":
+        misread["reported_changes"] = ("every application as filed", replace(r, changes="none"))
+    for target, (what, reading) in misread.items():
+        out[f"misread_{target}"] = (target, what, determinations(world, reading))
+    # misreadings no reading of the diagnostic holds as such, and two misread facts at once
+    up = 32 if r.uprating != 30 else 27
+    other = {name: next((v for v in POOLS[name][setting.tier] if str(v) != str(setting[name])), setting[name])
+             for name in ("uprating", "earned_disregard", "residency_days", "asset_limit")}
+    flat, ignored = EARNED[str(other["earned_disregard"])]
+    unlisted = {"guessed_uprating": ("uprating", f"a guessed uprating of {up / 10:g}%", replace(r, uprating=up)),
+                "guessed_disregard": ("earned_disregard", "a guessed disregard: the first 120 and 25% of the rest",
+                                      replace(r, earned_flat=120, earned_ignored=25)),
+                "uprating_and_disregard": (("uprating", "earned_disregard"), "another candidate uprating and "
+                                           "another candidate disregard together", replace(
+                                               r, uprating=round(float(other["uprating"]) * 10), earned_flat=flat,
+                                               earned_ignored=ignored))}
+    if setting.tier != "easy":
+        unlisted["guessed_supplement"] = ("disability_supplement", "a guessed supplement of 90",
+                                          replace(r, disability=90))
+        unlisted["residency_and_asset_limit"] = (("residency", "asset_limit"), "another candidate residency period "
+                                                 "and another candidate asset limit together", replace(
+                                                     r, residency_days=int(other["residency_days"]),
+                                                     asset_limit=ASSET_LIMITS[str(other["asset_limit"])]))
+        unlisted["uprating_and_cap"] = (("uprating", "amount_cap"), "another candidate uprating and no cap",
+                                        replace(r, uprating=round(float(other["uprating"]) * 10), cap=None))
+    if setting.tier == "hard":
+        unlisted["rent_changes_only"] = ("reported_changes", "only the new rents in effect applied (the earnings "
+                                         "changes ignored)", replace(r, changes="rent"))
+    for name, (target, what, reading) in unlisted.items():
+        out[name] = (target, what, determinations(world, reading))
     return out
 
 
