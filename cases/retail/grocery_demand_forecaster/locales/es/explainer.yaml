@@ -2,19 +2,34 @@
 role: Analista de previsión de demanda en supermercados
 task_type: Aprendizaje automático
 deliverable_spec: |
-  forecast.csv con la cabecera ASCII store_id,item_id,date,forecast
+  forecast.csv con la cabecera ASCII store_id,item_id,date,order_qty
   Una fila por cada tienda x artículo x fecha del periodo de 14 días (2026-11-02 .. 2026-11-15);
   store_id / item_id exactamente como en los datos (p. ej. S1, I01), date en formato YYYY-MM-DD,
-  forecast = las unidades previstas en la unidad de venta actual del artículo (un número, se admiten decimales).
+  order_qty = la cantidad que la tienda pide para ese día, en la unidad de venta actual del artículo (un número, se admiten decimales).
+  Las tiendas piden la cifra tal cual: un archivo sin la columna order_qty se lee por su columna forecast o, si no la tiene,
+  por su única otra columna de números; las columnas clave pueden llevar los nombres que tienen en los datos del cliente.
 tiers:
   easy: >-
-    La previsión base: lo que vende cada tienda en un día normal. El plan de promociones y el festivo regional único los añade el equipo de categorías, así que quedan fuera, y la previsión se evalúa con las ventas base de caja (devoluciones restadas, días con rotura de stock tal como se registraron) sin esos efectos. Se aplican el cierre de S4 los domingos, el mínimo de exposición y el peso del error; los panecillos (I07) no se evalúan en esta ronda.
+    El pedido sin las promociones: el plan de promociones lo añade el equipo de categorías, así que queda fuera, y el plan se evalúa con la demanda sin su efecto. Las tiendas piden exactamente la cifra del archivo, así que se puntúa como un pedido: por su coste esperado, las unidades que sobran más el múltiplo del cliente por cada unidad que falta. El festivo regional único, en la fecha sorteada, forma parte del pedido; los días con rotura de stock del historial quedan por debajo de la demanda; el cierre de S4 los domingos y el mínimo de exposición son reglas sobre el pedido; el correo del gerente no es política de la empresa; los panecillos (I07) no se evalúan en esta ronda.
   medium: >-
-    Easy más el plan de promociones (fechas de inicio y fin incluidas, el aumento estimado de las promociones pasadas y, si la semilla de reglas sortea un folleto, multiplicado por el factor del folleto) y el festivo regional único en la fecha sorteada. Se sigue evaluando con las ventas de caja con las devoluciones restadas; I07 no se evalúa en esta ronda.
+    Easy más el plan de promociones (fechas de inicio y fin incluidas, el aumento estimado de las promociones pasadas y, si la semilla de reglas sortea un folleto, multiplicado por el factor del folleto). I07 no se evalúa en esta ronda.
   hard: >-
-    Medium, pero evaluado con la demanda de los clientes: las ventas de los días con rotura de stock están censuradas y las devoluciones no son demanda. I07 se evalúa, así que cuenta su cambio de unidad (por unidad hasta el 31 de mayo de 2026, en paquetes de 6 desde entonces), y hay una revisión fechada: el viernes 30 de octubre, después de exportar plan_promociones.csv, se cancelaron las promociones de la categoría sorteada.
+    Medium más los panecillos: I07 se evalúa, así que cuenta su cambio de unidad (por unidad hasta el 31 de mayo de 2026, en paquetes de 6 desde entonces), y hay una revisión fechada: el viernes 30 de octubre, después de exportar plan_promociones.csv, se cancelaron las promociones de la categoría sorteada.
 rules:
   complete_grid: forecast.csv tiene exactamente una fila por cada tienda × artículo × fecha del periodo de la previsión.
-  non_negative: Ninguna previsión es negativa.
-  closed_day_zero: La tienda S4 cierra los domingos; su previsión para los domingos es 0.
-  min_display_stock: Los artículos básicos (fruta y verdura y lácteos) nunca tienen una previsión por debajo de {{min_display}} unidades en un día en que la tienda abre.
+  non_negative: Ninguna cantidad de pedido es negativa.
+  closed_day_zero: La tienda S4 cierra los domingos; su pedido para los domingos es 0.
+  min_display_stock: Los artículos básicos (fruta y verdura y lácteos) nunca se piden por debajo de {{min_display}} unidades para un día en que la tienda abre.
+shortcuts:
+  literal_plus_floor: "La solución literal cumpliendo la única regla que incumple: el mínimo de exposición de los artículos básicos."
+  forecast_as_order: "Ignorar la incertidumbre: todos los demás datos bien, pero la demanda esperada entregada como pedido."
+  blanket_cushion: "Inflarlo todo: la previsión literal con el 20 % que pide el gerente añadido para todas las tiendas."
+  copy_last_week: "Copiar los datos: lo vendido la semana pasada el mismo día de la semana, para las dos semanas."
+  flat_average: "Devolver constantes: una sola cifra por tienda y artículo, su media diaria de las últimas ocho semanas, todos los días."
+  never_run_out: "No quedarse nunca sin género: cada día, lo máximo que la tienda vendió del artículo en un día de las últimas ocho semanas."
+  display_only: "No pedir nada más que el mínimo de exposición de los artículos básicos."
+  judged_rows_only: "Dejar fuera las filas que no se evalúan o que siempre valen 0: los panecillos (I07) y los domingos de S4."
+  habit_last_year: "Copiar la forma de trabajar del cliente y cambiar una sola cosa: la costumbre de los gerentes, con la media de las últimas 52 semanas."
+  habit_more_cushion: "Copiar la forma de trabajar del cliente e inflarla: la costumbre de los gerentes con diez puntos más de margen."
+  literal_sized_cushion: "Preguntar una sola cosa, lo que cuesta una venta perdida: la previsión literal con un margen fijo calculado para ese coste."
+  weekday_quantile: "Sin modelo: por tienda, artículo y día de la semana, el cuantil de las ventas de las últimas 26 semanas que corresponde a la relación de costes."

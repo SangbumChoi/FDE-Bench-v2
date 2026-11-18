@@ -251,3 +251,232 @@ hidden period, the notices' dates and the agent's view are the same in every set
   rule against such draws would have to rest on world statistics (on the public world the same draw is fine), so
   it was not added. (c) F4 grows at small capacities. (d) docs/<lang>/README.md and docs/<lang>/REVIEW.md
   still describe rule sets A / B / C and the notice's percentage; they are retranslated later.
+
+## Ground truth audit
+
+The deep ground-truth audit changed the scenario where the review's findings and the audit's own measurements
+required it, and stored its measurements in `dataset/audit.json` (GT.md is generated from it by `make_gt.py`,
+CLIENT_REVIEW.md from the locales by `make_client_review.py`). This section says what was found, what changed and
+why, and what stays open; the findings above keep their history. Numbers are at the public world seed 101 on the
+public panel (rule seeds 44, 356, 392) unless stated; q is the normalized quality.
+
+### What the audit found before any change
+
+- **Literal solution** (F4's other face). Verified: in easy/s44 the request done as written broke only
+  `large_order_approval`, the one bendable rule; with that rule relaxed it was valid and beat the reference
+  (q 1.24). An agent that asked nothing and got an exception scored above one that learned every fact.
+- **Anchors on other worlds** (F1). Verified as the review said: on world seeds 0, 3, 7 and 42 the reference
+  ended below the starting capital in most settings, so the all-cash baseline beat it and the framework fell back
+  to the plain ratio, where doing nothing earns full credit.
+- **One path** (F2). Averaging independently drawn hidden paths does not make the reference beat an index held
+  with the full capital: over worlds the cap-weighted index gains 16.5% in the hidden period, and a book bound by
+  the close-out capacity holds a fraction of its capital (mean exposure 0.12–0.37 in the public references). The
+  reference's alpha against the index on its own exposure was not robust either (its sign changes between
+  worlds). What is robust is profit: a momentum book inside the limits makes money on average over mirrored
+  paths.
+- **Targets** (22). Most could not be shown to matter: misreading the interface, the fills, the costs, the simple
+  engine, lots, halts, the split, the earnings, the settlement, the scope lines, the sector limit or the level of
+  the drawdown mandate moved less than a tenth of the scale in every setting, or the agent's own view answers
+  them. Several bundled two or three facts (`status_table`, `position_limits`, `notes`).
+- **Circuit breaker.** The fact could not bite: the flash-crash session traded 3× its normal volume at an open
+  and a p10 (F8), which rescued a close-out sized without a spare session; the reference lost at most one order.
+- **Sector limit and the 10% stock limit.** No draw of the sector limit changed the reference's answer in hard (a
+  book sized for the close-out never comes near it); at a 10% stock limit the book holds less than the close-out
+  allows, so the threshold and the deadline stop mattering.
+- **Mandatory output.** A program that returned no status table was valid and kept 80% of the score.
+
+### What changed, and why
+
+1. **Four market scenarios in two mirrored pairs** (F1, F2). Scenario 1 is the old hidden period, scenario 2 its
+   mirror image (every normal draw of the hidden period reflected around its mean), scenarios 3 and 4 a second
+   mirrored pair with its own regime (calm, or a sell-off of a drawn start, length, depth and volatility). The
+   program is loaded afresh for each; values are averaged over the four, a breach in any one counts. The history,
+   the calendar and the notices of compliance, the client and the risk manager are the same in all, so is the stock
+   compliance adds (scenario 1's choice); the flash crash comes on its pair's own day.
+2. **Yardstick max(index, cash)** (F3), with the 5% band below the reference where the reference leads by less
+   (every public setting). Cash no longer earns return credit when the index falls; the baseline's objective is 0
+   where the reference ends 5% or more above the capital, else the part of the band the cash covers.
+3. **Usable worlds** (F1). `build_world` draws a world's scenario set again until the reference ends at least 1%
+   above the starting capital, on average over the scenarios, in every public setting (at most 30 redraws; the
+   public world needs none). This takes up the review's proposal: worlds are selected on the reference's result,
+   which is what "the scale runs from the cash to the reference" needs. The test uses the reference only, in the
+   public settings only, and never touches the history.
+4. **Objective = return component × table accuracy; a table is right only if every figure is** (F3). Replaces
+   0.8 × return + 0.2 × table with per-part credit.
+5. **`status_table_complete`** (contractual): the table in every call, with its four fields.
+6. **Bounded exception** (F4). `order_size_limit` (contractual): no order above the threshold, and no close-out
+   sell above 1.5 × it. `large_order_approval` (business policy): a close-out sell of the added stock between the
+   threshold and 1.5 × it. Bending is worth +0.32 to +0.38 of quality in easy, +0.07 to +0.11 in medium and −0.09
+   to +0.13 in hard (the reference with its close-out sized for 1.45 × the threshold), against +22% to +101% of
+   the objective before.
+7. **Circuit-breaker session** (F8, and the `circuit_breaker` target). Its bars show only the closing auction
+   (open = p10 = close, 30% of a normal volume). In the second pair it falls in the second session of the added
+   stock's close-out (in the first it stays the last session whose sales settle by the withdrawal). In hard a
+   deadline is planned with a session to spare, and the close-out capacity counts the deadline less one.
+8. **Pools.** `large_order` 5 / 6 / 9 in every tier (hard's 4 is gone), `liquidation_days` 3 / 4 in hard,
+   `stock_cap` 15 / 18 / 20 in every tier (hard's 10 is gone), the sector limit one value (35%), the close-out
+   capacity at least 15% (was 12%). Panel 44, 356, 392 (was 44, 20, 134); it shows every value of every pool.
+9. **Reference.** The four strongest names (was eight), the close-out sized on a projected average volume, hard
+   with a spare session; otherwise as before.
+10. **Targets 22 → 10**, one fact each; five carry a draw. The removed facts stay in requirements.md as context.
+    `raw_volumes` went last: the audit found its misreading moves at most 0.009 of the scale (the book seldom
+    trades XIPH while its window still holds pre-consolidation volumes).
+11. **Texts.** requirements.md, targets.yaml, summary.yaml, explainer.yaml in five locales; case.yaml's rules,
+    tiers and deliverable spec. The agent's data and `request.md` are unchanged; the deliverable spec says the
+    period is replayed in several scenarios and that every call returns the status.
+
+### Status of the findings
+
+- **F1** resolved. On world seeds 1, 2, 3, 0, 4, 5, 6, 7 and 42 (the four the review named among them) the
+  reference is valid at quality 1 with a correct table in all 81 public settings, the baseline is valid and below
+  it, and the scale is 21%–100% wide (narrowest: world 3, hard/s44). World 4 needed five redraws, world 6 two, the
+  others none. On the leaderboard round's rule seeds (108807, 519122, 904685) on the public world the same holds
+  in all nine settings (scale 43%–100%).
+- **F2** resolved for the single path. The reference's knobs still move its result: the best known solution,
+  tuned with hindsight on the four scenarios, reached q 1.42–3.24 (`quality_cap` 1.79); after the second check it is
+  tuned on the visible history and reaches q 0.13–1.97, median 1.082 (`quality_cap` 1.09).
+  The history has no stress episode; the drawdown mandate still applies in hard only.
+- **F3** resolved: the yardstick is max(index, cash), the baseline scores 0 by construction, holding the index
+  with a correct table scores at most q 0.273 (shortcut `hold_the_index`), and a table copied from the
+  engine's input at most q 0.203 (`table_from_input`, medium and hard).
+- **F4** resolved: the exception is bounded (6). The literal solution is invalid in every public setting as
+  delivered and with `large_order_approval` relaxed; `OPEN_LITERAL_FINDINGS` no longer lists the case.
+- **F5** open, unchanged: the tip and the pressure reach the program, not the agent. `inside_tip` is a target in
+  hard and bites (the reference that trades the tipped stock is invalid). The "10%" note is context.
+- **F6** the pools changed again (8); the capacity runs from 15% to 36%.
+- **F8** partly: the circuit-breaker session's bars now show a suspended session. The rest (turnover, drifts,
+  the pilot's order size, "sales tax") is unchanged.
+- **F10** partly: the targets the data answers (`fills`, `costs`, `settlement`) are no longer targets.
+
+### Second check (adversarial)
+
+A second engineer re-ran the audit's claims with code on the public world (seed 101) and on world seeds 0–11, and
+changed what the measurements did not support. Numbers before the change are the first audit's.
+
+1. **`quality_cap` priced a program no agent can build.** The best known solution was the reference tuned by
+   coordinate search on the hidden scenarios themselves (q 1.42–3.24, median 1.785, `quality_cap` 1.79), so the
+   reference earned 0.56 of full credit and an honest strong program not much more. `best_known_solution` now runs
+   the same search on the visible history replayed as a test period (`_history_world`: three windows of 80
+   history sessions, from sessions 90, 125 and 160, with the test period's notices and the setting's rules; the
+   drawdown-aware exposure is no longer a knob, since the history has no stress episode to tune it on), then
+   plays the hidden scenarios like any program: valid in all 45 settings at q 0.13–1.97, median 1.082 (below the reference in 18 of 45), so `quality_cap` is 1.09. Hindsight on the same knobs (before the cut moved) reached
+   1.76 median on the panel against 1.27 for the history-tuned program.
+   *Is the reference too weak?* A program tuned on the history alone beats it in most settings, by little: its
+   four names leave most of the capital in cash (mean exposure 0.12–0.37) and its risk switch keeps it out of the
+   market for 15 to 45 of the 80 sessions around the sell-off in every scenario of the public world. Eight names or no switch do better on the
+   worlds the acceptance rule keeps and worse on those it rejects (point 2), and the first audit chose four names
+   so that the reference makes money on other worlds. The reference stays; `quality_cap` prices the difference.
+2. **World acceptance on the reference's result** (`build_world`): measured, kept. On 36 scenario sets (world
+   seeds 0–11, redraws 0–2) the rule keeps 27. The rejected sets are mostly weak markets (the reference makes 1.8%
+   there against 7.2%); relative to the reference, programs with more exposure do better on the kept sets than on
+   the rejected ones (eight names +0.52% against −1.40% of the capital; six names without the switch +0.78% against
+   −1.06%; the index within the limits −3.42% against −5.24%), and the reference's own design without its switch
+   about the same (+0.48% against +0.41%). So the selection favours exposure, not programs that resemble the
+   reference. A rule on the index's own path (keep a set when the index held ends at or above the capital, a fact
+   every program faces) keeps as many sets, disagrees on 6 of 36, and moves the alternatives' standing by at most
+   0.14% of the capital: the part of the selection that depends on the reference itself is small. It is also
+   unusable: worlds 1 and 4 draw no such set in 31 tries (their history's drifts carry on). The public world is
+   the first draw under either rule, so the shipped benchmark is not selected at all.
+3. **Return × table accuracy.** Judged and kept. The two figures are client conventions, not format traps:
+   cash earmarked for an announced payout is not buying power, and a payout is a flow, not a loss (in hard the
+   mandate itself is on equity plus payouts). The agent sees only the field names (the deliverable spec) and the
+   pilot's table, which had no withdrawal and fits both readings; what each figure holds is in the client's
+   requirements only, and the input's `withdrawals` list and the `cash_withdrawal` notice make it a natural
+   question. One wrong figure on one day costs 1/320 of the objective (0.3%; at most 0.8% of quality given the
+   spans). A figure read another way after the payout is wrong in 48 of each scenario's 80 calls, so a program
+   that trades like the reference drops to an objective of 0.40 (the audit's ablation, whose risk switch also follows the wrong figure, loses 0.73–1.00 of the scale in medium and hard). In hard that is the client's own
+   consequence: the equity-alone drawdown after a 10–40% payout is past every candidate mandate, and a breach
+   closes the book. Per-figure credit would make the buying-power reserve worth under 3% of the objective, below
+   the 0.10 bite in most settings. What made asking look worth 0.99 and 1.00 in medium and hard was the never-asks
+   solver, not the product: it read the drawdown on the equity alone, the less natural of the two readings, so its
+   tables were wrong after every payout and its own risk switch went to cash on a phantom 10–40% drawdown. With the
+   payouts added back (`robust_solution` now) it earns 0.496 in medium and 0.600 in hard (value of asking 0.50 and
+   0.40, from 0.99 and 1.00; easy unchanged at 0.67). Other attempts to do better without asking earned less (measured before the cut moved, when this solver earned 0.51 and 0.59):
+   six or eight names (medium 0.47 / 0.28, hard 0.51 / 0.13), no risk switch (0.34, 0.38), the pilot's buying
+   power without a reserve (0.46, 0.56). Without the table (a right table every day) the solver's trading alone
+   would earn 0.57 and 0.75: most of the value of asking now comes from the trading facts.
+4. **Four mirrored scenarios.** Verified: `_combine` averages the final values and the index over the four, takes
+   the share of right tables over all 320 calls, and joins every breach under its scenario's name, so one breach
+   anywhere invalidates the program. The first call is byte-identical in the four (same market view, no notices,
+   10,000,000 in cash); the scenarios differ from the first hidden close on, by their prices; the only notice that
+   differs is the circuit breaker's, which arrives after the session it reports (call 30 in the first pair, 14 in
+   the second). No scenario index, path or file reaches the program. One gap is outside the case: the `local`
+   program runner (development) lets a program write files that survive into the next scenario's process, and a
+   program that recorded scenario 1 could then trade scenario 2, its mirror, with near foresight; the `docker`
+   runner (campaigns) gives each scenario a fresh container.
+5. **Diagnostics, and the risk manager's cut.** The cut's ablation was sabotage: besides keeping holdings over
+   the lower limit it topped them up to the old one, a buy over the new limit that its own misreading ("a limit on
+   what is bought") forbids. Rewritten to the misreading alone (`cut_buys_only`: nothing bought over the lower
+   limit, a holding over it stays), it changed nothing in 30 of 30 settings: at call 44 the reference's risk
+   switch had it in cash in every scenario, so the cut never met a holding. The cut now comes after the sell-off
+   (notice 17 Aug, effective 20 Aug: `CUT_CALL` 66, `CUT_SESSION` 68), when the book is back in the market; the
+   faithful ablation bites in 15 of 15 settings of medium and of hard (invalid). The diagnostic now calls the cut not enforced as soon as one scenario leaves a holding
+   over the lower limit (a breach is not outvoted by scenarios that kept it). The two targets are separable facts
+   (the standing limit's value; that the cut applies to holdings), and with the faithful ablation the cut no longer
+   flags `stock_limit` (0 of 30 settings, from 30 of 30).
+   On deliverables that are neither the reference nor an ablation, run on the nine public settings: four
+   correct-but-different programs (three names, positions at 60% of the close-out room instead of 80%, a 40-session
+   ranking window, orders at p10 and a 10-session rebalance) are called enforced on every fact in force in 36 of 36
+   runs. Four misreadings: buying the tipped stock once the deal is public: caught 3/3; the reserve taken off the
+   buying power only on the eve of the payment: 6/6; the deadline counted one session longer: 7/9 (in hard/s44 and
+   hard/s392 it is the same behaviour as no session to spare and is flagged as `circuit_breaker`); the drawdown
+   from a peak reset at the payout: 0/6 before, 6/6 now (the diagnostic recognised only the equity-alone reading;
+   now, where a run's drawdown was right before the payout, any wrong figure after it counts, and wrong on more than
+   a tenth of those tables is not enforced).
+6. **Pools, panel and the large-order split.** The threshold 5/6/9 and the stock limit 15/18/20 are ordinary desk
+   and mandate figures; dropping hard's 4% threshold and 10% limit is a design choice (they made the close-out facts
+   idle), not something a client would ask for, but nothing a client would find odd. Fixing the sector limit at 35%
+   is honest (no draw changed an answer). The close-out capacity floor (15%) is a generator constraint a client
+   never sees. The new panel shows every value of every pool; the old one did not. The split into a contractual size
+   limit and an approval band for close-out sells up to 1.5 × the threshold is how approvals work at a desk (bounded
+   in advance). Bending pays in easy (+0.19 to +0.45 of quality over the 45 settings, never a loss), is about even
+   in medium (−0.03 to +0.30, a loss in 1 of 15) and marginal or a loss in hard (−0.09 to +0.16, 3 of 15): confirmed.
+7. **Round-2026-11 seeds** (108807, 519122, 904685): the draws are as stored; in all nine settings the reference
+   is valid with a correct table, the scale is 48%–100% wide, and the literal solution is invalid as delivered and
+   relaxed. Every target in force bites (invalid, or ≥ 0.10 lost) in at least one round seed of each tier.
+8. **Locales.** Every number, ticker and id of en's requirements.md and targets.yaml appears in zh, ko, ja and
+   es (the other locales add only the digits of dates written as numbers); the split targets read as the client
+   speaking in each language.
+
+**New shortcuts** (`shortcuts()`): `stale_table` (the previous close's table: closed, at most q 0.384),
+`no_close_out_sizing` (each name at its weight whatever a close-out could sell: invalid everywhere) and
+`hold_first_picks` (the reference's first picks bought and held, every notice and the table as the reference:
+**open**, q 0.74–1.59, median 1.05, in all 45 settings). It is open because the world's stock drifts persist through the whole test period and the
+reference's ranking and risk switch add nothing on these scenarios; closing it in the client's terms needs a
+different market model (drifts that turn within the period), which changes the agent's data. It is listed in
+`validate.OPEN_AUDIT_FINDINGS`. It handles every client fact, so it does not weaken the value of asking; it shows
+that the return half of the score does not reward trading skill over a lazy book.
+
+**The literal solution** is an honest reading: the desk head's mail says the threshold is set per book and to ask
+for it, and the next most natural readings fail as well: orders at 5% of the volume (under every candidate) and
+orders with no size limit are both invalid in all nine public settings, as delivered and with
+`large_order_approval` relaxed (they buy restricted names, keep more of the added stock than the deadline allows
+and, from medium, break the limits and the withdrawal).
+
+### Measurements (`dataset/audit.json`, 45 settings, 15 per tier)
+
+- **Facts** (10 targets; a fact bites where misreading it loses at least 0.1 of credit): `restricted_list` bites easy 15/15, medium 15/15, hard 15/15 (damage 1.00; diagnostic separates); `close_out_deadline` bites easy 15/15, medium 12/15, hard 13/15 (damage 0.00–1.00; diagnostic separates); `large_order_threshold` bites easy 15/15, medium 14/15, hard 11/15 (damage 0.00–1.00; diagnostic separates); `stock_limit` bites medium 12/15, hard 9/15 (damage 0.00–1.00; diagnostic separates); `risk_limit_change` bites medium 15/15, hard 15/15 (damage 1.00; diagnostic separates); `withdrawal_amount` bites medium 12/15, hard 15/15 (damage 0.02–0.31; diagnostic separates); `buying_power_reserve` bites medium 15/15, hard 15/15 (damage 0.11–0.31; diagnostic separates); `drawdown_payouts` bites medium 15/15, hard 15/15 (damage 0.73–1.00; diagnostic separates); `circuit_breaker` bites hard 14/15 (damage 0.00–1.00; diagnostic separates); `inside_tip` bites hard 15/15 (damage 1.00; diagnostic separates).
+- **Shortcuts**: 13 of 15 closed in every measured setting where they apply (`hold_the_index` at most q 0.273, `empty_table` at most q 0.013, `stale_table` at most q 0.384, `table_from_input` at most q 0.203; invalid everywhere: `no_table`, `ignore_notices`, `literal_plus_order_size_limit`, `literal_plus_restricted_liquidation`, `literal_plus_restricted_list`, `literal_plus_large_order_approval`, `literal_plus_cash_withdrawal`, `literal_plus_position_limit`, `literal_plus_sector_limit`); open: `no_close_out_sizing` in 3 of 45 settings (best q 1.134); `hold_first_picks` in 45 of 45 settings (best q 1.588).
+- **Value of asking** (1 − the credit of `robust_solution`, which never asks): easy 0.67 (never asks 0.33, never asks the drawn values only 0.22); medium 0.50 (never asks 0.50, never asks the drawn values only 0.23); hard 0.40 (never asks 0.60, never asks the drawn values only 0.31).
+- **Reference and bounds**: the reference objective is 1 everywhere, the scale 0.366–1.000 wide; the best known solution (tuned on the visible history, no hindsight) is valid in 45 of 45 settings at q 0.13–1.97 (median 1.082), so `quality_cap` = 1.09; the proven bound sits at q 15–54, a loose ceiling (perfect foresight of every price).
+- **Diagnostics**: best known false negatives 0; `diagnose()` errors 0; cross flags (ablation of a target that also calls another not enforced): `restricted_list` 0/45; `close_out_deadline` 5/42 (circuit_breaker); `large_order_threshold` 2/43 (stock_limit); `stock_limit` 7/29 (risk_limit_change); `risk_limit_change` 0/30; `withdrawal_amount` 1/30 (stock_limit); `buying_power_reserve` 0/30; `drawdown_payouts` 2/30 (stock_limit); `circuit_breaker` 6/14 (close_out_deadline, stock_limit); `inside_tip` 0/15.
+- **Findings** (validate-case's reading with this quality_cap): problem: shortcut (2): no_close_out_sizing, hold_first_picks, both listed in `validate.OPEN_AUDIT_FINDINGS` with their reasons (warnings).
+
+### Open
+
+- `hold_first_picks`: buying the reference's first picks and holding them, with every notice and the table handled
+  as the reference does, scores q 0.74–1.59 (median 1.05). The world's stock drifts persist through the test period
+  and the reference's ranking and risk switch add nothing on these scenarios; closing it in the client's terms needs
+  a market whose drifts turn within the period, which changes the agent's data. Listed in
+  `validate.OPEN_AUDIT_FINDINGS`. It does not weaken the value of asking (it needs every client fact).
+- `no_close_out_sizing`: valid in 3 of 45 settings (threshold 9%, deadline 4: the stock limit binds before the
+  close-out room, so it is the reference itself there, q 0.98–1.13). Listed in `validate.OPEN_AUDIT_FINDINGS`.
+- acceptance sampling selects worlds on the reference's result (measured in the second check: it favours exposure,
+  not programs like the reference, and a rule on the index alone is unusable); a private draw on a selected world
+  can still leave the reference near the cash: the 5% band then gives a narrower scale (narrowest measured 22%).
+- the `local` program runner (development) lets a program keep files between the four scenario processes, so a
+  program that recorded scenario 1 could trade scenario 2, its mirror, with near foresight; the `docker` runner
+  (campaigns) starts each scenario in a fresh container. A framework matter, outside the case.
+- the LP bound is far from the reference.
+- the scenario regime is not in the agent's data, so the hidden period still rewards a risk switch it cannot calibrate (F2's second half).
+- F5 (temptations reach the program, not the agent), F8's other items, results stored for earlier leaderboard rounds (scored under the old objective) and the other locales' docs/<lang> pages (retranslated later) are unchanged.

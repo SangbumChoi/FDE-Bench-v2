@@ -1,19 +1,19 @@
 ﻿id_cafeteria,nombre,x_km,y_km,bandejas,categoria,apertura,entregar_antes,marca_asociada
-C01,Cafetería Ribera,6.56,-6.06,27,premium,06:00,06:45,no
-C02,Cafetería Casco Antiguo,-2.09,10.31,11,estándar,07:30,08:30,no
-C03,Cafetería Estación Norte,-4.82,-4.82,14,estándar,07:00,07:30,no
-C04,Cafetería Calle de los Cerezos,-6.52,4.31,25,premium,06:30,07:30,no
-C05,Cafetería Puerto,1.21,-4.08,16,estándar,07:00,07:45,sí
-C06,Cafetería Ciudad Universitaria,-3.89,-0.85,15,estándar,07:30,08:30,no
-C07,Cafetería Lago Este,10.17,2.52,10,premium,07:00,08:00,no
-C08,Cafetería Puerta Oeste,-7.25,0.19,23,estándar,06:30,07:15,no
-C09,Cafetería Barrio Nuevo,4.9,-6.17,16,estándar,07:00,07:30,no
-C10,Cafetería Torre del Reloj,0.56,-4.22,29,premium,06:00,07:00,sí
-C11,Cafetería Colina Sur,4.55,1.87,23,estándar,07:30,08:15,no
-C12,Cafetería Calle del Jardín,-1.86,5.74,10,estándar,06:30,07:00,no
-C13,Cafetería Puente Dorado,1.14,2.43,19,premium,06:00,06:30,no
-C14,Cafetería Paseo de los Arces,2.48,0.31,23,estándar,06:00,06:30,no
-C15,Cafetería Plaza del Mercado,1.95,6.25,21,estándar,07:00,07:30,no
-C16,Cafetería Estadio,-4.68,-1.72,18,premium,07:30,08:30,sí
-C17,Cafetería Bahía,2.5,-4.18,13,estándar,07:00,07:30,no
-C18,Cafetería Barrio Histórico,-5.74,-0.1,19,estándar,07:30,08:30,no
+C01,Cafetería Ribera,-4.89,-1.03,26,premium,06:30,07:00,no
+C02,Cafetería Casco Antiguo,5.42,3.82,12,estándar,07:00,07:45,no
+C03,Cafetería Estación Norte,1.89,-1.73,18,estándar,08:00,08:45,no
+C04,Cafetería Calle de los Cerezos,1.71,-4.92,27,premium,06:30,07:00,no
+C05,Cafetería Puerto,-8.91,3.56,16,estándar,06:00,07:00,sí
+C06,Cafetería Ciudad Universitaria,6.31,-0.94,25,estándar,07:30,08:15,no
+C07,Cafetería Lago Este,3.59,2.48,25,premium,07:00,07:45,no
+C08,Cafetería Puerta Oeste,-6.15,3.83,10,estándar,06:30,07:00,no
+C09,Cafetería Barrio Nuevo,-8.1,1.24,22,estándar,08:00,09:00,no
+C10,Cafetería Torre del Reloj,-6.24,-4.7,29,premium,06:00,07:00,sí
+C11,Cafetería Colina Sur,-4.74,4.3,19,estándar,06:30,07:15,no
+C12,Cafetería Calle del Jardín,2.32,-0.34,17,estándar,07:00,08:00,no
+C13,Cafetería Puente Dorado,2.68,-1.89,9,premium,06:30,07:15,no
+C14,Cafetería Paseo de los Arces,8.62,5.03,8,estándar,07:30,08:00,no
+C15,Cafetería Plaza del Mercado,-3.82,-5.28,21,estándar,07:00,07:45,no
+C16,Cafetería Estadio,-2.84,-5.51,19,premium,06:00,06:45,sí
+C17,Cafetería Bahía,3.17,-9.64,24,estándar,07:30,08:15,no
+C18,Cafetería Barrio Histórico,-3.65,-1.67,29,estándar,07:00,07:30,no

@@ -7,7 +7,7 @@ utilizada, una hora de salida (`HH:MM`, 05:00 si se omite) y las cafeterías en 
 el plan con el modelo de desplazamiento de la configuración y lo puntúa frente a la referencia.
 
 El caso tiene **configuraciones**: tres niveles × semillas de reglas (DESIGN.md, Settings). Los datos y la solicitud
-son los mismos en todas las configuraciones; solo cambian las reglas ocultas del cliente y, con ellas, el plan
+son los mismos en todas las configuraciones; solo cambian las reglas que conoce únicamente el cliente y, con ellas, el plan
 correcto. Los ajustes de la modalidad (especificación completa frente a aclarar primero, perfil del cliente, ruido en
 los datos, eventos) se aplican por encima, como en todos los casos (véase [cases/README.md](../../../../README.md)). Además
 es el fixture de pruebas del framework (`tests/conftest.py`, `tests/test_validator.py`), por lo que su validación
@@ -39,13 +39,13 @@ bandeja), el taller de V2 hasta las 06:40 (hard) y la cafetería que presiona (C
 ningún valor y no necesita `admissible()`: toda combinación es factible en cualquier mundo que `build_world` acepte
 (véase más abajo).
 
-## Panel público (semillas de reglas 5, 13 y 58) con la semilla del caso 20261025
+## Semillas de reglas públicas (5, 13 y 58) con la semilla del caso 20261025
 
 La semilla 5 sortea la **combinación principal** (headline) de cada nivel: el fin de turno más tardío y el límite de
 bandejas más alto, con el primer candidato de cada uno de los demás parámetros (`case.py` `_headline`); la
 comprobación de influencia de los parámetros del validador parte de ella.
 
-| Configuración | Parámetros sorteados | Referencia | Línea base | Línea base / referencia |
+| Configuración | Parámetros sorteados | Solución de referencia | Forma de trabajar del cliente | Forma de trabajar del cliente / referencia |
 |---|---|---|---|---|
 | easy/s5 | C11, retraso 3, 10:00, 120 bandejas, sin hora punta, costumbre desactivada | 435.73 | 1,669.60 | 3.83 |
 | easy/s13 | C14, retraso 5, 09:00, 100 bandejas, sin hora punta, costumbre desactivada | 449.79 | 1,285.12 | 2.86 |
@@ -72,7 +72,7 @@ hard/s13   {closed_cafe: C14, late_cost: 5, shift_end: "09:00", van_capacity: 11
 hard/s58   {closed_cafe: C03, late_cost: 2, shift_end: "09:30", van_capacity: 110, rush_start: "06:30", premium_first: false}
 ```
 
-Todos los candidatos de todos los parámetros aparecen en el panel. Todos los parámetros influyen (validador; también
+Todos los candidatos de todos los parámetros aparecen en las semillas de reglas públicas. Todos los parámetros influyen (validador; también
 con las semillas de mundo 1–20):
 - `closed_cafe`: la referencia de hard/s5 atiende C03 y C14, así que es inválida con cualquiera de las dos cerrada.
 - `late_cost`: la referencia de hard/s5 acumula 56 minutos de retraso; su objetivo varía un 7.9% (peso 2) y un 15.8%
@@ -85,7 +85,7 @@ con las semillas de mundo 1–20):
 
 ## Lo que un agente debe preguntar
 
-Las preguntas clave, por nivel (`locales/<lang>/targets.yaml`):
+Los hechos que la IA debe preguntar, por nivel (`locales/<lang>/targets.yaml`):
 
 - **Todos los niveles:** la distancia por carretera (1.3 ×), el tiempo de descarga, el fin del turno, la cafetería
   cerrada (cuál), una sola visita por cafetería, la costumbre de atender primero las premium (si se aplica o si queda
@@ -97,7 +97,7 @@ Las preguntas clave, por nivel (`locales/<lang>/targets.yaml`):
 - **hard:** la hora punta y su inicio (`rush_hour`), V2 en el taller hasta las 06:40 (`workshop`) y que la exigencia
   de la encargada de C07 no es una regla (`manager_pressure`).
 
-Así, hay 9 o 10 preguntas clave en easy y medium, y 12 en hard.
+Así, hay 9 o 10 hechos que preguntar en easy y medium, y 12 en hard.
 
 ## Datos
 
@@ -149,7 +149,7 @@ pedido después de su `deliver_by`.
 
 ## Situaciones presentes
 
-- **Hechos ocultos:** qué cafetería está cerrada; el límite de bandejas de esta semana, por debajo de `max_trays`; el
+- **Hechos que solo conoce el cliente:** qué cafetería está cerrada; el límite de bandejas de esta semana, por debajo de `max_trays`; el
   fin del turno; el peso del retraso; si se aplica la costumbre de atender primero las premium; en hard, cuándo empieza
   la hora punta.
 - **Semántica de los datos:** `partner_brand = yes` significa productos refrigerados y, por tanto, solo la furgoneta
@@ -165,9 +165,9 @@ pedido después de su `deliver_by`.
   posteriores al inicio de la hora punta son más lentos, y las llegadas tardías cuestan `late_cost` veces lo que el
   tiempo de furgoneta.
 
-## Referencia y línea base
+## Solución de referencia y forma de trabajar del cliente
 
-La **referencia** (`_plan`) construye las rutas por inserción factible más barata (primero las cafeterías asociadas
+La **solución de referencia** (`_plan`) construye las rutas por inserción factible más barata (primero las cafeterías asociadas
 cuando se aplica la cadena de frío, luego por categoría, de mayor a menor) y, cuando la construcción voraz se queda
 sin salida, reintenta con V4 iniciada con cada orden viable de las cafeterías asociadas y después con órdenes de
 inserción barajados; además parte del plan de respaldo del nivel sin la cafetería cerrada. Cada punto de partida se
@@ -176,7 +176,7 @@ mejora reubicando paradas sueltas; el más barato de los dos, además, con 300 r
 cada ruta recibe su mejor hora de salida en una cuadrícula de 5 minutos. Se calcula una vez por mundo y valores de
 las reglas.
 
-La **línea base** (`baseline_solution`) es el plan del propio coordinador de reparto sin un ingeniero: cuando se
+La **forma de trabajar del cliente** (`baseline_solution`) es el plan del propio coordinador de reparto sin un ingeniero: cuando se
 aplica la cadena de frío, V4 se encarga de las cafeterías asociadas (premium primero, en el orden que la hace volver
 antes); las demás cafeterías se toman por acimut alrededor de la cocina, empezando por el oeste, y se cargan en V1,
 V2, V3 y luego V4 hasta que la siguiente ya no cabe (el límite de bandejas de esta semana, la vuelta como muy tarde al fin
@@ -191,12 +191,21 @@ Las rutas de las configuraciones de la combinación principal con la semilla del
 | Configuración | Plan | Objetivo |
 |---|---|---|
 | referencia de medium/s5 | V1 05:50 C01 C07 C09 · V2 06:05 C08 C12 C15 C02 · V3 06:05 C13 C14 C17 C03 C18 C06 · V4 06:00 C10 C04 C16 C05 | 626.50 (557.97 min de ruta, 22.84 de retraso) |
-| línea base de medium/s5 | V1 C01 C03 C09 C17 C06 C18 · V2 C13 C04 C07 C14 C12 C15 C02 · V3 C08 · V4 C10 C16 C05, todas a las 05:00 | 1,977.71 (859.59, 372.71 de retraso) |
+| forma de trabajar del cliente en medium/s5 | V1 C01 C03 C09 C17 C06 C18 · V2 C13 C04 C07 C14 C12 C15 C02 · V3 C08 · V4 C10 C16 C05, todas a las 05:00 | 1,977.71 (859.59, 372.71 de retraso) |
 | referencia de hard/s5 | V1 06:10 C04 C12 C15 C02 · V2 06:40 C08 C03 C18 C06 · V3 06:10 C13 C14 C09 C17 · V4 05:50 C10 C01 C07 C16 C05 | 709.27 (541.10, 56.06 de retraso) |
-| línea base de hard/s5 | V1 C01 C03 C09 C17 C06 C18 · V2 06:40 C13 C07 C14 C15 C02 · V3 C04 C08 C12 · V4 C10 C16 C05, las demás a las 05:00 | 1,870.28 (841.89, 342.80 de retraso) |
+| forma de trabajar del cliente en hard/s5 | V1 C01 C03 C09 C17 C06 C18 · V2 06:40 C13 C07 C14 C15 C02 · V3 C04 C08 C12 · V4 C10 C16 C05, las demás a las 05:00 | 1,870.28 (841.89, 342.80 de retraso) |
 
-La mayor parte del coste adicional de la línea base es espera (furgonetas en cafeterías antes de que abran) y retraso
+La mayor parte del coste adicional de la forma de trabajar del cliente es espera (furgonetas en cafeterías antes de que abran) y retraso
 en las cafeterías a las que llega en último lugar.
+
+**Solución literal** (`literal_solution`: la solicitud hecha tal como está escrita, la misma en todas las
+configuraciones): el planificador de la referencia con las lecturas que da lo que ve el agente: se atienden todas las
+cafeterías de la lista ("todas nuestras cafeterías"), cualquier furgoneta sirve para cualquier cafetería hasta las 120
+bandejas de sus estanterías, se sale desde las 05:00 sin fin de turno, `deliver_by` es el objetivo (un minuto de retraso
+pesa como diez minutos de furgoneta), y no hay cafetería cerrada, hora punta, costumbre, cadena de frío ni día de
+taller. Entrega a la cafetería que está cerrada esta semana, así que es inválida en las 9 configuraciones públicas
+(además supera el límite de bandejas de la semana en 7, e incumple la cadena de frío, la costumbre y la mañana de
+taller de V2 allí donde se aplican).
 
 Objetivos de la referencia con las demás semillas de mundo del validador:
 
@@ -207,7 +216,7 @@ Objetivos de la referencia con las demás semillas de mundo del validador:
 | 3 | 492.71 / 496.33 / 499.92 | 634.03 / 607.11 / 601.92 | 751.63 / 597.80 / 708.56 |
 
 Con la semilla del caso y las semillas de mundo 1–30, en todos los niveles y con las semillas de reglas 5, 13, 58 y
-las privadas 101–105 (744 configuraciones), la referencia es válida, la línea base es válida y cuesta entre 1.17 y
+las privadas 101–105 (744 configuraciones), la referencia es válida, la forma de trabajar del cliente es válida y cuesta entre 1.17 y
 9.76 veces lo que la referencia (mediana 3.04), y cada regla que se aplica tiene un plan que solo la incumple a ella.
 `validate-case --world-seeds 1,...,20` pasa.
 
@@ -217,7 +226,7 @@ las privadas 101–105 (744 configuraciones), la referencia es válida, la líne
   los pesos del retraso son inventados. En hard, la velocidad cambia a las `rush_start` también en un tramo ya
   empezado (un tramo nunca tarda menos por empezar más tarde).
 - El margen de mejora sobre la referencia no se ha vuelto a medir desde las semillas de reglas (REVIEW.md, F2).
-- `validate-case` comprueba todas las configuraciones públicas: la referencia con calidad 1.0, la línea base válida y
+- `validate-case` comprueba todas las configuraciones públicas: la referencia con calidad 1.0, la forma de trabajar del cliente válida y
   peor, un entregable por cada regla que se aplica que solo incumple esa regla, datos deterministas en los cinco
   idiomas, que todos los parámetros influyen, la misma vista del agente en todas las configuraciones y las semillas de
   mundo 1, 2 y 3.

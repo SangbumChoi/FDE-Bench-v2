@@ -19,7 +19,7 @@ One JSON file, `routes.json`: `{"routes": [{"van": "V1", "depart": "05:40", "sto
 <!-- /tier -->
 - Unloading at a café takes 4 minutes plus 0.2 minutes per tray.
 - A van that arrives before `opens` waits until the café opens. `deliver_by` is the latest arrival the café is happy with.
-- A late delivery is accepted but not free: every minute a café is reached after its `deliver_by` costs us as much as {{late_cost}} minutes of van time (complaints and credit notes to the café).
+- A late delivery is accepted but not free: every minute a café is reached after its `deliver_by` costs us as much as 3 minutes of van time (complaints and credit notes to the café).
 - Vans may leave from 05:00 and must be back at the kitchen by {{shift_end}} (end of the drivers' shift).
 <!-- when: van_capacity=120 -->
 - Each van carries at most `max_trays` trays (120).
@@ -49,6 +49,17 @@ One JSON file, `routes.json`: `{"routes": [{"van": "V1", "depart": "05:40", "sto
 - The manager of the East Lake café (C07) keeps calling me: she insists on being the very first stop of the morning, before 06:30, and says she will take it to head office otherwise. That is not a rule of ours. She gets her trays between `opens` and `deliver_by` like every café, and I don't want the plan built around her calls.
 <!-- /tier -->
 
+## How we plan it today
+
+Our dispatcher plans the morning by hand. He draws it up three ways and drives the one that costs least: going through the cafés in the order they open (the one with the earlier `deliver_by` first when two open together), or in the order of `deliver_by`, and giving each café to the van that can be there first, at the end of that van's round, as long as the van stays within the tray limit and is back in time (a café that fits at the end of no round is squeezed in where it adds the least driving); or splitting the map into four slices round the kitchen, one per van. Then he puts each van's cafés in the order that serves them best, and each van leaves so that it reaches its first café just as it opens.
+<!-- tier: medium hard -->
+Partner-brand cafés always go to V4.
+<!-- /tier -->
+<!-- when: premium_first=true -->
+He gives out all the premium cafés before the standard ones.
+<!-- /when -->
+His plan keeps our rules, but the drivers are out longer than we would like and some cafés get their trays late.
+
 ## How the plan is judged
 
 **Hard constraints** (if any is broken, the plan does not count):
@@ -66,4 +77,4 @@ One JSON file, `routes.json`: `{"routes": [{"van": "V1", "depart": "05:40", "sto
 <!-- /when -->
 <!-- /tier -->
 
-**Quality**: the total time all vans are out (from departure to return), plus {{late_cost}} times every minute a café is reached after its `deliver_by` time. Lower is better.
+**Quality**: the total time all vans are out (from departure to return), plus 3 times every minute a café is reached after its `deliver_by` time. Lower is better.

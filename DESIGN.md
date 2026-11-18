@@ -97,6 +97,14 @@ Design rules that keep scoring language-independent:
   invalid. The reference is not the ceiling: the composite gives full credit at
   `quality_cap` (the policy's, 1.5 by default, or the case's when it knows its best solution), so headroom
   above the reference counts and a degenerate valid deliverable earns nothing.
+- **The literal solution scores low.** case.py `literal_solution(world, out_dir)` is the request done exactly
+  as written, from the agent's view only: the most natural reading of everything, no question asked, no hedging
+  across settings (it never gets the Setting). validate-case requires it, in every public setting, to be invalid or
+  to score at most 0.2 normalized quality (`validate.LITERAL_MAX_QUALITY`), so the score rewards learning the
+  client's facts rather than doing what the request says (FDE-Gym's admission anchor). The same must hold with
+  every `business_policy` rule relaxed, since an approved exception can relax those: a literal solution that is
+  invalid only through a bendable rule is one exception away from a good score. `answers.csv` records its
+  objective and quality per setting. `validate.OPEN_LITERAL_FINDINGS` turns a known case into a warning.
 - **Rules carry a class** (`physical`, `contractual`, `business_policy`). The evaluator reports violations by
   rule id; relaxing a rule is a scoring parameter (`evaluate(..., relaxed={...})`), so no per-case hooks.
 
@@ -601,8 +609,14 @@ re-export that changes it (a new layout of `dataset/answer/`, for instance) runs
   collection, an end-to-end run).
 - Ground truth audit (`audit-case`, `audited: true`, the target funnel, the lazy `diagnose()` hook and the
   diagnostic reliability checks): implemented and tested on a toy case. Three cases are audited (procurement,
-  loan underwriting, multilingual corpus curator); their stored audits predate `AUDIT_VERSION` 3 and are stale
-  until audit-case runs on them again.
+  loan underwriting, multilingual corpus curator) and their stored audits are current.
+- Literal solution: every case has one, and it is invalid in every public setting (in five cases through a
+  single client rule; see docs/DIRECTION.md §11.6).
+- Taking part: `fdebench2 try` (a case without a model or API key), `fdebench2 submit` and the leaderboard page,
+  `configs/experiments.starter.yaml` (a 9-run first campaign), CONTRIBUTING.md and docs/SUBMITTING.md in five
+  languages: implemented and tested. A submission is ranked only when it ran a full round
+  (`leaderboard/rounds.yaml`, `configs/experiments.leaderboard.yaml`: every case and tier on the round's rule
+  seeds, 3 trials). The leaderboard holds only the round's anchor rows until a live campaign runs.
 
 Not yet verified: a live model run (no API keys in the build environment), the vendor CLI command lines
 against installed versions, `DockerSandbox` and `docker/Dockerfile.agent` (no Docker daemon in the build

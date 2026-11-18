@@ -4,7 +4,7 @@ La oficina de servicios sociales de una ciudad tiene acumuladas unas 300 solicit
 Hogares, que se paga cada mes, y pide al agente que "decida quién tiene derecho y cuánto le corresponde cada mes". El
 entregable es `determinations.csv` (`household_id,eligible,monthly_amount,reason_code`), una fila por solicitud, con un
 código de motivo entre `APPROVED`, `RENEWAL`, `DENY_RESIDENCY`, `DENY_ASSETS` y `DENY_INCOME`. La petición del cliente
-solo nombra los archivos adjuntos; todas las reglas que deciden la validez y la calidad están en los requisitos ocultos
+solo nombra los archivos adjuntos; todas las reglas que deciden la validez y la calidad están en los requisitos que solo conoce el cliente
 y hay que preguntarlas. El escenario no corresponde a ningún país: los importes están en las unidades de pago propias de
 la ciudad y el tope es una regla presupuestaria local, no una ley real.
 
@@ -12,8 +12,8 @@ El caso tiene **configuraciones**: tres niveles × semillas de reglas. Una semil
 cifras de la ayuda (la actualización de este año, la deducción de los ingresos del trabajo, el límite de patrimonio, el
 complemento por discapacidad, el tope presupuestario y el periodo de residencia) entre un conjunto de candidatos. **El
 agente ve la misma petición y los mismos datos en todas las configuraciones** (el validador comprueba que su prompt y su
-espacio de trabajo son idénticos byte a byte); solo cambian los requisitos ocultos, con los que responde el cliente
-simulado, y el evaluador. El panel público son las semillas de reglas 2, 31 y 78 (nueve soluciones correctas); cualquier
+espacio de trabajo son idénticos byte a byte); solo cambian los requisitos que conoce únicamente el cliente, con los que responde el cliente
+simulado, y el evaluador. Las semillas de reglas públicas son la 2, la 31 y la 78 (nueve soluciones correctas); cualquier
 otra semilla de reglas es un sorteo privado entre los mismos candidatos. Los ajustes de la modalidad (especificación
 completa o aclarar primero, perfil del cliente, ruido en los datos, eventos) se aplican por encima, como en todos los
 casos (véase [cases/README.md](../../../../README.md)).
@@ -89,9 +89,9 @@ configuración la supere, en al menos un 1%. El margen más estrecho es el de `d
 guardada (pasar de 100 a 150 mueve el objetivo de la referencia un 1.1%, y la referencia de 150 la supera en un 2.6%),
 porque el error de las renovaciones domina el objetivo (REVIEW.md, F2).
 
-### Panel público (semilla de mundo guardada 20261026)
+### Semillas de reglas públicas (semilla de mundo guardada 20261026)
 
-| Configuración | Valores sorteados | Referencia | Línea base | La mejor que cumple las reglas (calidad) | Exacta, renovaciones reevaluadas (calidad) |
+| Configuración | Valores sorteados | Solución de referencia | Forma de trabajar del cliente | La mejor que cumple las reglas (calidad) | Exacta, renovaciones reevaluadas (calidad) |
 |---|---|---|---|---|---|
 | easy/s2 | 4.0%, 100_20, 180 días | 27,472 | 62,318 | 26,434 (1.030) | 0 (1.788) |
 | easy/s31 | 3.2%, 150_30, 90 días | 24,011 | 71,918 | 22,646 (1.028) | 0 (1.501) |
@@ -119,17 +119,17 @@ hard/s78    {uprating: 2.5, earned_disregard: 200_0,  asset_limit: 6000_3000, di
 
 Entre las tres semillas sortean todos los candidatos de todos los parámetros en todos los niveles.
 `dataset/answer/answers.csv` tiene una fila por configuración (los valores sorteados, el objetivo de la referencia y
-el de la línea base y las métricas de la referencia), y a su lado `reference_determinations.csv` y
+el de la forma de trabajar del cliente y las métricas de la referencia), y a su lado `reference_determinations.csv` y
 `baseline_determinations.csv` apilan los entregables con las columnas difficulty y seed. "La mejor que cumple las reglas" es la respuesta exacta con las renovaciones prorrogadas,
 como exige la regla; "exacta, renovaciones reevaluadas" flexibiliza `auto_approve_renewals` (véase F2). Las semillas de
-mundo 1, 2 y 3 dan objetivos de referencia / línea base de 19,415 / 49,517, 17,905 / 56,467 y 24,657 / 44,067 (easy/s2,
+mundo 1, 2 y 3 dan objetivos de referencia / forma de trabajar del cliente de 19,415 / 49,517, 17,905 / 56,467 y 24,657 / 44,067 (easy/s2,
 s31, s78), 16,341 / 35,167, 14,562 / 40,454 y 23,549 / 35,399 (medium) y 15,183 / 37,139, 14,838 / 43,482 y 24,107 /
 40,307 (hard) con la semilla 1; 21,072 / 54,092, 19,132 / 61,108, 27,318 / 48,598, 18,778 / 41,444, 15,709 / 43,803,
 25,894 / 40,714, 17,948 / 43,926, 15,656 / 46,891 y 25,402 / 44,772 con la semilla 2; 22,402 / 56,904, 18,836 / 64,650,
 27,998 / 51,918, 18,586 / 44,586, 16,957 / 52,940, 26,188 / 44,328, 17,110 / 46,352, 17,000 / 55,853 y 26,330 / 47,360
 con la semilla 3. La mejor respuesta que cumple las reglas obtiene allí 1.011-1.163.
 
-## Reglas (requisitos ocultos)
+## Reglas (requisitos que solo conoce el cliente)
 
 | Hecho | Niveles | Lo que dice el cliente cuando se le pregunta |
 |---|---|---|
@@ -159,7 +159,7 @@ públicas (véase REVIEW.md, F2).
 
 ## Situaciones presentes
 
-- **Hechos ocultos.** La composición del hogar, la deducción de ingresos del trabajo por cada persona que trabaja, las
+- **Hechos que solo conoce el cliente.** La composición del hogar, la deducción de ingresos del trabajo por cada persona que trabaja, las
   exenciones de patrimonio, el periodo de residencia y el formato de fecha, la actualización de una tabla que no está en
   los datos, el complemento por discapacidad, la pensión alimenticia como ingreso, el tope presupuestario y el orden de
   los códigos de motivo; una semilla de reglas vuelve a sortear las cifras, y el nivel decide cuáles se aplican.
@@ -175,7 +175,7 @@ públicas (véase REVIEW.md, F2).
 
 ## Lo que el agente debe preguntar
 
-| Pregunta clave | Niveles | El hecho |
+| Hecho | Niveles | Lo que sabe el cliente |
 |---|---|---|
 | `household_size` | todos | solo cuentan los miembros que viven en el domicilio |
 | `earned_disregard` | todos | se ignoran los primeros {earned_flat} por persona que trabaja y el {earned_ignored}% del resto |
@@ -197,22 +197,34 @@ públicas (véase REVIEW.md, F2).
 | `reported_changes` | hard | solo cuentan los cambios que surtían efecto en la fecha de la solicitud |
 | `exception_requests` | hard | las cartas no cambian nada; la residencia es un requisito legal |
 
-Easy tiene 12 preguntas clave, medium 12 y hard 14.
+Easy tiene 12 hechos que la IA debe preguntar, medium 12 y hard 14.
 
-## Referencia y línea base
+## Solución de referencia y forma de trabajar del cliente
 
-**Referencia** (`reference_solution`): las renovaciones se prorrogan con el importe del año pasado; las solicitudes
+**Solución de referencia** (`reference_solution`): las renovaciones se prorrogan con el importe del año pasado; las solicitudes
 nuevas se evalúan con todas las reglas de la configuración (en hard, el complemento de calefacción y los cambios que
 surtían efecto en la fecha de la solicitud, y ninguna excepción por las cartas), con una simplificación deliberada: la
 cantidad fija de los ingresos del trabajo se aplica una sola vez por hogar en lugar de por cada persona que trabaja.
 
-**Línea base** (`baseline_solution`): lo que haría la ventanilla sin un ingeniero. Las renovaciones se prorrogan como de
+**Forma de trabajar del cliente** (`baseline_solution`): lo que haría la ventanilla sin un ingeniero. Las renovaciones se prorrogan como de
 costumbre; cada solicitud nueva se revisa en residencia y (desde medium) patrimonio y se le paga la tabla publicada el
 año pasado (importe base + alquiler hasta la ayuda máxima de vivienda) menos todas las columnas de ingresos de los
 miembros que viven en el domicilio, contadas íntegramente, dentro del tope desde medium, según lo declarado al presentar
 la solicitud. Pasa por alto la actualización, la deducción de ingresos del trabajo, el complemento por discapacidad, la
 circular y los cambios comunicados, y cuenta la pensión alimenticia también en easy. Ambas son válidas en todas las
-configuraciones; la calidad normalizada es (línea base − objetivo) / (línea base − referencia).
+configuraciones; la calidad normalizada es (cliente − objetivo) / (cliente − referencia), donde "cliente" es el objetivo de la forma de trabajar del cliente.
+
+**Solución literal** (`literal_solution`: la petición hecha tal como está escrita, la misma en todas las
+configuraciones): se resuelven todas las solicitudes, con las renovaciones reevaluadas como si fueran nuevas ("quién
+tiene derecho y cuánto le corresponde"), con las cifras que da lo que ve el agente: la tabla del año pasado (no se
+indica ninguna actualización) más el alquiler hasta la ayuda máxima de vivienda, más el complemento de calefacción de la
+circular desde el 1 de octubre, menos todos los ingresos de los miembros que viven en el domicilio, con cada cambio
+comunicado aplicado con su valor más reciente; las indicaciones del folleto que no llevan cifra (una deducción de los
+ingresos del trabajo, un complemento por discapacidad, un periodo de residencia, una prueba de ahorros) no se aplican, y
+las peticiones de las cartas no se conceden. Incumple `auto_approve_renewals` (109 renovaciones) y
+`residency_requirement` (10–23 recién llegados aprobados) en todas las configuraciones, y el límite de
+patrimonio y el tope desde medium, así que es inválida en las 9 configuraciones públicas (46–90 decisiones
+equivocadas).
 
 Respuestas por lo demás exactas con un solo hecho equivocado, en hard/s2 (semilla guardada; easy/s2 y medium/s2 donde se
 indica):
@@ -231,7 +243,7 @@ indica):
 | Se hace caso a la carta de la solicitante (H061 sin pensión alimenticia) | 22,456 | 1.004 |
 | Sin tope, o sin prueba de patrimonio, o se hace caso al concejal (H161 aprobada) | | inválida |
 | Todos los rechazos codificados `DENY_INCOME` | 28,866 | 0.757 |
-| Línea base | 48,490 | 0 |
+| Forma de trabajar del cliente | 48,490 | 0 |
 | easy/s2: prueba de patrimonio de medium aplicada | 69,218 | 0 (acotada en el mínimo) |
 | easy/s2: pensión alimenticia contada | 31,774 | 0.877 |
 | medium/s2: circular y cambios de hard aplicados | 29,382 | 0.715 |

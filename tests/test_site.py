@@ -16,9 +16,9 @@ def test_site_pages_and_links(tmp_path):
     out = tmp_path / "site"
     pages = build_site(REPO, out, github=GITHUB, ref="main")
     cases = sorted(cid for cid, c in discover(REPO / "cases").items() if (c.root / PAGE).is_file())
-    assert cases and {"index.html", "direction.html", "design.html", "catalog.html", ".nojekyll"} <= {
+    assert cases and {"index.html", "leaderboard.html", "direction.html", "design.html", "catalog.html", ".nojekyll"} <= {
         p.name for p in out.iterdir()}
-    expected = 3
+    expected = 3 + len(LANGS)                  # the documents, and the leaderboard in every language
     for lang in LANGS:
         root = out if lang == "en" else out / lang
         prefix = "" if lang == "en" else "../"

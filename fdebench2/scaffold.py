@@ -125,6 +125,13 @@ def baseline_solution(world: World, out_dir: Path, setting) -> None:
     raise NotImplementedError("TODO")
 
 
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request done exactly as written, from the agent's view only, without any fact only the client knows
+    (no setting: it is the same in every one). validate-case requires it to be invalid or to score at most 0.2
+    normalized quality in every public setting, so the client's facts are what the score rewards."""
+    raise NotImplementedError("TODO")
+
+
 def violating_examples(world: World, setting) -> dict:
     """{{rule_id: fn(out_dir)}}: for every rule of the setting, a deliverable that breaks exactly that rule."""
     raise NotImplementedError("TODO")

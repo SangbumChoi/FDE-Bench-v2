@@ -4,15 +4,22 @@ A central kitchen delivers bread trays to cafés with a small van fleet on a Mon
 "plan the routes"; the rules that decide validity and quality are in the requirements and must be asked for.
 
 Settings (case.yaml): three tiers, and a rule seed that draws the client's parameters. Easy is the routing core:
-this week's tray limit per van, the shift end, one visit per café, the café closed this week, a constant 25 km/h
-and the lateness cost. Medium adds the partner cold chain and, when the rule seed draws it, the premium-first habit.
-Hard adds the morning rush (30 km/h before a drawn time, 20 km/h from it, also on a leg already under way), a dated
-event (V2 is in the workshop until 06:40 on Monday) and a premium café manager's pressure to be served first. The
-data is the same in every setting.
+this week's tray limit per van, the café closed this week, the travel times (road distance, a constant 25 km/h,
+unloading), the cost of a late minute and the vans back by 10:00. Medium adds the partner cold chain and, when the
+rule seed draws it, the premium-first habit. Hard fixes the tray limit at 110 and adds the morning rush (30 km/h
+before a drawn time, 20 km/h from it, also on a leg already under way), a drawn shift end, a dated event (V2 is in
+the workshop until 06:40 on Monday) and a premium café manager's pressure to be served first. The data is the same
+in every setting.
+
+The ground truth audit (GT.md, docs/en/REVIEW.md "Ground truth audit"): the zero of the quality scale is the
+dispatcher's hand plan (baseline_solution), the literal solution guesses the travel times the request never gives,
+and the hooks below give the misreadings, the lazy plans, the solver that never asks, the stored best plans and
+bounds (make_bounds.py) and a diagnostic per client fact.
 """
 
 from __future__ import annotations
 
+import hashlib
 import itertools
 import json
 import math
@@ -33,6 +40,9 @@ AVERAGE = 25.0                # km/h all morning in easy and medium
 ROAD_FACTOR = 1.3
 CAPACITY = 120                # max_trays in the data: the vans' racks
 WORKSHOP = ("V2", 6 * 60 + 40)  # hard: V2 is in the workshop on Monday until 06:40
+PRESSURE_CAFE = "C07"         # hard: its manager wants to be the first stop of the morning, before 06:30
+PRESSURE_BY = 6 * 60 + 30
+LATE_COST = 3.0               # one late minute at a café costs as much as this many minutes of van time
 GRID = 5                      # minutes between the departures the reference tries
 MAX_DRAWS = 400               # draws per seed before giving up on finding a usable world
 MATTERS = 0.01                # build_world: the least effect, as a share of the objective, that counts as a change
@@ -50,6 +60,23 @@ def _hhmm(m: int) -> str:
 
 
 @dataclass(frozen=True)
+class Travel:
+    """How long the vans take: road distance as a multiple of the straight line, the speeds (km/h: all morning
+    without a rush; before and from the rush with one) and the unloading time per stop (minutes plus minutes per
+    tray). The client's model is the default; a plan made with another one (a misreading) is still scored with it."""
+
+    road: float = ROAD_FACTOR
+    average: float = AVERAGE
+    fast: float = FAST
+    slow: float = SLOW
+    stop: float = 4.0
+    per_tray: float = 0.2
+
+
+TRAVEL = Travel()
+
+
+@dataclass(frozen=True)
 class Rules:
     """The rules in force in one setting, as the simulation reads them."""
 
@@ -62,6 +89,9 @@ class Rules:
     cold_chain: bool              # partner cafés only by the refrigerated van
     premium_first: bool           # on every route, premium cafés before standard ones
     ready: tuple[tuple[str, int], ...] = ()   # (van, earliest departure) for vans held back
+    travel: Travel = TRAVEL       # the travel model a plan is made with (scoring always uses the client's)
+    first: tuple[str, int] | None = None   # (café, minute): it must open its route and be reached by then (only a
+                                           # misreading: the C07 manager's demand followed)
 
     def earliest(self, van_id: str) -> int:
         return dict(self.ready).get(van_id, DAY_START)
@@ -72,7 +102,7 @@ def _rules(tier: str, p: dict) -> Rules:
         return TIERS.index(tier) >= TIERS.index(t)
 
     return Rules(tier=tier, closed=None if p["closed_cafe"] is None else str(p["closed_cafe"]),
-                 capacity=int(p["van_capacity"]), shift_end=_minutes(p["shift_end"]), late_weight=float(p["late_cost"]),
+                 capacity=int(p["van_capacity"]), shift_end=_minutes(p["shift_end"]), late_weight=LATE_COST,
                  rush=None if p["rush_start"] == "none" else _minutes(p["rush_start"]),
                  cold_chain=at_least("medium"), premium_first=at_least("medium") and bool(p["premium_first"]),
                  ready=(WORKSHOP,) if at_least("hard") else ())
@@ -93,7 +123,7 @@ def _strictest(tier: str) -> Rules:
     rushes = [_minutes(v) for v in pool["rush_start"] if v != "none"]
     return _rules(tier, {"closed_cafe": None, "van_capacity": min(int(v) for v in pool["van_capacity"]),
                          "shift_end": _hhmm(min(_minutes(v) for v in pool["shift_end"])),
-                         "late_cost": pool["late_cost"][0], "rush_start": _hhmm(min(rushes)) if rushes else "none",
+                         "rush_start": _hhmm(min(rushes)) if rushes else "none",
                          "premium_first": any(pool["premium_first"])})
 
 
@@ -113,11 +143,9 @@ def _stress(tier: str) -> Rules:
     return replace(_headline(tier), shift_end=_strictest(tier).shift_end)
 
 
-def _matters(tier: str, name: str) -> bool:
-    """Whether the parameter has two or more candidates in the tier and none in a higher tier: the validator checks
-    that it changes the answer in this tier."""
-    return (len(set(map(str, POOLS[name][tier]))) >= 2
-            and all(len(set(map(str, POOLS[name][t]))) < 2 for t in TIERS[TIERS.index(tier) + 1:]))
+def _varies(tier: str, name: str) -> bool:
+    """Whether the parameter has two or more candidates in the tier (the validator checks that it binds there)."""
+    return len(set(map(str, POOLS[name][tier]))) >= 2
 
 
 @dataclass
@@ -131,6 +159,8 @@ class Cafe:
     open_min: int
     latest_min: int
     partner: bool        # cold-chain partner: refrigerated van only (medium and hard)
+    home: float = field(default=0.0, repr=False, compare=False)            # straight-line km to the kitchen
+    to: dict = field(default_factory=dict, repr=False, compare=False)      # straight-line km to each other café
 
 
 @dataclass
@@ -142,6 +172,9 @@ class World:
 
     def __post_init__(self):
         self.by_id = {c.id: c for c in self.cafes}
+        for a in self.cafes:
+            a.home = math.hypot(a.x, a.y)
+            a.to = {b.id: math.hypot(a.x - b.x, a.y - b.y) for b in self.cafes}
 
     def cafe(self, cid: str) -> Cafe | None:
         return self.by_id.get(cid)
@@ -150,52 +183,67 @@ class World:
         return [c for c in self.cafes if c.id != rules.closed]
 
 
+OPENINGS = [6 * 60, 6 * 60 + 30, 7 * 60, 7 * 60 + 30, 8 * 60]   # a standard café opens on one of these
+PREMIUM_OPENS = (6 * 60, 6 * 60 + 30)    # a premium café opens first: the drawn opening, folded onto these two
+PRESSURE_OPENS = (7 * 60, 7 * 60 + 30)   # the East Lake café (C07), premium, opens after its manager's 06:30
+
+
 def _draw_world(rng: random.Random) -> World:
+    """18 cafés round the kitchen. A standard café opens on the half hour from 06:00 to 08:00. Premium cafés
+    (every third) open first, at 06:00 or 06:30, except the East Lake café (C07), whose manager wants to be served
+    before 06:30 in hard: it opens at 07:00 or 07:30. deliver_by is 30, 45 or 60 minutes after opening."""
     cafes = []
     for i in range(18):
         ang, r = rng.uniform(0, 2 * math.pi), rng.uniform(2.0, 11.0)
-        open_min = rng.choice([6 * 60, 6 * 60 + 30, 7 * 60, 7 * 60 + 30])
-        cafes.append(Cafe(id=f"C{i + 1:02d}", district=i, x=round(r * math.cos(ang), 2), y=round(r * math.sin(ang), 2),
-                          trays=rng.randint(8, 30), tier="A" if i % 3 == 0 else "B", open_min=open_min,
-                          latest_min=open_min + rng.choice([30, 45, 60]), partner=i in (4, 9, 15)))
+        k = rng.randrange(len(OPENINGS))
+        x, y, trays = round(r * math.cos(ang), 2), round(r * math.sin(ang), 2), rng.randint(8, 30)
+        window = rng.choice([30, 45, 60])
+        cid, premium = f"C{i + 1:02d}", i % 3 == 0
+        open_min = (PRESSURE_OPENS[k % 2] if cid == PRESSURE_CAFE else PREMIUM_OPENS[k % 2] if premium
+                    else OPENINGS[k])
+        cafes.append(Cafe(id=cid, district=i, x=x, y=y, trays=trays, tier="A" if premium else "B",
+                          open_min=open_min, latest_min=open_min + window, partner=i in (4, 9, 15)))
     vans = [{"id": f"V{i}", "capacity": CAPACITY, "refrigerated": i == 4} for i in range(1, 5)]
     return World(cafes, vans)
+
+
+def _binds(world: World, plan: list[dict], rules: Rules, tier: str, solve) -> bool:
+    """Whether the tier's shift end, tray limit and habit (where they vary) can change `plan`, the plan for the
+    tier's _headline: it brings a van back after the earliest shift end, loads one above the smallest tray limit,
+    and costs at least MATTERS more than `solve`'s plan without the premium-first habit."""
+    routes = [[world.cafe(s) for s in r["stops"]] for r in plan]
+    backs = [_run(rules, cafes, _minutes(r["depart"]))[0] for r, cafes in zip(plan, routes)]
+    if _varies(tier, "shift_end") and max(backs) <= _strictest(tier).shift_end:
+        return False
+    if _varies(tier, "van_capacity") and \
+            max(sum(c.trays for c in cafes) for cafes in routes) <= _strictest(tier).capacity:
+        return False
+    if _varies(tier, "premium_first") and rules.premium_first:
+        free = replace(rules, premium_first=False)
+        if simulate(world, solve(world, free), free)[1] > (1 - MATTERS) * simulate(world, plan, rules)[1]:
+            return False
+    return True
 
 
 def _usable(world: World) -> bool:
     """Whether every setting has a valid plan and every parameter can change the answer.
 
     For each tier, the reference solver must serve every café under the tier's strictest rules (the plan is kept
-    as the tier's fallback). And in the tier where a parameter's candidates differ most (the highest tier in which
-    it has two or more), the reference under _headline must bring a van back after the tier's earliest shift end,
-    load one above its smallest tray limit, reach cafés late for at least MATTERS of its objective, and cost at
-    least MATTERS more than the reference without the premium-first habit: otherwise the shift end, the tray
-    limit, the lateness cost or the habit could not change the plan. (Which café is closed and when the rush
-    starts change it in any world.)"""
+    as the tier's fallback). And in every tier where a parameter has two or more candidates, the reference under
+    _headline must bring a van back after the tier's earliest shift end, load one above its smallest tray limit and
+    cost at least MATTERS more than the reference without the premium-first habit (_binds): otherwise the shift
+    end, the tray limit or the habit could not change the plan there. (Which café is closed and when the rush
+    starts change it in any world.) The quick construction screens the draw first, and the reference confirms it,
+    since most draws fail and the reference takes longer."""
     for tier in TIERS:
         plan = _solve(world, _strictest(tier))
         if plan is None or simulate(world, plan, _strictest(tier))[0]:
             return False
         world.fallback[tier] = plan
-    for tier in TIERS:
-        shift, cap, late, habit = (_matters(tier, name) for name in ("shift_end", "van_capacity", "late_cost",
-                                                                      "premium_first"))
-        if not (shift or cap or late or habit):
-            continue
-        rules = _headline(tier)
-        plan = _plan(world, rules)
-        routes = [[world.cafe(s) for s in r["stops"]] for r in plan]
-        backs = [_run(rules, cafes, _minutes(r["depart"]))[0] for r, cafes in zip(plan, routes)]
-        if shift and max(backs) <= _strictest(tier).shift_end:
-            return False
-        if cap and max(sum(c.trays for c in cafes) for cafes in routes) <= _strictest(tier).capacity:
-            return False
-        _, objective, metrics = simulate(world, plan, rules)
-        if late and metrics["late_minutes"] < MATTERS * objective:
-            return False
-        if habit and rules.premium_first:
-            free = replace(rules, premium_first=False)
-            if simulate(world, _plan(world, free), free)[1] > (1 - MATTERS) * objective:
+    for solve in (_solve, _plan):
+        for tier in TIERS:
+            plan = solve(world, _headline(tier))
+            if plan is None or not _binds(world, plan, _headline(tier), tier, solve):
                 return False
     return True
 
@@ -282,40 +330,44 @@ def write_data(world: World, data_dir: Path, lang: str) -> None:
 
 # ── simulation and scoring ───────────────────────────────────────────────────
 
-def _km(a: tuple[float, float], b: tuple[float, float]) -> float:
-    return ROAD_FACTOR * math.hypot(a[0] - b[0], a[1] - b[1])
+def _km(a: tuple[float, float], b: tuple[float, float], road: float = ROAD_FACTOR) -> float:
+    return road * math.hypot(a[0] - b[0], a[1] - b[1])
 
 
-def _drive(km: float, t: float, rush: int | None) -> float:
-    """Minutes to drive `km` leaving at minute t: AVERAGE without a rush; else FAST before the rush and SLOW from
-    it, also on a leg under way."""
+def _drive(km: float, t: float, rush: int | None, travel: Travel = TRAVEL) -> float:
+    """Minutes to drive `km` leaving at minute t: the average speed without a rush; else the fast speed before the
+    rush and the slow one from it, also on a leg under way."""
     if rush is None:
-        return km / AVERAGE * 60.0
-    fast = km / FAST * 60.0
+        return km / travel.average * 60.0
+    fast = km / travel.fast * 60.0
     if t + fast <= rush:
         return fast
     if t >= rush:
-        return km / SLOW * 60.0
-    return (rush - t) + (km - (rush - t) / 60.0 * FAST) / SLOW * 60.0
+        return km / travel.slow * 60.0
+    return (rush - t) + (km - (rush - t) / 60.0 * travel.fast) / travel.slow * 60.0
 
 
-def _service(trays: int) -> float:
-    return 4.0 + 0.2 * trays
+def _service(trays: int, travel: Travel = TRAVEL) -> float:
+    return travel.stop + travel.per_tray * trays
 
 
 def _run(rules: Rules, cafes: list[Cafe], depart: float, waits: bool = False) -> tuple:
     """(return time, late minutes) of a route through `cafes` leaving at `depart`; a van waits for opening.
     With waits=True also whether it waits anywhere."""
-    pos, t, late, waited = (0.0, 0.0), float(depart), 0.0, False
+    t, late, waited, tr, rush, prev = float(depart), 0.0, False, rules.travel, rules.rush, None
     for cafe in cafes:
-        t += _drive(_km(pos, (cafe.x, cafe.y)), t, rules.rush)
+        km = (cafe.home if prev is None else prev.to[cafe.id]) * tr.road
+        t += km / tr.average * 60.0 if rush is None else _drive(km, t, rush, tr)
         if t < cafe.open_min:
             t, waited = cafe.open_min, True
-        late += max(0.0, t - cafe.latest_min)
-        t += _service(cafe.trays)
-        pos = (cafe.x, cafe.y)
-    back = t + _drive(_km(pos, (0.0, 0.0)), t, rules.rush)
-    return (back, late, waited) if waits else (back, late)
+        if t > cafe.latest_min:
+            late += t - cafe.latest_min
+        t += tr.stop + tr.per_tray * cafe.trays
+        prev = cafe
+    if prev is not None:
+        km = prev.home * tr.road
+        t += km / tr.average * 60.0 if rush is None else _drive(km, t, rush, tr)
+    return (t, late, waited) if waits else (t, late)
 
 
 def _parse_time(v, what: str) -> int:
@@ -399,13 +451,14 @@ def score(world: World, submission_dir: Path, setting: Setting) -> dict:
 
 SHUFFLES = 30        # shuffled insertion orders tried when the plain greedy construction corners itself
 RUIN_ROUNDS = 300    # ruin-and-recreate rounds that improve the reference
+LNS_RUNS = (0.0, 0.01, 0.0)   # one ruin-and-recreate run per entry, from the i-th best start: its cooling threshold
 
 
 class _Routes:
     """Route costs for one world and one set of rules, each route evaluated once (with its best departure)."""
 
-    def __init__(self, world: World, rules: Rules):
-        self.world, self.rules = world, rules
+    def __init__(self, world: World, rules: Rules, fine: bool = True):
+        self.world, self.rules, self.fine = world, rules, fine
         self.vans = {vn["id"]: vn for vn in world.vans}
         self.memo: dict[tuple, tuple[float, int] | None] = {}
 
@@ -417,12 +470,14 @@ class _Routes:
             return False
         if rules.cold_chain and any(c.partner and not van["refrigerated"] for c in cafes):
             return False
+        if rules.first and rules.first[0] in stops[1:]:
+            return False
         tiers = [c.tier for c in cafes]
         return not (rules.premium_first and "B" in tiers and "A" in tiers[tiers.index("B"):])
 
     def best(self, van_id: str, stops: list[str]) -> tuple[float, int] | None:
-        """(objective contribution, departure) of the route at its best departure on the GRID, or None if no
-        departure keeps every rule."""
+        """(objective contribution, departure) of the route at its best departure (the GRID, then, when fine, to the
+        minute around its best step), or None if no departure keeps every rule."""
         key = (van_id, tuple(stops))
         if key not in self.memo:
             self.memo[key] = self._best(van_id, stops)
@@ -438,11 +493,22 @@ class _Routes:
         if not self.allowed(van_id, stops):
             return None
         cafes, rules, best = [self.world.cafe(s) for s in stops], self.rules, None
-        first, km = cafes[0], _km((0.0, 0.0), (cafes[0].x, cafes[0].y))
+        tr = rules.travel
+        first, km = cafes[0], _km((0.0, 0.0), (cafes[0].x, cafes[0].y), tr.road)
         lo = rules.earliest(van_id)
-        start = lo + max(0, int((first.open_min - _drive(km, 0.0, None if rules.rush is None else 10 ** 6) - lo)
+        if rules.first and rules.first[0] == first.id:
+            # reached by the demanded minute: the latest departure that makes it is the cheapest (the van waits
+            # for the opening either way)
+            depart = int(math.floor(rules.first[1] - _drive(km, rules.first[1], rules.rush, tr) + 1e-9))
+            while depart >= lo and depart + _drive(km, depart, rules.rush, tr) > rules.first[1] + 1e-9:
+                depart -= 1
+            if depart < lo:
+                return None
+            back, late = _run(rules, cafes, depart)
+            return None if back > rules.shift_end + 1e-9 else (back - depart + rules.late_weight * late, depart)
+        start = lo + max(0, int((first.open_min - _drive(km, 0.0, None if rules.rush is None else 10 ** 6, tr) - lo)
                                     // GRID)) * GRID
-        while start > lo and start + _drive(km, start, rules.rush) > first.open_min:
+        while start > lo and start + _drive(km, start, rules.rush, tr) > first.open_min:
             start -= GRID
         for depart in range(start, rules.shift_end, GRID):
             back, late, waited = _run(rules, cafes, depart, waits=True)
@@ -453,6 +519,12 @@ class _Routes:
                 best = (cost, depart)
             if not waited:
                 break
+        if best is not None and self.fine:   # then to the minute around the best step (a departure is HH:MM)
+            for depart in range(max(lo, best[1] - GRID + 1), best[1] + GRID):
+                back, late = _run(rules, cafes, depart)
+                cost = back - depart + rules.late_weight * late
+                if back <= rules.shift_end + 1e-9 and cost < best[0] - 1e-9:
+                    best = (cost, depart)
         return best
 
     def cost(self, van_id: str, stops: list[str]) -> float | None:
@@ -570,50 +642,124 @@ def _total(rc: _Routes, routes: dict[str, list[str]]) -> float:
     return sum(rc.cost(vid, stops) for vid, stops in routes.items())
 
 
-def _ruin_recreate(rc: _Routes, routes: dict[str, list[str]], rounds: int = RUIN_ROUNDS) -> dict[str, list[str]]:
-    """Large-neighbourhood search: take 2-4 cafés out (a café and its nearest neighbours, or cafés at random) and
-    put them back by cheapest insertion, keeping the result when the total objective drops. Taking cafés out
-    never breaks a rule (an earlier arrival everywhere), so every round starts from a valid plan. Deterministic:
-    its random choices come from a fixed seed."""
-    rng = random.Random(0)
+def _swap(rc: _Routes, routes: dict[str, list[str]]) -> bool:
+    """The first exchange of two stops on different routes (each taking the other's place) that lowers the total
+    objective, made in place; False when none does."""
+    vids = list(routes)
+    for a, b in itertools.combinations(vids, 2):
+        base = rc.cost(a, routes[a]) + rc.cost(b, routes[b])
+        for i, j in itertools.product(range(len(routes[a])), range(len(routes[b]))):
+            ra, rb = routes[a][:], routes[b][:]
+            ra[i], rb[j] = routes[b][j], routes[a][i]
+            ca, cb = rc.cost(a, ra), rc.cost(b, rb)
+            if ca is not None and cb is not None and ca + cb < base - 1e-6:
+                routes[a], routes[b] = ra, rb
+                return True
+    return False
+
+
+def _two_opt(rc: _Routes, routes: dict[str, list[str]]) -> bool:
+    """The first reversal of a stretch of one route that lowers its objective, made in place; False when none does."""
+    for vid, stops in routes.items():
+        base = rc.cost(vid, stops)
+        for i, j in itertools.combinations(range(len(stops)), 2):
+            cand = stops[:i] + stops[i:j + 1][::-1] + stops[j + 1:]
+            cost = rc.cost(vid, cand)
+            if cost is not None and cost < base - 1e-6:
+                routes[vid] = cand
+                return True
+    return False
+
+
+def _polish(rc: _Routes, routes: dict[str, list[str]]) -> dict[str, list[str]]:
+    """Local search to a local optimum: single-stop relocation, exchanges between routes and reversals within one."""
+    while True:
+        _relocate(rc, routes)
+        if not (_swap(rc, routes) or _two_opt(rc, routes)):
+            return routes
+
+
+def _ruin_recreate(rc: _Routes, routes: dict[str, list[str]], rounds: int = RUIN_ROUNDS, seed: int = 0,
+                   cooling: float = 0.0) -> dict[str, list[str]]:
+    """Large-neighbourhood search: take 2-5 cafés out (a café and its nearest neighbours in place and opening time,
+    cafés at random, or a stretch of one route) and put them back by cheapest insertion in a random order, keeping
+    the result when the total objective drops and, while the search is young, sometimes when it rises a little
+    (a cooling threshold), from the best plan found so far every hundred rounds. Taking cafés out never breaks a
+    rule (an earlier arrival everywhere), so every round starts from a valid plan. Deterministic: its random choices
+    come from a fixed seed. The best plan found is polished by local search."""
+    rng = random.Random(seed)
     world = rc.world
-    cur, cur_cost = {vid: list(stops) for vid, stops in routes.items()}, _total(rc, routes)
+    best = cur = {vid: list(stops) for vid, stops in routes.items()}
+    best_cost = cur_cost = _total(rc, routes)
     ids = [s for stops in routes.values() for s in stops]
+    if len(ids) < 3:
+        return _polish(rc, best)
+
+    def near(centre: Cafe, s: str) -> float:
+        c = world.cafe(s)
+        return _km((centre.x, centre.y), (c.x, c.y)) + abs(c.open_min - centre.open_min) / 6.0
+
     for k in range(rounds):
-        if k % 2 == 0:
+        size = rng.randint(2, min(5, len(ids)))
+        kind = k % 3
+        if kind == 0:
             centre = world.cafe(rng.choice(ids))
-            near = sorted(ids, key=lambda s: (_km((centre.x, centre.y), (world.cafe(s).x, world.cafe(s).y)), s))
-            out = near[:rng.randint(2, 4)]
+            out = sorted(ids, key=lambda s: (near(centre, s), s))[:size]
+        elif kind == 1:
+            out = rng.sample(ids, size)
         else:
-            out = rng.sample(ids, rng.randint(2, 4))
+            vid = rng.choice([v for v, stops in cur.items() if stops])
+            i = rng.randrange(len(cur[vid]))
+            out = cur[vid][i:i + size] or cur[vid][-1:]
         rng.shuffle(out)
         cand = {vid: [s for s in stops if s not in out] for vid, stops in cur.items()}
         if _insert_all(rc, [world.cafe(s) for s in out], cand):
             cost = _total(rc, cand)
-            if cost < cur_cost - 1e-6:
+            threshold = cooling * cur_cost * max(0.0, 1.0 - k / (0.7 * rounds))
+            if cost < cur_cost - 1e-6 or cost < cur_cost + threshold * rng.random():
                 cur, cur_cost = cand, cost
-    return _relocate(rc, cur)
+                if cost < best_cost - 1e-6:
+                    best, best_cost = cand, cost
+        if k % 100 == 99:
+            cur, cur_cost = best, best_cost
+    return _polish(rc, best)
 
 
 def _plan(world: World, rules: Rules) -> list[dict]:
     """The reference routes under `rules` (computed once per world and rules).
 
-    Two starts, each improved by relocation: the greedy construction, and the world's fallback without the closed
-    café (valid under any rules a setting draws, so there is always one). The cheaper one is improved further by
-    ruin and recreate. The greedy construction is not monotone in the rules (a looser shift can corner it where a
-    tighter one does not), which is why the fallback is always tried too."""
+    Starts, each polished by local search: the greedy construction, the world's fallback without the closed café
+    (valid under any rules a setting of its tier draws, so a setting always has one; a misreading may need another
+    tier's) and the dispatcher's own plan, those that keep the rules. Ruin and recreate improves them further (one
+    run per entry of LNS_RUNS, from the best starts in turn) with departures on the GRID, and the best result is
+    polished again with departures to the minute. The greedy construction is not monotone in the rules (a looser
+    shift can corner it where a tighter one does not), which is why the fallbacks are always tried too."""
     if rules not in world.cache:
-        rc = _Routes(world, rules)
+        rc = _Routes(world, rules, fine=False)
         found = []
         built = _construct(rc)
         if built is not None:
-            found.append(_relocate(rc, built))
-        routes = {vid: [] for vid in rc.vans}
-        for r in world.fallback[rules.tier]:
-            routes[r["van"]] = [s for s in r["stops"] if s != rules.closed]
-        found.append(_relocate(rc, routes))
-        best = min(found, key=lambda routes: _total(rc, routes))
-        world.cache[rules] = rc.plan(_ruin_recreate(rc, best))
+            found.append(built)
+        tiers = [rules.tier] + [t for t in TIERS if t != rules.tier]
+        sources = [world.fallback[t] for t in tiers if t in world.fallback] + [_client_way(world, rules)]
+        for plan in sources:
+            routes = {vid: [] for vid in rc.vans}
+            for r in plan:
+                routes[r["van"]] = [s for s in r["stops"] if s != rules.closed]
+            variants = [routes]
+            if rules.first:             # the demanded café moved to the front of each route in turn
+                cid = rules.first[0]
+                variants = [{v: ([cid] if v == vid else []) + [s for s in stops if s != cid]
+                             for v, stops in routes.items()} for vid in routes]
+            found += [r for r in variants if all(rc.cost(vid, stops) is not None for vid, stops in r.items())]
+        if not found:
+            raise ValueError("no start keeps the rules")
+        found = sorted((_polish(rc, {vid: list(stops) for vid, stops in r.items()}) for r in found),
+                       key=lambda routes: _total(rc, routes))
+        runs = [_ruin_recreate(rc, found[min(i, len(found) - 1)], seed=i, cooling=cool)
+                for i, cool in enumerate(LNS_RUNS)]
+        fine = _Routes(world, rules)
+        world.cache[rules] = fine.plan(_polish(fine, min(runs, key=lambda routes: _total(rc, routes))))
     return json.loads(json.dumps(world.cache[rules]))
 
 
@@ -624,6 +770,142 @@ def reference_solution(world: World, out_dir: Path, setting: Setting) -> None:
 
 # ── baseline: the dispatcher's own plan ──────────────────────────────────────
 
+def _leave_for(rules: Rules, van_id: str, first: Cafe) -> int:
+    """The minute a van leaves to reach `first` as it opens (rounded down), or as early as it may if that is later."""
+    km = _km((0.0, 0.0), (first.x, first.y))
+    d = first.open_min - _drive(km, 0.0, None if rules.rush is None else 10 ** 6)
+    for _ in range(8):                  # with a rush the drive depends on when the van leaves
+        d = first.open_min - _drive(km, d, rules.rush)
+    return max(rules.earliest(van_id), int(math.floor(d + 1e-9)))
+
+
+def _habit_route(world: World, rules: Rules, van_id: str, stops: list[str]) -> tuple[int, float, float] | None:
+    """(departure, return, arrival at the last stop) of a round as the dispatcher sends it, or None when it breaks a
+    rule: this week's tray limit, the cold chain, the premium-first habit (the rules the dispatcher knows) or the
+    shift end."""
+    cafes = [world.cafe(s) for s in stops]
+    van = next(vn for vn in world.vans if vn["id"] == van_id)
+    if sum(c.trays for c in cafes) > min(van["capacity"], rules.capacity):
+        return None
+    if rules.cold_chain and any(c.partner and not van["refrigerated"] for c in cafes):
+        return None
+    tiers = [c.tier for c in cafes]
+    if rules.premium_first and "B" in tiers and "A" in tiers[tiers.index("B"):]:
+        return None
+    depart = _leave_for(rules, van_id, cafes[0])
+    back, _ = _run(rules, cafes, depart)
+    if back > rules.shift_end + 1e-9:
+        return None
+    pos, t, arrive = (0.0, 0.0), float(depart), float(depart)
+    for c in cafes:
+        t += _drive(_km(pos, (c.x, c.y)), t, rules.rush)
+        arrive = t
+        t = max(t, c.open_min) + _service(c.trays)
+        pos = (c.x, c.y)
+    return depart, back, arrive
+
+
+def _dispatch(world: World, rules: Rules, order: list[Cafe]) -> tuple[dict[str, list[str]] | None, Cafe | None]:
+    """(rounds, None), or (None, the café that fits nowhere): the cafés of `order` given out in turn, each at the end
+    of the round of the van that can be there first; else squeezed in where it adds the fewest route minutes; else
+    squeezed in after moving one café of that round to the end of another van's round (or squeezed in there)."""
+    vans = [vn["id"] for vn in world.vans]
+    rounds: dict[str, list[str]] = {vid: [] for vid in vans}
+
+    def minutes(vid: str, stops: list[str]) -> float | None:
+        if not stops:
+            return 0.0
+        sent = _habit_route(world, rules, vid, stops)
+        return None if sent is None else sent[1] - sent[0]
+
+    def squeeze(cid: str, rounds: dict[str, list[str]], skip: str | None = None):
+        """(added minutes, van, new round) of the cheapest place for cid on any round (not `skip`'s)."""
+        best = None
+        for vid in vans:
+            if vid == skip:
+                continue
+            now = minutes(vid, rounds[vid])
+            for pos in range(len(rounds[vid]) + 1):
+                stops = rounds[vid][:pos] + [cid] + rounds[vid][pos:]
+                after = minutes(vid, stops)
+                if after is not None and now is not None and (best is None or (after - now, vid, pos) < best[:3]):
+                    best = (after - now, vid, pos, stops)
+        return None if best is None else (best[0], best[1], best[3])
+
+    for cafe in order:
+        best = None
+        for vid in vans:
+            sent = _habit_route(world, rules, vid, rounds[vid] + [cafe.id])
+            if sent is not None and (best is None or (sent[2], vid) < best[:2]):
+                best = (sent[2], vid)
+        if best is not None:
+            rounds[best[1]].append(cafe.id)
+            continue
+        found = squeeze(cafe.id, rounds)
+        if found is None:
+            for vid in vans:
+                for out in rounds[vid]:
+                    rest = [s for s in rounds[vid] if s != out]
+                    placed = squeeze(cafe.id, {**rounds, vid: rest})
+                    if placed is None or placed[1] != vid:
+                        continue
+                    moved = squeeze(out, {**rounds, vid: placed[2]}, skip=vid)
+                    if moved is not None:
+                        cost = placed[0] + moved[0]
+                        if found is None or cost < found[0]:
+                            found = (cost, vid, placed[2], moved[1], moved[2])
+            if found is None:
+                return None, cafe
+            rounds[found[3]] = found[4]
+        rounds[found[1]] = found[2]
+    return rounds, None
+
+
+HABIT_ORDER_MAX = 7           # the dispatcher sorts out the order of a round of up to this many cafés
+
+
+def _round_cost(world: World, rules: Rules, van_id: str, stops: list[str]) -> float | None:
+    """Minutes out plus the lateness cost of a round as the dispatcher sends it (None: it breaks a rule)."""
+    sent = _habit_route(world, rules, van_id, stops)
+    if sent is None:
+        return None
+    return sent[1] - sent[0] + rules.late_weight * _run(rules, [world.cafe(s) for s in stops], sent[0])[1]
+
+
+def _sorted_round(world: World, rules: Rules, van_id: str, stops: list[str]) -> list[str]:
+    """The round's cafés in the order that serves them best, the van leaving to reach the first as it opens (the
+    round as given out when it has more than HABIT_ORDER_MAX cafés or no other order keeps the rules)."""
+    if not stops:
+        return stops
+    best = (_round_cost(world, rules, van_id, stops), stops)
+    if 1 < len(stops) <= HABIT_ORDER_MAX:
+        for perm in itertools.permutations(stops):
+            cost = _round_cost(world, rules, van_id, list(perm))
+            if cost is not None and (best[0] is None or cost < best[0] - 1e-9):
+                best = (cost, list(perm))
+    return best[1]
+
+
+def _habit(world: World, rules: Rules, by_deadline: bool = False) -> list[dict] | None:
+    """The dispatcher's plan giving out the cafés by opening time, or by deliver_by (see baseline_solution); None
+    when no order of giving out the cafés works."""
+    order = sorted(world.open_cafes(rules), key=lambda c: (not (c.partner and rules.cold_chain),
+                                                           c.tier if rules.premium_first else "",
+                                                           *((c.latest_min, c.open_min) if by_deadline
+                                                             else (c.open_min, c.latest_min)), c.id))
+    first: list[Cafe] = []
+    for _ in range(len(order)):
+        rounds, stuck = _dispatch(world, rules, first + [c for c in order if c not in first])
+        if rounds is not None:
+            rounds = {vid: _sorted_round(world, rules, vid, stops) for vid, stops in rounds.items()}
+            return [{"van": vid, "depart": _hhmm(_habit_route(world, rules, vid, stops)[0]), "stops": stops}
+                    for vid, stops in rounds.items() if stops]
+        if stuck in first:
+            return None
+        first.append(stuck)
+    return None
+
+
 def _fits(world: World, rules: Rules, van_id: str, stops: list[str]) -> bool:
     """The route leaving as early as the van may breaks no rule (cafés on other routes aside)."""
     route = {"van": van_id, "depart": _hhmm(rules.earliest(van_id)), "stops": stops}
@@ -631,7 +913,9 @@ def _fits(world: World, rules: Rules, van_id: str, stops: list[str]) -> bool:
 
 
 def _sweep(world: World, rules: Rules, start: float) -> dict[str, list[str]] | None:
-    """The dispatcher's split of the map, cafés taken by bearing from `start` (None if a café fits on no van)."""
+    """The map split into slices round the kitchen, cafés taken by bearing from `start` (None if a café fits on no
+    van): V4 takes the partner cafés first when the cold chain applies, and every van serves its cafés in the order
+    they open, premium cafés first while the habit holds."""
     vans = [vn["id"] for vn in world.vans]
     fridge = next(vn["id"] for vn in world.vans if vn["refrigerated"])
     fixed = {vid: [] for vid in vans}
@@ -645,7 +929,8 @@ def _sweep(world: World, rules: Rules, start: float) -> dict[str, list[str]] | N
     extra: dict[str, list[str]] = {vid: [] for vid in vans}
 
     def route(vid: str, more: tuple[str, ...] = ()) -> list[str]:
-        cafes = sorted((world.cafe(s) for s in extra[vid] + list(more)), key=lambda c: (c.tier, c.open_min, c.id))
+        cafes = sorted((world.cafe(s) for s in extra[vid] + list(more)),
+                       key=lambda c: (c.tier if rules.premium_first else "", c.open_min, c.id))
         return fixed[vid] + [c.id for c in cafes]
 
     order = [vid for vid in vans if vid != fridge] + [fridge]
@@ -664,31 +949,102 @@ def _sweep(world: World, rules: Rules, start: float) -> dict[str, list[str]] | N
     return {vid: route(vid) for vid in vans}
 
 
-def baseline_solution(world: World, out_dir: Path, setting: Setting) -> None:
-    """What the dispatcher does without an engineer: split the map by bearing and send every van out at once.
+def _timed(world: World, rules: Rules, routes: dict[str, list[str]]) -> list[dict]:
+    """Rounds with each van leaving so that it reaches its first café as it opens (when that keeps the rules the
+    dispatcher checks; else as early as it may)."""
+    plan = []
+    for vid, stops in routes.items():
+        if stops:
+            sent = _habit_route(world, rules, vid, stops)
+            plan.append({"van": vid, "depart": _hhmm(sent[0] if sent else rules.earliest(vid)), "stops": stops})
+    return plan
 
-    When the cold chain applies (medium, hard), V4 takes the partner cafés, premium first, in the order that brings
-    it back soonest. The other cafés are taken in bearing order round the kitchen, starting due west (negative x),
-    and loaded onto V1, V2, V3 and then V4 until the next one no longer fits (this week's tray limit, back by the
-    shift end); each van serves its premium cafés first, then the rest in order of opening. A café that fits nowhere
-    at its turn goes on the first van that can still take it; if one is still left over, the sweep starts again
-    from the next café round. Every van leaves at 05:00, when the drivers' shift starts (in hard V2 as soon as it
-    is out of the workshop), so the vans wait at cafés that are not open yet, and deliver_by is ignored. If no start
-    places every café (no world built so far needs it), the world's fallback routes without the closed café are
-    driven, every van leaving as early as it may: valid, since an earlier start never brings a van back later.
-    """
-    rules = rules_of(setting)
+
+def _slices(world: World, rules: Rules) -> list[dict] | None:
+    """The dispatcher's older way: the map split into four slices round the kitchen (from due west, the next café
+    round when a start leaves one over), each round in its best order and each van leaving to reach its first café
+    as it opens; None when no start places every café."""
     first = sorted((c for c in world.open_cafes(rules) if not (c.partner and rules.cold_chain)),
                    key=lambda c: ((math.atan2(c.y, c.x) - math.pi) % (2 * math.pi), c.id))
     for start in [math.pi] + [math.atan2(c.y, c.x) for c in first[1:]]:
         routes = _sweep(world, rules, start)
         if routes is not None:
+            routes = {vid: _sorted_round(world, rules, vid, stops) for vid, stops in routes.items()}
+            plan = _timed(world, rules, routes)
+            return None if simulate(world, plan, rules)[0] else plan
+    return None
+
+
+def _client_way(world: World, rules: Rules) -> list[dict]:
+    """baseline_solution's plan (computed once per world and rules)."""
+    key = ("habit", rules)
+    if key not in world.cache:
+        plans = [p for p in (_habit(world, rules), _habit(world, rules, by_deadline=True), _slices(world, rules))
+                 if p is not None]
+        if plans:
+            plan = min(plans, key=lambda p: simulate(world, p, rules)[1])
+        else:
+            routes = {vn["id"]: [] for vn in world.vans}
+            for r in world.fallback[rules.tier]:
+                routes[r["van"]] = [s for s in r["stops"] if s != rules.closed]
             plan = [{"van": vid, "depart": _hhmm(rules.earliest(vid)), "stops": stops}
                     for vid, stops in routes.items() if stops]
-            break
-    else:
-        plan = [{"van": r["van"], "depart": _hhmm(rules.earliest(r["van"])),
-                 "stops": [s for s in r["stops"] if s != rules.closed]} for r in world.fallback[rules.tier]]
+        world.cache[key] = plan
+    return json.loads(json.dumps(world.cache[key]))
+
+
+def baseline_solution(world: World, out_dir: Path, setting: Setting) -> None:
+    """What the client does without an engineer: the dispatcher's habit, as the requirements describe it.
+
+    The dispatcher draws up the morning by hand in three ways and drives the one that costs least (minutes out plus
+    lateness). His usual way goes through the cafés in the order they open (the earlier deliver_by first among those
+    that open together; the partner cafés first when the cold chain gives them to V4, and premium cafés before all
+    standard ones while the premium-first habit holds), or the same by deliver_by (the earlier opening first among
+    equal ones), and gives each one to the van that can be there first, at the end of that van's round, as long as
+    the van keeps this week's tray limit, is back by the end of the shift and, when the cold chain applies, is the
+    refrigerated V4 for a partner café. A café that no round can take at its end is squeezed in where it adds the
+    fewest route minutes, if need be after moving one café of that round to another; one that still fits nowhere is
+    given out first and he starts again. His older way splits the map into four slices round the kitchen, one per van (V4 with the partner
+    cafés when the cold chain applies). Either way he then puts each round in the order that serves it best (rounds
+    of up to HABIT_ORDER_MAX cafés), and each van leaves so that it reaches its first café as it opens (in hard V2
+    not before it is out of the workshop). He knows the client's rules and travel times but plans by hand: a café
+    never moves to another van once the rounds are made. If neither way places every café, the world's fallback
+    routes without the closed café are driven, every van leaving as early as it may (always valid; not needed in
+    any world checked).
+    """
+    plan = _client_way(world, rules_of(setting))
+    (out_dir / "routes.json").write_text(json.dumps({"routes": plan}, indent=2), encoding="utf-8")
+
+
+# ── literal solution: the request as written ─────────────────────────────────
+
+LITERAL_SHIFT_END = 12 * 60   # literal_solution: no shift end in the agent's view, so the whole morning
+LITERAL_LATE = 10.0           # literal_solution: deliver_by read as a firm target, a late minute costing ten
+# literal_solution: the travel times an agent assumes when nobody tells it: the straight line between the
+# coordinates (they are in km), a city van's 30 km/h and five minutes at each café.
+LITERAL_TRAVEL = Travel(road=1.0, average=30.0, stop=5.0, per_tray=0.0)
+# shortcuts: another guess, a planner's without being told (a detour factor, an urban average speed, a short stop).
+# With the closed café known it scores up to 0.93 in six of the nine easy settings, where the closed café is often
+# the only rule the literal solution breaks: the travel times are guessable (GT.md, part 5; known and open in
+# validate.OPEN_AUDIT_FINDINGS).
+PLANNER_GUESS = Travel(road=1.3, average=25.0, stop=5.0, per_tray=0.0)
+
+
+def _literal_rules() -> Rules:
+    return Rules(tier="easy", closed=None, capacity=CAPACITY, shift_end=LITERAL_SHIFT_END, late_weight=LITERAL_LATE,
+                 rush=None, cold_chain=False, premium_first=False, travel=LITERAL_TRAVEL)
+
+
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request at face value, from the agent's view alone: every café on the list gets its trays ("all our
+    cafés"), any van may serve any café (nothing says the partner range needs the refrigerated van), up to its racks'
+    max_trays, leaving from 05:00 and driving as long as the morning needs, with deliver_by as the target (a late
+    minute weighted as ten van minutes) and the drivers' time otherwise kept short. The data gives positions but no
+    travel times, so the plan assumes what an agent assumes when nobody says: the straight line between the
+    coordinates, 30 km/h and five minutes at each café. The reference planner under those readings: no closed café,
+    no week's tray limit, no shift end, no habit, no rush and no workshop day. It delivers to the café that is closed
+    this week, so it is invalid in every setting."""
+    plan = _plan(world, _literal_rules())
     (out_dir / "routes.json").write_text(json.dumps({"routes": plan}, indent=2), encoding="utf-8")
 
 
@@ -925,3 +1281,485 @@ def violating_examples(world: World, setting: Setting) -> dict:
         return lambda out: (out / "routes.json").write_text(json.dumps({"routes": routes}), encoding="utf-8")
 
     return {rule: write(plan) for rule, plan in _breaking_plans(world, rules_of(setting)).items()}
+
+
+# ── ground truth audit hooks (fdebench2.audit, GT.md) ────────────────────────
+
+_EN_TARGETS = yaml.safe_load((Path(__file__).parent / "locales" / "en" / "targets.yaml").read_text(encoding="utf-8"))
+TARGET_TIERS = {t["id"]: tuple(t.get("tiers", TIERS)) for t in _EN_TARGETS}
+TARGET_PARAM = {t["id"]: t["param"] for t in _EN_TARGETS if t.get("param")}
+TARGET_WHEN = {t["id"]: t.get("when") or {} for t in _EN_TARGETS}
+FORCE_LATE = 10.0             # the lateness cost misread: deliver_by as a firm target, as the literal reads it
+
+
+def _in_force(setting: Setting) -> list[str]:
+    return [t for t, tiers in TARGET_TIERS.items() if setting.tier in tiers
+            and all(str(setting.params.get(k)).lower() in [str(v).lower() for v in vs]
+                    for k, vs in TARGET_WHEN[t].items())]
+
+
+def _misread(rules: Rules, target: str) -> Rules | None:
+    """The rules a plan is made with when one fixed fact is read the most natural wrong way (None: no such
+    misreading here). Travel facts change only the planning model: the plan is still scored with the client's."""
+    tr = rules.travel
+    if target == "road_distance":
+        return replace(rules, travel=replace(tr, road=1.0))                 # the straight line between the points
+    if target == "speed":
+        return replace(rules, travel=replace(tr, average=FAST))             # a city van's 30 km/h
+    if target == "rush_hour":
+        return replace(rules, rush=None, travel=replace(tr, average=FAST))  # 30 km/h all morning, no rush
+    if target == "service_time":
+        return replace(rules, travel=replace(tr, stop=5.0, per_tray=0.0))   # five minutes a stop (the literal's guess)
+    if target == "tray_limit":
+        return replace(rules, capacity=CAPACITY)                            # the racks' max_trays
+    if target == "cold_chain":
+        return replace(rules, cold_chain=False)                             # any van for the partner cafés
+    if target == "partner_this_week":
+        return replace(rules, cold_chain=True)                              # the refrigerated van only
+    if target == "lateness":
+        return replace(rules, late_weight=FORCE_LATE)                       # deliver_by as a firm target
+    if target == "workshop":
+        return replace(rules, ready=())                                     # V2 out from 05:00
+    if target == "manager_pressure":
+        return replace(rules, first=(PRESSURE_CAFE, PRESSURE_BY))           # her demand followed
+    if target == "premium_first":
+        return replace(rules, premium_first=True)                           # the habit kept although suspended
+    return None
+
+
+def _write(out_dir: Path, plan: list[dict]) -> None:
+    (out_dir / "routes.json").write_text(json.dumps({"routes": plan}, indent=2), encoding="utf-8")
+
+
+def ablations(world: World, setting: Setting) -> dict:
+    """{target: write the plan that misreads only that fact}: the reference planner under the setting's rules with
+    one fact read the most natural wrong way the agent's view allows (_misread), for every target in force that is
+    not a drawn parameter with another candidate here (those the audit ablates itself, with the reference of each
+    other candidate). The tray limit is ablated here in hard, where its parameter has one candidate: the racks'
+    120 trays from the data."""
+    rules = rules_of(setting)
+    out = {}
+    for t in _in_force(setting):
+        param = TARGET_PARAM.get(t)
+        if param and len(set(map(str, POOLS[param][setting.tier]))) > 1:
+            continue
+        wrong = _misread(rules, t)
+        if wrong is not None:
+            out[t] = (lambda w: lambda d: _write(d, _misread_plan(world, rules, w)))(wrong)
+    return out
+
+
+def _misread_plan(world: World, rules: Rules, wrong: Rules) -> list[dict]:
+    """The reference planner's plan under the misread rules. Where the C07 manager's demand cannot be met within
+    the other rules, the plan meets it anyway, as an agent that follows her would: the reference with her café moved
+    to the front of the round where that costs least, the van leaving to reach it by 06:30."""
+    try:
+        return _plan(world, wrong)
+    except ValueError:
+        if not wrong.first:
+            raise
+    cid, by = wrong.first
+    ref = _plan(world, rules)
+    best = None
+    for i in range(len(ref)):
+        plan = json.loads(json.dumps(ref))
+        for r in plan:
+            r["stops"] = [s for s in r["stops"] if s != cid]
+        plan[i]["stops"].insert(0, cid)
+        c = world.cafe(cid)
+        km = _km((0.0, 0.0), (c.x, c.y))
+        depart = int(math.floor(by - _drive(km, by, rules.rush) + 1e-9))
+        plan[i]["depart"] = _hhmm(max(rules.earliest(plan[i]["van"]), depart))
+        violations, obj, _ = simulate(world, plan, rules)
+        key = (len(violations), obj)
+        if best is None or key < best[0]:
+            best = (key, plan)
+    return best[1]
+
+
+# ── shortcuts: lazy plans that must not score ────────────────────────────────
+
+def _rounds_plan(world: World, rules: Rules, rounds: dict[str, list[str]]) -> list[dict]:
+    """Rounds as a plan, each van leaving at the best minute for its round (the reference's own timing)."""
+    rc = _Routes(world, rules)
+    plan = []
+    for vid, stops in rounds.items():
+        if stops:
+            best = rc.best(vid, stops)
+            plan.append({"van": vid, "depart": _hhmm(best[1] if best else rules.earliest(vid)), "stops": stops})
+    return plan
+
+
+def _cut(world: World, rules: Rules, order: list[Cafe]) -> dict[str, list[str]]:
+    """Cafés of `order` loaded onto V1, V2, V3 and V4 in turn, the next van once the tray limit is reached (partner
+    cafés on V4 when the cold chain applies; premium cafés first on each van while the habit holds)."""
+    vans = [vn["id"] for vn in world.vans]
+    fridge = next(vn["id"] for vn in world.vans if vn["refrigerated"])
+    rounds = {vid: [] for vid in vans}
+    if rules.cold_chain:
+        rounds[fridge] = [c.id for c in order if c.partner]
+        order = [c for c in order if not c.partner]
+    i = 0
+    for c in order:
+        while i < len(vans) - 1 and sum(world.cafe(s).trays for s in rounds[vans[i]]) + c.trays > rules.capacity:
+            i += 1
+        rounds[vans[i]].append(c.id)
+    if rules.premium_first:
+        rounds = {vid: sorted(stops, key=lambda s: world.cafe(s).tier) for vid, stops in rounds.items()}
+    return rounds
+
+
+def shortcuts(world: World, setting: Setting) -> dict:
+    """Lazy plans a gaming agent might hand in, given every rule of the setting where the plan can keep it; each
+    must be invalid or score at most 0.5. Every departure is the best minute for its round."""
+    rules = rules_of(setting)
+    open_cafes = world.open_cafes(rules)
+
+    def id_order(out: Path) -> None:
+        """One route per van in café-id order: C01, C02, ... loaded onto V1 until the tray limit, then V2, V3, V4."""
+        _write(out, _rounds_plan(world, rules, _cut(world, rules, sorted(open_cafes, key=lambda c: c.id))))
+
+    def opening_order(out: Path) -> None:
+        """Cafés in the order they open, loaded onto V1 until the tray limit, then V2, V3, V4 (time, not place)."""
+        _write(out, _rounds_plan(world, rules, _cut(world, rules, sorted(open_cafes, key=lambda c: (c.open_min,
+                                                                                                    c.id)))))
+
+    def nearest_neighbour(out: Path) -> None:
+        """Nearest neighbour without the delivery windows: each van drives to the nearest café not yet served until
+        the tray limit, then the next van starts from the kitchen."""
+        left = list(open_cafes)
+        order, pos = [], (0.0, 0.0)
+        while left:
+            c = min(left, key=lambda c: (math.hypot(c.x - pos[0], c.y - pos[1]), c.id))
+            order.append(c)
+            left.remove(c)
+            pos = (c.x, c.y)
+        _write(out, _rounds_plan(world, rules, _cut(world, rules, order)))
+
+    def map_slices(out: Path) -> None:
+        """Four slices of the map round the kitchen, one per van, each in the order its cafés open."""
+        start = math.pi
+        rounds = None
+        for s in [start] + [math.atan2(c.y, c.x) for c in open_cafes]:
+            rounds = _sweep(world, rules, s)
+            if rounds is not None:
+                break
+        _write(out, _rounds_plan(world, rules, rounds) if rounds else [])
+
+    def habit_best_departures(out: Path) -> None:
+        """Copy the client's way and change one thing, the timing: the dispatcher's rounds, each van at its best
+        departure (and each round in its best order for that departure)."""
+        rc = _Routes(world, rules)
+        rounds = {vn["id"]: [] for vn in world.vans}
+        for r in _client_way(world, rules):
+            rounds[r["van"]] = r["stops"]
+        for vid, stops in rounds.items():
+            if 1 < len(stops) <= HABIT_ORDER_MAX:
+                orders = [list(p) for p in itertools.permutations(stops) if rc.cost(vid, list(p)) is not None]
+                rounds[vid] = min(orders, key=lambda p: rc.cost(vid, p), default=stops)
+        _write(out, _rounds_plan(world, rules, rounds))
+
+    def habit_one_move(out: Path) -> None:
+        """Copy the client's way and change one thing: the one café whose move to another place saves the most."""
+        plan = _client_way(world, rules)
+        rounds = {vn["id"]: [] for vn in world.vans}
+        for r in plan:
+            rounds[r["van"]] = r["stops"]
+        cost = {vid: _round_cost(world, rules, vid, stops) if stops else 0.0 for vid, stops in rounds.items()}
+        best = None
+        for src, stops in rounds.items():
+            for cid in stops:
+                rest = [x for x in stops if x != cid]
+                left = _round_cost(world, rules, src, rest) if rest else 0.0
+                if left is None:
+                    continue
+                for dst, other in rounds.items():
+                    base = rest if dst == src else other
+                    for pos in range(len(base) + 1):
+                        cand = base[:pos] + [cid] + base[pos:]
+                        new = _round_cost(world, rules, dst, cand)
+                        if new is None:
+                            continue
+                        saving = cost[src] + (cost[dst] if dst != src else 0.0) - (new + (left if dst != src else 0.0))
+                        if best is None or saving > best[0] + 1e-9:
+                            best = (saving, src, rest, dst, cand)
+        if best is not None and best[0] > 1e-9:
+            rounds[best[1]] = best[2]
+            rounds[best[3]] = best[4]
+        _write(out, _timed(world, rules, rounds))
+
+    def insertion_without_departures(out: Path) -> None:
+        """Cheapest insertion with every rule and the client's travel times, the departures left out of the file
+        (every van at the default 05:00)."""
+        _write(out, [{"van": r["van"], "stops": r["stops"]} for r in insertion_plan(world, rules)])
+
+    def deadline_balanced(out: Path) -> None:
+        """Cafés by deliver_by, each to the van with the fewest trays so far (partner cafés on V4 when the cold chain
+        applies, premium cafés first while the habit holds), each van at its best departure."""
+        vans = [vn["id"] for vn in world.vans]
+        fridge = next(vn["id"] for vn in world.vans if vn["refrigerated"])
+        rounds, load = {vid: [] for vid in vans}, {vid: 0 for vid in vans}
+        for c in sorted(open_cafes, key=lambda c: (c.tier if rules.premium_first else "", c.latest_min, c.id)):
+            vid = fridge if rules.cold_chain and c.partner else min(vans, key=lambda v: (load[v], v))
+            rounds[vid].append(c.id)
+            load[vid] += c.trays
+        _write(out, _rounds_plan(world, rules, rounds))
+
+    def literal_plus_closed_cafe_planner_guess(out: Path) -> None:
+        """The literal solution with the closed café known and the travel times guessed as a planner would without
+        being told: 1.3 times the straight line, 25 km/h and five minutes a stop."""
+        guess = replace(literal, tier=rules.tier, closed=rules.closed, travel=PLANNER_GUESS)
+        _write(out, _plan(world, guess))
+
+    made = [id_order, opening_order, nearest_neighbour, map_slices, habit_best_departures, habit_one_move,
+            insertion_without_departures, deadline_balanced, literal_plus_closed_cafe_planner_guess]
+    literal = _literal_rules()
+    near = {"closed_cafe": dict(closed=rules.closed), "van_capacity": dict(capacity=rules.capacity),
+            "shift_window": dict(shift_end=rules.shift_end), "cold_chain": dict(cold_chain=rules.cold_chain),
+            "premium_first": dict(premium_first=rules.premium_first), "van_ready": dict(ready=rules.ready)}
+    out = {f.__name__: f for f in made}
+    for rule, change in near.items():
+        def literal_plus(d: Path, change=change) -> None:
+            _write(d, _plan(world, replace(literal, tier=rules.tier, **change)))
+        literal_plus.__doc__ = (f"The literal solution with the one client fact behind rule {rule} known (planned "
+                                f"anew with it, every other reading literal).")
+        out[f"literal_plus_{rule}"] = literal_plus
+    return out
+
+
+def insertion_plan(world: World, rules: Rules) -> list[dict]:
+    """Not a shortcut, a part of the work (GT.md): the cafés given out in the dispatcher's order, each put where it
+    adds the least on any round (cheapest insertion) with the client's rules and travel times, each van at its best
+    departure. It needs every fact the client knows."""
+    rc = _Routes(world, rules)
+    order = sorted(world.open_cafes(rules), key=lambda c: (c.tier if rules.premium_first else "", c.open_min,
+                                                           c.latest_min, c.id))
+    rounds = {vn["id"]: [] for vn in world.vans}
+    if not _insert_all(rc, order, rounds):
+        return _client_way(world, rules)
+    return _rounds_plan(world, rules, rounds)
+
+
+# ── the solver that never asks ───────────────────────────────────────────────
+
+ROBUST_LATE = 5.0             # robust_solution: deliver_by read as a target the café expects, not a wall: a late
+                              # minute weighs five van minutes (between the literal's firm ten and a soft one)
+
+
+def robust_solution(world: World, out_dir: Path, tier: str, candidates: dict) -> None:
+    """The one plan for every setting of the tier, from the agent's view and the tier's pools.
+
+    Read from the data: the cafés, their trays, windows and tiers, the vans and that only V4 is refrigerated. The
+    partner cafés go on V4 (the data pairs partner_brand with the refrigerated van and nothing settles that a dry
+    van may take them; it is also valid in every tier). deliver_by is read as a target the café expects but not a
+    wall, a late minute weighted as five van minutes: a solver that cannot ask hedges between the firm deadline the
+    literal reads (ten) and a soft target (on the public world this scores 0.12 better in easy than the firm
+    reading, 0.02 worse in medium and the same in hard). Granted, although nothing on hand settles it, so that the
+    gap left does not rest on a guess: the client's travel times (1.3 times the straight line, 25 km/h, and in hard 30 km/h before the rush and 20 km/h
+    from it; four minutes plus 0.2 a tray at each café). Planned across the pools: the smallest tray limit and the
+    earliest shift end (valid whatever the client's value); the premium-first habit kept or not, the rush planned
+    at each candidate start, and one candidate café left out as the closed one (any other choice serves the closed
+    café in every setting). Among those plans it hands in the one with the best mean, over every combination of the
+    pools read as above, of (valid there) x (the reference planner's objective there) / (its objective there): it
+    never sees the client's own way, so it cannot weigh by the quality scale. Not granted, and not guessed: V2's
+    workshop morning and the C07 manager's demand, which nothing on hand mentions (her demand is not followed)."""
+    _write(out_dir, _robust_plan(world, tier, candidates))
+
+
+def _robust_plan(world: World, tier: str, candidates: dict, cold_chain: bool = True) -> list[dict]:
+    """robust_solution's plan; cold_chain=False reads the partner cafés as free for any van instead (GT.md reports
+    that guess beside it)."""
+    pools = {name: list(dict.fromkeys(values)) for name, values in candidates.items()}
+    combos = [dict(zip(pools, values)) for values in itertools.product(*pools.values())]
+    # each combination as the solver reads it: the tier's fixed facts at its own reading, not the client's
+    true_rules = [replace(_rules(tier, c), cold_chain=cold_chain, ready=(), late_weight=ROBUST_LATE) for c in combos]
+    refs = [simulate(world, _plan(world, r), r)[1] for r in true_rules]
+    base = {"van_capacity": min(int(v) for v in pools["van_capacity"]),
+            "shift_end": _hhmm(min(_minutes(v) for v in pools["shift_end"]))}
+    best = None
+    for closed, habit, rush in itertools.product(pools["closed_cafe"], pools["premium_first"], pools["rush_start"]):
+        p = {**combos[0], **base, "closed_cafe": closed, "premium_first": habit, "rush_start": rush}
+        rules = replace(_rules(tier, p), cold_chain=cold_chain, late_weight=ROBUST_LATE, ready=())
+        plan = _plan(world, rules)
+        score = 0.0
+        for r, ref in zip(true_rules, refs):
+            violations, obj, _ = simulate(world, plan, r)
+            score += 0.0 if violations else ref / obj
+        key = (-score / len(combos), str(closed), str(habit), str(rush))
+        if best is None or key < best[0]:
+            best = (key, plan)
+    return best[1]
+
+
+# ── best known solution and a proven bound ───────────────────────────────────
+
+def best_known_solution(world: World, out_dir: Path, setting: Setting) -> None:
+    """The best plan known: the stored result of the long search (reference/best_known.json, see make_bounds.py)
+    for this world and setting when it is valid and no worse than the reference, else the reference."""
+    rules = rules_of(setting)
+    ref = _plan(world, rules)
+    found = _stored(world, setting).get("plan")
+    if found is not None:
+        violations, obj, _ = simulate(world, found, rules)
+        if not violations and obj <= simulate(world, ref, rules)[1] + 1e-9:
+            ref = found
+    _write(out_dir, ref)
+
+
+def objective_bound(world: World, setting: Setting) -> float:
+    """A proven lower bound on the objective (make_bounds.py: the dual bound of a mixed-integer relaxation of the
+    setting with the client's travel times, the morning rush priced exactly, free departures and V2's workshop
+    morning relaxed), stored for this world and setting; without one, the plain bound of service time alone."""
+    bound = _stored(world, setting).get("bound")
+    if bound is not None:
+        return float(bound)
+    rules = rules_of(setting)
+    return sum(_service(c.trays) for c in world.open_cafes(rules))
+
+
+BOUNDS_FILE = Path(__file__).with_name("reference") / "best_known.json"
+
+
+def world_key(world: World) -> str:
+    """A fingerprint of the world's data (a stored result belongs to the world it was computed on)."""
+    rows = [[c.id, c.x, c.y, c.trays, c.tier, c.open_min, c.latest_min, c.partner] for c in world.cafes]
+    return hashlib.sha256(json.dumps(rows).encode()).hexdigest()[:16]
+
+
+def setting_key(setting: Setting) -> str:
+    return setting.tier + "|" + ",".join(f"{k}={setting.params[k]}" for k in sorted(POOLS))
+
+
+def _stored(world: World, setting: Setting) -> dict:
+    if "stored" not in world.cache:
+        data = json.loads(BOUNDS_FILE.read_text(encoding="utf-8")) if BOUNDS_FILE.is_file() else {}
+        world.cache["stored"] = data.get(world_key(world), {})
+    return world.cache["stored"].get(setting_key(setting), {})
+
+
+# ── diagnostics: does a plan implement each client fact? ────────────────────
+# A rule that only one fact states is checked on the plan itself: a plan that breaks it is not enforced on that
+# fact (the closed café, the tray limit, the shift end, the cold chain, the habit where it holds, V2's workshop
+# morning; the C07 demand: her café first on its round and reached by 06:30). Every other fact, and a plan that
+# keeps such a rule, is told by its misreadings (another candidate of the fact's parameter, else _misread; then a
+# small grid round the client's value, _other_way): a plan that breaks a rule of the client's that the misreading
+# would allow follows it; so does one that loses at least DIAG_TOL of the quality scale against the reference under
+# the client's reading when the misreading explains the loss (under the misread rules the plan is that much closer
+# to the reference planner's own plan for them, and that covers DIAG_SHARE of its loss, DIAG_SHARE_OTHER for the
+# grid). A plan that breaks a rule of the misreading that the client's rules allow does not follow it. The travel
+# facts all change how long the vans take, so a plan made with one of them misread is often explained by another
+# too (reported as cross flags).
+
+DIAG_TOL = 0.05
+DIAG_SHARE = 0.5
+DIAG_SHARE_OTHER = 0.6      # the share a reading of _other_way must explain: a weak plan that knows the fact (cheapest
+                            # insertion, late at many cafés) is otherwise half explained by deliver_by ignored
+TARGET_RULE = {"closed_cafe": "closed_cafe", "tray_limit": "van_capacity", "shift_end": "shift_window",
+               "cold_chain": "cold_chain", "premium_first": "premium_first", "workshop": "van_ready"}
+RULE_ONLY = ("closed_cafe", "cold_chain", "workshop")    # a plan that keeps these rules implements the fact
+
+
+def _span(world: World, rules: Rules) -> float:
+    return abs(simulate(world, _client_way(world, rules), rules)[1]
+               - simulate(world, _plan(world, rules), rules)[1]) or 1.0
+
+
+def _other_way(rules: Rules, target: str) -> list[tuple[str, Rules]]:
+    """Further misreadings of a fact (diagnostics only: the ablation is _misread's alone): the other direction and
+    milder values, a small grid round the client's value. With _misread's alone, a plan made with the vans a little
+    too slow, the roads too long, heavier unloading or deliver_by ignored was called enforced on that fact, since no
+    listed misreading explained its loss."""
+    tr = rules.travel
+    if target == "road_distance":
+        return [(f"road distance taken as {f} times the straight line", replace(rules, travel=replace(tr, road=f)))
+                for f in (1.15, 1.45, 1.6)]
+    if target == "speed":
+        return [(f"speed taken as {v:g} km/h", replace(rules, travel=replace(tr, average=v)))
+                for v in (20.0, 22.0, 28.0)]
+    if target == "rush_hour":
+        return [(f"{v:g} km/h all morning", replace(rules, rush=None, travel=replace(tr, average=v)))
+                for v in (SLOW, AVERAGE)]
+    if target == "service_time":
+        return [("no time at the café", replace(rules, travel=replace(tr, stop=0.0, per_tray=0.0))),
+                ("ten minutes at every café", replace(rules, travel=replace(tr, stop=10.0, per_tray=0.0))),
+                ("two minutes plus 0.4 a tray", replace(rules, travel=replace(tr, stop=2.0, per_tray=0.4)))]
+    if target == "lateness":
+        return [("deliver_by ignored", replace(rules, late_weight=0.0)),
+                ("a late minute worth one van minute", replace(rules, late_weight=1.0))]
+    if target == "rush_start" and rules.rush is not None:
+        return [(f"the rush taken to start at {_hhmm(t)}", replace(rules, rush=t)) for t in (6 * 60, 8 * 60)]
+    return []
+
+
+def _readings(rules: Rules, setting: Setting, t: str) -> list[tuple[str, Rules, float]]:
+    """[(what, rules, share)]: the misreadings of target t (another candidate of its parameter, else _misread; then
+    the further ones of _other_way) and the share of a plan's loss each must explain."""
+    param = TARGET_PARAM.get(t)
+    pool = list(dict.fromkeys(map(str, POOLS[param][setting.tier]))) if param else []
+    other = [(what, wrong, DIAG_SHARE_OTHER) for what, wrong in _other_way(rules, t)]
+    if param and len(pool) > 1:
+        return [(f"{param} were {v}", _rules(setting.tier, {**setting.params, param: v}), DIAG_SHARE)
+                for v in dict.fromkeys(POOLS[param][setting.tier]) if str(v) != str(setting.params[param])] + other
+    wrong = _misread(rules, t)
+    return ([(t.replace("_", " ") + " misread", wrong, DIAG_SHARE)] if wrong is not None else []) + other
+
+
+def _regret_check(world: World, rules: Rules, plan: list[dict], readings) -> tuple[bool, str]:
+    span = _span(world, rules)
+    broken_s, g_s, _ = simulate(world, plan, rules)
+    broken_s = {r for r, _ in broken_s}
+    r_s = (g_s - simulate(world, _plan(world, rules), rules)[1]) / span
+    seen = f"regret {r_s:+.1%} of the scale"
+    for what, wrong, share in readings:
+        broken_m, g_m, _ = simulate(world, plan, wrong)
+        broken_m = {r for r, _ in broken_m}
+        if broken_m - broken_s:
+            continue                       # it breaks a rule only the misreading has: it does not follow it
+        if broken_s - broken_m:
+            return False, f"breaks {', '.join(sorted(broken_s - broken_m))}, which it would keep if {what}"
+        try:
+            misread_plan = _plan(world, wrong)
+        except ValueError:
+            continue                       # no plan keeps the misread rules: the reading explains nothing
+        r_m = (g_m - simulate(world, misread_plan, wrong)[1]) / span
+        if r_s > DIAG_TOL and r_s - r_m > max(DIAG_TOL, share * r_s):
+            return False, f"regret {r_s:+.1%} of the scale under the client's reading, {r_m:+.1%} if {what}"
+        seen = f"regret {r_s:+.1%} of the scale, {r_m:+.1%} if {what}"
+    return True, seen
+
+
+def _diagnostics(world: World, setting: Setting, plan: list[dict]) -> tuple[dict, dict]:
+    rules = rules_of(setting)
+    broken = {r for r, _ in simulate(world, plan, rules)[0]}
+    enforced, evidence = {}, {}
+    for t in _in_force(setting):
+        rule = TARGET_RULE.get(t)
+        if t == "premium_first" and not rules.premium_first:
+            rule = None
+        if t == "manager_pressure":
+            first = [r for r in plan if r.get("stops") and str(r["stops"][0]) == PRESSURE_CAFE]
+            reached = None
+            if first:
+                c = world.cafe(PRESSURE_CAFE)
+                d = _parse_time(first[0].get("depart"), "depart")
+                reached = d + _drive(_km((0.0, 0.0), (c.x, c.y)), d, rules.rush)
+            ok = reached is None or reached > PRESSURE_BY + 1e-9
+            why = (f"{PRESSURE_CAFE} first on its round, reached at {_hhmm(int(reached))}" if reached is not None
+                   else f"{PRESSURE_CAFE} not first on its round")
+        elif rule and rule in broken:
+            ok, why = False, f"breaks {rule}"
+        elif t in RULE_ONLY:
+            ok, why = True, f"keeps {rule}"
+        else:
+            ok, why = _regret_check(world, rules, plan, _readings(rules, setting, t))
+        enforced[t], evidence[t] = ok, why
+    return enforced, evidence
+
+
+def diagnose(world: World, submission_dir: Path, setting: Setting, scored: dict) -> dict:
+    """{enforced, evidence} per target in force (see the section comment), for any plan that can be read."""
+    if "fatal" in scored:
+        return {}
+    plan = read_json(submission_dir, "routes.json")["routes"]
+    enforced, evidence = _diagnostics(world, setting, plan)
+    return {"enforced": enforced, "evidence": evidence}

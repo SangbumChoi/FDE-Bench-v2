@@ -253,6 +253,18 @@ book has other files and its manifest row lists only the JSON. On world seeds 1,
 policy). Under the review policy, bending `missing_author_review` (shelving the two author-less books under
 "Unknown") is valid when relaxed and gives 100.00 in hard/s18 (normalized quality 1.007).
 
+### Literal solution
+
+`literal_solution` is the reference program reading the drive as the data shows it (every format, encoding, year
+notation, copy and exception), the description alone in each file, with the natural reading of the catalogue rules
+nobody gave: `library/<author>/<year>_<title>.txt`, the year of first publication, the original script, all authors
+joined with " & ", names kept whole with their spaces; what it cannot file goes to `_review/` with the reason in
+plain words ("years disagree", "author missing"), as the request asks, since the six codes are the client's. It is
+the same program in every setting and is invalid in all 9 public settings (quality 0): its review rows carry no
+reason code, and under a shelving policy (hard/s11, hard/s21) the author-less books go to review. The same program
+listing those books as skipped instead (as `robust_solution` does) is valid at 0.28–0.42: a misfiled book keeps 0.4
+of its credit, so the right descriptions at the wrong paths keep it above 0.2 even under another layout (s18, s21).
+
 ## Notes
 
 - The visible corpus is byte-identical in every setting and locale (`content_dirs: [corpus]`); only the

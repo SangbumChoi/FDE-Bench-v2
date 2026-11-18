@@ -1827,6 +1827,23 @@ def robust_solution(world: World, out_dir: Path, tier: str, candidates: dict) ->
     write_config(out_dir, cfg)
 
 
+# The request at face value, without the client's catalogue rules: the reference program reads the drive as the data
+# shows it (every format, encoding, year notation, copy and exception) and writes the description alone in each file
+# (the program interface says so), with the natural reading of each rule nobody gave: a library shelved by author
+# (library/<author>/<year>_<title>.txt), the year of first publication, every name in its original script, all
+# authors joined with " & ", names kept whole with their spaces, and what it cannot file set aside in _review/ (the
+# request says so: nothing guessed, missing authors included) with the reason in plain words, since the reason codes
+# are the client's.
+LITERAL_CONFIG = {"layout": "author/year_title", "year_basis": "first", "script": "original", "multi_author": "all",
+                  "sep": " ", "max_len": CUTS[-1], "no_author": "review", "fallback_author": EXCEPTION_AUTHOR,
+                  "misread": "free_reasons", "shortcut": None, "break": None}
+
+
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request done as written: the reference program on LITERAL_CONFIG (the same program in every setting)."""
+    write_config(out_dir, LITERAL_CONFIG)
+
+
 ORACLE = '''"""The answer key of the hidden drive as a program (the ground truth audit's best known solution)."""
 import base64
 import json

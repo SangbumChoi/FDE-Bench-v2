@@ -12,20 +12,29 @@ of 20 working days (9 November - 4 December 2026), in order, in one isolated pro
 
 The key of the case is slot utilization: as many patients seen as possible in the doctors' time, by
 re-filling cancelled and released slots from the waitlist (and, in hard, by overbooking follow-ups of
-patients who often stay away), without breaking a rule. Quality = 0.8 x operations value / the reference
-program's operations value + 0.2 x status-table accuracy. The operations value counts 10 per expected
-patient-slot seen on the period's clinic days, minus waiting, unbooked requests, moves of patients'
-appointments and (hard) overbooking collisions and extra trips.
+patients who often stay away), without breaking a rule. Objective = the operations value / the reference
+program's operations value. The operations value counts 10 per expected patient-slot seen on the period's clinic
+days, minus waiting, unbooked requests, moves of patients' appointments, follow-ups seen by a colleague (only
+under the bendable habit's exception), every entry of the daily status table that is not exact (20, as much as
+two empty slots: the departments staff their clinics from the table, which is also mandatory, rule status_table)
+and (hard) overbooking collisions (30 x the chance both come) and extra trips.
+
+What the agent sees carries the office's old practice and only that: the history keeps the first two morning
+slots for urgent patients (empty when none comes), never double-books and shows some follow-ups seen by a
+colleague (exceptions); the pilot holds the reserve too and reports held_back 0. The client's facts (the
+reserve released for tomorrow, its size, the table's definition, the collision cost, the round's scope, ...)
+are what the score rewards; the ground truth audit's hooks (ablations, shortcuts, diagnose, robust_solution,
+best_known_solution, objective_bound) are below the violating examples.
 
 One world and one hidden period for every setting: the same doctors, requests, cancellations intents,
 notices and notes. The tier decides which rules are in force:
 
   easy    the daily booking core: new patient = 2 consecutive slots, follow-up = 1; department; the urgent
-          window; the urgent reserve (first two morning slots held for urgent requests until the day before);
-          a clinic closed on the City Day holiday; in-person interpreters per day for new patients; the
-          notice period for moving an appointment; the waitlist priority order; follow-ups with the same
-          doctor (bendable); the status table. Absence and interpreter notices, referral dates, blood tests,
-          no-shows and duplicates are out of scope.
+          window; the urgent reserve (first two or three morning slots held for urgent requests until the day
+          before, then released); a clinic closed on the City Day holiday; in-person interpreters per day for
+          new patients; the notice period for moving an appointment; the waitlist priority order; follow-ups
+          with the same doctor (bendable); staff notes carry no weight; the status table. Absence and
+          interpreter notices, referral dates, blood tests, no-shows and duplicates are out of scope.
   medium  + referral letters that expire, a fasting blood test >= 1 working day before the visit with a daily
           lab cap, doctor absences (the absent doctor's appointments must be moved, with the notice period)
           and an interpreter's absence (one fewer interpreter that day)
@@ -35,7 +44,8 @@ notices and notes. The tier decides which rules are in force:
 
 A rule seed draws the client's rule values from the pools in case.yaml, each on its own: which clinic closes
 on the holiday, how many morning slots the urgent reserve holds, the in-person interpreters per day, the
-waitlist order, the lab cap (medium+) and the overbooking cap (hard). The urgent window (2 working days) and
+waitlist order, the lab cap (drawn in medium and hard only) and the overbooking cap (drawn in hard only; a single
+candidate where the tier does not use them). The urgent window (2 working days) and
 the notice period for a changed appointment (3 working days) are fixed: the reference never books an urgent
 request later than tomorrow, and it moves appointments too rarely at short notice for another value to change
 its answer (see README.md, "Parameters and rule seeds").
@@ -45,6 +55,7 @@ from __future__ import annotations
 
 import copy
 import datetime as dt
+import functools
 import hashlib
 import importlib.util
 import json
@@ -83,9 +94,12 @@ SEEN_VALUE = 10.0                       # per patient-slot seen on a clinic day 
 WAIT_COST = 0.4                         # per working day of waiting x urgency weight
 UNBOOKED_COST = 10.0                    # per request (need) never booked
 MOVE_COST = 4.0                         # per change the hospital makes to a patient's appointment
-COLLISION_COST = 12.0                   # hard: both patients of an overbooked slot turn up
+COLLISION_COST = 30.0                   # hard: both patients of an overbooked slot turn up (three empty slots)
 TRIP_COST = 3.0                         # hard: an extra hospital trip of a patient with several departments
-OPS_WEIGHT, TABLE_WEIGHT = 0.8, 0.2
+COLLEAGUE_COST = 1.0                    # a follow-up seen by another doctor than the patient's own (only possible
+                                        # under the head of the outpatient office's exception)
+TABLE_COST = 20.0                       # per entry of the daily status table that is not exact (15 a day): the
+                                        # department staffs for a wrong number, as much as two empty slots
 LEAD_SLOPE = 0.01                       # hard: no-show rate + 1 point per working day of lead time
 HIST_LEAD = 5                           # the patients' attendance counts were measured at ~5 days of lead
 CALL_TIMEOUT = 10.0
@@ -94,7 +108,7 @@ TOTAL_TIMEOUT = 600.0
 # Notices (data: the same in every setting; which apply is the tier's business).
 ABSENCES = (("D13", 4, tuple(range(5, 15)), "illness"),      # notice day, absent days, reason
             ("D05", 9, (15, 16, 17, 18), "conference"))
-INTERP_NOTICE, INTERP_DAY = 11, 13
+INTERP_NOTICE, INTERP_DAY = 6, 9            # Tuesday 17 November: an interpreter away on Friday 20
 HEAD_NOTE_DAY, HEAD_DOCTOR = 2, "D10"
 NOTES_PLAN = ((7, "ORTH"), (14, "ORTH"), (17, "DERM"), (18, "ORTH"))   # the director's-acquaintance notes
 
@@ -171,12 +185,15 @@ DOCTOR_PLAN = [  # (department, languages besides L0, weekly sessions (weekday, 
 ]
 DEMAND = {"IM": 14.5, "CARD": 9.0, "DERM": 10.0, "ORTH": 15.0, "PED": 9.0}   # requests per day
 NEW_SHARE = 0.45
-TEST_SHARE = {"IM": 0.2, "CARD": 0.2, "PED": 0.08}
+TEST_SHARE = {"IM": 0.3, "CARD": 0.3, "PED": 0.12}   # requests that need a fasting blood test first
 PREV_WEIGHT = {"D11": 2.5, "D13": 2.5, "D05": 2.0}
 N_WAIT0 = 45
 N_DUPLICATES = 10
 N_MULTI = 10
 CANCEL_SHARE = 0.09
+CHRONIC_SHARE = 0.18                    # patients who miss most of their appointments
+HIST_URGENT = 0.10                      # history: chance that a reserve slot holds an urgent patient
+HIST_COLLEAGUE = 0.12                   # history: follow-ups seen by a colleague (exceptions the head granted)
 
 
 @dataclass
@@ -241,6 +258,7 @@ class World:
     past_appts: list = field(default_factory=list)       # history: (Req, Appt, outcome)
     past_reqs: list = field(default_factory=list)
     sample: dict = field(default_factory=dict)
+    repeat_keys: set = field(default_factory=set)        # (patient, department) with more than one request
     _cache: dict = field(default_factory=dict, repr=False)
 
     def __post_init__(self):
@@ -265,6 +283,7 @@ class World:
 
 # ── the rule seed's parameters ───────────────────────────────────────────────
 
+RESERVE_SIZES = (2, 3)                  # the candidates of reserve_slots
 RESERVE_TIMES = {   # the reserve's slots as each locale lists them, by the number of slots
     2: {"zh": "09:00 和 09:20", "en": "09:00 and 09:20", "ko": "09:00, 09:20", "ja": "09:00と09:20",
         "es": "09:00 y 09:20"},
@@ -281,6 +300,18 @@ def derive_params(params: dict, tier: str) -> dict:
 def no_show(r: Req, lead: int) -> float:
     """True probability that the patient stays away from an appointment booked `lead` working days ahead."""
     return min(0.9, r.base_p + LEAD_SLOPE * max(lead, 0))
+
+
+ORDERS = ("urgency_received", "received", "urgency_earliest")     # the candidates of waitlist_order
+
+
+def priority(order: str, r: Req) -> tuple:
+    """A request's waitlist priority under an order (smaller first)."""
+    if order == "received":
+        return (0 if r.urgency == "U" else 1, r.recv, r.id)
+    if order == "urgency_earliest":
+        return (URGENCY.index(r.urgency), r.earliest, r.id)
+    return (URGENCY.index(r.urgency), r.recv, r.id)
 
 
 class _View:
@@ -319,11 +350,7 @@ class _View:
 
     def prio(self, r: Req) -> tuple:
         """Waitlist priority (smaller first)."""
-        if self.order == "received":
-            return (0 if r.urgency == "U" else 1, r.recv, r.id)
-        if self.order == "urgency_earliest":
-            return (URGENCY.index(r.urgency), r.earliest, r.id)
-        return (URGENCY.index(r.urgency), r.recv, r.id)
+        return priority(self.order, r)
 
     def dup(self, r: Req) -> bool:
         return self.hard and bool(r.dup_of)
@@ -332,7 +359,9 @@ class _View:
 # ── generation ───────────────────────────────────────────────────────────────
 
 def _base_p(rng: random.Random) -> float:
-    return round(rng.betavariate(4, 8) if rng.random() < 0.15 else rng.betavariate(2, 14), 4)
+    """A patient's no-show rate at zero lead time: most patients nearly always come, a minority (CHRONIC_SHARE)
+    miss more appointments than they keep. Which kind a patient is shows in their record, not in the request."""
+    return round(rng.betavariate(6, 4) if rng.random() < CHRONIC_SHARE else rng.betavariate(2, 30), 4)
 
 
 def _history_counts(rng: random.Random, r: Req) -> None:
@@ -368,12 +397,14 @@ def _initial(w: World, rng: random.Random, rp: random.Random) -> list[Req]:
                 i = 0
                 while i < len(starts):
                     s = starts[i]
-                    held = half == "AM" and s in RESERVE and t >= 1
+                    # the office's practice: the first two morning slots stay with urgent patients, also on the
+                    # day itself (it never gave them to anyone else)
+                    held = half == "AM" and s in RESERVE
                     if held or rng.random() >= occ:
                         i += 1
                         continue
                     new = i + 1 < len(starts) and rng.random() < NEW_SHARE and not (
-                        half == "AM" and starts[i + 1] in RESERVE and t >= 1)
+                        half == "AM" and starts[i + 1] in RESERVE)
                     urg = rng.choices(("S", "R"), weights=(30, 70))[0]
                     recv = -rng.randint(1, 10)
                     earliest = recv + 1 if rng.random() < 0.8 else rng.randint(recv + 1, t)
@@ -533,6 +564,10 @@ def build_world(seed: int) -> World:
     for d in range(N_DAYS):
         w.by_day[d] = [r.id for r in order if r.recv == d]
     w.past_reqs = [r for r in order if r.recv < 0]
+    seen: dict = {}
+    for r in order:
+        seen[(r.patient, r.dept)] = seen.get((r.patient, r.dept), 0) + 1
+    w.repeat_keys = {k for k, n in seen.items() if n > 1}
     w.notices = _notices()
     w.sample = _pilot(w, seed)
     return w
@@ -561,16 +596,26 @@ def _history(w: World, rng: random.Random) -> list:
     out = []
     for t in range(-20, 0):
         for doc in w.doctors:
+            colleagues = [x.id for x in w.doctors if x.dept == doc.dept and x.id != doc.id]
             for half, starts in w.sessions(doc.id, t):
                 i = 0
                 while i < len(starts):
-                    if rng.random() >= 0.92:
+                    # The office's practice before the program: the first two morning slots (09:00, 09:20) are
+                    # kept for urgent patients and stay empty when none comes; everything else fills up.
+                    reserve = half == "AM" and starts[i] in RESERVE
+                    if rng.random() >= (HIST_URGENT if reserve else 0.92):
                         i += 1
                         continue
-                    new = i + 1 < len(starts) and rng.random() < NEW_SHARE
-                    urg = rng.choices(URGENCY, weights=(4, 28, 68))[0]
+                    if reserve:
+                        new, urg = starts[i] == RESERVE[0] and rng.random() < 0.5, "U"
+                    else:
+                        new = i + 1 < len(starts) and rng.random() < NEW_SHARE
+                        urg = rng.choices(("S", "R"), weights=(30, 70))[0]
                     recv = t - (1 if urg == "U" else rng.randint(1, 12))
-                    r = Req("", "", doc.dept, None if new else doc.id, urg, _lang(rng), recv, recv + 1,
+                    prev = None if new else doc.id
+                    if prev and urg != "U" and colleagues and rng.random() < HIST_COLLEAGUE:
+                        prev = rng.choice(colleagues)        # seen by a colleague of the patient's own doctor
+                    r = Req("", "", doc.dept, prev, urg, _lang(rng), recv, recv + 1,
                             note=rng.randrange(3))
                     if new:
                         r.referral = recv + rng.randint(15, 60)
@@ -634,8 +679,10 @@ class Engine:
     """One replay of the hidden period in one setting. begin(d) builds the day's input; end(d, out, err)
     applies the program's actions, checks the rules and scores the status table."""
 
-    def __init__(self, view: _View):
+    def __init__(self, view: _View, trace: bool = False):
         self.v, self.w = view, view._w
+        self.trace = [] if trace else None      # per call, what diagnose() reads (score() keeps it private)
+        self.rec: dict | None = None
         self.appt = {rid: copy.copy(a) for rid, a in self.w.initial_book.items()}
         self.occ: dict = {}
         for rid, a in self.appt.items():
@@ -649,6 +696,7 @@ class Engine:
         self.released_on: dict = {}      # request id -> (call day, day, start) of the hospital's latest release
         self.found: dict = {}
         self.acc: list = []
+        self.wrong = 0                   # entries of the daily status tables that were not exact
         self.m = {"booked": 0, "moved": 0, "released": 0, "cancellations": 0, "calls_failed": 0,
                   "actions_rejected": 0}
 
@@ -672,8 +720,10 @@ class Engine:
                 if not lst:
                     del self.occ[(a.doctor, a.day, s)]
 
-    def flag(self, rule: str, msg: str) -> None:
+    def flag(self, rule: str, msg: str, **info) -> None:
         self.found.setdefault(rule, []).append(msg)
+        if self.rec is not None:
+            self.rec["viol"].append({"rule": rule, **info})
 
     # ── one day ──────────────────────────────────────────────────────────────
     def begin(self, d: int) -> dict:
@@ -705,6 +755,10 @@ class Engine:
         self.open.update(new)
         self.start = {rid: (a.doctor, a.day, a.start, a.test) for rid, a in self.appt.items()}
         self.start_open = set(self.open)
+        if self.trace is not None:
+            self.rec = {"day": d, "viol": [], "placed": [], "changed": 0, "released": [], "double": 0,
+                        "interp_at_start": sum(1 for rid, a in self.appt.items() if a.day == INTERP_DAY
+                                               and w.req[rid].new and w.req[rid].lang not in w.doc[a.doctor].langs)}
         book = [{"request_id": rid, "doctor_id": a.doctor, "date": iso(a.day), "start": hhmm(a.start),
                  "slots": a.n, "test_date": iso(a.test) if a.test is not None else None,
                  "booked_on": iso(a.booked_on), "request": req_json(w, w.req[rid])}
@@ -768,14 +822,14 @@ class Engine:
 
     def end(self, d: int, out, err) -> None:
         problems: list = []
-        actions, table = [], None
+        actions, table, answered = [], None, False
         if err is not None:
             problems.append(f"call failed: {err}"[:200])
             self.m["calls_failed"] += 1
         elif not isinstance(out, dict) or not isinstance(out.get("actions"), list):
             problems.append("output is not {'actions': [...], 'status_table': {...}}")
         else:
-            actions, table = out["actions"], out.get("status_table")
+            actions, table, answered = out["actions"], out.get("status_table"), True
         for act in actions:
             n = len(problems)
             self._apply(d, act, problems)
@@ -783,7 +837,18 @@ class Engine:
         for p in problems:
             self.flag("well_formed", f"{iso(d)}: {p}")
         self._check(d)
-        self.acc.append(self._table_accuracy(d, table))
+        formed = table_formed(table)
+        if answered and not formed:      # a call that failed breaks well_formed, not this
+            self.flag("status_table", f"{iso(d)}: the status table lacks a department or one of its three whole "
+                                      f"numbers")
+        ok = self._table_right(d, table)
+        self.acc.append(ok / 15)
+        self.wrong += 15 - ok
+        if self.rec is not None:
+            self.rec.update(table=table if formed else None, truth=self.table_truth(d),
+                            readings=self.table_readings(d))
+            self.trace.append(self.rec)
+            self.rec = None
 
     # ── the rules ────────────────────────────────────────────────────────────
     def _check(self, d: int) -> None:
@@ -800,6 +865,11 @@ class Engine:
             elif placed:
                 self.m["moved"] += 1
                 self.moves += 1
+            if placed and self.rec is not None:
+                self.rec["placed"].append({"rid": rid, "doc": a.doctor, "day": a.day, "start": a.start,
+                                           "from": None if was is None else [was[0], was[1]],
+                                           "shared": len(self.occ.get((a.doctor, a.day, a.start), ())) > 1})
+                self.rec["changed"] += was is not None and (a.day, a.start) != was[1:3]
             if placed:
                 half = w.slot_half(a.doctor, a.day)
                 if any(s not in half for s in a.slots()) or len({half.get(s) for s in a.slots()}) != 1:
@@ -812,18 +882,20 @@ class Engine:
                 if r.urgency != "U" and a.day >= d + 2 and any(
                         s in v.reserve and w.slot_half(a.doctor, a.day).get(s) == "AM" for s in a.slots()):
                     self.flag("urgent_reserve", f"{day}: {r.urgency} request {rid} in the reserve slot "
-                                                f"{a.doctor} {iso(a.day)} {hhmm(a.start)}")
+                                                f"{a.doctor} {iso(a.day)} {hhmm(a.start)}", rid=rid,
+                              start=a.start)
                 # Notice is for a changed date or time; the same slot with another doctor needs none.
                 if was is not None and (a.day, a.start) != was[1:3] and a.day < d + v.notice:
                     self.flag("move_notice", f"{day}: {rid} moved to {iso(a.day)} with less than {v.notice} "
-                                             f"working days' notice")
+                                             f"working days' notice", rid=rid)
                 elif was is None and rid in self.released_on:
                     # A request the hospital released and books again later: notice from the day of the release
                     # (the same date and time as the released appointment needs none).
                     rd, t0, s0 = self.released_on[rid]
                     if a.day < rd + v.notice and (a.day, a.start) != (t0, s0):
                         self.flag("move_notice", f"{day}: {rid} released on {iso(rd)} and booked again for "
-                                                 f"{iso(a.day)}, less than {v.notice} working days after the release")
+                                                 f"{iso(a.day)}, less than {v.notice} working days after the release",
+                                  rid=rid)
                 if r.prev and a.doctor != r.prev:
                     self.flag("follow_up_same_doctor", f"{day}: follow-up {rid} with {a.doctor}, not {r.prev}")
             if v.medium and r.new and a.day > r.referral:
@@ -838,6 +910,8 @@ class Engine:
             if rid not in self.appt:
                 self.m["released"] += 1
                 self.moves += 1
+                if self.rec is not None:
+                    self.rec["released"].append((rid, was[0], was[1]))
 
         # End state of the upcoming book.
         sessions_ob: dict = {}
@@ -853,6 +927,8 @@ class Engine:
                 if len(lst) >= 2:
                     key = (doc, t, w.slot_half(doc, t).get(s, "?"))
                     sessions_ob[key] = sessions_ob.get(key, 0) + 1
+                    if self.rec is not None:
+                        self.rec["double"] += 1
         for (doc, t, h), n in sessions_ob.items():
             if n > v.ob_cap:
                 self.flag("overbooking_limit", f"{day}: {doc} {iso(t)} {h} has {n} overbooked slots")
@@ -873,10 +949,11 @@ class Engine:
             per[(r.patient, r.dept)] = per.get((r.patient, r.dept), 0) + 1
         for t, n in interp.items():
             if n > v.interp_cap(t, d):
-                self.flag("interpreter_capacity", f"{day}: {n} interpreted new-patient visits on {iso(t)}")
+                self.flag("interpreter_capacity", f"{day}: {n} interpreted new-patient visits on {iso(t)}",
+                          on=t, n=n)
         for t, n in lab.items():
             if n > v.lab_cap:
-                self.flag("lab_capacity", f"{day}: {n} blood tests on {iso(t)}")
+                self.flag("lab_capacity", f"{day}: {n} blood tests on {iso(t)}", on=t, n=n)
         if v.hard:
             for (p, dept), n in per.items():
                 if n + self.held.get((p, dept), 0) > 1:
@@ -910,6 +987,7 @@ class Engine:
                 continue
             px = v.prio(x)
             langs = w.doc[a.doctor].langs
+            passed = []
             for y in groups.get((x.dept, x.prev), ()):
                 if v.prio(y) >= px or y.earliest > a.day:
                     continue
@@ -920,13 +998,54 @@ class Engine:
                     continue
                 if y.id in self.released_on and a.day < self.released_on[y.id][0] + v.notice:
                     continue
+                passed.append(y)
+                if self.rec is None:
+                    break
+            if passed:
+                y = passed[0]
                 self.flag("waitlist_priority", f"{iso(d)}: {rid} booked on {iso(a.day)} while {y.id} (higher "
-                                               f"priority) still waits")
-                break
+                                               f"priority) still waits", x=rid,
+                          **(self._passed_over(x, passed, a) if self.rec is not None else {}))
+
+    def _passed_over(self, x: Req, passed: list, a: Appt) -> dict:
+        """For the diagnostic: why a program may have passed over each higher-priority request in `passed` when
+        it booked x into slot a, as the readings that explain it: an interpreter it needs there ("interp"), a blood
+        test ("lab", or easy "test_scope"), a referral run out by then (easy "referral_scope"), a second request
+        of the patient for the department (easy/medium "dup_scope"), a release ("released"), a note on x
+        ("note"), or another candidate order that puts x first ("order")."""
+        v, w = self.v, self.w
+        langs = w.doc[a.doctor].langs
+        out = []
+        for y in passed:
+            why = []
+            if y.new and y.lang not in langs and not (x.new and x.lang not in langs):
+                why.append("interp")
+            if y.test:
+                why.append("lab" if v.medium else "test_scope")
+            if not v.medium and y.new and y.referral is not None and y.referral < a.day:
+                why.append("referral_scope")
+            if not v.hard and (y.patient, y.dept) in w.repeat_keys:
+                why.append("dup_scope")
+            if y.id in self.released_on:
+                why.append("released")
+            if x.notes:
+                why.append("note")
+            if any(priority(o, y) > priority(o, x) for o in ORDERS if o != v.order):
+                why.append("order")
+            out.append(why)
+        return {"reasons": out}
 
     # ── the status table ─────────────────────────────────────────────────────
-    def table_truth(self, d: int) -> dict:
+    def table_truth(self, d: int, reserve=None, closed=None, absences: bool = True, count_expired: bool = False,
+                    count_requests: bool = False, tomorrow: bool = False) -> dict:
+        """The day's true table, or (for the diagnostic) the table a program reports that reads one fact another
+        way: `reserve` the reserve's slot starts (() for none held back), `tomorrow` tomorrow's empty reserve slots
+        counted as held back too, `closed` the clinics closed on City Day,
+        `absences` False for the calendar's sessions of notified absences counted, `count_expired` new patients
+        whose referral has run out counted (medium+), `count_requests` requests counted instead of patients (hard)."""
         w, v = self.w, self.v
+        reserve = v.reserve if reserve is None else reserve
+        closed = {v.closed} if closed is None else closed
         out = {}
         upcoming = {(w.req[rid].patient, w.req[rid].dept) for rid in self.appt}
         for dept in DEPTS:
@@ -935,20 +1054,20 @@ class Engine:
                 if doc.dept != dept:
                     continue
                 for t in range(d + 1, d + HORIZON + 1):
-                    if v.closed_on(dept, t) or v.absent(doc.id, t, d):
+                    if (t == HOLIDAY and dept in closed) or (absences and v.absent(doc.id, t, d)):
                         continue
                     for h, starts in w.sessions(doc.id, t):
                         for s in starts:
                             if self.occ.get((doc.id, t, s)):
                                 continue
-                            if h == "AM" and s in v.reserve and t >= d + 2:
+                            if h == "AM" and s in reserve and (t >= d + 2 or tomorrow):
                                 held += 1
                             else:
                                 free += 1
             waiting = [w.req[rid] for rid in self.open if w.req[rid].dept == dept]
-            if v.medium:
+            if v.medium and not count_expired:
                 waiting = [r for r in waiting if not (r.new and r.referral < d + 1)]
-            if v.hard:
+            if v.hard and not count_requests:
                 n = len({r.patient for r in waiting if (r.patient, dept) not in self.held
                          and (r.patient, dept) not in upcoming})
             else:
@@ -956,18 +1075,37 @@ class Engine:
             out[dept] = {"free_slots": free, "held_back": held, "waitlist": n}
         return out
 
-    def _table_accuracy(self, d: int, table) -> float:
+    def table_readings(self, d: int) -> dict:
+        """{reading: the table a program that reads one client fact another way reports today}, for the readings
+        the diagnostic tells apart (only those that differ from the truth on some day are worth keeping)."""
+        v = self.v
+        out = {"no_reserve": self.table_truth(d, reserve=()), "hold_tomorrow": self.table_truth(d, tomorrow=True)}
+        for k in RESERVE_SIZES:
+            if AM[:k] != v.reserve:
+                out[f"reserve_{k}"] = self.table_truth(d, reserve=AM[:k])
+        if d + 1 <= HOLIDAY <= d + HORIZON:
+            for dept in CLOSABLE:
+                if dept != v.closed:
+                    out[f"closed_{dept}"] = self.table_truth(d, closed={dept})
+            out["calendar"] = self.table_truth(d, closed=set())
+        if v.medium:
+            out["absences_ignored"] = self.table_truth(d, absences=False)
+            out["expired"] = self.table_truth(d, count_expired=True)
+        if v.hard:
+            out["requests"] = self.table_truth(d, count_requests=True)
+        return out
+
+    def _table_right(self, d: int, table) -> int:
+        """How many of the day's 15 table entries (5 departments x 3 numbers) are exact (0 without a table)."""
         if not isinstance(table, dict):
-            return 0.0
-        truth = self.table_truth(d)
-        ok = total = 0
-        for dept, row in truth.items():
+            return 0
+        ok = 0
+        for dept, row in self.table_truth(d).items():
             got = table.get(dept)
             for k, val in row.items():
-                total += 1
                 x = got.get(k) if isinstance(got, dict) else None
                 ok += isinstance(x, (int, float)) and not isinstance(x, bool) and x == val
-        return ok / total
+        return ok
 
     # ── the end of the period ───────────────────────────────────────────────
     def finish(self) -> dict:
@@ -986,10 +1124,13 @@ class Engine:
             seen += a.n * p
             if v.hard:
                 for s in a.slots():
-                    slots.setdefault((a.doctor, a.day, s), []).append(p)
+                    slots.setdefault((a.doctor, a.day, s), []).append((a.booked_on, rid, p))
+        pairs = []                       # overbooked slots: (chance the first-booked comes, chance the second comes)
         for ps in slots.values():
             if len(ps) == 2:
-                collisions += COLLISION_COST * ps[0] * ps[1]
+                (_, _, p1), (_, _, p2) = sorted(ps)
+                collisions += COLLISION_COST * p1 * p2
+                pairs.append((round(p1, 6), round(p2, 6)))
         cap = 0
         for doc in w.doctors:
             for t in SCORED:
@@ -1025,21 +1166,48 @@ class Engine:
                 if a.day >= 1:
                     depts.setdefault(w.req[rid].patient, set()).add(w.req[rid].dept)
             trips = sum(len(pdays[p]) - 1 for p in pdays if len(depts[p]) > 1)
+        # Follow-ups with another doctor than the patient's own: none in a valid run; under the head of the
+        # outpatient office's exception each counts for less (the colleague has to read into the case).
+        colleague = sum(1 for rid, a in list(self.past.items()) + list(self.appt.items())
+                        if a.day >= 1 and w.req[rid].prev and a.doctor != w.req[rid].prev)
+        table_cost = TABLE_COST * self.wrong
         value = (SEEN_VALUE * seen - wait - UNBOOKED_COST * unbooked - MOVE_COST * self.moves - collisions
-                 - TRIP_COST * trips)
+                 - TRIP_COST * trips - COLLEAGUE_COST * colleague - table_cost)
         acc = sum(self.acc) / len(self.acc) if self.acc else 0.0
         viol = [(rule, f"{len(items)} cases, e.g. {items[0]}") for rule, items in self.found.items()]
         m = dict(self.m)
         m.update(ops_value=round(value, 3), seen_slots=round(seen, 3), capacity_slots=cap,
                  utilization=round(seen / cap, 6) if cap else 0.0, waiting_cost=round(wait, 3),
                  unbooked=unbooked, moves=self.moves, collision_cost=round(collisions, 3), extra_trips=trips,
-                 overbooked_slots=sum(1 for ps in slots.values() if len(ps) == 2), table_accuracy=round(acc, 6))
-        return {"violations": viol, "value": value, "accuracy": acc, "metrics": m}
+                 overbooked_slots=len(pairs), colleague_follow_ups=colleague, table_accuracy=round(acc, 6),
+                 table_entries_wrong=self.wrong, table_cost=round(table_cost, 3))
+        out = {"violations": viol, "value": value, "accuracy": acc, "metrics": m}
+        if self.trace is not None:
+            out["trace"] = {"days": self.trace, "pairs": pairs}
+        return out
 
 
-def replay(view: _View, decide, engine: Engine | None = None, first: int = 0) -> dict:
+TABLE_KEYS = ("free_slots", "held_back", "waitlist")
+
+
+def table_formed(table) -> bool:
+    """The status table has a row for every department with its three whole numbers."""
+    if not isinstance(table, dict):
+        return False
+    for dept in DEPTS:
+        row = table.get(dept)
+        if not isinstance(row, dict):
+            return False
+        for k in TABLE_KEYS:
+            x = row.get(k)
+            if isinstance(x, bool) or not isinstance(x, (int, float)) or x != int(x) or x < 0:
+                return False
+    return True
+
+
+def replay(view: _View, decide, engine: Engine | None = None, first: int = 0, trace: bool = False) -> dict:
     """Run the hidden period in one setting. `decide(day_input)` returns (output, error) for one call."""
-    e = engine or Engine(view)
+    e = engine or Engine(view, trace)
     for d in range(first, N_DAYS):
         x = e.begin(d)
         out, err = decide(x)
@@ -1048,7 +1216,9 @@ def replay(view: _View, decide, engine: Engine | None = None, first: int = 0) ->
 
 
 def _objective(res: dict, ref_value: float) -> float:
-    return OPS_WEIGHT * res["value"] / ref_value + TABLE_WEIGHT * res["accuracy"]
+    """The operations value relative to the reference program's. The status table is in the operations value:
+    every entry that is not exact costs as much as two empty slots (TABLE_COST), the reference's table is exact."""
+    return res["value"] / ref_value
 
 
 def score(world: World, submission_dir: Path, setting) -> dict:
@@ -1057,13 +1227,14 @@ def score(world: World, submission_dir: Path, setting) -> dict:
     try:
         with program_session(Path(submission_dir), ENTRYPOINT, per_call_timeout=CALL_TIMEOUT,
                              total_timeout=TOTAL_TIMEOUT) as prog:
-            res = replay(view, prog.call)
+            res = replay(view, prog.call, trace=True)
     except Fatal as e:
         return {"fatal": str(e)}
     res["metrics"].update(reference_ops_value=round(ref_value, 3),
                           ops_component=round(res["value"] / ref_value, 6))
+    # "trace": what the run did each day, for diagnose() (evaluate() never copies it to its result)
     return {"violations": res["violations"], "objective": round(_objective(res, ref_value), 8),
-            "metrics": res["metrics"]}
+            "metrics": res["metrics"], "trace": res["trace"]}
 
 
 # ── reference solution ───────────────────────────────────────────────────────
@@ -1091,7 +1262,7 @@ def ref_config(view: _View, **extra) -> dict:
            "interpreters_per_day": view.interpreters, "lab_cap": view.lab_cap,
            "overbooked_per_session": view.ob_cap, "move_notice_days": view.notice,
            "waitlist_order": view.order, "horizon": HORIZON, "noshow": _noshow_prior(view._w),
-           "seen_value": SEEN_VALUE, "collision_cost": COLLISION_COST}
+           "seen_value": SEEN_VALUE, "collision_cost": COLLISION_COST, "unbooked_cost": UNBOOKED_COST}
     cfg.update(extra)
     return cfg
 
@@ -1345,7 +1516,13 @@ def _cands(view: _View, rule: str):
                         break
                 if len(acts) == 2 * need:
                     yield d, acts
-        elif rule == "lab_capacity":
+        elif rule in ("lab_capacity", "test_before_visit") and v.medium:
+            # Book the first waiting test-needing request of its group, which the reference left waiting, into a
+            # free slot: without a test day (test_before_visit), or with its test on a day the lab is full
+            # (lab_capacity). Moving booked test days instead frees lab places that excused the reference's
+            # passed-over patients, which breaks waitlist_priority too when the lab is busy.
+            yield from _book_test_examples(st, rule)
+        if rule == "lab_capacity":
             for t in range(d + 1, d + HORIZON + 1):
                 load = sum(1 for a in st.e.appt.values() if a.test == t)
                 movers = [(rid, r, a) for rid, r, a in st.appts(no_test=False, urgent=True)
@@ -1354,11 +1531,11 @@ def _cands(view: _View, rule: str):
                 need = v.lab_cap + 1 - load
                 if 0 < need <= len(movers):
                     yield d, [st.act("move", rid, a.doctor, a.day, a.start, t) for rid, r, a in movers[:need]]
-        elif rule == "test_before_visit":
+        if rule == "test_before_visit":
             for rid, r, a in st.appts(no_test=False):
                 if r.test and a.day >= d + 1 and sum(1 for b in st.e.appt.values() if b.test == a.day) < v.lab_cap:
                     yield d, [st.act("move", rid, a.doctor, a.day, a.start, a.day)]
-        elif rule == "referral_validity":
+        if rule == "referral_validity":
             for rid, r, a in st.appts(new=True, interp=False):
                 if r.referral >= d + HORIZON:
                     continue
@@ -1466,6 +1643,46 @@ def _cands(view: _View, rule: str):
                     break
 
 
+def _book_test_examples(st: _State, rule: str):
+    """(day, actions) booking a waiting test-needing request that heads its priority group into a free slot of
+    its doctor (follow-ups) or of a doctor who speaks its language (new patients), with no test day
+    (test_before_visit) or with its test on a working day the lab is already full (lab_capacity)."""
+    v, w, d = st.v, st.w, st.d
+    groups: dict = {}
+    for rid in st.e.open:
+        r = w.req[rid]
+        if r.recv <= d and not v.dup(r):
+            groups.setdefault((r.dept, r.prev), []).append(r)
+    upcoming = {(w.req[x].patient, w.req[x].dept) for x in list(st.e.appt) + list(st.e.past)}
+    lab: dict = {}
+    for a in st.e.appt.values():
+        if a.test is not None and a.test >= d + 1:
+            lab[a.test] = lab.get(a.test, 0) + 1
+    for _, members in sorted(groups.items(), key=lambda g: str(g[0])):
+        x = min(members, key=v.prio)
+        if not x.test or x.urgency == "U" or (v.hard and (x.patient, x.dept) in upcoming):
+            continue
+        docs = [x.prev] if x.prev else [y.id for y in w.doctors if y.dept == x.dept and x.lang in y.langs]
+        n = 1 if x.prev else 2
+        for t in range(max(d + 2, x.earliest), d + HORIZON + 1):
+            if x.new and x.referral < t:
+                break
+            full = [u for u in range(max(d + 1, x.earliest), t) if lab.get(u, 0) >= v.lab_cap]
+            if rule == "lab_capacity" and not full:
+                continue
+            for doc in docs:
+                if not st.ok_day(doc, t):
+                    continue
+                for h, starts in w.sessions(doc, t):
+                    for s in starts:
+                        if st.free(doc, t, s, n) and not st.reserve(doc, t, s, n):
+                            yield d, [st.act("book", x.id, doc, t, s, full[0] if rule == "lab_capacity" else None)]
+                            break
+                    else:
+                        continue
+                    break
+
+
 def violating_examples(world: World, setting) -> dict:
     """One program per rule of the setting that breaks exactly that rule (for the validator): the reference
     with a few actions appended on one day, found by replaying candidates in this process."""
@@ -1480,6 +1697,12 @@ def violating_examples(world: World, setting) -> dict:
         rules += ["overbooking_limit", "one_per_department"]
     assert not _reference_run(view)["violations"], _reference_run(view)["violations"]
     out = {}
+    # status_table: the reference's last call reports a table without the Pediatrics row.
+    table = {dept: dict(row) for dept, row in _snapshots(view)[N_DAYS - 1][2]["status_table"].items() if dept != "PED"}
+    cfg = ref_config(view, inject_table={str(N_DAYS - 1): table})
+    broken = {r for r, _ in run_inprocess(view, cfg)["violations"]}
+    assert broken == {"status_table"}, broken
+    out["status_table"] = (lambda o, cfg=cfg: write_program(o, cfg))
     for rule in rules:
         for k, (d, extra) in enumerate(_cands(view, rule)):
             if k >= 40:
@@ -1493,12 +1716,608 @@ def violating_examples(world: World, setting) -> dict:
     return out
 
 
+# ── the ground truth audit's hooks (fdebench2.audit) ─────────────────────────
+
+@functools.lru_cache(maxsize=1)
+def target_tiers() -> dict:
+    """{target id: the tiers it is in force in}, from locales/en/targets.yaml."""
+    import yaml
+    from fdebench2.cases import TIERS
+    path = Path(__file__).resolve().parent / "locales" / "en" / "targets.yaml"
+    return {t["id"]: tuple(t.get("tiers", TIERS)) for t in yaml.safe_load(path.read_text(encoding="utf-8"))}
+
+
+def _in_force(setting) -> list[str]:
+    return [t for t, tiers in target_tiers().items() if setting.tier in tiers]
+
+
+def misreading(target: str, view: _View) -> dict:
+    """The reference program's switches for the most natural wrong reading of one client fact, from the agent's
+    view alone: the office's practice where the data shows it, the pilot's where the pilot shows it, and every
+    field and notice of the data acted on where the tier puts it out of scope (and ignored where it is in)."""
+    m, h = view.medium, view.hard
+    return {
+        "reserve_release": dict(hold_reserve=True),                  # the office never gave the reserve away
+        "follow_up_doctor": dict(bend=True),                          # the export has follow-ups seen by colleagues
+        "move_notice": dict(move_notice_days=1, pull_forward=True),   # a change is free: pull patients forward
+        "status_table": dict(table_no_reserve=True),                  # the pilot's table: held_back 0
+        "staff_notes": dict(follow_notes=True, head_note=True),       # the notes followed
+        "duplicates": dict(dedupe=not h),                             # a second request read the other way
+        "overbooking": dict(no_overbook=True) if h else dict(overbook=True),
+        "referral_expiry": dict(referrals=not m),
+        "blood_test": dict(tests=not m),
+        "doctor_absence": dict(absences=not m),
+        "interpreter_absence": dict(interpreter_absence=not m),
+        "collision_cost": dict(collision_cost=0.0),                   # no cost stated: a collision costs nothing
+    }[target]
+
+
+def ablations(world: World, setting) -> dict:
+    """{target: fn(out_dir)} for every target in force that is not a drawn parameter: the reference program
+    misreading only that fact (misreading())."""
+    view, out = _View(world, setting), {}
+    for t in _in_force(setting):
+        if t in PARAM_TARGETS:
+            continue
+        cfg = ref_config(view, **misreading(t, view))
+        out[t] = (lambda o, cfg=cfg: write_program(o, cfg))
+    return out
+
+
+PARAM_TARGETS = {"urgent_reserve": "reserve_slots", "interpreters": "interpreters_per_day",
+                 "holiday_clinic": "closed_dept", "waitlist_priority": "waitlist_order", "lab_cap": "lab_cap",
+                 "overbooking_cap": "overbooked_per_session"}
+
+
+def shortcuts(world: World, setting) -> dict:
+    """Degenerate strategies the scoring must not reward (each closed: invalid, or quality at most 0.5)."""
+    view = _View(world, setting)
+    base = ref_config(view)
+    lit = literal_config(world)
+
+    def book_nobody(out_dir):
+        """Book nobody: no action, an exact status table"""
+        write_program(out_dir, dict(base, book_nothing=True))
+
+    def urgent_only(out_dir):
+        """Book only the urgent requests, an exact status table"""
+        write_program(out_dir, dict(base, urgent_only=True))
+
+    def arrival_order(out_dir):
+        """First come, first served: every request in the order received into the earliest free slot of its doctor, no slot held back, the pilot's table"""
+        write_program(out_dir, dict(base, waitlist_order="fcfs", pilot_reserve=False, table_no_reserve=True))
+
+    def earliest_slots(out_dir):
+        """Fill the earliest free slots: every request with whichever doctor of its department is free first, no slot held back"""
+        write_program(out_dir, dict(base, bend=True, pilot_reserve=False))
+
+    def copy_last_weeks(out_dir):
+        """Keep doing what the export shows: the reserve held for urgent patients, one patient a slot, the pilot's table"""
+        write_program(out_dir, dict(base, hold_reserve=True, no_overbook=True, table_no_reserve=True))
+
+    def no_table(out_dir):
+        """The reference's bookings without a status table"""
+        write_program(out_dir, dict(base, table_none=True))
+
+    def zero_table(out_dir):
+        """The reference's bookings, every table entry 0"""
+        write_program(out_dir, dict(base, table_zero=True))
+
+    def morning_table(out_dir):
+        """The reference's bookings, the table as the day began (before the day's bookings)"""
+        write_program(out_dir, dict(base, table_morning=True))
+
+    def copy_and_release(out_dir):
+        """Keep doing what the export shows but give tomorrow's empty reserve slots to the waitlist, the pilot's table"""
+        write_program(out_dir, dict(base, no_overbook=True, table_no_reserve=True))
+
+    def pilot_numbers(out_dir):
+        """The reference's bookings, the pilot day's table numbers reported every day"""
+        write_program(out_dir, dict(base, table_const=world.sample["output"]["status_table"]))
+    out = {f.__name__: f for f in (book_nobody, urgent_only, arrival_order, earliest_slots, copy_last_weeks,
+                                   no_table, zero_table, morning_table, copy_and_release, pilot_numbers)}
+    if view.hard:
+        def office_overbooking(out_dir):
+            """Keep the office's practice (the reserve held) but overbook the earliest follow-up slots the cap allows, whoever the patients are, an exact table"""
+            write_program(out_dir, dict(base, hold_reserve=True, ob_blind=True))
+        out["office_overbooking"] = office_overbooking
+
+    # The literal solution's near misses: the literal program with one client rule it breaks kept (the setting's
+    # value of that rule), and with all of them kept.
+    fixes = {"holiday": {"closed_dept": view.closed, "holiday": iso(HOLIDAY)},
+             "order": {"waitlist_order": view.order},
+             "interpreters": {"interpreters_per_day": view.interpreters},
+             "lab": {"lab_cap": view.lab_cap},
+             "reserve": {"reserve_slots": len(view.reserve)},
+             "scope": {"tier": view.setting.tier},
+             "notice": {"move_notice_days": view.notice}}
+    for name, fix in fixes.items():
+        def literal_plus(out_dir, fix=fix):
+            write_program(out_dir, dict(lit, **fix))
+        literal_plus.__doc__ = f"The literal program with {SHORTCUT_FIX[name]} kept"
+        out[f"literal_plus_{name}"] = literal_plus
+
+    every = {k: v for fix in fixes.values() for k, v in fix.items()}
+
+    def literal_all_rules(out_dir):
+        """The literal program with every client rule kept (all the setting's rule values)"""
+        write_program(out_dir, dict(lit, **every))
+
+    def literal_all_rules_release(out_dir):
+        """The literal program with every client rule kept and tomorrow's reserve released (the pilot's table)"""
+        write_program(out_dir, dict(lit, **every, hold_reserve=False))
+
+    def literal_all_rules_table(out_dir):
+        """The literal program with every client rule kept and the client's status table (the reserve held)"""
+        write_program(out_dir, dict(lit, **every, table_no_reserve=False))
+    out.update(literal_all_rules=literal_all_rules, literal_all_rules_release=literal_all_rules_release,
+               literal_all_rules_table=literal_all_rules_table)
+    return out
+
+
+SHORTCUT_FIX = {"holiday": "the City Day closure", "order": "the waitlist order", "interpreters": "the interpreters per day",
+                "lab": "the lab cap", "reserve": "the reserve's size", "scope": "the round's scope",
+                "notice": "the notice period"}
+
+
+# ── the per-target diagnostic ────────────────────────────────────────────────
+
+READING_TARGET = {"interp": "interpreters", "lab": "lab_cap", "test_scope": "blood_test",
+                  "referral_scope": "referral_expiry", "dup_scope": "duplicates", "released": "move_notice",
+                  "note": "staff_notes", "order": "waitlist_priority", "plain": "waitlist_priority"}
+TABLE_TARGET = {"no_reserve": "status_table", "hold_tomorrow": "status_table", "reserve_2": "urgent_reserve", "reserve_3": "urgent_reserve",
+                "closed_DERM": "holiday_clinic", "closed_ORTH": "holiday_clinic", "closed_PED": "holiday_clinic",
+                "calendar": "holiday_clinic", "absences_ignored": "doctor_absence", "expired": "referral_expiry",
+                "requests": "duplicates"}
+RISKY_PAIR = 0.5                # an overbooked slot whose two patients both come with more than this chance: its
+                                # expected collision (30 x 0.5) costs more than the second visit can be worth
+
+
+def _priority_readings(viol: list) -> dict:
+    """{reading: the priority breaches it explains}, each breach given to one reading: of the readings that
+    explain every request it passed over (their reasons), the one that explains most breaches overall; a breach
+    nothing explains is the order's ("plain")."""
+    breaches = [set.intersection(*(set(r) for r in v["reasons"])) if v.get("reasons") else set()
+                for v in viol if v["rule"] == "waitlist_priority"]
+    count: dict = {}
+    for b in breaches:
+        for r in b:
+            count[r] = count.get(r, 0) + 1
+    out: dict = {}
+    for b in breaches:
+        pick = max(sorted(b), key=lambda r: count[r]) if b else "plain"
+        out[pick] = out.get(pick, 0) + 1
+    return out
+
+
+def _same_table(a: dict, b: dict) -> bool:
+    return all(a[dept][k] == b[dept][k] for dept in DEPTS for k in TABLE_KEYS)
+
+
+def _table_readings(days: list) -> dict:
+    """{reading: (days the table is the truth, days it is the reading's table)} over the days whose table the
+    program reported and where the two differ (a whole table: a program that reads one fact another way reports
+    exactly the reading's table, and a partial match is often a coincidence of two wrong counts)."""
+    out: dict = {}
+    for day in days:
+        table, truth = day["table"], day["truth"]
+        if table is None:
+            continue
+        same = _same_table(table, truth)
+        for name, alt in day["readings"].items():
+            if _same_table(alt, truth):
+                continue
+            r, x = same, _same_table(table, alt)
+            a, b = out.get(name, (0, 0))
+            out[name] = (a + r, b + x)
+    return out
+
+
+def _diagnose(view: _View, trace: dict) -> tuple[dict, dict]:
+    """diagnose()'s per-target diagnostic: ({target: True | False | None}, {target: evidence}) for every target in
+    force, read from the trace of the deliverable's own run (score() records it). True: the run follows the
+    client's fact where it and its natural misreading differ; False: it follows the misreading; None: nothing in
+    the run tells them apart."""
+    w, setting = view._w, view.setting
+    days, pairs = trace["days"], trace["pairs"]
+    viol = [dict(v, call=day["day"]) for day in days for v in day["viol"]]
+    rules: dict = {}
+    for v in viol:
+        rules[v["rule"]] = rules.get(v["rule"], 0) + 1
+    prio = _priority_readings(viol)
+    tables = _table_readings(days)
+    placed = [dict(p, call=day["day"]) for day in days for p in day["placed"]]
+    released = [(day["day"], rid, doc, t) for day in days for rid, doc, t in day["released"]]
+    enforced: dict = {}
+    evidence: dict = {}
+
+    def table_follows(t: str) -> list:
+        return [name for name, (r, x) in tables.items() if TABLE_TARGET.get(name) == t and x > r]
+
+    def put(t: str, ok, text: str) -> None:
+        enforced[t], evidence[t] = ok, text
+
+    def by_rules(t: str, names: tuple, readings: tuple = (), table: bool = True, otherwise=True) -> None:
+        n = sum(rules.get(r, 0) for r in names)
+        k = sum(prio.get(r, 0) for r in readings)
+        follows = table_follows(t) if table else []
+        bad = [f"{n} breach(es) of {', '.join(names)}"] if n else []
+        bad += [f"{k} priority breach(es) explained by {', '.join(readings)}"] if k else []
+        bad += [f"the table follows the reading {', '.join(follows)}"] if follows else []
+        put(t, False if bad else otherwise, "; ".join(bad) or f"no breach of {', '.join(names) or 'the order'}"
+            + (", the table follows the truth" if table and any(TABLE_TARGET.get(x) == t for x in tables) else ""))
+
+    sr_tomorrow = sum(1 for p in placed if p["day"] == p["call"] + 1 and w.req[p["rid"]].urgency != "U"
+                      and not p["shared"]
+                      and any(s in view.reserve and w.slot_half(p["doc"], p["day"]).get(s) == "AM"
+                              for s in (p["start"], p["start"] + SLOT * (2 if w.req[p["rid"]].new else 1) - SLOT)))
+    # S/R bookings two or more days ahead in the reserve: in 09:00/09:20, the reserve not kept (its release read too
+    # early); after the first two, or in 09:20 while 09:00 is always kept, its size read wrong
+    breach = [v for v in viol if v["rule"] == "urgent_reserve"]
+    at_first = any(v.get("start") == RESERVE[0] for v in breach)
+    early = [v for v in breach if v.get("start") == RESERVE[0] or (at_first and v.get("start") in RESERVE)]
+    late = [v for v in breach if v not in early]
+    for t in _in_force(setting):
+        if t == "urgent_reserve":
+            follows = table_follows(t)
+            bad = ([f"{len(late)} S/R bookings in reserve slots after 09:00 while 09:00 is kept"] if late else []) + (
+                [f"the table follows {', '.join(follows)}"] if follows else [])
+            put(t, False if bad else True, "; ".join(bad) or "no S/R booking in the reserve two or more days ahead; "
+                                                             "held_back as the reserve's size gives it")
+        elif t == "reserve_release":
+            bad = ([f"{len(early)} S/R bookings in 09:00/09:20 two or more days ahead"] if early else [])
+            if not sr_tomorrow:
+                bad.append("no S/R request booked into tomorrow's reserve slots in the whole period")
+            put(t, False if bad else True, "; ".join(bad) or f"{sr_tomorrow} S/R bookings into tomorrow's reserve")
+        elif t == "follow_up_doctor":
+            n = rules.get("follow_up_same_doctor", 0)
+            fu = sum(1 for p in placed if w.req[p["rid"]].prev)
+            put(t, False if n else (True if fu else None),
+                f"{n} follow-up(s) with another doctor" if n else f"{fu} follow-ups placed, all with their doctor")
+        elif t == "interpreters":
+            over = [v for v in viol if v["rule"] == "interpreter_capacity"
+                    and not (view.medium and v.get("on") == INTERP_DAY and v.get("n", 0) <= view.interpreters)]
+            k = prio.get("interp", 0)
+            bad = ([f"{len(over)} day(s) over the interpreters"] if over else []) + (
+                [f"{k} priority breach(es) passing over interpreted patients while interpreters were free"] if k else [])
+            put(t, False if bad else True, "; ".join(bad) or "interpreters used up to the number and no further")
+        elif t == "holiday_clinic":
+            by_rules(t, ("holiday_closure",))
+        elif t == "move_notice":
+            changes = sum(day["changed"] for day in days) + len(released)
+            by_rules(t, ("move_notice",), ("released",), table=False, otherwise=True if changes else None)
+        elif t == "waitlist_priority":
+            by_rules(t, (), ("order", "plain"), table=False)
+        elif t == "status_table":
+            by_rules(t, ("status_table",))
+        elif t == "staff_notes":
+            pm = sum(1 for p in placed if p["doc"] == HEAD_DOCTOR and p["call"] > HEAD_NOTE_DAY
+                     and w.slot_half(p["doc"], p["day"]).get(p["start"]) == "PM")
+            k = prio.get("note", 0)
+            bad = ([f"{k} priority breach(es) booking a noted request ahead of its turn"] if k else []) + (
+                [f"nothing booked into {HEAD_DOCTOR}'s afternoons after the head's note"] if not pm else [])
+            put(t, False if bad else True, "; ".join(bad) or f"{pm} bookings into {HEAD_DOCTOR}'s afternoons, "
+                                                             f"notes not followed")
+        elif t == "duplicates":
+            if view.hard:
+                by_rules(t, ("one_per_department",))
+            else:
+                by_rules(t, (), ("dup_scope",), table=False)
+        elif t == "overbooking":
+            doubles = sum(day["double"] for day in days)
+            if view.hard:
+                put(t, bool(doubles), f"{doubles} overbooked slot-days in the book" if doubles else
+                    "no slot ever holds two follow-ups")
+            else:
+                by_rules(t, ("no_double_booking",), table=False)
+        elif t == "referral_expiry":
+            if view.medium:
+                by_rules(t, ("referral_validity",))
+            else:
+                by_rules(t, (), ("referral_scope",), table=False)
+        elif t == "blood_test":
+            if view.medium:
+                by_rules(t, ("test_before_visit",), table=False)
+            else:
+                by_rules(t, (), ("test_scope",), table=False)
+        elif t == "doctor_absence":
+            if view.medium:
+                by_rules(t, ("doctor_available",))
+            else:
+                moved = sum(1 for d, _, doc0, t0 in released for doc, nd, ds, _ in ABSENCES
+                            if doc0 == doc and t0 in ds and d >= nd)
+                kept = sum(1 for p in placed for doc, nd, ds, _ in ABSENCES if p["doc"] == doc and p["day"] in ds
+                           and p["call"] >= nd)
+                bad = ([f"{moved} appointment(s) of a doctor with a notice released"] if moved else []) + (
+                    ["no booking with a doctor on the days of their notice"] if not kept else [])
+                put(t, False if bad else True, "; ".join(bad) or f"{kept} bookings with the doctors on the days "
+                                                                 f"of their notices, as a locum covers them")
+        elif t == "interpreter_absence":
+            # a run over the interpreters on other days too misreads their number, which explains the day as well
+            other = [v for v in viol if v["rule"] == "interpreter_capacity" and v.get("on") != INTERP_DAY]
+            over = [v for v in viol if v["rule"] == "interpreter_capacity" and v.get("on") == INTERP_DAY
+                    and v.get("n", 0) <= view.interpreters] if not other else []
+            put(t, False if over else True, f"{len(over)} call(s) left {iso(INTERP_DAY)} over the reduced number"
+                if over else f"{iso(INTERP_DAY)} within the reduced number of interpreters")
+        elif t == "lab_cap":
+            by_rules(t, ("lab_capacity",), ("lab",), table=False)
+        elif t == "overbooking_cap":
+            by_rules(t, ("overbooking_limit",), table=False)
+        elif t == "collision_cost":
+            risky = sum(1 for p1, p2 in pairs if p1 * p2 > RISKY_PAIR)
+            if not pairs:
+                put(t, None, "no overbooked slot")
+            else:
+                put(t, risky * 2 <= len(pairs), f"{risky} of {len(pairs)} overbooked slots hold two patients who "
+                                                f"both come with more than an even chance")
+    return enforced, evidence
+
+
+def diagnose(world: World, submission_dir: Path, setting, scored: dict) -> dict:
+    """The per-target diagnostic (fdebench2: evaluate(..., diagnose=True), for a run's target funnel and the audit):
+    read from the trace score() recorded of the deliverable's own run (_diagnose), so the program runs once per
+    evaluation. The validator's many evaluations skip it."""
+    if "trace" not in scored:
+        return {}
+    enforced, evidence = _diagnose(_View(world, setting), scored["trace"])
+    return {"enforced": enforced, "evidence": evidence}
+
+
+# ── the never-asks program, the best known program and the bound ─────────────
+
+def robust_config(world: World, tier: str, candidates: dict, **choices) -> dict:
+    """robust_solution()'s configuration; `choices` overrides one of its guesses (for the audit's notes)."""
+    from fdebench2.cases import Setting
+    middle = {k: sorted(v)[(len(v) - 1) // 2] for k, v in candidates.items() if k in ("interpreters_per_day", "lab_cap")}
+    params = {"closed_dept": candidates["closed_dept"][0], "reserve_slots": max(candidates["reserve_slots"]),
+              "interpreters_per_day": choices.get("interpreters_per_day", 3 if 3 in candidates["interpreters_per_day"]
+                                                  else middle["interpreters_per_day"]),
+              "waitlist_order": choices.get("waitlist_order", "received"),
+              "lab_cap": choices.get("lab_cap", middle["lab_cap"]),
+              "overbooked_per_session": min(candidates["overbooked_per_session"])}
+    params.update(derive_params(params, tier))
+    view = _View(world, Setting(tier, 0, params, variation="never asks"))
+    extra = dict(closed_dept=sorted(set(candidates["closed_dept"])), table_closed=[], move_notice_days=5,
+                 collision_cost=0.0, table_reserve_slots=min(candidates["reserve_slots"]))
+    if choices.get("office_practice"):          # the export's practice and the pilot's table, nothing inferred
+        extra.update(hold_reserve=True, table_no_reserve=True)
+    extra.update({k: v for k, v in choices.items() if k in ("move_notice_days", "table_reserve_slots")})
+    return ref_config(view, **extra)
+
+
+def robust_solution(world: World, out_dir: Path, tier: str, candidates: dict) -> None:
+    """What the agent can build without asking the client anything: the reference program with a strong reading
+    of every fixed fact and, for each drawn parameter, a safe candidate of the tier's pool where one exists.
+
+    Fixed facts, read from the agent's view at their strongest: the program runs once a day after the clinics,
+    so tomorrow's urgent-reserve slots that today's urgent requests leave empty can serve nobody else and are
+    given to the waitlist ("above all we want to stop losing doctor time to empty slots"; the export's office
+    never did, and the client confirms it only when asked); held_back counts the reserve slots the program
+    still holds two or more days ahead, as many as the export shows (09:00 and 09:20; it holds the largest
+    candidate reserve but reports the office's), free_slots every other empty slot of the calendar as listed (the
+    absent doctors' days left out); one patient a slot except where the tier allows overbooking, and then no cost
+    for a collision (none is stated); follow-ups with their own doctor; notes not followed; a long notice (5
+    working days) for the changes the absences force. Generous beyond the agent's view: it is given the tier's
+    scope (what is in force this round), which can only help it.
+
+    Drawn parameters: safe where a side is safe (no booking in any clinic that may close on City Day, the
+    largest reserve, the smallest overbooking cap). The waitlist order, the interpreters and the lab cap have no
+    safe side: the priority rule makes passing over a waiting patient for want of an interpreter or a lab place
+    the client does have as invalid as booking one too many, and no booking order keeps every candidate order
+    (dropping each booking some candidate order forbids leaves the program at about a quarter of the
+    reference's operations value). It takes the pilot's waitlist order, the pilot's three interpreters and the
+    middle lab cap. With the export's practice and the pilot's table instead (office_practice), it earns 0
+    everywhere."""
+    write_program(out_dir, robust_config(world, tier, candidates))
+
+
+BEST_KNOWN_MOVES = (     # the reference's switches and weights, searched one move at a time
+    {"pack": True},
+    {"oracle": True},
+    {"ob_slot_value": 6.0}, {"ob_slot_value": 10.0}, {"ob_slot_value": 12.0},
+    {"ob_booked_value": 5.0}, {"ob_booked_value": 15.0},
+)
+
+
+def _best_known_config(view: _View) -> dict:
+    """The reference program tuned on the hidden period itself (hindsight the agent does not have): coordinate
+    search over BEST_KNOWN_MOVES from the reference's own configuration (in hard also the patients' true no-show
+    rates), keeping a move while the replay stays valid and its objective grows. Deterministic; cached per
+    setting."""
+    key = "best_known_config"
+    if key in view._cache:
+        return view._cache[key]
+    ref = _reference_run(view)
+    best_cfg, best = ref_config(view), _objective(ref, ref["value"])
+    moves = [m for m in BEST_KNOWN_MOVES if view.hard or "pack" in m]
+    for _ in range(2):
+        better = False
+        for move in moves:
+            cfg = dict(best_cfg, **move)
+            if cfg.pop("oracle", None):
+                cfg["oracle_p"] = {r.id: r.base_p for r in view._w.reqs}
+            if cfg == best_cfg:
+                continue
+            res = run_inprocess(view, cfg)
+            obj = _objective(res, ref["value"])
+            if not res["violations"] and obj > best + 1e-9:
+                best_cfg, best, better = cfg, obj, True
+        if not better:
+            break
+    view._cache[key] = best_cfg
+    return best_cfg
+
+
+def best_known_solution(world: World, out_dir: Path, setting) -> None:
+    write_program(out_dir, _best_known_config(_View(world, setting)))
+
+
+def _bound_lp(world: World, view: _View) -> dict:
+    """objective_bound()'s linear relaxation: {"value": its optimum (an upper bound on the operations value of
+    every valid program), "seen", "pairs", "unbooked": what the optimum is made of}."""
+    import numpy as np
+    from scipy.optimize import linprog
+    from scipy.sparse import coo_matrix
+    w = world
+    cap, sessions = {}, {}
+    for doc in w.doctors:
+        for t in range(1, N_CAL):
+            if view.closed_on(doc.dept, t) or view.absent(doc.id, t, N_DAYS):
+                continue
+            n = sum(len(st) for _, st in w.sessions(doc.id, t))
+            if n:
+                cap[(doc.id, t)], sessions[(doc.id, t)] = n, len(w.sessions(doc.id, t))
+    cap_index = {k: i for i, k in enumerate(sorted(cap))}
+    n_cap = len(cap_index)
+    fixed = {rid for rid, a in w.initial_book.items() if a.day == 0}
+    groups: dict = {}
+    for r in w.reqs:
+        groups.setdefault((r.patient, r.dept) if view.hard else r.id, []).append(r)
+    # a request (hard: a need) with an appointment on day 0 is settled: seen before the period, no waiting
+    groups = {k: rs for k, rs in groups.items() if not any(r.id in fixed for r in rs)}
+    docs_of = {dept: [d.id for d in w.doctors if d.dept == dept] for dept in DEPTS}
+    a_rows, a_cols, a_vals, gain, kinds = [], [], [], [], []
+    const = 0.0
+    n_needs = len(groups)
+    for i, (k, rs) in enumerate(sorted(groups.items(), key=lambda x: str(x[0]))):
+        start = max(min(r.ref for r in rs), 1)
+        wt = max(WEIGHT[r.urgency] for r in rs)
+        never = (0.0 if any(r.cancel_k for r in rs) else
+                 -(UNBOOKED_COST + WAIT_COST * wt * max(0, N_DAYS + 1 - start))
+                 if min(r.earliest for r in rs) <= N_CAL - 1 else 0.0)
+        const += never
+        best = {}
+        for r in rs:
+            lo, hi = max(r.ref, 1), N_CAL - 1
+            if view.medium and r.test:
+                lo = max(lo, r.earliest + 1, r.recv + 2)
+            if view.medium and r.new:
+                hi = min(hi, r.referral)
+            if r.urgency == "U":
+                hi = min(hi, view.deadline(r))
+            booked = w.initial_book.get(r.id)
+            p = 1.0 - no_show(r, 1) if view.hard else 1.0
+            p_lo = 1.0 - no_show(r, HORIZON) if view.hard else 1.0
+            for doc in ([r.prev] if r.prev else docs_of[r.dept]):
+                for t in range(lo, hi + 1):
+                    if (doc, t) not in cap:
+                        continue
+                    stay = booked is not None and (booked.doctor, booked.day) == (doc, t)
+                    if booked is not None and not stay and t < MOVE_NOTICE and t != booked.day:
+                        continue        # a booked appointment moves at the earliest on day 0: to day 3 or later,
+                                        # or to another doctor at the same date and time
+                    if stay and view.hard:
+                        p = 1.0 - no_show(r, booked.day - booked.booked_on)
+                    elif view.hard:
+                        p = 1.0 - no_show(r, 1)
+                    v = (SEEN_VALUE * (1 if r.prev else 2) * p if t in SCORED else 0.0) \
+                        - WAIT_COST * wt * max(0, t - start) - (MOVE_COST if booked is not None and not stay else 0)
+                    key = (doc, t)
+                    if key not in best or v > best[key][0]:
+                        best[key] = (v, 1 if r.prev else 2, p, p_lo, r.prev is not None)
+        for (doc, t), (v, n, p, p_lo, fu) in best.items():
+            j = len(gain)
+            gain.append(v - never)
+            kinds.append(("x", doc, t, fu, p_lo))
+            a_rows += [i, n_needs + cap_index[(doc, t)]]
+            a_cols += [j, j]
+            a_vals += [1.0, float(n)]
+            if view.hard and fu and t in SCORED:
+                # u: this follow-up is the first of an overbooked slot (at most when it is booked there)
+                gain.append(0.0)
+                kinds.append(("u", doc, t, j, p_lo))
+                # y: the same patient as the second follow-up of an overbooked slot: its visit (at best at a
+                # day's lead) and its waiting stopped there
+                gain.append(SEEN_VALUE * p - WAIT_COST * wt * max(0, t - start) - never)
+                kinds.append(("y", doc, t, i, p_lo))
+                a_rows += [i]
+                a_cols += [len(gain) - 1]
+                a_vals += [1.0]
+    rows = n_needs + n_cap
+    b = [1.0] * n_needs + [float(cap[k]) for k in sorted(cap)]
+    n_var = len(gain)
+    if view.hard:
+        # Per doctor-day ci: second follow-ups at most the overbooking cap per session (row A), at most the first
+        # follow-ups marked u (row B), each u at most its booking (row U), and the expected collisions C_ci at
+        # least 0 and at least 30 x the sum over its pairs of (p1 + p2 - 1) <= p1 p2, with each chance at its
+        # lowest in the window (row C): sum 30 (p_lo - 1/2) over the u and the y, less C.
+        c0 = len(gain)
+        gain += [-1.0] * n_cap
+        u_rows = []
+        for j, kind in enumerate(kinds):
+            if kind[0] not in "uy":
+                continue
+            ci = cap_index[(kind[1], kind[2])]
+            if kind[0] == "y":
+                a_rows += [rows + ci, rows + n_cap + ci]
+                a_cols += [j, j]
+                a_vals += [1.0, 1.0]
+            else:
+                a_rows += [rows + n_cap + ci]
+                a_cols += [j]
+                a_vals += [-1.0]
+                u_rows.append((j, kind[3]))
+            a_rows += [rows + 2 * n_cap + ci]
+            a_cols += [j]
+            a_vals += [COLLISION_COST * (kind[4] - 0.5)]
+        for ci in range(n_cap):
+            a_rows += [rows + 2 * n_cap + ci]
+            a_cols += [c0 + ci]
+            a_vals += [-1.0]
+        b += [float(view.ob_cap * sessions[k]) for k in sorted(cap)] + [0.0] * (2 * n_cap)
+        rows += 3 * n_cap
+        for k, (j, jx) in enumerate(u_rows):
+            a_rows += [rows + k, rows + k]
+            a_cols += [j, jx]
+            a_vals += [1.0, -1.0]
+        b += [0.0] * len(u_rows)
+        rows += len(u_rows)
+    A = coo_matrix((a_vals, (a_rows, a_cols)), shape=(rows, len(gain))).tocsr()
+    upper = np.array([1.0] * n_var + [np.inf] * (len(gain) - n_var))
+    res = linprog(-np.array(gain), A_ub=A, b_ub=np.array(b), bounds=np.column_stack([np.zeros(len(gain)), upper]),
+                  method="highs")
+    if res.status != 0:
+        raise RuntimeError(f"objective_bound: the LP did not solve ({res.message})")
+    x = res.x
+    return {"value": float(-res.fun + const),
+            "seen": float(sum(x[j] * (1 if True else 0) for j, k in enumerate(kinds) if k[0] == "x" and k[2] in SCORED)),
+            "pairs": float(sum(x[j] for j, k in enumerate(kinds) if k[0] == "y")),
+            "unbooked": float(n_needs - sum(x[j] for j, k in enumerate(kinds) if k[0] in ("x", "y")))}
+
+
+def objective_bound(world: World, setting) -> float:
+    """A proven upper bound on the objective of every valid program (the follow-up habit kept), over the
+    reference's operations value (the status table costs nothing at best): a linear relaxation of the period with
+    perfect information (_bound_lp).
+
+    Every request (hard: every patient's need in a department) either gets one appointment on a day t from its
+    first possible day on (medium+ with a fasting test one day later and not before the day after it arrives, a new
+    patient not after its referral, an urgent one within its window), with its own doctor (follow-ups) or any
+    doctor of its department, or gets none. An appointment already in the book stays where it is or moves, for 4,
+    to day 3 or later (or to another doctor at the same time). An appointment on a clinic day 1-20 earns 10 per slot (hard: times the patient's best
+    chance of coming, at a day's lead or the lead it was booked with), less 0.4 x urgency weight per day waited; one on a later day only stops the
+    waiting; none costs 10 and the waiting to 8 December, or nothing for a patient who would cancel (a cancellation
+    closes the request). A doctor-day holds at most its calendar slots (none in the closed clinic on City Day or,
+    medium+, on a notified absence day). In hard a doctor-day may also hold up to its overbooking cap per session of
+    second follow-ups, each next to a first one, worth their visit less the expected collisions, which are at least
+    0 and at least 30 x the sum over the pairs of (p1 + p2 - 1) (as p1 p2 >= p1 + p2 - 1), each chance at its lowest
+    within ten days' lead. Everything else is relaxed: the order, the reserve, interpreters, the lab, notice beyond the
+    book's first three days, slot positions, extra trips, and when requests arrive beyond their first possible day.
+    So the LP's optimum is at least any valid program's operations value."""
+    view = _View(world, setting)
+    key = "objective_bound"
+    if key not in view._cache:
+        view._cache[key] = _bound_lp(world, view)["value"] / _reference_run(view)["value"]
+    return view._cache[key]
+
+
 # ── the pilot day shown in the data ──────────────────────────────────────────
 
 PILOT_RULES = {"tier": "easy", "closed_dept": "", "holiday": "", "urgent_days": 2, "interpreters_per_day": 3,
                "lab_cap": 10, "overbooked_per_session": 0, "move_notice_days": 1, "waitlist_order": "received",
                "horizon": HORIZON, "noshow": {"base0": 0.15, "slope": 0.01, "shrink": 6.0, "hist_lead": HIST_LEAD},
-               "seen_value": SEEN_VALUE, "collision_cost": COLLISION_COST, "pilot_reserve": False}
+               "seen_value": SEEN_VALUE, "collision_cost": COLLISION_COST, "unbooked_cost": UNBOOKED_COST,
+               "hold_reserve": True, "table_no_reserve": True}
 
 
 def _pilot(w: World, seed: int) -> dict:
@@ -1556,6 +2375,26 @@ def _pilot(w: World, seed: int) -> dict:
            "waitlist": [req_json(pw, r) for r in waiting]}
     answer = _module().Scheduler(_rt(PILOT_RULES)).on_day(_rt(day))
     return {"input": day, "output": answer}
+
+
+# ── literal solution: the request as written ─────────────────────────────────
+
+def literal_config(world: World) -> dict:
+    """The literal program's configuration: the pilot's interim rules (PILOT_RULES) with every notice and request
+    field of the data acted on (tier medium's switches)."""
+    return dict(PILOT_RULES, tier="medium")
+
+
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request at face value, from the agent's view only: the reference program on the only rule values the
+    view shows, the pilot's (PILOT_RULES, as its answer and the export reveal them: earliest free slot first,
+    urgent requests and then everyone by the date received, 09:00 and 09:20 kept for urgent patients as the office
+    always did (never given to anyone else, the day before included), the status table as the pilot reports it
+    (held_back 0), three interpreters a day, a day's notice to move an appointment, no overbooking), every clinic
+    open on City Day as the outpatient office's e-mail says, and every notice and request field acted on
+    (absences, the interpreter's absence, referral dates, blood tests within the history's lab figure); notes
+    asking for special treatment are not followed. The same program in every setting."""
+    write_program(out_dir, literal_config(world))
 
 
 # ── data rendering ───────────────────────────────────────────────────────────
@@ -1947,10 +2786,11 @@ def _history_acquaintance(w: World):
     """The history's director's-acquaintance request: a routine new Orthopedics patient received 28 October."""
     reqs, ids = _history_requests(w)
     appt = {id(r): a for r, a, _ in w.past_appts}
-    for r in reqs:
-        a = appt.get(id(r))
-        if a and r.new and r.dept == "ORTH" and r.urgency == "R" and r.recv == -7 and a.day > r.recv + 1:
-            return r, ids[id(r)]
+    for recv in (-7, -8, -6, -9, -5):           # received about a week and a half before the export
+        for r in reqs:
+            a = appt.get(id(r))
+            if a and r.new and r.dept == "ORTH" and r.urgency == "R" and r.recv == recv and a.day > r.recv + 1:
+                return r, ids[id(r)]
     raise AssertionError("no history request for the acquaintance e-mail")
 
 

@@ -1,0 +1,15 @@
+# Leaderboard rounds. A ranked submission runs one round's track, so every system in a round answers the same
+# settings and nobody picks their own rule seeds:
+#   every case x the round's tiers x the round's rule seeds, at least 3 trials each,
+#   English client and agent, the baseline policy, standard engagement
+#   (configs/experiments.leaderboard.yaml is that campaign, ready to run).
+# The rule seeds are outside every case's public panel: their answers are stored nowhere in the repository. Each
+# seed was checked on every case and tier before the round opened (reference and baseline valid, quality scale
+# at least 5% wide, literal solution at most 0.2). A new round gets new seeds; earlier rounds stay listed so their
+# results remain readable, grouped by round on the leaderboard page. Rounds so far run on each case's public world
+# (the data in dataset/agent_view/); only the client's rules are drawn afresh.
+rounds:
+  - id: "2026-11"
+    opened: 2026-11-10
+    rule_seeds: [108807, 519122, 904685]
+    tiers: [easy, medium, hard]

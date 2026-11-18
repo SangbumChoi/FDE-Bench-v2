@@ -13,6 +13,10 @@
   fdebench2 score     RUN_DIR [--policy P ...]           (re)score a run, optionally under more policies
   fdebench2 campaign  configs/experiments.yaml [--dry-run]
   fdebench2 report    runs/
+  fdebench2 try       [--case ID] [--difficulty T] [--rule-seed N] [--lang L] [--submission DIR]
+                                                         a case in plain words and its anchors scored (no model)
+  fdebench2 submit    RUNS_DIR --name NAME --out submission.json   package a campaign for the leaderboard
+  fdebench2 anchors   --out FILE                         the anchors (literal, baseline, reference) as a submission
 """
 
 from __future__ import annotations
@@ -52,6 +56,14 @@ def _case_paths(paths: list[Path]) -> list[Path]:
         else:
             keep.append(path)
     return keep
+
+
+def _cases_root(given: Path | None) -> Path:
+    """--cases, else ./cases, else the repository's cases/ (a command run from another folder)."""
+    if given is not None:
+        return given
+    from .runner import REPO
+    return Path("cases") if Path("cases").is_dir() else REPO / "cases"
 
 
 def _axes(ap: argparse.ArgumentParser) -> None:
@@ -135,6 +147,37 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--concurrency", type=int, default=4)
     p = sub.add_parser("report")
     p.add_argument("out", type=Path)
+    from .cases import LOCALES
+    from .tryout import DEFAULT_CASE
+    p = sub.add_parser("try", help="a case in plain words, its anchors scored; no model or API key needed")
+    p.add_argument("--case", default=DEFAULT_CASE, help=f"<field>/<role> (default: {DEFAULT_CASE})")
+    p.add_argument("--difficulty", default="medium", choices=("easy", "medium", "hard"))
+    p.add_argument("--rule-seed", type=int, default=None, help="default: the case's first public rule seed")
+    p.add_argument("--lang", default="en", choices=LOCALES)
+    p.add_argument("--submission", type=Path, default=None, help="score your own deliverable folder too")
+    p.add_argument("--cases", dest="cases_root", type=Path, default=None)
+    p = sub.add_parser("submit", help="package a campaign's results into one submission JSON for the leaderboard")
+    p.add_argument("results", type=Path, help="the campaign's results directory (runs/)")
+    p.add_argument("--name", required=True, help="system name shown on the leaderboard")
+    p.add_argument("--model", default=None, help="model id (default: the runs' model)")
+    p.add_argument("--harness", default=None, help="harness (default: the runs' harness)")
+    p.add_argument("--version", dest="system_version", default="", help="the system's own version")
+    p.add_argument("--flag", action="append", default=[], metavar="KEY=VALUE",
+                   help="a setting to disclose (web_tools=off, max_steps=400, budget_usd=5, ...); repeatable")
+    p.add_argument("--date", default=None, help="submission date, YYYY-MM-DD (default: today, UTC)")
+    p.add_argument("--agent", default=None, help="the runs' agent label (<harness>--<model>) when several ran")
+    p.add_argument("--cases", dest="cases_root", type=Path, default=None)
+    p.add_argument("--rounds", type=Path, default=None,
+                   help="the leaderboard rounds file (default: leaderboard/rounds.yaml next to the cases folder)")
+    p.add_argument("--out", type=Path, default=Path("submission.json"))
+    p = sub.add_parser("anchors", help="the cases' anchors scored offline, as an example submission")
+    p.add_argument("--case", action="append", default=[], help="<field>/<role> (repeatable; default: every case)")
+    p.add_argument("--difficulty", action="append", default=[], choices=("easy", "medium", "hard"))
+    p.add_argument("--round", dest="round_id", default=None,
+                   help="score a leaderboard round's tiers and rule seeds (leaderboard/rounds.yaml), not the public ones")
+    p.add_argument("--date", default=None)
+    p.add_argument("--cases", dest="cases_root", type=Path, default=None)
+    p.add_argument("--out", type=Path, required=True)
 
     a = ap.parse_args(argv)
     if a.cmd in ("validate-case", "export-dataset", "explain-case"):
@@ -161,12 +204,13 @@ def main(argv: list[str] | None = None) -> None:
             n = sum(1 for f in dest.rglob("*") if f.is_file())
             print(f"{path.parent.name}/{path.name}: {n} files in {dest.relative_to(Path.cwd()) if dest.is_relative_to(Path.cwd()) else dest}")
     elif a.cmd == "audit-case":
-        from .audit import AUDIT_COMBOS, audit_case, report, write_audit
+        from .audit import AUDIT_COMBOS, audit_case, write_audit
+        from .audit import report as audit_report
         from .cases import NativeCase
         from .explain import write_page
         started = time.time()
         result = audit_case(NativeCase(a.path), a.world_seed, AUDIT_COMBOS if a.combos is None else a.combos)
-        print(report(result))
+        print(audit_report(result))
         print(f"audited in {time.time() - started:.0f} s", file=sys.stderr)
         if a.world_seed is None and not a.no_write:      # only the public world's audit is stored
             print(write_audit(a.path, result))
@@ -216,6 +260,25 @@ def main(argv: list[str] | None = None) -> None:
         run_campaign(a.config, dry_run=a.dry_run, concurrency=a.concurrency)
     elif a.cmd == "report":
         print(report(a.out))
+    elif a.cmd == "try":
+        from .tryout import try_case
+        sys.stdout.write(try_case(_cases_root(a.cases_root), a.case, a.difficulty, a.rule_seed, a.lang, a.submission))
+    elif a.cmd == "submit":
+        from .submit import build_submission, write_submission
+        doc = build_submission(a.results, name=a.name, model=a.model, harness=a.harness, version=a.system_version,
+                               flags=a.flag, date=a.date, agent=a.agent, cases_root=_cases_root(a.cases_root),
+                               rounds_file=a.rounds)
+        print(write_submission(doc, a.out))
+        agg = doc["aggregate"]
+        print(f"{doc['system']['name']}: {agg['n_scored']} scored runs on {agg['n_cases']} cases, final "
+              f"{agg['final']['mean']:.3f} [{agg['final']['ci'][0]:.2f}-{agg['final']['ci'][1]:.2f}], status "
+              f"{doc['status']}" + (f", round {doc['round']}" if doc.get("round") else "")
+              + (f" ({'; '.join(doc['status_reasons'])})" if doc["status_reasons"] else ""))
+    elif a.cmd == "anchors":
+        from .submit import anchor_submission, write_submission
+        doc = anchor_submission(_cases_root(a.cases_root), a.case or None, a.difficulty or ["medium"], date=a.date,
+                                round_id=a.round_id)
+        print(write_submission(doc, a.out))
 
 
 if __name__ == "__main__":

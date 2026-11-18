@@ -36,7 +36,7 @@
 - `agent_view/<lang>/`：上記のファイル、ロケールごと（どの設定でも同一）。
 - `hidden/days/<date>.json`：採点用の20日分の `on_day` 入力（その日の朝の信用情報のスナップショット付きの申込、通知）。`book` は含まず、エンジンがプログラム自身のそれまでの判断から埋めます。
 - `hidden/mail/<lang>/<date>_<ref>.eml`：採点用の期間の通知25件（規制変更1件、予算削減1件、返済15件、書類の訂正8件）と支店のメモ10件をメールにしたもの、ロケールごと。
-- `answer/`（9つの公開設定。どのファイルも difficulty と seed で設定を区別）：`answers.csv`（設定ごとに1行：抽選されたパラメータ、模範解答とベースラインの目的値、適用されるルールと確認すべき事実、模範解答の指標。そこから算出される `min_score`、`near_prime_below`、`other_bureau` は保存しない）、`files/reference/program/underwriter.py` と `files/baseline/program/underwriter.py`（どの設定でも同一）と、設定ごとの設定ファイルを収めた `reference_program.jsonl` と `baseline_program.jsonl`、`decisions.csv`（模範解答の日ごとの判断：difficulty, seed, date, day_index, application_id, customer_id, decision, amount, reason_code、hard の再判断は redecision = 1）、`limit_tables.jsonl`（設定と日ごとに1行、`file` = `<date>.json`：模範解答の承認後に評価器が計算する、各日の期待される締め時点の枠一覧表：`customers`、`daily_capacity_remaining`、`period_budget_remaining`、easy では null）。
+- `answer/`（9つの公開設定。どのファイルも difficulty と seed で設定を区別）：`answers.csv`（設定ごとに1行：抽選されたパラメータ、模範解答と従来のやり方の目的値、適用されるルールと確認すべき事実、模範解答の指標。そこから算出される `min_score`、`near_prime_below`、`other_bureau` は保存しない）、`files/reference/program/underwriter.py` と `files/baseline/program/underwriter.py`（どの設定でも同一）と、設定ごとの設定ファイルを収めた `reference_program.jsonl` と `baseline_program.jsonl`、`decisions.csv`（模範解答の日ごとの判断：difficulty, seed, date, day_index, application_id, customer_id, decision, amount, reason_code、hard の再判断は redecision = 1）、`limit_tables.jsonl`（設定と日ごとに1行、`file` = `<date>.json`：模範解答の承認後に評価器が計算する、各日の期待される締め時点の枠一覧表：`customers`、`daily_capacity_remaining`、`period_budget_remaining`、easy では null）。
 
 ## インターフェース（`on_day(day)`）
 
@@ -176,6 +176,8 @@
 | hard/s30 | 0.812 | 208,404 (81%) | 173 / 331 / 66 | 3,207,874 |
 | hard/s525 | 0.746 | 208,736 (75%) | 172 / 228 / 170 | 3,400,000 |
 | hard/s1043 | 0.845 | 268,709 (84%) | 223 / 208 / 139 | 4,000,000 |
+
+**依頼を文字どおりに実行した解答**（`literal_solution`：依頼を書かれたとおりに実行したもので、どの設定でも同じ）：模範解答のプログラムを、エージェントに見える唯一のルールの値、つまり試行時の値（`PILOT_RULES`：試行日の締め時点の枠一覧表が減らしていく1日の枠400,000、顧客1人あたり50,000、試行時のスコアの基準点、DSR上限、収入上限。期間予算、ニアプライム層への約束、勤続の慣行はなし）と信用情報機関のA社で動かし、それ以外は `robust_solution` と同じ自然な読み方をしたものです（すべての通知に対応し、分割申込のルールも、ペアを1単位として扱うこともなく、保護属性はスコアカードに入れません）。416件の申込を合計7,569,189で承認し、どの設定でもスコアの基準点、顧客枠、1日の上限、勤続の慣行、理由コード、ペアのルールに違反します。medium からは期間予算にも違反し、枠一覧表に予算の残りも載らないため、9つの公開設定すべてで無効です（枠一覧表の正確さは0.03–0.14）。
 
 ワールドシード1–3（公開ルールシード）でも、模範解答と従来のやり方はどこでも有効で、従来のやり方は模範解答の目的値の0.486–0.923です。そのため品質の尺度の幅はどれも7.7%以上あります（監査前は hard/s1043 と medium/s30 で5%未満でした）。
 

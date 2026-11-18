@@ -6,15 +6,15 @@ Buenos días: el departamento de compras tiene preparados unos cuarenta contrato
 
 ## Entregable
 
-Un archivo JSON, `review.json`, con una entrada por cada contrato del registro (40 contratos), cuya clave es el identificador del contrato tal como aparece en los datos:
+Un archivo JSON, `review.json`, con una entrada por cada contrato del registro (44 contratos), cuya clave es el identificador del contrato tal como aparece en los datos:
 `{"C001": {"issues": ["LIABILITY_CAP", "INDEMNITY"], "decision": "reject"}, "C002": {"issues": [], "decision": "sign"}, ...}`.
 `issues` contiene los códigos de incidencia detectados (lista vacía si no hay ninguno); `decision` es `sign`, `negotiate` o `reject`. Solo se admiten estos siete códigos: `LIABILITY_CAP`, `GOVERNING_LAW`, `AUTO_RENEWAL`, `PAYMENT_TERMS`, `DATA_PROTECTION`, `TERMINATION_CONVENIENCE`, `INDEMNITY`.
 
 <!-- tier: easy -->
-- **En esta ronda**: solo necesitamos revisar cuatro puntos de nuestros criterios: `LIABILITY_CAP`, `GOVERNING_LAW`, `PAYMENT_TERMS` e `INDEMNITY`. La renovación, la protección de datos y la resolución las revisa compras por su cuenta esta vez, así que no incluya `AUTO_RENEWAL`, `DATA_PROTECTION` ni `TERMINATION_CONVENIENCE`; si los incluye, no los tendremos en cuenta.
+- **En esta ronda**: solo queremos que se revisen y se indiquen cuatro puntos de nuestros criterios: `LIABILITY_CAP`, `GOVERNING_LAW`, `PAYMENT_TERMS` e `INDEMNITY`. La renovación, la protección de datos y la resolución las revisa compras por su cuenta esta vez y envía a los proveedores su propia lista, así que no incluya `AUTO_RENEWAL`, `DATA_PROTECTION` ni `TERMINATION_CONVENIENCE`: una entrada que los incluye no es la lista que pedimos.
 <!-- /tier -->
 <!-- tier: easy medium -->
-- **Contratos fuera de esta ronda**: esta vez compras se ocupa directamente de tres tipos de contratos: los redactados en el modelo del propio proveedor, los que tienen un registro en la carpeta `modificaciones/` y aquel del que trata el correo de la carpeta `correos/`. También necesitan una entrada en el archivo, pero no usaremos su respuesta sobre ellos.
+- **Contratos fuera de esta ronda**: esta vez compras se ocupa directamente de tres tipos de contratos: los redactados en el modelo del propio proveedor, los que tienen un registro en la carpeta `modificaciones/` y aquellos de los que tratan los correos de la carpeta `correos/`. También necesitan una entrada en el archivo, pero no usaremos su respuesta sobre ellos.
 - **Todos los demás contratos se revisan en esta ronda, también los pequeños.**
 <!-- /tier -->
 
@@ -25,10 +25,10 @@ Un archivo JSON, `review.json`, con una entrada por cada contrato del registro (
 - La mayoría de los contratos siguen nuestro modelo, pero algunos proveedores nos han enviado su propio contrato en inglés. Se les aplican los mismos criterios.
 - La redacción de las cláusulas no es siempre la misma y los títulos varían. Juzgue cada cláusula por lo que dice, no por su título ni por unas pocas palabras clave.
 - Cuando un plazo se expresa en meses, cada mes cuenta como 30 días.
-- Cada contrato empieza con la fecha de su borrador. La carpeta `modificaciones/` contiene un registro por cada cambio negociado sobre un borrador, con su fecha y su estado, y la carpeta `correos/` un mensaje que recibimos sobre uno de los contratos.
+- Cada contrato empieza con la fecha de su borrador. La carpeta `modificaciones/` contiene un registro por cada cambio negociado sobre un borrador, con su fecha y su estado, y la carpeta `correos/` dos mensajes que recibimos sobre tres contratos.
 <!-- tier: hard -->
-- **Modificaciones**: un cambio solo cuenta si ambas partes lo han acordado y su fecha es posterior al borrador de su contrato; la cláusula se lee entonces modificada. Un cambio que propuso el proveedor y que no aceptamos no cuenta, y un cambio con fecha anterior al borrador queda sustituido por el borrador (lo que firmamos es el borrador).
-- **Peticiones de firma**: a veces los responsables de negocio nos escriben para sacar adelante un contrato. La revisión sigue únicamente nuestros criterios: una aprobación o una petición del negocio no cambia las incidencias ni la decisión.
+- **Modificaciones**: un cambio solo cuenta si ambas partes lo han acordado y su fecha es posterior al borrador de su contrato; la cláusula se lee entonces modificada. Un cambio que propuso el proveedor y que no aceptamos no cuenta, y un cambio con fecha anterior al borrador queda sustituido por el borrador, aunque ambas partes lo hubieran acordado (lo que firmamos es el borrador).
+- **Peticiones de firma**: a veces los responsables de negocio nos escriben para sacar adelante un contrato. La revisión sigue únicamente nuestros criterios: una aprobación o una petición del negocio, incluida la del consejero delegado y por urgente que sea la renovación, no cambia las incidencias ni la decisión.
 <!-- /tier -->
 
 ## Nuestros criterios de contratación
@@ -73,15 +73,19 @@ Cada contrato se revisa en siete puntos. Cada punto que no se cumple es una inci
 - `INDEMNITY`: las indemnidades deben ser recíprocas, cada parte cubriendo a la otra. Una cláusula en la que solo nosotros indemnizamos al proveedor es una incidencia.
 
 <!-- tier: easy -->
-En esta ronda, las incidencias críticas son `LIABILITY_CAP` e `INDEMNITY`.
+En esta ronda, las incidencias críticas son `LIABILITY_CAP` e `INDEMNITY`; las otras dos son no críticas.
 <!-- /tier -->
 <!-- tier: medium hard -->
-`LIABILITY_CAP`, `DATA_PROTECTION` e `INDEMNITY` son incidencias críticas.
+`LIABILITY_CAP`, `DATA_PROTECTION` e `INDEMNITY` son incidencias críticas; las otras cuatro son no críticas.
 <!-- /tier -->
-Decisión: `reject` si el contrato tiene {{reject_at}} incidencias críticas; `negotiate` si tiene alguna incidencia; `sign` si no tiene ninguna.
+La decisión depende de quién puede firmar qué:
+- `reject` si el contrato tiene {{reject_at}} incidencias críticas: la directora jurídica no firma esos contratos.
+- `sign` si no tiene ninguna incidencia. Nuestro límite de firma es de {{tolerance_below}} USD: un contrato con un importe anual inferior a ese límite (estrictamente menor) cuyas incidencias son todas no críticas también es `sign`. El responsable del equipo legal acepta esas desviaciones, y las incidencias se mantienen en la lista para que queden registradas.
+- `negotiate` en todos los demás casos: una incidencia crítica que no llega a `reject`, y cualquier incidencia en un contrato igual o superior al límite de firma.
 <!-- tier: hard -->
 
 Nuestra costumbre: los contratos con un importe anual inferior a {{fast_track_below}} USD van por la vía rápida. Se marcan como `sign` sin incidencias y sin revisión jurídica, para dedicar el tiempo del equipo legal a los contratos grandes.
+La directora jurídica puede aprobar una excepción para un contrato pequeño. Solo merece la pena para un contrato que nuestros criterios rechazarían: ese no queremos firmarlo sea cual sea su importe, y detectarlo vale para nosotros el doble que una revisión ordinaria. Un contrato pequeño que nuestros criterios solo negociarían o firmarían no merece una excepción: sacarlo de la vía rápida cuesta más tiempo del equipo legal del que ahorra.
 <!-- /tier -->
 
 ## Cómo se evalúa la revisión
@@ -89,16 +93,16 @@ Nuestra costumbre: los contratos con un importe anual inferior a {{fast_track_be
 **Restricciones obligatorias** (si se incumple alguna, la revisión no cuenta):
 
 - Todos los contratos del registro tienen una entrada.
-- Cada decisión se deduce de las incidencias indicadas para ese contrato, según la regla anterior.
+- Toda incidencia indicada es uno de los siete códigos anteriores.
 <!-- tier: hard -->
 - Los contratos por debajo de {{fast_track_below}} USD se marcan como `sign` con la lista de incidencias vacía.
 <!-- /tier -->
 
-**Calidad**: 0,7 × la puntuación F1 de los códigos de incidencia (micropromedio sobre todos los pares contrato × código, frente a las incidencias que los contratos contienen realmente según nuestros criterios) + 0,3 × la proporción de contratos cuya decisión coincide con la que corresponde a sus incidencias reales.
+**Calidad**: la proporción de contratos cuya entrada es exactamente correcta. Una entrada es correcta cuando su lista de incidencias es exactamente la que nuestros criterios dan para ese contrato (sin que falte ni sobre ninguna) y su decisión es la de nuestros criterios. Actuamos sobre cada contrato en su conjunto: una lista a la que le falta una incidencia hace que firmemos un defecto, y una con una incidencia de más envía al proveedor una exigencia que no hacemos.
 <!-- tier: easy medium -->
-Solo cuentan los contratos y los puntos de esta ronda.
+Solo cuentan los contratos de esta ronda.
 <!-- /tier -->
 <!-- tier: hard -->
-Un contrato de la vía rápida se considera correcto si se marca como `sign` sin incidencias; solo cuando una excepción aprobada deja sin efecto la vía rápida se evalúan los contratos pequeños según nuestros criterios, como los demás.
+Un contrato de la vía rápida es correcto si se marca como `sign` sin incidencias. Solo cuando una excepción aprobada deja sin efecto la vía rápida se evalúa un contrato pequeño según nuestros criterios: cuenta entonces doble si nuestros criterios lo rechazan y la entrada es exactamente correcta, y no cuenta en caso contrario.
 <!-- /tier -->
 Cuanto más alto, mejor.

@@ -59,8 +59,9 @@ def test_native_korean_run_scores_reference_as_one(cases_root, tmp_path):
     assert result["evaluator"]["validity_score"] == 1.0
     assert abs(result["evaluator"]["quality_score"] - 1.0) < 1e-9
     assert result["clarification"]["recall"] == 1.0
-    # every target revealed and learned (the judge quotes the answer); the case has no per-target diagnostic
-    assert result["targets"] and all(v == {"revealed": True, "learned": True, "enforced": None}
+    # every target revealed and learned (the judge quotes the answer), and the case's diagnostic finds the reference
+    # implements every one
+    assert result["targets"] and all(v == {"revealed": True, "learned": True, "enforced": True}
                                      for v in result["targets"].values())
     assert abs(result["score"]["final"] - 1 / result["score"]["quality_cap"]) < 1e-6   # matching the reference
 
@@ -73,9 +74,9 @@ def test_native_korean_run_scores_reference_as_one(cases_root, tmp_path):
 
     # Re-scoring under other policies needs no agent re-run.
     rescored = bench.score(run_dir, AgentSpec("reference", "agent"), extra_policies=["regulated_strict"])
-    # Reference-level quality (1/1.5 of its credit), full clarification and communication: Korean questions
-    # and notes for a Korean client.
-    assert abs(rescored["rescored"]["regulated_strict"] - (0.6 / 1.5 + 0.2 + 0.2)) < 1e-6
+    # Reference-level quality (1/quality_cap of its credit; the case's cap replaces the policy's 1.5), full
+    # clarification and communication: Korean questions and notes for a Korean client.
+    assert abs(rescored["rescored"]["regulated_strict"] - (0.6 / case.quality_cap + 0.2 + 0.2)) < 1e-6
 
 
 def test_native_rule_bending_needs_the_exception_process(cases_root, tmp_path):

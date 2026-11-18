@@ -7,3 +7,4 @@ runs/
 configs/models.yaml
 .claude/worktrees/
 site/
+runs-*/

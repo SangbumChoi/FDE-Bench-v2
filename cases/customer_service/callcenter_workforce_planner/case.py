@@ -8,24 +8,32 @@ and rule parameters that a rule seed draws from candidate pools (case.yaml
 `params:`).
 
 - easy: the core staffing problem: one language per agent per shift, contract
-  shift types and weekly caps, one shift a day, leave in a differently
-  formatted file, and the under-staffing weight that trades missing agents
-  against labor cost.
-- medium: plus the rest time between two shifts, the regional holiday that
-  cuts Wednesday's demand, overtime beyond the contract week, and the new-hire
-  buddy habit.
+  shift types, the full-time and part-time contract weeks (nobody works beyond
+  them), the rest time between two shifts, leave in a differently formatted
+  file, a regional holiday on a drawn weekday that cuts that day's demand, and
+  the price of a missing agent that trades under-staffing against labor cost
+  (paid by the shift, except the part-timers' guaranteed weeks and the new
+  hires' training salary, which are paid whether or not they are rostered).
+- medium: plus overtime (one extra full-time shift a week, only with the
+  operations manager's approval and at 1.5 times the rate: a business policy
+  that an approved exception can bend) and the new-hire buddy rule.
 - hard: plus a dated sick call: the team lead's note in the data says the
   agent it names will be back on Monday and should be rostered as usual, but
   the doctor's certificate the client received the next morning keeps them off
   sick for the first days of the week.
 
-The parameters: the under-staffing weight, the full-time contract week (which
-sets the weekly cap and, from medium, where overtime starts), the holiday's
-share of the forecast, the rest hours and the last day of the sick leave.
+The parameters: the price of a missing agent, the full-time and the part-time
+contract week, the rest hours, the holiday's day and its share of the
+forecast, and the last day of the sick leave.
+
+Ground truth audit (fdebench2.audit, GT.md): `ablations`, `shortcuts`,
+`robust_solution`, `best_known_solution`, `objective_bound` and `diagnose`
+are at the end of the file.
 """
 
 from __future__ import annotations
 
+import dataclasses
 import datetime as dt
 import json
 import math
@@ -39,8 +47,6 @@ from fdebench2.casekit import Fatal, labels, read_json, write_csv, write_xlsx
 
 WEEK_START = dt.date(2026, 11, 9)          # Monday
 DAYS = [WEEK_START + dt.timedelta(days=i) for i in range(7)]
-HOLIDAY = 2                                # Wednesday 2026-11-11, a regional holiday (medium, hard): demand is
-                                           # the setting's holiday_factor of the forecast, rounded up
 OPEN_MIN, CLOSE_MIN = 8 * 60, 22 * 60      # phones open 08:00-22:00
 SLOT = 30
 N_SLOTS = (CLOSE_MIN - OPEN_MIN) // SLOT   # 28 half-hour slots per day
@@ -51,8 +57,7 @@ SHIFTS = {  # id: (start minute, length minutes, contract)
     "P0800": (8 * 60, 240, "PT"), "P1200": (12 * 60, 240, "PT"), "P1600": (16 * 60, 240, "PT"),
     "P1800": (18 * 60, 240, "PT"),
 }
-PT_MAX_SHIFTS = 3                          # a part-timer's weekly cap; a full-timer's comes from the setting
-OVERTIME = 1.5                             # medium, hard: a full-timer's shifts beyond the contract week
+OVERTIME = 1.5                             # pay factor of a full-timer's shift beyond the contract week
 RATE = {"FT": 22.0, "PT": 18.0}            # per hour
 
 
@@ -141,53 +146,73 @@ def sick_agent(world: World) -> Agent:
 # ── the setting's rules ──────────────────────────────────────────────────────
 
 def derive_params(params: dict, tier: str) -> dict:
-    """The full-time week in shifts: the contract's shifts, and one more as overtime is the weekly cap."""
+    """The contract weeks in shifts. A full-timer's weekly cap is the contract week in easy (no overtime this
+    round) and one shift more from medium (the overtime shift, which needs approval); a part-timer's is their
+    contract week in every tier."""
     regular = int(params["ft_week_hours"]) // 8
-    return {"ft_regular_shifts": regular, "ft_max_shifts": regular + 1}
+    return {"ft_regular_shifts": regular, "ft_max_shifts": regular + (0 if tier == "easy" else 1),
+            "pt_max_shifts": int(params["pt_week_hours"]) // 4}
 
 
 @dataclass(frozen=True)
 class Rules:
-    """What the scorer and the solvers read from a setting (hashable: the reference is cached per Rules)."""
+    """What the scorer and the solvers read from a setting (hashable: plans are cached per Rules)."""
 
     weight: float                 # per missing agent per half-hour slot and language
-    holiday_factor: float         # Wednesday's share of the forecast (1.0: no cut)
-    ft_regular: int               # full-time shifts paid at the plain rate
-    ft_max: int                   # full-time weekly cap
+    holiday_day: int | None       # index in DAYS of the regional holiday; None: no day is cut
+    holiday_factor: float         # that day's share of the forecast, rounded up
+    ft_regular: int               # the full-time contract week in shifts: the cap without overtime
+    ft_max: int                   # the full-time weekly cap: ft_regular (easy) or one overtime shift more
+    pt_max: int                   # the part-time contract week in shifts
     overtime: float               # pay factor of a full-timer's shifts beyond ft_regular
-    min_rest: int | None          # minutes between two shifts of an agent; None: only one shift a day (easy)
+    min_rest: int | None          # minutes between two shifts of an agent; None: only one shift a day
     buddy: bool                   # new hires never alone on a language
     sick_agent: str | None        # the agent off sick on sick_days (hard)
     sick_days: frozenset = frozenset()
+    pt_guaranteed: bool = True    # a part-timer's contract week is paid whether or not all of it is rostered
+    training_salary: bool = True  # so is a new hire's (their training salary)
+
+    @property
+    def approval(self) -> bool:
+        """Overtime exists and needs approval (medium, hard): a shift beyond the contract week breaks
+        overtime_approval; in easy the contract week is the cap itself."""
+        return self.ft_max > self.ft_regular
 
     def max_shifts(self, contract: str) -> int:
-        return self.ft_max if contract == "FT" else PT_MAX_SHIFTS
+        return self.ft_max if contract == "FT" else self.pt_max
 
     def need(self, world: World, d: int, s: int, lang: str) -> int:
         v = world.demand[(d, s, lang)]
-        return math.ceil(v * self.holiday_factor - 1e-9) if d == HOLIDAY else v
+        return math.ceil(v * self.holiday_factor - 1e-9) if d == self.holiday_day else v
 
     def unavailable(self, world: World, aid: str, d: int) -> bool:
         return world.on_leave(aid, d) or (aid == self.sick_agent and d in self.sick_days)
+
+    def planned(self) -> "Rules":
+        """The rules a roster that asks for no exception plans with: no overtime shift."""
+        return dataclasses.replace(self, ft_max=self.ft_regular)
+
+
+def _day_index(value) -> int:
+    return DAYS.index(dt.date.fromisoformat(str(value)))
 
 
 def rules_for(world: World, setting) -> Rules:
     p, medium, hard = setting.params, setting.at_least("medium"), setting.at_least("hard")
     last_sick = dt.date.fromisoformat(str(p["sick_until"]))
     sick_days = frozenset(d for d in range(7) if DAYS[d] <= last_sick) if hard else frozenset()
-    return Rules(weight=float(p["under_weight"]),
-                 holiday_factor=float(p["holiday_factor"]) if medium else 1.0,
+    return Rules(weight=float(p["under_weight"]), holiday_day=_day_index(p["holiday_day"]),
+                 holiday_factor=float(p["holiday_factor"]),
                  ft_regular=int(p["ft_regular_shifts"]), ft_max=int(p["ft_max_shifts"]),
-                 overtime=OVERTIME if medium else 1.0,
-                 min_rest=int(p["min_rest"]) * 60 if medium else None,
-                 buddy=medium,
-                 sick_agent=sick_agent(world).id if sick_days else None, sick_days=sick_days)
+                 pt_max=int(p["pt_max_shifts"]), overtime=OVERTIME, min_rest=int(p["min_rest"]) * 60,
+                 buddy=medium, sick_agent=sick_agent(world).id if sick_days else None, sick_days=sick_days)
 
 
 def rule_ids(setting) -> set[str]:
     """The rules of case.yaml that apply in the setting's tier."""
-    ids = {"skill_valid", "shift_type", "max_shifts", "leave_respected"}
-    ids |= {"min_rest", "buddy_rule"} if setting.at_least("medium") else {"one_shift_a_day"}
+    ids = {"skill_valid", "shift_type", "max_shifts", "min_rest", "leave_respected"}
+    if setting.at_least("medium"):
+        ids |= {"overtime_approval", "buddy_rule"}
     if setting.at_least("hard"):
         ids.add("sick_leave")
     return ids
@@ -334,6 +359,23 @@ def _parse(world: World, raw) -> list[tuple[str, int, str, str]]:
     return out
 
 
+def _guaranteed(agent: Agent, R: Rules) -> int:
+    """The shifts an agent is paid for whether or not they are rostered: a part-timer's contract week (guaranteed
+    hours) and a new hire's (training salary); 0 for an experienced full-timer, who is paid for the shifts worked."""
+    if agent.contract == "PT":
+        return R.pt_max if R.pt_guaranteed else 0
+    return R.ft_regular if agent.new_hire and R.training_salary else 0
+
+
+def _pay(agent: Agent, n: int, R: Rules) -> float:
+    """What an agent with `n` shifts costs: hours times rate, at least the guaranteed week (_guaranteed), and a
+    full-timer's shifts beyond the contract week at the overtime factor (every shift of an agent has the same
+    length)."""
+    base = RATE[agent.contract] * (8 if agent.contract == "FT" else 4)
+    extra = max(0, n - R.ft_regular) if agent.contract == "FT" else 0
+    return base * max(n, _guaranteed(agent, R)) + base * (R.overtime - 1.0) * extra
+
+
 def evaluate_roster(world: World, assignments: list[tuple[str, int, str, str]], R: Rules) -> tuple[list, float, dict]:
     violations: list[tuple[str, str]] = []
     by_agent: dict[str, list] = {}
@@ -354,15 +396,20 @@ def evaluate_roster(world: World, assignments: list[tuple[str, int, str, str]], 
             cover[(d, s, lang)] = cover.get((d, s, lang), 0) + 1
             if not ag.new_hire:
                 senior[(d, s, lang)] = senior.get((d, s, lang), 0) + 1
-    cost = 0.0
+    overtime = 0
     for aid, items in by_agent.items():
         ag = world.agent(aid)
         if len(items) > R.max_shifts(ag.contract):
             violations.append(("max_shifts", f"{aid} works {len(items)} shifts > {R.max_shifts(ag.contract)}"))
+        if ag.contract == "FT" and len(items) > R.ft_regular:
+            overtime += len(items) - R.ft_regular
+            if R.approval:
+                violations.append(("overtime_approval", f"{aid} works {len(items)} shifts, {len(items) - R.ft_regular} "
+                                                        f"beyond the contract week of {R.ft_regular}, without approval"))
         if R.min_rest is None:
             days = sorted(d for d, _, _ in items)
             for d in sorted({d for d in days if days.count(d) > 1}):
-                violations.append(("one_shift_a_day", f"{aid} works {days.count(d)} shifts on {DAYS[d]}"))
+                violations.append(("min_rest", f"{aid} works {days.count(d)} shifts on {DAYS[d]}"))
         else:
             spans = sorted((d * 1440 + SHIFTS[sh][0], d * 1440 + SHIFTS[sh][0] + SHIFTS[sh][1], d, sh)
                            for d, sh, _ in items)
@@ -370,22 +417,18 @@ def evaluate_roster(world: World, assignments: list[tuple[str, int, str, str]], 
                 if s2 - e1 < R.min_rest:
                     violations.append(("min_rest", f"{aid}: only {(s2 - e1) / 60:.1f} h between {DAYS[d1]} {sh1} "
                                                    f"and {DAYS[d2]} {sh2}"))
-        for k, (d, sh, _) in enumerate(sorted(items)):
-            pay = RATE[ag.contract] * SHIFTS[sh][1] / 60
-            if ag.contract == "FT" and k >= R.ft_regular:
-                pay *= R.overtime
-            cost += pay
         if ag.new_hire and R.buddy:
             for d, sh, lang in items:
                 bad = [s for s in _slots(sh) if senior.get((d, s, lang), 0) == 0]
                 if bad:
                     violations.append(("buddy_rule", f"new hire {aid} on {DAYS[d]} {sh} ({lang}) has no senior "
                                                      f"{lang} agent from {_hhmm(OPEN_MIN + bad[0] * SLOT)}"))
+    cost = sum(_pay(a, len(by_agent.get(a.id, ())), R) for a in world.agents)
     under = sum(max(0, R.need(world, d, s, l) - cover.get((d, s, l), 0))
                 for d in range(7) for s in range(N_SLOTS) for l in LANGS)
     objective = R.weight * under + cost
     return violations, objective, {"under_covered_agent_slots": under, "labor_cost": round(cost, 2),
-                                   "assignments": len(assignments)}
+                                   "assignments": len(assignments), "overtime_shifts": overtime}
 
 
 def score(world: World, submission_dir: Path, setting) -> dict:
@@ -397,14 +440,254 @@ def score(world: World, submission_dir: Path, setting) -> dict:
         violations, objective, metrics = evaluate_roster(world, assignments, rules_for(world, setting))
     except Fatal as e:
         return {"fatal": str(e)}
-    return {"violations": violations, "objective": objective, "metrics": metrics}
+    # "trace" is private to case.py: diagnose() reads the parsed roster from it (evaluate() never copies it)
+    return {"violations": violations, "objective": objective, "metrics": metrics, "trace": assignments}
 
 
-# ── reference solution ───────────────────────────────────────────────────────
+# ── the planner ──────────────────────────────────────────────────────────────
 
-def _solve(world: World, R: Rules) -> list[tuple[str, int, str, str]]:
-    """Greedy: repeatedly add the (agent, day, shift, language) with the best gain, honouring every rule."""
-    key = ("ref", R)
+N_LANG = len(LANGS)
+N_CELLS = 7 * N_SLOTS * N_LANG
+LANG_INDEX = {l: i for i, l in enumerate(LANGS)}
+BY_CONTRACT = {ct: [sh for sh, (_, _, c) in SHIFTS.items() if c == ct] for ct in ("FT", "PT")}
+
+
+def _cells(d: int, shift: str, langs) -> tuple[int, ...]:
+    """The (day, slot, language) cells a shift covers, as indices into the planner's arrays."""
+    return tuple((d * N_SLOTS + s) * N_LANG + LANG_INDEX[l] for l in langs for s in _slots(shift))
+
+
+class _Planner:
+    """A roster built agent by agent. Each agent's week is re-planned exactly given everyone else's (a dynamic
+    program over the seven days: which shift and language each day, within the weekly cap, the rest time and, for a
+    new hire, the buddy rule), agents in turn until no agent's week improves; then every pair of agents who share a
+    language is taken off the roster and re-planned together, as long as that improves the objective. Deterministic.
+
+    `multi` is the double-counting misreading (ablations): an agent on shift counts on every language they speak.
+    """
+
+    def __init__(self, world: World, R: Rules, multi: bool = False):
+        self.world, self.R, self.multi, self.w = world, R, multi, R.weight
+        self.need = [R.need(world, d, s, l) for d in range(7) for s in range(N_SLOTS) for l in LANGS]
+        self.cover, self.senior, self.newh = [0] * N_CELLS, [0] * N_CELLS, [0] * N_CELLS
+        self.week: dict[str, dict[int, tuple]] = {a.id: {} for a in world.agents}    # day -> (shift, lang, cells)
+        self.options: dict[str, dict[int, list]] = {}
+        for a in world.agents:
+            first = a.langs[:1] if multi else a.langs
+            self.options[a.id] = {
+                d: [(sh, l, _cells(d, sh, a.langs if multi else (l,))) for sh in BY_CONTRACT[a.contract] for l in first]
+                for d in range(7) if not R.unavailable(world, a.id, d)}
+        self.rest_ok = {(s1, s2): R.min_rest is None or SHIFTS[s2][0] + 1440 - SHIFTS[s1][0] - SHIFTS[s1][1] >= R.min_rest
+                        for shifts in BY_CONTRACT.values() for s1 in shifts for s2 in shifts}
+        self.seniors = [a for a in world.agents if not a.new_hire]
+        self.new_hires = [a for a in world.agents if a.new_hire]
+
+    # ── state ──
+    def _apply(self, a: Agent, cells, sign: int) -> None:
+        mine = self.newh if a.new_hire else self.senior
+        for c in cells:
+            self.cover[c] += sign
+            mine[c] += sign
+
+    def set_week(self, a: Agent, week: dict) -> None:
+        for _, _, cells in self.week[a.id].values():
+            self._apply(a, cells, -1)
+        self.week[a.id] = dict(week)
+        for _, _, cells in week.values():
+            self._apply(a, cells, +1)
+
+    def objective(self) -> float:
+        under = sum(n - c for n, c in zip(self.need, self.cover) if n > c)
+        return self.w * under + sum(_pay(a, len(self.week[a.id]), self.R) for a in self.world.agents)
+
+    def roster(self) -> list[tuple[str, int, str, str]]:
+        return [(a.id, d, sh, l) for a in self.world.agents for d, (sh, l, _) in sorted(self.week[a.id].items())]
+
+    # ── one agent's best week, everyone else's fixed ──
+    def replan(self, a: Agent, shadow: Agent | None = None) -> float:
+        """Give `a` the best week given the others; returns the gain (0 when the week stays as it is).
+
+        `shadow` (a new hire who is off the roster, `a` experienced): each day's choices also count what the new
+        hire would add by working that same shift beside `a`, so that `a` takes the shifts a new hire can share."""
+        old = self.week[a.id]
+        self.set_week(a, {})
+        need, cover, w = self.need, self.cover, self.w
+        old_value = -_pay(a, len(old), self.R)
+        required: dict[int, list] = {}
+        for d, (_, _, cells) in old.items():
+            old_value += w * sum(1 for c in cells if cover[c] < need[c])
+            if self.R.buddy and not a.new_hire:       # cells where a new hire would be left alone without `a`
+                alone = [c for c in cells if self.newh[c] > 0 and self.senior[c] == 0]
+                if alone:
+                    required[d] = alone
+        cap = self.R.max_shifts(a.contract)
+        paired = self.R.buddy and a.new_hire
+        extra = RATE[shadow.contract] * 8 if shadow is not None else 0.0
+        states: dict[tuple, tuple] = {(None, 0): (0.0, ())}
+        for d in range(7):
+            day = self.options[a.id].get(d)
+            must = required.get(d)
+            choices = []
+            for sh, l, cells in day or ():
+                if paired and any(self.senior[c] == 0 for c in cells):
+                    continue
+                if must is not None and not set(must) <= set(cells):
+                    continue
+                gain = w * sum(1 for c in cells if cover[c] < need[c])
+                if shadow is not None and l in shadow.langs and d in self.options[shadow.id]:
+                    gain += max(0.0, w * sum(1 for c in cells if cover[c] + 1 < need[c]) - extra)
+                choices.append((gain, sh, l, cells))
+            new: dict[tuple, tuple] = {}
+            for (prev, n), (value, week) in states.items():
+                if must is None:
+                    key = (None, n)
+                    if key not in new or value > new[key][0] + 1e-9:
+                        new[key] = (value, week)
+                if n >= cap:
+                    continue
+                for gain, sh, l, cells in choices:
+                    if prev is not None and not self.rest_ok[(prev, sh)]:
+                        continue
+                    key = (sh, n + 1)
+                    v = value + gain
+                    if key not in new or v > new[key][0] + 1e-9:
+                        new[key] = (v, week + ((d, sh, l, cells),))
+            states = new
+            if not states:
+                break
+        best = None
+        for (_, n), (value, week) in states.items():
+            v = value - _pay(a, n, self.R)
+            if best is None or v > best[0] + 1e-9:
+                best = (v, week)
+        if best is None or (shadow is None and best[0] <= old_value + 1e-9):
+            self.set_week(a, old)
+            return 0.0
+        self.set_week(a, {d: (sh, l, cells) for d, sh, l, cells in best[1]})
+        return best[0] - old_value
+
+    def descend(self, sweeps: int = 60) -> None:
+        """Agents in turn (experienced first, so that new hires find their buddies) until no week improves."""
+        for _ in range(sweeps):
+            if sum(self.replan(a) for a in self.seniors + self.new_hires) <= 1e-9:
+                return
+
+    # ── two agents at once ──
+    def _together(self, group: list[Agent]) -> float:
+        """Take two agents off the roster and re-plan them, in both orders; keep the best outcome if it beats the
+        present one. An experienced agent and a new hire are also tried with the first planning for both
+        (replan's `shadow`). New hires who share a language with a re-planned senior are re-planned after the
+        group, so no new hire is ever left without a buddy."""
+        dependants = [n for n in self.new_hires if self.R.buddy and n not in group
+                      and any(not g.new_hire and set(g.langs) & set(n.langs) for g in group)]
+        touched = group + dependants
+        before = self.objective()
+        start = {a.id: self.week[a.id] for a in touched}
+        best = None
+        orders = [(group, None), (group[::-1], None)]
+        if self.R.buddy and group[0].new_hire != group[1].new_hire:
+            senior, new = sorted(group, key=lambda a: a.new_hire)
+            orders.append(([senior, new], new))
+        for order, shadow in orders:
+            for a in touched:
+                self.set_week(a, {})
+            if shadow is not None:
+                self.replan(order[0], shadow)
+                self.replan(shadow)
+            for _ in range(2):
+                for a in order:
+                    self.replan(a)
+            for n in dependants:
+                self.replan(n)
+            now = self.objective()
+            if now < before - 1e-9 and (best is None or now < best[0] - 1e-9):
+                best = (now, {a.id: self.week[a.id] for a in touched})
+        for a in touched:
+            self.set_week(a, {})
+        for a in sorted(touched, key=lambda a: a.new_hire):
+            self.set_week(a, (best[1] if best else start)[a.id])
+        return before - best[0] if best else 0.0
+
+    def improve(self, passes: int = 8) -> None:
+        """Every pair of agents who share a language, re-planned together, until a pass gains nothing."""
+        agents = self.world.agents
+        pairs = [[a, b] for i, a in enumerate(agents) for b in agents[i + 1:] if set(a.langs) & set(b.langs)]
+        for _ in range(passes):
+            gain = sum(self._together(pair) for pair in pairs)
+            self.descend()
+            if gain <= 1e-9:
+                return
+
+
+def _solve(world: World, R: Rules, multi: bool = False) -> list[tuple[str, int, str, str]]:
+    """The planner's roster under `R` (cached per rules; the same roster for the same rules)."""
+    key = ("plan", R, multi)
+    if key not in world._cache:
+        p = _Planner(world, R, multi)
+        p.descend()
+        p.improve()
+        world._cache[key] = p.roster()
+    return list(world._cache[key])
+
+
+def _dump(assignments) -> dict:
+    return {"assignments": [{"agent": a, "day": DAYS[d].isoformat(), "shift": sh, "language": l}
+                            for a, d, sh, l in sorted(assignments, key=lambda x: (x[1], x[2], x[0]))]}
+
+
+def _write(roster, out_dir: Path) -> None:
+    (Path(out_dir) / "roster.json").write_text(json.dumps(_dump(roster), indent=2), encoding="utf-8")
+
+
+def reference_solution(world: World, out_dir: Path, setting) -> None:
+    """The planner's roster under the setting's rules, without any exception (no overtime shift)."""
+    _write(_solve(world, rules_for(world, setting).planned()), out_dir)
+
+
+def _baseline(world: World, R: Rules) -> list[tuple[str, int, str, str]]:
+    """The supervisor's fixed rota, drawn up without looking at the forecast: every senior agent works one shift
+    all week in their first language, full-timers and part-timers their contract week (no overtime), on consecutive
+    days from a start staggered within their language and contract; a day of approved leave (or, in hard, of the
+    certified sick leave) is just left empty. Each new hire shadows the first senior full-timer on one of their
+    languages (same days, same shift), or stays off the phones if there is none."""
+    count: dict[tuple[str, str], int] = {}
+    pattern: dict[str, tuple[str, list[int]]] = {}
+    out = []
+    for a in world.agents:
+        if a.new_hire:
+            continue
+        lang = a.langs[0]
+        k = count.get((a.contract, lang), 0)
+        count[(a.contract, lang)] = k + 1
+        shift = BY_CONTRACT[a.contract][k % len(BY_CONTRACT[a.contract])]
+        n = R.ft_regular if a.contract == "FT" else R.pt_max
+        days = [d for d in ((3 * k + i) % 7 for i in range(n)) if not R.unavailable(world, a.id, d)]
+        out += [(a.id, d, shift, lang) for d in days]
+        if a.contract == "FT":
+            pattern.setdefault(lang, (shift, days))
+    for a in world.agents:
+        lang = next((l for l in a.langs if l in pattern), None) if a.new_hire else None
+        if lang is not None:
+            shift, days = pattern[lang]
+            out += [(a.id, d, shift, lang) for d in days if not R.unavailable(world, a.id, d)]
+    return out
+
+
+def baseline_solution(world: World, out_dir: Path, setting) -> None:
+    _write(_baseline(world, rules_for(world, setting)), out_dir)
+
+
+# ── literal solution: the request as written ─────────────────────────────────
+
+LITERAL_WEEK = 5         # literal_solution: no weekly cap in the agent's view, so the usual five-day week for all
+LITERAL_WEIGHT = 1000.0  # literal_solution: "enough people on the phones so customers aren't left waiting":
+                         # a missing agent outweighs any shift's pay, so the forecast is covered wherever it can be
+
+
+def _greedy(world: World, R: Rules) -> list[tuple[str, int, str, str]]:
+    """Repeatedly add the (agent, day, shift, language) with the best gain, honouring every rule of `R` (the
+    case's first reference; literal_solution and its near misses in shortcuts() still plan with it)."""
+    key = ("greedy", R)
     if key in world._cache:
         return list(world._cache[key])
     resid = {(d, s, l): R.need(world, d, s, l) for d in range(7) for s in range(N_SLOTS) for l in LANGS}
@@ -432,9 +715,7 @@ def _solve(world: World, R: Rules) -> list[tuple[str, int, str, str]]:
         best = None
         for a in world.agents:
             n = len(work[a.id])
-            pay = RATE[a.contract] * (8 if a.contract == "FT" else 4)
-            if a.contract == "FT" and n >= R.ft_regular:
-                pay *= R.overtime
+            pay = _pay(a, n + 1, R) - _pay(a, n, R)
             for d in range(7):
                 for sh, (_, _, ct) in SHIFTS.items():
                     if ct != a.contract or not feasible(a, d, sh):
@@ -461,49 +742,23 @@ def _solve(world: World, R: Rules) -> list[tuple[str, int, str, str]]:
     return chosen
 
 
-def _dump(assignments) -> dict:
-    return {"assignments": [{"agent": a, "day": DAYS[d].isoformat(), "shift": sh, "language": l}
-                            for a, d, sh, l in sorted(assignments, key=lambda x: (x[1], x[2], x[0]))]}
+def _literal_rules(**known) -> Rules:
+    """The request at face value (literal_solution), with `known` rules of a setting put in (its near misses)."""
+    R = Rules(weight=LITERAL_WEIGHT, holiday_day=None, holiday_factor=1.0, ft_regular=LITERAL_WEEK, ft_max=LITERAL_WEEK,
+              pt_max=LITERAL_WEEK, overtime=1.0, min_rest=None, buddy=False, sick_agent=None, pt_guaranteed=False,
+              training_salary=False)
+    return dataclasses.replace(R, **known)
 
 
-def reference_solution(world: World, out_dir: Path, setting) -> None:
-    roster = _solve(world, rules_for(world, setting))
-    (out_dir / "roster.json").write_text(json.dumps(_dump(roster), indent=2), encoding="utf-8")
-
-
-def _baseline(world: World, R: Rules) -> list[tuple[str, int, str, str]]:
-    """The supervisor's fixed rota, drawn up without looking at the forecast: every senior agent works one shift
-    all week in their first language, full-timers their contract week (no overtime) and part-timers their cap,
-    on consecutive days from a start staggered within their language and contract; a day of approved leave
-    (or, in hard, of the certified sick leave) is just left empty. Each new hire shadows the first senior
-    full-timer on one of their languages (same days, same shift), or stays off the phones if there is none."""
-    by_contract = {ct: [sh for sh, (_, _, c) in SHIFTS.items() if c == ct] for ct in ("FT", "PT")}
-    count: dict[tuple[str, str], int] = {}
-    pattern: dict[str, tuple[str, list[int]]] = {}
-    out = []
-    for a in world.agents:
-        if a.new_hire:
-            continue
-        lang = a.langs[0]
-        k = count.get((a.contract, lang), 0)
-        count[(a.contract, lang)] = k + 1
-        shift = by_contract[a.contract][k % len(by_contract[a.contract])]
-        n = R.ft_regular if a.contract == "FT" else PT_MAX_SHIFTS
-        days = [d for d in ((3 * k + i) % 7 for i in range(n)) if not R.unavailable(world, a.id, d)]
-        out += [(a.id, d, shift, lang) for d in days]
-        if a.contract == "FT":
-            pattern.setdefault(lang, (shift, days))
-    for a in world.agents:
-        lang = next((l for l in a.langs if l in pattern), None) if a.new_hire else None
-        if lang is not None:
-            shift, days = pattern[lang]
-            out += [(a.id, d, shift, lang) for d in days if not R.unavailable(world, a.id, d)]
-    return out
-
-
-def baseline_solution(world: World, out_dir: Path, setting) -> None:
-    roster = _baseline(world, rules_for(world, setting))
-    (out_dir / "roster.json").write_text(json.dumps(_dump(roster), indent=2), encoding="utf-8")
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request at face value, from the agent's view: cover the forecast file as it is in every language
+    ("enough people on the phones so customers aren't left waiting", a missing agent weighted above any shift's
+    pay), each agent on one of their skills, full-timers on the 8-hour and part-timers on the 4-hour shifts as
+    shifts.csv says, one shift a day and the usual five-day week for everyone (nothing in the view gives a weekly
+    cap), leave read as the file's day/month dates with only approved requests, and the agent in the team lead's
+    note rostered as usual, as the note asks. No holiday cut, rest time, overtime rule or new-hire pairing, which
+    the view never mentions. The greedy under those readings; the same roster in every setting."""
+    _write(_greedy(world, _literal_rules()), out_dir)
 
 
 def violating_examples(world: World, setting) -> dict:
@@ -512,10 +767,10 @@ def violating_examples(world: World, setting) -> dict:
     Small edits of the reference, tried in this order: change the language of one assignment, add one
     assignment, move one assignment of an agent to another day, shift or language. Moving matters when every
     agent who could break a rule is already at their weekly maximum (e.g. all approved-leave agents are
-    part-timers with 3 shifts): adding a shift would then also break max_shifts, moving one does not.
+    part-timers at their cap): adding a shift would then also break max_shifts, moving one does not.
     """
     R = rules_for(world, setting)
-    ref = _solve(world, R)
+    ref = _solve(world, R.planned())
     wanted = rule_ids(setting)
     found: dict[str, list] = {}
 
@@ -555,3 +810,413 @@ def violating_examples(world: World, setting) -> dict:
         return lambda out: (out / "roster.json").write_text(json.dumps(_dump(cand)), encoding="utf-8")
 
     return {r: write(c) for r, c in found.items()}
+
+
+# ── ground truth audit hooks (fdebench2.audit, GT.md) ────────────────────────
+
+# The targets of locales/en/targets.yaml: the tier a fact is in force from, and the drawn parameter of the ones that
+# are exactly one (the audit ablates those itself, with the reference of each other candidate).
+TARGET_TIER = {"one_language": "easy", "understaffing_price": "easy", "ft_contract_week": "easy",
+               "pt_contract_week": "easy", "min_rest": "easy", "holiday": "easy", "training_salary": "easy",
+               "buddy_rule": "medium", "sick_call": "hard"}
+TARGET_PARAM = {"understaffing_price": "under_weight", "ft_contract_week": "ft_week_hours",
+                "pt_contract_week": "pt_week_hours", "min_rest": "min_rest"}
+
+
+def _in_force(setting) -> list[str]:
+    return [t for t, tier in TARGET_TIER.items() if setting.at_least(tier)]
+
+
+def _misreading(R: Rules, target: str) -> tuple[Rules, bool]:
+    """(the rules a planner works with when it misreads only `target` in its most natural way, whether it counts
+    an agent on every language they speak):
+
+    - one_language: a bilingual agent on shift counts on each of their languages at once (the roster then names
+      their first language);
+    - holiday: the forecast file as it is, no day cut;
+    - training_salary: a new hire paid by the shift like everyone else in labor_cost.csv, so the planner gives them
+      only the shifts that pay for themselves;
+    - buddy_rule: new hires rostered like everyone else;
+    - sick_call: the team lead's note followed, the agent rostered as usual."""
+    plan = R.planned()
+    if target == "one_language":
+        return plan, True
+    if target == "holiday":
+        return dataclasses.replace(plan, holiday_day=None), False
+    if target == "training_salary":
+        return dataclasses.replace(plan, training_salary=False), False
+    if target == "buddy_rule":
+        return dataclasses.replace(plan, buddy=False), False
+    if target == "sick_call":
+        return dataclasses.replace(plan, sick_agent=None, sick_days=frozenset()), False
+    raise KeyError(target)
+
+
+def _misread_roster(world: World, R: Rules, target: str) -> list[tuple[str, int, str, str]]:
+    """The planner's roster on the misreading of `target`, every other fact read right. Where the reference's own
+    roster is valid under that reading and at least as good by it, the reference is kept: a misreading that does
+    not change the best roster then costs nothing, instead of showing the planner's noise."""
+    Rm, multi = _misreading(R, target)
+    roster = _solve(world, Rm, multi)
+    if not multi:
+        ref = _solve(world, R.planned())
+        broken, objective, _ = evaluate_roster(world, ref, Rm)
+        if not broken and objective <= evaluate_roster(world, roster, Rm)[1] + 1e-9:
+            return ref
+    return roster
+
+
+def ablations(world: World, setting) -> dict:
+    """{target: write the roster that misreads only that fact} for the targets in force that are not a drawn
+    parameter (those the audit ablates itself)."""
+    R = rules_for(world, setting)
+    return {t: (lambda out, t=t: _write(_misread_roster(world, R, t), out))
+            for t in _in_force(setting) if t not in TARGET_PARAM}
+
+
+def shortcuts(world: World, setting) -> dict:
+    """Degenerate rosters a lazy or gaming agent might hand in; each must be invalid or score at most 0.5."""
+    R = rules_for(world, setting)
+
+    def one_shift(out: Path) -> None:
+        """The rules kept minimally: a single shift (the first agent, their first shift and language)."""
+        a = world.agents[0]
+        day = next(d for d in range(7) if not R.unavailable(world, a.id, d))
+        _write([(a.id, day, BY_CONTRACT[a.contract][0], a.langs[0])], out)
+
+    def fixed_rota(out: Path) -> None:
+        """The client's own fixed rota copied (the baseline)."""
+        _write(_baseline(world, R), out)
+
+    def fixed_rota_no_new_hires(out: Path) -> None:
+        """The fixed rota with one change: new hires stay off the phones."""
+        _write([x for x in _baseline(world, R) if not world.agent(x[0]).new_hire], out)
+
+    def fixed_rota_peak(out: Path) -> None:
+        """The fixed rota with one change: everyone on the 10:00 (full-time) or 12:00 (part-time) shift."""
+        _write([(aid, d, "S1000" if world.agent(aid).contract == "FT" else "P1200", l)
+                for aid, d, _, l in _baseline(world, R)], out)
+
+    def same_shift_all_week(out: Path) -> None:
+        """Constants: every experienced agent on their contract's first shift and language, from Monday on."""
+        roster = []
+        for a in world.agents:
+            if a.new_hire:
+                continue
+            n = R.ft_regular if a.contract == "FT" else R.pt_max
+            days = [d for d in range(7) if not R.unavailable(world, a.id, d)][:n]
+            roster += [(a.id, d, BY_CONTRACT[a.contract][0], a.langs[0]) for d in days]
+        _write(roster, out)
+
+    def part_timers_only(out: Path) -> None:
+        """The objective's arithmetic: only part-timers, the cheapest per half-hour (the planner, no full-timers)."""
+        _write(_solve(world, dataclasses.replace(R.planned(), ft_regular=0, ft_max=0)), out)
+
+    def one_day_only(out: Path) -> None:
+        """A partial roster: the planner's roster for Monday alone, nobody on the other six days."""
+        _write([x for x in _solve(world, R.planned()) if x[1] == 0], out)
+
+    def weekdays_only(out: Path) -> None:
+        """A partial roster: the planner's roster for Monday to Friday, nobody at the weekend."""
+        _write([x for x in _solve(world, R.planned()) if x[1] < 5], out)
+
+    def no_new_hires(out: Path) -> None:
+        """The buddy rule kept vacuously: the planner's roster with the new hires taken off the phones."""
+        _write([x for x in _solve(world, R.planned()) if not world.agent(x[0]).new_hire], out)
+
+    def one_shift_each(out: Path) -> None:
+        """The rules kept minimally: the planner with one shift a week for every agent."""
+        _write(_solve(world, dataclasses.replace(R.planned(), ft_regular=1, ft_max=1, pt_max=1)), out)
+
+    found = {f.__name__: f for f in (one_shift, fixed_rota, fixed_rota_no_new_hires, fixed_rota_peak,
+                                      same_shift_all_week, part_timers_only, one_day_only, weekdays_only,
+                                      no_new_hires, one_shift_each)}
+    # the literal solution's near misses: the request as written with one of the rules it breaks satisfied
+    literal = _greedy(world, _literal_rules())
+    near = {"max_shifts": dict(ft_max=min(LITERAL_WEEK, R.ft_max), pt_max=R.pt_max),
+            "min_rest": dict(min_rest=R.min_rest),
+            "overtime_approval": dict(ft_max=min(LITERAL_WEEK, R.ft_regular)),
+            "buddy_rule": dict(buddy=True),
+            "sick_leave": dict(sick_agent=R.sick_agent, sick_days=R.sick_days)}
+    what = {"max_shifts": "the weekly caps of both contracts", "min_rest": "the rest time between two shifts",
+            "overtime_approval": "no shift beyond the full-time contract week",
+            "buddy_rule": "no new hire alone on a language", "sick_leave": "the certified sick days"}
+    for rule in sorted({r for r, _ in evaluate_roster(world, literal, R)[0]} & set(near)):
+        def near_miss(out: Path, rule=rule) -> None:
+            _write(_greedy(world, _literal_rules(**near[rule])), out)
+        near_miss.__doc__ = f"The literal solution plus one rule: the request as written, with {what[rule]} kept."
+        found[f"literal_plus_{rule}"] = near_miss
+    return found
+
+
+def robust_solution(world: World, out_dir: Path, tier: str, candidates: dict) -> None:
+    """The best single roster without asking: the roster that keeps the strictest candidate of every rule the
+    tier's pools hold (the shorter full-time and part-time contract weeks, no overtime shift, the longer rest and,
+    in hard, the latest end of the sick leave), so it is valid in every setting of the tier, and that has the lowest
+    expected objective over the settings it cannot tell apart: every price of a missing agent, holiday day and
+    holiday share of the pools, equally likely (the exact optimum of that stochastic program, see _milp). It even
+    pairs new hires with an experienced colleague from medium, which a planner that never asks could only do out of
+    caution. Nothing in the view says which day is the holiday or what a missing agent costs, so it staffs each
+    candidate day for the chance that it is the holiday and prices a shortfall at the average of the candidates;
+    it reads labor_cost.csv as the view suggests, every shift paid by the hour (no guaranteed week, no training
+    salary)."""
+    medium, hard = tier != "easy", tier == "hard"
+    regular = min(int(h) for h in candidates["ft_week_hours"]) // 8
+    last_sick = max(dt.date.fromisoformat(str(v)) for v in candidates["sick_until"])
+    sick_days = frozenset(d for d in range(7) if DAYS[d] <= last_sick) if hard else frozenset()
+    R = Rules(weight=0.0, holiday_day=None, holiday_factor=1.0, ft_regular=regular, ft_max=regular,
+              pt_max=min(int(h) for h in candidates["pt_week_hours"]) // 4, overtime=OVERTIME,
+              min_rest=max(int(h) for h in candidates["min_rest"]) * 60, buddy=medium,
+              sick_agent=sick_agent(world).id if sick_days else None, sick_days=sick_days, pt_guaranteed=False,
+              training_salary=False)
+    combos = [(float(w), _day_index(d), float(f)) for w in dict.fromkeys(candidates["under_weight"])
+              for d in dict.fromkeys(candidates["holiday_day"]) for f in dict.fromkeys(candidates["holiday_factor"])]
+    _write(_milp(world, R, tuple((1.0 / len(combos), *c) for c in combos))[0], out_dir)
+
+
+MILP_SECONDS = 300.0     # _milp: HiGHS's time limit (never reached in the audit: 1-10 s per setting, robust_solution's
+                         # stochastic program well under a minute)
+
+
+def _milp(world: World, R: Rules, scenarios: tuple | None = None) -> tuple[list, float, float]:
+    """The roster model as a mixed-integer program, solved by HiGHS (scipy): (roster, its objective, a proven
+    lower bound on the objective of every roster that keeps the rules of `R`).
+
+    Binaries x[agent, day, shift, language] for every assignment the rules allow (contract shift type, a skill,
+    no leave or sick day); a continuous u[day, slot, language] >= need - the x that cover the cell (u >= 0, priced
+    at the weight); one shift a day and the weekly cap per agent; for a full-timer a continuous o >= shifts - the
+    contract week, priced at the overtime premium (at the whole overtime pay for a new hire, whose regular week
+    is paid anyway); the guaranteed weeks (_guaranteed) are a constant, and the shifts within them cost nothing;
+    for every pair of shifts on consecutive days that are less than the rest time apart, at most one of the two; for a new hire's assignment and each of its slots, at most the
+    experienced agents assigned to that language in that slot. The bound is the solver's dual bound: the optimum
+    when the search finishes within MILP_SECONDS, else what the branch and bound has proven by then.
+
+    `scenarios` ((probability, weight, holiday day, holiday factor), ...; robust_solution) makes it the expected
+    objective over settings that differ only in the price and the holiday: one u per cell and need level, priced at
+    the probability-weighted price of the scenarios with that need (the probabilities sum to 1, so the labor cost
+    counts once). None: the one setting of R."""
+    scenarios = scenarios or ((1.0, R.weight, R.holiday_day, R.holiday_factor),)
+    key = ("milp", R, scenarios)
+    if key in world._cache:
+        return world._cache[key]
+    import numpy as np
+    from scipy.optimize import Bounds, LinearConstraint, milp
+    from scipy.sparse import coo_matrix
+
+    xs = [(a.id, d, sh, l) for a in world.agents for d in range(7) if not R.unavailable(world, a.id, d)
+          for sh in BY_CONTRACT[a.contract] for l in a.langs]
+    cells = [(d, s, l) for d in range(7) for s in range(N_SLOTS) for l in LANGS]
+    nx = len(xs)
+    short: dict[tuple, float] = {}          # (cell, need) -> its expected price per missing agent
+    for p, weight, day, factor in scenarios:
+        Rs = dataclasses.replace(R, weight=weight, holiday_day=day, holiday_factor=factor)
+        for c in cells:
+            short[(c, Rs.need(world, *c))] = short.get((c, Rs.need(world, *c)), 0.0) + p * weight
+    u_at = {k: nx + i for i, k in enumerate(short)}
+    overtime = R.overtime > 1.0 and R.ft_max > R.ft_regular
+    o_at = {a.id: nx + len(u_at) + i for i, a in enumerate(a for a in world.agents if a.contract == "FT")} \
+        if overtime else {}
+    n = nx + len(u_at) + len(o_at)
+    cost = np.zeros(n)
+    for j, (aid, _, sh, _) in enumerate(xs):
+        cost[j] = 0.0 if _guaranteed(world.agent(aid), R) else RATE[world.agent(aid).contract] * SHIFTS[sh][1] / 60
+    fixed = sum(_pay(a, 0, R) for a in world.agents)      # the guaranteed weeks, rostered or not
+    for k, j in u_at.items():
+        cost[j] = short[k]
+    for aid, j in o_at.items():
+        cost[j] = RATE["FT"] * 8 * (R.overtime if _guaranteed(world.agent(aid), R) else R.overtime - 1.0)
+    entries, low, high = [], [], []
+
+    def add(row: dict, lo: float, hi: float) -> None:
+        entries.extend((len(low), j, v) for j, v in row.items())
+        low.append(lo)
+        high.append(hi)
+    cover: dict = {c: [] for c in cells}
+    seniors: dict = {c: [] for c in cells}
+    per_day, per_agent, per_shift = {}, {}, {}
+    for j, (aid, d, sh, l) in enumerate(xs):
+        for s in _slots(sh):
+            cover[(d, s, l)].append(j)
+            if not world.agent(aid).new_hire:
+                seniors[(d, s, l)].append(j)
+        per_day.setdefault((aid, d), []).append(j)
+        per_agent.setdefault(aid, []).append(j)
+        per_shift.setdefault((aid, d, sh), []).append(j)
+    for (c, need), j in u_at.items():
+        add({j: 1.0, **{i: 1.0 for i in cover[c]}}, need, np.inf)
+    for js in per_day.values():
+        add({j: 1.0 for j in js}, -np.inf, 1.0)
+    for aid, js in per_agent.items():
+        add({j: 1.0 for j in js}, -np.inf, R.max_shifts(world.agent(aid).contract))
+        if aid in o_at:
+            add({o_at[aid]: 1.0, **{j: -1.0 for j in js}}, -R.ft_regular, np.inf)
+    if R.min_rest is not None:
+        for a in world.agents:
+            for d in range(6):
+                for s1 in BY_CONTRACT[a.contract]:
+                    close = [s2 for s2 in BY_CONTRACT[a.contract]
+                             if SHIFTS[s2][0] + 1440 - SHIFTS[s1][0] - SHIFTS[s1][1] < R.min_rest]
+                    js = per_shift.get((a.id, d, s1), []) + [j for s2 in close for j in per_shift.get((a.id, d + 1, s2), [])]
+                    if close and js:
+                        add({j: 1.0 for j in js}, -np.inf, 1.0)
+    if R.buddy:
+        for j, (aid, d, sh, l) in enumerate(xs):
+            if world.agent(aid).new_hire:
+                for s in _slots(sh):
+                    add({j: 1.0, **{k: -1.0 for k in seniors[(d, s, l)]}}, -np.inf, 0.0)
+    r, c, v = zip(*entries)
+    matrix = coo_matrix((v, (r, c)), shape=(len(low), n)).tocsr()
+    integrality = np.zeros(n)
+    integrality[:nx] = 1
+    upper = np.full(n, np.inf)
+    upper[:nx] = 1
+    res = milp(cost, constraints=LinearConstraint(matrix, low, high), integrality=integrality,
+               bounds=Bounds(np.zeros(n), upper), options={"time_limit": MILP_SECONDS, "mip_rel_gap": 0.0})
+    bound = getattr(res, "mip_dual_bound", None)
+    if res.x is None or bound is None or not math.isfinite(bound):
+        raise AssertionError(f"the roster MILP gave no bound ({res.message})")
+    roster = [xs[j] for j in range(nx) if res.x[j] > 0.5]
+    world._cache[key] = (roster, float(res.fun) + fixed, float(bound) + fixed)
+    return world._cache[key]
+
+
+def best_known_solution(world: World, out_dir: Path, setting) -> None:
+    """The best roster known that keeps every rule: the MILP's (the proven optimum when HiGHS finishes within
+    MILP_SECONDS), or the reference's own where that is no better."""
+    R = rules_for(world, setting)
+    ref = _solve(world, R.planned())
+    roster = _milp(world, R.planned())[0]
+    broken, mine, _ = evaluate_roster(world, roster, R)
+    _write(roster if not broken and mine < evaluate_roster(world, ref, R)[1] - 1e-9 else ref, out_dir)
+
+
+def objective_bound(world: World, setting) -> float:
+    """A proven lower bound on the objective of every roster that keeps every rule of the setting, the overtime
+    approval included (a roster with an approved overtime exception is outside its scope): the dual bound of the
+    MILP (see _milp), which HiGHS proves by branch and bound. The model has every assignment the rules allow as a
+    column and every rule as constraints, so no valid roster is cut off."""
+    return _milp(world, rules_for(world, setting).planned())[2]
+
+
+# ── diagnostics: does a roster implement each client fact? ───────────────────
+
+FOLLOWS_GAP = 0.05       # diagnose: a roster follows another reading when it is at least this much of the quality
+                         # scale closer to that reading's best roster than to the true one's,
+FOLLOWS_SHARE = 0.5      # and its distance to that reading's best roster is at most this share of the true one
+
+
+def _reading_objective(world: World, roster, R: Rules, multi: bool = False) -> float:
+    """The objective of a roster as a reading counts it (`multi`: every agent on each language they speak)."""
+    if not multi:
+        return evaluate_roster(world, roster, R)[1]
+    cover = [0] * N_CELLS
+    count: dict[str, int] = {}
+    for aid, d, sh, _ in roster:
+        count[aid] = count.get(aid, 0) + 1
+        for c in _cells(d, sh, world.agent(aid).langs):
+            cover[c] += 1
+    under = sum(max(0, R.need(world, d, s, l) - cover[(d * N_SLOTS + s) * N_LANG + LANG_INDEX[l]])
+                for d in range(7) for s in range(N_SLOTS) for l in LANGS)
+    return R.weight * under + sum(_pay(a, count.get(a.id, 0), R) for a in world.agents)
+
+
+def _pool(name: str, tier: str) -> list:
+    """The candidates of a drawn parameter in a tier, read from case.yaml."""
+    import yaml
+    values = yaml.safe_load((Path(__file__).parent / "case.yaml").read_text(encoding="utf-8"))["params"][name]["values"]
+    return list(dict.fromkeys(values[tier] if isinstance(values, dict) else values))
+
+
+def _other_readings(setting, R: Rules, target: str) -> list[tuple[str, Rules, bool]]:
+    """(name, rules, multi) of the readings a roster could follow in place of the true one for `target`: the other
+    candidates of its parameter, or its natural misreading (for the holiday also the cut on another candidate day,
+    at the true share)."""
+    if target == "holiday":         # the forecast uncut, or the cut on another candidate day
+        return [("the forecast uncut", _misreading(R, target)[0], False)] + [
+            (f"the holiday on {v}", dataclasses.replace(R, holiday_day=_day_index(v)), False)
+            for v in _pool("holiday_day", setting.tier) if _day_index(v) != R.holiday_day]
+    if target not in TARGET_PARAM:
+        Rm, multi = _misreading(R, target)
+        return [("the misreading", Rm, multi)]
+    name = TARGET_PARAM[target]
+    out = []
+    for v in _pool(name, setting.tier):
+        if str(v) == str(setting.params[name]):
+            continue
+        if name == "under_weight":
+            Ro = dataclasses.replace(R, weight=float(v))
+        elif name == "ft_week_hours":
+            Ro = dataclasses.replace(R, ft_regular=int(v) // 8, ft_max=int(v) // 8 + (R.ft_max - R.ft_regular))
+        elif name == "pt_week_hours":
+            Ro = dataclasses.replace(R, pt_max=int(v) // 4)
+        else:
+            Ro = dataclasses.replace(R, min_rest=int(v) * 60)
+        out.append((f"{name} = {v}", Ro, False))
+    return out
+
+
+def diagnose(world: World, submission_dir: Path, setting, scored: dict) -> dict:
+    """Per target in force: does the roster implement the fact (True, False, or None when it cannot tell)?
+
+    A fact that is a rule is read off the rule: the part-time and full-time contract weeks (nobody above them), the
+    rest time, the overtime approval, the buddy rule (None when no new hire is rostered) and the sick call (None
+    when the agent in the note is not rostered at all). Every other fact, and a contract week or rest time that is
+    kept, is measured against each other reading (another candidate of the parameter, or the natural misreading):
+    the roster *follows* that reading when it loses at least FOLLOWS_GAP of the quality scale against the reference
+    under the true reading, keeps that reading's rules (without an overtime exception) and is closer to the
+    planner's best roster under that reading than to the true one's, by at least FOLLOWS_GAP of the scale and with
+    at most FOLLOWS_SHARE of the distance. A roster that follows another reading does not implement the fact; a
+    roster at least as good as the reference never follows one (a better roster than the planner's is not a
+    misreading)."""
+    roster = scored.get("trace")
+    if roster is None:
+        return {}
+    R = rules_for(world, setting)
+    broken = {r for r, _ in scored["violations"]}
+    best = evaluate_roster(world, _solve(world, R.planned()), R)[1]
+    scale = evaluate_roster(world, _baseline(world, R), R)[1] - best
+    regret = scored["objective"] - best
+    shifts: dict[str, int] = {}
+    for aid, _, _, _ in roster:
+        shifts[aid] = shifts.get(aid, 0) + 1
+    most = {ct: max([n for aid, n in shifts.items() if world.agent(aid).contract == ct], default=0) for ct in ("FT", "PT")}
+    enforced, evidence = {}, {}
+
+    def follows(target: str) -> str | None:
+        """The other reading of `target` the roster follows, if any."""
+        if regret < FOLLOWS_GAP * scale:
+            return None                                     # it loses next to nothing under the true reading
+        for name, Ro, multi in _other_readings(setting, R, target):
+            plan = Ro if multi else Ro.planned()
+            if not multi and {r for r, _ in evaluate_roster(world, roster, plan)[0]}:
+                continue                                    # it breaks that reading's own rules
+            other = _reading_objective(world, roster, Ro, multi) - _reading_objective(world, _solve(world, plan, multi), Ro, multi)
+            if regret - other >= FOLLOWS_GAP * scale and other <= FOLLOWS_SHARE * regret:
+                return f"closer to the best roster under {name} ({other:.0f} above it) than to the true one's ({regret:.0f})"
+        return None
+
+    for t in _in_force(setting):
+        why = None
+        if t == "pt_contract_week" and most["PT"] > R.pt_max:
+            why = f"a part-timer works {most['PT']} shifts, the contract week is {R.pt_max}"
+        elif t == "ft_contract_week" and most["FT"] > R.ft_regular:
+            why = f"a full-timer works {most['FT']} shifts, the contract week is {R.ft_regular}"
+        elif t == "min_rest" and "min_rest" in broken:
+            why = "two shifts of an agent are less than the rest time apart"
+        elif t == "buddy_rule":
+            if "buddy_rule" in broken:
+                why = "a new hire is alone on a language"
+            elif not any(world.agent(aid).new_hire for aid in shifts):
+                enforced[t], evidence[t] = None, "no new hire is rostered"
+                continue
+        elif t == "sick_call":
+            if "sick_leave" in broken:
+                why = "the agent in the team lead's note is rostered on a certified sick day"
+            elif R.sick_agent not in shifts:
+                enforced[t], evidence[t] = None, "the agent in the team lead's note is not rostered at all"
+                continue
+        if why is None and t not in ("buddy_rule", "sick_call"):
+            why = follows(t)
+        enforced[t] = why is None
+        evidence[t] = why or "keeps the rule and follows no other reading"
+    return {"enforced": enforced, "evidence": evidence}

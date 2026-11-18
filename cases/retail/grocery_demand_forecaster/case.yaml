@@ -3,30 +3,35 @@ role: Grocery Demand Forecaster
 task_type: Machine Learning
 field: retail
 seed: 20261102
-objective: minimize          # mean over stores of the weighted WAPE (a unit short counts short_weight times a unit
-                             # over) against the tier's actuals: till sales net of returns (easy, medium; I07 not
-                             # judged) or customer demand (hard), in the horizon
+audited: true
+quality_cap: 1.05           # the median quality of the best plan there is (best_known_solution = objective_bound),
+                            # 1.040, rounded up to the next 0.01
+objective: minimize          # the expected cost of the order plan under the world's demand distribution: per store,
+                             # expected units left over + lost_sale_cost x expected units short over its judged
+                             # items and days, as a share of its expected demand; the mean over the five stores
 tiers:                       # one world and the same data in every setting
   easy: >-
-    The base forecast: what each store sells on a normal day. The category team adds the promotion plan and the
-    one-off regional holiday on top, so both stay out, and the forecast is judged against base till sales (net of
-    returns, stockout days as recorded) without those effects. S4's Sunday closure, the display floor and the error
-    weight apply; bread rolls (I07) are not judged this round.
+    The order without the promotions: the category team adds the promotion plan on top, so it stays out, and the
+    plan is judged against demand without it. The stores order exactly the number in the file, so it is scored as
+    an order: by its expected cost, the units left over plus the client's multiple for each unit short. The one-off
+    regional holiday on its drawn date is in the order; stockout days in the history understate demand; S4's Sunday
+    closure and the display minimum are rules on the order; the store manager's e-mail is not policy; bread rolls
+    (I07) are not judged this round.
   medium: >-
     Easy plus the promotion plan (inclusive dates, the lift learned from past promotions, times the flyer's multiple
-    when the rule seed draws a flyer) and the one-off regional holiday on its drawn date. Still judged against till
-    sales net of returns; I07 is not judged this round.
+    when the rule seed draws a flyer). I07 is not judged this round.
   hard: >-
-    Medium judged against customer demand instead: stockout days are censored and returns are not demand. I07 is
-    judged, so its unit change (pieces until 31 May 2026, packs of 6 since) matters, and a dated revision applies:
-    on Friday 30 October, after promo_plan.csv was exported, the drawn category's promotions were cancelled.
+    Medium plus bread rolls: I07 is judged, so its unit change (pieces until 31 May 2026, packs of 6 since) matters,
+    and a dated revision applies: on Friday 30 October, after promo_plan.csv was exported, the drawn category's
+    promotions were cancelled.
 params:                      # the client's rule values; a rule seed draws each one
-  min_display:               # core items (fresh produce and dairy) are never forecast below this on an open day
-    values: [6, 4, 8]
-  holiday_date:              # the one-off regional holiday in the horizon (medium, hard; easy: out of scope)
-    values: {easy: [none], medium: ["2026-11-11", "2026-11-13", "2026-11-09"], hard: ["2026-11-11", "2026-11-13", "2026-11-09"]}
+  lost_sale_cost:            # a unit a customer wanted and did not get costs this many times a unit left over
+    values: [5, 12, 30]
+  min_display:               # core items (fresh produce and dairy) are never ordered below this on an open day
+    values: [6, 4, 12]
+  holiday_date:              # the one-off regional holiday in the horizon, not in holidays.csv
+    values: ["2026-11-11", "2026-11-13", "2026-11-09"]
     labels:
-      none: {zh: 无, en: none, ko: 없음, ja: なし, es: ninguno}
       "2026-11-11": {zh: 2026 年 11 月 11 日（周三）, en: Wednesday 11 November 2026, ko: 2026년 11월 11일(수),
                      ja: 2026年11月11日（水）, es: miércoles 11 de noviembre de 2026}
       "2026-11-13": {zh: 2026 年 11 月 13 日（周五）, en: Friday 13 November 2026, ko: 2026년 11월 13일(금),
@@ -34,11 +39,7 @@ params:                      # the client's rule values; a rule seed draws each 
       "2026-11-09": {zh: 2026 年 11 月 9 日（周一）, en: Monday 9 November 2026, ko: 2026년 11월 9일(월),
                      ja: 2026年11月9日（月）, es: lunes 9 de noviembre de 2026}
   promo_uplift:              # the flyer: a November promotion brings this multiple of a past promotion's extra sales
-    values: {easy: [1], medium: [1, 1.5, 2], hard: [1, 1.5, 2]}
-    labels:
-      1: {zh: "1", en: "1", ko: "1", ja: "1", es: "1"}
-      1.5: {zh: "1.5", en: "1.5", ko: "1.5", ja: "1.5", es: "1,5"}
-      2: {zh: "2", en: "2", ko: "2", ja: "2", es: "2"}
+    values: {easy: [1], medium: [1, 2, 3], hard: [1, 2, 3]}
   promo_cancelled:           # hard: the category whose promotions were cancelled on 30 October
     values: {easy: [none], medium: [none], hard: [beverages, dairy, bakery]}
     labels:
@@ -46,25 +47,25 @@ params:                      # the client's rule values; a rule seed draws each 
       beverages: {zh: 饮料, en: beverages, ko: 음료, ja: 飲料, es: bebidas}
       dairy: {zh: 乳制品, en: dairy, ko: 유제품, ja: 乳製品, es: lácteos}
       bakery: {zh: 烘焙, en: bakery, ko: 베이커리, ja: ベーカリー, es: panadería}
-  short_weight:              # in the store's WAPE a unit forecast too low counts this many times a unit too high
-    values: [1, 2, 3]
 rule_seeds: [3, 25, 58]
 deliverables: [forecast.csv]
 deliverable_spec: |
-  forecast.csv with ASCII header store_id,item_id,date,forecast
+  forecast.csv with ASCII header store_id,item_id,date,order_qty
   One row per store x item x date in the 14-day horizon (2026-11-02 .. 2026-11-15);
   store_id / item_id exactly as in the data (e.g. S1, I01), date as YYYY-MM-DD,
-  forecast = the forecast quantity in the item's current sales unit (a number, decimals allowed).
+  order_qty = the quantity the store orders for that day, in the item's current sales unit (a number, decimals allowed).
+  The stores order the number as it is: a file without an order_qty column is read by its forecast column, or else
+  by its one other column of numbers; the key columns may carry the names the client's data gives them.
 rules:
   - id: complete_grid
     class: contractual
     description: forecast.csv has exactly one row for every store x item x date in the horizon.
   - id: non_negative
     class: physical
-    description: No forecast is negative.
+    description: No order quantity is negative.
   - id: closed_day_zero
     class: physical
-    description: Store S4 is closed on Sundays; its Sunday forecasts are 0.
+    description: Store S4 is closed on Sundays; its Sunday orders are 0.
   - id: min_display_stock
     class: business_policy
-    description: Core items (fresh produce and dairy) are never forecast below {{min_display}} units on a day the store is open.
+    description: Core items (fresh produce and dairy) are never ordered below {{min_display}} units on a day the store is open.

@@ -42,6 +42,37 @@ company policies and vendor harnesses on one client channel.
   - What v2 adds to that framing: counterfactual ground truths over a fixed view, rule classes with company
     policies and exception processes, dated events and pressure items, program deliverables run day by day,
     five natively authored languages on two axes, and harness comparison through one client channel.
+- **τ-bench** (Sierra, arXiv 2406.12045). A conversational agent serves a simulated user (an LLM that holds
+  the task's goal) through tools over a database, under a Markdown domain policy, in two domains: retail (115
+  tasks) and airline (50). A task scores 0 or 1 on the final database state and the required answers, and
+  pass^k asks that all k trials succeed. GPT-4o reached about 61% (retail) and about 35% (airline) at pass^1, and
+  under 25% at pass^8 in retail. Removing the policy document cost it 22 points in airline but only 4 in
+  retail. v2 keeps pass^k. It differs in what is hidden: τ-bench's policy is given to the agent, while v2's
+  client facts must be asked for, and change across settings.
+- **FDE-Gym** (DeepLethe and co-authors, arXiv 2610.22350, Oct 2026; harness Apache-2.0 at
+  github.com/deeplethe/fde-gym, cases gated on Hugging Face under their own terms). 95 end-to-end delivery tasks
+  from 20 scenarios in 18 sectors, adapted from real projects. The agent works in a copy of the customer's
+  production system and its delivery is replayed on held-out production traffic. The score is normalized uplift
+  (0 = the system as found, 1 = the reference), set to at most 0 on an incident, minus a hidden per-message
+  contact cost for 130+ scripted stakeholders. Briefs come at four levels (L0 gives the constraints and scoring,
+  L3 only the sponsor's original request). Tasks are admitted only if the reference scores ≥ 0.95, doing
+  nothing 0, the literal reading of the request ≤ 0.2 and each of 270+ shortcut strategies ≤ 0.8. Best result
+  (13 configurations, three runs each): 0.56 mean, 14 of 95 resolved.
+  - **Findings that support v2's direction.** Withholding the constraints costs the most: L0 to L1 drops 0.28,
+    while L1 to L3 drops only 0.04. That is what v2's counterfactual client facts isolate. Leading models obtain
+    72–85% of key facts yet reach uplift ≥ 0.8 in only 37% of the cases where they obtained all of them. This is
+    the learned-versus-enforced gap that v2's per-target funnel (revealed → learned → enforced) is built to
+    show.
+  - **Where they meet.** The same normalized scale (v2's baseline 0 / reference 1); admission anchors close to
+    v2's audit gates (§11.2); held-out replay like v2's program cases on hidden inputs.
+  - **Where they differ.** FDE-Gym prices asking (a hidden contact cost); v2 limits question rounds and scores
+    Ask-F1. FDE-Gym has fixed tasks plus held-out variants; v2 has one world with counterfactual settings drawn by
+    a rule seed. FDE-Gym is one language; v2 has five, on two axes. v2 shares no code or data with it: its cases
+    were not read.
+  - **Worth adopting.** A "literal solution" anchor: the deliverable that does exactly what the request says,
+    without the client's facts, must score low (FDE-Gym: ≤ 0.2). It complements v2's never-asks solver (which
+    plans robustly) and is a cheap admission check. An incident rule (quality at most 0 when the delivery breaks
+    the client's operation) is close to v2's hard gates.
 - **Name collision.** Another, unrelated "FDE-Bench" (arXiv 2609.27571, Sep 2026) evaluates deployment
   configuration (Docker, Compose, Kubernetes). Cite v2 with its full name and repository.
 - **Closest neighbour: τ^τ-Bench** (arXiv 2609.04611, Sep 2026). A coding agent builds a customer-service
@@ -190,6 +221,8 @@ See §10 (from an independent review of every case with adversarial verification
 - **Settings:** report per tier (difficulty), each case's score the mean over its rule seeds, then the mean
   over cases. Use private rule seeds (`rule_seeds: [...]` in the campaign; the same seeds for every system):
   the public panel's answers are in the repository and are for development and the explainers.
+  The leaderboard fixes the seeds per round (`leaderboard/rounds.yaml`), so every ranked system answers the same
+  settings.
 - **Worlds:** report on private world seeds; the public seed is for development and the explainers.
 - **Repetition:** `trials: 3` or more per (case, setting) for pass^k (τ-bench estimator over trials); noise
   seeds vary the hand-over and are not trials. World robustness (valid across world seeds) is a separate
@@ -211,6 +244,7 @@ See §10 (from an independent review of every case with adversarial verification
 | P0 | Client audit: leakage and fidelity per locale, sensitivity to the client model; consider a fact-ID knowledge boundary |
 | P0 | Private evaluation seeds (world and rule seeds) and a canary string; web tools off or logged in harness configs; an egress proxy for the agent container |
 | P1 | Settle the open binding findings (`validate.OPEN_BINDING_FINDINGS`: bi, bakery) and give a parameter a single candidate in tiers where nothing uses it (loan, hospital); add a dated event and pressure to bi |
+| P1 | Make the client's facts carry the literal solution's failure in the five cases where one rule alone does (§11.6): corpus curator, contract review, BI, callcenter easy, stock easy |
 | P1 | Human-FDE baseline on a subset (time and quality); expert review of each case's requirements |
 | P1 | Native-speaker review of the five locales; difficulty parity across locales; declare or localize each scenario's country |
 | P1 | A `confirm` target kind for facts the data already settles; CLI solver token parsing; Pareto plots |
@@ -219,7 +253,7 @@ See §10 (from an independent review of every case with adversarial verification
 
 ## 9. Sources
 
-Primary references for the claims above: Baidu FDE-Bench arXiv 2610.14539; deployment FDE-Bench arXiv
+Primary references for the claims above: Baidu FDE-Bench arXiv 2610.14539; FDE-Gym arXiv 2610.22350; deployment FDE-Bench arXiv
 2609.27571; τ^τ-Bench arXiv 2609.04611; τ-bench 2406.12045; τ²-bench 2506.07982; τ-Multilingual 2609.35820;
 SABER / τ-Bench Verified 2512.07850; UserBench 2507.22034; BIRD-Interact 2510.05318; CRMArena-Pro 2505.18878;
 GDPval 2510.04374; Remote Labor Index 2510.26787; SWE-bench Pro 2509.16941; MLE-bench 2410.07095; RE-Bench
@@ -431,3 +465,43 @@ noted:
 - **Audits are slow.** An audit takes 10–40 minutes per case, and every source change makes the stored audit
   stale.
 - **No live runs yet.** No live run has measured how real agents move through revealed → learned → enforced.
+
+### 11.6 The literal solution, and taking part
+
+**Literal solution.** Every case now has a `literal_solution`: the request done exactly as written, from the
+agent's view alone, with the most natural reading of everything and no question asked. The validator requires it
+to be invalid or to score at most 0.2 normalized quality in every public setting (FDE-Gym's admission anchor).
+
+- All 13 are invalid in all 9 public settings, so none scores above 0.
+- In most cases several client rules break at once. Examples: procurement (dual sourcing, the quality hold, the
+  budget), loan (cutoff, limits, daily cap, reason codes), hospital (urgent slots, the holiday closure).
+- In five cases one rule alone makes it invalid, and without that rule it would score above 0.2:
+
+| Case | The one rule | Quality without it |
+|---|---|---|
+| multilingual corpus curator | review rows without the client's reason codes | 0.28–0.42 |
+| contract review | critical issues not rejected (the decision rule) | 0.45–0.80 |
+| BI analyst | money not rounded to the client's unit | 0.36–0.60 in rule seed 4, 0 elsewhere |
+| callcenter, easy | part-timers above 3 shifts a week | 0.68–0.98 |
+| stock trading, easy/s44 | large orders without approval | not measured |
+
+- BI's rounding rule and the stock case's large-order approval are business-policy rules, which an approved
+  exception can relax. There an agent that gets the exception could score like the literal solution.
+- These five are where the client's facts should carry more of the score.
+
+**Taking part.** The benchmark should be easy to enter, not only to read:
+
+- `fdebench2 try` shows a case and scores its literal solution, baseline and reference, or one's own deliverable
+  folder. It needs no model or API key and runs in under a second on a fresh clone.
+- `configs/experiments.starter.yaml` is a 9-run first campaign without docker.
+- `fdebench2 submit` packs a campaign into one file for the leaderboard page.
+- **Rounds.** A submission is ranked only when it ran a full leaderboard round (`leaderboard/rounds.yaml`): every
+  case and tier on the round's rule seeds, three or more trials, the same for every system. Before this, each
+  submitter chose their own private seeds, so two systems were never compared on the same settings and seeds
+  could be picked. Round 2026-11's three seeds were checked on every case and tier before it opened. Anything
+  else is shown as development.
+- The answers of a round can still be computed from the repository's own code, so the leaderboard is
+  self-reported: it relies on runs made in the sandbox, where the agent sees only its workspace.
+- CONTRIBUTING.md and docs/SUBMITTING.md (five languages) give the bar a case must pass and the submission rules.
+
+Until a live campaign runs, the leaderboard holds only the three anchor rows.

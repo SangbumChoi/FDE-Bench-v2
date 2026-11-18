@@ -1,22 +1,26 @@
 - id: fiscal_year
-  text: El año fiscal empieza el 1 de {{fy_start}} y lleva el nombre del año en que empieza (el FY2025 va {{fy2025}}); el primer trimestre del FY2026 es {{fy2026_q1}} y su primer semestre, {{fy2026_h1}}, y un periodo aún en curso en la fecha de referencia se cuenta hasta ella.
+  text: El año fiscal empieza el 1 de {{fy_start}}.
+- id: fy_naming
+  text: "Un año fiscal lleva el nombre del año natural en que empieza: el FY2025 va {{fy2025}}, el primer trimestre del FY2026 va {{fy2026_q1}} y su primer semestre, {{fy2026_h1}}."
+- id: running_period
+  text: "Un periodo que sigue en curso en la fecha de referencia aún no tiene cifra: su pregunta se responde con null («aún no disponible»), no con la cifra acumulada hasta la fecha. Es una costumbre de finanzas; el director financiero puede aprobar una cifra acumulada hasta la fecha."
 - id: local_day
   text: Las marcas de tiempo están en UTC, pero los días, meses, trimestres y años fiscales se deciden en hora de Corea (UTC+9); hay que sumar 9 horas antes de tomar la fecha.
 - id: test_accounts
-  text: Los clientes con account_type «prueba» en accounts_meta son cuentas de QA y se excluyen de todas las cifras; las cuentas «empleado» se mantienen.
+  text: Los clientes con account_type «prueba» en accounts_meta son cuentas de QA y se excluyen de todas las cifras; las cuentas «empleado» son clientes reales y se mantienen.
 - id: counted_orders
   text: Solo cuentan los pedidos «completado»; los «cancelado» y «pago_fallido» no cuentan nunca, aunque payments.csv tenga una fila de pago para ellos.
-- id: net_revenue
-  text: Ingreso neto = subtotal del pedido (sin impuestos) menos los reembolsos sin impuesto (importe × subtotal / total), imputados al periodo de la fecha del pedido, no al del reembolso.
+- id: revenue_ex_tax
+  text: "El ingreso neto no incluye impuestos: el subtotal del pedido (sin impuestos) menos la parte sin impuesto de sus reembolsos (importe del reembolso × subtotal / total)."
+- id: refund_period
+  text: Un reembolso reduce el ingreso del periodo en que se hizo su pedido, no del periodo del reembolso.
 - id: late_refunds
   text: La exportación se hizo el 2026-10-31 con todos los reembolsos registrados hasta entonces; los reembolsos posteriores a la fecha de referencia (octubre de 2026) también cuentan, en el periodo de su pedido.
 - id: fx_order_date
-  text: Los importes están en la moneda del pedido y se convierten a KRW con el krw_per_unit de fx_rates de la fecha del pedido (hora de Corea); los reembolsos usan el mismo tipo que su pedido.
+  text: Los importes están en la moneda del pedido y se convierten a KRW con el krw_per_unit de fx_rates de la fecha del pedido (hora de Corea).
 - id: active_customer
   text: Un cliente activo tiene al menos un pedido completado con fecha dentro de los {{active_days}} días que terminan en la fecha de referencia (del {{active_from}} al 2026-09-30).
 - id: category_rename
-  text: La categoría snacks se renombró como despensa el 2025-10-01 y los productos antiguos conservan la etiqueta vieja; las preguntas sobre despensa incluyen ambas etiquetas, con los reembolsos de cada pedido repartidos entre sus líneas en proporción a su importe.
+  text: La categoría snacks se renombró como despensa el 2025-10-01 y los productos antiguos conservan la etiqueta vieja; una pregunta sobre despensa incluye ambas etiquetas.
 - id: report_rounding
-  text: Finanzas exige redondear toda respuesta monetaria al múltiplo de {{rounding_unit}} KRW más cercano; las respuestas se comparan con las cifras exactas (recuentos e identificadores exactos, importes dentro del 0,5 % o de media unidad de redondeo, la variación mensual dentro de 0,05 puntos porcentuales, el resto dentro del 0,5 %).
-- id: answer_rewards
-  text: Las respuestas van al dosier del consejo del consejero delegado y null («aún no disponible») es una respuesta admitida; finanzas valora una cifra correcta en {{right_reward}}, un null en {{dont_know_reward}} y una cifra errónea en {{wrong_reward}}.
+  text: Todas las respuestas monetarias se redondean al múltiplo de {{rounding_unit}} KRW que quede más cerca.

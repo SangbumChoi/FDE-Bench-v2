@@ -19,7 +19,7 @@ Un archivo JSON, `routes.json`: `{"routes": [{"van": "V1", "depart": "05:40", "s
 <!-- /tier -->
 - La descarga en cada cafetería dura 4 minutos más 0,2 minutos por bandeja.
 - Una furgoneta que llega antes de la `apertura` espera a que abra la cafetería. `entregar_antes` es la hora de llegada más tardía que la cafetería acepta.
-- Una entrega tardía se acepta, pero nos cuesta: cada minuto que una cafetería recibe el pedido después de su `entregar_antes` nos cuesta lo mismo que {{late_cost}} minutos de furgoneta (quejas y abonos a la cafetería).
+- Una entrega tardía se acepta, pero nos cuesta: cada minuto que una cafetería recibe el pedido después de su `entregar_antes` nos cuesta lo mismo que 3 minutos de furgoneta (quejas y abonos a la cafetería).
 - Las furgonetas pueden salir desde las 05:00 y deben estar de vuelta en la cocina a las {{shift_end}} (fin del turno de los conductores).
 <!-- when: van_capacity=120 -->
 - Cada furgoneta lleva como máximo `max_bandejas` bandejas (120).
@@ -49,6 +49,17 @@ Un archivo JSON, `routes.json`: `{"routes": [{"van": "V1", "depart": "05:40", "s
 - La encargada de la Cafetería Lago Este (C07) no deja de llamarme: insiste en ser la primera parada de la mañana, antes de las 06:30, y dice que si no lo llevará a la central. Eso no es una norma nuestra. Recibe sus bandejas entre la `apertura` y `entregar_antes` como todas las cafeterías, y no quiero que el plan gire en torno a sus llamadas.
 <!-- /tier -->
 
+## Cómo lo planificamos hoy
+
+Nuestro coordinador planifica la mañana a mano. La prepara de tres maneras y usa la que menos cuesta: recorriendo las cafeterías por orden de apertura (si dos abren a la vez, primero la de `entregar_antes` más temprano), o por orden de `entregar_antes`, y asignando cada una a la furgoneta que puede llegar antes, al final de su ruta, siempre que esa furgoneta no pase del límite de bandejas y vuelva a tiempo (una cafetería que no cabe al final de ninguna ruta la mete donde menos alarga la conducción); o dividiendo el mapa en cuatro porciones alrededor de la cocina, una por furgoneta. Después pone las cafeterías de cada furgoneta en el orden que mejor les sirve, y cada furgoneta sale de modo que llegue a su primera cafetería justo cuando abre.
+<!-- tier: medium hard -->
+Las cafeterías de marca asociada van siempre a la V4.
+<!-- /tier -->
+<!-- when: premium_first=true -->
+Reparte todas las cafeterías premium antes que las estándar.
+<!-- /when -->
+Su plan cumple nuestras reglas, pero los conductores pasan fuera más tiempo del que querríamos y algunas cafeterías reciben las bandejas tarde.
+
 ## Cómo se evalúa el plan
 
 **Restricciones obligatorias** (si se incumple alguna, el plan no cuenta):
@@ -66,4 +77,4 @@ Un archivo JSON, `routes.json`: `{"routes": [{"van": "V1", "depart": "05:40", "s
 <!-- /when -->
 <!-- /tier -->
 
-**Calidad**: el tiempo total que están fuera todas las furgonetas (de la salida a la vuelta), más {{late_cost}} veces cada minuto que una cafetería recibe el pedido después de su hora `entregar_antes`. Cuanto menor, mejor.
+**Calidad**: el tiempo total que están fuera todas las furgonetas (de la salida a la vuelta), más 3 veces cada minuto que una cafetería recibe el pedido después de su hora `entregar_antes`. Cuanto menor, mejor.

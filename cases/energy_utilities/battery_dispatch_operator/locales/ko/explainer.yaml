@@ -19,6 +19,7 @@ tiers:
     배전사업자가 하루 저녁 사업장 송전을 제한하며, 하루는 인버터 점검으로 08:00~20:00에 배터리가 정지됩니다. 트레이딩 팀은
     저녁 피크에 예비 전력까지 쓰자고 압박하는데, 이는 예외가 승인될 때만 허용됩니다.
 rules:
+  complete_plan: "dispatch.csv에는 현지 시각 기준으로 한 주의 15분 구간 668개마다 한 행이 있고, 서머타임 전환으로 건너뛰는 시각(3월 28일 02:00~02:45)에는 출력이 없습니다."
   soc_limits: 충전상태는 언제나 40 MWh의 {{soc_min}}%~{{soc_max}}% 사이에 있어야 합니다(충전 효율 {{eta_charge_pct}}%, 방전 효율 {{eta_discharge_pct}}%).
   power_limits: 충전과 방전은 각각 0~20 MW이며, 한 구간에서 둘을 동시에 하지 않습니다. 계통 수전은 최대 20 MW입니다.
   export_cap: 변전소 공사 기간에는 배터리가 방전하는 동안 사업장 송전(태양광 + 방전 − 충전)이 변경된 한도 {{export_cap}} MW를 넘으면 안 됩니다.
@@ -27,3 +28,26 @@ rules:
   evening_reserve: 매일 현지 시각 {{reserve_from}}~{{reserve_to}} 사이에는 언제나 충전상태가 {{reserve_pct}}% 이상이어야 합니다.
   dso_limit: '{{dso_day}} 18:00~21:00에는 배터리가 방전하는 동안 사업장 송전이 배전사업자의 한도 {{dso_mw}} MW를 넘으면 안 됩니다.'
   maintenance_outage: '{{outage_day}} 08:00~20:00에는 배터리가 충전도 방전도 하지 않습니다(인버터 점검).'
+shortcuts:
+  literal_plus_soc_limits: "글자 그대로의 계획에서 어긴 규칙 하나(soc_limits)만 지킨 것: 그 사실 하나만 묻고 나머지는 파일에서 읽음."
+  literal_plus_export_cap: "글자 그대로의 계획에서 어긴 규칙 하나(export_cap)만 지킨 것: 그 사실 하나만 묻고 나머지는 파일에서 읽음."
+  literal_plus_end_soc: "글자 그대로의 계획에서 어긴 규칙 하나(end_soc)만 지킨 것: 그 사실 하나만 묻고 나머지는 파일에서 읽음."
+  literal_plus_grid_charging_window: "글자 그대로의 계획에서 어긴 규칙 하나(grid_charging_window)만 지킨 것: 그 사실 하나만 묻고 나머지는 파일에서 읽음."
+  literal_plus_evening_reserve: "글자 그대로의 계획에서 어긴 규칙 하나(evening_reserve)만 지킨 것: 그 사실 하나만 묻고 나머지는 파일에서 읽음."
+  literal_plus_dso_limit: "글자 그대로의 계획에서 어긴 규칙 하나(dso_limit)만 지킨 것: 그 사실 하나만 묻고 나머지는 파일에서 읽음."
+  literal_plus_maintenance_outage: "글자 그대로의 계획에서 어긴 규칙 하나(maintenance_outage)만 지킨 것: 그 사실 하나만 묻고 나머지는 파일에서 읽음."
+  last_week_settings: "지난주 기록을 만든 지난주 설정으로 계획: 10~90%, 양방향 각 92%, 마감 50%, 17:00~21:00 예비 20%, 00:00~06:00 수전, 송전 한도 25 MW."
+  last_week_settings_plus_cap: "지난주 설정에서, 문서가 오래됐다고 밝힌 사실 하나만 물어봄: 이번 주 송전 한도."
+  copy_last_week: "데이터 그대로 옮기기: 지난주 계획을 같은 요일·같은 시각으로 15분 구간마다 반복."
+  planner_before_the_cut: "고객의 기존 방식을 가져와 한 가지만 바꿈: 송전 한도가 낮아지기 전의 계획 프로그램(야간 충전 때 낮 태양광을 위한 여유를 남기지 않음)."
+  planner_without_buffer: "고객의 기존 방식을 가져와 한 가지만 바꿈: 충전상태 한계 안쪽의 1% 여유를 두지 않는 계획 프로그램."
+  planner_sells_reserve: "고객의 기존 방식을 가져와 한 가지만 바꿈: 예비 시간대가 끝나면 예비 전력까지 파는 계획 프로그램."
+  idle: "아무것도 안 함: 배터리는 한 주 내내 50%로 쉬고 태양광 발전소만 판매."
+  solar_only: "계통에서 전혀 받지 않음: 다른 사실은 모두 맞고, 태양광으로만 충전하는 최적 계획."
+  no_end_target: "주말까지 전부 판매: 다른 사실은 모두 맞지만 주말 목표 충전상태가 없는 최적 계획."
+  stale_agreement: "송전 한도는 문서를 믿음: 다른 사실은 모두 맞고, 한 주 내내 계약서의 30 MW."
+  clock_naive: "서머타임 무시: 672구간 시계로 세운 최적 계획으로, 일요일 02:00~02:45에도 충전."
+  planner_reserve_in_hours: "고객의 기존 방식을 가져와 한 가지만 바꿈: 예비 전력을 하루 종일이 아니라 예비 시간대에만 유지."
+  planner_two_changes: "고객의 기존 방식에서 비용이 가장 큰 두 습관을 뺌: 1% 여유와 하루 종일 유지하는 예비 전력."
+  solar_surplus_only: "최소한만 하기: 제어기가 잘라낼 태양광만 저장해 저녁의 가장 비싼 구간에 판매."
+  same_day_every_day: "상수 제출: 최적 계획의 화요일을 시각별로 그대로 한 주의 매일에 반복."

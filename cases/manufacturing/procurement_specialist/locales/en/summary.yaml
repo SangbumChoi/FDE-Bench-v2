@@ -9,13 +9,13 @@ given:
   - "`production_plan.csv` and `bom.csv`: boards built per week for each model (W1 to W10), and how many pieces of each part go into one board, including the flash change (part C04 until W5, the new C25 from W6)."
   - "`components.csv`, `inventory.csv` and `open_orders.csv`: the 25 parts with a critical flag and a standard cost, the stock at the start of W1, and orders already placed with their arrival week."
   - "`supplier_quotes.xlsx` and `mail/`: for each part and supplier the unit price (Pacific Parts quotes in dollars, everyone else in won), minimum order, two quantity discounts and lead time in days; the e-mails agree a 12% rise of Nara Display's display module C06 for orders it receives from Wednesday 9 December, and leave a further 8% from January unaccepted."
-  - "`approved_vendors.csv` and `budget.csv`: each supplier's status per part (approved, pending or suspended), and the monthly purchase budget: 115 million won for November, 480 million for December, 85 million for January."
+  - "`approved_vendors.csv` and `budget.csv`: each supplier's status per part (approved, pending or suspended), and the monthly purchase budget: 115 million won for November, 485 million for December, 85 million for January."
   - "`delivery_history.csv` and `allocations.csv`: 188 past deliveries with promised and received dates, and the most that two suppliers will confirm per month for three scarce parts."
 ask:
   - "The exchange rate for Pacific Parts' dollar prices: 1,320, 1,380, 1,450 or 1,500 won per dollar, depending on the version (always 1,380 on hard)."
   - "How much safety stock to keep of the parts marked critical (MCU, power IC, DRAM, flash, PCB, display): 0.5, 1 or 1.5 weeks of average demand, depending on the version (for the MCU one week is about 2,500 pieces)."
   - "That every critical part must be bought from at least two suppliers, none getting more than 70%, 80% or 90% of its quantity, depending on the version (always 80% on hard). It is a company habit: the client allows an exception if it saves real money."
-  - "Which supplier is on quality hold and up to which week (its goods due to arrive by then are rejected), depending on the version: Kowon Passive up to W3, Seoul PCB Tech up to W4 or Hanbit Electronics up to W4; on hard Mirae Semicon, Seoul PCB Tech or Hanbit Electronics, all up to W5."
+  - "Which supplier is on quality hold and up to which week (its goods due to arrive by then are rejected), depending on the version: Kowon Passive up to W3, Seoul PCB Tech up to W4 or Hanbit Electronics up to W4; on hard Mirae Semicon, Seoul PCB Tech or Hanbit Electronics, all up to W6 (the supplier's corrective action can only be verified after the New Year shutdown)."
   - "Which order week Nara Display's price rise first hits: orders go out on the Monday of their week, so W3 (7 December) still gets the old price and W4 is the first at the new one."
   - "That the budget is a hard monthly cap, and an order counts in the month of its order week's Monday: W1-W2 November, W3-W6 December, W7-W8 January."
   - "How to read the files: resistor stock is counted in reels of 5,000 pieces; the minimum order applies to each order line (one week, part and supplier), never to several weeks added up; only suppliers marked \"approved\" for that part may be used."
@@ -50,5 +50,5 @@ tiers:
   hard: >-
     Adds late deliveries (each supplier one or two weeks late, with odds the AI has to estimate from the history),
     monthly allocation caps on three parts, the flash change (C25 replaces C04 from W6; C04 left after W5 is
-    scrapped), and a quality hold to W5 that may hit the main chip maker Mirae Semicon. The exchange rate and the
+    scrapped), and a quality hold to W6 that may hit the main chip maker Mirae Semicon. The exchange rate and the
     share limit are fixed at 1,380 and 80%.

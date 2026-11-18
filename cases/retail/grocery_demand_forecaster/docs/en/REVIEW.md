@@ -53,6 +53,14 @@ smaller than before, so the `quality_cap` question is more pressing. The expecte
 is considering for forecasting cases (docs/DIRECTION.md, section 5) is not implemented: scoring is still the
 weighted WAPE against one realized horizon. Still open.
 
+**Ground truth audit:** resolved. Scoring is now the plan's expected cost under the demand distribution the world
+draws from, so the optimum is known and proven (`objective_bound`, attained by `best_known_solution`): it scores
+1.026–1.059 over 45 settings, and `quality_cap` is 1.05, its median (1.040) rounded up. The reference pools the
+weekday profile per category and orders a quantile of the demand it predicts; it is 1.2–2.2% above the optimum.
+The small headroom is now what full credit means, not a defect: nothing valid can score above the cap by more
+than 0.01. (With the first, four-week baseline of the audit the optimum scored 1.018–1.040 and the cap was 1.03;
+see "Adversarial check" below.)
+
 ### F3 — Display floor stated as 2 in `case.yaml`, 6 everywhere else (high, confirmed)
 
 `case.yaml` described `min_display_stock` as "never forecast below 2 units", while `MIN_DISPLAY = 6.0` in
@@ -84,6 +92,14 @@ less than the enterprise one. Document the expected bend / no-bend answer per po
 quality with a floor of 6 or 8 and 0.1–0.3% with a floor of 4 under error weight 3, where the quantile forecast
 already clears it (README). It is never negative, so "never bend" is still not a real trade-off. Still open.
 
+**Ground truth audit:** partly resolved. The minimum is a rule on the order and its pool is 4, 6 or 12. Dropping it
+gains the reference 0.35–0.43 of quality where the minimum is 12 and a missed sale costs 5, 0.11–0.23 at 12 with a
+dearer missed sale, at most 0.07 at 6 and nothing at 4 (GT.md, part 2). Against the policies' penalties that pays
+under both policies in the first case, under the startup policy in the second and loses in the others, so the
+answer now depends on the setting. What is left: a plan already at the reference's level cannot gain more than
+0.05 from any bend, because `quality_cap` is the best plan that keeps the rule; the bend pays only for plans with
+room under the cap.
+
 ### F5 — Several data-semantics traps barely bind (medium, partly)
 
 Measured as one change to the reference: netting returns gives quality 1.001 (1,286 return rows, −2,104 units
@@ -103,6 +119,14 @@ numbers.
 targets. In hard, fitting till sales as recorded costs the reference 6–7% quality, while not dividing I07's early
 history by 6 (0.991–0.999) and netting returns (0.999–1.001) still barely move it. Still open.
 
+**Ground truth audit:** partly resolved. Stockout days now cost: the order has to cover demand in every tier, a
+unit short costs 5 to 30 units left over, and the items run out more often (8–30% of days, was 5–20%; the history
+was redrawn). Reading stockout days as normal sales loses 0.11–0.48 of the scale and bites in all 45 settings.
+Returns still move nothing (under 0.003) and are no longer a target; bread rolls' unit change costs 0.09–0.21 in
+hard but the data settles it, so it is context too. Still open: stockouts stay independent of the day's demand,
+so leaving flagged days out is unbiased; capping sales at a shelf level would make that biased as well, and needs
+a reference that treats flagged days as lower bounds.
+
 ### F6 — Targets that the data already settles count fully in Ask-F1 (medium, partly)
 
 `s4_sunday_closed` (S4 has no Sunday rows) and `unit_change_i07` (items list "pack of 6", the history drops about
@@ -117,6 +141,11 @@ trace in the data (holiday, floor, metric). This needs a framework notion of tar
 
 **Rule seeds:** unchanged: `s4_sunday_closed` (every tier) and `unit_change_i07` (hard only) are still `missing`.
 Still open.
+
+**Ground truth audit:** resolved by removing both from the targets. The closure stays a rule
+(`closed_day_zero`) and the unit change a data note the client confirms when asked; neither counts in Ask-F1.
+What the data does not settle, that S4's Sundays and bread rolls still need their rows, is in
+`submission_format`.
 
 ### F7 — No dated events or pressure (medium, confirmed)
 
@@ -134,6 +163,11 @@ never run out"), which raises WAPE and which the client confirms is not policy. 
 target `promo_revision`. The visible plan is stale for that category, so an agent that does not ask forecasts lifts
 that will not happen (quality 0.86–0.98 at the case seed). The pressure message and a closure are not done. Still
 open for pressure.
+
+**Ground truth audit:** resolved for pressure. The data has an e-mail from the Central Plaza (S1) store manager
+to the ordering desk: "Whatever numbers you get for November, please add 20% on top for Central Plaza." The client
+says it is his wish, not policy (target `manager_note`, every tier); following it loses 0.15–0.47. A future
+closure is not done.
 
 ### F8 — Calendar is Western and partly Spanish (medium, partly)
 
@@ -227,3 +261,181 @@ truth the forecast is scored against follow the tier and the drawn values.
   pool has a promotion in the plan: a plan that lacks one moves one promotion of its most promoted category (same
   store, dates and discount) to an item of the missing category, with its own random stream. The stored world and
   world seeds 1–5 already cover every category, so their data and answers are unchanged.
+
+## Ground truth audit
+
+The case owner's principles for forecasting cases (docs/DIRECTION.md, section 5) and the audit contract (DESIGN.md,
+Ground truth audit) were applied together. `audit-case` now passes with no finding and no waiver; `audited: true`.
+
+### What was wrong
+
+- **The literal forecast was one exception away from a good score.** It broke only the display floor, a
+  bendable rule; with the floor relaxed it scored 0.42–0.95 in every public setting, and with the floor kept
+  (the "literal plus one rule" near miss) 0.42–0.86.
+- **Open shortcuts.** The median forecast with every other fact right scored 0.74–1.00; the literal forecast with
+  a blanket 20% on top 0.00–0.78.
+- **A rule on a forecast.** The display floor made a forecast invalid for being low, although forecasting models
+  differ and none is "the" answer.
+- **One draw.** Quality was the weighted WAPE against one realized horizon, so skill and luck were mixed and the
+  best achievable score was unknown (the true generator mean reached 1.07).
+- **Facts that changed nothing.** Returns (under 0.002), bread rolls' unit change (0.001–0.009), stockout days
+  (0.06–0.07, hard only); `wape_metric` bundled the error weight with what the actuals were.
+- **A baseline that knew nothing.** Last week's sales repeated, so a competent model beat it by modelling alone
+  and the client's facts carried little of the scale.
+
+### What changed (scenario, in the client's terms)
+
+| Change | Before | Now | Why |
+|---|---|---|---|
+| What is scored | a forecast, against one realized horizon (weighted WAPE) | an order plan, by its expected cost under the demand distribution: units left over + `lost_sale_cost` × units short, as a share of expected demand, exact | "we place our orders from these numbers": the stores order the number as it is. Expected loss has no luck and a known optimum |
+| The loss | `short_weight` 1, 2 or 3, described under "how the forecast is judged" | `lost_sale_cost` 5, 12 or 30, a business cost stated in the background | the client's decision picks the loss; with a weight of 1 the plain forecast was the answer |
+| The deliverable | `forecast` column | `order_qty` column (a `forecast` column alone is read as the order) | rules belong on the decision |
+| Display floor | on the forecast; 4, 6 or 8 | on the order; 4, 6 or 12 | a forecast is never invalid for being low; at 12 the habit is costly enough to be worth bending |
+| What demand is | till sales in easy and medium, demand in hard | demand in every tier | an order has to cover demand; "till sales" has no meaning for an order |
+| The holiday | out of scope in easy | in every tier | without it easy had too few facts: a literal forecast with a lucky blanket cushion reached 0.58–0.70 |
+| The flyer | 1, 1.5 or 2 | 1, 2 or 3 | 1.5 against 1 moved the plan by under 0.10 |
+| Stockout rates in the history | 5–20% per item | 8–30%, one item per category well above the others | reading stockout days as sales now costs 0.09–0.30 and can be told from the plan |
+| The store manager's e-mail | none | `mail/2026-10-28_central_plaza_orders.eml`, five locales | the pressure item of F7 |
+| The client's own way | last week's sales of the same weekday | the store managers' habit: eight-week average without stockout days (four weeks in the audit's first version; see "Adversarial check"), a cushion of 10, 20 or 30% by cost ratio, 2% per discount point times the flyer, the holiday like a Saturday | the managers know their business; an engineer who ignores the client's facts must not beat them |
+
+**The agent's view.** The request is unchanged. The data changed in two ways, the same in every setting:
+`sales_history` was redrawn with the higher stockout rates (43,687 rows, 7,175 stockout rows; was 43,718 and
+4,390), and `mail/` is new (its first sentence was reworded in the adversarial check, below). `promo_plan`,
+`holidays`, `stores` and `items` are byte-identical to before.
+
+**Targets** (12 → 11, one fact each): new `order_quantity`, `lost_sale_cost` (param) and `manager_note`;
+`stockout_censoring` and `one_off_holiday` in every tier; `base_forecast` and `promo_plan` are the promotions'
+scope only; `promo_flyer`, `one_off_holiday`, `promo_revision` and `min_display` carry `param:`. Removed and kept
+as context: `returns`, `s4_sunday_closed`, `unit_change_i07`, `wape_metric`.
+
+### What the audit shows (45 settings, public world)
+
+Numbers as they stand after the adversarial check (next section), which changed the baseline's window, the
+diagnostics and the shortcuts.
+
+**Shortcuts**, all closed in every setting:
+
+| Shortcut | Before the audit | Now | How closed |
+|---|---|---|---|
+| `literal_plus_floor` | 0.42–0.86 | 0.00 | the cost of a missed sale and the holiday: the literal covers half the days |
+| `forecast_as_order` | 0.74–1.00 | 0.00 | `lost_sale_cost` is 5 or more in every setting |
+| `blanket_cushion` | 0.00–0.78 | 0.00 | the holiday in every tier, the promotions' scope, stockout days |
+| `copy_last_week` | 0.00 (it was the baseline) | 0.00 | — |
+| `flat_average` | 0.19–0.43 | 0.00 | — |
+| `never_run_out` | 0.00 | 0.00 | — |
+| `display_only` | 0.00 | 0.00 | — |
+| `judged_rows_only` | invalid | invalid | `complete_grid`: the mandatory output |
+| `habit_last_year` (new in the check) | up to 0.59 against the four-week habit | at most 0.33 | the habit averages eight weeks |
+| `habit_more_cushion` (new) | up to 0.24 | at most 0.16 | the same |
+| `literal_sized_cushion` (new) | 0.00 | 0.00 | the holiday, the promotions' scope, stockout days |
+| `weekday_quantile` (new) | 0.00 | 0.00 | the same |
+
+- **The literal solution**: invalid as delivered in all 9 public settings (118–136 core orders under the minimum);
+  with the bendable rule relaxed, quality 0.00 in all 9 (cost 0.61–3.62 against the habit's 0.35–0.54).
+- **Facts**: all 11 bite in every tier where they are in force (README, Ground truth audit; GT.md, part 1).
+- **Value of asking**: 0.90 / 0.82 / 0.86 in easy / medium / hard. `robust_solution` is granted two facts it could
+  not know (the number is ordered as it is; the e-mail is not followed).
+- **Reference and bounds**: the optimum is proven and attained; `quality_cap` 1.05.
+- **Diagnostics**: one per target, read from the plan; they separate the reference from every biting ablation,
+  with no false "not enforced" on the best plan and no cross flag, on the public world and on world seeds 1–10.
+- **Round 2026-11** (rule seeds 108807, 519122, 904685, all nine settings): reference and baseline valid, scale
+  25% to 59% wide, literal invalid as delivered and 0.00 with the bendable rule relaxed, and every fact bites in
+  at least one of the three seeds in every tier (`min_display` in one or two of three, every other fact in all
+  three).
+
+### Adversarial check
+
+A second engineer checked the audit by running code against it. What held, what did not, and what changed.
+
+**Held.**
+
+- **The score is exact.** The expected cost of six plans (reference, baseline, literal, best plan, the reference
+  jittered by ±15%, a flat 40 units) in easy/s3, medium/s58 and hard/s25 was recomputed with independent code: the
+  cell means re-derived from the world's constants, the day noise integrated on a 4,001-point grid, and a Monte
+  Carlo of 200,000 draws per cell with the generator's own recipe. `score()` agrees with the quadrature to
+  1.4 × 10⁻⁵ or better (the 16 Gauss-Hermite nodes) and with the Monte Carlo within 1.2 standard errors in all 18
+  comparisons. The 35,257 history rows without a stockout have mean −0.01 and standard deviation 1.00 when
+  standardized by the scoring law, so the law that scores is the law the data was drawn from.
+- **The bound is the optimum.** Per cell, no order on a 0.25 grid costs less than the bound's (45 settings, the
+  scorer's cost and an independent one on sampled cells), and 900 random valid perturbations of the best plan all
+  cost more.
+- **The agent's view** is byte-identical over 78 settings (public, round and 20 other rule seeds) in each of the
+  five locales; the five locales' data hold the same numbers, dates and ids; and the data is built before any
+  setting is drawn, so no file can show a drawn value. The days the holiday can fall on look like any other in
+  past years.
+- **The never-asks solver is a genuine attempt.** Without the first grant (it hands in the expected demand) it
+  earns 0.00 in every tier; without the second (it follows the e-mail) 0.03 / 0.08 / 0.07 (0.19 / 0.24 / 0.26 on
+  the first baseline). Other compromise ratios, display minimums and holiday hedges were tried: over all 27 / 81 /
+  243 combinations of a tier's candidates the best of them (a ratio of 20 instead of 14) earns 0.113 / 0.181 /
+  0.117 against its 0.099 / 0.167 / 0.099, and a planner that scores every candidate plan against its own model,
+  by the ratio of the best cost to the plan's cost over all combinations, picks the solver's own ratio and
+  minimum. A plan found with hindsight (the true demand and the true scale of every combination) earned 0.01 to
+  0.04 more on the first baseline. It was left as it is.
+- **The literal solution is not bent to fail.** Following the e-mail helps it (Central Plaza gets a cushion);
+  without the e-mail, with stockout days left out, with bread rolls in packs or rounded to whole units it is
+  invalid as delivered and 0.00 with the rule relaxed in all 54 settings tried. Its `forecast` header is read as
+  the order.
+- **The locales** agree on every placeholder, marker, code, date and number of two digits or more, line by line;
+  the differences are single digits one language writes as words.
+
+**Did not hold, and what changed.**
+
+| Finding | Evidence | Change |
+|---|---|---|
+| The baseline's four-week window made the zero a matter of luck and left a shortcut open | Averaging two to four days per weekday, the habit lost 0.21–0.45 of the scale to the same habit over eight weeks; over 52 weeks it scored up to 0.59 (above 0.5 in 18 of 54 settings), a copy of the client's own way with one number changed. On world seeds 1 and 2 the same shortcut reached 0.49 and 0.41: the public draw was an unlucky one for the habit, and its scale (up to 120% wide) was the widest | The habit averages eight weeks (requirements, five locales). Scale 25–72% wide (21–103% on world seeds 1–10); the same shortcut at most 0.33 (0.44, 0.36, 0.33 on world seeds 1–3). New shortcuts `habit_last_year`, `habit_more_cushion` |
+| The cushions were said to be the flat cushions that serve the habit best | With four weeks the best flat cushions were 15, 25 and 35% on average (10–15, 20–35, 35–50 by setting); 10, 20 and 30% left 0.00–0.28 of the scale to a larger cushion | With eight weeks 10, 20 and 30% cost the habit 0.000, 0.000 and 0.001 more than the cheapest flat cushion at a ratio of 5, 12 and 30 (objective units, pooled over the public world and world seeds 1 and 2), so the statement is now true. A fixed 20% for every ratio would be worse still: quality −0.26 to +0.08 at a ratio of 5 and −0.63 to −0.38 at 30 on the first scale, so following the ratio narrows the scale, not widens it |
+| A file named `forecast.csv` with any header but `order_qty` or `forecast` was fatal | The request names no format and the prompt says to infer one; `forecast_units`, or the client's own `점포코드`, could not be read | The quantity is read from `order_qty`, else `forecast`, else the one other column of numbers; key columns may carry the data's names in any locale. `submission_format` no longer names the header: its fact is the rows the ordering system needs |
+| Diagnostics off the public world: 15 cross flags on world seeds 1–5, all on seeds 3 and 4 (3 more on seed 6 once seeds 6–10 were run) | A plan that reads stockout days as sales, or holds a slow item at a higher minimum, understates a promotion's lift (0.37–0.48 of it, 0.06 for aged cheese) and was called "dropped the wrong category"; a plan that hands in expected demand carries more promotion lift than a cushioned one and was read as a larger flyer | `promo_revision`: "no lift" is under a quarter of the historical one, not told for a plan without promotions; promotions of slow core items are not read; the lift yardstick of a plan without a cushion is expected demand. World seeds 1–10: reference 0 / 4,050 false calls, best plan 0 / 4,050, biting ablation deliverables missed 0 / 5,660, cross flags 0 |
+| The cost-ratio check called a correct plan from a cruder model a misreading | An independent forecaster sized for the client's ratio sat at 0.32 of the way from another candidate to the client's (threshold one third) on world seed 5 | The threshold is a quarter (the reference sized for another candidate sits at −0.18 to 0.22 where it bites) |
+| Misreadings the ablations never tried were missed | The flyer's multiple applied to the whole day's demand read as "nearest to 3"; the holiday ordered like a Saturday on a Friday sat at 0.51 of the lift; one lift for every category at 0.90 | `promo_flyer` rejects a lift past the largest multiple by more than half a step; `one_off_holiday` also asks for half of bakery's and of beverages' own lift, the categories the client names |
+| The e-mail said "we ran out of several lines again last Saturday" | On Saturday 24 October Central Plaza ran out of one line on the public world and of none on world seed 3 | "We keep running out of one line or another on Saturdays" (five locales; the agent's view changes by that sentence, the same in every setting) |
+
+**Probes of the diagnostics** (the nine public settings on the public world and world seeds 1–5, 54 settings).
+
+- *Correct plans built another way*: an independent cruder forecaster (plain weekday means of eight weeks, a
+  straight-line promotion lift), a normal approximation with decimals, each store's level off by 2–5%, no
+  seasonal carry, the best plan plus or minus one unit everywhere. 324 plans, 2,916 target checks, no false
+  "not enforced" (before the changes: 1).
+- *Plans with every fact right whose cushion is the neighbouring ratio's*: one flat percentage for every product
+  (z × 15%) at a ratio of 30 covers 93–95% of days where the best plan covers 97%, and the reference's model with
+  twice its day noise at a ratio of 12 covers 97% where the best plan covers 93%. The cost-ratio check calls 29
+  of these 108 plans not enforced; the 108 lose 0.04–0.45 of the scale. The check reads the cushion a plan ends up
+  with, not the ratio its author had in mind, and cannot tell these from a misread ratio.
+- *New misreadings* (13 kinds, among them a 95% service level whatever the ratio, the ratio inverted, the
+  holiday like a Saturday, one holiday lift for every category, the flyer on the whole day's demand, the note
+  followed on Fridays and Saturdays only, stockout days at half weight or scaled back by one flat factor, the
+  whole plan read as cancelled): 328 of the 462 that bite are called not enforced on their own target (71%;
+  245 of 436, 56%, before the changes). Missed by design: a flat 20% at a ratio of 5 (between two candidates),
+  stockout days at half weight (under half the pattern), the note's 20% given to every store (Central Plaza
+  is not above the others; the cost-ratio check flags it instead), and the whole plan cancelled (told by
+  `promo_plan`; `promo_revision` says it cannot tell).
+
+**Reported, not changed.**
+
+- `min_display` bites in 31 of 45 settings (25 before): a guess above the client's minimum is cheap unless the
+  guess is 12. An agent that does not know there is a minimum is invalid everywhere.
+- `quality_cap` 1.05 is the public world's median best plan, rounded up; on world seeds 1–10 that median is
+  1.033–1.062.
+- The scale reaches 103% on world seed 7 (a missed sale of 30, the holiday on a Friday, a flyer of 3).
+
+### Still open
+
+- **Stockouts are independent of the day's demand**, so leaving flagged days out is unbiased (F5). The history's
+  stockout rates (10% to 31% by item) are also the same whatever cushion the client says the managers add.
+- **One cost ratio for every product.** Fresh produce that is thrown away and water that keeps do not cost the
+  same when left over. With per-category costs a flat cushion would fail; today a flat cushion of the right size
+  on an otherwise right forecast reaches 0.69–0.96.
+- **The managers' cushion follows the cost ratio** (`habit_cushion`) and the requirements quote it, so a client
+  asked how the stores order today hints at the cushion's size.
+- **Bending never pays for a plan at the cap** (F4).
+- **The cost-ratio diagnostic reads the cushion, not the ratio**: a plan sized for the right ratio with one flat
+  percentage, or with twice the day noise, is called not enforced where it lands on the neighbouring candidate.
+- **The complete grid is a hard gate**: a plan that leaves out S4's Sunday rows is invalid, although the order
+  there would be 0. The request asks for every store and every day, and the client says the ordering system needs
+  the rows; it stays as it was before the audit.
+- **Native review** of the rewritten texts in zh, ko, ja and es (requirements, targets, summaries, explainer
+  texts, the e-mail), and every verdict in CLIENT_REVIEW.md. docs/<lang>/README.md and REVIEW.md in those four
+  languages still describe the case before the audit.
+- **`leaderboard/anchors-2026-11.json`** holds this case's anchor rows and fingerprint from before the audit; it
+  is outside the case directory and has to be regenerated (`fdebench2 anchors`).
+- F8 (the calendar) is unchanged.

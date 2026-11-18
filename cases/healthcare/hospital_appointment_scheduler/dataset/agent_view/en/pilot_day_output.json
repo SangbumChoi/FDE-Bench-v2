@@ -5,7 +5,7 @@
    "request_id": "T0001",
    "doctor_id": "D01",
    "date": "2026-11-09",
-   "start": "09:00",
+   "start": "09:40",
    "test_date": null
   },
   {
@@ -13,7 +13,7 @@
    "request_id": "T0002",
    "doctor_id": "D05",
    "date": "2026-11-09",
-   "start": "09:00",
+   "start": "09:40",
    "test_date": null
   },
   {
@@ -21,30 +21,30 @@
    "request_id": "T0003",
    "doctor_id": "D08",
    "date": "2026-11-09",
-   "start": "09:20",
+   "start": "11:00",
    "test_date": null
   },
   {
    "type": "book",
    "request_id": "T0004",
-   "doctor_id": "D10",
-   "date": "2026-11-09",
-   "start": "09:20",
+   "doctor_id": "D11",
+   "date": "2026-11-10",
+   "start": "09:40",
    "test_date": null
   },
   {
    "type": "book",
    "request_id": "T0005",
    "doctor_id": "D13",
-   "date": "2026-11-11",
+   "date": "2026-11-16",
    "start": "13:00",
    "test_date": null
   },
   {
    "type": "book",
    "request_id": "T0006",
-   "doctor_id": "D01",
-   "date": "2026-11-09",
+   "doctor_id": "D02",
+   "date": "2026-11-20",
    "start": "09:40",
    "test_date": null
   },
@@ -53,23 +53,23 @@
    "request_id": "T0011",
    "doctor_id": "D08",
    "date": "2026-11-09",
-   "start": "09:00",
+   "start": "10:20",
    "test_date": null
   },
   {
    "type": "book",
    "request_id": "T0012",
-   "doctor_id": "D10",
-   "date": "2026-11-09",
-   "start": "09:00",
+   "doctor_id": "D11",
+   "date": "2026-11-12",
+   "start": "09:40",
    "test_date": null
   },
   {
    "type": "book",
    "request_id": "T0013",
-   "doctor_id": "D14",
+   "doctor_id": "D13",
    "date": "2026-11-09",
-   "start": "09:00",
+   "start": "13:00",
    "test_date": null
   }
  ],
@@ -85,17 +85,17 @@
    "waitlist": 0
   },
   "DERM": {
-   "free_slots": 122,
+   "free_slots": 121,
    "held_back": 0,
    "waitlist": 0
   },
   "ORTH": {
-   "free_slots": 177,
+   "free_slots": 178,
    "held_back": 0,
    "waitlist": 0
   },
   "PED": {
-   "free_slots": 142,
+   "free_slots": 141,
    "held_back": 0,
    "waitlist": 0
   }

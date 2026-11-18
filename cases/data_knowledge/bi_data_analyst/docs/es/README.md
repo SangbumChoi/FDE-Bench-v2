@@ -7,7 +7,7 @@ de la base de datos? … con un número por pregunta nos basta». El entregable 
 identificadores de pregunta (`{"Q01": ..., ..., "Q12": ...}`), cada uno con un número o `null`. `null` significa «no
 sé»: en el dosier que el consejero delegado presenta al consejo, esa cifra figura como «aún no disponible». La
 solicitud no menciona ninguna de las definiciones que deciden las cifras ni dice cuánto cuesta una cifra errónea.
-Ambas cosas están en los requisitos ocultos, y el cliente simulado solo las da cuando se le pregunta.
+Ambas cosas están en los requisitos que solo conoce el cliente, y el cliente simulado las da únicamente cuando se le pregunta.
 
 Una configuración es un nivel y una semilla de reglas. El nivel decide qué preguntas necesita el dosier en esta ronda.
 La semilla de reglas sortea cuatro de las reglas del cliente, cada una por separado, entre tres valores candidatos: el
@@ -16,8 +16,8 @@ primer mes del año fiscal, la ventana de cliente activo, la unidad a la que se 
 públicas son la 4, la 12 y la 23 (nueve configuraciones, guardadas en `dataset/answer/` y comprobadas por el validador);
 cualquier otra semilla es un sorteo privado cuyas respuestas no se publican en ninguna parte. **El agente ve la misma
 solicitud y los mismos datos en todas las configuraciones** (el validador comprueba que su prompt y su espacio de
-trabajo son idénticos byte a byte). El cliente simulado responde a partir de los requisitos ocultos de la
-configuración, y el evaluador puntúa según ella. Así, el caso mide dos cosas: si el agente encuentra las definiciones
+trabajo son idénticos byte a byte). El cliente simulado responde a partir de los requisitos de la
+configuración, que solo conoce él, y el evaluador puntúa según ella. Así, el caso mide dos cosas: si el agente encuentra las definiciones
 y acierta las respuestas, y si dice «no sé» cuando debe (abstención calibrada). Los ajustes de la modalidad
 (especificación completa frente a aclarar primero, perfil del cliente, ruido en los datos, eventos) se aplican por
 encima, como en todos los casos (véase [cases/README.md](../../../../README.md)).
@@ -49,7 +49,7 @@ en julio añaden que ese semestre solo ha transcurrido del 2026-07-01 al 2026-09
 primer trimestre. Con un año que empieza en abril, el semestre termina en la fecha de referencia, y con uno que
 empieza en enero ya ha terminado.
 
-## Las preguntas y los hechos ocultos
+## Las preguntas y lo que solo sabe el cliente
 
 Q01 ingreso neto del FY2025 · Q02 ingreso neto del primer trimestre del FY2026 · Q03 clientes activos a la fecha de
 referencia · Q04 cliente con más ingreso neto en el FY2025 · Q05 pedidos del día de rebajas 2026-07-01 · Q06 ingreso
@@ -57,10 +57,10 @@ neto de «despensa» en el FY2025 · Q07 valor medio por pedido del primer semes
 del FY2025 · Q09 reembolso medio por pedido reembolsado en el FY2025 · Q10 clientes nuevos del FY2025 · Q11 variación
 del ingreso neto de septiembre de 2026 frente a agosto · Q12 unidades por pedido en el FY2025.
 
-Once preguntas clave (`targets.yaml`; los valores entre llaves son el sorteo de la semilla de reglas o se derivan de
+Once hechos que la IA debe preguntar (`targets.yaml`; los valores entre llaves son el sorteo de la semilla de reglas o se derivan de
 él):
 
-| Pregunta clave | Clase | Niveles | El hecho |
+| Hecho | Clase | Niveles | Lo que sabe el cliente |
 |---|---|---|---|
 | `fiscal_year` | missing | todos | el año fiscal empieza el 1 de {fy_start} y lleva el nombre del año en que empieza; FY2025, el primer trimestre y el primer semestre del FY2026 según las fechas indicadas; un periodo aún en curso en la fecha de referencia se cuenta hasta ella |
 | `local_day` | ambiguous | todos | las marcas de tiempo están en UTC; los días, en hora de Corea (UTC+9) |
@@ -95,7 +95,7 @@ sé».
 
 **Umbrales de abstención.** Una hoja que conoce el esquema solo debería responder una pregunta cuando su probabilidad
 p de acertar supera al «no sé»: p × 2 > dont_know_reward. El cliente expone el esquema como un hecho del negocio, y es
-una pregunta clave (`answer_rewards`, clase missing): «una cifra errónea que llega al consejo hay que corregirla en la
+un hecho que la IA debe preguntar (`answer_rewards`, clase missing): «una cifra errónea que llega al consejo hay que corregirla en la
 reunión siguiente y nos cuesta credibilidad, mientras que “aún no disponible” solo deja un hueco», seguido de los tres
 valores. Cuando un `null` vale 0.5, el cliente añade que «esta vez el consejo prefiere ver una cifra antes que un
 hueco»; cuando vale 1.5, que tras las correcciones de los dos últimos dosieres «esta vez el consejo prefiere, con
@@ -115,7 +115,7 @@ incumplimiento en todas las configuraciones y en todos los mundos que construye 
 | **Preguntas puntuadas** | Q01, Q03, Q04, Q10, Q12 (5) | + Q02, Q05, Q07, Q08, Q09, Q11 (11) | las 12 (+ Q06) |
 | **Qué ponen a prueba** | Qué pedidos cuentan, cuentas de prueba fuera y de empleado dentro, el año fiscal, la ventana de actividad, el redondeo (Q01 es la única pregunta monetaria) | Ingreso neto (impuestos, imputación de reembolsos), tipo de cambio de la fecha del pedido, días en hora de Corea en los límites de mes, trimestre y día de rebajas, y los reembolsos de octubre de pedidos de septiembre | El cambio de nombre snacks → despensa (Q06) |
 | **Qué dejan fuera los requisitos** | «esta vez el dosier solo necesita Q01, Q03, Q04, Q10 y Q12 … si las responde, no usaremos esas cifras» | «todas las preguntas salvo Q06 (la cifra de despensa)» | Nada |
-| **Preguntas clave** | 9: año fiscal, día local, cuentas de prueba, pedidos válidos, ingreso neto, tipo de cambio, cliente activo, redondeo, recompensas de las respuestas | 10: + reembolsos tardíos | 11: + categoría renombrada |
+| **Hechos que la IA debe preguntar** | 9: año fiscal, día local, cuentas de prueba, pedidos válidos, ingreso neto, tipo de cambio, cliente activo, redondeo, recompensas de las respuestas | 10: + reembolsos tardíos | 11: + categoría renombrada |
 
 Todos los niveles sortean entre los mismos candidatos, así que la semilla de reglas da los mismos parámetros en los
 tres niveles (s4 es un año que empieza en enero con una ventana de 60 días tanto en easy como en medium y hard). Lo
@@ -131,7 +131,7 @@ comprobados: las rebajas abren a medianoche del 2026-07-01, primer día de ese a
 mundos. Las preguntas de medium son las que se construyen en torno a estas definiciones. Los reembolsos de octubre
 (`late_refunds`) ya influyen en medium: mueven Q11 unos 3 puntos sea cual sea el sorteo y, con un año que empieza en
 julio, también mueven Q02, cuyo trimestre va de julio a septiembre de 2026. Por eso hard solo añade el cambio de
-nombre. Las notas sobre el alcance de la ronda no son preguntas clave: una respuesta a una pregunta que no se puntúa
+nombre. Las notas sobre el alcance de la ronda no son hechos que la IA deba preguntar: una respuesta a una pregunta que no se puntúa
 no tiene efecto ni a favor ni en contra, así que conocer el alcance no cambia ninguna puntuación.
 
 Preguntas que pierde una hoja cuando se equivoca en un solo hecho (respuestas exactas en lo demás, redondeadas a la
@@ -168,12 +168,12 @@ Cada parámetro tiene una sola lista de candidatos, la misma en todos los nivele
 posición `Random("data_knowledge/bi_data_analyst|<name>|s").randrange(3)` de cada lista, de forma independiente de los
 demás parámetros y del nivel.
 
-| Parámetro | Candidatos (easy, medium, hard) | Qué cambia | Pregunta clave |
+| Parámetro | Candidatos (easy, medium, hard) | Qué cambia | Hecho que la IA debe preguntar |
 |---|---|---|---|
 | `fy_start`: el año fiscal empieza el 1 de este mes y lleva el nombre del año en que empieza | enero, abril, julio (1, 4, 7) | los periodos del FY2025 y del primer trimestre y el primer semestre del FY2026, y por tanto los valores exactos de Q01, Q02, Q06, Q07, Q08, Q09, Q10 y Q12, y Q04 con julio (10247 frente a 10392); Q03, Q05 y Q11 no cambian | `fiscal_year` |
 | `active_days`: activo = un pedido válido en los últimos N días | 30, 60, 90 | Q03 (623 / 801 / 881 en el mundo público) | `active_customer` |
 | `rounding_unit`: los importes se informan redondeados al múltiplo más cercano de | 100, 1,000, 10,000 KRW | qué respuestas monetarias son válidas (una hoja redondeada a una unidad más fina incumple la regla de una unidad más gruesa) y la tolerancia monetaria (media unidad): una hoja más gruesa puntuada con una unidad más fina falla Q07 o Q09 | `report_rounding` |
-| `dont_know_reward`: lo que obtiene un `null` (errónea 0, correcta 2) | 0.5, 1, 1.5 | la recompensa de cada `null` y, por tanto, el umbral de abstención (25 %, 50 %, 75 %) y la línea base de todo `null` (0.25, 0.50, 0.75); la referencia solo responde su Q06 no resuelta con 0.5 | `answer_rewards` |
+| `dont_know_reward`: lo que obtiene un `null` (errónea 0, correcta 2) | 0.5, 1, 1.5 | la recompensa de cada `null` y, por tanto, el umbral de abstención (25 %, 50 %, 75 %) y la forma de trabajar del cliente, todo `null` (0.25, 0.50, 0.75); la referencia solo responde su Q06 no resuelta con 0.5 | `answer_rewards` |
 
 `derive_params` añade lo que citan los textos: `fy2025`, `fy2026_q1` y `fy2026_h1` (rangos de fechas redactados en
 cada idioma, p. ej. "2025-07-01 to 2026-06-30" / "del 2025-07-01 al 2026-06-30"; el semestre se indica completo y se
@@ -204,7 +204,7 @@ puntuación con el primer otro valor que prueba. `fy_start` 1 → 4: la referenc
 `active_days` 60 → 30: a 0.875 (Q03). `rounding_unit` 100 → 1,000: la referencia queda inválida. `dont_know_reward` 1
 → 0.5: su objetivo pasa de 0.958 a 0.938, y la referencia sorteada con 0.5 responde Q06 y obtiene 0.917. En easy y
 medium la referencia responde todas las preguntas puntuadas, así que allí `dont_know_reward` deja su objetivo en
-1.000; aun así mueve la línea base de todo `null` (0.25 / 0.50 / 0.75) y la recompensa de cada `null` que dé un
+1.000; aun así mueve la puntuación de la forma de trabajar del cliente, todo `null` (0.25 / 0.50 / 0.75), y la recompensa de cada `null` que dé un
 agente, de modo que cambia la calidad normalizada de cualquier hoja que se abstenga. Del mismo modo, en easy, donde
 Q01 es la única pregunta monetaria, una hoja de 10,000 KRW sigue siendo válida y correcta con 100 o 1,000 KRW; allí
 solo incumple la regla la dirección contraria (una hoja más fina con una unidad más gruesa). Al puntuar la referencia
@@ -216,10 +216,10 @@ más gruesa puntuada con una más fina falla Q07 o Q09.
 
 ## Qué debe preguntar un agente
 
-Las once preguntas clave en hard (nueve en easy, diez en medium), pero cuatro de ellas llevan el sorteo de la semilla
+Los once hechos que la IA debe preguntar en hard (nueve en easy, diez en medium), pero cuatro de ellos llevan el sorteo de la semilla
 de reglas y no se pueden trasladar de otra ejecución ni adivinar a partir de los datos: el primer mes del año fiscal
 (`fiscal_year`), la ventana de actividad (`active_customer`), la unidad de redondeo (`report_rounding`) y lo que vale
-un «aún no disponible» (`answer_rewards`). Las otras siete son iguales con cualquier sorteo. Sin `answer_rewards`, un
+un «aún no disponible» (`answer_rewards`). Los otros siete son iguales con cualquier sorteo. Sin `answer_rewards`, un
 agente no puede saber si debe dar una respuesta con un 60 % de probabilidad de acierto (sí con 0.5 y 1, no con 1.5);
 sin `report_rounding`, no puede saber qué cifras monetarias son válidas.
 
@@ -233,23 +233,23 @@ sin `report_rounding`, no puede saber qué cifras monetarias son válidas.
 
 ## Situaciones presentes
 
-- **Hechos ocultos:** las once preguntas clave anteriores. Los datos están construidos para que cada una se
+- **Hechos que solo conoce el cliente:** los once hechos anteriores. Los datos están construidos para que cada uno se
   manifieste. Una prueba de carga de QA en la cuenta de prueba 10027 (36 pedidos de diez molinillos manuales y cinco
   mezclas de 1 kg, de abril de 2025 a marzo de 2026) la convierte en el cliente principal con cualquier año fiscal
   cuando las cuentas de prueba se mantienen. Cinco pedidos de prueba caen en los primeros minutos de las rebajas del
   2026-07-01 (hora de Corea), que en UTC todavía es 2026-06-30. Las cancelaciones pagadas tienen filas de pago. Cuatro
   productos de despensa se lanzaron con la etiqueta nueva, mientras que los cuatro más antiguos siguen diciendo
   snacks. Los reembolsos de octubre de pedidos de septiembre mueven Q11 unos 3 puntos (2–4 en las semillas 1–3).
-- **Abstención calibrada:** el esquema de recompensas también es un hecho oculto. Un agente que no ha encontrado una
+- **Abstención calibrada:** el esquema de recompensas también es un hecho que solo conoce el cliente. Un agente que no ha encontrado una
   definición, o que no puede fijar una cifra, debería comparar su probabilidad de acertar con el umbral del sorteo.
-  Decir «no sé» a todo da 0.25–0.75, que es la línea base (calidad 0); responder todo a valor nominal da 0–0.4 en las
+  Decir «no sé» a todo da 0.25–0.75, que es la forma de trabajar del cliente (calidad 0); responder todo a valor nominal da 0–0.4 en las
   semillas de reglas públicas con el mundo público, menos que eso.
 - **Eventos con fecha, presión:** ninguno en el propio caso (véase REVIEW.md F6). La modalidad messy añade los eventos
   genéricos del framework.
 
-## Referencia y línea base (semilla de mundo pública 20261026)
+## Solución de referencia y forma de trabajar del cliente (semilla de mundo pública 20261026)
 
-La **referencia** es un analista cuidadoso que usa las convenciones de la configuración y acierta todas las
+La **solución de referencia** es un analista cuidadoso que usa las convenciones de la configuración y acierta todas las
 definiciones salvo el cambio de nombre de la categoría: responde la pregunta de «despensa» solo con la etiqueta
 `pantry`. Deja en `null` las preguntas que el nivel no puntúa. Su política de abstención es razonada y determinista:
 su cifra de despensa solo abarca los productos lanzados desde 2025-10, así que le da a esa respuesta una probabilidad
@@ -257,7 +257,7 @@ de acierto del 50 % y solo la mantiene cuando ½ × right_reward > dont_know_rew
 0.5 (1 > 0.5), así que responde y falla. Con 1 (1 = 1; en caso de empate se abstiene) y con 1.5 (1 < 1.5) dice «no
 sé». En easy y medium no se puntúa Q06, así que allí la referencia acierta todas las preguntas puntuadas.
 
-La **línea base** es lo que finanzas informa sin un analista: «aún no disponible» (`null`) en todas las preguntas.
+La **forma de trabajar del cliente** es lo que finanzas informa sin un analista: «aún no disponible» (`null`) en todas las preguntas.
 Obtiene la recompensa de «no sé» del sorteo en todas las preguntas puntuadas (0.25 / 0.50 / 0.75 del máximo), de modo
 que decir «no sé» a todo vale 0 en la escala normalizada. La **hoja a valor nominal** es la exportación sumada sin
 ninguna de las definiciones del cliente: periodos de año natural sobre las fechas UTC guardadas, todos los pedidos sea
@@ -265,9 +265,9 @@ cual sea su estado, ingreso = `total` del pedido menos los reembolsos fechados e
 tipo del 2026-09-30, activo = con un pedido en los últimos 30 días, «despensa» = la etiqueta `pantry`. Responde todas
 las preguntas y respeta las dos políticas de finanzas que el cliente aplica de todos modos (cuentas de prueba fuera,
 importes redondeados a la unidad de la configuración). En las semillas de reglas públicas con el mundo público puntúa
-por debajo de la línea base en todas las configuraciones: sus cifras erróneas no suman nada.
+por debajo de la forma de trabajar del cliente en todas las configuraciones: sus cifras erróneas no suman nada.
 
-| Configuración | Sorteo (fy_start, active_days, rounding_unit, dont_know_reward) | Objetivo de la referencia | Línea base (todo `null`) | Hoja a valor nominal | Hoja perfecta | Hoja perfecta, calidad normalizada |
+| Configuración | Sorteo (fy_start, active_days, rounding_unit, dont_know_reward) | Objetivo de la solución de referencia | Forma de trabajar del cliente (todo `null`) | Hoja a valor nominal | Hoja perfecta | Hoja perfecta, calidad normalizada |
 |---|---|---|---|---|---|---|
 | easy/s4 | 1, 60, 100, 1 | 1.000 (5 correctas) | 0.500 | 0.400 | 1.000 | 1.000 |
 | easy/s12 | 7, 30, 10000, 0.5 | 1.000 | 0.250 | 0.000 | 1.000 | 1.000 |
@@ -279,23 +279,23 @@ por debajo de la línea base en todas las configuraciones: sus cifras erróneas 
 | hard/s12 | 7, 30, 10000, 0.5 | 0.917 (11 correctas, Q06 errónea) | 0.250 | 0.083 | 1.000 | 1.125 |
 | hard/s23 | 4, 90, 1000, 1.5 | 0.979 (11 correctas, Q06 null) | 0.750 | 0.000 | 1.000 | 1.091 |
 
-La calidad normalizada es (objetivo − línea base) / (referencia − línea base); la de la hoja a valor nominal es 0 en
-todas las filas (por debajo de la línea base). La calidad normalizada de la hoja perfecta es 1.0 en easy y medium y
+La calidad normalizada es (objetivo − cliente) / (referencia − cliente), donde «cliente» es el objetivo de la forma de trabajar del cliente; la de la hoja a valor nominal es 0 en
+todas las filas (por debajo de la forma de trabajar del cliente). La calidad normalizada de la hoja perfecta es 1.0 en easy y medium y
 1.09–1.13 en hard, así que el caso no fija `quality_cap` (un solo número por caso no puede dar la puntuación completa
 a la hoja perfecta en todas las configuraciones; REVIEW.md, F2). El objetivo de la referencia solo depende del nivel y
 de la recompensa del `null`: 1.000 en easy y medium, y 0.917 / 0.958 / 0.979 en hard para un `null` que vale 0.5 / 1 /
 1.5, en las 81 combinaciones con las semillas de mundo 1–10 y el mundo público, y en las nueve configuraciones
 públicas con las semillas de mundo 1–20.
 
-La hoja a valor nominal no siempre queda por debajo de la línea base. Con las semillas de mundo 1–20 obtiene 0.20–0.60
-en easy/s4, frente a una línea base de 0.50: queda por encima con las semillas de mundo 4 y 7, donde acierta tres de
+La hoja a valor nominal no siempre queda por debajo de la forma de trabajar del cliente. Con las semillas de mundo 1–20 obtiene 0.20–0.60
+en easy/s4, frente a 0.50 de la forma de trabajar del cliente: queda por encima con las semillas de mundo 4 y 7, donde acierta tres de
 las cinco preguntas. En el resto de las configuraciones públicas se mantiene por debajo (0.00–0.20 en easy/s12,
 0.00–0.40 en easy/s23, 0.09–0.36 en medium/s4, 0.00–0.18 en medium/s12 y medium/s23, 0.08–0.33 en hard/s4, 0.00–0.17
-en hard/s12 y hard/s23). En las 81 combinaciones por nivel con las semillas de mundo 1–10, alcanza la línea base en
+en hard/s12 y hard/s23). En las 81 combinaciones por nivel con las semillas de mundo 1–10, alcanza la forma de trabajar del cliente en
 117 de 2,430 casos, todos salvo seis con un año que empieza en enero (el año natural que ella supone) y un `null` que
-vale 0.5 o 1; su mejor resultado es 0.60 en easy, 0.46 en medium y 0.42 en hard, frente a una línea base de 0.25. Un
+vale 0.5 o 1; su mejor resultado es 0.60 en easy, 0.46 en medium y 0.42 en hard, frente a 0.25 de la forma de trabajar del cliente. Un
 sorteo así da al enfoque a valor nominal una calidad normalizada positiva (hasta 0.47). Con las semillas 1–20 se
-construyen, en las nueve configuraciones públicas, mundos, referencias, líneas base y ejemplos de incumplimiento
+construyen, en las nueve configuraciones públicas, mundos, referencias, formas de trabajar del cliente y ejemplos de incumplimiento
 válidos.
 
 Las respuestas del nivel hard (cifra exacta, referencia, hoja a valor nominal; ✓/✗ = la respuesta a valor nominal es
@@ -320,6 +320,16 @@ Con s23 (un año que empieza en abril y una ventana de 90 días), las cifras exa
 configuraciones. Q05 y Q11 no dependen del año fiscal; Q04 es el mismo cliente con el año que empieza en abril y con
 el que empieza en enero.
 
+### Solución literal
+
+`literal_solution` responde todas las preguntas con un número, como pide la solicitud: solo los pedidos completados,
+las cuentas de prueba fuera, ingreso neto = subtotal menos reembolsos al tipo de la fecha del pedido (como hace
+`compute()`), y con la lectura natural de lo que el cliente no dijo: el año natural como año fiscal, las fechas UTC
+guardadas como días, «activo» como con un pedido en los últimos 30 días, «despensa» como los productos con la etiqueta
+`pantry`, y los importes al won entero. Es la misma hoja en todas las configuraciones y es inválida en las 9
+configuraciones públicas (calidad 0): ningún importe está redondeado a los 100, 1,000 o 10,000 KRW del cliente. Con
+esa regla flexibilizada obtendría 0.36–0.60 con el año que empieza en enero (s4) y 0 en las demás.
+
 ## Notas
 
 - Sintético. Los precios, los tipos impositivos, las trayectorias del tipo de cambio, los ritmos de pedido y las tasas
@@ -332,7 +342,7 @@ el que empieza en enero.
   que el historial de pedidos empieza el 2025-01-01. La cuenta de prueba de QA 10027 tiene pedidos de prueba de carga
   desde abril de 2025, aunque se dio de alta en diciembre de 2025.
 - `validate-case` comprueba todas las configuraciones públicas: datos deterministas en cinco idiomas, la misma vista
-  del agente en las nueve, la referencia con calidad 1.0, una línea base válida peor que la referencia, un entregable
+  del agente en las nueve, la referencia con calidad 1.0, una forma de trabajar del cliente válida y peor que la referencia, un entregable
   por regla que incumple solo esa regla, las listas de candidatos y las semillas de reglas públicas, `derive_params`
   en todas las combinaciones, y que cada parámetro influye. Advierte de que las referencias de medium y hard son
   idénticas byte a byte con las semillas 4 y 23: ambas dejan Q06 en `null`, porque en medium no se necesita y en hard

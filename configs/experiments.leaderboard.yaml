@@ -1,0 +1,26 @@
+# The current leaderboard round (leaderboard/rounds.yaml, round 2026-11) as a campaign: every case, three tiers,
+# the round's three rule seeds, three trials, in docker. 13 x 3 x 3 x 3 = 351 runs per agent.
+#   fdebench2 campaign configs/experiments.leaderboard.yaml --dry-run
+#   fdebench2 campaign configs/experiments.leaderboard.yaml
+#   fdebench2 submit runs-leaderboard/ --name "My system" --flag web_tools=off --out leaderboard/my-system.json
+# See docs/SUBMITTING.md for the rules. Do not change the seeds, tiers, trials or axes: `submit` then marks the
+# result "development" instead of ranking it.
+defaults:
+  cases_root: cases
+  rule_seeds: [108807, 519122, 904685]
+  models: configs/models.yaml
+  out: runs-leaderboard
+  noise_seeds: [0]
+  trials: 3
+  isolation: strict
+  sandbox:
+    kind: docker
+    image: "fde-bench-agent:latest"     # docker/Dockerfile.agent
+  cases: all
+
+agents:
+  - {harness: reference, model: gpt}    # your endpoint name from configs/models.yaml, or a vendor harness
+
+experiments:
+  round_2026_11:
+    difficulty: [easy, medium, hard]

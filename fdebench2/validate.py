@@ -98,27 +98,19 @@ from .transforms.policy import RULE_CLASSES
 DISTINCT_MARGIN = 0.01           # on objectives: a parameter whose answers differ by less changes nothing
 SUMMARY_REQUIRED = True          # a case without locales/<lang>/summary.yaml fails validation
 BASELINE_REQUIRED = True         # a case without baseline_solution fails validation
+LITERAL_REQUIRED = True          # a case without literal_solution fails validation
+LITERAL_MAX_QUALITY = 0.2        # the request read literally, without the client's facts, scores at most this,
+                                 # as delivered and with every bendable (business_policy) rule relaxed
+# Cases whose literal solution scores above LITERAL_MAX_QUALITY in some public setting, known and open:
+# case id -> why (a warning instead of a problem until the case changes).
+OPEN_LITERAL_FINDINGS: dict[str, str] = {
+}
 ADMISSIBLE_SEARCH = 5000         # combinations tried per candidate before it is called never admissible
 # Per-tier binding findings that the cases had when the check became per tier, warned about instead of failing
 # until each case's owner decides: (case id, parameter, tier) -> (worlds, why it changes nothing there), where
 # worlds are the world seeds the finding holds on (None: on every world, the public one included). Remove an entry
 # once the case is changed; any other finding of this kind, on another tier or another world, fails validation.
 OPEN_BINDING_FINDINGS: dict[tuple[str, str, str], tuple[tuple[int, ...] | None, str]] = {
-    ("data_knowledge/bi_data_analyst", "dont_know_reward", "easy"): (
-        None, "the reference answers every scored question right (objective 1.0), so the reward for a null moves "
-              "no reference objective; it moves the all-null baseline and so the quality scale"),
-    ("data_knowledge/bi_data_analyst", "dont_know_reward", "medium"): (
-        None, "the reference answers every scored question right (objective 1.0), so the reward for a null moves "
-              "no reference objective; it moves the all-null baseline and so the quality scale"),
-    ("logistics/bakery_delivery_dispatcher", "late_cost", "easy"): (
-        None, "the easy reference is hardly ever late at a café, so the cost of a late minute moves no reference "
-              "objective by 1%"),
-    ("logistics/bakery_delivery_dispatcher", "shift_end", "easy"): (
-        (2, 3), "the reference of rule seed 5 stays valid with the same objective under every shift end (10:00, "
-                "09:30, 09:00)"),
-    ("logistics/bakery_delivery_dispatcher", "shift_end", "medium"): (
-        (2, 3), "the reference of rule seed 5 stays valid with the same objective under every shift end (10:00, "
-                "09:30, 09:00)"),
 }
 # Settings whose quality scale is narrower than MIN_QUALITY_SPAN (the baseline within 5% of the reference), known
 # and open: a warning instead of a problem on the worlds listed (None: every world) until the case is fixed.
@@ -128,7 +120,98 @@ OPEN_NARROW_SCALES: dict[str, tuple[tuple[int, ...] | None, str]] = {
 # why it is open (kinds and keys as fdebench2.audit.findings gives them, e.g. ("no_bite", "safety_stock@easy") or
 # ("invalid_reference", "hard/cap=22,price=3"), and ("audit", "missing" or "stale")). A listed problem is a warning
 # until the case changes; waiving "stale" waives only that: the stored audit's own findings still count.
-OPEN_AUDIT_FINDINGS: dict[tuple[str, str, str], str] = {}
+OPEN_AUDIT_FINDINGS: dict[tuple[str, str, str], str] = {
+    ("customer_service/callcenter_workforce_planner", "shortcut", "weekdays_only"): (
+        "at the cost-driven price of a missing agent (17) the client's own objective values the whole weekend at "
+        "under half of the scale, so the planner's roster with the weekend left empty keeps up to 0.59 of it (at 50 "
+        "at most 0.29); a low price high enough to close it (25) leaves the price nothing to decide (it bites in 0 of "
+        "45 settings), a cost for a language left with nobody widened the scale until the facts and the value of "
+        "asking shrank, and a rule that every line is staffed every day makes the client's own rota invalid on world "
+        "seed 3"),
+    ("customer_service/callcenter_workforce_planner", "shortcut", "no_new_hires"): (
+        "keeping the four new hires off the phones keeps the buddy rule vacuously; with their training salary paid "
+        "anyway it keeps at most 0.515 of the scale (above 0.5 in one hard setting of 45); a rule that every new hire "
+        "works would make the client's own rota invalid, which leaves a new hire off when no experienced full-timer "
+        "of their language has days to shadow (most world seeds)"),
+    ("public_sector/benefits_eligibility_officer", "shortcut", "worksheet_best_two_changes"): (
+        "copying the client's worksheet and changing the two of its differences that recover the most reaches about "
+        "0.6-0.75 in easy and medium (every single change stays at most 0.39): the worksheet's two habits of reading "
+        "the form (the disregard for the applicant only, the earnings of adults living elsewhere) and this year's "
+        "table and supplement are each a quarter to two fifths of the scale, and its two halves (the reading habits "
+        "fixed, this year's figures put on it) together make up most of the scale (0.62-1.02 of it), so cutting its "
+        "differences into two groups leaves one near or above half in most settings; narrowing the habits moved the "
+        "excess to pairs of this year's figures (up to 0.90), and a worksheet with more errors would be a strawman"),
+    ("finance/stock_trading_strategist", "shortcut", "hold_first_picks"): (
+        "buying the reference's first picks and holding them (every notice and the table handled as the reference) "
+        "scores about as well as the reference: the world's stock drifts persist over the whole test period and the "
+        "reference's risk switch sits in cash through the sell-off, so ranking again adds nothing; closing it needs "
+        "a different market model, which changes the agent's data"),
+    ("people_hr/resume_screening_specialist", "shortcut", "skill_count"): (
+        "a keyword screen that keeps every client rule and ranks by the number of listed nice-to-haves keeps 0.42-0.77 "
+        "of the scale (at best 0.54, 0.62 and 0.71 on world seeds 1-3): the fit is mostly experience and two valuable "
+        "listed skills per role, which a count partly rewards, and the past hires add the rest (the right weights, the "
+        "unlisted skill, the bias removed). It leaves the attached past hires unread, so it is a shortcut, not a part "
+        "of the work. Tried: a keyword screen as the zero point narrows the scale below 5% on world seeds 1-3 "
+        "(2.1-15.6%); heavier experience weights or 600 past hires kept the screens at 0.54-0.98; an unlisted skill "
+        "worth 12 instead of 6 still left them at 0.55-0.77 in some settings and made the face-value learner lose "
+        "nothing on world seed 1 (the bias fact would stop biting)"),
+    ("people_hr/resume_screening_specialist", "shortcut", "skills_and_years"): (
+        "a hand-made scorecard that keeps every client rule (a point per listed nice-to-have and per year above the "
+        "minimum) keeps 0.54-0.76 of the scale (at best 0.82, 0.77 and 0.75 on world seeds 1-3), for the reason given "
+        "for skill_count: learning the weights from the past hires is worth the rest of the scale, not more"),
+    ("people_hr/resume_screening_specialist", "shortcut", "jd_position"): (
+        "skills weighted by their place in the job description's list (not the weight order) keep 0.24-0.75 of the "
+        "scale, above 0.5 in 2 of 33 settings (at best 0.56, 0.58 and 0.62 on world seeds 1-3): a variant of the "
+        "keyword screen, open for the reason given for skill_count"),
+    ("people_hr/resume_screening_specialist", "shortcut", "jd_scorecard"): (
+        "the strongest keyword screen found (a point per listed nice-to-have, per year above the minimum up to three, "
+        "for a bonus certificate that counts and for an R2 master's or PhD, every client rule kept) keeps 0.62-0.93 "
+        "of the scale (at best 0.90, 0.72 and 0.74 on world seeds 1-3): a hand-made scorecard reads most of what the "
+        "fit is made of, and learning from the past hires is worth 0.07-0.38 of the scale over it; open for the "
+        "reason given for skill_count"),
+    ("people_hr/resume_screening_specialist", "shortcut", "note_on_top"): (
+        "the hiring manager's note followed only in the order (the reference's own invited, with the Singaporean men "
+        "under 40 among them moved to the top of each list) keeps 0.80-1.00 of the scale: it changes nobody's "
+        "invitation, so the fair-hiring screen cannot see it, and a test of the places within the lists flagged the "
+        "client's own experience ranking (protected-blind) at p = 0.0002 on world seed 3, so it cannot be a rule; "
+        "following the note in who is invited (note_followed) is invalid in every tier (33 of 33 settings here, 33, "
+        "26 and 33 on world seeds 1-3)"),
+    ("finance/stock_trading_strategist", "shortcut", "no_close_out_sizing"): (
+        "invalid in 42 of the 45 measured settings; valid only at a 9% threshold with a 4-session deadline, where the "
+        "stock limit binds before the close-out room, so the program is the reference itself (q 0.98-1.13) and the "
+        "close-out deadline does not bite either"),
+    ("logistics/bakery_delivery_dispatcher", "shortcut", "habit_best_departures"): (
+        "the dispatcher's own rounds, each van at its best minute, reach 0.67 in hard/c12 and 0.53 in medium/s13 of "
+        "39 settings, where his plan is within 9% and 13% of the reference and the reference within 1.1% of the "
+        "proven optimum (against the best known plan hard/c12 would still reach 0.61); a dispatcher who times to the "
+        "minute narrows other scales below 5%; on world seeds 1-3 it opens in 4, 6 and 18 settings of 39"),
+    ("logistics/bakery_delivery_dispatcher", "shortcut", "habit_one_move"): (
+        "the dispatcher's plan with its one most useful café move reaches 0.53 in one hard setting of 39 (hard/c1), "
+        "where his plan is within 8% of the reference and the reference within 0.2% of the proven optimum; folding "
+        "the move into the habit narrows scales below 5%"),
+    ("logistics/bakery_delivery_dispatcher", "shortcut", "literal_plus_closed_cafe_planner_guess"): (
+        "the literal solution with the closed café known and the travel times guessed as a planner would (1.3 times "
+        "the straight line, 25 km/h, five minutes a stop) reaches 0.77-0.93 in 6 of the 9 easy settings: the "
+        "client's travel model is close to a textbook guess, so knowing the closed café is enough there; closing "
+        "it needs a travel fact no uniform guess approximates, a redesign (a prototype with a river crossed only at "
+        "the kitchen closed it but drew a new world and opened the one-move shortcut in 19 of 39 settings)"),
+    ("energy_utilities/battery_dispatch_operator", "shortcut", "solar_only"): (
+        "never drawing from the grid, every other fact right, scores above 0.5 in 19 of the 45 audited settings (19-20 "
+        "on world seeds 1-3) and in all six medium and hard settings of round 2026-11: at the forecast prices a night "
+        "charge rarely pays for its losses and degradation, and the free solar above the export limit fills the "
+        "battery anyway, so the best plan imports little and no window changes it. It needs every other fact and is "
+        "the safe answer to the one question it skips. Closing it trades the degradation fact's bite away: a cheaper "
+        "degradation pool, or a morning peak 30 EUR/MWh dearer with nights 10 EUR/MWh cheaper (still open in 4 of 30 "
+        "medium and hard settings, degradation biting in 21 instead of 30) (GT.md, part 1)"),
+    ("energy_utilities/battery_dispatch_operator", "shortcut", "planner_two_changes"): (
+        "the client's planner without its 1% buffer and without its all-day reserve (the reserve held only through "
+        "its hours) scores up to 0.57, above 0.5 in 3 of the 30 audited medium and hard settings (2 on each of "
+        "world seeds 1-3, none in round 2026-11), where the morning sale into the reserve pays most. It needs every "
+        "client fact and the "
+        "planner rebuilt from its description, so it is the client's way improved by applying the rules, not a way "
+        "around them; a planner that dips into the reserve in the morning on its own breaks the reserve on outage or "
+        "cloudy days (GT.md, part 2)"),
+}
 REQUIRED_META = ("id", "role", "field", "task_type", "objective", "seed", "deliverable_spec", "rules")
 HANGUL = re.compile(r"[가-힣]")
 KANA = re.compile(r"[぀-ヿ]")
@@ -1045,6 +1128,18 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                for row in _data_rows(d) for text in (row, re.sub(r"[,;\t|]", " ", row))
                for x in (float(n.replace(",", "")) for n in NUMBER.findall(text)) if x >= 10}
     broken_baseline = False
+    literal_fn, literal_dir, literal_high = getattr(case.module, "literal_solution", None), None, []
+    if literal_fn is None:
+        (problems if LITERAL_REQUIRED else warnings).append(
+            "case.py has no literal_solution (the request done exactly as written, without the client's facts)")
+    else:
+        literal_dir = Path(keep.name) / "literal"
+        literal_dir.mkdir()
+        try:
+            literal_fn(case.world, literal_dir)
+        except Exception as e:
+            problems.append(f"literal_solution fails: {e!r}"[:400])
+            literal_dir = None
     try:
         case.quality_cap
     except ValueError as e:
@@ -1121,6 +1216,17 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                     span = quality_span(ref, base_obj)
                     if span is not None and span < MIN_QUALITY_SPAN:
                         close.append((c.setting.label if c.tiers else "the case", span))
+            if literal_dir is not None and first["validity_score"] == 1.0:
+                # as delivered, and with every rule an approved exception can relax (business_policy) relaxed
+                bendable = frozenset(r.id for r in c.rules().rules if r.rule_class == "business_policy")
+                where = c.setting.label if c.tiers else "the case"
+                for relaxed, note in ((frozenset(), ""), (bendable, " with the bendable rules relaxed")):
+                    lit = c.evaluate(literal_dir, "en", relaxed=relaxed)
+                    if lit["validity_score"] == 1.0 and lit["quality_score"] > LITERAL_MAX_QUALITY:
+                        literal_high.append(f"{where} ({lit['quality_score']:.2f}{note})")
+                        break
+                    if not bendable:
+                        break
             examples = c.violating_examples()
             for rule_id in [r.id for r in c.rules().rules]:
                 if rule_id not in examples:
@@ -1142,6 +1248,11 @@ def check_case(root: Path, world_seeds: list[int] = ()) -> Report:
                         problems.append(f"{at}rule {rule_id}: example still invalid when the rule is relaxed: {relaxed}")
     if ratios:
         report.notes.append("baseline/reference objective: " + ", ".join(ratios))
+    if literal_high:
+        text = (f"the literal solution (the request done exactly as written, without the client's facts) scores "
+                f"above {LITERAL_MAX_QUALITY} in {', '.join(literal_high)}: the client's facts do not matter enough")
+        why = OPEN_LITERAL_FINDINGS.get(case.id)
+        (warnings.append(f"known and open: {text} ({why})") if why else problems.append(text))
     if close:
         found = narrow_scale(case, close)
         (warnings if found.startswith("known and open") else problems).append(found)

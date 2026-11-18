@@ -2127,6 +2127,30 @@ def robust_solution(world: World, out_dir: Path, tier: str, candidates: dict) ->
                                       apply_reg_notice=True, redecide=False, split_rule=False, twins=False))
 
 
+def literal_solution(world: World, out_dir: Path) -> None:
+    """The request at face value, from the agent's view only: a program that does what the pilot day shows. With no
+    policy in the view, the rule values are the pilot's, as its answer reveals them (PILOT_RULES: the daily line of
+    400,000 the closing table counts down from, 50,000 per customer from the product sheet, the pilot's score floor,
+    DSR and income limits, no period budget, which the pilot table leaves null, no near-prime commitment, no tenure
+    habit); policy bureau A. Everything else read as robust_solution reads it: a scorecard fitted on the history
+    without the protected attributes, the documented bonus only, our earlier lending counted, the closing table of
+    every customer seen, every notice acted on, the documents' lower salary, credit lines at their interest without
+    a stress rate, a corrected document applied without deciding its referral again, no limit on same-day approvals
+    and no pairing of identical applications. The same program in every setting; the reference program's
+    economics (margin, loss given default) are kept, which can only help it."""
+    from fdebench2.cases import Setting
+    p = PILOT_RULES
+    params = {"policy_bureau": p["policy_bureau"], "min_score_a": p["min_score"], "near_prime_a": p["near_prime_below"],
+              "max_dsr_pct": p["max_dsr_pct"], "income_cap_pct": p["income_cap_pct"], "daily_cap": p["daily_cap"],
+              "period_budget": p["period_budget"], "quota_pct": p["quota_pct"], "discrepancy_pct": p["discrepancy_pct"],
+              "min_tenure": p["min_tenure"]}
+    params.update(derive_params(params, p["tier"]))
+    view = _View(world, Setting(p["tier"], 0, params, variation="literal"))
+    write_program(out_dir, ref_config(view, tenure_review=False, quota=False, lines="interest", stress=False,
+                                      verify_income=True, apply_repayments=True, apply_reg_notice=True,
+                                      redecide=False, split_rule=False, twins=False))
+
+
 BEST_KNOWN_GRID = (                      # the reference's hyperparameters, searched one move at a time
     {"quota_margin": 0.01}, {"quota_margin": 0.02}, {"quota_margin": 0.05},
     {"buffer_price": 0.02}, {"buffer_price": 0.1}, {"pace": 1.0}, {"pace": 1.25},

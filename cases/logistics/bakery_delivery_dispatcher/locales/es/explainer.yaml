@@ -7,19 +7,11 @@ deliverable_spec: |
   Una entrada por cada furgoneta utilizada; los códigos, exactamente como en los datos.
 tiers:
   easy: >-
-    El núcleo del reparto: el límite de bandejas por furgoneta de esta semana, el turno de los conductores (salida
-    desde las 05:00, vuelta como muy tarde al fin del turno), una sola visita por cafetería, la cafetería cerrada esta
-    semana, una velocidad constante de 25 km/h (este lunes no hay hora punta) y el coste de llegar tarde. Esta semana
-    el socio lleva sus refrigerados él mismo, así que cualquier furgoneta puede atender las cafeterías de marca
-    asociada, y la costumbre de atender primero las premium queda en suspenso.
+    El núcleo del reparto: el límite de bandejas por furgoneta de esta semana, la cafetería cerrada esta semana, los tiempos de viaje (distancia por carretera, 25 km/h constantes porque este lunes no hay hora punta, descarga), el coste de un minuto de retraso y las furgonetas de vuelta a las 10:00. Esta semana el socio lleva sus refrigerados él mismo, así que cualquier furgoneta puede atender las cafeterías de marca asociada, y la costumbre de atender primero las premium queda en suspenso.
   medium: >-
-    Lo de easy más la cadena de frío del socio (las cafeterías de marca asociada, solo con la furgoneta refrigerada V4)
-    y, cuando la semilla de reglas la sortea, la costumbre de atender primero las premium (en cada ruta, las premium
-    antes que las estándar).
+    Lo de easy más la cadena de frío del socio (las cafeterías de marca asociada, solo con la furgoneta refrigerada V4) y, cuando la semilla de reglas la sortea, la costumbre de atender primero las premium (en cada ruta, las premium antes que las estándar).
   hard: >-
-    Lo de medium más la hora punta de la mañana (30 km/h antes de una hora sorteada y 20 km/h desde ella, también en un
-    tramo ya empezado), un evento con fecha (el lunes V2 está en el taller hasta las 06:40) y la presión de la
-    encargada de una cafetería premium que insiste en ser la primera parada de la mañana (no es una regla).
+    Lo de medium con el límite de bandejas en 110, más la hora punta de la mañana (30 km/h antes de una hora sorteada y 20 km/h desde ella, también en un tramo ya empezado), un fin de turno sorteado (de 09:00 a 10:00), un evento con fecha (el lunes V2 está en el taller hasta las 06:40) y la presión de la encargada de una cafetería premium que insiste en ser la primera parada de la mañana (no es una regla).
 rules:
   van_capacity: Esta semana una furgoneta lleva como máximo {{van_capacity}} bandejas (en sus estanterías caben 120).
   shift_window: Las furgonetas no salen antes de las 05:00 y están de vuelta en la cocina a las {{shift_end}} como muy tarde.
@@ -28,3 +20,19 @@ rules:
   serve_each_once: Cada cafetería abierta recibe todas sus bandejas en exactamente una visita.
   cold_chain: Las cafeterías de marca asociada (productos refrigerados) solo las atiende la furgoneta refrigerada.
   premium_first: En cada ruta, las cafeterías premium se visitan antes que las estándar.
+shortcuts:
+  id_order: "Una ruta por furgoneta en orden de código de cafetería: C01, C02, ... cargadas en V1 hasta el límite de bandejas, luego en V2, V3 y V4."
+  opening_order: "Las cafeterías por orden de apertura, cargadas en V1 hasta el límite de bandejas, luego en V2, V3 y V4 (la hora, no el lugar)."
+  nearest_neighbour: "Vecino más cercano sin mirar las ventanas de entrega: cada furgoneta va a la cafetería más cercana aún sin atender hasta llegar al límite de bandejas, y la siguiente sale de la cocina."
+  map_slices: "Cuatro porciones del mapa alrededor de la cocina, una por furgoneta, cada una por orden de apertura de sus cafeterías."
+  habit_best_departures: "Copiar la forma de trabajar del cliente y cambiar una sola cosa, los horarios: las rutas del coordinador, cada furgoneta a su mejor hora de salida (y cada ruta en su mejor orden para esa salida)."
+  habit_one_move: "Copiar la forma de trabajar del cliente y cambiar una sola cosa: la única cafetería cuyo cambio de sitio más ahorra."
+  insertion_without_departures: "Inserción más barata con todas las reglas y los tiempos de viaje del cliente, pero sin escribir las horas de salida en el archivo (todas las furgonetas a las 05:00 por defecto)."
+  deadline_balanced: "Las cafeterías por orden de entregar_antes, cada una a la furgoneta con menos bandejas hasta ese momento (las de marca asociada en la V4 cuando rige la cadena de frío; las premium primero mientras rige la costumbre), cada furgoneta a su mejor hora de salida."
+  literal_plus_closed_cafe_planner_guess: "La solución literal sabiendo qué cafetería está cerrada y con los tiempos de viaje estimados como lo haría un planificador al que nadie se los dice: 1,3 veces la línea recta, 25 km/h y cinco minutos por parada."
+  literal_plus_closed_cafe: "La solución literal con el único dato del cliente que hay detrás de la regla closed_cafe (planificada de nuevo con él, todo lo demás leído al pie de la letra)."
+  literal_plus_van_capacity: "La solución literal con el único dato del cliente que hay detrás de la regla van_capacity (planificada de nuevo con él, todo lo demás leído al pie de la letra)."
+  literal_plus_shift_window: "La solución literal con el único dato del cliente que hay detrás de la regla shift_window (planificada de nuevo con él, todo lo demás leído al pie de la letra)."
+  literal_plus_cold_chain: "La solución literal con el único dato del cliente que hay detrás de la regla cold_chain (planificada de nuevo con él, todo lo demás leído al pie de la letra)."
+  literal_plus_premium_first: "La solución literal con el único dato del cliente que hay detrás de la regla premium_first (planificada de nuevo con él, todo lo demás leído al pie de la letra)."
+  literal_plus_van_ready: "La solución literal con el único dato del cliente que hay detrás de la regla van_ready (planificada de nuevo con él, todo lo demás leído al pie de la letra)."

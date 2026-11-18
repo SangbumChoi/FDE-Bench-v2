@@ -1,0 +1,27 @@
+# A first campaign: one model, three small cases, medium difficulty, each case's three public rule seeds, one
+# trial, no docker. 9 runs, a few minutes and a few cents with a small model. For development only: the public
+# seeds' answers are in the repository, so a leaderboard entry needs private seeds, 3 trials and isolation
+# (configs/experiments.example.yaml, docs/SUBMITTING.md).
+#   cp configs/models.example.yaml configs/models.yaml     # set one endpoint and its API-key env var
+#   fdebench2 campaign configs/experiments.starter.yaml --dry-run
+#   fdebench2 campaign configs/experiments.starter.yaml && fdebench2 report runs-starter/
+defaults:
+  cases_root: cases
+  rule_seeds: public
+  models: configs/models.yaml
+  out: runs-starter
+  noise_seeds: [0]
+  trials: 1
+  isolation: "off"               # the agent runs on this machine; use strict + docker for anything you report
+  sandbox: {kind: local}
+  cases:
+    - energy_utilities/battery_dispatch_operator
+    - logistics/bakery_delivery_dispatcher
+    - data_knowledge/bi_data_analyst
+
+agents:
+  - {harness: reference, model: gpt}      # any endpoint name from configs/models.yaml
+
+experiments:
+  first_look:
+    difficulty: [medium]

@@ -124,7 +124,9 @@ def test_baseline_must_be_valid_and_worse(tmp_path, baseline, problem):
         write_page(root)
     report = check_case(root)
     if problem is None:
-        assert report.problems == [] and report.notes[0].startswith("baseline/reference objective: easy/s5 ")
+        # the planted baseline changes case.py, so the case's stored ground truth audit is stale: that is all
+        assert [p for p in report.problems if "audit.json is stale" not in p] == []
+        assert report.notes[0].startswith("baseline/reference objective: easy/s5 ")
     else:
         assert any(problem in p for p in report.problems)
 

@@ -1,24 +1,18 @@
 - id: one_language
   text: 一个班次内坐席只接一个语种（须是其语言技能之一），会两种语言的坐席不能同时算两个语种。
-- id: slot_coverage
-  text: 预测文件给的已经是每个语种每半小时所需的坐席人数，按半小时时段检查覆盖，坐席在班次内的每个时段都算在岗。
-- id: holiday_wednesday
-  text: 11月11日周三是主要市场所在地区的公共假日，当天需求按预测值的 {{holiday_factor}} 向上取整计算，预测文件没有更新。
-- id: contract_limits
-  text: 全职只上 8 小时班且每周最多 {{ft_max_shifts}} 个，兼职只上 4 小时班且每周最多 3 个。
-- id: one_shift_a_day
-  text: 每位坐席每天最多上一个班。
+- id: understaffing_price
+  text: 每个时段、每个语种每缺一名坐席的代价是 {{under_weight}}，与时薪同一单位（客户估算的放弃来电、回拨处理和服务水平不达标的损失）；班表按这项代价加上所有班次的人工成本来评判，越低越好。
+- id: ft_contract_week
+  text: "全职的合同工时是每周 {{ft_week_hours}} 小时，即 {{ft_regular_shifts}} 个班<!-- tier: easy -->；本轮谁都不超出合同工时<!-- /tier --><!-- tier: medium hard -->；不事先安排加班，超出合同工时的班（最多一个，按 1.5 倍付薪）必须经运营经理批准<!-- /tier -->。"
+- id: pt_contract_week
+  text: 兼职的合同工时是每周 {{pt_week_hours}} 小时，最多 {{pt_max_shifts}} 个班，不加班；这些工时是保底的，即使排的班更少也照付。
 - id: min_rest
   text: 同一坐席上一个班结束到下一个班开始之间至少休息 {{min_rest}} 小时。
-- id: leave_dates
-  text: 请假记录的日期是“日/月/年”格式，起止日期都包含在内；只有已批准的才算请假，被驳回的申请人可以排班。
-- id: overtime
-  text: 全职的合同工时是每周 {{ft_week_hours}} 小时（{{ft_regular_shifts}} 个班），每周第 {{ft_max_shifts}} 个班算加班，成本按时薪的 1.5 倍计算。
+- id: holiday
+  text: "{{holiday_day}}是客户主要市场所在地区的公共假日，当天需求按预测值的 {{holiday_factor}} 向上取整计算，预测文件没有为此更新。"
+- id: training_salary
+  text: 新员工领培训期工资：无论是否上线接电话，其整周合同工时（{{ft_regular_shifts}} 个班）都照付，所以少排新员工的班并不省钱。
 - id: buddy_rule
   text: 新员工不能单独负责一个语种，其在岗的每个半小时时段，同一语种至少要有一位非新员工。
-- id: understaffing_penalty
-  text: 班表按每个时段每个语种每缺一名坐席记 {{under_weight}}（客户用与时薪相同的单位估算的缺人损失），再加上所有班次的人工成本来评分，越低越好。
 - id: sick_call
   text: 组长留言已经过时；客户周五上午收到了留言里那位坐席的医生证明，病假到 {{sick_until}} 为止（含当天），不管留言怎么说，在此之前都不能给这个人排班。
-- id: easy_scope
-  text: 本轮每天都按预测原样安排，每个班按普通时薪计算成本，休息时间由现场核对（只要求每天最多一个班），新员工可以和其他人一样排班。

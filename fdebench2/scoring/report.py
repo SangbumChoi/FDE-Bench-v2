@@ -70,12 +70,16 @@ def _num(x: float | None, digits: int = 3) -> str:
 
 
 def load_results(out: Path) -> list[dict[str, Any]]:
-    """Every out/<agent>/<run key>/result.json (never a file of that name an agent left in its workspace).
+    """Every run's result.json: out/<agent>/<run key>/result.json, where a campaign's run key holds the case id
+    <field>/<role>, so its run directory is out/<agent>/<field>/<role>__c-.../ (never a file of that name an agent
+    left in its workspace).
 
     A result scored under a rule set (A / B / C, before rule seeds replaced them) is refused: its ground truth
     is no longer what any rule seed draws, so it cannot be averaged with the others."""
     results = []
-    for p in sorted(out.glob("*/*/result.json")):
+    paths = sorted(Path(out).glob("*/*/result.json")) + sorted(
+        p for p in Path(out).glob("*/*/*/result.json") if "__c-" in p.parent.name)
+    for p in paths:
         r = json.loads(p.read_text(encoding="utf-8"))
         if "ruleset" in r or "ruleset" in (r.get("spec") or {}):
             raise ValueError(f"{p}: this run was scored under rule set {r.get('ruleset', r['spec'].get('ruleset'))}, "

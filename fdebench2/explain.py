@@ -622,6 +622,18 @@ def _answer_index(root: Path, meta: dict) -> list[str]:
             "difficulty and seed columns"]
 
 
+def site_url(start: Path) -> str | None:
+    """The published site's address, `[tool.fdebench2] site_url` in the repository's pyproject.toml (found by
+    walking up from `start`); None when there is none, and links then go to the stored pages."""
+    import tomllib
+    for folder in [Path(start).resolve(), *Path(start).resolve().parents]:
+        if (folder / "pyproject.toml").is_file():
+            conf = tomllib.loads((folder / "pyproject.toml").read_text(encoding="utf-8"))
+            url = conf.get("tool", {}).get("fdebench2", {}).get("site_url")
+            return url.rstrip("/") + "/" if url else None
+    return None
+
+
 def build_case_readme(case_root: Path) -> str:
     """The case's README.md: a generated index of its documents, so the case folder shows something on GitHub. The
     role and id, one row per language (the role in that language, its README, REVIEW when the case has one, and
@@ -636,9 +648,16 @@ def build_case_readme(case_root: Path) -> str:
     def cell(lang: str, name: str) -> str:
         return f"[{name}]({doc_path(lang, name)})" if (root / doc_path(lang, name)).is_file() else "–"
 
+    site, cid = site_url(root), f"{root.parent.name}/{root.name}"
+
+    def page_link(lang: str) -> str:      # the published page when the repository has a site, else the stored file
+        if site:
+            return f"[web page]({site}{'' if lang == 'en' else lang + '/'}{cid}/)"
+        return f"[explainer.html]({page_name(lang)})"
+
     head = ["Language", "Role", "README", *(["REVIEW"] if review else []), "Explainer"]
     rows = [[LANG_NAMES[lang], str(case_texts(root, lang).get("role") or role), cell(lang, "README.md"),
-             *([cell(lang, "REVIEW.md")] if review else []), f"[explainer.html]({page_name(lang)})"]
+             *([cell(lang, "REVIEW.md")] if review else []), page_link(lang)]
             for lang in README_LANGS]
     table = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     table += ["| " + " | ".join(c.replace("|", "\\|") for c in r) + " |" for r in rows]
@@ -678,8 +697,13 @@ def build_index(cases_root: Path, lang: str = "en") -> str:
         rows.append([_esc(fields.get(case.field, {}).get(lang, case.field)),
                      f'<a href="{_esc(rel)}">{_esc(own.get("role") or case.role)}</a>', f"<code>{_esc(cid)}</code>",
                      _esc(kind), _esc(settings), _esc(own.get("task_type") or meta.get("task_type", ""))])
+    # what sets the benchmark apart, linking the README's section of that name (in this language) when it exists
+    readme = "README.md" if lang == "en" else f"docs/{lang}/README.md"
+    more = (f'<p><a href="{UP}../{readme}#{_esc(heading_id(_esc(UI[lang]["diff_heading"])))}">{t("diff_more")}</a></p>'
+            if (Path(cases_root).parent / readme).is_file() else "")
     body = f"""<header>{_switcher(lang, "index.html")}<p class="eyebrow">{t("index_eyebrow")}</p><h1>{t("index_title")}</h1>
 <p class="muted">{t("index_intro", n=len(rows))}</p></header>
+<section><h2>{t("diff_title")}</h2><div class="common">{t("diff_body")}</div>{more}</section>
 <section><h2>{t("scoring_title")}</h2><div class="common">{t("common_body")}</div></section>
 <section>{_table([t("field"), t("role"), t("case_id"), t("deliverable"), t("settings"), t("task_type")], rows)}</section>"""
     return _shell(f"FDE-Bench v2 — {UI[lang]['index_title']}", body, script=False, lang=lang)

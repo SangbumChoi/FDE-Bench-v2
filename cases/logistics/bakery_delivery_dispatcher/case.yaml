@@ -3,20 +3,23 @@ role: Bakery Delivery Dispatcher
 task_type: Combinatorial Optimization
 field: logistics
 seed: 20261025
-objective: minimize          # total route minutes + late_cost x late minutes
+objective: minimize          # total route minutes + 3 x late minutes
+quality_cap: 1.0             # the median best known quality over the audit's settings (GT.md, part 4)
+audited: true                # the ground truth audit passes (dataset/audit.json, GT.md)
 tiers:                       # one world and the same data in every setting
   easy: >-
-    The routing core: this week's tray limit per van, the drivers' shift (out from 05:00, back by the shift end),
-    one visit per café, the café that is closed this week, a constant 25 km/h (no rush hour this Monday) and the
-    lateness cost. The partner's chilled range travels with the partner this week, so any van may serve the
+    The routing core: this week's tray limit per van, the café that is closed this week, the travel times (road
+    distance, a constant 25 km/h with no rush hour this Monday, unloading), the cost of a late minute and the
+    drivers back by 10:00. The partner's chilled range travels with the partner this week, so any van may serve the
     partner-brand cafés, and the premium-first habit is suspended.
   medium: >-
     Easy plus the partner cold chain (partner-brand cafés by the refrigerated V4 only) and the premium-first habit
     (premium cafés before standard ones on every route), when the rule seed draws it.
   hard: >-
-    Medium plus the morning rush (30 km/h before a drawn time, 20 km/h from it, also on a leg already under way), a
-    dated event (V2 is in the workshop until 06:40 on Monday) and pressure from a premium café manager who insists
-    on being the first stop of the morning (not a rule).
+    Medium with the tray limit at 110, plus the morning rush (30 km/h before a drawn time, 20 km/h from it, also on
+    a leg already under way), a drawn end of the drivers' shift (09:00 to 10:00), a dated event (V2 is in the
+    workshop until 06:40 on Monday) and pressure from a premium café manager who insists on being the first stop of
+    the morning (not a rule).
 params:                      # the client's rule values; a rule seed draws each one
   closed_cafe:               # the café closed this week for renovation (names as the data gives them)
     values: [C11, C03, C14]
@@ -24,17 +27,16 @@ params:                      # the client's rule values; a rule seed draws each 
       C11: {zh: 南山店（C11）, en: South Hill café (C11), ko: 남산점(C11), ja: 南山店（C11）, es: Cafetería Colina Sur (C11)}
       C03: {zh: 北站店（C03）, en: North Station café (C03), ko: 북역점(C03), ja: 北駅店（C03）, es: Cafetería Estación Norte (C03)}
       C14: {zh: 梧桐里店（C14）, en: Maple Row café (C14), ko: 단풍길점(C14), ja: 楓並木店（C14）, es: Cafetería Paseo de los Arces (C14)}
-  late_cost:                 # one minute late at a café costs as much as this many minutes of van time
-    values: [3, 2, 5]
-  shift_end:                 # every van back at the kitchen by then
-    values: ["09:30", "09:00", "10:00"]
+  shift_end:                 # every van back at the kitchen by then; drawn in hard only (in easy and medium no good
+                             # plan comes back after 09:00, so the end of the shift could not change the answer)
+    values: {easy: ["10:00"], medium: ["10:00"], hard: ["09:30", "09:00", "10:00"]}
   van_capacity:              # trays per van this week (max_trays in the data is 120); fixed in hard
     values: {easy: [100, 110, 120], medium: [100, 110, 120], hard: [110]}
   rush_start:                # hard: 30 km/h before it, 20 km/h from it; easy and medium: 25 km/h all morning
     values: {easy: [none], medium: [none], hard: ["07:00", "06:30", "07:30"]}
   premium_first:             # whether the premium-first habit holds this week (medium and hard)
     values: {easy: [false], medium: [true, false], hard: [true, false]}
-rule_seeds: [5, 13, 58]      # the first one draws the medium and hard headline (case.py _headline)
+rule_seeds: [5, 13, 58]      # the first one draws each tier's headline (case.py _headline)
 deliverables: [routes.json]
 deliverable_spec: |
   routes.json = {"routes": [{"van": "<van id, e.g. V1>", "depart": "HH:MM (optional, default 05:00)",

@@ -25,3 +25,28 @@ rules:
     每项决定都带有固定列表中与决定相符的原因代码（批准时，续期申请为 RENEWAL，新申请为 APPROVED）。
   auto_approve_renewals: >-
     续期申请不重新审核，按上年度的月发放额批准。
+shortcuts:
+  deny_every_new_application: 新申请一律以收入为由拒绝，续期照旧延续。
+  need_without_income: 每个通过居住和资产审核的新家庭都按全部所需金额发放，不扣收入（不超过上限），续期照旧延续。
+  one_amount_for_all: 每个通过居住和资产审核的新家庭都按同一个金额（标准答案发放额的中位数，不超过上限）批准，续期照旧延续。
+  counter_screening: 以前的快速筛查：去年的金额表减去申请表上的全部收入，按该版本的居住、资产和上限审核，按申报时的情况判定，续期照旧延续。
+  literal_renewals_rolled_over: 照字面完成的方案，只补上它违反的一条规则：续期照旧延续。
+  literal_residency_kept: 照字面完成的方案，只补上它违反的一条规则：居住时间不够的家庭被拒。
+  literal_all_rules: 照字面完成的方案，补上它违反的每一条规则：续期照旧延续，并按该版本的居住期限、资产上限和金额上限审核。
+  literal_six_months: 按下一种最自然的方式理解字面要求：续期照旧延续，并按须知中“新迁入的居民可能需要等待一段时间”猜测居住期限为六个月（180天）。
+  worksheet_members_elsewhere_left_out: 照搬客户的审核表，只改一处：不计住在别处的成员的工资。
+  worksheet_residency_in_days: 照搬客户的审核表，只改一处：居住期限按天数计算。
+  worksheet_disregard_every_earner: 照搬客户的审核表，只改一处：去年的工资扣除用于申请地址的每位有工资的人。
+  worksheet_this_years_disregard: 照搬客户的审核表，只改一处：用今年的工资扣除（仍像审核表那样只用于申请人的工资）。
+  worksheet_this_years_table: 照搬客户的审核表，只改一处：用今年的金额表。
+  worksheet_child_support_rule: 照搬客户的审核表，只改一处：子女抚养费按本轮的规定处理。
+  worksheet_supplement_line: 照搬客户的审核表，只改一处：加上残疾补贴。
+  worksheet_this_years_cap: 照搬客户的审核表，只改一处：用今年的上限表。
+  worksheet_circular: 照搬客户的审核表，只改一处：执行财政局的通知。
+  worksheet_reported_changes: 照搬客户的审核表，只改一处：计入在申请日期当天或之前生效的变更申报。
+  worksheet_guessed_uprating: 照搬客户的审核表，只改一处：猜测今年上调3%。
+  literal_asset_limit_kept: "照字面完成的方案，只补上它违反的一条规则：资产超过上限的家庭被拒。"
+  literal_cap_kept: "照字面完成的方案，只补上它违反的一条规则：每笔金额都不超过上限。"
+  worksheet_this_years_figures: "照搬客户的审核表，但印上今年的数字：今年的金额表、工资收入扣除，以及从 medium 起的上限。"
+  worksheet_never_refuses_income: "照搬客户的审核表，但把它因收入拒绝的每个家庭都改为批准、发放1（利用目标函数的算法：错拒要计400加应得金额，象征性发放只计应得金额）。"
+  worksheet_best_two_changes: "照搬客户的审核表，改掉合起来挽回最多的两处不同（该版本里最好的一对，就像了解窗口做法的人改掉它最糟的两个习惯）。"

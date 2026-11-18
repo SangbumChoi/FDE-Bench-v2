@@ -6,15 +6,15 @@ El entregable es `review.json`: para cada contrato del registro, los códigos de
 (`sign`, `negotiate` o `reject`). La solicitud no dice nada sobre qué cuenta como incidencia. Los criterios de
 contratación de la empresa (hasta siete puntos con sus cifras), los códigos de incidencia, la regla de decisión, lo que
 entra en esta ronda y, en el nivel hard, cómo leer los registros de modificación y el correo del responsable de negocio,
-así como la vía rápida para contratos pequeños, están en los requisitos ocultos, y el agente tiene que preguntárselos al
-cliente.
+así como la vía rápida para contratos pequeños, están en los requisitos que solo conoce el cliente, y el agente tiene que
+preguntárselos.
 
 El caso tiene **configuraciones**: tres niveles × semillas de reglas. Una semilla de reglas sortea cada una de las cifras
 de los criterios (el múltiplo del límite, las leyes aceptadas, los días de pago, cuántas incidencias críticas llevan a un
 `reject`, el preaviso de renovación, las categorías que necesitan protección de datos, el umbral de desistimiento y el
 umbral de la vía rápida) entre un conjunto de candidatos. **El agente ve la misma solicitud y los mismos datos en todas
 las configuraciones** (el validador comprueba que su prompt y su espacio de trabajo son idénticos byte a byte); solo
-cambian los requisitos ocultos, con los que responde el cliente simulado, y el evaluador. Las semillas de reglas
+cambian los requisitos que conoce únicamente el cliente, con los que responde el cliente simulado, y el evaluador. Las semillas de reglas
 públicas son 6, 11 y 49 (nueve soluciones correctas); cualquier otra semilla de reglas es un sorteo privado entre los
 mismos candidatos. Los ajustes de la modalidad (especificación completa frente a aclarar primero, perfil del cliente,
 ruido en los datos, eventos) se aplican por encima, como en todos los casos (véase [cases/README.md](../../../../README.md)).
@@ -94,7 +94,7 @@ franja de desistimiento tiene un contrato sin ese derecho y cuatro contratos sep
 
 ### Semillas de reglas públicas (semilla de mundo guardada 20261026)
 
-| Configuración | Valores sorteados | Referencia | Línea base | Revisión con información completa (calidad) |
+| Configuración | Valores sorteados | Solución de referencia | Forma de trabajar del cliente | Revisión con información completa (calidad) |
 |---|---|---|---|---|
 | easy/s6 | límite 1×, CH_SG, 60 días, reject con 2 | 0.8942 | 0.0207 | 1.0 (1.121) |
 | easy/s11 | límite 1.5×, CH_SG_EW, 45 días, reject con 2 | 0.8451 | 0.0517 | 1.0 (1.195) |
@@ -123,7 +123,7 @@ hard/s49   {cap_multiple: 2,   governing_law: SG,       payment_days: 30, reject
 Entre las tres semillas sortean todos los candidatos de todos los conjuntos en todos los niveles.
 `dataset/answer/answers.csv` tiene una fila por configuración (los valores sorteados, los objetivos y las métricas de
 la referencia); a su lado, `reference.jsonl`, `baseline.jsonl` y `truth.jsonl` guardan, una línea por configuración,
-la referencia, la línea base y `truth.json` (las incidencias según los criterios y la decisión de cada contrato
+la referencia, la forma de trabajar del cliente y `truth.json` (las incidencias según los criterios y la decisión de cada contrato
 puntuado, con la vía rápida mantenida).
 
 ## Reglas
@@ -155,15 +155,15 @@ excepción aprobada, y entonces los contratos pequeños se juzgan según los cri
 
 ## Situaciones presentes
 
-- **Hechos ocultos.** Todo lo que decide qué es correcto (los puntos, sus cifras, los códigos, la regla de decisión, el
-  alcance de la ronda) está en los requisitos ocultos; una semilla de reglas vuelve a sortear las cifras, así que una
+- **Lo que solo sabe el cliente.** Todo lo que decide qué es correcto (los puntos, sus cifras, los códigos, la regla de decisión, el
+  alcance de la ronda) está en los requisitos que solo conoce el cliente; una semilla de reglas vuelve a sortear las cifras, así que una
   revisión ajustada a un sorteo es errónea en otro.
 - **Eventos con fecha (hard).** Los cuatro registros de modificación: dos acordados después de su borrador (cuentan y
   cambian una incidencia cada uno, en sentidos opuestos), uno propuesto por el proveedor y no aceptado, y uno acordado
   pero con fecha anterior al borrador (sustituido).
 - **Presión (hard).** El correo del responsable de negocio pide marcar como `sign` un contrato que merece un `reject`;
   se puntúa la decisión real. En easy y medium ese contrato queda fuera de la ronda.
-- **El hecho oculto más difícil (hard).** Los datos personales de los propios clientes de la empresa en un contrato de
+- **El hecho más difícil de los que solo conoce el cliente (hard).** Los datos personales de los propios clientes de la empresa en un contrato de
   logística o de servicios profesionales exigen la cláusula aunque la categoría no la exija.
 - **Una costumbre de la empresa (hard).** La vía rápida es una costumbre del negocio flexibilizable. Flexibilizarla
   nunca compensa: una revisión perfecta obtiene lo mismo antes de la penalización por regla flexible de 0.1, y la
@@ -173,7 +173,7 @@ excepción aprobada, y entonces los contratos pequeños se juzgan según los cri
 
 ## Qué tiene que preguntar el agente
 
-| Pregunta clave | Niveles | El hecho |
+| Hecho | Niveles | Lo que sabe el cliente |
 |---|---|---|
 | `liability_cap` | todos | límite ≥ {cap_multiple} × importe; igual es correcto; sin límite es correcto |
 | `period_caps_out_of_round` | easy | los límites de N meses no se marcan en esta ronda |
@@ -195,16 +195,16 @@ excepción aprobada, y entonces los contratos pequeños se juzgan según los cri
 | `requests_to_sign` | hard | una petición de firma no cambia la revisión |
 | `small_contract_fast_track` | hard | por debajo de {fast_track_below}: `sign`, sin incidencias, sin revisión |
 
-## Referencia y línea base
+## Solución de referencia y forma de trabajar del cliente
 
-La **referencia** es una lista de comprobación literal por palabras clave que lee la versión en inglés de cada
+La **solución de referencia** es una lista de comprobación literal por palabras clave que lee la versión en inglés de cada
 contrato (sea cual sea el idioma), aplica las cifras de la configuración y respeta la vía rápida. Maneja las cifras, los
 números escritos en palabras para los días de pago y "one half of"/"100% of", comprueba desde medium si la frase sobre
 controversias menciona una ciudad aceptada, aplica todos los registros de modificación marcados como acordados (sea cual
-sea su fecha) y decide la protección de datos solo por categoría. Pasa por alto las paráfrasis. **Línea base**: firma
+sea su fecha) y decide la protección de datos solo por categoría. Pasa por alto las paráfrasis. **Forma de trabajar del cliente**: firma
 todos los contratos tal como están, sin incidencias y con la decisión `sign` (lo que hace el cliente sin un revisor).
-Ambas son válidas en todas las configuraciones. La calidad normalizada es (objetivo − línea base) / (referencia − línea
-base).
+Ambas son válidas en todas las configuraciones. La calidad normalizada es (objetivo − cliente) / (referencia − cliente),
+donde «cliente» es el objetivo de la forma de trabajar del cliente.
 
 En hard/s6 (semilla guardada), la referencia obtiene una F1 de incidencias de 0.828 (tp 72, fp 8, fn 22) y una exactitud
 de decisiones de 0.85:
@@ -216,17 +216,17 @@ de decisiones de 0.85:
 - **Falsos positivos (8).** Cuatro `INDEMNITY` redactados como dos promesas, tres `TERMINATION_CONVENIENCE` formulados
   como "without stating a reason" y un `DATA_PROTECTION` cuya cláusula se titula "Personal Information".
 
-La línea base no da ningún código (F1 0); su exactitud de decisiones es la proporción de contratos puntuados cuya
+La forma de trabajar del cliente no da ningún código (F1 0); su exactitud de decisiones es la proporción de contratos puntuados cuya
 respuesta correcta es `sign` (de 0 a 10 de 40 con la semilla guardada: con los sorteos estrictos casi todos los
 contratos necesitan cambios).
 
-Referencia / línea base con otras semillas de mundo:
+Referencia / forma de trabajar del cliente («cliente» en la tabla) con otras semillas de mundo:
 
 | Semilla de mundo | easy s6 / s11 / s49 | medium s6 / s11 / s49 | hard s6 / s11 / s49 |
 |---|---|---|---|
-| 1 | 0.884 / 0.853 / 0.863 (línea base 0.031 / 0.062 / 0.021) | 0.873 / 0.862 / 0.846 (línea base 0.000 / 0.021 / 0.000) | 0.867 / 0.868 / 0.870 (línea base 0.075 / 0.068 / 0.023) |
-| 2 | 0.912 / 0.873 / 0.805 (línea base 0.041 / 0.083 / 0.041) | 0.885 / 0.792 / 0.768 (línea base 0.010 / 0.021 / 0.010) | 0.891 / 0.785 / 0.769 (línea base 0.083 / 0.068 / 0.030) |
-| 3 | 0.905 / 0.856 / 0.844 (línea base 0.021 / 0.062 / 0.021) | 0.891 / 0.854 / 0.833 (línea base 0.000 / 0.041 / 0.010) | 0.872 / 0.836 / 0.830 (línea base 0.075 / 0.075 / 0.030) |
+| 1 | 0.884 / 0.853 / 0.863 (cliente 0.031 / 0.062 / 0.021) | 0.873 / 0.862 / 0.846 (cliente 0.000 / 0.021 / 0.000) | 0.867 / 0.868 / 0.870 (cliente 0.075 / 0.068 / 0.023) |
+| 2 | 0.912 / 0.873 / 0.805 (cliente 0.041 / 0.083 / 0.041) | 0.885 / 0.792 / 0.768 (cliente 0.010 / 0.021 / 0.010) | 0.891 / 0.785 / 0.769 (cliente 0.083 / 0.068 / 0.030) |
+| 3 | 0.905 / 0.856 / 0.844 (cliente 0.021 / 0.062 / 0.021) | 0.891 / 0.854 / 0.833 (cliente 0.000 / 0.041 / 0.010) | 0.872 / 0.836 / 0.830 (cliente 0.075 / 0.075 / 0.030) |
 
 Margen de mejora con la semilla guardada y la primera semilla pública (cada revisión es la revisión con información
 completa con un único error, respetando la vía rápida):
@@ -254,6 +254,21 @@ completa con un único error, respetando la vía rápida):
 Con el tope de calidad por defecto de la política, 1.5, la mejor revisión posible alcanza 1.12–1.24 / 1.5 del
 componente de calidad en las semillas de reglas públicas (REVIEW.md F1).
 
+### Solución literal
+
+`literal_solution` revisa todos los contratos (incluidos el del correo y los pequeños; una modificación marcada como
+acordada se aplica) con cada cláusula bien leída y juzgada según la práctica habitual del mercado, ya que no hay
+criterios de contratación a mano: un límite inferior al importe de un año, un plazo de pago de menos de 30 días, una
+renovación automática con menos de dos meses de preaviso, ninguna cláusula de protección de datos cuando el proveedor
+trata datos personales, ningún desistimiento por conveniencia, una indemnidad unilateral; la ley aplicable no se
+marca. Un contrato con alguna incidencia es `negotiate` («cuáles necesitan cambios»); si no, `sign`. Es la misma
+revisión en todas las configuraciones y es inválida en las 9 configuraciones públicas (calidad 0): los contratos con
+el número de incidencias críticas que fijan los criterios de contratación no se rechazan, y en hard los contratos
+pequeños se revisan en lugar de pasar por la vía rápida. Sus listas de incidencias son buenas: con esas dos reglas
+flexibilizadas obtendría 0.45–0.80, y una lectura que rechaza con dos o más incidencias críticas (límite, protección
+de datos, indemnidad) es válida en medium/s6 y medium/s11, con 0.83 y 0.74. Aquí son las reglas de validez las que
+llevan la lógica de decisión del cliente; los umbrales de las incidencias por sí solos no.
+
 ## Notas
 
 - La práctica detrás de los hechos. Los siete puntos son los habituales de unos criterios internos de compras. Las
@@ -270,7 +285,7 @@ componente de calidad en las semillas de reglas públicas (REVIEW.md F1).
   diseño, no proceden de unos criterios reales. El mundo se construye solo a partir de `random.Random(seed)` y de los
   conjuntos de candidatos de case.yaml.
 - El importe del registro equivale por definición a «el importe anual del contrato».
-- `validate-case` comprueba datos deterministas en los cinco idiomas, una referencia válida con calidad 1.0 y una línea
-  base válida por debajo de ella en todas las configuraciones públicas, un entregable por regla que incumple solo esa
+- `validate-case` comprueba datos deterministas en los cinco idiomas, una referencia válida con calidad 1.0 y una forma de trabajar del cliente
+  válida por debajo de ella en todas las configuraciones públicas, un entregable por regla que incumple solo esa
   regla, que todos los parámetros influyen, que lo que ve el agente es lo mismo en todas las configuraciones, y las
   semillas de mundo 1–3.

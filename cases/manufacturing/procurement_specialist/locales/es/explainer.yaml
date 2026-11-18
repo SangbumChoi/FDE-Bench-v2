@@ -25,7 +25,7 @@ tiers:
     probabilidades que no se le dicen a la IA (los datos traen seis meses de historial de entregas), topes mensuales de asignación en
     tres componentes escasos y el cambio de ingeniería que sustituye la flash C04 por C25 desde W6 (la C04 que
     quede después de W5 se desecha); la calidad pasa a ser un coste esperado exacto. La retención de calidad dura
-    hasta W5 y puede recaer en el principal fabricante de semiconductores; el tipo de cambio de planificación
+    hasta W6 y puede recaer en el principal fabricante de semiconductores; el tipo de cambio de planificación
     (1.380 KRW por USD) y el tope por proveedor (80 %) son los habituales.
 rules:
   approved_vendor: Un componente solo se pide a proveedores cuyo estado para ese componente en la lista de proveedores homologados sea homologado.
@@ -45,3 +45,6 @@ shortcuts:
   copy_demand: "Copiar la necesidad: la necesidad bruta de cada semana pedida con la antelación del plazo, sin descontar el stock ni los pedidos abiertos (al proveedor homologado más barato que llega a tiempo y no está en retención; los críticos repartidos al tope por proveedor)."
   constant_orders: "Constantes: la necesidad neta semanal media de cada componente pedida igual en cada semana de W1 a W8 (al proveedor homologado más barato que no está en retención y llega antes de W10; los críticos repartidos al tope por proveedor)."
   baseline_breaks: "El MRP del propio cliente con un solo cambio: cada línea redondeada al alza hasta un tramo de precio cuando así cuesta menos."
+  literal_plus_quality_hold: "La solución literal más una regla: la petición tal como está escrita, sabiendo solo qué proveedor está en retención de calidad."
+  literal_plus_budget_cap: "La solución literal más una regla: la petición tal como está escrita, sabiendo solo el tipo de cambio de planificación (el presupuesto al tipo del cliente)."
+  literal_plus_dual_source_critical: "La solución literal más una regla: la petición tal como está escrita, respetando solo la costumbre de la doble fuente."

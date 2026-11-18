@@ -1,7 +1,7 @@
 # Revisión — `healthcare/hospital_appointment_scheduler`
 
 Hallazgos de la revisión del caso (F1–F9), con los veredictos del verificador y lo que este cambio hizo con cada uno. Las cifras
-son de la semilla 20261116 salvo que se diga otra cosa; «q» es la calidad normalizada (línea base 0, referencia 1). Un cambio
+son de la semilla 20261116 salvo que se diga otra cosa; «q» es la calidad normalizada (forma de trabajar del cliente 0, referencia 1). Un cambio
 posterior sustituyó los tres conjuntos de reglas fijos A/B/C por semillas de reglas que sortean cada valor de regla entre unos
 candidatos (sección «Semillas de reglas», al final). Resuelve F3 y mueve las cifras de F1, F2, F4 y F5; los hallazgos de abajo
 conservan las cifras de los conjuntos de reglas con las que se escribieron.
@@ -10,7 +10,7 @@ conservan las cifras de los conjuntos de reglas con las que se escribieron.
 
 La capacidad es de unos 79 huecos al día y la demanda de unos 83–86, así que la referencia ya llena el 98% de los huecos en easy y
 medium. Las mejores variantes válidas que conocemos (empaquetado; en hard además un umbral de sobrecitación más bajo y las tasas de
-ausencia verdaderas) solo añaden entre +0.1% y +1.5% al objetivo, lo que supone q = 1.005–1.056 frente a la nueva línea base. Los
+ausencia verdaderas) solo añaden entre +0.1% y +1.5% al objetivo, lo que supone q = 1.005–1.056 frente a la nueva forma de trabajar del cliente. Los
 programas válidos siguen repartidos entre aproximadamente 0.79 y 1.0, pero a través de unas pocas palancas gruesas (liberar la
 reserva, la nota de D10, sobrecitar o no) y no del empaquetado. El problema original de «recortado en 1.0» desaparece con la nueva
 escala, pero ahora el tope de la política, 1.5, queda fuera de alcance: ningún programa válido conocido obtiene más de alrededor
@@ -90,14 +90,14 @@ coincide con B). Semillas de reglas: sigue abierto. El orden `received` del pilo
 cuando una semilla sortea tres huecos, los requisitos dicen ahora, en los cinco idiomas, que la oficina solo guardaba dos hasta el 9
 de noviembre y que las citas de las 09:40 ya dadas se quedan donde están.
 
-### F6 — Preguntas clave sobre la puntuación que al cliente se le indica no revelar nunca (media, en parte)
+### F6 — Hechos que la IA debe preguntar sobre la puntuación que al cliente se le indica no revelar nunca (media, en parte)
 
 `scoring` y `scoring_hard` eran fórmulas y pesos de la puntuación, y `status_table` («20% de la calidad») y `several_departments`
 («cuesta 3») también llevaban pesos, mientras que el prompt del cliente prohíbe describir puntuaciones o pesos; el recall de
 Ask-F1 no podía llegar a 1. La parte de «ya visible» no se sostenía: en la condición por defecto `interact_req` el agente solo ve
 request.md y los datos, así que `interface`, `visit_length` y el final del periodo hay que preguntarlos de todos modos.
 
-**Estado:** corregido en este cambio — las cuatro preguntas clave se han reescrito en los cinco idiomas como hechos del negocio
+**Estado:** corregido en este cambio — los cuatro se han reescrito en los cinco idiomas como hechos del negocio
 (el tiempo de médico vacío es la mayor pérdida; la espera, las solicitudes sin cita y los cambios cuestan; con ausencias, lo que
 cuenta son los pacientes que acuden; un hueco sobrecitado en el que acuden los dos cuesta algo más que uno vacío; los viajes de más
 son un coste), sin pesos. Los requisitos de hard ganan la frase que necesita el último hecho; la puntuación no cambia. Se mantienen
@@ -113,8 +113,8 @@ en hard, aunque seguir la nota de D10 cuesta un 6.7–7.5% en easy y medium.
 **Estado:** corregido en este cambio — los puntos de alcance de easy y medium ahora dicen el porqué, como lo diría el cliente, en
 los cinco idiomas: esta ronda admisión y el laboratorio se ocupan ellos mismos de los volantes y de los análisis en ayunas; no se
 cuenta con ausencias de pacientes; una segunda solicitud lleva su propia cita porque la oficina no puede saber por la solicitud si
-es la misma dolencia. La puntuación no cambia y las preguntas clave correspondientes se han reformulado. Queda como propuesta:
-llevar el párrafo de las notas y la pregunta clave `staff_notes` a todos los niveles, ya que las notas están en los datos de
+es la misma dolencia. La puntuación no cambia y los hechos correspondientes se han reformulado. Queda como propuesta:
+llevar el párrafo de las notas y el hecho `staff_notes` a todos los niveles, ya que las notas están en los datos de
 todos los niveles.
 
 ### F8 — Excusas laxas en la prioridad de la lista de espera y un resquicio en el preaviso (baja, confirmado)
@@ -129,7 +129,7 @@ intérpretes presenciales de ese día están todos ocupados al final de la llama
 laborable antes del hueco (desde mañana, no antes de su fecha más temprana) tiene sitio en el laboratorio, contando como sitio la
 plaza de análisis de la propia solicitud citada; `move_notice` cubre ahora también una solicitud anulada que se vuelve a citar más
 tarde (preaviso desde el día de la anulación; volver a la fecha y hora anuladas no lo necesita), y la excusa correspondiente por
-anulación se cuenta desde el día de la anulación. Así lo dicen los requisitos (cinco idiomas), la pregunta clave sobre el preaviso
+anulación se cuenta desde el día de la anulación. Así lo dicen los requisitos (cinco idiomas), el hecho sobre el preaviso
 de los cambios, case.yaml y el README. La referencia ahora recuerda sus propias anulaciones; sus resultados no cambian en ninguna
 de las nueve configuraciones. En A y C el ejemplo de `move_notice` del validador es ahora la vía de la anulación. Un cambio a la
 misma fecha y hora con otro médico ya no exige preaviso, como dice el texto (solo podía darse en IM los viernes por la tarde, cuando
@@ -141,12 +141,12 @@ cola de su médico anterior.
 `earliest_date` se traducía como «희망시작일» (fecha de inicio deseada) aunque la regla es un «nunca antes» estricto; S era «조기»;
 los médicos firmaban como «교수» y la secretaría como «의국», lo que apunta a un hospital universitario.
 
-**Estado:** corregido en este cambio — «진료 가능 시작일(earliest_date)» en los requisitos coreanos, las preguntas clave y la
+**Estado:** corregido en este cambio — «진료 가능 시작일(earliest_date)» en los requisitos coreanos, los hechos que la IA debe preguntar y la
 etiqueta del orden del conjunto de reglas C; S = «준응급»; los médicos «{name} 과장» y la secretaría «{dept} 사무실» en los correos
 coreanos (con la partícula tras «과장» ajustada). Los correos japoneses siguen firmando como «医局», algo que quizá convenga que
 revise también un hablante nativo.
 
-**Línea base:** la práctica de la oficina de citas sin un ingeniero: el programa de referencia, pero la reserva de urgencias nunca
+**Forma de trabajar del cliente:** la práctica de la oficina de citas sin un ingeniero: el programa de referencia, pero la reserva de urgencias nunca
 se libera para las consultas de mañana y (hard) nunca se sobrecita nada. Objetivo 0.806–0.812 en easy, 0.787–0.799 en medium y
 0.689–0.701 en hard, frente al 1.0 de la referencia en todas las configuraciones (válida en las nueve configuraciones y en las
 semillas de mundo 1–3).
@@ -169,9 +169,9 @@ unos candidatos, los mismos en todos los niveles, así que una semilla es un hos
 
 Las semillas de reglas públicas son la 1, la 10 y la 64, que muestran cada candidato de cada lista al menos una vez (README.md,
 «Parámetros y semillas de reglas», tiene los diccionarios sorteados y las cifras). `derive_params` redacta en cada idioma las horas
-de la reserva (`reserve_times`); no hace falta ningún gancho `admissible`, porque la referencia y la línea base son válidas, y la
+de la reserva (`reserve_times`); no hace falta ningún gancho `admissible`, porque la referencia y la forma de trabajar del cliente son válidas, y la
 tabla de la referencia exacta, en las 54 combinaciones de easy, las 162 de medium y las 486 de hard en el mundo público. Los datos,
-el periodo oculto y `request.md` no cambian; solo cambiaron la forma en que el evaluador ve la reserva y los textos.
+el periodo de evaluación y `request.md` no cambian; solo cambiaron la forma en que el evaluador ve la reserva y los textos.
 
 **Por qué dos números son fijos.** `urgent_days` no puede actuar: cada solicitud urgente se genera para una especialidad con un
 hueco de reserva libre mañana, así que la referencia cita las 18 para mañana con cualquier plazo (F3). Mover en su lugar el extremo
@@ -182,14 +182,14 @@ combinaciones probadas (los tres antiguos conjuntos de reglas y doce aleatorias,
 un preaviso de 2 y uno de 3 dieron siempre la misma respuesta; una referencia construida para 2 o 3 incumplía un preaviso de 4 en la
 mayoría de ellas, mientras que una construida para 4 era válida con 2 y con 3 en alrededor de la mitad; en la semilla de mundo 2
 ningún par se diferenció en nada. Adelantar un día los avisos de ausencia (probado: el aviso de D13 el jueves, el de D05 el jueves)
-hizo que los pares se diferenciaran en algunas combinaciones y no en otras. Ambas reglas se mantienen, con su número en el texto y
-sus preguntas clave.
+hizo que los pares se diferenciaran en algunas combinaciones y no en otras. Ambas reglas se mantienen, con su número en el texto, y
+siguen siendo hechos que la IA debe preguntar.
 
-**Por qué `reserve_slots` es nuevo.** Es un valor que el cliente tiene que decir («los dos primeros huecos» era un número oculto en
+**Por qué `reserve_slots` es nuevo.** Es un valor que el cliente tiene que decir («los dos primeros huecos» era un número que solo conocía el cliente en
 todos los conjuntos de reglas) y actúa en los dos sentidos: un programa que guarda dos huecos cuando la regla es tres cita
 solicitudes S/R a las 09:40 con dos días de antelación (`urgent_reserve`); uno que guarda tres cuando la regla es dos informa mal de
 `held_back` y `free_slots` todos los días (precisión de la tabla 0.33, objetivo 0.85–0.86). Con tres huecos la referencia libera
-para mañana 160–190 huecos de reserva en lugar de unos 100, y la línea base, que nunca los libera, baja a 0.73 / 0.68 / 0.56.
+para mañana 160–190 huecos de reserva en lugar de unos 100, y la forma de trabajar del cliente, que nunca los libera, baja a 0.73 / 0.68 / 0.56.
 
 **Efecto y doble sentido.** La comprobación de efecto de validate-case parte de `hard/s1`; cada parámetro actúa ya con su primera
 alternativa, siempre porque la referencia pasa a ser inválida (README.md). Puntuando la referencia de cada configuración pública con
@@ -208,7 +208,7 @@ sorteado), con la consulta y el orden de la propia configuración: inválida en 
 **Cifras que se movieron.** F1: las mejores variantes válidas (empaquetado; en hard, un umbral de 0.10) llegan a 1.001–1.012,
 q 1.003–1.058; el tope de calidad de la política, 1.5, sigue fuera de alcance. F2 es más marcado con un tope de un hueco sobrecitado
 por sesión: en `hard/s64`, sobrecitar todas las revisiones elegibles (umbral 0) puntúa 1.009, por encima de la referencia (1.002 en
-`hard/s10`, 0.999 en `hard/s1`). F4: arriba. La línea base es válida en todas las combinaciones y puntúa 0.81 / 0.79 / 0.68–0.70
+`hard/s10`, 0.999 en `hard/s1`). F4: arriba. La forma de trabajar del cliente es válida en todas las combinaciones y puntúa 0.81 / 0.79 / 0.68–0.70
 (easy / medium / hard) con una reserva de dos huecos y 0.73 / 0.68 / 0.56 con tres.
 
 **Pruebas.** `tests/test_transforms.py` fijaba las antiguas semillas públicas (1, 2, 3) y el cierre de Dermatología del conjunto
@@ -216,8 +216,8 @@ de reglas A en easy; ahora comprueba las semillas públicas (1, 10, 64) y usa `e
 semilla privada que sigue sorteando Pediatría y dos huecos sobrecitados.
 
 **Comprobación de la conversión.** Una revisión adversarial encontró lo que ve el agente idéntico byte a byte en todos los idiomas
-en los tres niveles, las semillas públicas y las semillas de reglas privadas 4–10; la referencia válida con 1.0 y la línea base
+en los tres niveles, las semillas públicas y las semillas de reglas privadas 4–10; la referencia válida con 1.0 y la forma de trabajar del cliente
 válida y por debajo de ella (como mucho 0.823 de ella) allí, en el mundo público y en las semillas de mundo 1–3; cada parámetro
-sorteado cubierto por una pregunta clave; y las cifras de las semillas públicas del README iguales al conjunto de datos guardado.
+sorteado cubierto por un hecho que la IA debe preguntar; y las cifras de las semillas públicas del README iguales al conjunto de datos guardado.
 Se corrigió una cifra del README: la referencia de hard con un hueco sobrecitado por sesión puntúa 0.976 con un tope de 2 y 0.964
 con un tope de 3 (no 0.98 en ambos casos).

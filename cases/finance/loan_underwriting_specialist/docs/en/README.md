@@ -306,6 +306,15 @@ baseline).
 | hard/s525 | 0.746 | 208,736 (75%) | 172 / 228 / 170 | 3,400,000 |
 | hard/s1043 | 0.845 | 268,709 (84%) | 223 / 208 / 139 | 4,000,000 |
 
+**Literal solution** (`literal_solution`: the request done as written, the same in every setting): the reference
+program with the only rule values the agent's view shows, the pilot's (`PILOT_RULES`: the 400,000 daily line its
+closing table counts down from, 50,000 per customer, its score floor, DSR and income limits, no period budget, no
+near-prime commitment, no tenure habit), bureau A, and otherwise the natural readings `robust_solution` uses (every
+notice acted on, no split rule, no pairing of twins, protected attributes left out of the scorecard). It approves
+416 applications for 7,569,189, breaking the score cutoff, the customer limit, the daily cap, the tenure habit, the
+reason codes and the twins everywhere, and from medium the period budget and the table's missing budget, so it is
+invalid in all 9 public settings (its table accuracy is 0.03–0.14).
+
 On world seeds 1–3 (public panel) the reference and the baseline stay valid everywhere, the baseline at
 0.486–0.923 of the reference's objective, so every quality scale is at least 7.7% wide (it was under 5% in
 hard/s1043 and medium/s30 before the audit).

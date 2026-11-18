@@ -1,7 +1,7 @@
 # Revisión de `customer_service/callcenter_workforce_planner`
 
 Hallazgos de la revisión del caso, con el veredicto del verificador y lo que este cambio hizo con cada uno. Las cifras
-corresponden a la semilla pública 20261109 salvo que se indique otra cosa; la calidad se normaliza con la nueva línea base
+corresponden a la semilla pública 20261109 salvo que se indique otra cosa; la calidad se normaliza con la nueva forma de trabajar del cliente
 (rotación fija = 0, referencia voraz = 1).
 
 ## Semillas de reglas
@@ -37,8 +37,8 @@ y partes de F3, F4, F5 y F6 (estados más abajo).
   con la semilla de mundo pública: el valor más permisivo deja la referencia válida, y su objetivo y la propia referencia de
   la configuración permisiva quedan a menos de un 1%.
 - **Código.** `score`, `reference_solution`, `baseline_solution` y `violating_examples` leen la configuración mediante
-  `rules_for(world, setting)`; la referencia voraz y la línea base de rotación fija no cambian de método. Con la antigua
-  configuración única (peso 40, 32 h, festivo 60%, descanso 11 h, sin aviso de baja), la referencia da 25,584 y la línea base
+  `rules_for(world, setting)`; la referencia voraz y la forma de trabajar del cliente (rotación fija) no cambian de método. Con la antigua
+  configuración única (peso 40, 32 h, festivo 60%, descanso 11 h, sin aviso de baja), la referencia da 25,584 y la forma de trabajar del cliente
   37,376, como antes, y el óptimo MILP exacto 23,464, como antes.
 - **Validador:** OK con la semilla pública y las semillas de mundo 1–3, sin avisos.
 
@@ -48,14 +48,14 @@ Un MILP exacto del mismo modelo (HiGHS de scipy, unas 2,000 variables binarias, 
 23,464 frente a los 25,584 de la referencia (ratio 1.090; 75 frente a 183 agentes-franja sin cubrir). En el momento de la
 revisión la calidad se recortaba en 1.0, así que este margen de mejora no daba ningún punto, e ignorar el festivo, el recargo
 por horas extra o el peso no costaba nada. Con el nuevo framework (sin recorte por arriba, puntuación completa en el tope de
-calidad de la política de 1.5) y esta línea base, el óptimo obtiene 1.180, un óptimo que ignora el festivo 1.145 y uno que
+calidad de la política de 1.5) y esta forma de trabajar del cliente como punto cero, el óptimo obtiene 1.180, un óptimo que ignora el festivo 1.145 y uno que
 ignora las horas extra o el peso 1.172. Estas diferencias ahora cuentan, pero son pequeñas.
 
 **Estado:** abierto — propuesta: mantener el algoritmo voraz como referencia y fijar `quality_cap: 1.18` en `case.yaml`, la
 calidad normalizada del óptimo MILP con esta semilla (1.1798). El objetivo óptimo es único, así que el valor es determinista.
 El óptimo obtendría entonces la puntuación completa y la referencia 0.85, en lugar de 0.67 con el tope por defecto. Las
 semillas de mundo 1–3 alcanzan 1.135–1.177, de modo que en las semillas privadas el tope queda un poco por encima de lo
-alcanzable. Una comprobación del validador de que ignorar cada pregunta clave que solo afecta a la calidad cuesta al menos un
+alcanzable. Una comprobación del validador de que ignorar cada hecho que solo afecta a la calidad cuesta al menos un
 3% obligaría además a reajustar F3 y F5.
 
 **Estado (semillas de reglas):** sigue abierto, cifras actualizadas. En las nueve configuraciones públicas el voraz queda un
@@ -96,7 +96,7 @@ que el óptimo usa 126 de los 130 turnos posibles. El peso no tenía un signific
 **Estado:** corregido en este cambio — los requisitos en los cinco idiomas indican ahora qué significa el 40: está en las mismas
 unidades que las tarifas por hora y es la estimación del cliente de lo que cuesta que falte un agente durante media hora en
 llamadas abandonadas, rellamadas y niveles de servicio incumplidos (el número no cambia). El suelo alto desaparece con la
-normalización por la línea base: el cuadrante de un solo turno obtiene −2.57, que se acota en 0. Sigue abierto — propuesta:
+normalización por la forma de trabajar del cliente: el cuadrante de un solo turno obtiene −2.57, que se acota en 0. Sigue abierto — propuesta:
 bajar el peso al rango 15–30 o variarlo por conjunto de reglas (F2), donde las horas extra y la elección entre jornada completa
 y media jornada sí pesan. La restricción obligatoria de cobertura mínima que se sugirió no tiene solución en este mundo (el
 verificador: solo hay 4 agentes zh veteranos).
@@ -131,12 +131,12 @@ regla de acompañamiento flexibilizable sigue compensando poco, y la tentación 
 una persona de nuevo ingreso en un idioma) actuaría desde medium, donde se aplica la regla de acompañamiento, así que no se
 añadió; para eso hace falta dar forma a los datos como se propone arriba.
 
-### F5 — Hechos ocultos que no tienen efecto (media, en parte)
+### F5 — Hechos que solo conoce el cliente y que no tienen efecto (media, en parte)
 
 El redondeo hacia arriba sobre enteros pequeños amortigua el festivo: 106 de las 140 celdas del miércoles no cambian, así que
 la demanda del miércoles baja de 265 a 229 agentes-franja (−13.6%, no −40%), e ignorar el festivo solo le cuesta al óptimo
 1.180 → 1.145. Tratar la solicitud rechazada (A03) como ausencia deja el óptimo igual. La fila rechazada decía
-`12/11/2026–13/11/2026`, y un día mayor que 12 delata el formato día/mes/año. Algunas preguntas clave (`slot_coverage`, la
+`12/11/2026–13/11/2026`, y un día mayor que 12 delata el formato día/mes/año. Algunos hechos que la IA debe preguntar (`slot_coverage`, la
 parte de contrato de `contract_limits`) se pueden deducir de los nombres de las columnas.
 
 **Estado:** corregido en este cambio (solo la fecha) — la solicitud rechazada queda ahora dentro del lunes 9 al jueves 12 (A03
@@ -147,14 +147,14 @@ ausencias aprobadas de viernes a domingo siguen mostrando los días 13–15. No 
 que no conoce la regla produce 13 incumplimientos de `min_rest`, así que el descanso es una trampa de validez que sí tiene
 efecto. Sigue abierto — propuesta: expresar la demanda en unidades más grandes (p. ej. 2–12 por franja) o redondear al más
 cercano, de modo que ignorar el festivo cueste al menos un 3%. Asignar la solicitud rechazada a un agente escaso en un día de
-pico. Marcar las preguntas clave que se pueden deducir de los datos, o eliminarlas, para que el Ask-F1 no premie preguntarlas.
+pico. Marcar, entre los hechos que la IA debe preguntar, los que se pueden deducir de los datos, o eliminarlos, para que el Ask-F1 no premie preguntarlos.
 
 **Estado (semillas de reglas):** corregido en parte — la proporción del festivo se sortea entre 50% / 60% / 75% (medium,
 hard), así que la demanda del miércoles es de 176, 229 o 255 agentes-franja en lugar de 265. Ignorarlo le cuesta al voraz
 0.12–0.13 de calidad normalizada con 50%, 0.03 con 60% y nada con 75%; el redondeo no cambia (hacia arriba, como haría un
 planificador). El descanso tiene efecto en todas las configuraciones medium y hard (el voraz planificado sin la regla incumple
-`min_rest` de 1 a 7 veces; planificado con 11 h cuando son 13 h, 8 veces). Las partes de la solicitud rechazada y de las
-preguntas clave deducibles no cambian.
+`min_rest` de 1 a 7 veces; planificado con 11 h cuando son 13 h, 8 veces). Las partes de la solicitud rechazada y de los
+hechos deducibles no cambian.
 
 ### F6 — Realismo y tipos de regla (media, en parte)
 
@@ -189,16 +189,16 @@ como 정규직 (empleo fijo). Los nombres están en alfabeto latino en todos los
 que habla cada agente (p. ej. "Haruto Kim" solo habla ja).
 
 **Estado:** corregido en este cambio — el festivo es ahora "festivo regional en nuestro mercado principal" en los requisitos
-y en la pregunta clave de los cinco idiomas (fecha y 60% sin cambios). Coreano: "상담원 1명의 근무 1회당 항목 1개입니다",
-"기존(신입이 아닌) 상담원/동료" en los requisitos y en la pregunta clave, y el párrafo de calidad nombra ahora sus dos partes y da
+y en el hecho que la IA debe preguntar de los cinco idiomas (fecha y 60% sin cambios). Coreano: "상담원 1명의 근무 1회당 항목 1개입니다",
+"기존(신입이 아닌) 상담원/동료" en los requisitos y en el hecho, y el párrafo de calidad nombra ahora sus dos partes y da
 unidad al 40 ("부족한 상담원 1명·30분당 40(인건비와 같은 단위)"). La jornada completa es 풀타임 en la etiqueta de los datos
-(`고용형태`), en los requisitos y en las preguntas clave. Sigue abierto — propuesta: escribir los nombres según el idioma (hangul,
+(`고용형태`), en los requisitos y en los hechos que la IA debe preguntar. Sigue abierto — propuesta: escribir los nombres según el idioma (hangul,
 kanji/kana, hanzi) o vincularlos al idioma principal del agente.
 
 ### F8 — El formato del cuadrante no se muestra al agente (baja, en parte)
 
-Al agente se le dice que no se especificó ningún formato de archivo. La forma exacta del JSON solo está en los requisitos
-ocultos, así que un cuadrante de unas 120 filas puede pasar por el extractor, y una sola fila mal transcrita lo invalida. El
+Al agente se le dice que no se especificó ningún formato de archivo. La forma exacta del JSON está únicamente en los requisitos
+que solo conoce el cliente, así que un cuadrante de unas 120 filas puede pasar por el extractor, y una sola fila mal transcrita lo invalida. El
 verificador señala que basta una pregunta al cliente para obtener el formato, que un `roster.json` escrito por el agente se
 copia directamente y que el extractor puede convertir un CSV con un script. La etiqueta "agent-visible" de la página
 explicativa se corrigió después en el framework.
@@ -208,11 +208,11 @@ de cuadrante (CSV/xlsx con columnas de agente, día, turno e idioma, nombres de 
 incumplimientos que introdujo el extractor por separado de los del agente. Otra opción es dejar una plantilla de cuadrante en
 el espacio de trabajo. Cualquiera de las dos es una decisión del framework o del diseño, no una corrección del caso.
 
-**Línea base:** rotación fija (el mismo turno toda la semana en el idioma principal, 4 días normales para jornada completa y 3
+**Forma de trabajar del cliente:** rotación fija (el mismo turno toda la semana en el idioma principal, 4 días normales para jornada completa y 3
 para media jornada, las personas de nuevo ingreso acompañando a un veterano), objetivo 37,376 frente a los 25,584 de la
 referencia (ratio 0.685) con la semilla 20261109; 36,776–37,848 frente a 25,232–25,440 en las semillas de mundo 1–3. El caso
 no tiene configuraciones.
 
-**Línea base (semillas de reglas):** la misma rotación fija, con la semana de contrato sorteada (4 o 5 días para jornada
+**Forma de trabajar del cliente (semillas de reglas):** la misma rotación fija, con la semana de contrato sorteada (4 o 5 días para jornada
 completa) y, en hard, los días de baja vacíos. En las nueve configuraciones públicas queda un 16–63% por encima de la
 referencia (ratio de objetivos 0.62–0.86): 23,722–38,176 frente a 20,047–24,288 con la semilla 20261109.

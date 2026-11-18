@@ -1,15 +1,15 @@
 CONTRATO DE SUMINISTRO Y SERVICIOS N.º C005
 Borrador de fecha 2026-09-27
 
-Este contrato se celebra entre Brightvale Holdings (el «Cliente») y Pinar Sistemas S.L. (el «Proveedor»).
+Este contrato se celebra entre Brightvale Holdings (el «Cliente») y Lince Materiales S.A. (el «Proveedor»).
 
 Cláusula 1. Objeto y duración
-1.1 El Proveedor presta al Cliente servicios de alojamiento en la nube, mantenimiento de software y tratamiento de datos asociados.
+1.1 El Proveedor presta al Cliente el suministro de materiales de embalaje y componentes industriales.
 1.2 El contrato entra en vigor en la fecha de su firma y tiene una duración inicial de dos años. Al término de cada periodo, el contrato continuará un año más en las mismas condiciones, a menos que una de las partes manifieste por escrito su oposición al menos 60 días antes de dicho término.
 
 Cláusula 2. Precio y forma de pago
 2.1 Los precios se fijan en los pedidos acordados por las partes.
-2.2 El Cliente abonará cada factura no controvertida dentro de los cuarenta y cinco días siguientes a su recepción.
+2.2 El Cliente abonará cada factura no controvertida dentro de los quince días siguientes a su recepción.
 
 Cláusula 3. Confidencialidad
 Cada parte mantendrá la confidencialidad de la información comercial recibida de la otra y la utilizará únicamente para los fines de este contrato. Esta obligación subsistirá durante tres años tras la terminación.

@@ -34,6 +34,7 @@ rules:
   holiday_closure: '{{closed_dept}}는 2026년 11월 23일(월) 시민의 날에 휴진합니다. 진료 일정표에는 그날 세션이 그대로 나오지만, 그날 {{closed_dept}} 예약은 없어야 합니다.'
   not_before_earliest: 요청의 진료 가능 시작일(earliest_date) 전에는 예약하지 않습니다.
   interpreter_capacity: 환자의 언어를 못 하는 의사와의 초진은 병원 전체에서 하루 최대 {{interpreters_per_day}}건입니다(건마다 대면 통역사 한 명이 필요하며, medium 이상에서는 통역사가 부재한 날 한 명 줄어듭니다).
+  referral_validity: '초진은 의뢰서 유효 마지막 날(referral_valid_until) 당일이나 그 전에 진료합니다.'
   lab_capacity: 검사실은 영업일당 공복 채혈을 최대 {{lab_cap}}건 받습니다.
   test_before_visit: 공복 채혈이 필요한 요청은 채혈일이 진료 가능 시작일부터 진료 전 영업일 사이에 있어야 합니다(새로 정하는 채혈일은 앞으로의 날짜여야 함).
   doctor_available: 부재 통지가 온 뒤로는 그 의사의 부재일에 남아 있거나 새로 잡히는 예약이 없어야 합니다.
@@ -43,4 +44,27 @@ rules:
   waitlist_priority: 대기 중인 요청은 우선순위대로({{waitlist_order}}) 예약합니다. 같은 진료과, 같은 진료 구분, 같은 이전 담당의의 더 높은 우선순위 요청이 아직 대기 중이고 그 슬롯을 쓸 수 있었다면 그보다 낮은 요청을 예약하지 않습니다.
   overbooking_limit: 의사 한 명당 세션(오전 또는 오후)마다 오버부킹 슬롯(재진 2건이 든 슬롯)은 최대 {{overbooked_per_session}}개입니다.
   one_per_department: 환자 한 명은 기간 중 진료과마다 예약이 최대 하나입니다(이미 받은 진료든 앞으로의 예약이든). 중복 요청(같은 환자, 같은 진료과)을 두 번째 예약으로 잡지 않습니다.
+  status_table: '모든 호출이 현황표를 반환합니다. 진료과 코드(IM, CARD, DERM, ORTH, PED)마다 한 행, 각각 정수 세 개(free_slots, held_back, waitlist). 진료과들은 이 표로 진료 인력을 배치합니다.'
   follow_up_same_doctor: 재진은 환자의 이전 담당의에게 예약합니다. 외래 운영실장이 예외를 승인할 수 있는 관행입니다.
+shortcuts:
+  book_nobody: '아무도 예약하지 않음: 액션 없음, 현황표는 정확'
+  urgent_only: '긴급 요청만 예약, 현황표는 정확'
+  arrival_order: '선착순: 모든 요청을 접수 순서대로 담당의의 가장 이른 빈 슬롯에 넣고, 예비 슬롯 없이, 현황표는 시범 프로그램처럼'
+  earliest_slots: '가장 이른 빈 슬롯 채우기: 모든 요청을 진료과에서 가장 먼저 비는 의사에게, 예비 슬롯 없이'
+  copy_last_weeks: '내보내기 파일에 보이는 대로 계속: 예비 슬롯은 긴급 환자용으로 남기고, 슬롯 하나에 환자 한 명, 현황표는 시범 프로그램처럼'
+  no_table: '참조 해답의 예약, 현황표 없음'
+  zero_table: '참조 해답의 예약, 현황표 항목은 모두 0'
+  morning_table: '참조 해답의 예약, 현황표는 그날 예약 전의 상태'
+  literal_plus_holiday: '문자 그대로의 프로그램에 시민의 날 휴진만 지킴'
+  literal_plus_order: '문자 그대로의 프로그램에 대기 우선순위만 지킴'
+  literal_plus_interpreters: '문자 그대로의 프로그램에 하루 통역사 수만 지킴'
+  literal_plus_lab: '문자 그대로의 프로그램에 검사실 하루 한도만 지킴'
+  literal_plus_reserve: '문자 그대로의 프로그램에 예비 슬롯 수만 지킴'
+  literal_plus_scope: '문자 그대로의 프로그램에 이번 범위만 지킴'
+  literal_plus_notice: '문자 그대로의 프로그램에 사전 통보 기간만 지킴'
+  literal_all_rules: '문자 그대로의 프로그램에 고객의 모든 규칙(그 설정의 모든 규칙 값)을 지킴'
+  copy_and_release: '내보내기 데이터의 방식을 그대로 따르되 내일 비어 있는 긴급 예비 슬롯은 대기 목록에 줍니다. 현황표는 시범 프로그램처럼'
+  pilot_numbers: '모범 답안의 예약, 현황표는 매일 시범일의 숫자 그대로'
+  literal_all_rules_release: '문자 그대로의 프로그램이 고객의 규칙을 모두 지키고 내일 예비 슬롯을 풀어 줌(현황표는 시범 프로그램처럼)'
+  literal_all_rules_table: '문자 그대로의 프로그램이 고객의 규칙을 모두 지키고 고객의 현황표를 냄(예비 슬롯은 묶어 둠)'
+  office_overbooking: '외래 운영실의 방식(예비 슬롯을 묶어 둠)을 따르되 상한이 허용하는 가장 이른 재진 슬롯마다 환자가 누구든 겹쳐 예약, 현황표는 정확'

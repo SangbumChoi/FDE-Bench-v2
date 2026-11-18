@@ -1,19 +1,19 @@
 ﻿cafe_id,name,x_km,y_km,trays,tier,opens,deliver_by,partner_brand
-C01,Riverside café,6.56,-6.06,27,premium,06:00,06:45,no
-C02,Old Town café,-2.09,10.31,11,standard,07:30,08:30,no
-C03,North Station café,-4.82,-4.82,14,standard,07:00,07:30,no
-C04,Cherry Lane café,-6.52,4.31,25,premium,06:30,07:30,no
-C05,Harbour café,1.21,-4.08,16,standard,07:00,07:45,yes
-C06,University café,-3.89,-0.85,15,standard,07:30,08:30,no
-C07,East Lake café,10.17,2.52,10,premium,07:00,08:00,no
-C08,West Gate café,-7.25,0.19,23,standard,06:30,07:15,no
-C09,New District café,4.9,-6.17,16,standard,07:00,07:30,no
-C10,Clock Tower café,0.56,-4.22,29,premium,06:00,07:00,yes
-C11,South Hill café,4.55,1.87,23,standard,07:30,08:15,no
-C12,Garden Street café,-1.86,5.74,10,standard,06:30,07:00,no
-C13,Golden Bridge café,1.14,2.43,19,premium,06:00,06:30,no
-C14,Maple Row café,2.48,0.31,23,standard,06:00,06:30,no
-C15,Market Square café,1.95,6.25,21,standard,07:00,07:30,no
-C16,Stadium café,-4.68,-1.72,18,premium,07:30,08:30,yes
-C17,Bayside café,2.5,-4.18,13,standard,07:00,07:30,no
-C18,Heritage Quarter café,-5.74,-0.1,19,standard,07:30,08:30,no
+C01,Riverside café,-4.89,-1.03,26,premium,06:30,07:00,no
+C02,Old Town café,5.42,3.82,12,standard,07:00,07:45,no
+C03,North Station café,1.89,-1.73,18,standard,08:00,08:45,no
+C04,Cherry Lane café,1.71,-4.92,27,premium,06:30,07:00,no
+C05,Harbour café,-8.91,3.56,16,standard,06:00,07:00,yes
+C06,University café,6.31,-0.94,25,standard,07:30,08:15,no
+C07,East Lake café,3.59,2.48,25,premium,07:00,07:45,no
+C08,West Gate café,-6.15,3.83,10,standard,06:30,07:00,no
+C09,New District café,-8.1,1.24,22,standard,08:00,09:00,no
+C10,Clock Tower café,-6.24,-4.7,29,premium,06:00,07:00,yes
+C11,South Hill café,-4.74,4.3,19,standard,06:30,07:15,no
+C12,Garden Street café,2.32,-0.34,17,standard,07:00,08:00,no
+C13,Golden Bridge café,2.68,-1.89,9,premium,06:30,07:15,no
+C14,Maple Row café,8.62,5.03,8,standard,07:30,08:00,no
+C15,Market Square café,-3.82,-5.28,21,standard,07:00,07:45,no
+C16,Stadium café,-2.84,-5.51,19,premium,06:00,06:45,yes
+C17,Bayside café,3.17,-9.64,24,standard,07:30,08:15,no
+C18,Heritage Quarter café,-3.65,-1.67,29,standard,07:00,07:30,no

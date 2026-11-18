@@ -1,0 +1,962 @@
+{
+ "94d8c9d7aee61fcb": {
+  "easy|closed_cafe=C03,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=100": {
+   "bound": 457.78979238282966,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 458.390056,
+   "plan": [
+    {
+     "depart": "06:15",
+     "stops": [
+      "C01",
+      "C10",
+      "C15",
+      "C17"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "05:50",
+     "stops": [
+      "C16",
+      "C04",
+      "C13",
+      "C12"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "06:50",
+     "stops": [
+      "C07",
+      "C02",
+      "C14",
+      "C06"
+     ],
+     "van": "V3"
+    },
+    {
+     "depart": "06:12",
+     "stops": [
+      "C11",
+      "C08",
+      "C05",
+      "C18",
+      "C09"
+     ],
+     "van": "V4"
+    }
+   ],
+   "reference": 463.430278
+  },
+  "easy|closed_cafe=C03,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=110": {
+   "bound": 457.7897923828298,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 458.390056,
+   "plan": [
+    {
+     "depart": "06:15",
+     "stops": [
+      "C01",
+      "C10",
+      "C15",
+      "C17"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "06:50",
+     "stops": [
+      "C07",
+      "C02",
+      "C14",
+      "C06"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "06:12",
+     "stops": [
+      "C11",
+      "C08",
+      "C05",
+      "C18",
+      "C09"
+     ],
+     "van": "V3"
+    },
+    {
+     "depart": "05:50",
+     "stops": [
+      "C16",
+      "C04",
+      "C13",
+      "C12"
+     ],
+     "van": "V4"
+    }
+   ],
+   "reference": 459.960364
+  },
+  "easy|closed_cafe=C03,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=120": {
+   "bound": 457.78979238282966,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 458.390056,
+   "plan": [
+    {
+     "depart": "06:15",
+     "stops": [
+      "C01",
+      "C10",
+      "C15",
+      "C17"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "06:50",
+     "stops": [
+      "C07",
+      "C02",
+      "C14",
+      "C06"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "06:12",
+     "stops": [
+      "C11",
+      "C08",
+      "C05",
+      "C18",
+      "C09"
+     ],
+     "van": "V3"
+    },
+    {
+     "depart": "05:50",
+     "stops": [
+      "C16",
+      "C04",
+      "C13",
+      "C12"
+     ],
+     "van": "V4"
+    }
+   ],
+   "reference": 459.960364
+  },
+  "easy|closed_cafe=C11,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=100": {
+   "bound": 455.0027637374552,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 455.819653,
+   "plan": [
+    {
+     "depart": "05:45",
+     "stops": [
+      "C05",
+      "C08",
+      "C01",
+      "C18"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "06:52",
+     "stops": [
+      "C12",
+      "C07",
+      "C02",
+      "C14",
+      "C06"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "06:34",
+     "stops": [
+      "C13",
+      "C04",
+      "C17",
+      "C03"
+     ],
+     "van": "V3"
+    },
+    {
+     "depart": "06:22",
+     "stops": [
+      "C16",
+      "C10",
+      "C15",
+      "C09"
+     ],
+     "van": "V4"
+    }
+   ],
+   "reference": 458.088688
+  },
+  "easy|closed_cafe=C11,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=110": {
+   "bound": 455.0027637374558,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 455.819653,
+   "plan": null,
+   "reference": 455.819653
+  },
+  "easy|closed_cafe=C11,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=120": {
+   "bound": 450.95715992824796,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 451.853863,
+   "plan": null,
+   "reference": 451.853863
+  },
+  "easy|closed_cafe=C14,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=100": {
+   "bound": 444.2312332726399,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 444.873542,
+   "plan": [
+    {
+     "depart": "06:47",
+     "stops": [
+      "C07",
+      "C02",
+      "C06",
+      "C12"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "06:12",
+     "stops": [
+      "C11",
+      "C08",
+      "C05",
+      "C18",
+      "C09"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "06:34",
+     "stops": [
+      "C13",
+      "C04",
+      "C17",
+      "C03"
+     ],
+     "van": "V3"
+    },
+    {
+     "depart": "05:50",
+     "stops": [
+      "C16",
+      "C01",
+      "C10",
+      "C15"
+     ],
+     "van": "V4"
+    }
+   ],
+   "reference": 446.951199
+  },
+  "easy|closed_cafe=C14,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=110": {
+   "bound": 441.3615825622089,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 441.403627,
+   "plan": null,
+   "reference": 441.403627
+  },
+  "easy|closed_cafe=C14,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=120": {
+   "bound": 441.3615825622088,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 441.403627,
+   "plan": null,
+   "reference": 441.403627
+  },
+  "hard|closed_cafe=C03,premium_first=False,rush_start=06:30,shift_end=09:00,van_capacity=110": {
+   "bound": 550.4331836360573,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 551.118289,
+   "plan": null,
+   "reference": 551.118289
+  },
+  "hard|closed_cafe=C03,premium_first=False,rush_start=06:30,shift_end=09:30,van_capacity=110": {
+   "bound": 550.4331836360653,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 551.118289,
+   "plan": null,
+   "reference": 551.118289
+  },
+  "hard|closed_cafe=C03,premium_first=False,rush_start=06:30,shift_end=10:00,van_capacity=110": {
+   "bound": 550.4331836360655,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 551.118289,
+   "plan": null,
+   "reference": 551.118289
+  },
+  "hard|closed_cafe=C03,premium_first=False,rush_start=07:00,shift_end=10:00,van_capacity=110": {
+   "bound": 505.92887440225854,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 506.590842,
+   "plan": [
+    {
+     "depart": "06:19",
+     "stops": [
+      "C04",
+      "C13",
+      "C12"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "05:35",
+     "stops": [
+      "C05",
+      "C10",
+      "C16",
+      "C15",
+      "C17"
+     ],
+     "van": "V4"
+    },
+    {
+     "depart": "06:49",
+     "stops": [
+      "C07",
+      "C02",
+      "C14",
+      "C06"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "06:13",
+     "stops": [
+      "C11",
+      "C08",
+      "C01",
+      "C18",
+      "C09"
+     ],
+     "van": "V3"
+    }
+   ],
+   "reference": 514.291726
+  },
+  "hard|closed_cafe=C03,premium_first=False,rush_start=07:30,shift_end=09:30,van_capacity=110": {
+   "bound": 474.60643795459816,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 474.83206,
+   "plan": [
+    {
+     "depart": "06:21",
+     "stops": [
+      "C01",
+      "C08",
+      "C11",
+      "C18",
+      "C09"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "06:20",
+     "stops": [
+      "C04",
+      "C13",
+      "C12"
+     ],
+     "van": "V3"
+    },
+    {
+     "depart": "05:35",
+     "stops": [
+      "C05",
+      "C10",
+      "C16",
+      "C15",
+      "C17"
+     ],
+     "van": "V4"
+    },
+    {
+     "depart": "06:49",
+     "stops": [
+      "C07",
+      "C02",
+      "C14",
+      "C06"
+     ],
+     "van": "V2"
+    }
+   ],
+   "reference": 480.221332
+  },
+  "hard|closed_cafe=C03,premium_first=True,rush_start=06:30,shift_end=09:00,van_capacity=110": {
+   "bound": 592.3118178902282,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 592.991572,
+   "plan": null,
+   "reference": 592.991572
+  },
+  "hard|closed_cafe=C03,premium_first=True,rush_start=07:00,shift_end=09:30,van_capacity=110": {
+   "bound": 517.1515200783167,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 518.787457,
+   "plan": null,
+   "reference": 518.787457
+  },
+  "hard|closed_cafe=C03,premium_first=True,rush_start=07:00,shift_end=10:00,van_capacity=110": {
+   "bound": 517.1515200782756,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 518.787457,
+   "plan": null,
+   "reference": 518.787457
+  },
+  "hard|closed_cafe=C11,premium_first=False,rush_start=07:30,shift_end=09:00,van_capacity=110": {
+   "bound": 475.0982735811599,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 475.976898,
+   "plan": [
+    {
+     "depart": "06:38",
+     "stops": [
+      "C01",
+      "C15",
+      "C18",
+      "C09"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "06:19",
+     "stops": [
+      "C04",
+      "C13",
+      "C12",
+      "C17",
+      "C03"
+     ],
+     "van": "V3"
+    },
+    {
+     "depart": "06:49",
+     "stops": [
+      "C07",
+      "C02",
+      "C14",
+      "C06"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "05:44",
+     "stops": [
+      "C16",
+      "C10",
+      "C05",
+      "C08"
+     ],
+     "van": "V4"
+    }
+   ],
+   "reference": 477.611573
+  },
+  "hard|closed_cafe=C11,premium_first=True,rush_start=06:30,shift_end=09:00,van_capacity=110": {
+   "bound": 560.3510186507682,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 561.27742,
+   "plan": null,
+   "reference": 561.27742
+  },
+  "hard|closed_cafe=C11,premium_first=True,rush_start=06:30,shift_end=09:30,van_capacity=110": {
+   "bound": 560.3510186507692,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 561.27742,
+   "plan": null,
+   "reference": 561.27742
+  },
+  "hard|closed_cafe=C11,premium_first=True,rush_start=07:00,shift_end=09:00,van_capacity=110": {
+   "bound": 505.54082295631713,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 506.37742,
+   "plan": [
+    {
+     "depart": "06:34",
+     "stops": [
+      "C01",
+      "C18",
+      "C15",
+      "C17"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "06:19",
+     "stops": [
+      "C04",
+      "C13",
+      "C12"
+     ],
+     "van": "V3"
+    },
+    {
+     "depart": "06:49",
+     "stops": [
+      "C07",
+      "C02",
+      "C14",
+      "C06",
+      "C03"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "05:44",
+     "stops": [
+      "C16",
+      "C10",
+      "C08",
+      "C05",
+      "C09"
+     ],
+     "van": "V4"
+    }
+   ],
+   "reference": 511.136231
+  },
+  "hard|closed_cafe=C11,premium_first=True,rush_start=07:00,shift_end=10:00,van_capacity=110": {
+   "bound": 505.5408229563167,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 506.37742,
+   "plan": [
+    {
+     "depart": "06:34",
+     "stops": [
+      "C01",
+      "C18",
+      "C15",
+      "C17"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "06:19",
+     "stops": [
+      "C04",
+      "C13",
+      "C12"
+     ],
+     "van": "V3"
+    },
+    {
+     "depart": "06:49",
+     "stops": [
+      "C07",
+      "C02",
+      "C14",
+      "C06",
+      "C03"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "05:44",
+     "stops": [
+      "C16",
+      "C10",
+      "C08",
+      "C05",
+      "C09"
+     ],
+     "van": "V4"
+    }
+   ],
+   "reference": 508.01254
+  },
+  "hard|closed_cafe=C14,premium_first=False,rush_start=06:30,shift_end=09:30,van_capacity=110": {
+   "bound": 529.068687048362,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 529.542147,
+   "plan": [
+    {
+     "depart": "06:17",
+     "stops": [
+      "C01",
+      "C08",
+      "C11"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "05:35",
+     "stops": [
+      "C05",
+      "C16",
+      "C10",
+      "C15",
+      "C17"
+     ],
+     "van": "V4"
+    },
+    {
+     "depart": "06:55",
+     "stops": [
+      "C12",
+      "C07",
+      "C02",
+      "C06",
+      "C03"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "06:26",
+     "stops": [
+      "C13",
+      "C04",
+      "C18",
+      "C09"
+     ],
+     "van": "V3"
+    }
+   ],
+   "reference": 533.424282
+  },
+  "hard|closed_cafe=C14,premium_first=False,rush_start=07:30,shift_end=09:00,van_capacity=110": {
+   "bound": 451.5565489950342,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 453.302599,
+   "plan": null,
+   "reference": 453.302599
+  },
+  "hard|closed_cafe=C14,premium_first=False,rush_start=07:30,shift_end=10:00,van_capacity=110": {
+   "bound": 451.55654899567935,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 453.302599,
+   "plan": null,
+   "reference": 453.302599
+  },
+  "hard|closed_cafe=C14,premium_first=True,rush_start=06:30,shift_end=09:30,van_capacity=110": {
+   "bound": 559.6876954701319,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 560.591508,
+   "plan": null,
+   "reference": 560.591508
+  },
+  "medium|closed_cafe=C03,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=100": {
+   "bound": 493.7441729690761,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 494.4705,
+   "plan": null,
+   "reference": 494.4705
+  },
+  "medium|closed_cafe=C03,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=110": {
+   "bound": 482.24532932407317,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 483.631254,
+   "plan": null,
+   "reference": 483.631254
+  },
+  "medium|closed_cafe=C03,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=120": {
+   "bound": 482.2453293240735,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 483.631254,
+   "plan": null,
+   "reference": 483.631254
+  },
+  "medium|closed_cafe=C03,premium_first=True,rush_start=none,shift_end=10:00,van_capacity=100": {
+   "bound": 507.5970798658709,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 507.59708,
+   "plan": [
+    {
+     "depart": "06:15",
+     "stops": [
+      "C04",
+      "C13",
+      "C12",
+      "C17"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "06:15",
+     "stops": [
+      "C01",
+      "C08",
+      "C11",
+      "C15",
+      "C09"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "06:50",
+     "stops": [
+      "C07",
+      "C02",
+      "C14",
+      "C06"
+     ],
+     "van": "V3"
+    },
+    {
+     "depart": "05:41",
+     "stops": [
+      "C16",
+      "C10",
+      "C05",
+      "C18"
+     ],
+     "van": "V4"
+    }
+   ],
+   "reference": 524.601578
+  },
+  "medium|closed_cafe=C03,premium_first=True,rush_start=none,shift_end=10:00,van_capacity=110": {
+   "bound": 496.88467031277787,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 497.293097,
+   "plan": [
+    {
+     "depart": "06:14",
+     "stops": [
+      "C01",
+      "C08",
+      "C11",
+      "C18",
+      "C09"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "06:15",
+     "stops": [
+      "C04",
+      "C13",
+      "C12"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "06:50",
+     "stops": [
+      "C07",
+      "C02",
+      "C14",
+      "C06"
+     ],
+     "van": "V3"
+    },
+    {
+     "depart": "05:45",
+     "stops": [
+      "C16",
+      "C10",
+      "C05",
+      "C15",
+      "C17"
+     ],
+     "van": "V4"
+    }
+   ],
+   "reference": 498.468441
+  },
+  "medium|closed_cafe=C03,premium_first=True,rush_start=none,shift_end=10:00,van_capacity=120": {
+   "bound": 496.884670312778,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 497.293097,
+   "plan": [
+    {
+     "depart": "06:14",
+     "stops": [
+      "C01",
+      "C08",
+      "C11",
+      "C18",
+      "C09"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "06:15",
+     "stops": [
+      "C04",
+      "C13",
+      "C12"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "06:50",
+     "stops": [
+      "C07",
+      "C02",
+      "C14",
+      "C06"
+     ],
+     "van": "V3"
+    },
+    {
+     "depart": "05:45",
+     "stops": [
+      "C16",
+      "C10",
+      "C05",
+      "C15",
+      "C17"
+     ],
+     "van": "V4"
+    }
+   ],
+   "reference": 498.004272
+  },
+  "medium|closed_cafe=C11,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=100": {
+   "bound": 485.49240284056214,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 486.757148,
+   "plan": null,
+   "reference": 486.757148
+  },
+  "medium|closed_cafe=C11,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=120": {
+   "bound": 477.12535853327995,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 477.851685,
+   "plan": null,
+   "reference": 477.851685
+  },
+  "medium|closed_cafe=C11,premium_first=True,rush_start=none,shift_end=10:00,van_capacity=100": {
+   "bound": 498.5910226865783,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 499.292666,
+   "plan": [
+    {
+     "depart": "06:40",
+     "stops": [
+      "C01",
+      "C18",
+      "C15",
+      "C09"
+     ],
+     "van": "V1"
+    },
+    {
+     "depart": "06:50",
+     "stops": [
+      "C07",
+      "C02",
+      "C14",
+      "C06"
+     ],
+     "van": "V2"
+    },
+    {
+     "depart": "06:34",
+     "stops": [
+      "C13",
+      "C04",
+      "C17",
+      "C03"
+     ],
+     "van": "V3"
+    },
+    {
+     "depart": "05:40",
+     "stops": [
+      "C16",
+      "C10",
+      "C05",
+      "C08",
+      "C12"
+     ],
+     "van": "V4"
+    }
+   ],
+   "reference": 499.866019
+  },
+  "medium|closed_cafe=C11,premium_first=True,rush_start=none,shift_end=10:00,van_capacity=120": {
+   "bound": 490.62923242595275,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 491.173765,
+   "plan": null,
+   "reference": 491.173765
+  },
+  "medium|closed_cafe=C14,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=100": {
+   "bound": 475.8717183708849,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 475.913763,
+   "plan": null,
+   "reference": 475.913763
+  },
+  "medium|closed_cafe=C14,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=110": {
+   "bound": 464.37287472587457,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 465.074518,
+   "plan": null,
+   "reference": 465.074518
+  },
+  "medium|closed_cafe=C14,premium_first=False,rush_start=none,shift_end=10:00,van_capacity=120": {
+   "bound": 464.37287472587457,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 465.074518,
+   "plan": null,
+   "reference": 465.074518
+  },
+  "medium|closed_cafe=C14,premium_first=True,rush_start=none,shift_end=10:00,van_capacity=100": {
+   "bound": 475.871718370885,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 475.913763,
+   "plan": null,
+   "reference": 475.913763
+  },
+  "medium|closed_cafe=C14,premium_first=True,rush_start=none,shift_end=10:00,van_capacity=110": {
+   "bound": 471.8555903244486,
+   "mip": "optimal",
+   "model": "rush-exact-1",
+   "objective": 472.557234,
+   "plan": null,
+   "reference": 472.557234
+  }
+ }
+}

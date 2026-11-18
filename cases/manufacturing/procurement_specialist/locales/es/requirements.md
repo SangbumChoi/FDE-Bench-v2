@@ -39,7 +39,10 @@ Un archivo CSV, `orders.csv`, con la cabecera `order_week,component_id,supplier_
 <!-- /tier -->
 - `proveedores_homologados.csv`: un componente solo puede comprarse a un proveedor cuyo `estado` para ese componente sea `homologado`. `en evaluación` (aún en calificación) y `suspendido` no valen, aunque el proveedor haya enviado cotización.
 - {{hold_supplier}} está en retención de calidad: sus lotes con llegada prevista de W1 a W{{hold_until}} se rechazan en la inspección de entrada y no llegan a la línea. Su mercancía solo puede llegar después de W{{hold_until}}.
-<!-- when: quality_hold=S03-W5 -->
+<!-- tier: hard -->
+  La retención se mantiene durante las fiestas: su acción correctiva solo puede verificarse en nuestra primera inspección de entrada después del cierre de Año Nuevo.
+<!-- /tier -->
+<!-- when: quality_hold=S03-W6 -->
   La retención cubre todo lo que envía Mirae Semicon, incluidos el microcontrolador (C01) y la DRAM (C03) en asignación y la nueva flash C25; los pedidos que se le hagan siguen contando en su asignación mensual.
 <!-- /when -->
 - `presupuesto.csv` es un tope mensual fijado por nuestra casa matriz, no un objetivo: ningún mes puede superarlo. Cada pedido cuenta en el mes del lunes de su semana de pedido: W1-W2 son noviembre de 2026 (W2 empieza el lunes 30 de noviembre, así que cuenta en noviembre aunque la mayoría de sus días sean de diciembre), W3-W6 diciembre de 2026, W7-W8 enero de 2027. Los pedidos en USD cuentan a {{usd_krw}} KRW por USD.

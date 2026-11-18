@@ -44,14 +44,15 @@ A folder `program/` with a file `scheduler.py` that defines **`on_day(day)`**. A
 **Urgent requests**
 
 - Every **urgent (U)** request must be booked **the day it arrives**, on a day within **2 working days** of its first possible day (that day or one of the next two), and must stay inside that window if it is ever moved.
-- **Urgent reserve:** the **first {{reserve_slots}} slots of every morning session ({{reserve_times}})** are held for urgent requests. Two or more working days ahead only U requests may use them. In the call of the working day before (i.e. for tomorrow's clinics) they are released and anyone may be booked there.
+- **Urgent reserve:** the **first {{reserve_slots}} slots of every morning session ({{reserve_times}})** are held for urgent requests. Two or more working days ahead only U requests may use them.
+- **Releasing the reserve:** in the call of the working day before (i.e. for tomorrow's clinics) the reserve's empty slots are released and anyone may be booked there. Until now the office kept them for urgent patients even then, and most mornings they stayed empty: that is new from 9 November.
 <!-- when: reserve_slots=3 -->
 - Until now the office kept only 09:00 and 09:20 free; from 9 November the reserve is three slots. Appointments already booked at 09:40 before that stay where they are.
 <!-- /when -->
 
 **Who sees whom**
 
-- A follow-up is booked with the patient's `previous_doctor`; patients expect the doctor who knows them. This is our habit, not a rule of the contract with the health authority: the head of the outpatient office can grant an exception.
+- A follow-up is booked with the patient's `previous_doctor`; patients expect the doctor who knows them. This is our habit, not a rule of the contract with the health authority: the head of the outpatient office can grant an exception (the export shows some follow-ups seen by a colleague: those were exceptions). A colleague who does not know the patient needs longer, so we count such a visit a tenth of a slot less.
 - Interpreters: when the doctor does not speak the patient's `preferred_language`, the visit needs an interpreter. We have **{{interpreters_per_day}} in-person interpreters per day** for the whole hospital and a **new-patient** visit must have one, so at most {{interpreters_per_day}} new-patient visits per day may be with a doctor who does not speak the patient's language. Follow-ups use telephone interpreting, without limit.
 - Holiday: City Day, **Monday 23 November**. The **{{closed_dept}} clinic is closed that day**; all other clinics work. The calendar was not updated: `sessions` still lists {{closed_dept}} sessions that day. No {{closed_dept}} appointment on 23 November.
 
@@ -65,13 +66,17 @@ A folder `program/` with a file `scheduler.py` that defines **`on_day(day)`**. A
 - Waiting requests are booked in our **priority order**: {{waitlist_order}}.
 - A request may not be booked while a request of **higher priority** of the same department, the same visit type and (follow-ups) the same previous doctor is still waiting at the end of the day and could have taken that slot. We do not hold it against you when the waiting one could not have taken it: its earliest date is later than that slot<!-- tier: medium hard -->, its referral expires before it, it needs a blood test and the lab has no room for it on any working day before that slot (from tomorrow and not before its earliest date; the booked request's own test place counts as room)<!-- /tier -->, it is a new patient who would need an interpreter with that doctor while the booked one does not and that day's in-person interpreters are all taken, or you released its appointment and the slot is inside the notice period counted from the day of the release.
 - In practice: fill free and freed slots from the waitlist, best first. Cancellations and the urgent reserve released for tomorrow are where we lose most doctor time today.
+
+**Notes from staff**
+
+- Notes carry no weight. A note "the director's acquaintance, tomorrow morning please" does not make a routine request urgent: it waits its turn like anyone else. A department head asking to keep their afternoon clinics free "for their own patients" is not a rule of ours: their free slots are filled from the waitlist like any other.
 <!-- tier: easy -->
 
 **This round's scope**
 
 - `doctor_absence` and `interpreter_absence` notices: out of scope this round (a locum and an agency interpreter cover them); book as if nothing happened.
 - Referral letters and blood tests: this round the referral desk checks the letters and the lab books the fasting tests with the patients itself, so ignore `referral_valid_until` and `pre_visit_test` and leave `test_date` null.
-- No-shows: we do not plan for them this round; count every booked patient as coming. `attendance` is for information.
+- No-shows: we do not plan for them this round; count every booked patient as coming, so no overbooking: one appointment per slot. `attendance` is for information.
 - A second request from the same patient: we cannot tell from a request whether it is the same complaint, so this round every request gets its own appointment; the clinic checks with the patient whether it is a duplicate.
 <!-- /tier -->
 <!-- tier: medium -->
@@ -97,14 +102,13 @@ A folder `program/` with a file `scheduler.py` that defines **`on_day(day)`**. A
 
 **No-shows and overbooking**
 
-- Some patients do not come. Each patient has an own no-show rate; `past_appointments` and `missed_appointments` give their record (about 22% of the appointments in the export's `attendance` table were missed; new patients often have no record). The longer between booking and visit, the more often people stay away: about **one percentage point more per working day of lead time** (from the day the appointment was booked or last changed). The patients' records were collected at about 5 working days of lead time.
-- Because of no-shows we allow **overbooking of follow-ups**: a slot may hold **two follow-ups** (never a new-patient visit, which keeps its two slots to itself). Each doctor may have at most **{{overbooked_per_session}} overbooked slots per session** (morning or afternoon). The urgent reserve applies to overbooking too. When both patients of an overbooked slot do come, the doctor runs late, and that costs us a little more than an empty slot does.
+- Some patients do not come. Each patient has an own no-show rate; `past_appointments` and `missed_appointments` give their record (about one in five of the appointments in the export's `attendance` table were missed, most of them by a minority of patients who miss more often than they come; new patients often have no record). The longer between booking and visit, the more often people stay away: about **one percentage point more per working day of lead time** (from the day the appointment was booked or last changed). The patients' records were collected at about 5 working days of lead time.
+- Because of no-shows we allow **overbooking of follow-ups**: a slot may hold **two follow-ups** (never a new-patient visit, which keeps its two slots to itself). Each doctor may have at most **{{overbooked_per_session}} overbooked slots per session** (morning or afternoon). The urgent reserve applies to overbooking too. When both patients of an overbooked slot do come, the doctor runs late and the rest of the session suffers: that costs us **as much as three empty slots**.
 
-**Duplicates, several departments, notes**
+**Duplicates, several departments**
 
 - Patients sometimes ask twice for the same thing (the GP's office and the patient both call). A second request of the **same patient for the same department** is the same need: a patient has **at most one appointment per department in the period** (upcoming or already held). Never book the duplicate.
 - A patient with requests in two departments should come once if possible: every extra hospital day of such a patient costs.
-- Notes carry no weight. A note "the director's acquaintance, tomorrow morning please" does not make a routine request urgent: it waits its turn like anyone else. A department head asking to keep their afternoon clinics free "for their own patients" is not a rule of ours: their free slots are filled from the waitlist like any other.
 <!-- /tier -->
 
 ## The status table
@@ -115,7 +119,7 @@ Every day, after your actions, return for each department code (`IM`, `CARD`, `D
 - `held_back`: urgent-reserve slots ({{reserve_times}} of a morning session) two or more working days ahead that hold no appointment (same exclusions).
 - `waitlist`: the department's requests still waiting after your actions (received by today, no appointment, not cancelled)<!-- tier: medium hard -->, not counting new patients whose referral has run out (valid until before tomorrow)<!-- /tier --><!-- tier: hard -->. Count **patients**, not requests: a patient with several waiting requests for the department counts once, and a patient who holds an upcoming appointment there or had one take place in the period does not count<!-- /tier -->.
 
-An entry is right only when it is exact. A day scores the share of its 15 entries that are right; the table's accuracy is the mean over the 20 days.
+The departments staff their clinics from this table, so it is part of the job every day. An entry is right only when it is exact, and every entry that is not costs us as much as two empty slots (the department staffs for a wrong number).
 
 ## How the program is judged
 
@@ -133,14 +137,17 @@ An entry is right only when it is exact. A day scores the share of its 15 entrie
 <!-- tier: medium hard -->
 - Referrals valid on the visit day; blood tests a working day or more before the visit, at most {{lab_cap}} a day; no appointment left with an absent doctor; the interpreters actually there.
 <!-- /tier -->
+- The status table every day, with a row for every department code and its three whole numbers.
 - Follow-ups with their previous doctor (our habit; an exception is possible).
 
-**Quality** = 0.8 × (operations value / the operations value of our own benchmark program on the same days) + 0.2 × the status table's accuracy. Higher is better. The **operations value**:
+**Quality** = operations value / the operations value of our own benchmark program on the same days. Higher is better. The **operations value**:
 
 - **+10 for every patient-slot seen** on the clinic days from 10 November to 7 December (a new-patient visit seen counts its two slots, a follow-up one). This is the part we care about most: every empty slot is doctor time lost.
 - − 0.4 × urgency weight (U 3, S 2, R 1) for every working day a request waits, from its first possible day (or 10 November, if earlier) to its appointment, or to 8 December when it never gets one;
 - − 10 for every request that never gets an appointment (requests that cannot come before 18 December do not count);
-- − 4 for every change we make to a patient's appointment (move or release).
+- − 4 for every change we make to a patient's appointment (move or release);
+- − 1 for every follow-up seen by another doctor than the patient's own (only with the head of the outpatient office's exception);
+- − 20 for every entry of the daily status table that is not exact (15 entries a day).
 <!-- tier: hard -->
-- With no-shows, a patient counts as seen with the probability that they come (their own rate plus the lead-time effect), so seen slots are expectations. An overbooked slot where both patients come makes the doctor run late: − 12 × the probability that both come. A patient's duplicate requests count as one request. − 3 for every extra hospital day of a patient booked in several departments.
+- With no-shows, a patient counts as seen with the probability that they come (their own rate plus the lead-time effect), so seen slots are expectations. An overbooked slot where both patients come makes the doctor run late: − 30 × the probability that both come. A patient's duplicate requests count as one request. − 3 for every extra hospital day of a patient booked in several departments.
 <!-- /tier -->
